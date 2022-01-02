@@ -136,7 +136,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service, schema=service_schema
     )
 
-    async def async_handle_core_service(call):
+    async def async_handle_core_service(call: ha.ServiceCall) -> None:
         """Service handler for handling core services."""
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass
@@ -220,7 +220,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         schema=SCHEMA_UPDATE_ENTITY,
     )
 
-    async def async_handle_reload_config(call):
+    async def async_handle_reload_config(call: ha.ServiceCall) -> None:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
@@ -235,7 +235,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
     )
 
-    async def async_set_location(call):
+    async def async_set_location(call: ha.ServiceCall) -> None:
         """Service handler to set location."""
         await hass.config.async_update(
             latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
@@ -248,7 +248,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
     )
 
-    async def async_handle_reload_config_entry(call):
+    async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for reloading a config entry."""
         reload_entries = set()
         if ATTR_ENTRY_ID in call.data:

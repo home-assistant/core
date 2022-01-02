@@ -60,13 +60,18 @@ def is_bluetooth_device(device: Device) -> bool:
 
 def discover_devices(device_id: int) -> list[tuple[str, str]]:
     """Discover Bluetooth devices."""
-    result = bluetooth.discover_devices(
-        duration=8,
-        lookup_names=True,
-        flush_cache=True,
-        lookup_class=False,
-        device_id=device_id,
-    )
+    try:
+        result = bluetooth.discover_devices(
+            duration=8,
+            lookup_names=True,
+            flush_cache=True,
+            lookup_class=False,
+            device_id=device_id,
+        )
+    except OSError as ex:
+        # OSError is generally thrown if a bluetooth device isn't found
+        _LOGGER.error("Couldn't discover bluetooth devices: %s", ex)
+        return []
     _LOGGER.debug("Bluetooth devices discovered = %d", len(result))
     return result  # type: ignore[no-any-return]
 

@@ -20,9 +20,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -354,7 +356,7 @@ class FibaroController:
                 pass
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Fibaro Component."""
     gateways = base_config[DOMAIN][CONF_GATEWAYS]
     hass.data[FIBARO_CONTROLLERS] = {}

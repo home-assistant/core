@@ -1,9 +1,9 @@
-"""Test the UniFi Protect button platform."""
+"""Test the UniFi Protect media_player platform."""
 # pylint: disable=protected-access
 from __future__ import annotations
 
 from copy import copy
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera
@@ -23,16 +23,17 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture
+from .conftest import MockEntityFixture, assert_entity_counts
 
 
 @pytest.fixture(name="camera")
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera with only the media_player platform active, camera has speaker."""
+    """Fixture for a single camera for testing the media_player platform."""
 
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
@@ -49,16 +50,10 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
     }
 
-    with patch(
-        "homeassistant.components.unifiprotect.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 1
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
     yield (camera_obj, "media_player.test_camera_speaker")
 
@@ -85,7 +80,7 @@ async def test_media_player_setup(
     assert state
     assert state.state == STATE_IDLE
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 7684
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 5636
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == "music"
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == expected_volume
 
@@ -201,16 +196,17 @@ async def test_media_player_play_invalid(
     camera[0].__fields__["play_audio"] = Mock()
     camera[0].play_audio = AsyncMock()
 
-    await hass.services.async_call(
-        "media_player",
-        "play_media",
-        {
-            ATTR_ENTITY_ID: camera[1],
-            "media_content_id": "/test.png",
-            "media_content_type": "image",
-        },
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: camera[1],
+                "media_content_id": "/test.png",
+                "media_content_type": "image",
+            },
+            blocking=True,
+        )
 
     assert not camera[0].play_audio.called
 
@@ -226,16 +222,17 @@ async def test_media_player_play_error(
     camera[0].play_audio = AsyncMock(side_effect=StreamError)
     camera[0].wait_until_audio_completes = AsyncMock()
 
-    await hass.services.async_call(
-        "media_player",
-        "play_media",
-        {
-            ATTR_ENTITY_ID: camera[1],
-            "media_content_id": "/test.mp3",
-            "media_content_type": "music",
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: camera[1],
+                "media_content_id": "/test.mp3",
+                "media_content_type": "music",
+            },
+            blocking=True,
+        )
 
     assert camera[0].play_audio.called
     assert not camera[0].wait_until_audio_completes.called

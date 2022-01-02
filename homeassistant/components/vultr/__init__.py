@@ -6,7 +6,9 @@ import voluptuous as vol
 from vultr import Vultr as VultrAPI
 
 from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Vultr component."""
     api_key = config[DOMAIN].get(CONF_API_KEY)
 

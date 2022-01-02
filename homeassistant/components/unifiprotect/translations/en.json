@@ -10,12 +10,24 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "host": "IP/Host of UniFi Protect Server",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "UniFi Protect Reauth"
+            },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Password",
-                    "username": "Username"
-                }
+                    "port": "Port",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "title": "UniFi Protect Setup"
             }
         }
     },

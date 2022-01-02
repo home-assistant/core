@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from copy import copy
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera as ProtectCamera
 from pyunifiprotect.data.devices import CameraChannel
+from pyunifiprotect.data.types import StateType
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import (
@@ -35,14 +36,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockEntityFixture, enable_entity, time_changed
+from .conftest import (
+    MockEntityFixture,
+    assert_entity_counts,
+    enable_entity,
+    time_changed,
+)
 
 
 @pytest.fixture(name="camera")
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera, no extra setup."""
+    """Fixture for a single camera for testing the camera platform."""
 
     camera_obj = mock_camera.copy(deep=True)
     camera_obj._api = mock_entry.api
@@ -59,14 +65,10 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
     }
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.CAMERA]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 2
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
     yield (camera_obj, "camera.test_camera_high")
 
@@ -263,15 +265,10 @@ async def test_basic_setup(
         camera_all_channels.id: camera_all_channels,
         camera_no_channels.id: camera_no_channels,
     }
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.CAMERA]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 4
-    assert len(entity_registry.entities) == 11
+    assert_entity_counts(hass, Platform.CAMERA, 11, 4)
 
     # test camera 1
     entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
@@ -463,7 +460,7 @@ async def test_camera_ws_update_offline(
     # camera goes offline
     new_bootstrap = copy(mock_entry.api.bootstrap)
     new_camera = camera[0].copy()
-    new_camera.is_connected = False
+    new_camera.state = StateType.DISCONNECTED
 
     mock_msg = Mock()
     mock_msg.new_obj = new_camera
@@ -477,7 +474,7 @@ async def test_camera_ws_update_offline(
     assert state and state.state == "unavailable"
 
     # camera comes back online
-    new_camera.is_connected = True
+    new_camera.state = StateType.CONNECTED
 
     mock_msg = Mock()
     mock_msg.new_obj = new_camera

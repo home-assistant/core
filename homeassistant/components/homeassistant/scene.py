@@ -173,17 +173,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Store platform for later.
     platform = hass.data[DATA_PLATFORM] = entity_platform.async_get_current_platform()
 
-    async def reload_config(call):
+    async def reload_config(call: ServiceCall) -> None:
         """Reload the scene config."""
         try:
-            conf = await conf_util.async_hass_config_yaml(hass)
+            config = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
 
         integration = await async_get_integration(hass, SCENE_DOMAIN)
 
-        conf = await conf_util.async_process_component_config(hass, conf, integration)
+        conf = await conf_util.async_process_component_config(hass, config, integration)
 
         if not (conf and platform):
             return
