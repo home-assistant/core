@@ -61,7 +61,7 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="refresh",
         icon="mdi:refresh",
-        name="Refresh from API",
+        name="Refresh from cloud",
         account_function="update",
         enabled_when_read_only=True,
     ),
