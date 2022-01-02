@@ -18,7 +18,17 @@ import re
 import threading
 from time import monotonic
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Optional, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 from urllib.parse import urlparse
 
 import attr
@@ -673,12 +683,17 @@ class Event:
         )
 
 
+_ListenerType = Callable[[Event], Union[None, Awaitable[None]]]
+_EventFilterType = Callable[[Event], bool]
+_FilterableJobType = Tuple[HassJob, Union[_EventFilterType, None]]
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[tuple[HassJob, Callable | None]]] = {}
+        self._listeners: dict[str, list[_FilterableJobType]] = {}
         self._hass = hass
 
     @callback
@@ -697,7 +712,7 @@ class EventBus:
     def fire(
         self,
         event_type: str,
-        event_data: dict | None = None,
+        event_data: dict[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
     ) -> None:
@@ -749,7 +764,7 @@ class EventBus:
                     continue
             self._hass.async_add_hass_job(job, event)
 
-    def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def listen(self, event_type: str, listener: _ListenerType) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -769,8 +784,8 @@ class EventBus:
     def async_listen(
         self,
         event_type: str,
-        listener: Callable,
-        event_filter: Callable | None = None,
+        listener: _ListenerType,
+        event_filter: _EventFilterType | None = None,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -791,7 +806,7 @@ class EventBus:
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: tuple[HassJob, Callable | None]
+        self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
 
@@ -801,9 +816,7 @@ class EventBus:
 
         return remove_listener
 
-    def listen_once(
-        self, event_type: str, listener: Callable[[Event], None]
-    ) -> CALLBACK_TYPE:
+    def listen_once(self, event_type: str, listener: _ListenerType) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -822,7 +835,9 @@ class EventBus:
         return remove_listener
 
     @callback
-    def async_listen_once(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def async_listen_once(
+        self, event_type: str, listener: _ListenerType
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -832,7 +847,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: tuple[HassJob, Callable | None] | None = None
+        filterable_job: _FilterableJobType | None = None
 
         @callback
         def _onetime_listener(event: Event) -> None:
@@ -860,7 +875,7 @@ class EventBus:
 
     @callback
     def _async_remove_listener(
-        self, event_type: str, filterable_job: tuple[HassJob, Callable | None]
+        self, event_type: str, filterable_job: _FilterableJobType
     ) -> None:
         """Remove a listener of a specific event_type.
 
