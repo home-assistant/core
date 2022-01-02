@@ -164,6 +164,25 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     assert await resp.read() == b""
 
 
+async def test_local_webhook_id_storage(hass, hass_storage):
+    """Test a disconnect message."""
+
+    hass_storage["google_assistant"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": {},
+        },
+    }
+
+    store = helpers.GoogleConfigStore(hass)
+    await store.async_initialize()
+
+    assert "local_webhook_id" in hass_storage["google_assistant"]["data"]
+    assert len(hass_storage["google_assistant"]["data"]["local_webhook_id"]) == 32
+
+
 async def test_agent_user_id_storage(hass, hass_storage):
     """Test a disconnect message."""
 
