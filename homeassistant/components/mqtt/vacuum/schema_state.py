@@ -29,7 +29,13 @@ import homeassistant.helpers.config_validation as cv
 
 from .. import subscription
 from ... import mqtt
-from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
@@ -248,6 +254,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_PAYLOAD_START],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_pause(self):
@@ -260,6 +267,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_PAYLOAD_PAUSE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_stop(self, **kwargs):
@@ -272,6 +280,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_PAYLOAD_STOP],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
@@ -286,6 +295,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             fan_speed,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_return_to_base(self, **kwargs):
@@ -298,6 +308,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_PAYLOAD_RETURN_TO_BASE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_clean_spot(self, **kwargs):
@@ -310,6 +321,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_PAYLOAD_CLEAN_SPOT],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_locate(self, **kwargs):
@@ -322,6 +334,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_PAYLOAD_LOCATE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_send_command(self, command, params=None, **kwargs):
@@ -340,4 +353,5 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             message,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
