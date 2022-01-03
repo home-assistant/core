@@ -30,6 +30,11 @@ async def async_setup_entry(
 class SteamistSwitchEntity(SteamistEntity, SwitchEntity):
     """Representation of an Steamist binary sensor."""
 
+    @property
+    def is_on(self) -> bool:
+        """Return if the steam is active."""
+        return self._status.active
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified device on."""
         await self.coordinator.client.async_turn_on_steam()
