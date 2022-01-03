@@ -217,15 +217,3 @@ class AlarmControlPanelEntity(Entity):
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
         }
-
-
-class AlarmControlPanel(AlarmControlPanelEntity):
-    """An abstract class for alarm control entities (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "AlarmControlPanel is deprecated, modify %s to extend AlarmControlPanelEntity",
-            cls.__name__,
-        )

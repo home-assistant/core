@@ -124,9 +124,10 @@ class BondDevice:
 class BondHub:
     """Hub device representing Bond Bridge."""
 
-    def __init__(self, bond: Bond) -> None:
+    def __init__(self, bond: Bond, host: str) -> None:
         """Initialize Bond Hub."""
         self.bond: Bond = bond
+        self.host = host
         self._bridge: dict[str, Any] = {}
         self._version: dict[str, Any] = {}
         self._devices: list[BondDevice] = []
@@ -205,6 +206,11 @@ class BondHub:
     def fw_ver(self) -> str | None:
         """Return this hub firmware version."""
         return self._version.get("fw_ver")
+
+    @property
+    def mcu_ver(self) -> str | None:
+        """Return this hub hardware version."""
+        return self._version.get("mcu_ver")
 
     @property
     def devices(self) -> list[BondDevice]:

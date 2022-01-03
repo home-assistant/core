@@ -1,9 +1,9 @@
 """Configuration for Sonos tests."""
-from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
@@ -42,6 +42,37 @@ class SonosMockEvent:
         return self.variables[var_name]
 
 
+@pytest.fixture
+def zeroconf_payload():
+    """Return a default zeroconf payload."""
+    return zeroconf.ZeroconfServiceInfo(
+        host="192.168.4.2",
+        hostname="Sonos-aaa",
+        name="Sonos-aaa@Living Room._sonos._tcp.local.",
+        port=None,
+        properties={"bootseq": "1234"},
+        type="mock_type",
+    )
+
+
+@pytest.fixture
+async def async_autosetup_sonos(async_setup_sonos):
+    """Set up a Sonos integration instance on test run."""
+    await async_setup_sonos()
+
+
+@pytest.fixture
+def async_setup_sonos(hass, config_entry):
+    """Return a coroutine to set up a Sonos integration instance on demand."""
+
+    async def _wrapper():
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return _wrapper
+
+
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
     """Create a mock Sonos config entry."""
@@ -68,8 +99,13 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         mock_soco.alarmClock = alarm_clock
         mock_soco.mute = False
         mock_soco.night_mode = True
-        mock_soco.dialog_mode = True
+        mock_soco.dialog_level = True
         mock_soco.volume = 19
+        mock_soco.bass = 1
+        mock_soco.treble = -1
+        mock_soco.sub_enabled = False
+        mock_soco.surround_enabled = True
+        mock_soco.soundbar_audio_input_format = "Dolby 5.1"
         mock_soco.get_battery_info.return_value = battery_info
         mock_soco.all_zones = [mock_soco]
         yield mock_soco
@@ -92,10 +128,14 @@ def discover_fixture(soco):
 
     async def do_callback(hass, callback, *args, **kwargs):
         await callback(
-            {
-                ssdp.ATTR_UPNP_UDN: soco.uid,
-                ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_location=f"http://{soco.ip_address}/",
+                ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+                ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+                upnp={
+                    ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
+                },
+            ),
             ssdp.SsdpChange.ALIVE,
         )
         return MagicMock()

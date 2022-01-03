@@ -7,6 +7,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, DOMAIN
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -74,7 +75,9 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
         for device_class in DEVICE_CLASSES
         for condition in ENTITY_CONDITIONS[device_class]
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert conditions == expected_conditions
 
 
@@ -93,7 +96,7 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
             "test",
             f"5678_{device_class}",
             device_id=device_entry.id,
-            device_class=device_class,
+            original_device_class=device_class,
         ).entity_id
 
     await hass.async_block_till_done()
@@ -109,7 +112,9 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
         for device_class in DEVICE_CLASSES
         for condition in ENTITY_CONDITIONS[device_class]
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert conditions == expected_conditions
 
 
@@ -127,10 +132,12 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 

@@ -68,29 +68,22 @@ class MaxCubeClimate(ClimateEntity):
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
         room = handler.cube.room_by_id(device.room_id)
-        self._name = f"{room.name} {device.name}"
+        self._attr_name = f"{room.name} {device.name}"
         self._cubehandle = handler
         self._device = device
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._device.serial
+        self._attr_supported_features = SUPPORT_FLAGS
+        self._attr_should_poll = True
+        self._attr_unique_id = self._device.serial
+        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        self._attr_preset_modes = [
+            PRESET_NONE,
+            PRESET_BOOST,
+            PRESET_COMFORT,
+            PRESET_ECO,
+            PRESET_AWAY,
+            PRESET_ON,
+        ]
 
     @property
     def min_temp(self):
@@ -104,11 +97,6 @@ class MaxCubeClimate(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature."""
         return self._device.max_temperature or MAX_TEMPERATURE
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -128,11 +116,6 @@ class MaxCubeClimate(ClimateEntity):
             return HVAC_MODE_OFF
 
         return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
     def set_hvac_mode(self, hvac_mode: str):
         """Set new target hvac mode."""
@@ -221,18 +204,6 @@ class MaxCubeClimate(ClimateEntity):
         elif self._device.mode == MAX_DEVICE_MODE_VACATION:
             return PRESET_AWAY
         return PRESET_NONE
-
-    @property
-    def preset_modes(self):
-        """Return available preset modes."""
-        return [
-            PRESET_NONE,
-            PRESET_BOOST,
-            PRESET_COMFORT,
-            PRESET_ECO,
-            PRESET_AWAY,
-            PRESET_ON,
-        ]
 
     def set_preset_mode(self, preset_mode):
         """Set new operation mode."""

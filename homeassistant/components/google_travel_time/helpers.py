@@ -3,9 +3,10 @@ from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
 from googlemaps.exceptions import ApiError
 
-from homeassistant.components.google_travel_time.const import TRACKABLE_DOMAINS
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers import location
+
+from .const import TRACKABLE_DOMAINS
 
 
 def is_valid_config_entry(hass, logger, api_key, origin, destination):

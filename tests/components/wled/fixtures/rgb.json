@@ -41,13 +41,15 @@
         "ix": 64,
         "pal": 1,
         "sel": true,
-        "rev": false,
+        "rev": true,
         "cln": -1
       }
     ]
   },
   "info": {
     "ver": "0.8.5",
+    "version_latest_stable": "0.12.0",
+    "version_latest_beta": "0.13.0b1",
     "vid": 1909122,
     "leds": {
       "count": 30,

@@ -8,14 +8,14 @@ from pykmtronic.auth import Auth
 from pykmtronic.hub import KMTronicHubAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER, UPDATE_LISTENER
 
-PLATFORMS = ["switch"]
+PLATFORMS = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

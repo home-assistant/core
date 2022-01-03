@@ -12,7 +12,7 @@ from pymelcloud import Device, get_devices
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-PLATFORMS = ["climate", "sensor", "water_heater"]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
 CONF_LANGUAGE = "language"
 CONFIG_SCHEMA = vol.Schema(
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS

@@ -1,18 +1,19 @@
 """Support for RDW binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from vehicle import Vehicle
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -20,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, ENTRY_TYPE_SERVICE
+from .const import DOMAIN
 
 
 @dataclass
@@ -47,7 +48,7 @@ BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="pending_recall",
         name="Pending Recall",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda vehicle: vehicle.pending_recall,
     ),
 )
@@ -87,7 +88,7 @@ class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.data.license_plate}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.data.license_plate)},
             manufacturer=coordinator.data.brand,
             name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",

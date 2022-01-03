@@ -9,13 +9,14 @@ from typing import Any, cast
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry, start
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
+
+from . import entity_registry, start
+from .entity import Entity
+from .event import async_track_time_interval
+from .json import JSONEncoder
+from .singleton import singleton
+from .storage import Store
 
 DATA_RESTORE_STATE_TASK = "restore_state_task"
 

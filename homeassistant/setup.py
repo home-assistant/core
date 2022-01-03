@@ -7,18 +7,20 @@ import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
+from typing import Any
 
-from homeassistant import config as conf_util, core, loader, requirements
-from homeassistant.config import async_notify_setup_error
-from homeassistant.const import (
+from . import config as conf_util, core, loader, requirements
+from .config import async_notify_setup_error
+from .const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     PLATFORM_FORMAT,
+    Platform,
 )
-from homeassistant.core import CALLBACK_TYPE
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util, ensure_unique_string
+from .core import CALLBACK_TYPE
+from .exceptions import HomeAssistantError
+from .helpers.typing import ConfigType
+from .util import dt as dt_util, ensure_unique_string
 
 # mypy: disallow-any-generics
 
@@ -26,33 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
-BASE_PLATFORMS = {
-    "air_quality",
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "device_tracker",
-    "fan",
-    "humidifier",
-    "image_processing",
-    "light",
-    "lock",
-    "media_player",
-    "notify",
-    "number",
-    "remote",
-    "scene",
-    "select",
-    "sensor",
-    "siren",
-    "switch",
-    "tts",
-    "vacuum",
-    "water_heater",
-    "weather",
-}
+BASE_PLATFORMS = {platform.value for platform in Platform}
 
 DATA_SETUP_DONE = "setup_done"
 DATA_SETUP_STARTED = "setup_started"
@@ -235,15 +211,15 @@ async def _async_setup_component(
             )
 
         task = None
-        result = True
+        result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
-                task = component.async_setup(hass, processed_config)  # type: ignore
+                task = component.async_setup(hass, processed_config)
             elif hasattr(component, "setup"):
                 # This should not be replaced with hass.async_add_executor_job because
                 # we don't want to track this task in case it blocks startup.
                 task = hass.loop.run_in_executor(
-                    None, component.setup, hass, processed_config  # type: ignore
+                    None, component.setup, hass, processed_config
                 )
             elif not hasattr(component, "async_setup_entry"):
                 log_error("No setup or config entry setup function defined.")

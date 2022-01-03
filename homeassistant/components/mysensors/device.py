@@ -131,6 +131,10 @@ class MySensorsDevice:
     @property
     def name(self) -> str:
         """Return the name of this entity."""
+        child = self._child
+
+        if child.description:
+            return str(child.description)
         return f"{self.node_name} {self.child_id}"
 
     @property

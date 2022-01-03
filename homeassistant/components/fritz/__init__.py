@@ -1,17 +1,15 @@
 """Support for AVM Fritz!Box functions."""
 import logging
 
-from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.exceptions import (
+    FritzConnectionException,
+    FritzResourceError,
+    FritzSecurityError,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .common import FritzBoxTools, FritzData
@@ -33,11 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await fritz_tools.async_setup()
-        await fritz_tools.async_start(entry.options)
+        await fritz_tools.async_setup(entry.options)
     except FritzSecurityError as ex:
         raise ConfigEntryAuthFailed from ex
-    except FritzConnectionException as ex:
+    except (FritzConnectionException, FritzResourceError) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})
@@ -46,14 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_FRITZ not in hass.data:
         hass.data[DATA_FRITZ] = FritzData()
 
-    @callback
-    def _async_unload(event: Event) -> None:
-        fritz_tools.async_unload()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
-    )
     entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    await fritz_tools.async_config_entry_first_refresh()
 
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -66,7 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-    fritzbox.async_unload()
 
     fritz_data = hass.data[DATA_FRITZ]
     fritz_data.tracked.pop(fritzbox.unique_id)

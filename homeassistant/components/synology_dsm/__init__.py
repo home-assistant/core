@@ -29,7 +29,6 @@ from synology_dsm.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -76,7 +75,7 @@ from .const import (
     SynologyDSMEntityDescription,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 ATTRIBUTION = "Data provided by Synology"
@@ -298,6 +297,7 @@ class SynoApi:
         else:
             self.config_url = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
 
+        self.initialized = False
         # DSM APIs
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
@@ -347,6 +347,7 @@ class SynoApi:
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
+        self.initialized = True
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -506,6 +507,9 @@ class SynoApi:
                 self.dsm.update, self._with_information
             )
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
+            if not self.initialized:
+                raise err
+
             _LOGGER.warning(
                 "Connection error during update, fallback by reloading the entry"
             )
@@ -523,7 +527,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
 
     entity_description: SynologyDSMEntityDescription
     unique_id: str
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,

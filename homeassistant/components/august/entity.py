@@ -25,6 +25,7 @@ class AugustEntityMixin(Entity):
             name=device.device_name,
             sw_version=self._detail.firmware_version,
             suggested_area=_remove_device_types(device.device_name, DEVICE_TYPES),
+            configuration_url="https://account.august.com",
         )
 
     @property

@@ -1,11 +1,17 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_WEBHOOK_ID,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DEVICE_NAME,
@@ -39,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
         config = {
             ATTR_SENSOR_ATTRIBUTES: {},
-            ATTR_SENSOR_DEVICE_CLASS: entry.device_class,
+            ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,
             ATTR_SENSOR_NAME: entry.original_name,
             ATTR_SENSOR_STATE: None,
@@ -81,7 +87,22 @@ class MobileAppSensor(MobileAppEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._config[ATTR_SENSOR_STATE]
+        if (state := self._config[ATTR_SENSOR_STATE]) in (None, STATE_UNKNOWN):
+            return None
+
+        if (
+            self.device_class
+            in (
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
+            )
+            and (timestamp := dt_util.parse_datetime(state)) is not None
+        ):
+            if self.device_class == SensorDeviceClass.DATE:
+                return timestamp.date()
+            return timestamp
+
+        return state
 
     @property
     def native_unit_of_measurement(self):

@@ -1,9 +1,12 @@
 """Config flow for Network UPS Tools (NUT) integration."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
@@ -14,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from . import PyNUTData
 from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -21,7 +25,7 @@ from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _base_schema(discovery_info):
+def _base_schema(discovery_info: zeroconf.ZeroconfServiceInfo | None) -> vol.Schema:
     """Generate base schema."""
     base_schema = {}
     if not discovery_info:
@@ -81,17 +85,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the nut config flow."""
         self.nut_config = {}
-        self.discovery_info = {}
+        self.discovery_info: zeroconf.ZeroconfServiceInfo | None = None
         self.ups_list = None
         self.title = None
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
         self.context["title_placeholders"] = {
-            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
-            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_PORT: discovery_info.port or DEFAULT_PORT,
+            CONF_HOST: discovery_info.host,
         }
         return await self.async_step_user()
 
@@ -102,8 +108,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.discovery_info:
                 user_input.update(
                     {
-                        CONF_HOST: self.discovery_info[CONF_HOST],
-                        CONF_PORT: self.discovery_info.get(CONF_PORT, DEFAULT_PORT),
+                        CONF_HOST: self.discovery_info.host,
+                        CONF_PORT: self.discovery_info.port or DEFAULT_PORT,
                     }
                 )
             info, errors = await self._async_validate_or_error(user_input)

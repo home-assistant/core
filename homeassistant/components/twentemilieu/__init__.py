@@ -7,7 +7,7 @@ from twentemilieu import TwenteMilieu, WasteType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,7 +20,7 @@ SCAN_INTERVAL = timedelta(seconds=3600)
 SERVICE_UPDATE = "update"
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -46,7 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # For backwards compat, set unique ID
     if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data[CONF_ID])
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(entry.data[CONF_ID])
+        )
 
     hass.data.setdefault(DOMAIN, {})[entry.data[CONF_ID]] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -58,5 +60,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Twente Milieu config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
+        del hass.data[DOMAIN][entry.data[CONF_ID]]
     return unload_ok

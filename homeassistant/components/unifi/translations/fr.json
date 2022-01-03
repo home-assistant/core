@@ -10,7 +10,7 @@
             "service_unavailable": "\u00c9chec de connexion",
             "unknown_client_mac": "Aucun client disponible sur cette adresse MAC"
         },
-        "flow_title": "UniFi Network {site} ( {host} )",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -34,7 +34,7 @@
                     "poe_clients": "Autoriser le contr\u00f4le POE des clients"
                 },
                 "description": "Configurer les contr\u00f4les client \n\n Cr\u00e9ez des interrupteurs pour les num\u00e9ros de s\u00e9rie pour lesquels vous souhaitez contr\u00f4ler l'acc\u00e8s au r\u00e9seau.",
-                "title": "Options UniFi 2/3"
+                "title": "Options de r\u00e9seau UniFi 2/3"
             },
             "device_tracker": {
                 "data": {
@@ -46,7 +46,7 @@
                     "track_wired_clients": "Inclure les clients du r\u00e9seau filaire"
                 },
                 "description": "Configurer le suivi des appareils",
-                "title": "Options UniFi 1/3"
+                "title": "Options de r\u00e9seau UniFi 1/3"
             },
             "init": {
                 "data": {
@@ -68,7 +68,7 @@
                     "allow_uptime_sensors": "Capteurs de disponibilit\u00e9 pour les clients r\u00e9seau"
                 },
                 "description": "Configurer des capteurs de statistiques",
-                "title": "Options UniFi 3/3"
+                "title": "Options de r\u00e9seau UniFi 3/3"
             }
         }
     }

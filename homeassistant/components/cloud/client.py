@@ -42,12 +42,13 @@ class CloudClient(Interface):
         self._websession = websession
         self.google_user_config = google_user_config
         self.alexa_user_config = alexa_user_config
-        self._alexa_config = None
-        self._google_config = None
+        self._alexa_config: alexa_config.AlexaConfig | None = None
+        self._google_config: google_config.CloudGoogleConfig | None = None
 
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
+        assert self._hass.config.config_dir is not None
         return Path(self._hass.config.config_dir)
 
     @property
@@ -56,7 +57,7 @@ class CloudClient(Interface):
         return self._prefs
 
     @property
-    def loop(self) -> asyncio.BaseEventLoop:
+    def loop(self) -> asyncio.AbstractEventLoop:
         """Return client loop."""
         return self._hass.loop
 
@@ -66,7 +67,7 @@ class CloudClient(Interface):
         return self._websession
 
     @property
-    def aiohttp_runner(self) -> aiohttp.web.AppRunner:
+    def aiohttp_runner(self) -> aiohttp.web.AppRunner | None:
         """Return client webinterface aiohttp application."""
         return self._hass.http.runner
 

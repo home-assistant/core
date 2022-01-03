@@ -44,23 +44,22 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assert self._username
             assert self._password
 
+        errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
             await async_get_client(self._username, self._password, session=session)
         except InvalidCredentialsError:
-            return self.async_show_form(
-                step_id=step_id,
-                data_schema=schema,
-                errors={"base": "invalid_auth"},
-                description_placeholders={CONF_USERNAME: self._username},
-            )
+            errors["base"] = "invalid_auth"
         except NotionError as err:
             LOGGER.error("Unknown Notion error: %s", err)
+            errors["base"] = "unknown"
+
+        if errors:
             return self.async_show_form(
                 step_id=step_id,
                 data_schema=schema,
-                errors={"base": "unknown"},
+                errors=errors,
                 description_placeholders={CONF_USERNAME: self._username},
             )
 

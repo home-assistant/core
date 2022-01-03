@@ -3,7 +3,7 @@
   "name": "devolo Home Network",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
-  "requirements": ["devolo-plc-api==0.6.2"],
+  "requirements": ["devolo-plc-api==0.6.3"],
   "zeroconf": ["_dvl-deviceapi._tcp.local."],
   "codeowners": ["@2Fake", "@Shutgun"],
   "quality_scale": "platinum",

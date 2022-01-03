@@ -12,7 +12,7 @@
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Kodi: {name}",
+        "flow_title": "{name}",
         "step": {
             "credentials": {
                 "data": {

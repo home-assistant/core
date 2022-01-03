@@ -56,6 +56,13 @@ class BroadlinkDevice:
         """Return the mac address of the device."""
         return self.config.data[CONF_MAC]
 
+    @property
+    def available(self):
+        """Return True if the device is available."""
+        if self.update_manager is None:  # pragma: no cover
+            return False
+        return self.update_manager.available
+
     @staticmethod
     async def async_update(hass, entry):
         """Update the device and related entities.

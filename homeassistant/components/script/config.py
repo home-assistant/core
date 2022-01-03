@@ -1,5 +1,4 @@
 """Config validation helper for the script integration."""
-import asyncio
 from contextlib import suppress
 
 import voluptuous as vol
@@ -24,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv
 from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
-    async_validate_action_config,
+    async_validate_actions_config,
     make_script_schema,
 )
 from homeassistant.helpers.selector import validate_selector
@@ -72,11 +71,8 @@ async def async_validate_config_item(hass, config, full_config=None):
         return await blueprints.async_inputs_from_config(config)
 
     config = SCRIPT_ENTITY_SCHEMA(config)
-    config[CONF_SEQUENCE] = await asyncio.gather(
-        *(
-            async_validate_action_config(hass, action)
-            for action in config[CONF_SEQUENCE]
-        )
+    config[CONF_SEQUENCE] = await async_validate_actions_config(
+        hass, config[CONF_SEQUENCE]
     )
 
     return config

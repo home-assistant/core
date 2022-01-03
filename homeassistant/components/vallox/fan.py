@@ -13,9 +13,10 @@ from homeassistant.components.fan import (
     FanEntity,
     NotValidPresetModeError,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ValloxDataUpdateCoordinator
@@ -61,21 +62,19 @@ def _convert_fan_speed_value(value: StateType) -> int | None:
     return None
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the fan device."""
-    if discovery_info is None:
-        return
+    data = hass.data[DOMAIN][entry.entry_id]
 
-    client = hass.data[DOMAIN]["client"]
+    client = data["client"]
     client.set_settable_address(METRIC_KEY_MODE, int)
 
     device = ValloxFan(
-        hass.data[DOMAIN]["name"], client, hass.data[DOMAIN]["coordinator"]
+        data["name"],
+        client,
+        data["coordinator"],
     )
 
     async_add_entities([device])
@@ -98,6 +97,8 @@ class ValloxFan(CoordinatorEntity, FanEntity):
         self._client = client
 
         self._attr_name = name
+
+        self._attr_unique_id = str(self.coordinator.data.get_uuid())
 
     @property
     def supported_features(self) -> int:

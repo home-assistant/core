@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -11,10 +10,8 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
 from .util import remap_value
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,6 +23,7 @@ class IntegerTypeData:
     scale: float
     step: float
     unit: str | None = None
+    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -45,6 +43,10 @@ class IntegerTypeData:
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
         return value * 1.0 / (10 ** self.scale)
+
+    def scale_value_back(self, value: float | int) -> int:
+        """Return raw value for scaled."""
+        return int(value * (10 ** self.scale))
 
     def remap_value_to(
         self,
@@ -82,6 +84,20 @@ class EnumTypeData:
     def from_json(cls, data: str) -> EnumTypeData:
         """Load JSON string and return a EnumTypeData object."""
         return cls(**json.loads(data))
+
+
+@dataclass
+class ElectricityTypeData:
+    """Electricity Type Data."""
+
+    electriccurrent: str | None = None
+    power: str | None = None
+    voltage: str | None = None
+
+    @classmethod
+    def from_json(cls, data: str) -> ElectricityTypeData:
+        """Load JSON string and return a ElectricityTypeData object."""
+        return cls(**json.loads(data.lower()))
 
 
 class TuyaEntity(Entity):
@@ -132,5 +148,5 @@ class TuyaEntity(Entity):
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
-        _LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
+        LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         self.device_manager.send_commands(self.device.id, commands)

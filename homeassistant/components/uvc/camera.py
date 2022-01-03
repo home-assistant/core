@@ -86,7 +86,7 @@ class UnifiVideoCamera(Camera):
         self._uuid = uuid
         self._name = name
         self._password = password
-        self.is_streaming = False
+        self._attr_is_streaming = False
         self._connect_addr = None
         self._camera = None
         self._motion_status = False

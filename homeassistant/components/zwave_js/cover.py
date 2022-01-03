@@ -1,7 +1,6 @@
 """Support for Z-Wave cover devices."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, cast
 
@@ -21,10 +20,6 @@ from zwave_js_server.model.value import Value as ZwaveValue
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
@@ -33,6 +28,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -120,11 +116,11 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         super().__init__(config_entry, client, info)
 
         # Entity class attributes
-        self._attr_device_class = DEVICE_CLASS_WINDOW
+        self._attr_device_class = CoverDeviceClass.WINDOW
         if self.info.platform_hint in ("window_shutter", "window_shutter_tilt"):
-            self._attr_device_class = DEVICE_CLASS_SHUTTER
+            self._attr_device_class = CoverDeviceClass.SHUTTER
         if self.info.platform_hint == "window_blind":
-            self._attr_device_class = DEVICE_CLASS_BLIND
+            self._attr_device_class = CoverDeviceClass.BLIND
 
     @property
     def is_closed(self) -> bool | None:
@@ -181,7 +177,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
 
 class ZWaveTiltCover(ZWaveCover):
-    """Representation of a Fibaro Z-Wave cover device."""
+    """Representation of a Z-Wave Cover device with tilt."""
 
     _attr_supported_features = (
         SUPPORT_OPEN
@@ -222,12 +218,6 @@ class ZWaveTiltCover(ZWaveCover):
                 tilt_value,
                 percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
             )
-            # The following 2 lines are a workaround for this issue:
-            # https://github.com/zwave-js/node-zwave-js/issues/3611
-            # As soon as the issue is fixed, and minimum server schema is bumped
-            # the 2 lines should be removed.
-            await asyncio.sleep(2.5)
-            await self.info.node.async_refresh_cc_values(tilt_value.command_class)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
@@ -242,7 +232,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
 
     _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
-    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_device_class = CoverDeviceClass.GARAGE
 
     def __init__(
         self,

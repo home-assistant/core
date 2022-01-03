@@ -1,14 +1,21 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from datetime import datetime
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_FORECAST,
@@ -63,7 +70,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
     """Abstract class for an OpenWeatherMap sensor."""
 
     _attr_should_poll = False
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -80,16 +87,11 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         self._attr_unique_id = unique_id
         split_unique_id = unique_id.split("-")
         self._attr_device_info = DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def available(self) -> bool:
@@ -142,9 +144,17 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
         self._weather_coordinator = weather_coordinator
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
         forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
-        if forecasts is not None and len(forecasts) > 0:
-            return forecasts[0].get(self.entity_description.key, None)
-        return None
+        if not forecasts:
+            return None
+
+        value = forecasts[0].get(self.entity_description.key, None)
+        if (
+            value
+            and self.entity_description.device_class is SensorDeviceClass.TIMESTAMP
+        ):
+            return dt_util.parse_datetime(value)
+
+        return value

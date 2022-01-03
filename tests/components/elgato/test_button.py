@@ -5,14 +5,10 @@ from elgato import ElgatoError
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_ICON,
-    ENTITY_CATEGORY_CONFIG,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.components.elgato import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -35,7 +31,7 @@ async def test_button_identify(
     entry = entity_registry.async_get("button.identify")
     assert entry
     assert entry.unique_id == "CN11A1A00001_identify"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category == EntityCategory.CONFIG
 
     with patch(
         "homeassistant.components.elgato.light.Elgato.identify"

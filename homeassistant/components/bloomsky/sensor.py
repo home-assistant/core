@@ -1,11 +1,14 @@
 """Support the sensor of a BloomSky weather station."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     PRESSURE_INHG,
@@ -47,7 +50,7 @@ SENSOR_UNITS_METRIC = {
 
 # Device class
 SENSOR_DEVICE_CLASS = {
-    "Temperature": DEVICE_CLASS_TEMPERATURE,
+    "Temperature": SensorDeviceClass.TEMPERATURE,
 }
 
 # Which sensors to format numerically
@@ -79,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BloomSkySensor(SensorEntity):
     """Representation of a single sensor in a BloomSky device."""
 
-    def __init__(self, bs, device, sensor_name):
+    def __init__(self, bs, device, sensor_name):  # pylint: disable=invalid-name
         """Initialize a BloomSky sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]

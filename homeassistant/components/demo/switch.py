@@ -1,7 +1,7 @@
 """Demo platform that has two fake switches."""
 from __future__ import annotations
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -19,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 False,
                 "mdi:air-conditioner",
                 False,
-                device_class="outlet",
+                device_class=SwitchDeviceClass.OUTLET,
             ),
         ]
     )
@@ -42,7 +42,7 @@ class DemoSwitch(SwitchEntity):
         state: bool,
         icon: str | None,
         assumed: bool,
-        device_class: str | None = None,
+        device_class: SwitchDeviceClass | None = None,
     ) -> None:
         """Initialize the Demo switch."""
         self._attr_assumed_state = assumed

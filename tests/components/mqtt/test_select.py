@@ -5,10 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import select
-from homeassistant.components.mqtt.select import (
-    CONF_OPTIONS,
-    MQTT_SELECT_ATTRIBUTES_BLOCKED,
-)
+from homeassistant.components.mqtt.select import MQTT_SELECT_ATTRIBUTES_BLOCKED
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -478,7 +475,8 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     )
 
 
-async def test_options_attributes(hass, mqtt_mock):
+@pytest.mark.parametrize("options", [["milk", "beer"], ["milk"], []])
+async def test_options_attributes(hass, mqtt_mock, options):
     """Test options attribute."""
     topic = "test/select"
     await async_setup_component(
@@ -490,35 +488,14 @@ async def test_options_attributes(hass, mqtt_mock):
                 "state_topic": topic,
                 "command_topic": topic,
                 "name": "Test select",
-                "options": ["milk", "beer"],
+                "options": options,
             }
         },
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("select.test_select")
-    assert state.attributes.get(ATTR_OPTIONS) == ["milk", "beer"]
-
-
-async def test_invalid_options(hass, caplog, mqtt_mock):
-    """Test invalid options."""
-    topic = "test/select"
-    await async_setup_component(
-        hass,
-        "select",
-        {
-            "select": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Select",
-                "options": "beer",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert f"'{CONF_OPTIONS}' must include at least 2 options" in caplog.text
+    assert state.attributes.get(ATTR_OPTIONS) == options
 
 
 async def test_mqtt_payload_not_an_option_warning(hass, caplog, mqtt_mock):

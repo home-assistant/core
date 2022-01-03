@@ -19,15 +19,25 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_NAME,
-    ATTR_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
+    HASSIO_USER_NAME,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HASS_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
-from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
+from homeassistant.helpers.device_registry import (
+    DeviceEntryType,
+    DeviceRegistry,
+    async_get_registry,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -54,7 +64,7 @@ from .const import (
     DOMAIN,
     SupervisorEntityModel,
 )
-from .discovery import async_setup_discovery_view
+from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -65,7 +75,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_FRONTEND_REPO = "development_repo"
 
@@ -436,10 +446,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
             # Migrate old name
             if user.name == "Hass.io":
-                await hass.auth.async_update_user(user, name="Supervisor")
+                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
 
     if refresh_token is None:
-        user = await hass.auth.async_create_system_user("Supervisor", [GROUP_ID_ADMIN])
+        user = await hass.auth.async_create_system_user(
+            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+        )
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data["hassio_user"] = user.id
         await store.async_save(data)
@@ -456,8 +468,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await hass.components.panel_custom.async_register_panel(
         frontend_url_path="hassio",
         webcomponent_name="hassio-main",
-        sidebar_title="Supervisor",
-        sidebar_icon="hass:home-assistant",
         js_url="/api/hassio/app/entrypoint.js",
         embed_iframe=True,
         require_admin=True,
@@ -483,7 +493,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     await push_config(None)
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
         api_endpoint = MAP_SERVICE_API[service.service]
 
@@ -561,7 +571,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Fetch data
     await update_info_data(None)
 
-    async def async_handle_core_service(call):
+    async def async_handle_core_service(call: ServiceCall) -> None:
         """Service handler for handling core services."""
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass
@@ -660,7 +670,7 @@ def async_register_addons_in_dev_reg(
             model=SupervisorEntityModel.ADDON,
             sw_version=addon[ATTR_VERSION],
             name=addon[ATTR_NAME],
-            entry_type=ATTR_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             configuration_url=f"homeassistant://hassio/addon/{addon[ATTR_SLUG]}",
         )
         if manufacturer := addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL):
@@ -679,7 +689,7 @@ def async_register_os_in_dev_reg(
         model=SupervisorEntityModel.OS,
         sw_version=os_dict[ATTR_VERSION],
         name="Home Assistant Operating System",
-        entry_type=ATTR_SERVICE,
+        entry_type=DeviceEntryType.SERVICE,
     )
     dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 

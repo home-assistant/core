@@ -19,6 +19,8 @@ class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
+        if self._refresh_callback is not None:
+            return self._assumed_state
         return self.robot.night_light_mode_enabled
 
     @property
@@ -28,11 +30,11 @@ class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.perform_action_and_refresh(self.robot.set_night_light, True)
+        await self.perform_action_and_assume_state(self.robot.set_night_light, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.perform_action_and_refresh(self.robot.set_night_light, False)
+        await self.perform_action_and_assume_state(self.robot.set_night_light, False)
 
 
 class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
@@ -41,6 +43,8 @@ class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
+        if self._refresh_callback is not None:
+            return self._assumed_state
         return self.robot.panel_lock_enabled
 
     @property
@@ -50,11 +54,11 @@ class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.perform_action_and_refresh(self.robot.set_panel_lockout, True)
+        await self.perform_action_and_assume_state(self.robot.set_panel_lockout, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.perform_action_and_refresh(self.robot.set_panel_lockout, False)
+        await self.perform_action_and_assume_state(self.robot.set_panel_lockout, False)
 
 
 ROBOT_SWITCHES: list[tuple[type[LitterRobotConfigEntity], str]] = [

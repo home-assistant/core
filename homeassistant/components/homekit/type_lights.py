@@ -120,10 +120,11 @@ class Light(HomeAccessory):
         if self._event_timer:
             self._event_timer()
         self._event_timer = async_call_later(
-            self.hass, CHANGE_COALESCE_TIME_WINDOW, self._send_events
+            self.hass, CHANGE_COALESCE_TIME_WINDOW, self._async_send_events
         )
 
-    def _send_events(self, *_):
+    @callback
+    def _async_send_events(self, *_):
         """Process all changes at once."""
         _LOGGER.debug("Coalesced _set_chars: %s", self._pending_events)
         char_values = self._pending_events

@@ -3,7 +3,8 @@ import pytest
 
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
-from homeassistant.helpers.entity_registry import DISABLED_USER, RegistryEntry
+from homeassistant.helpers.device_registry import DeviceEntryDisabler
+from homeassistant.helpers.entity_registry import RegistryEntry, RegistryEntryDisabler
 
 from tests.common import (
     MockConfigEntry,
@@ -100,19 +101,21 @@ async def test_get_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
-        "config_entry_id": None,
-        "device_id": None,
         "area_id": None,
-        "disabled_by": None,
-        "platform": "test_platform",
-        "entity_id": "test_domain.name",
-        "name": "Hello World",
-        "icon": None,
-        "original_name": None,
-        "original_icon": None,
         "capabilities": None,
-        "unique_id": "1234",
+        "config_entry_id": None,
+        "device_class": None,
+        "device_id": None,
+        "disabled_by": None,
         "entity_category": None,
+        "entity_id": "test_domain.name",
+        "icon": None,
+        "name": "Hello World",
+        "original_device_class": None,
+        "original_icon": None,
+        "original_name": None,
+        "platform": "test_platform",
+        "unique_id": "1234",
     }
 
     await client.send_json(
@@ -125,19 +128,21 @@ async def test_get_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
-        "config_entry_id": None,
-        "device_id": None,
         "area_id": None,
-        "disabled_by": None,
-        "platform": "test_platform",
-        "entity_id": "test_domain.no_name",
-        "name": None,
-        "icon": None,
-        "original_name": None,
-        "original_icon": None,
         "capabilities": None,
-        "unique_id": "6789",
+        "config_entry_id": None,
+        "device_class": None,
+        "device_id": None,
+        "disabled_by": None,
         "entity_category": None,
+        "entity_id": "test_domain.no_name",
+        "icon": None,
+        "name": None,
+        "original_device_class": None,
+        "original_icon": None,
+        "original_name": None,
+        "platform": "test_platform",
+        "unique_id": "6789",
     }
 
 
@@ -165,15 +170,16 @@ async def test_update_entity(hass, client):
     assert state.name == "before update"
     assert state.attributes[ATTR_ICON] == "icon:before update"
 
-    # UPDATE NAME & ICON & AREA
+    # UPDATE AREA, DEVICE_CLASS, ICON AND NAME
     await client.send_json(
         {
             "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
-            "name": "after update",
-            "icon": "icon:after update",
             "area_id": "mock-area-id",
+            "device_class": "custom_device_class",
+            "icon": "icon:after update",
+            "name": "after update",
         }
     )
 
@@ -181,19 +187,21 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
-            "config_entry_id": None,
-            "device_id": None,
             "area_id": "mock-area-id",
-            "disabled_by": None,
-            "platform": "test_platform",
-            "entity_id": "test_domain.world",
-            "name": "after update",
-            "icon": "icon:after update",
-            "original_name": None,
-            "original_icon": None,
             "capabilities": None,
-            "unique_id": "1234",
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
             "entity_category": None,
+            "entity_id": "test_domain.world",
+            "icon": "icon:after update",
+            "name": "after update",
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "unique_id": "1234",
         }
     }
 
@@ -207,14 +215,16 @@ async def test_update_entity(hass, client):
             "id": 7,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
-            "disabled_by": DISABLED_USER,
+            "disabled_by": RegistryEntryDisabler.USER,
         }
     )
 
     msg = await client.receive_json()
 
     assert hass.states.get("test_domain.world") is None
-    assert registry.entities["test_domain.world"].disabled_by == DISABLED_USER
+    assert (
+        registry.entities["test_domain.world"].disabled_by is RegistryEntryDisabler.USER
+    )
 
     # UPDATE DISABLED_BY TO NONE
     await client.send_json(
@@ -230,19 +240,21 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
-            "config_entry_id": None,
-            "device_id": None,
             "area_id": "mock-area-id",
-            "disabled_by": None,
-            "platform": "test_platform",
-            "entity_id": "test_domain.world",
-            "name": "after update",
-            "icon": "icon:after update",
-            "original_name": None,
-            "original_icon": None,
             "capabilities": None,
-            "unique_id": "1234",
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
             "entity_category": None,
+            "entity_id": "test_domain.world",
+            "icon": "icon:after update",
+            "name": "after update",
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "unique_id": "1234",
         },
         "reload_delay": 30,
     }
@@ -285,19 +297,21 @@ async def test_update_entity_require_restart(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
-            "config_entry_id": config_entry.entry_id,
-            "device_id": None,
             "area_id": None,
-            "disabled_by": None,
-            "platform": "test_platform",
-            "entity_id": "test_domain.world",
-            "name": None,
-            "icon": None,
-            "original_name": None,
-            "original_icon": None,
             "capabilities": None,
-            "unique_id": "1234",
+            "config_entry_id": config_entry.entry_id,
+            "device_class": None,
+            "device_id": None,
+            "disabled_by": None,
             "entity_category": None,
+            "entity_id": "test_domain.world",
+            "icon": None,
+            "name": None,
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "unique_id": "1234",
         },
         "require_restart": True,
     }
@@ -314,7 +328,7 @@ async def test_enable_entity_disabled_device(hass, client, device_registry):
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
-        disabled_by=DISABLED_USER,
+        disabled_by=DeviceEntryDisabler.USER,
     )
 
     mock_registry(
@@ -387,19 +401,21 @@ async def test_update_entity_no_changes(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
-            "config_entry_id": None,
-            "device_id": None,
             "area_id": None,
-            "disabled_by": None,
-            "platform": "test_platform",
-            "entity_id": "test_domain.world",
-            "name": "name of entity",
-            "icon": None,
-            "original_name": None,
-            "original_icon": None,
             "capabilities": None,
-            "unique_id": "1234",
+            "config_entry_id": None,
+            "device_class": None,
+            "device_id": None,
+            "disabled_by": None,
             "entity_category": None,
+            "entity_id": "test_domain.world",
+            "icon": None,
+            "name": "name of entity",
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "unique_id": "1234",
         }
     }
 
@@ -468,19 +484,21 @@ async def test_update_entity_id(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
-            "config_entry_id": None,
-            "device_id": None,
             "area_id": None,
-            "disabled_by": None,
-            "platform": "test_platform",
-            "entity_id": "test_domain.planet",
-            "name": None,
-            "icon": None,
-            "original_name": None,
-            "original_icon": None,
             "capabilities": None,
-            "unique_id": "1234",
+            "config_entry_id": None,
+            "device_class": None,
+            "device_id": None,
+            "disabled_by": None,
             "entity_category": None,
+            "entity_id": "test_domain.planet",
+            "icon": None,
+            "name": None,
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "unique_id": "1234",
         }
     }
 

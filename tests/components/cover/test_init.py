@@ -111,13 +111,3 @@ def is_closed(hass, ent):
 def is_closing(hass, ent):
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_CLOSING)
-
-
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomCover(cover.CoverDevice):
-        pass
-
-    CustomCover()
-    assert "CoverDevice is deprecated, modify CustomCover" in caplog.text

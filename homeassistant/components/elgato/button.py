@@ -7,9 +7,8 @@ from elgato import Elgato, ElgatoError, Info
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -39,7 +38,7 @@ class ElgatoIdentifyButton(ButtonEntity):
             key="identify",
             name="Identify",
             icon="mdi:help",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         )
         self._attr_unique_id = f"{info.serial_number}_{self.entity_description.key}"
 

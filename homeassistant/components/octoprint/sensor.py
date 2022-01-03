@@ -1,19 +1,18 @@
 """Support for monitoring OctoPrint sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,6 +22,17 @@ from . import OctoprintDataUpdateCoordinator
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+JOB_PRINTING_STATES = ["Printing from SD", "Printing"]
+
+
+def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
+    return (
+        printer
+        and printer.state
+        and printer.state.flags
+        and printer.state.flags.printing
+    )
 
 
 async def async_setup_entry(
@@ -149,7 +159,7 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
 class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -158,21 +168,25 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Estimated Finish Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job or not job.progress.print_time_left or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time_left
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time + timedelta(seconds=job.progress.print_time_left)).isoformat()
+        return read_time + timedelta(seconds=job.progress.print_time_left)
 
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -181,24 +195,28 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Start Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
 
-        if not job or not job.progress.print_time or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time - timedelta(seconds=job.progress.print_time)).isoformat()
+        return read_time - timedelta(seconds=job.progress.print_time)
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

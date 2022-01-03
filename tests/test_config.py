@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     __version__,
 )
-from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
+from homeassistant.core import ConfigSource, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
@@ -395,7 +395,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.currency == "EUR"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
-    assert hass.config.config_source == SOURCE_STORAGE
+    assert hass.config.config_source is ConfigSource.STORAGE
 
 
 async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_storage):
@@ -425,7 +425,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
-    assert hass.config.config_source == SOURCE_STORAGE
+    assert hass.config.config_source is ConfigSource.STORAGE
 
 
 async def test_updating_configuration(hass, hass_storage):
@@ -444,6 +444,7 @@ async def test_updating_configuration(hass, hass_storage):
         },
         "key": "core.config",
         "version": 1,
+        "minor_version": 1,
     }
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(
@@ -485,7 +486,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
-    assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.config_source is ConfigSource.YAML
 
 
 async def test_loading_configuration(hass):
@@ -520,7 +521,7 @@ async def test_loading_configuration(hass):
     assert "/etc" in hass.config.allowlist_external_dirs
     assert "/usr" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
-    assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.legacy_templates is True
     assert hass.config.currency == "EUR"
 
@@ -549,7 +550,7 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.currency == "EUR"
 
 

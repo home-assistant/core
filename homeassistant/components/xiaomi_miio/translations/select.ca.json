@@ -3,7 +3,7 @@
         "xiaomi_miio__led_brightness": {
             "bright": "Brillant",
             "dim": "Atenua",
-            "off": "off"
+            "off": "OFF"
         }
     }
 }

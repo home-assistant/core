@@ -20,12 +20,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
@@ -52,7 +54,7 @@ def ensure_valid_path(value):
     return value
 
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"
@@ -124,7 +126,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
     if DOMAIN not in config:
         return True
@@ -149,7 +151,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OctoPrint from a config entry."""
 
     if DOMAIN not in hass.data:
@@ -181,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

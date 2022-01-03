@@ -49,7 +49,7 @@
             "send_status": "wy\u015blij aktualizacj\u0119 statusu: {subtype}"
         },
         "trigger_type": {
-            "command": "Otrzymane polecenie: {subtype}",
+            "command": "otrzymane polecenie {subtype}",
             "status": "otrzymany status: {subtype}"
         }
     },

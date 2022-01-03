@@ -1,10 +1,11 @@
 """AVM FRITZ!Box binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -16,54 +17,52 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
     DATA_RATE_KILOBITS_PER_SECOND,
     DATA_RATE_KILOBYTES_PER_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     SIGNAL_STRENGTH_DECIBELS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
+from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _uptime_calculation(seconds_uptime: float, last_value: str | None) -> str:
+def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
     """Calculate uptime with deviation."""
-    delta_uptime = utcnow() - datetime.timedelta(seconds=seconds_uptime)
+    delta_uptime = utcnow() - timedelta(seconds=seconds_uptime)
 
     if (
         not last_value
-        or abs(
-            (delta_uptime - datetime.datetime.fromisoformat(last_value)).total_seconds()
-        )
-        > UPTIME_DEVIATION
+        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0).isoformat()
+        return delta_uptime
 
     return last_value
 
 
-def _retrieve_device_uptime_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_device_uptime_state(
+    status: FritzStatus, last_value: datetime
+) -> datetime:
     """Return uptime from device."""
     return _uptime_calculation(status.device_uptime, last_value)
 
 
 def _retrieve_connection_uptime_state(
-    status: FritzStatus, last_value: str | None
-) -> str:
+    status: FritzStatus, last_value: datetime | None
+) -> datetime:
     """Return uptime from connection."""
     return _uptime_calculation(status.connection_uptime, last_value)
 
@@ -153,6 +152,7 @@ class FritzSensorEntityDescription(SensorEntityDescription, FritzRequireKeysMixi
     """Describes Fritz sensor entity."""
 
     connection_type: Literal["dsl"] | None = None
+    exclude_mesh_role: MeshRoles = MeshRoles.SLAVE
 
 
 SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
@@ -165,21 +165,22 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="device_uptime",
         name="Device Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
+        exclude_mesh_role=MeshRoles.NONE,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
         name="Connection Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_connection_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="kb_s_sent",
         name="Upload Throughput",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
         value_fn=_retrieve_kb_s_sent_state,
@@ -187,7 +188,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="kb_s_received",
         name="Download Throughput",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
         value_fn=_retrieve_kb_s_received_state,
@@ -197,7 +198,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -205,13 +206,13 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="gb_sent",
         name="GB sent",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
         value_fn=_retrieve_gb_sent_state,
@@ -219,7 +220,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="gb_received",
         name="GB received",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         value_fn=_retrieve_gb_received_state,
@@ -282,13 +283,6 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
-    if (
-        not fritzbox_tools.connection
-        or "WANIPConn1" not in fritzbox_tools.connection.services
-    ):
-        # Only routers are supported at the moment
-        return
-
     dsl: bool = False
     try:
         dslinterface = await hass.async_add_executor_job(
@@ -308,7 +302,8 @@ async def async_setup_entry(
     entities = [
         FritzBoxSensor(fritzbox_tools, entry.title, description)
         for description in SENSOR_TYPES
-        if dsl or description.connection_type != DSL_CONNECTION
+        if (dsl or description.connection_type != DSL_CONNECTION)
+        and description.exclude_mesh_role != fritzbox_tools.mesh_role
     ]
 
     async_add_entities(entities, True)

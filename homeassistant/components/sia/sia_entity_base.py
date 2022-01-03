@@ -29,13 +29,13 @@ class SIABaseEntity(RestoreEntity):
         entry: ConfigEntry,
         account_data: dict[str, Any],
         zone: int,
-        device_class: str,
+        device_class: str | None = None,
     ) -> None:
         """Create SIABaseEntity object."""
         self._entry: ConfigEntry = entry
         self._account_data: dict[str, Any] = account_data
         self._zone: int = zone
-        self._attr_device_class: str = device_class
+        self._attr_device_class = device_class
 
         self._port: int = self._entry.data[CONF_PORT]
         self._account: str = self._account_data[CONF_ACCOUNT]

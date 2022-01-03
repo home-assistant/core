@@ -3,6 +3,7 @@ import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.adguard.const import DOMAIN
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -121,7 +122,13 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": "3000"},
+        data=HassioServiceInfo(
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": "3000",
+            }
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
@@ -137,7 +144,13 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": "3000"},
+        data=HassioServiceInfo(
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": "3000",
+            }
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
@@ -157,7 +170,9 @@ async def test_hassio_confirm(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
+        data=HassioServiceInfo(
+            config={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000}
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
@@ -191,7 +206,9 @@ async def test_hassio_connection_error(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
+        data=HassioServiceInfo(
+            config={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000}
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
 

@@ -5,13 +5,8 @@ import logging
 from openzwavemqtt.const import CommandClass, ValueType
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -65,23 +60,23 @@ class ZwaveSensorBase(ZWaveDeviceEntity, SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         if self.values.primary.command_class == CommandClass.BATTERY:
-            return DEVICE_CLASS_BATTERY
+            return SensorDeviceClass.BATTERY
         if self.values.primary.command_class == CommandClass.METER:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
         if "Temperature" in self.values.primary.label:
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         if "Illuminance" in self.values.primary.label:
-            return DEVICE_CLASS_ILLUMINANCE
+            return SensorDeviceClass.ILLUMINANCE
         if "Humidity" in self.values.primary.label:
-            return DEVICE_CLASS_HUMIDITY
+            return SensorDeviceClass.HUMIDITY
         if "Power" in self.values.primary.label:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
         if "Energy" in self.values.primary.label:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
         if "Electric" in self.values.primary.label:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
         if "Pressure" in self.values.primary.label:
-            return DEVICE_CLASS_PRESSURE
+            return SensorDeviceClass.PRESSURE
         return None
 
     @property

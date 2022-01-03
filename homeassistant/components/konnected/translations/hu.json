@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "not_konn_panel": "Nem felismert Konnected.io eszk\u00f6z",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },

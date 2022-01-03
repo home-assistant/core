@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_ACTIONS,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     FAN_AUTO,
@@ -51,7 +52,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, subscription
+from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
@@ -272,11 +273,11 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, async_add_entities, config: ConfigType, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT climate device through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, config, async_add_entities)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -376,11 +377,10 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
-            command_templates[key] = lambda value: value
-        for key in COMMAND_TEMPLATE_KEYS & config.keys():
-            tpl = config[key]
-            command_templates[key] = tpl.async_render_with_possible_json_value
-            tpl.hass = self.hass
+            command_templates[key] = MqttCommandTemplate(
+                config.get(key), self.hass
+            ).async_render
+
         self._command_templates = command_templates
 
     async def _subscribe_topics(self):  # noqa: C901
@@ -405,9 +405,15 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def handle_action_received(msg):
             """Handle receiving action via MQTT."""
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
-
-            self._action = payload
-            self.async_write_ha_state()
+            if payload in CURRENT_HVAC_ACTIONS:
+                self._action = payload
+                self.async_write_ha_state()
+            else:
+                _LOGGER.warning(
+                    "Invalid %s action: %s",
+                    CURRENT_HVAC_ACTIONS,
+                    payload,
+                )
 
         add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
 

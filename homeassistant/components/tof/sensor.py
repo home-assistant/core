@@ -1,7 +1,7 @@
 """Platform for Time of Flight sensor VL53L1X from STMicroelectronics."""
-
 import asyncio
 from functools import partial
+import logging
 
 from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 import voluptuous as vol
@@ -30,6 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def init_tof_0(xshut, sensor):
     """XSHUT port LOW resets the device."""
@@ -46,6 +48,12 @@ def init_tof_1(xshut):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Reset and initialize the VL53L1X ToF Sensor from STMicroelectronics."""
+    _LOGGER.warning(
+        "The Time of Flight integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)

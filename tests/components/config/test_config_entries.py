@@ -12,6 +12,7 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
+import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -46,9 +47,15 @@ async def test_get_entries(hass, client):
 
             @staticmethod
             @callback
-            def async_get_options_flow(config, options):
+            def async_get_options_flow(config_entry):
                 """Get options flow."""
                 pass
+
+            @classmethod
+            @callback
+            def async_supports_options_flow(cls, config_entry):
+                """Return options flow support for this handler."""
+                return True
 
         hass.helpers.config_entry_flow.register_discovery_flow(
             "comp2", "Comp 2", lambda: None
@@ -72,7 +79,7 @@ async def test_get_entries(hass, client):
             domain="comp3",
             title="Test 3",
             source="bla3",
-            disabled_by=core_ce.DISABLED_USER,
+            disabled_by=core_ce.ConfigEntryDisabler.USER,
         ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
@@ -114,7 +121,7 @@ async def test_get_entries(hass, client):
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
-                "disabled_by": core_ce.DISABLED_USER,
+                "disabled_by": core_ce.ConfigEntryDisabler.USER,
                 "reason": None,
             },
         ]
@@ -689,6 +696,81 @@ async def test_two_step_options_flow(hass, client):
         }
 
 
+async def test_options_flow_with_invalid_data(hass, client):
+    """Test an options flow with invalid_data."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                async def async_step_init(self, user_input=None):
+                    return self.async_show_form(
+                        step_id="finish",
+                        data_schema=vol.Schema(
+                            {
+                                vol.Required(
+                                    "choices", default=["invalid", "valid"]
+                                ): cv.multi_select({"valid": "Valid"})
+                            }
+                        ),
+                    )
+
+                async def async_step_finish(self, user_input=None):
+                    return self.async_create_entry(
+                        title="Enable disable", data=user_input
+                    )
+
+            return OptionsFlowHandler()
+
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        url = "/api/config/config_entries/options/flow"
+        resp = await client.post(url, json={"handler": entry.entry_id})
+
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        flow_id = data.pop("flow_id")
+        assert data == {
+            "type": "form",
+            "handler": "test1",
+            "step_id": "finish",
+            "data_schema": [
+                {
+                    "default": ["invalid", "valid"],
+                    "name": "choices",
+                    "options": {"valid": "Valid"},
+                    "required": True,
+                    "type": "multi_select",
+                }
+            ],
+            "description_placeholders": None,
+            "errors": None,
+            "last_step": None,
+        }
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/options/flow/{flow_id}",
+            json={"choices": ["valid", "invalid"]},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {
+            "message": "User input malformed: invalid is not a valid option for "
+            "dictionary value @ data['choices']"
+        }
+
+
 async def test_update_prefrences(hass, hass_ws_client):
     """Test that we can update system options."""
     assert await async_setup_component(hass, "config", {})
@@ -795,14 +877,14 @@ async def test_disable_entry(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": entry.entry_id,
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()
 
     assert response["success"]
     assert response["result"] == {"require_restart": True}
-    assert entry.disabled_by == core_ce.DISABLED_USER
+    assert entry.disabled_by is core_ce.ConfigEntryDisabler.USER
     assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
@@ -848,7 +930,7 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": "non_existing",
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()

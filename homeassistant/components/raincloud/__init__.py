@@ -15,10 +15,12 @@ from homeassistant.const import (
     TIME_DAYS,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +94,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Melnor RainCloud component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)

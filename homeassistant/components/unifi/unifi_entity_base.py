@@ -1,4 +1,4 @@
-"""Base class for UniFi entities."""
+"""Base class for UniFi Network entities."""
 import logging
 from typing import Any
 
@@ -18,7 +18,7 @@ class UniFiBase(Entity):
     TYPE = ""
 
     def __init__(self, item, controller) -> None:
-        """Set up UniFi entity base.
+        """Set up UniFi Network entity base.
 
         Register mac to controller entities to cover disabled entities.
         """

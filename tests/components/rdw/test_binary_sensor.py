@@ -1,6 +1,6 @@
 """Tests for the sensors provided by the RDW integration."""
-from homeassistant.components.binary_sensor import DEVICE_CLASS_PROBLEM
-from homeassistant.components.rdw.const import DOMAIN, ENTRY_TYPE_SERVICE
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.rdw.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -33,7 +33,7 @@ async def test_vehicle_binary_sensors(
     assert entry.unique_id == "11ZKZ3_pending_recall"
     assert state.state == "off"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pending Recall"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PROBLEM
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM
     assert ATTR_ICON not in state.attributes
 
     assert entry.device_id
@@ -42,7 +42,7 @@ async def test_vehicle_binary_sensors(
     assert device_entry.identifiers == {(DOMAIN, "11ZKZ3")}
     assert device_entry.manufacturer == "Skoda"
     assert device_entry.name == "Skoda: 11ZKZ3"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "Citigo"
     assert (
         device_entry.configuration_url

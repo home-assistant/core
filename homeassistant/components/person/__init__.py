@@ -148,7 +148,7 @@ UPDATE_FIELDS = {
 class PersonStore(Store):
     """Person storage."""
 
-    async def _async_migrate_func(self, old_version, old_data):
+    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version.
 
         Migrate storage to use format of collection helper.
@@ -336,7 +336,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
 
-    async def async_reload_yaml(call: ServiceCall):
+    async def async_reload_yaml(call: ServiceCall) -> None:
         """Reload YAML."""
         conf = await entity_component.async_prepare_reload(skip_reset=True)
         if conf is None:

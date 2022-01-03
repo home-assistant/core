@@ -13,7 +13,12 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 
 from .const import (
     CONF_HEATING_TYPE,
@@ -21,7 +26,6 @@ from .const import (
     VICARE_API,
     VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
-    VICARE_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,29 +70,26 @@ def _build_entity(name, vicare_api, circuit, device_config, heating_type):
     )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Create the ViCare water_heater devices."""
-    if discovery_info is None:
-        return
-
-    name = hass.data[DOMAIN][VICARE_NAME]
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the ViCare climate platform."""
+    name = config_entry.data[CONF_NAME]
 
     all_devices = []
-    for circuit in hass.data[DOMAIN][VICARE_CIRCUITS]:
+    for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
         suffix = ""
-        if len(hass.data[DOMAIN][VICARE_CIRCUITS]) > 1:
+        if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
             suffix = f" {circuit.id}"
         entity = _build_entity(
             f"{name} Water{suffix}",
-            hass.data[DOMAIN][VICARE_API],
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
             circuit,
-            hass.data[DOMAIN][VICARE_DEVICE_CONFIG],
-            hass.data[DOMAIN][CONF_HEATING_TYPE],
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            config_entry.data[CONF_HEATING_TYPE],
         )
         if entity is not None:
             all_devices.append(entity)
 
-    async_add_entities(all_devices)
+    async_add_devices(all_devices)
 
 
 class ViCareWater(WaterHeaterEntity):
