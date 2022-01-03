@@ -215,6 +215,7 @@ async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
     assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+    assert isinstance(acc.to_HAP(), dict)
 
 
 async def test_battery_service(hass, hk_driver, caplog):
