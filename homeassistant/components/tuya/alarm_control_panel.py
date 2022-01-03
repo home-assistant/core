@@ -94,7 +94,6 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
     _attr_icon = "mdi:security"
-    _attr_supported_features = 0
 
     def __init__(
         self,

@@ -130,7 +130,7 @@ class AlarmControlPanelEntity(Entity):
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
     _attr_code_format: str | None = None
-    _attr_supported_features: int
+    _attr_supported_features: int = 0
 
     @property
     def code_format(self) -> str | None:
