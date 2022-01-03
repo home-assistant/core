@@ -378,6 +378,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         "topic": self._topic[CONF_STATE_TOPIC],
                         "msg_callback": state_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )

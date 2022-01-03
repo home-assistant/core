@@ -288,6 +288,7 @@ class MqttAttributes(Entity):
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                     "msg_callback": attributes_message_received,
                     "qos": self._attributes_config.get(CONF_QOS),
+                    "encoding": self._attributes_config[CONF_ENCODING] or None,
                 }
             },
         )

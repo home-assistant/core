@@ -28,6 +28,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -756,6 +757,36 @@ async def test_discovery_update_binary_sensor_template(hass, mqtt_mock, caplog):
         config2,
         state_data1=state_data1,
         state_data2=state_data2,
+    )
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("json_attributes_topic", '{ "id": 123 }', "id", 123),
+        (
+            "json_attributes_topic",
+            '{ "id": 123, "temperature": 34.0 }',
+            "temperature",
+            34.0,
+        ),
+        ("state_topic", "ON", None, "on"),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        binary_sensor.DOMAIN,
+        DEFAULT_CONFIG[binary_sensor.DOMAIN],
+        topic,
+        value,
+        attribute,
+        attribute_value,
     )
 
 
