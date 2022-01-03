@@ -10,12 +10,19 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the SHC cover platform."""
 
     entities = []
