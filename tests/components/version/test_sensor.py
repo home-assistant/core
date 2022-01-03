@@ -47,7 +47,6 @@ async def async_setup_sensor_wrapper(
         await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
-    print(config_entries)
     config_entry = config_entries[-1]
     assert config_entry.source == "import"
     return config_entry
