@@ -169,7 +169,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if value_template is not None:
             value_template.hass = self.hass
         self._command_template = MqttCommandTemplate(
-            self._config[CONF_COMMAND_TEMPLATE], self.hass
+            self._config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
     async def _subscribe_topics(self):

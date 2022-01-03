@@ -389,7 +389,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
             command_templates[key] = MqttCommandTemplate(
-                config.get(key), self.hass
+                config.get(key), entity=self
             ).async_render
 
         self._command_templates = command_templates
