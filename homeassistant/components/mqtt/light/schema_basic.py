@@ -201,7 +201,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
                 CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE
