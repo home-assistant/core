@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _schema_with_defaults(
-    username="", host="", port=80, path="/", ssl=False, verifiy_ssl=True
+    username="", host="", port=80, path="/", ssl=False, verify_ssl=True
 ):
     return vol.Schema(
         {
@@ -34,7 +34,7 @@ def _schema_with_defaults(
             vol.Required(CONF_PORT, default=port): cv.port,
             vol.Required(CONF_PATH, default=path): str,
             vol.Required(CONF_SSL, default=ssl): bool,
-            vol.Required(CONF_VERIFY_SSL, default=verifiy_ssl): bool,
+            vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
         },
         extra=vol.ALLOW_EXTRA,
     )
@@ -84,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_PORT],
                         user_input[CONF_PATH],
                         user_input[CONF_SSL],
-                        user_input.get(CONF_VERIFY_SSL, True),
+                        user_input[CONF_VERIFY_SSL],
                     ),
                 )
 
