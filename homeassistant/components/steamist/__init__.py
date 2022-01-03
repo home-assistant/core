@@ -1,8 +1,6 @@
 """The Steamist integration."""
 from __future__ import annotations
 
-import logging
-
 from aiosteamist import Steamist
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,8 +12,6 @@ from .const import DOMAIN
 from .coordinator import SteamistDataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.SWITCH]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
