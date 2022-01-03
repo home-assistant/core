@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Launch Library er allerede konfigureret"
+            "single_instance_allowed": "Launch Library er allerede konfigureret"
         },
         "step": {
             "user": {
