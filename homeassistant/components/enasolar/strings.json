@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup EnaSolar Inverter connection",
+        "data": {
+          "host": "FQDN or IP Address of the Inverter",
+          "name": "A name for the Inverter (optional)"
+        },
+        "description": "Enter the connection data"
+      },
+      "inverter": {
+        "title": "EnaSolar Model Characteristics",
+        "data": {
+           "max_output": "Maximum AC Output Power",
+           "dc_strings": "Number of DC strings in the array",
+           "capability": "Capability bits - see documentation"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "time_invalid": "Time must be HH:MM",
+      "time_range": "Polling must cease after polling starts",
+      "capability_invalid": "Invalid - See documentation for capability",
+      "unexpected_response": "Unexpected response from Inverter",
+      "invalid_host": "IP address or FQDN is invalid"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sun_up": "The time that polling will start each day",
+          "sun_down": "The time that polling will cease each day"
+        },
+        "title": "EnaSolar Polling"
+      }
+    }
+  }
+}

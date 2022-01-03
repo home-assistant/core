@@ -895,6 +895,9 @@ pyeconet==0.1.14
 # homeassistant.components.efergy
 pyefergy==0.1.5
 
+# homeassistant.components.enasolar
+pyenasolar==0.1.5
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 

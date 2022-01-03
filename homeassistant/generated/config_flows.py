@@ -84,6 +84,7 @@ FLOWS = [
     "elmax",
     "emonitor",
     "emulated_roku",
+    "enasolar",
     "enocean",
     "enphase_envoy",
     "environment_canada",
