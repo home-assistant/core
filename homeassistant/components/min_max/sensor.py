@@ -138,6 +138,20 @@ def calc_median(sensor_values, round_digits):
     return round(median, round_digits)
 
 
+def calc_range(sensor_values, round_digits):
+    """Calculate range, honoring unknown states."""
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
+        return None
+
+    return round(max(result) - min(result), round_digits)
+
+
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
@@ -261,7 +275,4 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
         self.median = calc_median(sensor_values, self._round_digits)
-        if None in [self.max_value, self.min_value]:
-            self.range = None
-        else:
-            self.range = self.max_value - self.min_value
+        self.range = calc_range(sensor_values, self._round_digits)
