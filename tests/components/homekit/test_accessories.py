@@ -212,6 +212,7 @@ async def test_accessory_with_hardware_revision(hass, hk_driver):
             ATTR_INTEGRATION: None,
         },
     )
+    acc.driver = hk_driver
     serv = acc.get_service(SERV_ACCESSORY_INFO)
     assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
