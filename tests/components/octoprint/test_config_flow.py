@@ -108,6 +108,7 @@ async def test_form_cannot_connect(hass):
                 "name": "Printer",
                 "port": 81,
                 "ssl": True,
+                "verify_ssl": True,
                 "path": "/",
                 "api_key": "test-key",
             },
@@ -158,6 +159,7 @@ async def test_form_unknown_exception(hass):
                 "ssl": True,
                 "path": "/",
                 "api_key": "test-key",
+                "verify_ssl": True,
             },
         )
 
