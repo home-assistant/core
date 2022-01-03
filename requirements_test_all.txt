@@ -1208,9 +1208,6 @@ pytile==2021.12.0
 # homeassistant.components.tomorrowio
 pytomorrowio==0.1.0
 
-# homeassistant.components.tomorrowio
-pytomorrowio==0.1.0
-
 # homeassistant.components.traccar
 pytraccar==0.10.0
 
