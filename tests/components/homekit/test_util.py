@@ -349,9 +349,10 @@ async def test_format_version():
     assert format_version("undefined-undefined-1.6.8") == "1.6.8"
     assert format_version("56.0-76060") == "56.0.76060"
     assert format_version(3.6) == "3.6"
-    assert format_version("AK001-ZJ100") == "001.100"
+    assert format_version("AK001-ZJ100") == "1.100"
     assert format_version("HF-LPB100-") == "100"
-    assert format_version("AK001-ZJ2149") == "001.2149"
+    assert format_version("AK001-ZJ2149") == "1.2149"
+    assert format_version("0.1") == "1"
     assert format_version("unknown") is None
 
 
