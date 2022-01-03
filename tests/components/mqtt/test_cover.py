@@ -3173,8 +3173,8 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     [
         ("state_topic", "open", None, None),
         ("state_topic", "closing", None, None),
-        ("position_topic", "40.0", "current_position", 40.0),
-        ("tilt_status_topic", "60.0", "current_tilt_position", 60.0),
+        ("position_topic", "40", "current_position", 40),
+        ("tilt_status_topic", "60", "current_tilt_position", 60),
     ],
 )
 async def test_encoding_subscribable_topics(
@@ -3191,4 +3191,5 @@ async def test_encoding_subscribable_topics(
         value,
         attribute,
         attribute_value,
+        skip_raw_test=True,
     )
