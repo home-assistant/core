@@ -584,6 +584,8 @@ async def test_publishing_with_custom_encoding(
         payload,
         template,
     )
+
+
 async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN

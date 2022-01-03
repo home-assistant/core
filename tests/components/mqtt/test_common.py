@@ -11,7 +11,12 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, SERVICE_RELOAD, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
@@ -1386,6 +1391,8 @@ async def help_test_publishing_with_custom_encoding(
         "cmd/test5", tpl_output or str(payload)[0].encode("utf-8"), 0, False
     )
     mqtt_mock.async_publish.reset_mock()
+
+
 async def help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config):
     """Test reloading an MQTT platform."""
     # Create and test an old config of 2 entities based on the config supplied

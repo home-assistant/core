@@ -3373,39 +3373,6 @@ async def test_max_mireds(hass, mqtt_mock):
     assert state.attributes.get("max_mireds") == 370
 
 
-async def test_reloadable(hass, mqtt_mock):
-    """Test reloading an mqtt light."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "command_topic": "test/set",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("light.test")
-    assert len(hass.states.async_all("light")) == 1
-
-    yaml_path = get_fixture_path("configuration.yaml", "mqtt")
-
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            "mqtt",
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("light")) == 1
-
-    assert hass.states.get("light.test") is None
-    assert hass.states.get("light.reload")
-
-
 @pytest.mark.parametrize(
     "service,topic,parameters,payload,template,tpl_par,tpl_output",
     [
@@ -3526,6 +3493,8 @@ async def test_publishing_with_custom_encoding(
         tpl_par=tpl_par,
         tpl_output=tpl_output,
     )
+
+
 async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = light.DOMAIN
