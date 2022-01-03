@@ -34,6 +34,7 @@ from .const import (
     ATTR_SECONDS,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    CONF_UNIT_SYSTEM_CUSTOM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
@@ -68,7 +69,12 @@ from .util.async_ import (
     shutdown_run_callback_threadsafe,
 )
 from .util.timeout import TimeoutManager
-from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from .util.unit_system import (
+    IMPERIAL_SYSTEM,
+    METRIC_SYSTEM,
+    CustomUnitSystem,
+    UnitSystem,
+)
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -1562,6 +1568,7 @@ class Config:
         self.elevation: int = 0
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
+        self.custom_units: dict[str, str] = {}
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None
@@ -1690,6 +1697,7 @@ class Config:
         latitude: float | None = None,
         longitude: float | None = None,
         elevation: int | None = None,
+        custom_units: dict[str, str] | None = None,
         unit_system: str | None = None,
         location_name: str | None = None,
         time_zone: str | None = None,
@@ -1706,9 +1714,13 @@ class Config:
             self.longitude = longitude
         if elevation is not None:
             self.elevation = elevation
+        if custom_units is not None:
+            self.custom_units = custom_units
         if unit_system is not None:
             if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
                 self.units = IMPERIAL_SYSTEM
+            elif unit_system == CONF_UNIT_SYSTEM_CUSTOM:
+                self.units = CustomUnitSystem(self.custom_units)
             else:
                 self.units = METRIC_SYSTEM
         if location_name is not None:
@@ -1756,6 +1768,7 @@ class Config:
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             elevation=data.get("elevation"),
+            custom_units=data.get("custom_units"),
             unit_system=data.get("unit_system"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
@@ -1770,6 +1783,7 @@ class Config:
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
+            "custom_units": self.custom_units,
             "unit_system": self.units.name,
             "location_name": self.location_name,
             "time_zone": self.time_zone,

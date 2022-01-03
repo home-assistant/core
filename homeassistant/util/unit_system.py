@@ -5,6 +5,7 @@ from numbers import Number
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    CONF_UNIT_SYSTEM_CUSTOM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
@@ -187,6 +188,32 @@ class UnitSystem:
             VOLUME: self.volume_unit,
             WIND_SPEED: self.wind_speed_unit,
         }
+
+
+class CustomUnitSystem(UnitSystem):
+    """User-defined unit system defaulting missing units to metric."""
+
+    def __init__(
+        self,
+        units: dict[str, str],
+    ) -> None:
+        """Initialize the unit system object."""
+        super().__init__(
+            name=CONF_UNIT_SYSTEM_CUSTOM,
+            temperature=units.get(TEMPERATURE) or METRIC_SYSTEM.temperature_unit,
+            length=units.get(LENGTH) or METRIC_SYSTEM.length_unit,
+            wind_speed=units.get(WIND_SPEED) or METRIC_SYSTEM.wind_speed_unit,
+            volume=units.get(VOLUME) or METRIC_SYSTEM.volume_unit,
+            mass=units.get(MASS) or METRIC_SYSTEM.mass_unit,
+            pressure=units.get(PRESSURE) or METRIC_SYSTEM.pressure_unit,
+            accumulated_precipitation=units.get(ACCUMULATED_PRECIPITATION)
+            or METRIC_SYSTEM.accumulated_precipitation_unit,
+        )
+
+    @property
+    def is_metric(self) -> bool:
+        """Determine if this is the metric unit system."""
+        return self.temperature_unit != TEMP_FAHRENHEIT
 
 
 METRIC_SYSTEM = UnitSystem(

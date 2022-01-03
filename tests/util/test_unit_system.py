@@ -3,22 +3,33 @@ import pytest
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    CONF_UNIT_SYSTEM_CUSTOM,
     LENGTH,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILLIMETERS,
     MASS,
     MASS_GRAMS,
+    MASS_KILOGRAMS,
     PRESSURE,
     PRESSURE_PA,
+    PRESSURE_PSI,
+    SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
+    VOLUME_CUBIC_FEET,
     VOLUME_LITERS,
     WIND_SPEED,
 )
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    IMPERIAL_SYSTEM,
+    METRIC_SYSTEM,
+    CustomUnitSystem,
+    UnitSystem,
+)
 
 SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
@@ -293,3 +304,31 @@ def test_is_metric():
     """Test the is metric flag."""
     assert METRIC_SYSTEM.is_metric
     assert not IMPERIAL_SYSTEM.is_metric
+
+
+def test_custom_system():
+    """Test the custom system initializes correctly."""
+    system = CustomUnitSystem({})
+
+    assert system.as_dict() == METRIC_SYSTEM.as_dict()
+
+    system = CustomUnitSystem(
+        {
+            LENGTH: LENGTH_METERS,
+            WIND_SPEED: SPEED_KILOMETERS_PER_HOUR,
+            TEMPERATURE: TEMP_CELSIUS,
+            VOLUME: VOLUME_CUBIC_FEET,
+            MASS: MASS_KILOGRAMS,
+            PRESSURE: PRESSURE_PSI,
+            ACCUMULATED_PRECIPITATION: LENGTH_INCHES,
+        }
+    )
+
+    assert system.name == CONF_UNIT_SYSTEM_CUSTOM
+    assert system.length_unit == LENGTH_METERS
+    assert system.wind_speed_unit == SPEED_KILOMETERS_PER_HOUR
+    assert system.temperature_unit == TEMP_CELSIUS
+    assert system.volume_unit == VOLUME_CUBIC_FEET
+    assert system.mass_unit == MASS_KILOGRAMS
+    assert system.pressure_unit == PRESSURE_PSI
+    assert system.accumulated_precipitation_unit == LENGTH_INCHES

@@ -118,6 +118,7 @@ CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
 CONF_COVERS: Final = "covers"
 CONF_CURRENCY: Final = "currency"
+CONF_CUSTOM_UNITS: Final = "custom_units"
 CONF_CUSTOMIZE: Final = "customize"
 CONF_CUSTOMIZE_DOMAIN: Final = "customize_domain"
 CONF_CUSTOMIZE_GLOB: Final = "customize_glob"
@@ -384,6 +385,7 @@ ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
 CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+CONF_UNIT_SYSTEM_CUSTOM: Final = "custom"
 
 # Electrical attributes
 ATTR_VOLTAGE: Final = "voltage"
