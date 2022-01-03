@@ -42,7 +42,14 @@ from homeassistant.util.percentage import (
 
 from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -542,6 +549,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if percentage:
             await self.async_set_percentage(percentage)
@@ -563,6 +571,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             self._state = False
@@ -583,6 +592,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_percentage:
@@ -606,6 +616,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_preset_mode:
@@ -632,6 +643,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_oscillation:

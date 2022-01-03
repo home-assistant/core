@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import PLATFORMS
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
 from .mixins import (
     CONF_OBJECT_ID,
     MQTT_AVAILABILITY_SCHEMA,
@@ -153,4 +153,5 @@ class MqttScene(
             self._config[CONF_PAYLOAD_ON],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )

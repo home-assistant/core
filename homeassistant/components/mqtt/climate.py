@@ -58,7 +58,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -685,6 +685,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 payload,
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
+                self._config[CONF_ENCODING],
             )
 
     async def _set_temperature(

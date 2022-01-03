@@ -40,7 +40,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -326,6 +333,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     def _validate_code(self, code, state):
