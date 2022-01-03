@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_REFRESH_DELAY = 2.5
+REQUEST_REFRESH_DELAY = 5
 
 
 class SteamistDataUpdateCoordinator(DataUpdateCoordinator):
