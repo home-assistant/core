@@ -1,4 +1,6 @@
 """Support for OpenCV classification on images."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -13,8 +15,10 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 try:
     # Verify that the OpenCV python package is pre-installed
@@ -92,7 +96,12 @@ def _get_default_classifier(dest_path):
                 fil.write(chunk)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the OpenCV image processing platform."""
     if not CV2_IMPORTED:
         _LOGGER.error(
