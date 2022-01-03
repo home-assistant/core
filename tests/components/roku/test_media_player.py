@@ -131,6 +131,7 @@ async def test_tv_setup(
     )
 
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     state = hass.states.get(TV_ENTITY_ID)
     entry = entity_registry.async_get(TV_ENTITY_ID)
