@@ -36,17 +36,15 @@ async def async_setup_entry(
     coordinator = data[COORDINATOR]
 
     # Glucose sensor
-    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
+    entities = [NightscoutSensor(api, "Blood Sugar", entry.unique_id)]
 
     # Uploader batteries
-    entities = []
-
     for device_name in coordinator.data:
         entities.append(
             Battery(coordinator, device_name, f"{entry.unique_id}_{device_name}")
         )
 
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class NightscoutSensor(SensorEntity):
