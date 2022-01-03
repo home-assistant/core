@@ -1,4 +1,6 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
+from __future__ import annotations
+
 import logging
 
 from bluepy.btle import BTLEException  # pylint: disable=import-error
@@ -23,8 +25,11 @@ from homeassistant.const import (
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +70,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the eQ-3 BLE thermostats."""
     devices = []
 
