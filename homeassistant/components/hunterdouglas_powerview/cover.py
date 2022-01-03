@@ -21,7 +21,9 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -49,7 +51,9 @@ TRANSITION_COMPLETE_DURATION = 30
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the hunter douglas shades."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]

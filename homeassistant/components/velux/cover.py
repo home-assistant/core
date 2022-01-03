@@ -1,4 +1,6 @@
 """Support for Velux covers."""
+from __future__ import annotations
+
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
@@ -16,11 +18,19 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_VELUX, VeluxEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up cover(s) for Velux platform."""
     entities = []
     for node in hass.data[DATA_VELUX].pyvlx.nodes:
