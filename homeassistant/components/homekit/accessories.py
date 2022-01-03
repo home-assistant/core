@@ -289,10 +289,11 @@ class HomeAccessory(Accessory):
         )
         if hw_version:
             serv_info = self.get_service(SERV_ACCESSORY_INFO)
-            serv_info.add_characteristic(
-                self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
-            )
+            char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
+            serv_info.add_characteristic(char)
             serv_info.configure_char(CHAR_HARDWARE_REVISION, value=hw_version)
+            self.iid_manager.assign(char)
+            char.broker = self
 
         self.category = category
         self.entity_id = entity_id
