@@ -1,6 +1,7 @@
 """Tests for the flux_led component."""
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -19,6 +20,7 @@ from . import (
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
     MAC_ADDRESS,
+    _mocked_bulb,
     _patch_discovery,
     _patch_wifibulb,
 )
@@ -138,3 +140,19 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     assert config_entry.unique_id == MAC_ADDRESS
     assert config_entry.data[CONF_NAME] == title
     assert config_entry.title == title
+
+
+async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
+    """Test that time is synced on startup and next day."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.LOADED
+
+    assert len(bulb.async_set_time.mock_calls) == 1
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=24))
+    await hass.async_block_till_done()
+    assert len(bulb.async_set_time.mock_calls) == 2
