@@ -51,7 +51,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import MqttCommandTemplate, subscription
+from .. import MqttCommandTemplate, MqttValueTemplate, subscription
 from ... import mqtt
 from ..const import (
     CONF_COMMAND_TOPIC,
@@ -325,12 +325,19 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         value_templates = {}
         for key in VALUE_TEMPLATE_KEYS:
-            value_templates[key] = lambda value, _: value
+            value_templates[key] = None
+        if CONF_VALUE_TEMPLATE in config:
+            value_templates = {
+                key: config.get(CONF_VALUE_TEMPLATE) for key in VALUE_TEMPLATE_KEYS
+            }
         for key in VALUE_TEMPLATE_KEYS & config.keys():
-            tpl = config[key]
-            value_templates[key] = tpl.async_render_with_possible_json_value
-            tpl.hass = self.hass
-        self._value_templates = value_templates
+            value_templates[key] = config[key]
+        self._value_templates = {
+            key: MqttValueTemplate(
+                template, entity=self
+            ).async_render_with_possible_json_value
+            for key, template in value_templates.items()
+        }
 
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:

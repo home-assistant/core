@@ -27,7 +27,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -157,17 +157,11 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
                 config.get(CONF_COMMAND_TEMPLATE), entity=self
             ).async_render,
-            CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
+            CONF_VALUE_TEMPLATE: MqttValueTemplate(
+                config.get(CONF_VALUE_TEMPLATE),
+                entity=self,
+            ).async_render_with_possible_json_value,
         }
-
-        value_template = self._templates[CONF_VALUE_TEMPLATE]
-        if value_template is None:
-            self._templates[CONF_VALUE_TEMPLATE] = lambda value: value
-        else:
-            value_template.hass = self.hass
-            self._templates[
-                CONF_VALUE_TEMPLATE
-            ] = value_template.async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

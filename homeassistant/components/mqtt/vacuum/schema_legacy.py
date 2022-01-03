@@ -24,7 +24,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from .. import subscription
+from .. import MqttValueTemplate, subscription
 from ... import mqtt
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
@@ -244,7 +244,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
-                tpl.hass = self.hass
+                tpl = MqttValueTemplate(tpl, entity=self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -256,7 +256,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 battery_level = self._templates[
                     CONF_BATTERY_LEVEL_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, error_value=None)
+                ].async_render_with_possible_json_value(msg.payload, None)
                 if battery_level:
                     self._battery_level = int(battery_level)
 
@@ -266,7 +266,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 charging = self._templates[
                     CONF_CHARGING_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, error_value=None)
+                ].async_render_with_possible_json_value(msg.payload, None)
                 if charging:
                     self._charging = cv.boolean(charging)
 
@@ -276,7 +276,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 cleaning = self._templates[
                     CONF_CLEANING_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, error_value=None)
+                ].async_render_with_possible_json_value(msg.payload, None)
                 if cleaning:
                     self._cleaning = cv.boolean(cleaning)
 
@@ -286,7 +286,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 docked = self._templates[
                     CONF_DOCKED_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, error_value=None)
+                ].async_render_with_possible_json_value(msg.payload, None)
                 if docked:
                     self._docked = cv.boolean(docked)
 
@@ -296,7 +296,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 error = self._templates[
                     CONF_ERROR_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, error_value=None)
+                ].async_render_with_possible_json_value(msg.payload, None)
                 if error is not None:
                     self._error = cv.string(error)
 
@@ -318,7 +318,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 fan_speed = self._templates[
                     CONF_FAN_SPEED_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, error_value=None)
+                ].async_render_with_possible_json_value(msg.payload, None)
                 if fan_speed:
                     self._fan_speed = fan_speed
 
