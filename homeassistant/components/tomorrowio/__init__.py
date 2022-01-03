@@ -22,6 +22,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -247,13 +248,13 @@ class TomorrowioEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.api_version = api_version
         self._config_entry = config_entry
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            "name": "Tomorrow.io",
-            "manufacturer": "Tomorrow.io",
-            "sw_version": f"v{self.api_version}",
-            "entry_type": DeviceEntryType.SERVICE,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry.data[CONF_API_KEY])},
+            name="Tomorrow.io",
+            manufacturer="Tomorrow.io",
+            sw_version=f"v{self.api_version}",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     def _get_current_property(self, property_name: str) -> int | str | float | None:
         """
