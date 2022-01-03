@@ -28,6 +28,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_NAME, URL_ROOT
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
@@ -405,7 +406,7 @@ class HTML5NotificationService(BaseNotificationService):
         self.registrations = registrations
         self.registrations_json_path = json_path
 
-        async def async_dismiss_message(service):
+        async def async_dismiss_message(service: ServiceCall) -> None:
             """Handle dismissing notification message service calls."""
             kwargs = {}
 

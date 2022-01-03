@@ -33,6 +33,7 @@ from homeassistant.helpers.entity import (
     ENTITY_CATEGORIES_SCHEMA,
     DeviceInfo,
     Entity,
+    EntityCategory,
     async_generate_entity_id,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -695,7 +696,7 @@ class MqttEntity(
         return self._config[CONF_ENABLED_BY_DEFAULT]
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return the entity category if any."""
         return self._config.get(CONF_ENTITY_CATEGORY)
 

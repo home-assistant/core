@@ -1,10 +1,11 @@
 """Support for controlling GPIO pins of a Orange Pi."""
-
 import logging
 
 from OPi import GPIO
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .const import PIN_MODES
 
@@ -13,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "orangepi_gpio"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Orange Pi GPIO component."""
 
     def cleanup_gpio(event):

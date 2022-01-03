@@ -11,8 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator
 from .const import DOMAIN, EFFECT_SPEED_SUPPORT_MODES
+from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness, _hass_color_modes
 

@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -256,7 +257,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
 
     state = hass.states.get("binary_sensor.test")
 
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test-topic", "ON")
     state = hass.states.get("binary_sensor.test")
@@ -286,11 +287,11 @@ async def test_invalid_sensor_value_via_mqtt_message(hass, mqtt_mock, caplog):
 
     state = hass.states.get("binary_sensor.test")
 
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test-topic", "0N")
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert "No matching payload found for entity" in caplog.text
     caplog.clear()
     assert "No matching payload found for entity" not in caplog.text
@@ -325,7 +326,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template(hass, mqtt_moc
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test-topic", "")
     state = hass.states.get("binary_sensor.test")
@@ -357,7 +358,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template2(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test-topic", "on")
     state = hass.states.get("binary_sensor.test")
@@ -395,7 +396,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template_and_raw_state_
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test-topic", b"\x01")
     state = hass.states.get("binary_sensor.test")
@@ -427,11 +428,11 @@ async def test_setting_sensor_value_via_mqtt_message_empty_template(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test-topic", "DEF")
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert "Empty template output" in caplog.text
 
     async_fire_mqtt_message(hass, "test-topic", "ABC")

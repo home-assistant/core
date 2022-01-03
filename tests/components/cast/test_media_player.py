@@ -683,10 +683,12 @@ async def test_entity_cast_status(hass: HomeAssistant):
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_STOP
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             SUPPORT_PLAY_MEDIA
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
         ),
@@ -791,7 +793,7 @@ async def test_entity_play_media(hass: HomeAssistant, quick_play_mock):
     chromecast.media_controller.play_media.assert_not_called()
     quick_play_mock.assert_called_once_with(
         chromecast,
-        "homeassistant_media",
+        "default_media_receiver",
         {
             "media_id": "best.mp3",
             "media_type": "audio",
@@ -907,7 +909,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
     # Play_media
     await common.async_play_media(hass, "audio", "/best.mp3", entity_id)
     quick_play_mock.assert_called_once_with(
-        chromecast, "homeassistant_media", {"media_id": ANY, "media_type": "audio"}
+        chromecast, "default_media_receiver", {"media_id": ANY, "media_type": "audio"}
     )
     assert quick_play_mock.call_args[0][2]["media_id"].startswith(
         "http://example.com:8123/best.mp3?authSig="
@@ -1080,7 +1082,12 @@ async def test_entity_control(hass: HomeAssistant):
     chromecast.media_controller.seek.assert_called_once_with(123)
 
 
-async def test_entity_media_states(hass: HomeAssistant):
+# Some smart TV's with Google TV report "Netflix", not the Netflix app's ID
+@pytest.mark.parametrize(
+    "app_id, state_no_media",
+    [(pychromecast.APP_YOUTUBE, "idle"), ("Netflix", "playing")],
+)
+async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media):
     """Test various entity media states."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -1088,7 +1095,7 @@ async def test_entity_media_states(hass: HomeAssistant):
     info = get_fake_chromecast_info()
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
-    _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
+    cast_status_cb, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
@@ -1101,6 +1108,15 @@ async def test_entity_media_states(hass: HomeAssistant):
     assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
+    # App id updated, but no media status
+    chromecast.app_id = app_id
+    cast_status = MagicMock()
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == state_no_media
+
+    # Got media status
     media_status = MagicMock(images=None)
     media_status.player_is_playing = True
     media_status_cb(media_status)
@@ -1122,15 +1138,23 @@ async def test_entity_media_states(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state.state == "idle"
 
-    media_status.player_is_idle = False
-    chromecast.is_idle = True
-    media_status_cb(media_status)
+    # No media status, app is still running
+    media_status_cb(None)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == state_no_media
+
+    # App no longer running
+    chromecast.app_id = pychromecast.IDLE_APP_ID
+    cast_status = MagicMock()
+    cast_status_cb(cast_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
+    # No cast status
     chromecast.is_idle = False
-    media_status_cb(media_status)
+    cast_status_cb(None)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
@@ -1311,7 +1335,7 @@ async def test_group_media_control(hass, mz_mock, quick_play_mock):
     assert not chromecast.media_controller.play_media.called
     quick_play_mock.assert_called_once_with(
         chromecast,
-        "homeassistant_media",
+        "default_media_receiver",
         {"media_id": "best.mp3", "media_type": "music"},
     )
 

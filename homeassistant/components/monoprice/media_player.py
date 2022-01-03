@@ -93,7 +93,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity.restore()
 
     @service.verify_domain_control(hass, DOMAIN)
-    async def async_service_handle(service_call):
+    async def async_service_handle(service_call: core.ServiceCall) -> None:
         """Handle for services."""
         entities = await platform.async_extract_from_service(service_call)
 

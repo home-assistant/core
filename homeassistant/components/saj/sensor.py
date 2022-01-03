@@ -9,9 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -19,9 +19,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -178,9 +175,9 @@ class SAJsensor(SensorEntity):
         self._state = self._sensor.value
 
         if pysaj_sensor.name in ("current_power", "temperature"):
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         if pysaj_sensor.name == "total_yield":
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def name(self):
@@ -204,14 +201,14 @@ class SAJsensor(SensorEntity):
     def device_class(self):
         """Return the device class the sensor belongs to."""
         if self.unit_of_measurement == POWER_WATT:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
         if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-            return DEVICE_CLASS_ENERGY
+            return SensorDeviceClass.ENERGY
         if (
             self.unit_of_measurement == TEMP_CELSIUS
             or self._sensor.unit == TEMP_FAHRENHEIT
         ):
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
 
     @property
     def should_poll(self) -> bool:

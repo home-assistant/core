@@ -45,6 +45,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
@@ -57,6 +58,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
@@ -75,6 +77,8 @@ from .discovery import setup_internal_discovery
 from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
 
 _LOGGER = logging.getLogger(__name__)
+
+APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
@@ -119,7 +123,11 @@ def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
     return CastDevice(info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Cast from a config entry."""
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
 
@@ -395,11 +403,14 @@ class CastDevice(MediaPlayerEntity):
             return
 
         if self._chromecast.app_id is not None:
-            # Quit the previous app before starting splash screen
+            # Quit the previous app before starting splash screen or media player
             self._chromecast.quit_app()
 
         # The only way we can turn the Chromecast is on is by launching an app
-        self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
+            self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        else:
+            self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
     def turn_off(self):
         """Turn off the cast device."""
@@ -526,7 +537,7 @@ class CastDevice(MediaPlayerEntity):
             controller.play_media(media)
         else:
             app_data = {"media_id": media_id, "media_type": media_type, **extra}
-            quick_play(self._chromecast, "homeassistant_media", app_data)
+            quick_play(self._chromecast, "default_media_receiver", app_data)
 
     def _media_status(self):
         """
@@ -561,7 +572,10 @@ class CastDevice(MediaPlayerEntity):
             if media_status.player_is_idle:
                 return STATE_IDLE
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
-            return STATE_PLAYING
+            if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
+                # Some apps don't report media status, show the player as playing
+                return STATE_PLAYING
+            return STATE_IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
@@ -674,9 +688,9 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
-        if (
-            self._chromecast
-            and self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST
+        if self._chromecast and self._chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_CHROMECAST,
+            pychromecast.const.CAST_TYPE_AUDIO,
         ):
             support |= SUPPORT_TURN_ON
 

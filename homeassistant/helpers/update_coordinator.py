@@ -15,9 +15,9 @@ import requests
 from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
+from . import entity, event
 from .debounce import Debouncer
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10

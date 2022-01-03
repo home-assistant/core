@@ -87,6 +87,9 @@ async def test_step_user(hass: HomeAssistant) -> None:
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
         return_value=DUMMY_RESPONSE,
+    ), patch(
+        "homeassistant.components.nina.async_setup_entry",
+        return_value=True,
     ):
 
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -128,3 +131,4 @@ async def test_step_user_already_configured(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "single_instance_allowed"

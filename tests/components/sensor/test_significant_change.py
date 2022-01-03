@@ -1,13 +1,7 @@
 """Test the sensor significant change platform."""
 import pytest
 
-from homeassistant.components.sensor.significant_change import (
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    async_check_significant_change,
-)
+from homeassistant.components.sensor import SensorDeviceClass, significant_change
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,24 +10,24 @@ from homeassistant.const import (
 )
 
 AQI_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_AQI,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.AQI,
 }
 
 BATTERY_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
 }
 
 HUMIDITY_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
 }
 
 TEMP_CELSIUS_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
 }
 
 TEMP_FREEDOM_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
 }
 
@@ -63,6 +57,8 @@ TEMP_FREEDOM_ATTRS = {
 async def test_significant_change_temperature(old_state, new_state, attrs, result):
     """Detect temperature significant changes."""
     assert (
-        async_check_significant_change(None, old_state, attrs, new_state, attrs)
+        significant_change.async_check_significant_change(
+            None, old_state, attrs, new_state, attrs
+        )
         is result
     )

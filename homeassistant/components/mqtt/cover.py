@@ -193,6 +193,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 DISCOVERY_SCHEMA = vol.All(
+    cv.removed("tilt_invert_state"),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_options,
 )

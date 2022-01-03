@@ -6,6 +6,7 @@ from homeassistant.components.cover import (
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -156,8 +157,8 @@ class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverEntity):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "garage"
+        """Return the class of this device, from CoverDeviceClass."""
+        return CoverDeviceClass.GARAGE
 
     @property
     def supported_features(self):

@@ -34,7 +34,7 @@ ATTR_SYSTEM_NAME = "system_name"
 DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

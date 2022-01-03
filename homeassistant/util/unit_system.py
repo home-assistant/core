@@ -31,7 +31,8 @@ from homeassistant.const import (
     VOLUME_LITERS,
     WIND_SPEED,
 )
-from homeassistant.util import (
+
+from . import (
     distance as distance_util,
     pressure as pressure_util,
     speed as speed_util,
