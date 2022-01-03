@@ -41,10 +41,12 @@ ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
+ATTR_AMOUNT = "amount"
 
 SERVICE_SET_VALUE = "set_value"
 SERVICE_INCREMENT = "increment"
 SERVICE_DECREMENT = "decrement"
+SERVICE_ADD = "add"
 
 
 def _cv_input_number(cfg):
@@ -168,6 +170,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
 
     component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
+
+    component.async_register_entity_service(
+        SERVICE_ADD,
+        {vol.Required(ATTR_AMOUNT): vol.Coerce(float)},
+        "async_add",
+    )
 
     return True
 
@@ -301,6 +309,11 @@ class InputNumber(RestoreEntity):
     async def async_decrement(self):
         """Decrement value."""
         await self.async_set_value(max(self._current_value - self._step, self._minimum))
+
+    async def async_add(self, amount):
+        """Increase current value by a certain amount."""
+        new_value = self._current_value + amount
+        await self.async_set_value(max(self._minimum, min(new_value, self._maximum)))
 
     async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""

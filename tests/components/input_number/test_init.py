@@ -6,8 +6,10 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.input_number import (
+    ATTR_AMOUNT,
     ATTR_VALUE,
     DOMAIN,
+    SERVICE_ADD,
     SERVICE_DECREMENT,
     SERVICE_INCREMENT,
     SERVICE_RELOAD,
@@ -203,6 +205,48 @@ async def test_decrement(hass):
 
     state = hass.states.get(entity_id)
     assert float(state.state) == 49
+
+
+async def test_add(hass):
+    """Test add method."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test_4": {"initial": 50, "min": 0, "max": 100}}}
+    )
+
+    entity_id = "input_number.test_4"
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 50
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AMOUNT: 10},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 60
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AMOUNT: 20},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 80
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AMOUNT: 100},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 100
 
 
 async def test_mode(hass):

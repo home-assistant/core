@@ -30,6 +30,24 @@ set_value:
           step: 0.001
           mode: box
 
+add:
+  name: Add
+  description: Increase the value of an input number entity by specified amount.
+  target:
+    entity:
+      domain: input_number
+  fields:
+    amount:
+      name: Amount
+      description: The amount to increase the current value by.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          step: 0.001
+          mode: box
+
 reload:
   name: Reload
   description: Reload the input_number configuration.
