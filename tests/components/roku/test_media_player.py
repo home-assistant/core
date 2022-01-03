@@ -144,13 +144,13 @@ async def test_tv_setup(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.identifiers == {(DOMAIN, "YN00H5555555")}
-    assert device_entry.manufacturer == "Onn"
-    assert device_entry.model == "100005844"
+    assert device_entry.identifiers == {(DOMAIN, TV_SERIAL)}
+    assert device_entry.manufacturer == TV_MANUFACTURER
+    assert device_entry.model == TV_MODEL
     assert device_entry.name == '58" Onn Roku TV'
     assert device_entry.entry_type is None
     assert device_entry.hw_version == "7820X"
-    assert device_entry.sw_version == "9.2.0"
+    assert device_entry.sw_version == TV_SW_VERSION
 
 
 async def test_availability(
