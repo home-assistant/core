@@ -128,6 +128,36 @@ async def test_all_optional_config(hass, calls):
     assert er.async_get_entity_id("button", "template", "test-test")
 
 
+async def test_name_template(hass, calls):
+    """Test: name template."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "button": {
+                        "press": {"service": "script.press"},
+                        "name": "Button {{ 1 + 1 }}",
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(
+        hass,
+        STATE_UNKNOWN,
+        {
+            CONF_FRIENDLY_NAME: "Button 2",
+        },
+        "button.button_2",
+    )
+
+
 async def test_unique_id(hass, calls):
     """Test: unique id is ok."""
     with assert_setup_component(1, "template"):
