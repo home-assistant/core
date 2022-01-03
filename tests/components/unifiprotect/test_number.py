@@ -41,7 +41,7 @@ async def light_fixture(
     light_obj.light_device_settings.pir_sensitivity = 45
     light_obj.light_device_settings.pir_duration = timedelta(seconds=45)
 
-    mock_entry.api.bootstrap.cameras = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
     }
@@ -81,7 +81,7 @@ async def camera_fixture(
     camera_obj.isp_settings.zoom_position = 0
     camera_obj.chime_duration = timedelta(seconds=0)
 
-    mock_entry.api.bootstrap.lights = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -159,7 +159,7 @@ async def test_number_setup_camera_none(
     # has_wdr is an the inverse of has HDR
     camera_obj.feature_flags.has_hdr = True
 
-    mock_entry.api.bootstrap.lights = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -188,7 +188,7 @@ async def test_number_setup_camera_missing_attr(
 
     Camera.__config__.validate_assignment = True
 
-    mock_entry.api.bootstrap.lights = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
