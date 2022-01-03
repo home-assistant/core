@@ -31,6 +31,7 @@ class RokuEntity(CoordinatorEntity):
             name=self.coordinator.data.info.name,
             manufacturer=self.coordinator.data.info.brand,
             model=self.coordinator.data.info.model_name,
+            hw_version=self.coordinator.data.info.model_number,
             sw_version=self.coordinator.data.info.version,
             suggested_area=self.coordinator.data.info.device_location,
         )
