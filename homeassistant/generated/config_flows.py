@@ -264,6 +264,7 @@ FLOWS = [
     "roon",
     "rpi_power",
     "rtsp_to_webrtc",
+    "rtsptowebrtc",
     "ruckus_unleashed",
     "samsungtv",
     "screenlogic",

@@ -260,7 +260,7 @@ aiosenseme==0.5.5
 aioshelly==1.0.7
 
 # homeassistant.components.steamist
-aiosteamist==0.2.1
+aiosteamist==0.3.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -2117,6 +2117,7 @@ rpi-bad-power==0.1.0
 # rpi-rf==0.9.7
 
 # homeassistant.components.rtsp_to_webrtc
+# homeassistant.components.rtsptowebrtc
 rtsp-to-webrtc==0.2.7
 
 # homeassistant.components.russound_rnet
