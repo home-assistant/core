@@ -1,5 +1,6 @@
 """Config flow to configure launch library component."""
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -9,11 +10,11 @@ class LaunchLibraryFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initialized by the user."""
         # Check if already configured
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             return self.async_create_entry(title="Launch Library", data=user_input)

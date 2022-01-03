@@ -5,7 +5,11 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     ATTR_AGENCY,
@@ -14,17 +18,17 @@ from .const import (
     ATTR_STREAM,
     ATTRIBUTION,
     DOMAIN,
-    ICON_ROCKET,
-    UPDATECOORDINATOR,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][UPDATECOORDINATOR]
+    coordinator = hass.data[DOMAIN]
 
     sensors = [
         NextLaunchSensor(coordinator, "Next launch"),
@@ -36,7 +40,7 @@ async def async_setup_entry(
 class LLBaseEntity(CoordinatorEntity, SensorEntity):
     """Sensor base entity."""
 
-    def __init__(self, coordinator, name):
+    def __init__(self, coordinator: DataUpdateCoordinator, name: str) -> None:
         """Initialize a Launch Library entity."""
         super().__init__(coordinator)
         self._attr_name = name
@@ -50,7 +54,7 @@ class LLBaseEntity(CoordinatorEntity, SensorEntity):
 class NextLaunchSensor(LLBaseEntity):
     """Representation of the next launch sensor."""
 
-    _attr_icon = ICON_ROCKET
+    _attr_icon = "mdi:orbit"
 
     @property
     def native_value(self):
