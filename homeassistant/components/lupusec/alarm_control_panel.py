@@ -1,4 +1,6 @@
 """Support for Lupusec System alarm control panels."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
@@ -12,6 +14,9 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
@@ -20,7 +25,12 @@ ICON = "mdi:security"
 SCAN_INTERVAL = timedelta(seconds=2)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an alarm control panel for a Lupusec device."""
     if discovery_info is None:
         return
