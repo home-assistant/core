@@ -8,7 +8,7 @@ import logging
 from math import ceil
 import sys
 from types import MappingProxyType
-from typing import Any, Final, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 from pycarwings2 import CarwingsError, Leaf, Session
 from pycarwings2.responses import (
@@ -31,35 +31,32 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
+from .const import (
+    CONF_CHARGING_INTERVAL,
+    CONF_CLIMATE_INTERVAL,
+    CONF_FORCE_MILES,
+    CONF_INTERVAL,
+    CONF_VALID_REGIONS,
+    DATA_BATTERY,
+    DATA_CHARGING,
+    DATA_CLIMATE,
+    DATA_LEAF,
+    DATA_PLUGGED_IN,
+    DATA_RANGE_AC,
+    DATA_RANGE_AC_OFF,
+    DEFAULT_CHARGING_INTERVAL_MINS,
+    DEFAULT_CLIMATE_INTERVAL_MINS,
+    DEFAULT_INTERVAL_MINS,
+    DOMAIN,
+    INITIAL_UPDATE,
+    MAX_RESPONSE_ATTEMPTS,
+    MIN_UPDATE_INTERVAL_MINS,
+    PYCARWINGS2_SLEEP,
+    RESTRICTED_BATTERY_PERCENT,
+    RESTRICTED_INTERVAL,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nissan_leaf"
-DATA_LEAF = "nissan_leaf_data"
-
-DATA_BATTERY = "battery"
-DATA_CHARGING = "charging"
-DATA_PLUGGED_IN = "plugged_in"
-DATA_CLIMATE = "climate"
-DATA_RANGE_AC = "range_ac_on"
-DATA_RANGE_AC_OFF = "range_ac_off"
-
-CONF_INTERVAL = "update_interval"
-CONF_CHARGING_INTERVAL = "update_interval_charging"
-CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
-CONF_FORCE_MILES = "force_miles"
-
-INITIAL_UPDATE: Final = timedelta(seconds=15)
-MIN_UPDATE_INTERVAL_MINS: Final = 2
-DEFAULT_INTERVAL_MINS: Final = 60
-DEFAULT_CHARGING_INTERVAL_MINS: Final = 15
-DEFAULT_CLIMATE_INTERVAL_MINS: Final = 5
-RESTRICTED_BATTERY: Final = 2
-RESTRICTED_INTERVAL: Final = timedelta(hours=12)
-
-MAX_RESPONSE_ATTEMPTS: Final = 3
-
-PYCARWINGS2_SLEEP: Final = 30
 
 # Legacy YAML config - to be removed in a future release
 CONFIG_SCHEMA = vol.Schema(
@@ -375,7 +372,7 @@ class LeafDataStore:
         if (
             self.last_battery_response is not None
             and self.data[DATA_CHARGING] is False
-            and self.data[DATA_BATTERY] <= RESTRICTED_BATTERY
+            and self.data[DATA_BATTERY] <= RESTRICTED_BATTERY_PERCENT
         ):
             _LOGGER.debug(
                 "Low battery so restricting refresh frequency (%s)", self.leaf.nickname

@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_CLIMATE, DATA_LEAF, LeafEntity
+from . import LeafEntity
+from .const import DATA_CLIMATE, DATA_LEAF
 
 _LOGGER = logging.getLogger(__name__)
 

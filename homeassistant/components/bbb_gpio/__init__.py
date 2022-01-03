@@ -4,13 +4,15 @@ import logging
 from Adafruit_BBIO import GPIO  # pylint: disable=import-error
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "bbb_gpio"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BeagleBone Black GPIO component."""
     _LOGGER.warning(
         "The BeagleBone Black GPIO integration is deprecated and will be removed "

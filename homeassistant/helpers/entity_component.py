@@ -198,7 +198,7 @@ class EntityComponent:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: Callable) -> None:
+        async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
             await self.hass.helpers.service.entity_service_call(
                 self._platforms.values(), func, call, required_features

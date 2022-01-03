@@ -10,12 +10,14 @@ from typing import Any, Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Version
-from pyunifiprotect.data.websocket import WSSubscriptionMessage
+from pyunifiprotect.data import Camera, Light, Version, WSSubscriptionMessage
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -131,6 +133,17 @@ def mock_camera():
     yield Camera.from_unifi_dict(**data)
 
 
+@pytest.fixture
+def mock_light():
+    """Mock UniFi Protect Camera device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_light.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    yield Light.from_unifi_dict(**data)
+
+
 async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
@@ -150,3 +163,38 @@ async def enable_entity(
     await hass.async_block_till_done()
 
     return updated_entity
+
+
+def assert_entity_counts(
+    hass: HomeAssistant, platform: Platform, total: int, enabled: int
+) -> None:
+    """Assert entity counts for a given platform."""
+
+    entity_registry = er.async_get(hass)
+
+    entities = [
+        e for e in entity_registry.entities if split_entity_id(e)[0] == platform.value
+    ]
+
+    assert len(entities) == total
+    assert len(hass.states.async_all(platform.value)) == enabled
+
+
+def ids_from_device_description(
+    platform: Platform,
+    device: ProtectAdoptableDeviceModel,
+    description: EntityDescription,
+) -> tuple[str, str]:
+    """Return expected unique_id and entity_id for a give platform/device/description combination."""
+
+    entity_name = (
+        device.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
+    )
+    description_entity_name = (
+        description.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
+    )
+
+    unique_id = f"{device.id}_{description.key}"
+    entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
+
+    return unique_id, entity_id

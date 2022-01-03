@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from pyunifiprotect.data import Camera
@@ -12,14 +12,14 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, enable_entity
+from .conftest import MockEntityFixture, assert_entity_counts, enable_entity
 
 
 @pytest.fixture(name="camera")
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera with only the button platform active, no extra setup."""
+    """Fixture for a single camera for testing the button platform."""
 
     camera_obj = mock_camera.copy(deep=True)
     camera_obj._api = mock_entry.api
@@ -32,14 +32,10 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
     }
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.BUTTON]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 0
-    assert len(entity_registry.entities) == 1
+    assert_entity_counts(hass, Platform.BUTTON, 1, 0)
 
     yield (camera_obj, "button.test_camera_reboot_device")
 

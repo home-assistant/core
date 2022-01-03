@@ -338,7 +338,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
     return await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
@@ -417,7 +417,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         schema=UNPAIR_SERVICE_SCHEMA,
     )
 
-    async def _handle_homekit_reload(service):
+    async def _handle_homekit_reload(service: ServiceCall) -> None:
         """Handle start HomeKit service call."""
         config = await async_integration_yaml_config(hass, DOMAIN)
 

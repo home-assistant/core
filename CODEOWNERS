@@ -647,6 +647,8 @@ homeassistant/components/omnilogic/* @oliver84 @djtimca @gentoosu
 tests/components/omnilogic/* @oliver84 @djtimca @gentoosu
 homeassistant/components/onboarding/* @home-assistant/core
 tests/components/onboarding/* @home-assistant/core
+homeassistant/components/oncue/* @bdraco
+tests/components/oncue/* @bdraco
 homeassistant/components/ondilo_ico/* @JeromeHXP
 tests/components/ondilo_ico/* @JeromeHXP
 homeassistant/components/onewire/* @garbled1 @epenet
@@ -777,6 +779,8 @@ tests/components/roon/* @pavoni
 homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
 tests/components/rpi_power/* @shenxn @swetoast
+homeassistant/components/rtsp_to_webrtc/* @allenporter
+tests/components/rtsp_to_webrtc/* @allenporter
 homeassistant/components/ruckus_unleashed/* @gabe565
 tests/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
@@ -1036,6 +1040,7 @@ tests/components/wemo/* @esev
 homeassistant/components/whirlpool/* @abmantis
 tests/components/whirlpool/* @abmantis
 homeassistant/components/whois/* @frenck
+tests/components/whois/* @frenck
 homeassistant/components/wiffi/* @mampfes
 tests/components/wiffi/* @mampfes
 homeassistant/components/wilight/* @leofig-rj

@@ -14,7 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
+from . import LeafEntity
+from .const import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN
 
 _LOGGER = logging.getLogger(__name__)
 
