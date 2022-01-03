@@ -4,7 +4,6 @@ from itertools import product
 import logging
 
 from homeassistant.const import ATTR_ENTITY_ID, __version__
-from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -24,7 +23,7 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_handle_message(hass: HomeAssistant, config, user_id, message, source):
+async def async_handle_message(hass, config, user_id, message, source):
     """Handle incoming API messages."""
     data = RequestData(
         config, user_id, source, message["requestId"], message.get("devices")
@@ -38,7 +37,7 @@ async def async_handle_message(hass: HomeAssistant, config, user_id, message, so
     return response
 
 
-async def _process(hass: HomeAssistant, data, message):
+async def _process(hass, data, message):
     """Process a message."""
     inputs: list = message.get("inputs")
 
@@ -72,7 +71,7 @@ async def _process(hass: HomeAssistant, data, message):
 
 
 @HANDLERS.register("action.devices.SYNC")
-async def async_devices_sync(hass: HomeAssistant, data, payload):
+async def async_devices_sync(hass, data, payload):
     """Handle action.devices.SYNC request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#SYNC
@@ -112,7 +111,7 @@ async def async_devices_sync(hass: HomeAssistant, data, payload):
 
 
 @HANDLERS.register("action.devices.QUERY")
-async def async_devices_query(hass: HomeAssistant, data, payload):
+async def async_devices_query(hass, data, payload):
     """Handle action.devices.QUERY request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#QUERY
@@ -167,7 +166,7 @@ async def _entity_execute(entity, data, executions):
 
 
 @HANDLERS.register("action.devices.EXECUTE")
-async def handle_devices_execute(hass: HomeAssistant, data, payload):
+async def handle_devices_execute(hass, data, payload):
     """Handle action.devices.EXECUTE request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#EXECUTE
@@ -248,7 +247,7 @@ async def handle_devices_execute(hass: HomeAssistant, data, payload):
 
 
 @HANDLERS.register("action.devices.DISCONNECT")
-async def async_devices_disconnect(hass: HomeAssistant, data: RequestData, payload):
+async def async_devices_disconnect(hass, data: RequestData, payload):
     """Handle action.devices.DISCONNECT request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
@@ -258,7 +257,7 @@ async def async_devices_disconnect(hass: HomeAssistant, data: RequestData, paylo
 
 
 @HANDLERS.register("action.devices.IDENTIFY")
-async def async_devices_identify(hass: HomeAssistant, data: RequestData, payload):
+async def async_devices_identify(hass, data: RequestData, payload):
     """Handle action.devices.IDENTIFY request.
 
     https://developers.google.com/assistant/smarthome/develop/local#implement_the_identify_handler
@@ -279,7 +278,7 @@ async def async_devices_identify(hass: HomeAssistant, data: RequestData, payload
 
 
 @HANDLERS.register("action.devices.REACHABLE_DEVICES")
-async def async_devices_reachable(hass: HomeAssistant, data: RequestData, payload):
+async def async_devices_reachable(hass, data: RequestData, payload):
     """Handle action.devices.REACHABLE_DEVICES request.
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
