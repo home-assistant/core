@@ -803,10 +803,14 @@ class MqttClimate(MqttEntity, ClimateEntity):
             if preset_mode == PRESET_NONE:
                 hold_mode = None
             if self._hold != hold_mode:
-                optimistic_update = await self._set_hold_mode(hold_mode) or optimistic_update
+                optimistic_update = (
+                    await self._set_hold_mode(hold_mode) or optimistic_update
+                )
 
             if self._away:
-                optimistic_update = await self._set_away_mode(False) or optimistic_update
+                optimistic_update = (
+                    await self._set_away_mode(False) or optimistic_update
+                )
 
         if optimistic_update:
             self.async_write_ha_state()
