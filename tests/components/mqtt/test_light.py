@@ -1117,37 +1117,6 @@ async def test_controlling_state_via_topic_with_templates(hass, mqtt_mock):
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
-async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock, caplog):
-    """Test the setting of the state with undocumented value_template."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test_light_rgb/status",
-            "command_topic": "test_light_rgb/set",
-            "value_template": "{{ value_json.hello }}",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert "The 'value_template' option is deprecated" in caplog.text
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "ON"}')
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "OFF"}')
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-
-
 async def test_legacy_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     """Test the sending of command in optimistic mode."""
     config = {
@@ -2289,7 +2258,7 @@ async def test_on_command_white(hass, mqtt_mock):
             "platform": "mqtt",
             "name": "test",
             "command_topic": "tasmota_B94927/cmnd/POWER",
-            "value_template": "{{ value_json.POWER }}",
+            "state_value_template": "{{ value_json.POWER }}",
             "payload_off": "OFF",
             "payload_on": "ON",
             "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
@@ -2598,7 +2567,7 @@ async def test_white_state_update(hass, mqtt_mock):
             "name": "test",
             "state_topic": "tasmota_B94927/tele/STATE",
             "command_topic": "tasmota_B94927/cmnd/POWER",
-            "value_template": "{{ value_json.POWER }}",
+            "state_value_template": "{{ value_json.POWER }}",
             "payload_off": "OFF",
             "payload_on": "ON",
             "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
