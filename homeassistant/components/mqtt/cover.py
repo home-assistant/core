@@ -308,7 +308,7 @@ class MqttCover(MqttEntity, CoverEntity):
             value_template.hass = self.hass
 
         self._set_position_template = MqttCommandTemplate(
-            self._config.get(CONF_SET_POSITION_TEMPLATE), self.hass
+            self._config.get(CONF_SET_POSITION_TEMPLATE), entity=self
         ).async_render
 
         get_position_template = self._config.get(CONF_GET_POSITION_TEMPLATE)
@@ -316,7 +316,7 @@ class MqttCover(MqttEntity, CoverEntity):
             get_position_template.hass = self.hass
 
         self._set_tilt_template = MqttCommandTemplate(
-            self._config.get(CONF_TILT_COMMAND_TEMPLATE), self.hass
+            self._config.get(CONF_TILT_COMMAND_TEMPLATE), entity=self
         ).async_render
 
         tilt_status_template = self._config.get(CONF_TILT_STATUS_TEMPLATE)
