@@ -6,8 +6,22 @@ import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import fan
-from homeassistant.components.fan import NotValidPresetModeError
-from homeassistant.components.mqtt.fan import MQTT_FAN_ATTRIBUTES_BLOCKED
+from homeassistant.components.fan import (
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    NotValidPresetModeError,
+)
+from homeassistant.components.mqtt.fan import (
+    CONF_OSCILLATION_COMMAND_TOPIC,
+    CONF_OSCILLATION_STATE_TOPIC,
+    CONF_PERCENTAGE_COMMAND_TOPIC,
+    CONF_PERCENTAGE_STATE_TOPIC,
+    CONF_PRESET_MODE_COMMAND_TOPIC,
+    CONF_PRESET_MODE_STATE_TOPIC,
+    MQTT_FAN_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -26,6 +40,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -1268,6 +1283,42 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "ON", None, "on"),
+        (CONF_PRESET_MODE_STATE_TOPIC, "auto", ATTR_PRESET_MODE, "auto"),
+        (CONF_PERCENTAGE_STATE_TOPIC, "60", ATTR_PERCENTAGE, 60),
+        (
+            CONF_OSCILLATION_STATE_TOPIC,
+            "oscillate_on",
+            ATTR_OSCILLATING,
+            True,
+        ),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[fan.DOMAIN])
+    config[ATTR_PRESET_MODES] = ["eco", "auto"]
+    config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
+    config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
+    config[CONF_OSCILLATION_COMMAND_TOPIC] = "fan/some_oscillation_command_topic"
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        fan.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )
 
 
 async def test_attributes(hass, mqtt_mock, caplog):

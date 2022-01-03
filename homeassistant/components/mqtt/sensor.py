@@ -262,6 +262,7 @@ class MqttSensor(MqttEntity, SensorEntity):
                 "topic": self._config[CONF_LAST_RESET_TOPIC],
                 "msg_callback": last_reset_message_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
 
         self._sub_state = await subscription.async_subscribe_topics(

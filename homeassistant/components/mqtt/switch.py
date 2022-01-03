@@ -159,6 +159,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                         "topic": self._config.get(CONF_STATE_TOPIC),
                         "msg_callback": state_message_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )

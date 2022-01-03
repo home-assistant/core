@@ -206,6 +206,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                     "topic": self._config[CONF_STATE_TOPIC],
                     "msg_callback": message_received,
                     "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
         )
