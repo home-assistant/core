@@ -26,7 +26,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import PLATFORMS, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -188,6 +195,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._config[CONF_PAYLOAD_ON],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.
@@ -205,6 +213,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._config[CONF_PAYLOAD_OFF],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.

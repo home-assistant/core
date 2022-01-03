@@ -338,18 +338,53 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
     return data
 
 
-def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
-    """Publish message to an MQTT topic."""
-    hass.add_job(async_publish, hass, topic, payload, qos, retain)
+def publish(
+    hass: HomeAssistant,
+    topic: str,
+    payload: PublishPayloadType,
+    qos: int | None = 0,
+    retain: bool | None = False,
+    encoding: str | None = DEFAULT_ENCODING,
+) -> None:
+    """Publish message to a MQTT topic."""
+    hass.add_job(async_publish, hass, topic, payload, qos, retain, encoding)
 
 
 async def async_publish(
-    hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
+    hass: HomeAssistant,
+    topic: str,
+    payload: PublishPayloadType,
+    qos: int | None = 0,
+    retain: bool | None = False,
+    encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to an MQTT topic."""
-    await hass.data[DATA_MQTT].async_publish(
-        topic, str(payload) if not isinstance(payload, bytes) else payload, qos, retain
-    )
+    """Publish message to a MQTT topic."""
+
+    outgoing_payload = payload
+    if not isinstance(payload, bytes):
+        if not encoding:
+            _LOGGER.error(
+                "Can't pass-through payload for publishing %s on %s with no encoding set, need 'bytes' got %s",
+                payload,
+                topic,
+                type(payload),
+            )
+            return
+        outgoing_payload = str(payload)
+        if encoding != DEFAULT_ENCODING:
+            # a string is encoded as utf-8 by default, other encoding requires bytes as payload
+            try:
+                outgoing_payload = outgoing_payload.encode(encoding)
+            except (AttributeError, LookupError, UnicodeEncodeError):
+                _LOGGER.error(
+                    "Can't encode payload for publishing %s on %s with encoding %s",
+                    payload,
+                    topic,
+                    encoding,
+                )
+                return
+
+    await hass.data[DATA_MQTT].async_publish(topic, outgoing_payload, qos, retain)
 
 
 AsyncDeprecatedMessageCallbackType = Callable[

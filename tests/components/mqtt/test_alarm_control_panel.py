@@ -50,6 +50,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -749,4 +750,59 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template,tpl_par,tpl_output",
+    [
+        (
+            alarm_control_panel.SERVICE_ALARM_ARM_AWAY,
+            "command_topic",
+            {"code": "secret"},
+            "ARM_AWAY",
+            "command_template",
+            "code",
+            b"s",
+        ),
+        (
+            alarm_control_panel.SERVICE_ALARM_DISARM,
+            "command_topic",
+            {"code": "secret"},
+            "DISARM",
+            "command_template",
+            "code",
+            b"s",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+    tpl_par,
+    tpl_output,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = alarm_control_panel.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+        tpl_par=tpl_par,
+        tpl_output=tpl_output,
     )

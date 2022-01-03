@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import climate
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
     ATTR_HVAC_ACTION,
@@ -46,6 +47,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -1133,3 +1135,121 @@ async def test_precision_whole(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") == 24.0
     mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (
+            climate.SERVICE_TURN_ON,
+            "power_command_topic",
+            None,
+            "ON",
+            None,
+        ),
+        (
+            climate.SERVICE_SET_HVAC_MODE,
+            "mode_command_topic",
+            {"hvac_mode": "cool"},
+            "cool",
+            "mode_command_template",
+        ),
+        (
+            climate.SERVICE_SET_PRESET_MODE,
+            "away_mode_command_topic",
+            {"preset_mode": "away"},
+            "ON",
+            None,
+        ),
+        (
+            climate.SERVICE_SET_PRESET_MODE,
+            "hold_command_topic",
+            {"preset_mode": "eco"},
+            "eco",
+            "hold_command_template",
+        ),
+        (
+            climate.SERVICE_SET_PRESET_MODE,
+            "hold_command_topic",
+            {"preset_mode": "some_hold_mode"},
+            "some_hold_mode",
+            "hold_command_template",
+        ),
+        (
+            climate.SERVICE_SET_FAN_MODE,
+            "fan_mode_command_topic",
+            {"fan_mode": "medium"},
+            "medium",
+            "fan_mode_command_template",
+        ),
+        (
+            climate.SERVICE_SET_SWING_MODE,
+            "swing_mode_command_topic",
+            {"swing_mode": "on"},
+            "on",
+            "swing_mode_command_template",
+        ),
+        (
+            climate.SERVICE_SET_AUX_HEAT,
+            "aux_command_topic",
+            {"aux_heat": "on"},
+            "ON",
+            None,
+        ),
+        (
+            climate.SERVICE_SET_TEMPERATURE,
+            "temperature_command_topic",
+            {"temperature": "20.1"},
+            20.1,
+            "temperature_command_template",
+        ),
+        (
+            climate.SERVICE_SET_TEMPERATURE,
+            "temperature_low_command_topic",
+            {
+                "temperature": "20.1",
+                "target_temp_low": "15.1",
+                "target_temp_high": "29.8",
+            },
+            15.1,
+            "temperature_low_command_template",
+        ),
+        (
+            climate.SERVICE_SET_TEMPERATURE,
+            "temperature_high_command_topic",
+            {
+                "temperature": "20.1",
+                "target_temp_low": "15.1",
+                "target_temp_high": "29.8",
+            },
+            29.8,
+            "temperature_high_command_template",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = climate.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+    )

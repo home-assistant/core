@@ -35,7 +35,13 @@ import homeassistant.util.color as color_util
 
 from .. import subscription
 from ... import mqtt
-from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -384,6 +390,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -409,6 +416,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
