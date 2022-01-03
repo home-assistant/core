@@ -92,7 +92,7 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
         if self._event is None:
             return None
 
-        return dt_util.as_local(dt_util.parse_datetime(self._event.time))
+        return dt_util.parse_datetime(self._event.time).astimezone(dt_util.UTC)
 
     @property
     def extra_state_attributes(self):
