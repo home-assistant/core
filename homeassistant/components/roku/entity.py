@@ -1,7 +1,7 @@
 """Base Entity for Roku."""
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RokuDataUpdateCoordinator
@@ -14,11 +14,20 @@ class RokuEntity(CoordinatorEntity):
     coordinator: RokuDataUpdateCoordinator
 
     def __init__(
-        self, *, device_id: str, coordinator: RokuDataUpdateCoordinator
+        self,
+        *,
+        device_id: str,
+        coordinator: RokuDataUpdateCoordinator,
+        description: EntityDescription | None = None,
     ) -> None:
         """Initialize the Roku entity."""
         super().__init__(coordinator)
         self._device_id = device_id
+
+        if description is not None:
+            self.entity_description = description
+            self._attr_name = f"{coordinator.data.info.name} {description.name}"
+            self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
