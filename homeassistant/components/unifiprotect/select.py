@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
-from typing import Any
+from typing import Any, Final
 
 from pyunifiprotect.data import (
     Camera,
@@ -83,6 +83,8 @@ DEVICE_RECORDING_MODES = [
     {"id": mode.value, "name": mode.value.title()} for mode in list(RecordingMode)
 ]
 
+DEVICE_CLASS_LCD_MESSAGE: Final = "lcd_message"
+
 
 @dataclass
 class ProtectSelectEntityDescription(ProtectRequiredKeysMixin, SelectEntityDescription):
@@ -120,6 +122,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         name="Doorbell Text",
         icon="mdi:card-text",
         entity_category=EntityCategory.CONFIG,
+        device_class=DEVICE_CLASS_LCD_MESSAGE,
         ufp_required_field="feature_flags.has_lcd_screen",
         ufp_value="lcd_message",
     ),
@@ -335,9 +338,14 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
 
         assert isinstance(self.device, Camera)
         reset_at = None
+        timeout_msg = ""
         if duration.isnumeric():
             reset_at = utcnow() + timedelta(minutes=int(duration))
+            timeout_msg = f" with timeout of {duration} minute(s)"
 
+        _LOGGER.debug(
+            'Setting message for %s to "%s"%s', self.device.name, message, timeout_msg
+        )
         await self.device.set_lcd_text(
             DoorbellMessageType.CUSTOM_MESSAGE, message, reset_at=reset_at
         )

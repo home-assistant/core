@@ -63,6 +63,6 @@ SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DURATION, default="None"): cv.string,
+        vol.Optional(ATTR_DURATION, default=""): cv.string,
     }
 )

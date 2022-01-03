@@ -14,6 +14,7 @@ set_doorbell_message:
         entity:
           integration: unifiprotect
           domain: select
+          device_class: lcd_message
     message:
       name: Message to display
       description: (Required) Message to display on LCD Panel. Max 30 characters
