@@ -5,8 +5,10 @@ import asyncio
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
+from math import ceil
 import sys
-from typing import Any, Mapping, cast
+from types import MappingProxyType
+from typing import Any, Final, TypedDict, cast
 
 from pycarwings2 import CarwingsError, Leaf, Session
 from pycarwings2.responses import (
@@ -18,6 +20,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -46,17 +49,17 @@ CONF_CLIMATE_INTERVAL = "update_interval_climate"
 CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
 CONF_FORCE_MILES = "force_miles"
 
-INITIAL_UPDATE = timedelta(seconds=15)
-MIN_UPDATE_INTERVAL = timedelta(minutes=2)
-DEFAULT_INTERVAL = timedelta(hours=1)
-DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
-DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
-RESTRICTED_BATTERY = 2
-RESTRICTED_INTERVAL = timedelta(hours=12)
+INITIAL_UPDATE: Final = timedelta(seconds=15)
+MIN_UPDATE_INTERVAL_MINS: Final = 2  # timedelta(minutes=2)
+DEFAULT_INTERVAL_MINS: Final = 60  # timedelta(hours=1)
+DEFAULT_CHARGING_INTERVAL_MINS: Final = 15  # timedelta(minutes=15)
+DEFAULT_CLIMATE_INTERVAL_MINS: Final = 5  # timedelta(minutes=5)
+RESTRICTED_BATTERY: Final = 2
+RESTRICTED_INTERVAL: Final = timedelta(hours=12)
 
-MAX_RESPONSE_ATTEMPTS = 3
+MAX_RESPONSE_ATTEMPTS: Final = 3
 
-PYCARWINGS2_SLEEP = 30
+PYCARWINGS2_SLEEP: Final = 30
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -68,18 +71,38 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_USERNAME): cv.string,
                         vol.Required(CONF_PASSWORD): cv.string,
                         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
-                        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): (
-                            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
+                        vol.Optional(
+                            CONF_INTERVAL,
+                            default=timedelta(minutes=DEFAULT_INTERVAL_MINS),
+                        ): (
+                            vol.All(
+                                cv.time_period,
+                                vol.Clamp(
+                                    min=timedelta(minutes=MIN_UPDATE_INTERVAL_MINS)
+                                ),
+                            )
                         ),
                         vol.Optional(
-                            CONF_CHARGING_INTERVAL, default=DEFAULT_CHARGING_INTERVAL
+                            CONF_CHARGING_INTERVAL,
+                            default=timedelta(minutes=DEFAULT_CHARGING_INTERVAL_MINS),
                         ): (
-                            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
+                            vol.All(
+                                cv.time_period,
+                                vol.Clamp(
+                                    min=timedelta(minutes=MIN_UPDATE_INTERVAL_MINS)
+                                ),
+                            )
                         ),
                         vol.Optional(
-                            CONF_CLIMATE_INTERVAL, default=DEFAULT_CLIMATE_INTERVAL
+                            CONF_CLIMATE_INTERVAL,
+                            default=timedelta(minutes=DEFAULT_CLIMATE_INTERVAL_MINS),
                         ): (
-                            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
+                            vol.All(
+                                cv.time_period,
+                                vol.Clamp(
+                                    min=timedelta(minutes=MIN_UPDATE_INTERVAL_MINS)
+                                ),
+                            )
                         ),
                         vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean,
                     }
@@ -105,32 +128,26 @@ START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 async def async_setup(
     hass: HomeAssistant,
     config: ConfigType,
-    #    async_add_entities: AddEntitiesCallback,
-    #    discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
-    """Set up the Nissan Leaf integration - allow migration from YAML config."""
+    """Set up the Nissan Leaf integration from YAML configuration."""
 
-    _LOGGER.debug("In async_setup")
+    _LOGGER.debug("In async_setup")  # FIXME: Remove after debugging
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(DATA_LEAF, {})
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+    _LOGGER.debug("type(config)=%s", type(config))
+    if DOMAIN in config:
+        _LOGGER.debug("type(config[DOMAIN])=%s", type(config[DOMAIN]))
+        _LOGGER.debug("config[DOMAIN]=%s", config[DOMAIN])
 
-    _LOGGER.warning(
-        "Your Nissan Leaf configuration has been imported into the UI; "
-        "please remove it from configuration.yaml as support for it "
-        "will be removed in a future release"
-    )
-
-    return True
-
-
-def setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Load a config entry."""
-    _LOGGER.debug("Hit setup_entry")
-    _LOGGER.debug("config_entry=%s", config_entry)
+        for entry_config in config[DOMAIN]:
+            _LOGGER.debug("type(entry_config)=%s", type(entry_config))
+            _LOGGER.debug("entry_config=%s", entry_config)
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
+                )
+            )
 
     return True
 
@@ -138,6 +155,11 @@ def setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Load a config entry."""
     _LOGGER.debug("Hit async setup_entry")
+    hass.data.setdefault(DATA_LEAF, {})
+
+    _LOGGER.debug("Running import_options_from_data_if_missing")
+    import_options_from_data_if_missing(config_entry)
+
     _LOGGER.debug("config_entry=%s", config_entry)
 
     username = config_entry.data[CONF_USERNAME]
@@ -151,9 +173,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.debug("Creating leaf session")
 
-    # This might need to be made async (somehow) causes
-    # homeassistant to be slow to start
-
     try:
         sess = Session(username, password, region)
 
@@ -161,11 +180,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         leaf = await hass.async_add_executor_job(sess.get_leaf)
 
         _LOGGER.debug("Leaf obtained")
-    except CarwingsError:
+    except CarwingsError as ex:
         _LOGGER.error(
             "An unknown error occurred while connecting to Nissan: %s",
             sys.exc_info()[0],
         )
+        raise ConfigEntryNotReady from ex
+    except OSError as ex:
+        raise ConfigEntryNotReady from ex
 
     _LOGGER.warning(
         "WARNING: This may poll your Leaf too often, and drain the 12V"
@@ -175,8 +197,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     _LOGGER.debug("leaf=%s", leaf)
+    _LOGGER.debug("leaf.vin=%s", leaf.vin)
 
-    data_store = LeafDataStore(hass, leaf, config_entry.data)
+    data_store = LeafDataStore(
+        hass,
+        leaf,
+        LeafDataStoreCarOptions(
+            INTERVAL=timedelta(
+                minutes=config_entry.options.get(CONF_INTERVAL, DEFAULT_INTERVAL_MINS)
+            ),
+            CHARGING_INTERVAL=timedelta(
+                minutes=config_entry.options.get(
+                    CONF_CHARGING_INTERVAL, DEFAULT_CHARGING_INTERVAL_MINS
+                )
+            ),
+            CLIMATE_INTERVAL=timedelta(
+                config_entry.options.get(
+                    CONF_CLIMATE_INTERVAL, DEFAULT_CLIMATE_INTERVAL_MINS
+                )
+            ),
+            FORCE_MILES=config_entry.options.get(CONF_FORCE_MILES, False),
+        ),
+    )
+
     hass.data[DATA_LEAF][leaf.vin] = data_store
 
     for platform in PLATFORMS:
@@ -191,6 +234,58 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
+@callback
+def convert_timedelta_to_minutes(entry: ConfigEntry, key: str, default: int) -> None:
+    """Convert a single timedelta configuration from YAML to Configflow JSON."""
+
+    options = dict(entry.options)
+
+    if key not in options:
+        _LOGGER.debug("Key not in options: %s", key)
+        if key in entry.data:
+            _LOGGER.debug("Key is in entry.data: %s", key)
+            delta = entry.data.get(key)
+            if isinstance(delta, timedelta):
+                _LOGGER.debug("Setting options[key] based on entry.data to %s", delta)
+                # Roundup to the nearest minute
+                options[key] = ceil(delta.seconds / 60.0)
+                _LOGGER.debug("Setting options[key] = %s", options[key])
+        else:
+            _LOGGER.debug("Defaulting options[key] to %s", default)
+            options[key] = default
+
+    if options[key] < MIN_UPDATE_INTERVAL_MINS:
+        _LOGGER.warning("Resetting options[%s] because below min update interval.", key)
+        options[key] = MIN_UPDATE_INTERVAL_MINS
+
+    # There's got to be a better way of doing this...
+    entry.options = cast(MappingProxyType, options)
+
+
+@callback
+def import_options_from_data_if_missing(entry: ConfigEntry) -> None:
+    """Convert options from yaml config to ConfigFlow JSON, especially from timedelta to integer minutes."""
+
+    _LOGGER.debug("Initial options=%s", entry.options)
+
+    convert_timedelta_to_minutes(entry, CONF_INTERVAL, DEFAULT_INTERVAL_MINS)
+
+    convert_timedelta_to_minutes(
+        entry, CONF_CHARGING_INTERVAL, DEFAULT_CHARGING_INTERVAL_MINS
+    )
+
+    convert_timedelta_to_minutes(
+        entry, CONF_CLIMATE_INTERVAL, DEFAULT_CLIMATE_INTERVAL_MINS
+    )
+
+    if CONF_FORCE_MILES not in entry.options:
+        options = dict(entry.options)
+        options[CONF_FORCE_MILES] = entry.data.get(CONF_FORCE_MILES, False)
+
+    _LOGGER.debug("After options=%s", entry.options)
+
+
+@callback
 def _extract_start_date(
     battery_info: CarwingsLatestBatteryStatusResponse,
 ) -> datetime | None:
@@ -204,23 +299,29 @@ def _extract_start_date(
         return None
 
 
-def get_timedelta(input: timedelta | int) -> timedelta:
-    """Convert passed input to timedelta (in mins) if not already a timedelta."""
-    if isinstance(input, int):
-        return timedelta(minutes=input)
-    # We must have a timedelta
-    return input
+class LeafDataStoreCarOptions(TypedDict):
+    """Options for a car in the Nissan Leaf data store."""
+
+    INTERVAL: timedelta
+    CLIMATE_INTERVAL: timedelta
+    CHARGING_INTERVAL: timedelta
+    FORCE_MILES: bool
 
 
 class LeafDataStore:
     """Nissan Leaf Data Store."""
 
-    def __init__(self, hass: HomeAssistant, leaf: Leaf, car_config: Mapping) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        leaf: Leaf,
+        car_options: LeafDataStoreCarOptions,
+    ) -> None:
         """Initialise the data store."""
         self.hass = hass
         self.leaf = leaf
-        self.car_config = car_config
-        self.force_miles = car_config[CONF_FORCE_MILES]
+        self.car_options = car_options
+        # self.force_miles = car_config[CONF_FORCE_MILES]
         self.data: dict[str, Any] = {}
         self.data[DATA_CLIMATE] = None
         self.data[DATA_BATTERY] = None
@@ -261,9 +362,9 @@ class LeafDataStore:
         # ConfigEntry stores config in minutes, whereas yaml config uses
         # a timedelta (which cannot be serialised).  Perform a conversion
         # in get_timedelta whilst the YAML configuration option still exists.
-        base_interval = get_timedelta(self.car_config[CONF_INTERVAL])
-        climate_interval = get_timedelta(self.car_config[CONF_CLIMATE_INTERVAL])
-        charging_interval = get_timedelta(self.car_config[CONF_CHARGING_INTERVAL])
+        base_interval = self.car_options["INTERVAL"]
+        climate_interval = self.car_options["CLIMATE_INTERVAL"]
+        charging_interval = self.car_options["CHARGING_INTERVAL"]
 
         # The 12V battery is used when communicating with Nissan servers.
         # The 12V battery is charged from the traction battery when not

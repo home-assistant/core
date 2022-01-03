@@ -24,7 +24,8 @@
                     "ssl": "Uses an SSL certificate",
                     "username": "Username"
                 },
-                "title": "Connect to Nissan Leaf"
+                "title": "Connect to Nissan Leaf",
+                "description": "Enter your credentials to connect to your Nissan"
             }
         }
     },
@@ -32,8 +33,13 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Update frequency (seconds)"
-                }
+                    "update_interval": "Update interval",
+                    "update_interval_charging": "Update interval when charging",
+                    "update_interval_climate": "Update interval when A/C on",
+                    "force_miles": "Always use miles"
+                },
+                "title": "Nissan Leaf Options",
+                "description": "Configure the frequency to request data from the Nissan servers (in minutes)"
             }
         }
     }

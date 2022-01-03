@@ -1,6 +1,7 @@
 """Config flow for Nissan Leaf integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import sys
 from typing import Any, cast
@@ -12,11 +13,9 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-
-# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from . import (  # _LOGGER,; CONF_FILTER_CORONA,; CONF_MESSAGE_SLOTS,; CONF_REGIONS,; CONST_REGION_MAPPING,; CONST_REGIONS,
+from . import (
     CONF_CHARGING_INTERVAL,
     CONF_CLIMATE_INTERVAL,
     CONF_FORCE_MILES,
@@ -25,11 +24,11 @@ from . import (  # _LOGGER,; CONF_FILTER_CORONA,; CONF_MESSAGE_SLOTS,; CONF_REGI
     CONF_REGION,
     CONF_USERNAME,
     CONF_VALID_REGIONS,
-    DEFAULT_CHARGING_INTERVAL,
-    DEFAULT_CLIMATE_INTERVAL,
-    DEFAULT_INTERVAL,
+    DEFAULT_CHARGING_INTERVAL_MINS,
+    DEFAULT_CLIMATE_INTERVAL_MINS,
+    DEFAULT_INTERVAL_MINS,
     DOMAIN,
-    MIN_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL_MINS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +71,10 @@ async def validate_auth(
 ) -> str | None:
     """Test authentication with given credentials."""
 
+    _LOGGER.debug("In validate_auth")
+
     try:
+        _LOGGER.debug("Creating session")
         sess = Session(username, password, region)
 
         _LOGGER.debug("Getting leaf during validation")
@@ -95,6 +97,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nissan Leaf."""
 
     VERSION: int = 1
+
+    def __init__(self) -> None:
+        """Initialize Nissan Leaf config flow."""
+        self._import_options: dict[str, Any] = {}
 
     async def async_step_user(
         self: ConfigFlow,
@@ -121,9 +127,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         #             self.split_regions()
 
+        _LOGGER.debug("In async_step_user")  # FIXME: Remove after debugging
+
         if user_input is not None:
             # Validate User input
+            _LOGGER.debug("username=%s", user_input[CONF_USERNAME])
+            _LOGGER.debug("password=%s", user_input[CONF_PASSWORD])
+            _LOGGER.debug("region=%s", user_input[CONF_REGION])
             try:
+                _LOGGER.debug("About to call validate_auth")
                 vin = await validate_auth(
                     self.hass,
                     user_input[CONF_USERNAME],
@@ -132,6 +144,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 _LOGGER.debug("vin=%s", vin)
             except ValueError:
+                # FIXME: Remove after debugging
+                _LOGGER.debug("Could not validate correctly")
                 errors["base"] = "auth"
 
             # FIXME: Fail if vin is None
@@ -141,32 +155,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
 
-                return self.async_create_entry(title="nissan_leaf", data=user_input)
+                _LOGGER.debug(
+                    "Calling async_create_entry"
+                )  # FIXME: Remove after debugging
 
-        #             for group in CONST_REGIONS:
-        #                 if group_input := user_input.get(group):
-        #                     user_input[CONF_REGIONS] += group_input
+                return self.async_create_entry(
+                    title="nissan_leaf", data=user_input, options=self._import_options
+                )
 
-        #             if user_input[CONF_REGIONS]:
-        #                 tmp: dict[str, Any] = {}
-
-        #                 for reg in user_input[CONF_REGIONS]:
-        #                     tmp[self._all_region_codes_sorted[reg]] = reg.split("_", 1)[0]
-
-        #                 compact: dict[str, Any] = {}
-
-        #                 for key, val in tmp.items():
-        #                     if val in compact:
-        #                         # Abenberg, St + Abenberger Wald
-        #                         compact[val] = f"{compact[val]} + {key}"
-        #                         break
-        #                     compact[val] = key
-
-        #                 user_input[CONF_REGIONS] = compact
-
-        #                 return self.async_create_entry(title="NINA", data=user_input)
-
-        #             errors["base"] = "no_selection"
+        _LOGGER.debug("Starting self.async_show_form")  # FIXME: Remove after debugging
 
         return self.async_show_form(
             step_id="user",
@@ -180,37 +177,55 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        """Handle import."""
+        _LOGGER.debug("In async_step_import")  # FIXME: Remove after debugging
+
+        user_input = {
+            CONF_USERNAME: import_config[CONF_USERNAME],
+            CONF_PASSWORD: import_config[CONF_PASSWORD],
+            CONF_REGION: import_config[CONF_REGION],
+        }
+
+        # Convert YAML timedeltas into integer minutes because we can't serialise timedeltas
+        self._import_options[CONF_INTERVAL] = (
+            import_config.get(
+                CONF_INTERVAL, timedelta(minutes=DEFAULT_INTERVAL_MINS)
+            ).total_seconds()
+            / 60
+        )
+        _LOGGER.debug(
+            "self._import_options[conf_interval]=%s",
+            self._import_options[CONF_INTERVAL],
+        )
+
+        self._import_options[CONF_CHARGING_INTERVAL] = (
+            import_config.get(
+                CONF_CHARGING_INTERVAL,
+                timedelta(minutes=DEFAULT_CHARGING_INTERVAL_MINS),
+            ).total_seconds()
+            / 60
+        )
+        self._import_options[CONF_CLIMATE_INTERVAL] = (
+            import_config.get(
+                CONF_CLIMATE_INTERVAL, timedelta(minutes=DEFAULT_CLIMATE_INTERVAL_MINS)
+            ).total_seconds()
+            / 60
+        )
+        self._import_options[CONF_FORCE_MILES] = import_config.get(
+            CONF_FORCE_MILES, False
+        )
+
+        _LOGGER.debug("Imported user_input=%s", user_input)
+        _LOGGER.debug("Imported self._import_options=%s", self._import_options)
+
+        return await self.async_step_user(user_input)
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Define the config flow to handle options."""
         return NissanLeafOptionsFlowHandler(config_entry)
-
-
-#     @staticmethod
-#     def swap_key_value(dict_to_sort: dict[str, str]) -> dict[str, str]:
-#         """Swap keys and values in dict."""
-#         all_region_codes_swaped: dict[str, str] = {}
-
-#         for key, value in dict_to_sort.items():
-#             if value not in all_region_codes_swaped:
-#                 all_region_codes_swaped[value] = key
-#             else:
-#                 for i in range(len(dict_to_sort)):
-#                     tmp_value: str = f"{value}_{i}"
-#                     if tmp_value not in all_region_codes_swaped:
-#                         all_region_codes_swaped[tmp_value] = key
-#                         break
-
-#         return dict(sorted(all_region_codes_swaped.items(), key=lambda ele: ele[1]))
-
-#     def split_regions(self) -> None:
-#         """Split regions alphabetical."""
-#         for index, name in self._all_region_codes_sorted.items():
-#             for region_name, grouping_letters in CONST_REGION_MAPPING.items():
-#                 if name[0] in grouping_letters:
-#                     self.regions[region_name][index] = name
-#                     break
 
 
 class NissanLeafOptionsFlowHandler(config_entries.OptionsFlow):
@@ -227,19 +242,31 @@ class NissanLeafOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # FIXME: Set default values here from the current settings if they exist
         options = {
-            vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): (
-                vol.All(vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL))
-            ),
-            vol.Optional(CONF_CHARGING_INTERVAL, default=DEFAULT_CHARGING_INTERVAL): (
-                vol.All(vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL))
-            ),
-            vol.Optional(CONF_CLIMATE_INTERVAL, default=DEFAULT_CLIMATE_INTERVAL): (
-                vol.All(vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL))
-            ),
-            vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean,
+            vol.Optional(
+                CONF_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_INTERVAL, DEFAULT_INTERVAL_MINS
+                ),
+            ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL_MINS))),
+            vol.Optional(
+                CONF_CHARGING_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_CHARGING_INTERVAL, DEFAULT_CHARGING_INTERVAL_MINS
+                ),
+            ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL_MINS))),
+            vol.Optional(
+                CONF_CLIMATE_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_CLIMATE_INTERVAL, DEFAULT_CLIMATE_INTERVAL_MINS
+                ),
+            ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL_MINS))),
+            vol.Optional(
+                CONF_FORCE_MILES,
+                default=self.config_entry.options.get(CONF_FORCE_MILES, False),
+            ): cv.boolean,
         }
+        _LOGGER.debug("New Options=%s", options)
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
