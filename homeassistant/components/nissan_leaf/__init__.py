@@ -50,10 +50,10 @@ CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
 CONF_FORCE_MILES = "force_miles"
 
 INITIAL_UPDATE: Final = timedelta(seconds=15)
-MIN_UPDATE_INTERVAL_MINS: Final = 2  # timedelta(minutes=2)
-DEFAULT_INTERVAL_MINS: Final = 60  # timedelta(hours=1)
-DEFAULT_CHARGING_INTERVAL_MINS: Final = 15  # timedelta(minutes=15)
-DEFAULT_CLIMATE_INTERVAL_MINS: Final = 5  # timedelta(minutes=5)
+MIN_UPDATE_INTERVAL_MINS: Final = 2
+DEFAULT_INTERVAL_MINS: Final = 60
+DEFAULT_CHARGING_INTERVAL_MINS: Final = 15
+DEFAULT_CLIMATE_INTERVAL_MINS: Final = 5
 RESTRICTED_BATTERY: Final = 2
 RESTRICTED_INTERVAL: Final = timedelta(hours=12)
 
@@ -61,6 +61,7 @@ MAX_RESPONSE_ATTEMPTS: Final = 3
 
 PYCARWINGS2_SLEEP: Final = 30
 
+# Legacy YAML config - to be removed in a future release
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -236,7 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 @callback
 def convert_timedelta_to_minutes(entry: ConfigEntry, key: str, default: int) -> None:
-    """Convert a single timedelta configuration from YAML to Configflow JSON."""
+    """Convert a single timedelta configuration (used in legacy YAML) to integer minutes (used in Configflow JSON)."""
 
     options = dict(entry.options)
 
@@ -255,7 +256,7 @@ def convert_timedelta_to_minutes(entry: ConfigEntry, key: str, default: int) -> 
             options[key] = default
 
     if options[key] < MIN_UPDATE_INTERVAL_MINS:
-        _LOGGER.warning("Resetting options[%s] because below min update interval.", key)
+        _LOGGER.warning("Resetting options[%s] because below min update interval", key)
         options[key] = MIN_UPDATE_INTERVAL_MINS
 
     # There's got to be a better way of doing this...

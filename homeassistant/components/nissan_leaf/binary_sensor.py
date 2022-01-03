@@ -10,8 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-
-# from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,25 +34,6 @@ async def async_setup_entry(
         entities.append(LeafChargingSensor(datastore))
 
     async_add_entities(entities, True)
-
-
-# def setup_platform(
-#     hass: HomeAssistant,
-#     config: ConfigType,
-#     add_entities: AddEntitiesCallback,
-#     discovery_info: DiscoveryInfoType | None = None,
-# ) -> None:
-#     """Set up of a Nissan Leaf binary sensor."""
-#     if discovery_info is None:
-#         return
-
-#     devices: list[LeafEntity] = []
-#     for vin, datastore in hass.data[DATA_LEAF].items():
-#         _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
-#         devices.append(LeafPluggedInSensor(datastore))
-#         devices.append(LeafChargingSensor(datastore))
-
-#     add_entities(devices, True)
 
 
 class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):

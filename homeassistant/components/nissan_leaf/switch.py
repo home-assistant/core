@@ -16,24 +16,7 @@ from . import DATA_CLIMATE, DATA_LEAF, LeafEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-# def setup_platform(
-#     hass: HomeAssistant,
-#     config: ConfigType,
-#     add_devices: AddEntitiesCallback,
-#     discovery_info: DiscoveryInfoType | None = None,
-# ) -> None:
-#     """Nissan Leaf switch platform setup."""
-#     if discovery_info is None:
-#         return
-
-#     devices = []
-#     for vin, datastore in hass.data[DATA_LEAF].items():
-#         _LOGGER.debug("Adding switch for vin=%s", vin)
-#         devices.append(LeafClimateSwitch(datastore))
-
-#     add_devices(devices, True)
-
-
+# FIXME: Should be making use of config_entry here I think
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,

@@ -33,38 +33,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# CONFIG_SCHEMA = vol.Schema(
-#     {
-#         DOMAIN: vol.All(
-#             cv.ensure_list,
-#             [
-#                 vol.Schema(
-#                     {
-#                         vol.Required(CONF_USERNAME): cv.string,
-#                         vol.Required(CONF_PASSWORD): cv.string,
-#                         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
-#                         vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): (
-#                             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
-#                         ),
-#                         vol.Optional(
-#                             CONF_CHARGING_INTERVAL, default=DEFAULT_CHARGING_INTERVAL
-#                         ): (
-#                             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
-#                         ),
-#                         vol.Optional(
-#                             CONF_CLIMATE_INTERVAL, default=DEFAULT_CLIMATE_INTERVAL
-#                         ): (
-#                             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
-#                         ),
-#                         vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean,
-#                     }
-#                 )
-#             ],
-#         )
-#     },
-#     extra=vol.ALLOW_EXTRA,
-# )
-
 
 async def validate_auth(
     hass: HomeAssistant, username: str, password: str, region: str
@@ -108,24 +76,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
-
-        #         if self._async_current_entries():
-        #             return self.async_abort(reason="single_instance_allowed")
-
-        #         if not self._all_region_codes_sorted:
-        #             nina: Nina = Nina(async_get_clientsession(self.hass))
-
-        #             try:
-        #                 self._all_region_codes_sorted = self.swap_key_value(
-        #                     await nina.getAllRegionalCodes()
-        #                 )
-        #             except ApiError:
-        #                 errors["base"] = "cannot_connect"
-        #             except Exception as err:  # pylint: disable=broad-except
-        #                 _LOGGER.exception("Unexpected exception: %s", err)
-        #                 return self.async_abort(reason="unknown")
-
-        #             self.split_regions()
 
         _LOGGER.debug("In async_step_user")  # FIXME: Remove after debugging
 
@@ -269,38 +219,3 @@ class NissanLeafOptionsFlowHandler(config_entries.OptionsFlow):
         _LOGGER.debug("New Options=%s", options)
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
-
-# class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
-#     """Handle a UPnP options flow."""
-
-#     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-#         """Initialize."""
-#         self.config_entry = config_entry
-
-#     async def async_step_init(self, user_input: Mapping = None) -> None:
-#         """Manage the options."""
-#         if user_input is not None:
-#             coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-#             update_interval_sec = user_input.get(
-#                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-#             )
-#             update_interval = timedelta(seconds=update_interval_sec)
-#             LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
-#             coordinator.update_interval = update_interval
-#             return self.async_create_entry(title="", data=user_input)
-
-#         scan_interval = self.config_entry.options.get(
-#             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-#         )
-#         return self.async_show_form(
-#             step_id="init",
-#             data_schema=vol.Schema(
-#                 {
-#                     vol.Optional(
-#                         CONF_SCAN_INTERVAL,
-#                         default=scan_interval,
-#                     ): vol.All(vol.Coerce(int), vol.Range(min=30)),
-#                 }
-#             ),
-#         )
