@@ -32,7 +32,7 @@ class SteamistSwitchEntity(SteamistEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return the binary sensor state."""
+        """Return the switch state."""
         return self._status.active
 
     async def async_turn_on(self, **kwargs: Any) -> None:

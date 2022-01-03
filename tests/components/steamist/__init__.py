@@ -27,10 +27,7 @@ def _patch_status_active(client=None):
 
     @contextmanager
     def _patcher():
-        with patch(
-            "homeassistant.components.steamist.Steamist",
-            return_value=client,
-        ):
+        with patch("homeassistant.components.steamist.Steamist", return_value=client):
             yield
 
     return _patcher()
@@ -43,10 +40,7 @@ def _patch_status_inactive(client=None):
 
     @contextmanager
     def _patcher():
-        with patch(
-            "homeassistant.components.steamist.Steamist",
-            return_value=client,
-        ):
+        with patch("homeassistant.components.steamist.Steamist", return_value=client):
             yield
 
     return _patcher()

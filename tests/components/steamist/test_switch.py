@@ -32,6 +32,7 @@ async def test_steam_active(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     client = _mocked_steamist()
+    client.async_get_status = AsyncMock(return_value=MOCK_ASYNC_GET_STATUS_ACTIVE)
     with _patch_status_active(client):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -61,6 +62,7 @@ async def test_steam_inactive(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     client = _mocked_steamist()
+    client.async_get_status = AsyncMock(return_value=MOCK_ASYNC_GET_STATUS_INACTIVE)
     with _patch_status_inactive(client):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
