@@ -1,5 +1,4 @@
 """Support for SleepIQ SleepNumber firmness and actuator number entities."""
-from typing import List
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +30,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SleepIQ bed sensors."""
     coordinator = hass.data[DATA_SLEEPIQ].coordinators[config_entry.data[CONF_USERNAME]]
-    entities = []
+    sleep_number_entities = []
+    actuator_entities = []
 
     for bed_id in coordinator.data:
         foundation_features = await hass.async_add_executor_job(
@@ -40,43 +40,37 @@ async def async_setup_entry(
 
         for side in SIDES:
             if getattr(coordinator.data[bed_id][BED], side) is not None:
-                entities.append(SleepIQFirmnessNumber(coordinator, bed_id, side))
+                sleep_number_entities.append(
+                    SleepIQFirmnessNumber(coordinator, bed_id, side)
+                )
 
             # For split foundations, create head and foot actuators for each side
             if not foundation_features.single:
-                entities.extend(
-                    add_actuator_entities(
-                        coordinator, bed_id, side, foundation_features
+                actuator_entities.append(
+                    SleepIQFoundationActuator(
+                        coordinator, bed_id, side, HEAD, foundation_features.single
                     )
                 )
 
-        # For single foundations (not split), only create a one head and one foot actuator.
+        # For single foundations (not split), only create a one head actuator.
         # It doesn't matter which side is passed to the entity, either one will properly
-        # control the actuators
+        # control it
         if foundation_features.single:
-            entities.extend(
-                add_actuator_entities(coordinator, bed_id, RIGHT, foundation_features)
+            actuator_entities.append(
+                SleepIQFoundationActuator(
+                    coordinator, bed_id, RIGHT, HEAD, foundation_features.single
+                )
             )
 
-    async_add_entities(entities, True)
-
-
-def add_actuator_entities(coordinator, bed_id, side, foundation_features) -> List:
-    """Create head actuator entity, and foot actuator if the foundation has that capability."""
-    entities = []
-    entities.append(
-        SleepIQFoundationActuator(
-            coordinator, bed_id, side, HEAD, foundation_features.single
-        )
-    )
-    if foundation_features.hasFootControl:
-        entities.append(
-            SleepIQFoundationActuator(
-                coordinator, bed_id, side, FOOT, foundation_features.single
+        # Foot control will never be split, always create one entity
+        # Again, the side doesn't matter
+        if foundation_features.hasFootControl:
+            actuator_entities.append(
+                SleepIQFoundationActuator(coordinator, bed_id, RIGHT, FOOT, True)
             )
-        )
 
-    return entities
+    async_add_entities(sleep_number_entities, True)
+    async_add_entities(actuator_entities, True)
 
 
 class SleepIQFirmnessNumber(SleepIQEntity, NumberEntity):
