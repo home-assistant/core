@@ -11,7 +11,10 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import (
@@ -30,7 +33,11 @@ from .entity import HomeConnectEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Home Connect light."""
 
     def get_entities():
