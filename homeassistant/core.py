@@ -7,7 +7,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Collection, Coroutine, Iterable, Mapping
+from collections.abc import Collection, Coroutine, Iterable, Mapping
 import datetime
 import enum
 import functools
@@ -18,7 +18,7 @@ import re
 import threading
 from time import monotonic
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Optional, TypeVar, cast
 from urllib.parse import urlparse
 
 import attr
@@ -1266,7 +1266,7 @@ class Service:
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Any],
+        func: Callable[[ServiceCall], None | Awaitable[None]],
         schema: vol.Schema | None,
         context: Context | None = None,
     ) -> None:
@@ -1550,11 +1550,15 @@ class ServiceRegistry:
     ) -> None:
         """Execute a service."""
         if handler.job.job_type == HassJobType.Coroutinefunction:
-            await handler.job.target(service_call)
+            await cast(Callable[[ServiceCall], Awaitable[None]], handler.job.target)(
+                service_call
+            )
         elif handler.job.job_type == HassJobType.Callback:
-            handler.job.target(service_call)
+            cast(Callable[[ServiceCall], None], handler.job.target)(service_call)
         else:
-            await self._hass.async_add_executor_job(handler.job.target, service_call)
+            await self._hass.async_add_executor_job(
+                cast(Callable[[ServiceCall], None], handler.job.target), service_call
+            )
 
 
 class Config:
