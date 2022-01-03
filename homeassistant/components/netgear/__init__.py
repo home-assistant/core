@@ -1,5 +1,6 @@
 """Support for Netgear routers."""
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -30,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=router.device_name,
         model=router.model,
         sw_version=router.firmware_version,
+        configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

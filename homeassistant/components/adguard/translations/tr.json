@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "password": "Parola",
                     "port": "Port",
                     "ssl": "SSL sertifikas\u0131 kullan\u0131r",

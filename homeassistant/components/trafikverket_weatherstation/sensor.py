@@ -5,15 +5,18 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 import aiohttp
-from pytrafikverket.trafikverket_weather import TrafikverketWeather
+from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -22,8 +25,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
@@ -69,7 +70,8 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Air temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:thermometer",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="road_temp",
@@ -77,13 +79,15 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Road temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:thermometer",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation",
         api_key="precipitationtype",
         name="Precipitation type",
         icon="mdi:weather-snowy-rainy",
+        entity_registry_enabled_default=False,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction",
@@ -91,6 +95,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind direction",
         native_unit_of_measurement=DEGREE,
         icon="mdi:flag-triangle",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction_text",
@@ -104,6 +109,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind speed",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
         icon="mdi:weather-windy",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed_max",
@@ -111,6 +117,8 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind speed max",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
         icon="mdi:weather-windy-variant",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="humidity",
@@ -118,7 +126,9 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amount",
@@ -126,18 +136,20 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Precipitation amount",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:cup-water",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amountname",
         api_key="precipitation_amountname",
         name="Precipitation name",
         icon="mdi:weather-pouring",
+        entity_registry_enabled_default=False,
     ),
 )
 
 SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
@@ -172,21 +184,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    sensor_name = entry.data[CONF_NAME]
-    sensor_api = entry.data[CONF_API_KEY]
-    sensor_station = entry.data[CONF_STATION]
-
     web_session = async_get_clientsession(hass)
+    weather_api = TrafikverketWeather(web_session, entry.data[CONF_API_KEY])
 
-    weather_api = TrafikverketWeather(web_session, sensor_api)
-
-    monitored_conditions = entry.data[CONF_MONITORED_CONDITIONS]
     entities = [
         TrafikverketWeatherStation(
-            weather_api, sensor_name, sensor_station, description
+            weather_api, entry.entry_id, entry.data[CONF_STATION], description
         )
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
     ]
 
     async_add_entities(entities, True)
@@ -199,29 +204,36 @@ class TrafikverketWeatherStation(SensorEntity):
 
     def __init__(
         self,
-        weather_api,
-        name,
-        sensor_station,
+        weather_api: TrafikverketWeather,
+        entry_id: str,
+        sensor_station: str,
         description: TrafikverketSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
+        self._attr_name = f"{sensor_station} {description.name}"
+        self._attr_unique_id = f"{entry_id}_{description.key}"
         self._station = sensor_station
         self._weather_api = weather_api
-        self._weather = None
+        self._weather: WeatherStationInfo | None = None
+        self._active: bool | None = None
+        self._measure_time: str | None = None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of Trafikverket Weatherstation."""
-        return {
+        _additional_attributes: dict[str, Any] = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_ACTIVE: self._weather.active,
-            ATTR_MEASURE_TIME: self._weather.measure_time,
         }
+        if self._active:
+            _additional_attributes[ATTR_ACTIVE] = self._active
+        if self._measure_time:
+            _additional_attributes[ATTR_MEASURE_TIME] = self._measure_time
+
+        return _additional_attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Trafikverket and updates the states."""
         try:
             self._weather = await self._weather_api.async_get_weather(self._station)
@@ -230,3 +242,6 @@ class TrafikverketWeatherStation(SensorEntity):
             )
         except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
             _LOGGER.error("Could not fetch weather data: %s", error)
+            return
+        self._active = self._weather.active
+        self._measure_time = self._weather.measure_time

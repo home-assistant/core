@@ -9,9 +9,8 @@ from typing import Any
 from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
@@ -119,7 +118,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
 class LitterRobotConfigEntity(LitterRobotControlEntity):
     """A Litter-Robot entity that can control configuration of the unit."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""

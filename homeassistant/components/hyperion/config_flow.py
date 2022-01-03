@@ -11,7 +11,6 @@ from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -189,22 +188,24 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # SSDP requires user confirmation.
         self._require_confirm = True
-        self._data[CONF_HOST] = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
+        self._data[CONF_HOST] = urlparse(discovery_info.ssdp_location).hostname
         try:
-            self._port_ui = urlparse(discovery_info[ATTR_SSDP_LOCATION]).port
+            self._port_ui = (
+                urlparse(discovery_info.ssdp_location).port or const.DEFAULT_PORT_UI
+            )
         except ValueError:
             self._port_ui = const.DEFAULT_PORT_UI
 
         try:
             self._data[CONF_PORT] = int(
-                discovery_info.get("ports", {}).get(
+                discovery_info.upnp.get("ports", {}).get(
                     "jsonServer", const.DEFAULT_PORT_JSON
                 )
             )
         except ValueError:
             self._data[CONF_PORT] = const.DEFAULT_PORT_JSON
 
-        if not (hyperion_id := discovery_info.get(ATTR_UPNP_SERIAL)):
+        if not (hyperion_id := discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL)):
             return self.async_abort(reason="no_id")
 
         # For discovery mechanisms, we set the unique_id as early as possible to

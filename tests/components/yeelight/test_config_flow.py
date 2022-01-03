@@ -55,7 +55,8 @@ DEFAULT_CONFIG = {
 SSDP_INFO = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
-    upnp=CAPABILITIES,
+    upnp={},
+    ssdp_headers=CAPABILITIES,
 )
 
 

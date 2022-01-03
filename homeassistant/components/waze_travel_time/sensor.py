@@ -25,6 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
@@ -50,7 +51,6 @@ from .const import (
     UNITS,
     VEHICLE_TYPES,
 )
-from .helpers import get_location_from_entity, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -237,23 +237,13 @@ class WazeTravelTime(SensorEntity):
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         # Get origin latitude and longitude from entity_id.
         if self._origin_entity_id is not None:
-            self._waze_data.origin = get_location_from_entity(
-                self.hass, _LOGGER, self._origin_entity_id
-            )
+            self._waze_data.origin = find_coordinates(self.hass, self._origin_entity_id)
 
         # Get destination latitude and longitude from entity_id.
         if self._destination_entity_id is not None:
-            self._waze_data.destination = get_location_from_entity(
-                self.hass, _LOGGER, self._destination_entity_id
+            self._waze_data.destination = find_coordinates(
+                self.hass, self._destination_entity_id
             )
-
-        # Get origin from zone name.
-        self._waze_data.origin = resolve_zone(self.hass, self._waze_data.origin)
-
-        # Get destination from zone name.
-        self._waze_data.destination = resolve_zone(
-            self.hass, self._waze_data.destination
-        )
 
         self._waze_data.update()
 

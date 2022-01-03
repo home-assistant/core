@@ -5,7 +5,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components import zeroconf
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
 from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
@@ -743,10 +742,8 @@ async def test_zeroconf_flow(
     # defaults which were set from discovery parameters
     user_input = result["data_schema"](
         {
-            CONF_HOST: f"{discovery_info[zeroconf.ATTR_HOST]}:{discovery_info[zeroconf.ATTR_PORT]}",
-            CONF_NAME: discovery_info[zeroconf.ATTR_NAME][
-                : -(len(discovery_info[zeroconf.ATTR_TYPE]) + 1)
-            ],
+            CONF_HOST: f"{discovery_info.host}:{discovery_info.port}",
+            CONF_NAME: discovery_info.name[: -(len(discovery_info.type) + 1)],
             CONF_DEVICE_CLASS: "speaker",
         }
     )

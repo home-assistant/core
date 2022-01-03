@@ -100,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle the configuration via dhcp."""
         self.discovery_info = {
-            CONF_IP_ADDRESS: discovery_info[dhcp.IP_ADDRESS],
+            CONF_IP_ADDRESS: discovery_info.ip,
             CONF_PORT: DEFAULT_PORT,
         }
         return await self._async_handle_discovery()

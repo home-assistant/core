@@ -7,10 +7,10 @@ from requests.exceptions import Timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
 
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartHabCover(CoverEntity):
     """Representation a cover."""
 
-    _attr_device_class = DEVICE_CLASS_WINDOW
+    _attr_device_class = CoverDeviceClass.WINDOW
 
     def __init__(self, cover):
         """Initialize a SmartHabCover."""

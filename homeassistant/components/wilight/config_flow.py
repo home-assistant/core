@@ -6,6 +6,7 @@ import pywilight
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
 
@@ -49,24 +50,24 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=self._title, data=data)
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered WiLight."""
         # Filter out basic information
         if (
-            not discovery_info.get(ssdp.ATTR_SSDP_LOCATION)
-            or ssdp.ATTR_UPNP_MANUFACTURER not in discovery_info
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info
-            or ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info
-            or ssdp.ATTR_UPNP_MODEL_NUMBER not in discovery_info
+            not discovery_info.ssdp_location
+            or ssdp.ATTR_UPNP_MANUFACTURER not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_MODEL_NUMBER not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_wilight_device")
         # Filter out non-WiLight devices
-        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
+        if discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
             return self.async_abort(reason="not_wilight_device")
 
-        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
-        model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
+        host = urlparse(discovery_info.ssdp_location).hostname
+        serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
 
         if not self._wilight_update(host, serial_number, model_name):
             return self.async_abort(reason="not_wilight_device")

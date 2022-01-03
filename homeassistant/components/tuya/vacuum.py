@@ -112,9 +112,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._supported_features |= SUPPORT_FAN_SPEED
             self._fan_speed_type = EnumTypeData.from_json(function.values)
 
-        if function := device.function.get(DPCode.ELECTRICITY_LEFT):
+        if status_range := device.status_range.get(DPCode.ELECTRICITY_LEFT):
             self._supported_features |= SUPPORT_BATTERY
-            self._battery_level_type = IntegerTypeData.from_json(function.values)
+            self._battery_level_type = IntegerTypeData.from_json(status_range.values)
 
     @property
     def battery_level(self) -> int | None:
@@ -171,7 +171,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     def pause(self, **kwargs: Any) -> None:
         """Pause the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": True}])
+        self._send_command([{"code": DPCode.POWER_GO, "value": False}])
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""

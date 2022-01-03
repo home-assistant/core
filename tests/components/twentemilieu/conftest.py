@@ -69,6 +69,7 @@ def mock_twentemilieu() -> Generator[None, MagicMock, None]:
             WasteType.ORGANIC: date(2021, 11, 2),
             WasteType.PACKAGES: date(2021, 11, 3),
             WasteType.PAPER: None,
+            WasteType.TREE: date(2022, 1, 6),
         }
         yield twentemilieu
 

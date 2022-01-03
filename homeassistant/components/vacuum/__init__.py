@@ -33,6 +33,7 @@ from homeassistant.helpers.entity import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -92,7 +93,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -341,17 +342,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Not supported."""
 
 
-class VacuumDevice(VacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "VacuumDevice is deprecated, modify %s to extend VacuumEntity", cls.__name__
-        )
-
-
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):
     """A class that describes vacuum entities."""
@@ -406,15 +396,3 @@ class StateVacuumEntity(_BaseVacuum):
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
-
-
-class StateVacuumDevice(StateVacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "StateVacuumDevice is deprecated, modify %s to extend StateVacuumEntity",
-            cls.__name__,
-        )

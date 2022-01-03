@@ -5,15 +5,12 @@ from typing import Any, Optional, Union, cast
 
 import greeneye
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
     TIME_HOURS,
@@ -162,7 +159,7 @@ class CurrentSensor(GEMSensor):
     """Entity showing power usage on one channel of the monitor."""
 
     _attr_native_unit_of_measurement = UNIT_WATTS
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = SensorDeviceClass.POWER
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, net_metering: bool
@@ -261,7 +258,7 @@ class PulseCounter(GEMSensor):
 class TemperatureSensor(GEMSensor):
     """Entity showing temperature from one temperature sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, unit: str
@@ -291,7 +288,7 @@ class VoltageSensor(GEMSensor):
     """Entity showing voltage."""
 
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-    _attr_device_class = DEVICE_CLASS_VOLTAGE
+    _attr_device_class = SensorDeviceClass.VOLTAGE
 
     def __init__(self, monitor_serial_number: int, number: int, name: str) -> None:
         """Construct the entity."""

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 
 import herepy
+from herepy.here_enum import RouteMode
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -198,14 +199,17 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     known_working_origin = [38.9, -77.04833]
     known_working_destination = [39.0, -77.1]
     try:
-        here_client.car_route(
+        here_client.public_transport_timetable(
             known_working_origin,
             known_working_destination,
+            True,
             [
-                herepy.RouteMode[ROUTE_MODE_FASTEST],
-                herepy.RouteMode[TRAVEL_MODE_CAR],
-                herepy.RouteMode[TRAFFIC_MODE_DISABLED],
+                RouteMode[ROUTE_MODE_FASTEST],
+                RouteMode[TRAVEL_MODE_CAR],
+                RouteMode[TRAFFIC_MODE_ENABLED],
             ],
+            arrival=None,
+            departure="now",
         )
     except herepy.InvalidCredentialsError:
         return False

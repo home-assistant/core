@@ -154,14 +154,18 @@ class LoginFlowBaseView(HomeAssistantView):
     async def _async_flow_result_to_response(self, request, client_id, result):
         """Convert the flow result to a response."""
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            if result["type"] == data_entry_flow.RESULT_TYPE_FORM:
-                # @log_invalid_auth does not work here since it returns HTTP 200
-                # need manually log failed login attempts
-                if result.get("errors", {}).get("base") in (
+            # @log_invalid_auth does not work here since it returns HTTP 200.
+            # We need to manually log failed login attempts.
+            if (
+                result["type"] == data_entry_flow.RESULT_TYPE_FORM
+                and (errors := result.get("errors"))
+                and errors.get("base")
+                in (
                     "invalid_auth",
                     "invalid_code",
-                ):
-                    await process_wrong_login(request)
+                )
+            ):
+                await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 
         result.pop("data")

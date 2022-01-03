@@ -11,14 +11,17 @@ from stringcase import camelcase, snakecase
 import thermoworks_smoke
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_EMAIL,
     CONF_EXCLUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
-    DEVICE_CLASS_TEMPERATURE,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -106,7 +109,7 @@ class ThermoworksSmokeSensor(SensorEntity):
         self._unique_id = f"{serial}-{sensor_type}"
         self.serial = serial
         self.mgr = mgr
-        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self.update_unit()
 
     @property

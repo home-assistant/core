@@ -9,11 +9,11 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
     DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
 )
-from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER, ATTR_UPNP_MODEL_NAME
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -100,7 +101,9 @@ IO_SCHEMA = vol.Schema(
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ZONE): vol.In(ZONES),
-        vol.Required(CONF_TYPE, default=DEVICE_CLASS_DOOR): DEVICE_CLASSES_SCHEMA,
+        vol.Required(
+            CONF_TYPE, default=BinarySensorDeviceClass.DOOR
+        ): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_INVERSE, default=False): cv.boolean,
     }
@@ -238,7 +241,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_user()
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered konnected panel.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -247,16 +250,16 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(discovery_info)
 
         try:
-            if discovery_info[ATTR_UPNP_MANUFACTURER] != KONN_MANUFACTURER:
+            if discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER] != KONN_MANUFACTURER:
                 return self.async_abort(reason="not_konn_panel")
 
             if not any(
-                name in discovery_info[ATTR_UPNP_MODEL_NAME]
+                name in discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
                 for name in KONN_PANEL_MODEL_NAMES
             ):
                 _LOGGER.warning(
                     "Discovered unrecognized Konnected device %s",
-                    discovery_info.get(ATTR_UPNP_MODEL_NAME, "Unknown"),
+                    discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "Unknown"),
                 )
                 return self.async_abort(reason="not_konn_panel")
 
@@ -266,7 +269,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Malformed Konnected SSDP info")
         else:
             # extract host/port from ssdp_location
-            netloc = urlparse(discovery_info["ssdp_location"]).netloc.split(":")
+            netloc = urlparse(discovery_info.ssdp_location).netloc.split(":")
             self._async_abort_entries_match(
                 {CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
             )
@@ -570,7 +573,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     {
                         vol.Required(
                             CONF_TYPE,
-                            default=current_cfg.get(CONF_TYPE, DEVICE_CLASS_DOOR),
+                            default=current_cfg.get(
+                                CONF_TYPE, BinarySensorDeviceClass.DOOR
+                            ),
                         ): DEVICE_CLASSES_SCHEMA,
                         vol.Optional(
                             CONF_NAME, default=current_cfg.get(CONF_NAME, vol.UNDEFINED)
@@ -599,7 +604,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         {
                             vol.Required(
                                 CONF_TYPE,
-                                default=current_cfg.get(CONF_TYPE, DEVICE_CLASS_DOOR),
+                                default=current_cfg.get(
+                                    CONF_TYPE, BinarySensorDeviceClass.DOOR
+                                ),
                             ): DEVICE_CLASSES_SCHEMA,
                             vol.Optional(
                                 CONF_NAME,

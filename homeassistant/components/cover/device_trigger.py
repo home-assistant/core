@@ -170,7 +170,9 @@ async def async_attach_trigger(
         }
         if CONF_FOR in config:
             state_config[CONF_FOR] = config[CONF_FOR]
-        state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+        state_config = await state_trigger.async_validate_trigger_config(
+            hass, state_config
+        )
         return await state_trigger.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
@@ -190,7 +192,9 @@ async def async_attach_trigger(
         CONF_ABOVE: min_pos,
         CONF_VALUE_TEMPLATE: value_template,
     }
-    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
+        hass, numeric_state_config
+    )
     return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )

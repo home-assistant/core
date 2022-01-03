@@ -29,6 +29,16 @@ def mock_wall_connector_version():
         yield
 
 
+@pytest.fixture
+async def mock_wall_connector_setup():
+    """Mock component setup."""
+    with patch(
+        "homeassistant.components.tesla_wall_connector.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
 def get_default_version_data():
     """Return default version data object for a wall connector."""
     return Version(

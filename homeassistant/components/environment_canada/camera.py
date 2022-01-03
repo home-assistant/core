@@ -1,40 +1,10 @@
 """Support for the Environment Canada radar imagery."""
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.camera import Camera
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import trigger_import
-from .const import ATTR_OBSERVATION_TIME, CONF_STATION, DOMAIN
-
-CONF_LOOP = "loop"
-CONF_PRECIP_TYPE = "precip_type"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_LOOP, default=True): cv.boolean,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): cv.matches_regex(r"^C[A-Z]{4}$|^[A-Z]{3}$"),
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_PRECIP_TYPE): vol.In(["RAIN", "SNOW"]),
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Environment Canada camera."""
-    lat = config.get(CONF_LATITUDE, hass.config.latitude)
-    lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    config[CONF_LATITUDE] = lat
-    config[CONF_LONGITUDE] = lon
-
-    trigger_import(hass, config)
+from .const import ATTR_OBSERVATION_TIME, DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

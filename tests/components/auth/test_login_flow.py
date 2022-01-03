@@ -54,33 +54,41 @@ async def test_invalid_username_password(hass, aiohttp_client):
     step = await resp.json()
 
     # Incorrect username
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={
-            "client_id": CLIENT_ID,
-            "username": "wrong-user",
-            "password": "test-pass",
-        },
-    )
+    with patch(
+        "homeassistant.components.auth.login_flow.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "wrong-user",
+                "password": "test-pass",
+            },
+        )
 
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
+    assert len(mock_process_wrong_login.mock_calls) == 1
 
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
 
     # Incorrect password
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={
-            "client_id": CLIENT_ID,
-            "username": "test-user",
-            "password": "wrong-pass",
-        },
-    )
+    with patch(
+        "homeassistant.components.auth.login_flow.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "wrong-pass",
+            },
+        )
 
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
+    assert len(mock_process_wrong_login.mock_calls) == 1
 
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
@@ -105,15 +113,23 @@ async def test_login_exist_user(hass, aiohttp_client):
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
-    )
+    with patch(
+        "homeassistant.components.auth.login_flow.process_success_login"
+    ) as mock_process_success_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
 
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
     assert step["type"] == "create_entry"
     assert len(step["result"]) > 1
+    assert len(mock_process_success_login.mock_calls) == 1
 
 
 async def test_login_local_only_user(hass, aiohttp_client):

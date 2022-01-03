@@ -4,6 +4,7 @@ from homeassistant.const import (
     CONF_LIGHTS,
     CONF_SENSORS,
     CONF_SWITCHES,
+    Platform,
 )
 
 CONF_ARDUINO_INSTANCE_ID = "arduino_instance_id"
@@ -27,8 +28,8 @@ CONF_SLEEP_TUNE = "sleep_tune"
 DOMAIN = "firmata"
 FIRMATA_MANUFACTURER = "Firmata"
 CONF_PLATFORM_MAP = {
-    CONF_BINARY_SENSORS: "binary_sensor",
-    CONF_LIGHTS: "light",
-    CONF_SENSORS: "sensor",
-    CONF_SWITCHES: "switch",
+    CONF_BINARY_SENSORS: Platform.BINARY_SENSOR,
+    CONF_LIGHTS: Platform.LIGHT,
+    CONF_SENSORS: Platform.SENSOR,
+    CONF_SWITCHES: Platform.SWITCH,
 }

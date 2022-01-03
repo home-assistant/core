@@ -8,7 +8,6 @@ from rokuecp import Roku, RokuError
 import voluptuous as vol
 
 from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -113,8 +112,8 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info.ssdp_location).hostname
-        name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
-        serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
+        name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
 
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

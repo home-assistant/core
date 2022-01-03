@@ -8,7 +8,7 @@ from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
@@ -60,28 +60,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle discovery from homekit."""
-        self._discovered_ip = discovery_info[zeroconf.ATTR_HOST]
+        self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery from dhcp."""
-        self._discovered_ip = discovery_info[dhcp.IP_ADDRESS]
+        self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle discovery from zeroconf."""
-        self._discovered_ip = discovery_info[zeroconf.ATTR_HOST]
+        self._discovered_ip = discovery_info.host
         await self.async_set_unique_id(
-            "{0:#0{1}x}".format(int(discovery_info[zeroconf.ATTR_NAME][-26:-18]), 18)
+            "{0:#0{1}x}".format(int(discovery_info.name[-26:-18]), 18)
         )
         return await self._async_handle_discovery_with_unique_id()
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle discovery from ssdp."""
-        self._discovered_ip = urlparse(discovery_info["location"]).hostname
-        await self.async_set_unique_id(discovery_info["id"])
+        self._discovered_ip = urlparse(discovery_info.ssdp_headers["location"]).hostname
+        await self.async_set_unique_id(discovery_info.ssdp_headers["id"])
         return await self._async_handle_discovery_with_unique_id()
 
     async def _async_handle_discovery_with_unique_id(self):

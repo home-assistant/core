@@ -4,15 +4,21 @@ import logging
 from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
-PLATFORMS = ["cover", "light", "scene"]
+PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -25,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the velux component."""
     try:
         hass.data[DATA_VELUX] = VeluxModule(hass, config[DOMAIN])
@@ -60,7 +66,7 @@ class VeluxModule:
             _LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
 
-        async def async_reboot_gateway(service_call):
+        async def async_reboot_gateway(service_call: ServiceCall) -> None:
             await self.pyvlx.reboot_gateway()
 
         self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)

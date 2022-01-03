@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,7 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
     """Representation of an updater binary sensor."""
 
-    _attr_device_class = DEVICE_CLASS_UPDATE
+    _attr_device_class = BinarySensorDeviceClass.UPDATE
     _attr_name = "Updater"
     _attr_unique_id = "updater"
 

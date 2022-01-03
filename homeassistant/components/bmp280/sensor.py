@@ -8,9 +8,8 @@ from busio import I2C
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
@@ -42,6 +41,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
+    _LOGGER.warning(
+        "The Bosch BMP280 Environmental Sensor integration is deprecated and "
+        "will be removed in Home Assistant Core 2022.4; "
+        "this integration is removed under Architectural Decision Record 0019, "
+        "more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     try:
         # initializing I2C bus using the auto-detected pins
         i2c = I2C(board.SCL, board.SDA)
@@ -87,7 +94,7 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
     def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
+            bmp280, f"{name} Temperature", TEMP_CELSIUS, SensorDeviceClass.TEMPERATURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -112,7 +119,7 @@ class Bmp280PressureSensor(Bmp280Sensor):
     def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE
+            bmp280, f"{name} Pressure", PRESSURE_HPA, SensorDeviceClass.PRESSURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

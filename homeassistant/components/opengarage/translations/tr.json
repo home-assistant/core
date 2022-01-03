@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "device_key": "Cihaz Anahtar\u0131",
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port",
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 }

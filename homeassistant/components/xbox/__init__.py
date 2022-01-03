@@ -21,7 +21,7 @@ from xbox.webapi.api.provider.smartglass.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
@@ -48,7 +48,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["media_player", "remote", "binary_sensor", "sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.REMOTE,
+    Platform.SENSOR,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

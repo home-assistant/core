@@ -2,8 +2,10 @@
 
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 DOMAIN = "devolo_home_network"
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 PRODUCT = "product"
 SERIAL_NUMBER = "serial_number"

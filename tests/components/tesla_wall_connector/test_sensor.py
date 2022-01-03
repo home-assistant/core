@@ -23,9 +23,26 @@ async def test_sensors(hass: HomeAssistant) -> None:
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_grid_frequency", "50.021", "49.981"
         ),
-        EntityAndExpectedValues("sensor.tesla_wall_connector_power", "7.6", "7.6"),
         EntityAndExpectedValues(
-            "sensor.tesla_wall_connector_total_energy", "988.022", "989.0"
+            "sensor.tesla_wall_connector_energy", "988022", "989000"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_phase_a_current", "10", "7"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_phase_b_current", "11.1", "8"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_phase_c_current", "12", "9"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_phase_a_voltage", "230.1", "228.1"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_phase_b_voltage", "231", "229.1"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_phase_c_voltage", "232.1", "230"
         ),
     ]
 
@@ -34,13 +51,11 @@ async def test_sensors(hass: HomeAssistant) -> None:
     mock_vitals_first_update.handle_temp_c = 25.51
     mock_vitals_first_update.grid_v = 230.15
     mock_vitals_first_update.grid_hz = 50.021
-    # to calculate power, we calculate power of each phase and sum up
-    # (230.1*10) + (231.1*11) + (232.1*12) = 7628.3 W
     mock_vitals_first_update.voltageA_v = 230.1
-    mock_vitals_first_update.voltageB_v = 231.1
+    mock_vitals_first_update.voltageB_v = 231
     mock_vitals_first_update.voltageC_v = 232.1
     mock_vitals_first_update.currentA_a = 10
-    mock_vitals_first_update.currentB_a = 11
+    mock_vitals_first_update.currentB_a = 11.1
     mock_vitals_first_update.currentC_a = 12
 
     mock_vitals_second_update = get_vitals_mock()
@@ -48,13 +63,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
     mock_vitals_second_update.handle_temp_c = -1.42
     mock_vitals_second_update.grid_v = 229.21
     mock_vitals_second_update.grid_hz = 49.981
-    # (228.1*10) + (229.1*11) + (230.1*12) = 7562.3 W
-    mock_vitals_second_update.voltageB_v = 228.1
-    mock_vitals_second_update.voltageC_v = 229.1
-    mock_vitals_second_update.voltageA_v = 230.1
-    mock_vitals_second_update.currentA_a = 10
-    mock_vitals_second_update.currentB_a = 11
-    mock_vitals_second_update.currentC_a = 12
+    mock_vitals_second_update.voltageA_v = 228.1
+    mock_vitals_second_update.voltageB_v = 229.1
+    mock_vitals_second_update.voltageC_v = 230
+    mock_vitals_second_update.currentA_a = 7
+    mock_vitals_second_update.currentB_a = 8
+    mock_vitals_second_update.currentC_a = 9
 
     lifetime_mock_first_update = get_lifetime_mock()
     lifetime_mock_first_update.energy_wh = 988022

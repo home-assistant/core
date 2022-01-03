@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Yetkilendirme URL'si olu\u015ftururken zaman a\u015f\u0131m\u0131.",
-            "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token]",
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131",
             "missing_configuration": "Bile\u015fen yap\u0131land\u0131r\u0131lmam\u0131\u015f. L\u00fctfen belgeleri takip edin.",
             "no_url_available": "Kullan\u0131labilir URL yok. Bu hata hakk\u0131nda bilgi i\u00e7in [yard\u0131m b\u00f6l\u00fcm\u00fcne bak\u0131n]({docs_url})",
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
