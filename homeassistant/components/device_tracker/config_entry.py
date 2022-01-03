@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import StateType
@@ -163,6 +164,71 @@ class ScannerEntity(BaseTrackerEntity):
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         raise NotImplementedError
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return unique ID of the entity."""
+        return self.mac_address
+
+    @final
+    @property
+    def device_info(self) -> None:
+        """Device tracker entities should not create device registry entries."""
+        return None
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        return self.find_device_entry() is not None
+
+    def find_device_entry(self) -> dr.DeviceEntry | None:
+        """Return device entry."""
+        if self.mac_address is None:
+            return None
+
+        return dr.async_get(self.hass).async_get_device(
+            set(), {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+        )
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Handle added to Home Assistant."""
+        await super().async_internal_added_to_hass()
+
+        # Entities without a unique ID don't have a device
+        if (
+            not self.registry_entry
+            or not self.platform
+            or not self.platform.config_entry
+        ):
+            return
+
+        device_entry = self.find_device_entry()
+
+        # Temporary to fix old approach to device trackers.
+        # Clean up device entry if device was created because of device tracker
+        if (
+            device_entry
+            and len(device_entry.config_entries) == 1
+            and self.platform.config_entry.entry_id in device_entry.config_entries
+        ):
+            dr.async_get(self.hass).async_remove_device(device_entry.id)
+            device_entry = None
+
+        if device_entry is None:
+            return
+
+        # Attach entry to device
+        if self.registry_entry.device_id != device_entry.id:
+            er.async_get(self.hass).async_update_entity(
+                self.entity_id, device_id=device_entry.id
+            )
+
+        # Attach device to config entry
+        if self.platform.config_entry.entry_id not in device_entry.config_entries:
+            dr.async_get(self.hass).async_update_device(
+                device_entry.id,
+                add_config_entry_id=self.platform.config_entry.entry_id,
+            )
 
     @final
     @property
