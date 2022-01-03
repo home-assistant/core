@@ -56,7 +56,6 @@ async def test_fan_basic(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
-    assert acc.char_current_state.value == 0
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
@@ -110,7 +109,6 @@ async def test_fan_basic(hass, hk_driver, events):
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
-    assert acc.char_current_state.value == 2
 
 
 async def test_fan_direction(hass, hk_driver, events):
@@ -278,7 +276,6 @@ async def test_fan_speed(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_ON, {ATTR_PERCENTAGE: 100})
     await hass.async_block_till_done()
     assert acc.char_speed.value == 100
-    assert acc.char_current_state.value == 2
 
     # Set from HomeKit
     call_set_percentage = async_mock_service(hass, DOMAIN, "set_percentage")

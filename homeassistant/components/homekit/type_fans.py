@@ -34,7 +34,6 @@ from homeassistant.core import callback
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
-    CHAR_CURRENT_FAN_STATE,
     CHAR_NAME,
     CHAR_ON,
     CHAR_ROTATION_DIRECTION,
@@ -59,7 +58,7 @@ class Fan(HomeAccessory):
     def __init__(self, *args):
         """Initialize a new Fan accessory object."""
         super().__init__(*args, category=CATEGORY_FAN)
-        chars = [CHAR_CURRENT_FAN_STATE]
+        chars = []
         state = self.hass.states.get(self.entity_id)
 
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -76,9 +75,6 @@ class Fan(HomeAccessory):
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
         self.set_primary_service(serv_fan)
         self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
-        self.char_current_state = serv_fan.configure_char(
-            CHAR_CURRENT_FAN_STATE, value=0
-        )
 
         self.char_direction = None
         self.char_speed = None
@@ -198,8 +194,8 @@ class Fan(HomeAccessory):
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):
-            self.char_active.set_value(int(state == STATE_ON))
-            self.char_current_state.set_value(2 if state == STATE_ON else 0)
+            self._state = 1 if state == STATE_ON else 0
+            self.char_active.set_value(self._state)
 
         # Handle Direction
         if self.char_direction is not None:
