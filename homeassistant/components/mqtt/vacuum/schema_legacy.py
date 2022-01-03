@@ -199,7 +199,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self._qos = config[CONF_QOS]
         self._retain = config[CONF_RETAIN]
-        self._encoding = config[CONF_ENCODING]
+        self._encoding = config[CONF_ENCODING] or None
 
         self._command_topic = config.get(CONF_COMMAND_TOPIC)
         self._set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
@@ -333,6 +333,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                     "topic": topic,
                     "msg_callback": message_received,
                     "qos": self._qos,
+                    "encoding": self._encoding,
                 }
                 for i, topic in enumerate(topics_list)
             },

@@ -290,6 +290,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "topic": self._topic[CONF_STATE_TOPIC],
                 "msg_callback": state_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
 
         @callback
@@ -335,6 +336,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "topic": self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC],
                 "msg_callback": target_humidity_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._target_humidity = None
 
@@ -367,6 +369,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "topic": self._topic[CONF_MODE_STATE_TOPIC],
                 "msg_callback": mode_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._mode = None
 

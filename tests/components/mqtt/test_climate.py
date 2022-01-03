@@ -9,7 +9,14 @@ import voluptuous as vol
 from homeassistant.components import climate
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
+    ATTR_AUX_HEAT,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
+    ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_AUTO,
@@ -27,7 +34,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-from homeassistant.const import STATE_OFF
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -40,6 +47,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -993,6 +1001,43 @@ async def test_unique_id(hass, mqtt_mock):
         ]
     }
     await help_test_unique_id(hass, mqtt_mock, CLIMATE_DOMAIN, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("action_topic", "heating", ATTR_HVAC_ACTION, "heating"),
+        ("action_topic", "cooling", ATTR_HVAC_ACTION, "cooling"),
+        ("aux_state_topic", "ON", ATTR_AUX_HEAT, "on"),
+        ("away_mode_state_topic", "ON", ATTR_PRESET_MODE, "away"),
+        ("current_temperature_topic", "22.1", ATTR_CURRENT_TEMPERATURE, 22.1),
+        ("fan_mode_state_topic", "low", ATTR_FAN_MODE, "low"),
+        ("hold_state_topic", "mode1", ATTR_PRESET_MODE, "mode1"),
+        ("mode_state_topic", "cool", None, None),
+        ("mode_state_topic", "fan_only", None, None),
+        ("swing_mode_state_topic", "on", ATTR_SWING_MODE, "on"),
+        ("temperature_low_state_topic", "19.1", ATTR_TARGET_TEMP_LOW, 19.1),
+        ("temperature_high_state_topic", "22.9", ATTR_TARGET_TEMP_HIGH, 22.9),
+        ("temperature_state_topic", "19.9", ATTR_TEMPERATURE, 19.9),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
+    config["hold_modes"] = ["mode1", "mode2"]
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        CLIMATE_DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )
 
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
