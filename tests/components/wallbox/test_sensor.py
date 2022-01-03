@@ -1,7 +1,11 @@
 """Test Wallbox Switch component."""
 from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, POWER_KILO_WATT
 
-from tests.components.wallbox import entry, setup_integration
+from tests.components.wallbox import (
+    entry,
+    setup_integration,
+    setup_integration_rounding_error,
+)
 from tests.components.wallbox.const import (
     CONF_MOCK_SENSOR_CHARGING_POWER_ID,
     CONF_MOCK_SENSOR_CHARGING_SPEED_ID,
@@ -25,5 +29,13 @@ async def test_wallbox_sensor_class(hass):
     # Test round with precision '0' works
     state = hass.states.get(CONF_MOCK_SENSOR_MAX_AVAILABLE_POWER)
     assert state.state == "25.0"
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_wallbox_sensor_class_rounding_error(hass):
+    """Test wallbox sensor class rounding error."""
+
+    await setup_integration_rounding_error(hass)
 
     await hass.config_entries.async_unload(entry.entry_id)

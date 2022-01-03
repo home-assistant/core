@@ -46,6 +46,25 @@ test_response = json.loads(
     )
 )
 
+test_response_rouding_error = json.loads(
+    json.dumps(
+        {
+            CONF_CHARGING_POWER_KEY: 0,
+            CONF_MAX_AVAILABLE_POWER_KEY: "NO_DATA",
+            CONF_CHARGING_SPEED_KEY: 0,
+            CONF_ADDED_RANGE_KEY: "NO_DATA",
+            CONF_ADDED_ENERGY_KEY: 44.697,
+            CONF_NAME_KEY: "WallboxName",
+            CONF_DATA_KEY: {
+                CONF_MAX_CHARGING_CURRENT_KEY: 24,
+                CONF_SERIAL_NUMBER_KEY: "20000",
+                CONF_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
+                CONF_SOFTWARE_KEY: {CONF_CURRENT_VERSION_KEY: "5.5.10"},
+            },
+        }
+    )
+)
+
 authorisation_response = json.loads(
     json.dumps(
         {
@@ -83,6 +102,34 @@ async def setup_integration(hass):
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
+            status_code=HTTPStatus.OK,
+        )
+
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def setup_integration_rounding_error(hass):
+    """Test wallbox sensor class setup."""
+
+    entry.add_to_hass(hass)
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://api.wall-box.com/auth/token/user",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response_rouding_error,
             status_code=HTTPStatus.OK,
         )
         mock_request.put(
