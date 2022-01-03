@@ -187,7 +187,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         data: ProtectData,
         device: Camera | Light | Viewer,
         description: ProtectSelectEntityDescription,
-    ):
+    ) -> None:
         """Initialize the unifi protect select entity."""
         assert description.ufp_value is not None
 
