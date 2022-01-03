@@ -741,7 +741,7 @@ class EventBus:
 
         listeners = self._listeners.get(event_type, [])
 
-        # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
+        # EVENT_HOMEASSISTANT_CLOSE should go only to this listeners
         match_all_listeners = self._listeners.get(MATCH_ALL)
         if match_all_listeners is not None and event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
