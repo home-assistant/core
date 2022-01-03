@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     ENERGY_KILO_WATT_HOUR,
@@ -28,6 +29,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_HOURS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import ViCareRequiredKeysMixin
@@ -355,7 +358,11 @@ async def _entities_from_descriptions(
                 all_devices.append(entity)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Create the ViCare sensor devices."""
     name = config_entry.data[CONF_NAME]
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
