@@ -9,15 +9,11 @@ from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_VOLTAGE,
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -83,22 +79,22 @@ class EDL21:
         "1-0:1.8.0*255": SensorEntityDescription(
             key="Positive active energy total",
             name="Positive active energy total",
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
         # E=1: Rate 1
         "1-0:1.8.1*255": SensorEntityDescription(
             key="Positive active energy in tariff T1",
             name="Positive active energy in tariff T1",
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
         # E=2: Rate 2
         "1-0:1.8.2*255": SensorEntityDescription(
             key="Positive active energy in tariff T2",
             name="Positive active energy in tariff T2",
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
         # D=17: Time integral 7
         # E=0: Total
@@ -112,22 +108,22 @@ class EDL21:
         "1-0:2.8.0*255": SensorEntityDescription(
             key="Negative active energy total",
             name="Negative active energy total",
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
         # E=1: Rate 1
         "1-0:2.8.1*255": SensorEntityDescription(
             key="Negative active energy in tariff T1",
             name="Negative active energy in tariff T1",
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
         # E=2: Rate 2
         "1-0:2.8.2*255": SensorEntityDescription(
             key="Negative active energy in tariff T2",
             name="Negative active energy in tariff T2",
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
         # C=14: Supply frequency
         # D=7: Instantaneous value
@@ -141,8 +137,8 @@ class EDL21:
         "1-0:15.7.0*255": SensorEntityDescription(
             key="Absolute active instantaneous power",
             name="Absolute active instantaneous power",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
         ),
         # C=16: Active power sum
         # D=7: Instantaneous value
@@ -150,8 +146,8 @@ class EDL21:
         "1-0:16.7.0*255": SensorEntityDescription(
             key="Sum active instantaneous power",
             name="Sum active instantaneous power",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
         ),
         # C=31: Active amperage L1
         # D=7: Instantaneous value
@@ -159,8 +155,8 @@ class EDL21:
         "1-0:31.7.0*255": SensorEntityDescription(
             key="L1 active instantaneous amperage",
             name="L1 active instantaneous amperage",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.CURRENT,
         ),
         # C=32: Active voltage L1
         # D=7: Instantaneous value
@@ -168,8 +164,8 @@ class EDL21:
         "1-0:32.7.0*255": SensorEntityDescription(
             key="L1 active instantaneous voltage",
             name="L1 active instantaneous voltage",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
         ),
         # C=36: Active power L1
         # D=7: Instantaneous value
@@ -183,8 +179,8 @@ class EDL21:
         "1-0:51.7.0*255": SensorEntityDescription(
             key="L2 active instantaneous amperage",
             name="L2 active instantaneous amperage",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.CURRENT,
         ),
         # C=52: Active voltage L2
         # D=7: Instantaneous value
@@ -192,8 +188,8 @@ class EDL21:
         "1-0:52.7.0*255": SensorEntityDescription(
             key="L2 active instantaneous voltage",
             name="L2 active instantaneous voltage",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
         ),
         # C=56: Active power L2
         # D=7: Instantaneous value
@@ -201,8 +197,8 @@ class EDL21:
         "1-0:56.7.0*255": SensorEntityDescription(
             key="L2 active instantaneous power",
             name="L2 active instantaneous power",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
         ),
         # C=71: Active amperage L3
         # D=7: Instantaneous value
@@ -210,8 +206,8 @@ class EDL21:
         "1-0:71.7.0*255": SensorEntityDescription(
             key="L3 active instantaneous amperage",
             name="L3 active instantaneous amperage",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.CURRENT,
         ),
         # C=72: Active voltage L3
         # D=7: Instantaneous value
@@ -219,8 +215,8 @@ class EDL21:
         "1-0:72.7.0*255": SensorEntityDescription(
             key="L3 active instantaneous voltage",
             name="L3 active instantaneous voltage",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
         ),
         # C=76: Active power L3
         # D=7: Instantaneous value
@@ -228,8 +224,8 @@ class EDL21:
         "1-0:76.7.0*255": SensorEntityDescription(
             key="L3 active instantaneous power",
             name="L3 active instantaneous power",
-            state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
         ),
         # C=81: Angles
         # D=7: Instantaneous value
