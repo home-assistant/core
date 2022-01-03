@@ -160,6 +160,16 @@ import pytest
 
 from homeassistant.components import light
 from homeassistant.components.mqtt.light.schema_basic import (
+    CONF_BRIGHTNESS_COMMAND_TOPIC,
+    CONF_COLOR_TEMP_COMMAND_TOPIC,
+    CONF_EFFECT_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_HS_COMMAND_TOPIC,
+    CONF_RGB_COMMAND_TOPIC,
+    CONF_RGBW_COMMAND_TOPIC,
+    CONF_RGBWW_COMMAND_TOPIC,
+    CONF_WHITE_VALUE_COMMAND_TOPIC,
+    CONF_XY_COMMAND_TOPIC,
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
 from homeassistant.const import (
@@ -181,6 +191,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -3500,3 +3511,66 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = light.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value,init_payload",
+    [
+        ("state_topic", "ON", None, "on", None),
+        ("brightness_state_topic", "60", "brightness", 60, ("state_topic", "ON")),
+        (
+            "color_mode_state_topic",
+            "200",
+            "color_mode",
+            "200",
+            ("state_topic", "ON"),
+        ),
+        ("color_temp_state_topic", "200", "color_temp", 200, ("state_topic", "ON")),
+        ("effect_state_topic", "random", "effect", "random", ("state_topic", "ON")),
+        ("hs_state_topic", "200,50", "hs_color", (200, 50), ("state_topic", "ON")),
+        (
+            "xy_state_topic",
+            "128,128",
+            "xy_color",
+            (128, 128),
+            ("state_topic", "ON"),
+        ),
+        (
+            "rgb_state_topic",
+            "255,0,240",
+            "rgb_color",
+            (255, 0, 240),
+            ("state_topic", "ON"),
+        ),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value, init_payload
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[light.DOMAIN])
+    config[CONF_EFFECT_COMMAND_TOPIC] = "light/CONF_EFFECT_COMMAND_TOPIC"
+    config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
+    config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
+    config[CONF_COLOR_TEMP_COMMAND_TOPIC] = "light/CONF_COLOR_TEMP_COMMAND_TOPIC"
+    config[CONF_HS_COMMAND_TOPIC] = "light/CONF_HS_COMMAND_TOPIC"
+    config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
+    config[CONF_RGBW_COMMAND_TOPIC] = "light/CONF_RGBW_COMMAND_TOPIC"
+    config[CONF_RGBWW_COMMAND_TOPIC] = "light/CONF_RGBWW_COMMAND_TOPIC"
+    config[CONF_XY_COMMAND_TOPIC] = "light/CONF_XY_COMMAND_TOPIC"
+    config[CONF_EFFECT_LIST] = ["colorloop", "random"]
+    if attribute and attribute == "brightness":
+        config[CONF_WHITE_VALUE_COMMAND_TOPIC] = "light/CONF_WHITE_VALUE_COMMAND_TOPIC"
+
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        light.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+        init_payload,
+    )

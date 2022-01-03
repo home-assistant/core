@@ -29,6 +29,7 @@ from .test_common import (
     help_test_discovery_update_attr,
     help_test_discovery_update_availability,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_category,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
@@ -927,3 +928,27 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = sensor.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "2.21", None, "2.21"),
+        ("state_topic", "beer", None, "beer"),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        sensor.DOMAIN,
+        DEFAULT_CONFIG[sensor.DOMAIN],
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )

@@ -412,6 +412,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                     "topic": self._topic[topic],
                     "msg_callback": msg_callback,
                     "qos": qos,
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
 
         def render_template(msg, template_name):

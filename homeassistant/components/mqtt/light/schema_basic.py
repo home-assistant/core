@@ -433,6 +433,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     "topic": self._topic[topic],
                     "msg_callback": msg_callback,
                     "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
 
         def restore_state(attribute, condition_attribute=None):
@@ -465,6 +466,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 "topic": self._topic[CONF_STATE_TOPIC],
                 "msg_callback": state_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
         elif self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
