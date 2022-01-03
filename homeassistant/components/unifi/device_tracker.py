@@ -324,6 +324,14 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         self._is_connected = device.state == 1
         self._controller_connection_state_changed = False
         self.schedule_update = False
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=self.device.model,
+            sw_version=self.device.version,
+        )
+        if self.device.name:
+            self._attr_device_info[ATTR_NAME] = self.device.name
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""
@@ -411,21 +419,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     def available(self) -> bool:
         """Return if controller is available."""
         return not self.device.disabled and self.controller.available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=self.device.model,
-            sw_version=self.device.version,
-        )
-
-        if self.device.name:
-            info[ATTR_NAME] = self.device.name
-
-        return info
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""

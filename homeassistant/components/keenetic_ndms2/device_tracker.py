@@ -24,9 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -216,15 +214,6 @@ class KeeneticTracker(ScannerEntity):
                 "interface": self._device.interface,
             }
         return None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a client description for device registry."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._device.mac)},
-            identifiers={(DOMAIN, self._device.mac)},
-            name=self._device.name if self._device.name else None,
-        )
 
     async def async_added_to_hass(self):
         """Client entity created."""

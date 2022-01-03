@@ -8,9 +8,7 @@ from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN
 from .router import FreeboxRouter
@@ -110,16 +108,6 @@ class FreeboxDevice(ScannerEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=self._manufacturer,
-            name=self.name,
-        )
 
     @property
     def should_poll(self) -> bool:
