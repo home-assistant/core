@@ -238,6 +238,35 @@ async def test_command_template_variables(hass, mqtt_mock):
     assert state.state == "beer"
 
 
+async def test_value_template_value(hass):
+    """Test the rendering of MQTT value template."""
+
+    variables = {"id": 1234, "some_var": "beer"}
+
+    # test rendering value
+    tpl = template.Template("{{ value_json.id }}", hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
+
+    # test variables at rendering
+    tpl = template.Template("{{ value_json.id }} {{ some_var }}", hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert (
+        val_tpl.async_render_with_possible_json_value(
+            '{"id": 4321}', variables=variables
+        )
+        == "4321 beer"
+    )
+
+    # test with default value if an error occurs due to an invalid template
+    tpl = template.Template("{{ value_json.id | as_datetime }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert (
+        val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
+        == "my default"
+    )
+
+
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
     """Test the service call if topic is missing."""
     with pytest.raises(vol.Invalid):

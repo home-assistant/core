@@ -99,6 +99,8 @@ from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+_SENTINEL = object()
+
 DATA_MQTT = "mqtt"
 
 SERVICE_PUBLISH = "publish"
@@ -314,6 +316,62 @@ class MqttCommandTemplate:
             values.update(variables)
         return _convert_outgoing_payload(
             self._attr_command_template.async_render(values, parse_result=False)
+        )
+
+
+class MqttValueTemplate:
+    """Class for rendering MQTT value template with possible json values."""
+
+    def __init__(
+        self,
+        value_template: template.Template | None,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
+        config_attributes: template.TemplateVarsType = None,
+    ) -> None:
+        """Instantiate a value template."""
+        self._value_template = value_template
+        self._config_attributes = config_attributes
+        if value_template is None:
+            return
+
+        value_template.hass = hass
+        self._entity = entity
+
+        if entity:
+            value_template.hass = entity.hass
+
+    @callback
+    def async_render_with_possible_json_value(
+        self,
+        payload: ReceivePayloadType,
+        default: ReceivePayloadType | object = _SENTINEL,
+        variables: template.TemplateVarsType = None,
+    ) -> ReceivePayloadType:
+        """Render with possible json value or pass-though a received MQTT value."""
+        if self._value_template is None:
+            return payload
+
+        values: dict[str, Any] = {}
+
+        if variables is not None:
+            values.update(variables)
+
+        if self._config_attributes is not None:
+            values.update(self._config_attributes)
+
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
+
+        if default == _SENTINEL:
+            return self._value_template.async_render_with_possible_json_value(
+                payload, variables=values
+            )
+
+        return self._value_template.async_render_with_possible_json_value(
+            payload, default, variables=values
         )
 
 

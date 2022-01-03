@@ -40,7 +40,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import PLATFORMS, MqttCommandTemplate, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -356,11 +356,10 @@ class MqttFan(MqttEntity, FanEntity):
             ).async_render
 
         for key, tpl in self._value_templates.items():
-            if tpl is None:
-                self._value_templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._value_templates[key] = tpl.async_render_with_possible_json_value
+            self._value_templates[key] = MqttValueTemplate(
+                tpl,
+                entity=self,
+            ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
