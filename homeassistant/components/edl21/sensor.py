@@ -262,12 +262,13 @@ class EDL21:
             else:
                 obis_sensor_properties = self._OBIS_SENSOR_PROPERTIES.get(obis)
                 if obis_sensor_properties and obis_sensor_properties.get("name"):
+                    name = obis_sensor_properties.get("name")
                     if self._name:
-                        name = f'{self._name}: {obis_sensor_properties.get("name")}'
+                        name = f"{self._name}: {name}"
 
                     entity_description = SensorEntityDescription(
                         key=obis,
-                        name=obis_sensor_properties.get("name"),
+                        name=name,
                         device_class=obis_sensor_properties.get("device_class"),
                         state_class=obis_sensor_properties.get("state_class"),
                     )
