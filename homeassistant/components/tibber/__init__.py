@@ -5,16 +5,19 @@ import logging
 import aiohttp
 import tibber
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
@@ -26,14 +29,14 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
 
     hass.data[DATA_HASS_CONFIG] = config
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
     tibber_connection = tibber.Tibber(

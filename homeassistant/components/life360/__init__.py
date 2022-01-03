@@ -9,6 +9,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.const import (
     SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_INCLUDE,
@@ -16,6 +17,7 @@ from homeassistant.const import (
     CONF_PREFIX,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -193,7 +195,7 @@ def setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     hass.data[DOMAIN]["apis"][entry.data[CONF_USERNAME]] = get_api(
         entry.data[CONF_AUTHORIZATION]
@@ -201,7 +203,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
     try:
         hass.data[DOMAIN]["apis"].pop(entry.data[CONF_USERNAME])
