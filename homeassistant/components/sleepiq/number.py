@@ -4,14 +4,16 @@ from typing import List
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.util.dt as dt_util
 
 from . import DATA_SLEEPIQ, SleepIQDataUpdateCoordinator, SleepIQEntity
 from .const import (
     ACTUATOR,
     ATTRIBUTES,
     BED,
+    DEFAULT_SCAN_INTERVAL,
     FOOT,
     HEAD,
     NAME,
@@ -94,18 +96,30 @@ class SleepIQFirmnessNumber(SleepIQEntity, NumberEntity):
         super().__init__(coordinator, bed_id, side)
         self._name = SLEEP_NUMBER
         self.client = coordinator.client
+        self._no_updates_until = dt_util.utcnow()
+        self._sleep_number = self._side.sleep_number
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        if self._no_updates_until > dt_util.utcnow():
+            return
+
+        self._sleep_number = self._side.sleep_number
+        self.async_write_ha_state()
 
     @property
     def value(self) -> float:
         """Return the sleep number."""
-        return self._side.sleep_number
+        return self._sleep_number
 
     async def async_set_value(self, value: float) -> None:
-        """Set new value."""
+        """Set new sleep number."""
         if await self.hass.async_add_executor_job(
             self.client.set_sleepnumber, self.side, value, self.bed_id
         ):
-            self._attr_value = value
+            self._sleep_number = value
+            self._no_updates_until = dt_util.utcnow() + DEFAULT_SCAN_INTERVAL
             self.async_write_ha_state()
 
 
@@ -130,6 +144,17 @@ class SleepIQFoundationActuator(SleepIQEntity, NumberEntity):
         self.actuator = actuator
         self.client = coordinator.client
         self.single = single
+        self._no_updates_until = dt_util.utcnow()
+        self._position = getattr(self._foundation, ATTRIBUTES[side][actuator])
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        if self._no_updates_until > dt_util.utcnow():
+            return
+
+        self._position = getattr(self._foundation, ATTRIBUTES[self.side][self.actuator])
+        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:
@@ -150,10 +175,10 @@ class SleepIQFoundationActuator(SleepIQEntity, NumberEntity):
     @property
     def value(self) -> float:
         """Return the foundation actuator position."""
-        return getattr(self._foundation, ATTRIBUTES[self.side][self.actuator])
+        return self._position
 
     async def async_set_value(self, value: float) -> None:
-        """Set new value."""
+        """Set new actuator position."""
         if await self.hass.async_add_executor_job(
             self.client.set_foundation_position,
             self.side,
@@ -161,5 +186,6 @@ class SleepIQFoundationActuator(SleepIQEntity, NumberEntity):
             value,
             self.bed_id,
         ):
-            self._attr_value = value
+            self._position = value
+            self._no_updates_until = dt_util.utcnow() + DEFAULT_SCAN_INTERVAL
             self.async_write_ha_state()
