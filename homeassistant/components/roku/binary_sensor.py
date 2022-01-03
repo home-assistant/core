@@ -23,7 +23,7 @@ from .entity import RokuEntity
 class RokuBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    is_on_fn: Callable[[RokuDevice], bool | None]
+    value_fn: Callable[[RokuDevice], bool | None]
 
 
 @dataclass
@@ -38,28 +38,28 @@ BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
         key="headphones_connected",
         name="Headphones Connected",
         icon="mdi:headphones",
-        is_on_fn=lambda device: device.info.headphones_connected,
+        value_fn=lambda device: device.info.headphones_connected,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_airplay",
         name="Supports AirPlay",
         icon="mdi:cast-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.info.supports_airplay,
+        value_fn=lambda device: device.info.supports_airplay,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_ethernet",
         name="Supports Ethernet",
         icon="mdi:ethernet",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.info.ethernet_support,
+        value_fn=lambda device: device.info.ethernet_support,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_find_remote",
         name="Supports Find Remote",
         icon="mdi:remote",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.info.supports_find_remote,
+        value_fn=lambda device: device.info.supports_find_remote,
     ),
 )
 
@@ -90,4 +90,4 @@ class RokuBinarySensorEntity(RokuEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return bool(self.entity_description.is_on_fn(self.coordinator.data))
+        return bool(self.entity_description.value_fn(self.coordinator.data))
