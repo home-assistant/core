@@ -83,7 +83,7 @@ DEVICE_RECORDING_MODES = [
     {"id": mode.value, "name": mode.value.title()} for mode in list(RecordingMode)
 ]
 
-DEVICE_CLASS_LCD_MESSAGE: Final = "lcd_message"
+DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
 
 @dataclass
