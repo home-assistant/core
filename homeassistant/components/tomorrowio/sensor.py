@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from pytomorrowio.const import (
     HealthConcernType,
