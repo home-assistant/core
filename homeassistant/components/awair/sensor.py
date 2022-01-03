@@ -5,7 +5,6 @@ from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
 import voluptuous as vol
 
-from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -21,6 +20,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AwairDataUpdateCoordinator, AwairResult
 from .const import (
     API_DUST,
     API_PM25,

@@ -4,8 +4,7 @@ from __future__ import annotations
 from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_NAME
@@ -77,7 +76,7 @@ class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
 class SyncThruOnlineSensor(SyncThruBinarySensor):
     """Implementation of a sensor that checks whether is turned on/online."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(self, syncthru, name):
         """Initialize the sensor."""
@@ -93,7 +92,7 @@ class SyncThruOnlineSensor(SyncThruBinarySensor):
 class SyncThruProblemSensor(SyncThruBinarySensor):
     """Implementation of a sensor that checks whether the printer works correctly."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, syncthru, name):
         """Initialize the sensor."""

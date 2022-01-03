@@ -6,13 +6,13 @@ from typing import Any
 from bond_api import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
     SUPPORT_OPEN_TILT,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -47,7 +47,7 @@ async def async_setup_entry(
 class BondCover(BondEntity, CoverEntity):
     """Representation of a Bond cover."""
 
-    _attr_device_class = DEVICE_CLASS_SHADE
+    _attr_device_class = CoverDeviceClass.SHADE
 
     def __init__(
         self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions

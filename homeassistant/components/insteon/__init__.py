@@ -5,9 +5,11 @@ import logging
 
 from pyinsteon import async_close, async_connect, devices
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
@@ -39,6 +41,8 @@ async def async_get_device_config(hass, config_entry):
     # Make a copy of addresses due to edge case where the list of devices could change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
+        if devices[address].is_battery:
+            continue
         with suppress(AttributeError):
             await devices[address].async_status()
 
@@ -68,7 +72,7 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Insteon platform."""
     if DOMAIN not in config:
         return True
@@ -87,7 +91,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
 
     if not devices.modem:

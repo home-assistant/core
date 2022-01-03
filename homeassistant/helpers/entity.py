@@ -37,13 +37,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import StateType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+
+from . import entity_registry as er
+from .device_registry import DeviceEntryType
+from .entity_platform import EntityPlatform
+from .event import Event, async_track_entity_registry_updated_event
+from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -177,6 +178,7 @@ class DeviceInfo(TypedDict, total=False):
     name: str | None
     suggested_area: str | None
     sw_version: str | None
+    hw_version: str | None
     via_device: tuple[str, str]
 
 
@@ -240,6 +242,9 @@ class Entity(ABC):
 
     # If we reported this entity is updated while disabled
     _disabled_reported = False
+
+    # If we reported this entity is using deprecated device_state_attributes
+    _deprecated_device_state_attributes_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -538,7 +543,10 @@ class Entity(ABC):
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
             # Warning added in 2021.12, will be removed in 2022.4
-            if self.device_state_attributes is not None:
+            if (
+                self.device_state_attributes is not None
+                and not self._deprecated_device_state_attributes_reported
+            ):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) implements device_state_attributes. Please %s",
@@ -546,6 +554,7 @@ class Entity(ABC):
                     type(self),
                     report_issue,
                 )
+                self._deprecated_device_state_attributes_reported = True
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})

@@ -44,7 +44,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -172,7 +172,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 host.get(CONF_NAME),
             )
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Map services to method of Bluesound devices."""
         if not (method := SERVICE_TO_METHOD.get(service.service)):
             return

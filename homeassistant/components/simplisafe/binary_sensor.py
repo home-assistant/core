@@ -6,18 +6,12 @@ from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
@@ -36,13 +30,13 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
 ]
 
 TRIGGERED_SENSOR_TYPES = {
-    DeviceTypes.CARBON_MONOXIDE: DEVICE_CLASS_GAS,
-    DeviceTypes.ENTRY: DEVICE_CLASS_DOOR,
-    DeviceTypes.GLASS_BREAK: DEVICE_CLASS_SAFETY,
-    DeviceTypes.LEAK: DEVICE_CLASS_MOISTURE,
-    DeviceTypes.MOTION: DEVICE_CLASS_MOTION,
-    DeviceTypes.SIREN: DEVICE_CLASS_SAFETY,
-    DeviceTypes.SMOKE: DEVICE_CLASS_SMOKE,
+    DeviceTypes.CARBON_MONOXIDE: BinarySensorDeviceClass.GAS,
+    DeviceTypes.ENTRY: BinarySensorDeviceClass.DOOR,
+    DeviceTypes.GLASS_BREAK: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.LEAK: BinarySensorDeviceClass.MOISTURE,
+    DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
+    DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
 }
 
 
@@ -100,8 +94,8 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
 class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     """Define a SimpliSafe battery binary sensor entity."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self, simplisafe: SimpliSafe, system: SystemV3, sensor: SensorV3

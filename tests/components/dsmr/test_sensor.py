@@ -12,10 +12,8 @@ from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
-from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -28,47 +26,8 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, patch
-
-
-async def test_setup_platform(hass, dsmr_connection_fixture):
-    """Test setup of platform."""
-    async_add_entities = MagicMock()
-
-    entry_data = {
-        "platform": DOMAIN,
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    serial_data = {"serial_id": "1234", "serial_id_gas": "5678"}
-
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.dsmr.config_flow._validate_dsmr_connection",
-        return_value=serial_data,
-    ):
-        assert await async_setup_component(
-            hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: entry_data}
-        )
-        await hass.async_block_till_done()
-
-    assert not async_add_entities.called
-
-    # Check config entry
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-
-    assert len(conf_entries) == 1
-
-    entry = conf_entries[0]
-
-    assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert entry.data == {**entry_data, **serial_data}
 
 
 async def test_default_setup(hass, dsmr_connection_fixture):

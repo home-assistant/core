@@ -11,11 +11,7 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.discovery import (
-    ALREADY_DISCOVERED,
-    MqttServiceInfo,
-    async_start,
-)
+from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -737,6 +733,100 @@ async def test_discovery_expansion_3(hass, mqtt_mock, caplog):
     )
 
 
+async def test_discovery_expansion_without_encoding_and_value_template_1(
+    hass, mqtt_mock, caplog
+):
+    """Test expansion of raw availability payload with a template as list."""
+    data = (
+        '{ "~": "some/base/topic",'
+        '  "name": "DiscoveryExpansionTest1",'
+        '  "stat_t": "test_topic/~",'
+        '  "cmd_t": "~/test_topic",'
+        '  "encoding":"",'
+        '  "availability": [{'
+        '    "topic":"~/avail_item1",'
+        '    "payload_available": "1",'
+        '    "payload_not_available": "0",'
+        '    "value_template":"{{value|unpack(\'b\')}}"'
+        "  }],"
+        '  "dev":{'
+        '    "ids":["5706DF"],'
+        '    "name":"DiscoveryExpansionTest1 Device",'
+        '    "mdl":"Generic",'
+        '    "sw":"1.2.3.4",'
+        '    "mf":"None",'
+        '    "sa":"default_area"'
+        "  }"
+        "}"
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x01")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state is not None
+    assert state.name == "DiscoveryExpansionTest1"
+    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_discovery_expansion_without_encoding_and_value_template_2(
+    hass, mqtt_mock, caplog
+):
+    """Test expansion of raw availability payload with a template directly."""
+    data = (
+        '{ "~": "some/base/topic",'
+        '  "name": "DiscoveryExpansionTest1",'
+        '  "stat_t": "test_topic/~",'
+        '  "cmd_t": "~/test_topic",'
+        '  "availability_topic":"~/avail_item1",'
+        '  "payload_available": "1",'
+        '  "payload_not_available": "0",'
+        '  "encoding":"",'
+        '  "availability_template":"{{ value | unpack(\'b\') }}",'
+        '  "dev":{'
+        '    "ids":["5706DF"],'
+        '    "name":"DiscoveryExpansionTest1 Device",'
+        '    "mdl":"Generic",'
+        '    "sw":"1.2.3.4",'
+        '    "mf":"None",'
+        '    "sa":"default_area"'
+        "  }"
+        "}"
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x01")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state is not None
+    assert state.name == "DiscoveryExpansionTest1"
+    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+
 ABBREVIATIONS_WHITE_LIST = [
     # MQTT client/server/trigger settings
     "CONF_BIRTH_MESSAGE",
@@ -909,27 +999,3 @@ async def test_mqtt_discovery_unsubscribe_once(hass, mqtt_client_mock, mqtt_mock
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
-
-
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = MqttServiceInfo(
-        topic="tasmota/discovery/DC4F220848A2/config",
-        payload="",
-        qos=0,
-        retain=False,
-        subscribed_topic="tasmota/discovery/#",
-        timestamp=None,
-    )
-
-    # Ensure first call get logged
-    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected code that accessed discovery_info['topic']" in caplog.text
-
-    # Ensure second call doesn't get logged
-    caplog.clear()
-    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected code that accessed discovery_info['topic']" not in caplog.text

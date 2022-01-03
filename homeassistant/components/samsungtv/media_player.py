@@ -8,7 +8,10 @@ from typing import Any
 import voluptuous as vol
 from wakeonlan import send_magic_packet
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -22,10 +25,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.samsungtv.bridge import (
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -37,6 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
+from .bridge import SamsungTVLegacyBridge, SamsungTVWSBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -107,7 +107,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_state: str | None = None
         self._attr_unique_id = config_entry.unique_id
         self._attr_is_volume_muted: bool = False
-        self._attr_device_class = DEVICE_CLASS_TV
+        self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
 
         if self._on_script or self._mac:

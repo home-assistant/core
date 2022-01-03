@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -35,21 +35,21 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:blur",
         name=ATTR_API_AQI,
         native_unit_of_measurement="aqi",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_PM25,
         icon="mdi:blur",
         name=ATTR_API_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_O3,
         icon="mdi:blur",
         name=ATTR_API_O3,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

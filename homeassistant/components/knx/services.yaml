@@ -23,6 +23,12 @@ send:
       example: "temperature"
       selector:
         text:
+    response:
+      name: "Send as Response"
+      description: "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+      default: false
+      selector:
+        boolean:
 read:
   name: "Read from KNX bus"
   description: "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities."

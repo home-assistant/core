@@ -5,11 +5,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
-    STATE_CLASS_TOTAL,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -119,7 +118,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        self._attr_state_class = STATE_CLASS_TOTAL
+        self._attr_state_class = SensorStateClass.TOTAL
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -149,9 +148,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 )
             if (
                 self.device_class is None
-                and new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+                and new_state.attributes.get(ATTR_DEVICE_CLASS)
+                == SensorDeviceClass.POWER
             ):
-                self._attr_device_class = DEVICE_CLASS_ENERGY
+                self._attr_device_class = SensorDeviceClass.ENERGY
 
             if (
                 old_state is None

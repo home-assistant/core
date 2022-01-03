@@ -1,9 +1,6 @@
 """Support for KEBA charging station binary sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SAFETY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -19,14 +16,32 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     sensors = [
         KebaBinarySensor(
-            keba, "Online", "Status", "device_state", DEVICE_CLASS_CONNECTIVITY
+            keba,
+            "Online",
+            "Status",
+            "device_state",
+            BinarySensorDeviceClass.CONNECTIVITY,
         ),
-        KebaBinarySensor(keba, "Plug", "Plug", "plug_state", DEVICE_CLASS_PLUG),
         KebaBinarySensor(
-            keba, "State", "Charging State", "charging_state", DEVICE_CLASS_POWER
+            keba,
+            "Plug",
+            "Plug",
+            "plug_state",
+            BinarySensorDeviceClass.PLUG,
         ),
         KebaBinarySensor(
-            keba, "Tmo FS", "Failsafe Mode", "failsafe_mode_state", DEVICE_CLASS_SAFETY
+            keba,
+            "State",
+            "Charging State",
+            "charging_state",
+            BinarySensorDeviceClass.POWER,
+        ),
+        KebaBinarySensor(
+            keba,
+            "Tmo FS",
+            "Failsafe Mode",
+            "failsafe_mode_state",
+            BinarySensorDeviceClass.SAFETY,
         ),
     ]
     async_add_entities(sensors)

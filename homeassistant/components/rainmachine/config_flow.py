@@ -85,7 +85,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 await self.async_set_unique_id(controller.mac)
                 self._abort_if_unique_id_configured(
-                    updates={CONF_IP_ADDRESS: ip_address}
+                    updates={CONF_IP_ADDRESS: ip_address}, reload_on_update=False
                 )
 
         # A new rain machine: We will change out the unique id

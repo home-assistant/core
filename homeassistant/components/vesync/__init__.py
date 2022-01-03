@@ -3,7 +3,9 @@ import logging
 
 from pyvesync import VeSync
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -19,14 +21,14 @@ from .const import (
     VS_SWITCHES,
 )
 
-PLATFORMS = ["switch", "fan", "light"]
+PLATFORMS = [Platform.SWITCH, Platform.FAN, Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Vesync as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
@@ -56,17 +58,17 @@ async def async_setup_entry(hass, config_entry):
 
     if device_dict[VS_SWITCHES]:
         switches.extend(device_dict[VS_SWITCHES])
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+        hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
 
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
-        hass.async_create_task(forward_setup(config_entry, "fan"))
+        hass.async_create_task(forward_setup(config_entry, Platform.FAN))
 
     if device_dict[VS_LIGHTS]:
         lights.extend(device_dict[VS_LIGHTS])
-        hass.async_create_task(forward_setup(config_entry, "light"))
+        hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
 
-    async def async_new_device_discovery(service):
+    async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
@@ -115,7 +117,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

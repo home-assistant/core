@@ -1,10 +1,5 @@
 """Constants for the Renault integration tests."""
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
@@ -13,11 +8,9 @@ from homeassistant.components.renault.const import (
     DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -46,6 +39,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_MINUTES,
     VOLUME_LITERS,
+    Platform,
 )
 
 ATTR_DEFAULT_DISABLED = "default_disabled"
@@ -97,7 +91,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.json",
         },
-        BINARY_SENSOR_DOMAIN: [
+        Platform.BINARY_SENSOR: [
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
@@ -111,7 +105,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
             },
         ],
-        BUTTON_DOMAIN: [
+        Platform.BUTTON: [
             {
                 ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
                 ATTR_ICON: "mdi:air-conditioner",
@@ -125,8 +119,8 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_charge",
             },
         ],
-        DEVICE_TRACKER_DOMAIN: [],
-        SELECT_DOMAIN: [
+        Platform.DEVICE_TRACKER: [],
+        Platform.SELECT: [
             {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
@@ -136,7 +130,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_mode",
             },
         ],
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_autonomy",
                 ATTR_ICON: "mdi:ev-station",
@@ -245,7 +239,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_ev.json",
             "location": "location.json",
         },
-        BINARY_SENSOR_DOMAIN: [
+        Platform.BINARY_SENSOR: [
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
@@ -259,7 +253,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
             },
         ],
-        BUTTON_DOMAIN: [
+        Platform.BUTTON: [
             {
                 ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
                 ATTR_ICON: "mdi:air-conditioner",
@@ -273,7 +267,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_charge",
             },
         ],
-        DEVICE_TRACKER_DOMAIN: [
+        Platform.DEVICE_TRACKER: [
             {
                 ATTR_ENTITY_ID: "device_tracker.reg_number_location",
                 ATTR_ICON: "mdi:car",
@@ -281,7 +275,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_location",
             }
         ],
-        SELECT_DOMAIN: [
+        Platform.SELECT: [
             {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
@@ -291,7 +285,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_mode",
             },
         ],
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_autonomy",
                 ATTR_ICON: "mdi:ev-station",
@@ -399,7 +393,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
         },
-        BINARY_SENSOR_DOMAIN: [
+        Platform.BINARY_SENSOR: [
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
@@ -413,7 +407,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charging",
             },
         ],
-        BUTTON_DOMAIN: [
+        Platform.BUTTON: [
             {
                 ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
                 ATTR_ICON: "mdi:air-conditioner",
@@ -427,7 +421,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_start_charge",
             },
         ],
-        DEVICE_TRACKER_DOMAIN: [
+        Platform.DEVICE_TRACKER: [
             {
                 ATTR_ENTITY_ID: "device_tracker.reg_number_location",
                 ATTR_ICON: "mdi:car",
@@ -435,7 +429,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location",
             }
         ],
-        SELECT_DOMAIN: [
+        Platform.SELECT: [
             {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
@@ -445,7 +439,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charge_mode",
             },
         ],
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_autonomy",
                 ATTR_ICON: "mdi:ev-station",
@@ -567,8 +561,8 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
         },
-        BINARY_SENSOR_DOMAIN: [],
-        BUTTON_DOMAIN: [
+        Platform.BINARY_SENSOR: [],
+        Platform.BUTTON: [
             {
                 ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
                 ATTR_ICON: "mdi:air-conditioner",
@@ -576,7 +570,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_start_air_conditioner",
             },
         ],
-        DEVICE_TRACKER_DOMAIN: [
+        Platform.DEVICE_TRACKER: [
             {
                 ATTR_ENTITY_ID: "device_tracker.reg_number_location",
                 ATTR_ICON: "mdi:car",
@@ -584,8 +578,8 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location",
             }
         ],
-        SELECT_DOMAIN: [],
-        SENSOR_DOMAIN: [
+        Platform.SELECT: [],
+        Platform.SENSOR: [
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_fuel_autonomy",
                 ATTR_ICON: "mdi:gas-station",

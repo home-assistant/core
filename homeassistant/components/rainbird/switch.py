@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
@@ -56,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices, True)
 
-    def start_irrigation(service):
+    def start_irrigation(service: ServiceCall) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = service.data[ATTR_DURATION]
 
@@ -71,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         schema=SERVICE_SCHEMA_IRRIGATION,
     )
 
-    def set_rain_delay(service):
+    def set_rain_delay(service: ServiceCall) -> None:
         duration = service.data[ATTR_DURATION]
 
         controller.set_rain_delay(duration)

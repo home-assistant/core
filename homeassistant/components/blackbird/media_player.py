@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SERVICE_SETALLZONES
@@ -105,7 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices, True)
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         source = service.data.get(ATTR_SOURCE)

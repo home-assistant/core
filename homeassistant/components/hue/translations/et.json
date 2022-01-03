@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Luba Hue r\u00fchmad",
                     "allow_hue_scenes": "Luba Hue stseenid",
-                    "allow_unreachable": "Luba k\u00e4ttesaamatutel pirnidel oma olekust \u00f5igesti teatada"
+                    "allow_unreachable": "Luba k\u00e4ttesaamatutel pirnidel oma olekust \u00f5igesti teatada",
+                    "ignore_availability": "Ignoreeri antud seadmete \u00fchenduvuse olekut"
                 }
             }
         }

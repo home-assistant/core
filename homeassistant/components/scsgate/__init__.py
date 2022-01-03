@@ -9,8 +9,9 @@ from scsgate.tasks import GetStatusTask
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE, CONF_NAME
-from homeassistant.core import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import EVENT_HOMEASSISTANT_STOP, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ SCSGATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
     scsgate = None

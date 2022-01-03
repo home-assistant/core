@@ -32,11 +32,12 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Autorisierungscode",
                     "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",
                     "password": "Passwort",
                     "username": "E-Mail"
                 },
-                "description": "Ab 2021 hat SimpliSafe auf einen neuen Authentifizierungsmechanismus \u00fcber seine Web-App umgestellt. Aufgrund technischer Einschr\u00e4nkungen gibt es am Ende dieses Prozesses einen manuellen Schritt; bitte stelle sicher, dass du die [Dokumentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) liest, bevor du beginnst.\n\nWenn du bereit bist, klicke [hier]({url}), um die SimpliSafe-Webanwendung zu \u00f6ffnen und deine Anmeldedaten einzugeben. Wenn der Vorgang abgeschlossen ist, kehre hierher zur\u00fcck und klicke auf Senden.",
+                "description": "SimpliSafe authentifiziert sich bei Home Assistant \u00fcber die SimpliSafe Web-App. Aufgrund technischer Beschr\u00e4nkungen gibt es am Ende dieses Prozesses einen manuellen Schritt; bitte stelle sicher, dass du die [Dokumentation]({docs_url}) liest, bevor du beginnst.\n\n1. Klicke [hier]({url}), um die SimpliSafe-Webanwendung zu \u00f6ffnen und deine Anmeldedaten einzugeben.\n\n2. Wenn der Anmeldevorgang abgeschlossen ist, kehre hierher zur\u00fcck und gib unten stehenden Autorisierungscode ein.",
                 "title": "Gib deine Informationen ein"
             }
         }

@@ -1,6 +1,7 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Any
 
 import voluptuous as vol
@@ -12,8 +13,10 @@ from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -227,7 +230,20 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     @callback
     def _update_state(self, result):
         super()._update_state(result)
-        self._attr_native_value = None if isinstance(result, TemplateError) else result
+        if isinstance(result, TemplateError):
+            self._attr_native_value = None
+            return
+
+        if result is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._attr_native_value = result
+            return
+
+        self._attr_native_value = async_parse_date_datetime(
+            result, self.entity_id, self.device_class
+        )
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -237,7 +253,7 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     extra_template_keys = (CONF_STATE,)
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | date | None:
         """Return state of the sensor."""
         return self._rendered.get(CONF_STATE)
 
@@ -245,3 +261,20 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     def state_class(self) -> str | None:
         """Sensor state class."""
         return self._config.get(CONF_STATE_CLASS)
+
+    @callback
+    def _process_data(self) -> None:
+        """Process new data."""
+        super()._process_data()
+
+        if (
+            state := self._rendered.get(CONF_STATE)
+        ) is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            return
+
+        self._rendered[CONF_STATE] = async_parse_date_datetime(
+            state, self.entity_id, self.device_class
+        )

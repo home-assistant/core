@@ -3,7 +3,9 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,7 +126,7 @@ async def async_register_panel(
     )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize custom panel."""
     if DOMAIN not in config:
         return True

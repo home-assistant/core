@@ -3,14 +3,11 @@
 from aiomusiccast.capabilities import NumberSetter
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.components.yamaha_musiccast import (
-    DOMAIN,
-    MusicCastCapabilityEntity,
-    MusicCastDataUpdateCoordinator,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
 
 
 async def async_setup_entry(
