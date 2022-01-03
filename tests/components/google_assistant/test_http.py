@@ -164,3 +164,29 @@ async def test_report_state(hass, aioclient_mock, hass_storage):
             REPORT_STATE_BASE_URL,
             {"requestId": ANY, "agentUserId": agent_user_id, "payload": message},
         )
+
+
+async def test_google_config_local_fulfillment(hass, aioclient_mock, hass_storage):
+    """Test the google config for local fulfillment."""
+    agent_user_id = "user"
+    local_webhook_id = "webhook"
+
+    hass_storage["google_assistant"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": {agent_user_id: {}},
+            "local_webhook_id": local_webhook_id,
+        },
+    }
+
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+
+    with patch.object(config, "async_call_homegraph_api"):
+        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
+        await hass.async_block_till_done()
+
+    assert config.local_sdk_user_id == agent_user_id
+    assert config.local_sdk_webhook_id == local_webhook_id
