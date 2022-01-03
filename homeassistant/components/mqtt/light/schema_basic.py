@@ -207,7 +207,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
                 CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE
@@ -224,14 +223,12 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 PLATFORM_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
-    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
-    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
+    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
+    cv.removed(CONF_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
