@@ -551,8 +551,8 @@ homeassistant/components/minecraft_server/* @elmurato
 tests/components/minecraft_server/* @elmurato
 homeassistant/components/minio/* @tkislan
 tests/components/minio/* @tkislan
-homeassistant/components/mobile_app/* @robbiet480
-tests/components/mobile_app/* @robbiet480
+homeassistant/components/mobile_app/* @home-assistant/core
+tests/components/mobile_app/* @home-assistant/core
 homeassistant/components/modbus/* @adamchengtkc @janiversen @vzahradnik
 tests/components/modbus/* @adamchengtkc @janiversen @vzahradnik
 homeassistant/components/modem_callerid/* @tkdrob

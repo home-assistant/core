@@ -33,6 +33,7 @@ from homeassistant.helpers import (
     network,
     storage,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
@@ -66,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Almond component."""
     hass.data[DOMAIN] = {}
 

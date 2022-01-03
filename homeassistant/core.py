@@ -85,9 +85,10 @@ async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
-_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
+# Internal; not helpers.typing.UNDEFINED due to circular dependency
+_UNDEF: dict[Any, Any] = {}
 # pylint: disable=invalid-name
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable[..., Any])
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
 
@@ -97,7 +98,7 @@ CORE_STORAGE_VERSION = 1
 DOMAIN = "homeassistant"
 
 # How long to wait to log tasks that are blocking
-BLOCK_LOG_TIMEOUT = 0.5
+BLOCK_LOG_TIMEOUT = 60
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
@@ -235,7 +236,7 @@ class HomeAssistant:
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
-        self.data: dict = {}
+        self.data: dict[str, Any] = {}
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -504,10 +505,8 @@ class HomeAssistant:
     async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
         # pylint: disable=no-self-use
-        wait_time = 0.0
+        wait_time = 0
         while pending:
-            for task in pending:
-                _LOGGER.debug("Waiting  for task: %s", task)
             _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
             if not pending:
                 return
@@ -1648,7 +1647,7 @@ class Config:
 
         return False
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Create a dictionary representation of the configuration.
 
         Async friendly.
@@ -1695,8 +1694,8 @@ class Config:
         location_name: str | None = None,
         time_zone: str | None = None,
         # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        external_url: str | dict | None = _UNDEF,
-        internal_url: str | dict | None = _UNDEF,
+        external_url: str | dict[Any, Any] | None = _UNDEF,
+        internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""

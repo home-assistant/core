@@ -38,7 +38,7 @@ from homeassistant.helpers.entity import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import DATA_MQTT, debug_info, publish, subscription
+from . import DATA_MQTT, MqttValueTemplate, debug_info, publish, subscription
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -254,17 +254,15 @@ class MqttAttributes(Entity):
 
     async def _attributes_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        attr_tpl = self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE)
-        if attr_tpl is not None:
-            attr_tpl.hass = self.hass
+        attr_tpl = MqttValueTemplate(
+            self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
         @callback
         @log_messages(self.hass, self.entity_id)
         def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
-                payload = msg.payload
-                if attr_tpl is not None:
-                    payload = attr_tpl.async_render_with_possible_json_value(payload)
+                payload = attr_tpl(msg.payload)
                 json_dict = json.loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
                     filtered_dict = {
@@ -290,6 +288,7 @@ class MqttAttributes(Entity):
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                     "msg_callback": attributes_message_received,
                     "qos": self._attributes_config.get(CONF_QOS),
+                    "encoding": self._attributes_config[CONF_ENCODING] or None,
                 }
             },
         )
@@ -356,14 +355,10 @@ class MqttAvailability(Entity):
             topic,  # pylint: disable=unused-variable
             avail_topic_conf,
         ) in self._avail_topics.items():
-            tpl = avail_topic_conf[CONF_AVAILABILITY_TEMPLATE]
-            if tpl is None:
-                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                avail_topic_conf[
-                    CONF_AVAILABILITY_TEMPLATE
-                ] = tpl.async_render_with_possible_json_value
+            avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
+                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE],
+                entity=self,
+            ).async_render_with_possible_json_value
 
         self._avail_config = config
 

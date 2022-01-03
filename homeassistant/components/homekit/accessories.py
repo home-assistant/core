@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SERVICE,
@@ -43,6 +44,11 @@ from .const import (
     BRIDGE_SERIAL_NUMBER,
     CHAR_BATTERY_LEVEL,
     CHAR_CHARGING_STATE,
+    CHAR_FIRMWARE_REVISION,
+    CHAR_HARDWARE_REVISION,
+    CHAR_MANUFACTURER,
+    CHAR_MODEL,
+    CHAR_SERIAL_NUMBER,
     CHAR_STATUS_LOW_BATTERY,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -59,6 +65,7 @@ from .const import (
     MAX_MODEL_LENGTH,
     MAX_SERIAL_LENGTH,
     MAX_VERSION_LENGTH,
+    SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
@@ -74,7 +81,7 @@ from .util import (
     async_show_setup_message,
     cleanup_name_for_homekit,
     convert_to_float,
-    format_sw_version,
+    format_version,
     validate_media_player_features,
 )
 
@@ -256,7 +263,7 @@ class HomeAccessory(Accessory):
             domain = split_entity_id(entity_id)[0].replace("_", " ")
 
         if self.config.get(ATTR_MANUFACTURER) is not None:
-            manufacturer = self.config[ATTR_MANUFACTURER]
+            manufacturer = str(self.config[ATTR_MANUFACTURER])
         elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
         elif domain:
@@ -264,16 +271,32 @@ class HomeAccessory(Accessory):
         else:
             manufacturer = MANUFACTURER
         if self.config.get(ATTR_MODEL) is not None:
-            model = self.config[ATTR_MODEL]
+            model = str(self.config[ATTR_MODEL])
         elif domain:
             model = domain.title()
         else:
             model = MANUFACTURER
         sw_version = None
         if self.config.get(ATTR_SW_VERSION) is not None:
-            sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
+            sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
             sw_version = __version__
+        hw_version = None
+        if self.config.get(ATTR_HW_VERSION) is not None:
+            hw_version = format_version(self.config[ATTR_HW_VERSION])
+
+        if hw_version:
+            serv_info = self.add_preload_service(
+                SERV_ACCESSORY_INFO,
+                [
+                    CHAR_MANUFACTURER,
+                    CHAR_MODEL,
+                    CHAR_FIRMWARE_REVISION,
+                    CHAR_SERIAL_NUMBER,
+                    CHAR_HARDWARE_REVISION,
+                ],
+            )
+            serv_info.configure_char(CHAR_HARDWARE_REVISION, value=hw_version)
 
         self.set_info_service(
             manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],

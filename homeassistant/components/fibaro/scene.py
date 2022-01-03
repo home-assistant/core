@@ -1,12 +1,22 @@
 """Support for Fibaro scenes."""
+from __future__ import annotations
+
 from typing import Any
 
 from homeassistant.components.scene import Scene
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Fibaro scenes."""
     if discovery_info is None:
         return

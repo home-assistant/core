@@ -350,7 +350,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.2
+async-upnp-client==0.23.3
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -475,7 +475,7 @@ btsmarthub_devicelist==0.2.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==0.7.1
+caldav==0.8.2
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
@@ -1711,7 +1711,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.3.1
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.6
+pyoctoprintapi==0.1.7
 
 # homeassistant.components.ombi
 pyombi==0.1.10
