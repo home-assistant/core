@@ -1,14 +1,12 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Launch Library is already configured"
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
             "user": {
-                "description": "Do you want to configure Launch Library?",
-                "title": "Launch Library"
+                "description": "Do you want to configure the Launch Library?"
             }
         }
-    },
-    "title": "Launch Library"
+    }
 }
