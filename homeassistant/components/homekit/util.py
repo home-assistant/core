@@ -420,7 +420,7 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
 def format_version(version):
     """Extract the version string in a format homekit can consume."""
     split_ver = str(version).replace("-", ".")
-    num_only = NUMBERS_ONLY_RE.sub("", split_ver).lstrip("0")
+    num_only = NUMBERS_ONLY_RE.sub("", split_ver)
     match = VERSION_RE.search(num_only)
     if match:
         return match.group(0)
