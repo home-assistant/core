@@ -3,7 +3,7 @@
   "name": "Steamist",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/steamist",
-  "requirements": ["aiosteamist==0.3.0"],
+  "requirements": ["aiosteamist==0.2.1"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_polling"
 }
