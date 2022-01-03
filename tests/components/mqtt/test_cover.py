@@ -934,12 +934,11 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
                 "position_closed": 0,
                 "set_position_topic": "set-position-topic",
                 "set_position_template": "{{position-1}}",
-                "tilt_command_template": '\
-                {% if state_attr(entity_id, "friendly_name") != "test" %}\
-                  {{ 5 }}\
-                {% else %}\
-                  {{ 23 }}\
-                {% endif %}',
+                "tilt_command_template": "{"
+                '"enitity_id": "{{ entity_id }}",'
+                '"value": {{ value }},'
+                '"tilt_position": {{ tilt_position }}'
+                "}",
                 "payload_open": "OPEN",
                 "payload_close": "CLOSE",
                 "payload_stop": "STOP",
@@ -951,12 +950,57 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 99},
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 45},
         blocking=True,
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "23", 0, False
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 45,"tilt_position": 45}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 0,"tilt_position": 0}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        0,
+        False,
     )
 
 

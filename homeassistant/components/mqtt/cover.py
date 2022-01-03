@@ -603,10 +603,20 @@ class MqttCover(MqttEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
+        tilt_open_position = self._config[CONF_TILT_OPEN_POSITION]
+        variables = {
+            "tilt_position": tilt_open_position,
+            "entity_id": self.entity_id,
+            "position_open": self._config.get(CONF_POSITION_OPEN),
+            "position_closed": self._config.get(CONF_POSITION_CLOSED),
+            "tilt_min": self._config.get(CONF_TILT_MIN),
+            "tilt_max": self._config.get(CONF_TILT_MAX),
+        }
+        tilt_payload = self._set_tilt_template(tilt_open_position, variables=variables)
         await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_TILT_COMMAND_TOPIC),
-            self._config[CONF_TILT_OPEN_POSITION],
+            tilt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
@@ -619,10 +629,22 @@ class MqttCover(MqttEntity, CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
+        tilt_closed_position = self._config[CONF_TILT_CLOSED_POSITION]
+        variables = {
+            "tilt_position": tilt_closed_position,
+            "entity_id": self.entity_id,
+            "position_open": self._config.get(CONF_POSITION_OPEN),
+            "position_closed": self._config.get(CONF_POSITION_CLOSED),
+            "tilt_min": self._config.get(CONF_TILT_MIN),
+            "tilt_max": self._config.get(CONF_TILT_MAX),
+        }
+        tilt_payload = self._set_tilt_template(
+            tilt_closed_position, variables=variables
+        )
         await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_TILT_COMMAND_TOPIC),
-            self._config[CONF_TILT_CLOSED_POSITION],
+            tilt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
