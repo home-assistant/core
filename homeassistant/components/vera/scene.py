@@ -60,3 +60,8 @@ class VeraScene(Scene):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the scene."""
         return {"vera_scene_id": self.vera_scene.vera_scene_id}
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return "vera_scene_"+str(self.vera_scene.scene_id)
