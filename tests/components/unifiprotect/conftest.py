@@ -12,6 +12,9 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from pyunifiprotect.data import Camera, Light, Version, WSSubscriptionMessage
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data.devices import Viewer
+from pyunifiprotect.data.nvr import DoorbellMessage, Liveview
+from pyunifiprotect.data.types import DoorbellMessageType, ModelType
 
 from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
 from homeassistant.const import Platform
@@ -34,6 +37,27 @@ class MockPortData:
 
 
 @dataclass
+class MockDoorbellSettings:
+    """Mock Port information."""
+
+    default_message_text = "Welcome"
+    all_messages = [
+        DoorbellMessage(
+            type=DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR,
+            text=DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR.value.replace("_", " "),
+        ),
+        DoorbellMessage(
+            type=DoorbellMessageType.DO_NOT_DISTURB,
+            text=DoorbellMessageType.DO_NOT_DISTURB.value.replace("_", " "),
+        ),
+        DoorbellMessage(
+            type=DoorbellMessageType.CUSTOM_MESSAGE,
+            text="Test",
+        ),
+    ]
+
+
+@dataclass
 class MockNvrData:
     """Mock for NVR."""
 
@@ -42,6 +66,9 @@ class MockNvrData:
     name: str
     id: str
     ports: MockPortData = MockPortData()
+    doorbell_settings = MockDoorbellSettings()
+    update_all_messages = Mock()
+    model: ModelType = ModelType.NVR
 
 
 @dataclass
@@ -53,6 +80,15 @@ class MockBootstrap:
     lights: dict[str, Any]
     sensors: dict[str, Any]
     viewers: dict[str, Any]
+    liveviews: dict[str, Any]
+
+    def reset_objects(self) -> None:
+        """Reset all devices on bootstrap for tests."""
+        self.cameras = {}
+        self.lights = {}
+        self.sensors = {}
+        self.viewers = {}
+        self.liveviews = {}
 
 
 @dataclass
@@ -71,7 +107,7 @@ MOCK_OLD_NVR_DATA = MockNvrData(
 )
 
 MOCK_BOOTSTRAP = MockBootstrap(
-    nvr=MOCK_NVR_DATA, cameras={}, lights={}, sensors={}, viewers={}
+    nvr=MOCK_NVR_DATA, cameras={}, lights={}, sensors={}, viewers={}, liveviews={}
 )
 
 
@@ -123,6 +159,17 @@ def mock_entry(
 
 
 @pytest.fixture
+def mock_liveview():
+    """Mock UniFi Protect Camera device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_liveview.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    yield Liveview.from_unifi_dict(**data)
+
+
+@pytest.fixture
 def mock_camera():
     """Mock UniFi Protect Camera device."""
 
@@ -142,6 +189,17 @@ def mock_light():
         data = json.load(json_file)
 
     yield Light.from_unifi_dict(**data)
+
+
+@pytest.fixture
+def mock_viewer():
+    """Mock UniFi Protect Viewport device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_viewport.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    yield Viewer.from_unifi_dict(**data)
 
 
 async def time_changed(hass: HomeAssistant, seconds: int) -> None:
