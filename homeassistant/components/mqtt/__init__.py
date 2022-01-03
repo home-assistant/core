@@ -23,6 +23,8 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
     CONF_PASSWORD,
@@ -47,6 +49,7 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
@@ -259,14 +262,21 @@ class MqttCommandTemplate:
     def __init__(
         self,
         command_template: template.Template | None,
-        hass: HomeAssistant,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
     ) -> None:
         """Instantiate a command template."""
         self._attr_command_template = command_template
         if command_template is None:
             return
 
+        self._entity = entity
+
         command_template.hass = hass
+
+        if entity:
+            command_template.hass = entity.hass
 
     @callback
     def async_render(
@@ -295,6 +305,9 @@ class MqttCommandTemplate:
             return value
 
         values = {"value": value}
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
         if variables is not None:
             values.update(variables)
         return _convert_outgoing_payload(
@@ -613,7 +626,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if payload_template is not None:
             try:
                 payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass
+                    template.Template(payload_template), hass=hass
                 ).async_render()
             except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(

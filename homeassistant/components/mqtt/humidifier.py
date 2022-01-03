@@ -258,7 +258,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
-                tpl, self.hass
+                tpl, entity=self
             ).async_render
 
         for key, tpl in self._value_templates.items():
