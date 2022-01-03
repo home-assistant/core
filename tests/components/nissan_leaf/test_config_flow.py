@@ -17,28 +17,28 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.nissan_leaf2.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.nissan_leaf.config_flow.PlaceholderHub.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.nissan_leaf2.async_setup_entry",
+        "homeassistant.components.nissan_leaf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                "region": "NE",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Nissan Leaf"
     assert result2["data"] == {
-        "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
+        "region": "NE",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -50,15 +50,15 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nissan_leaf2.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.nissan_leaf.config_flow.PlaceholderHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                "region": "NE",
             },
         )
 
@@ -73,15 +73,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nissan_leaf2.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.nissan_leaf.config_flow.PlaceholderHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                "host": "NE",
             },
         )
 
