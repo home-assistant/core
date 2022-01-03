@@ -9,7 +9,6 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation.const import CONF_CHANGED_STATES
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -18,6 +17,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
 from . import DEVICE_TRIGGER_BASE_SCHEMA
+from .const import CONF_CHANGED_STATES
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
