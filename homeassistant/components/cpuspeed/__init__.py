@@ -1,12 +1,21 @@
 """The CPU Speed integration."""
+from cpuinfo import cpuinfo
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import PLATFORMS
+from .const import LOGGER, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    if not await hass.async_add_executor_job(cpuinfo.get_cpu_info):
+        LOGGER.error(
+            "Unable to get CPU information, the CPU Speed integration "
+            "is not compatible with your system"
+        )
+        return False
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 

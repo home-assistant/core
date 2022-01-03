@@ -727,15 +727,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # We cannot have a device class, if the UOM isn't set or the
             # device class cannot be found in the validation mapping.
             if (
-                self.unit_of_measurement is None
+                self.native_unit_of_measurement is None
                 or self.device_class not in DEVICE_CLASS_UNITS
             ):
                 self._attr_device_class = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
-            self._uom = uoms.get(self.unit_of_measurement) or uoms.get(
-                self.unit_of_measurement.lower()
+            self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
+                self.native_unit_of_measurement.lower()
             )
 
             # Unknown unit of measurement, device class should not be used.
