@@ -841,6 +841,9 @@ def test_min(hass):
     with pytest.raises(TemplateError):
         template.Template("{{ min() }}", hass).async_render()
 
+    with pytest.raises(TemplateError):
+        template.Template("{{ min(1) }}", hass).async_render()
+
 
 def test_max(hass):
     """Test the max filter."""
@@ -853,6 +856,9 @@ def test_max(hass):
 
     with pytest.raises(TemplateError):
         template.Template("{{ max() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max(1) }}", hass).async_render()
 
 
 @pytest.mark.parametrize(
