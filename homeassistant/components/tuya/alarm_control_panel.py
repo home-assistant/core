@@ -94,6 +94,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
     _attr_icon = "mdi:security"
+    _attr_supported_features = 0
 
     def __init__(
         self,
@@ -110,7 +111,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         supported_mode = EnumTypeData.from_json(
             device.function[DPCode.MASTER_MODE].values
         ).range
-        self._attr_supported_features = 0
+
         if Mode.HOME in supported_mode:
             self._attr_supported_features |= SUPPORT_ALARM_ARM_HOME
 

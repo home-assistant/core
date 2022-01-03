@@ -281,7 +281,7 @@ class Entity(ABC):
     _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
-    _attr_supported_features: int = 0
+    _attr_supported_features: int | None = None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
