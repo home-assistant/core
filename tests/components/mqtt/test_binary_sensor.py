@@ -35,6 +35,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_unique_id,
@@ -829,3 +830,10 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = binary_sensor.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)

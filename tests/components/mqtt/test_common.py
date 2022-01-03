@@ -4,11 +4,19 @@ from datetime import datetime
 import json
 from unittest.mock import ANY, patch
 
+import yaml
+
+from homeassistant import config as hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
@@ -1383,3 +1391,50 @@ async def help_test_publishing_with_custom_encoding(
         "cmd/test5", tpl_output or str(payload)[0].encode("utf-8"), 0, False
     )
     mqtt_mock.async_publish.reset_mock()
+
+
+async def help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config):
+    """Test reloading an MQTT platform."""
+    # Create and test an old config of 2 entities based on the config supplied
+    old_config_1 = copy.deepcopy(config)
+    old_config_1["name"] = "test_old_1"
+    old_config_2 = copy.deepcopy(config)
+    old_config_2["name"] = "test_old_2"
+
+    assert await async_setup_component(
+        hass, domain, {domain: [old_config_1, old_config_2]}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{domain}.test_old_1")
+    assert hass.states.get(f"{domain}.test_old_2")
+    assert len(hass.states.async_all(domain)) == 2
+
+    # Create temporary fixture for configuration.yaml based on the supplied config and test a reload with this new config
+    new_config_1 = copy.deepcopy(config)
+    new_config_1["name"] = "test_new_1"
+    new_config_2 = copy.deepcopy(config)
+    new_config_2["name"] = "test_new_2"
+    new_config_3 = copy.deepcopy(config)
+    new_config_3["name"] = "test_new_3"
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump({domain: [new_config_1, new_config_2, new_config_3]})
+    new_yaml_config_file.write_text(new_yaml_config)
+    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert "<Event event_mqtt_reloaded[L]>" in caplog.text
+
+    assert len(hass.states.async_all(domain)) == 3
+
+    assert hass.states.get(f"{domain}.test_new_1")
+    assert hass.states.get(f"{domain}.test_new_2")
+    assert hass.states.get(f"{domain}.test_new_3")
