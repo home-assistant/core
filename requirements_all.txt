@@ -257,7 +257,7 @@ aioridwell==2021.12.2
 aioshelly==1.0.7
 
 # homeassistant.components.steamist
-aiosteamist==0.3.0
+aiosteamist==0.2.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
