@@ -289,9 +289,10 @@ class HomeAccessory(Accessory):
         )
         if hw_version:
             serv_info = self.get_service(SERV_ACCESSORY_INFO)
-            char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
-            char.set_value(hw_version, should_notify=False)
-            serv_info.add_characteristic(char)
+            serv_info.add_characteristic(
+                self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
+            )
+            serv_info.configure_char(CHAR_HARDWARE_REVISION, value=hw_version)
 
         self.category = category
         self.entity_id = entity_id
