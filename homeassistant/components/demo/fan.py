@@ -8,10 +8,6 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PRESET_MODE_AUTO = "auto"
 PRESET_MODE_SMART = "smart"
@@ -22,12 +18,7 @@ FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo fan platform."""
     async_add_entities(
         [
@@ -90,11 +81,7 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
