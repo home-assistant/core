@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_CIRCULATION_PUMP_ACTIVE = "circulationpump_active"
 SENSOR_BURNER_ACTIVE = "burner_active"
 SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
+SENSOR_SOLAR_PUMP_ACTIVE = "solarpump_active"
 
 
 @dataclass
@@ -38,6 +39,15 @@ class ViCareBinarySensorEntityDescription(
 ):
     """Describes ViCare binary sensor entity."""
 
+
+GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
+    ViCareBinarySensorEntityDescription(
+        key=SENSOR_SOLAR_PUMP_ACTIVE,
+        name="Solar pump active",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_getter=lambda api: api.getSolarPumpActive(),
+    ),
+)
 
 CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
@@ -117,6 +127,17 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     all_devices = []
+
+    for description in GLOBAL_SENSORS:
+        entity = await hass.async_add_executor_job(
+            _build_entity,
+            f"{name} {description.name}",
+            api,
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            description,
+        )
+        if entity is not None:
+            all_devices.append(entity)
 
     for description in CIRCUIT_SENSORS:
         for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
