@@ -36,7 +36,6 @@ async def async_setup_sensor_wrapper(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> ConfigEntry:
     """Set up the Version sensor platform."""
-    await async_setup_component(hass, "persistent_notification", {})
     with patch(
         "pyhaversion.HaVersion.get_version",
         return_value=(MOCK_VERSION, MOCK_VERSION_DATA),
