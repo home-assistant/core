@@ -1,4 +1,6 @@
 """Support for interface with an Harman/Kardon or JBL AVR."""
+from __future__ import annotations
+
 import hkavr
 import voluptuous as vol
 
@@ -11,7 +13,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "Harman Kardon AVR"
 DEFAULT_PORT = 10025
@@ -33,7 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discover_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discover_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the AVR platform."""
     name = config[CONF_NAME]
     host = config[CONF_HOST]

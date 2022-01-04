@@ -70,7 +70,7 @@ def async_all_device_entities(
     camera_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     light_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     sense_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    viewport_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    viewer_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
@@ -78,13 +78,13 @@ def async_all_device_entities(
     camera_descs = list(camera_descs or []) + all_descs
     light_descs = list(light_descs or []) + all_descs
     sense_descs = list(sense_descs or []) + all_descs
-    viewport_descs = list(viewport_descs or []) + all_descs
+    viewer_descs = list(viewer_descs or []) + all_descs
 
     return (
         _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
         + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
         + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
-        + _async_device_entities(data, klass, ModelType.VIEWPORT, viewport_descs)
+        + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
     )
 
 

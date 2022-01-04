@@ -1,12 +1,16 @@
 """KMtronic Switch integration."""
-
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Config entry example."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]

@@ -21,6 +21,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -32,7 +33,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL

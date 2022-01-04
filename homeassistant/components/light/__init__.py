@@ -27,6 +27,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -316,7 +317,7 @@ def filter_turn_on_params(light, params):
     return params
 
 
-async def async_setup(hass, config):  # noqa: C901
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
