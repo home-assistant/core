@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -911,6 +912,8 @@ class HomeKit:
             config[ATTR_MODEL] = device_entry.model
         if device_entry.sw_version:
             config[ATTR_SW_VERSION] = device_entry.sw_version
+        if device_entry.hw_version:
+            config[ATTR_HW_VERSION] = device_entry.hw_version
         if device_entry.config_entries:
             first_entry = list(device_entry.config_entries)[0]
             if entry := self.hass.config_entries.async_get_entry(first_entry):
