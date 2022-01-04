@@ -6,27 +6,22 @@ import logging
 import re
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_ENTITY_NAMESPACE,
     CONF_NAME,
     CONF_REGION,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
 )
-from homeassistant.core import Config, CoreState, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -47,64 +42,11 @@ from .const import (
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     ENTITY_ID_PATTERN,
-    REGIONS,
-    UNITS,
-    VEHICLE_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_REGION): vol.In(REGIONS),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_INCL_FILTER): cv.string,
-        vol.Optional(CONF_EXCL_FILTER): cv.string,
-        vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
-        vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): vol.In(
-            VEHICLE_TYPES
-        ),
-        vol.Optional(CONF_UNITS): vol.In(UNITS),
-        vol.Optional(
-            CONF_AVOID_TOLL_ROADS, default=DEFAULT_AVOID_TOLL_ROADS
-        ): cv.boolean,
-        vol.Optional(
-            CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
-        ): cv.boolean,
-        vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
-        # Remove options to exclude from import
-        vol.Remove(CONF_ENTITY_NAMESPACE): cv.string,
-        vol.Remove(CONF_SCAN_INTERVAL): cv.time_period,
-    },
-    extra=vol.REMOVE_EXTRA,
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: Config,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Waze travel time sensor platform."""
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-    _LOGGER.warning(
-        "Your Waze configuration has been imported into the UI; "
-        "please remove it from configuration.yaml as support for it "
-        "will be removed in a future release"
-    )
 
 
 async def async_setup_entry(

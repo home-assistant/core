@@ -8,9 +8,10 @@ import logging
 from aiohttp import web
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import (
+    ApiException,
     AuthException,
     ConfigurationException,
-    GoogleNestException,
+    SubscriberException,
 )
 import voluptuous as vol
 
@@ -141,17 +142,16 @@ class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_NEST_CONFIG] = config.get(DOMAIN)
 
     if DOMAIN not in config:
         return True
 
-    if CONF_PROJECT_ID not in config[DOMAIN]:
+    config_mode = config_flow.get_config_mode(hass)
+    if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
 
-    # For setup of ConfigEntry below
-    hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
-    config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
         InstalledAppAuth(
@@ -242,7 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
         return False
-    except GoogleNestException as err:
+    except SubscriberException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Subscriber error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -251,7 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -293,7 +293,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
     try:
         await subscriber.delete_subscription()
-    except GoogleNestException as err:
+    except (AuthException, SubscriberException) as err:
         _LOGGER.warning(
             "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
             subscriber.subscriber_id,
@@ -334,7 +334,7 @@ class NestEventMediaView(HomeAssistantView):
             )
         try:
             event_media = await nest_device.event_media_manager.get_media(event_id)
-        except GoogleNestException as err:
+        except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
         if not event_media:
             return self._json_error(

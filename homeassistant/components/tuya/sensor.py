@@ -137,6 +137,16 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.FEED_REPORT,
+            name="Last Amount",
+            icon="mdi:counter",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     # Air Quality Monitor
     # No specification on Tuya portal
     "hjjcy": (
@@ -662,10 +672,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaSensorEntity(
                                 device, hass_data.device_manager, description

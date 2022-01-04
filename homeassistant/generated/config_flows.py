@@ -217,6 +217,7 @@ FLOWS = [
     "nzbget",
     "octoprint",
     "omnilogic",
+    "oncue",
     "ondilo_ico",
     "onewire",
     "onvif",

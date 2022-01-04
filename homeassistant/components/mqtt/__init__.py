@@ -23,6 +23,8 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
     CONF_PASSWORD,
@@ -47,6 +49,7 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
@@ -96,6 +99,8 @@ from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+_SENTINEL = object()
+
 DATA_MQTT = "mqtt"
 
 SERVICE_PUBLISH = "publish"
@@ -131,6 +136,7 @@ TIMEOUT_ACK = 10
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
@@ -139,6 +145,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -259,14 +266,21 @@ class MqttCommandTemplate:
     def __init__(
         self,
         command_template: template.Template | None,
-        hass: HomeAssistant,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
     ) -> None:
         """Instantiate a command template."""
         self._attr_command_template = command_template
         if command_template is None:
             return
 
+        self._entity = entity
+
         command_template.hass = hass
+
+        if entity:
+            command_template.hass = entity.hass
 
     @callback
     def async_render(
@@ -295,10 +309,69 @@ class MqttCommandTemplate:
             return value
 
         values = {"value": value}
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
         if variables is not None:
             values.update(variables)
         return _convert_outgoing_payload(
             self._attr_command_template.async_render(values, parse_result=False)
+        )
+
+
+class MqttValueTemplate:
+    """Class for rendering MQTT value template with possible json values."""
+
+    def __init__(
+        self,
+        value_template: template.Template | None,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
+        config_attributes: template.TemplateVarsType = None,
+    ) -> None:
+        """Instantiate a value template."""
+        self._value_template = value_template
+        self._config_attributes = config_attributes
+        if value_template is None:
+            return
+
+        value_template.hass = hass
+        self._entity = entity
+
+        if entity:
+            value_template.hass = entity.hass
+
+    @callback
+    def async_render_with_possible_json_value(
+        self,
+        payload: ReceivePayloadType,
+        default: ReceivePayloadType | object = _SENTINEL,
+        variables: template.TemplateVarsType = None,
+    ) -> ReceivePayloadType:
+        """Render with possible json value or pass-though a received MQTT value."""
+        if self._value_template is None:
+            return payload
+
+        values: dict[str, Any] = {}
+
+        if variables is not None:
+            values.update(variables)
+
+        if self._config_attributes is not None:
+            values.update(self._config_attributes)
+
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
+
+        if default == _SENTINEL:
+            return self._value_template.async_render_with_possible_json_value(
+                payload, variables=values
+            )
+
+        return self._value_template.async_render_with_possible_json_value(
+            payload, default, variables=values
         )
 
 
@@ -338,18 +411,53 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
     return data
 
 
-def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
-    """Publish message to an MQTT topic."""
-    hass.add_job(async_publish, hass, topic, payload, qos, retain)
+def publish(
+    hass: HomeAssistant,
+    topic: str,
+    payload: PublishPayloadType,
+    qos: int | None = 0,
+    retain: bool | None = False,
+    encoding: str | None = DEFAULT_ENCODING,
+) -> None:
+    """Publish message to a MQTT topic."""
+    hass.add_job(async_publish, hass, topic, payload, qos, retain, encoding)
 
 
 async def async_publish(
-    hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
+    hass: HomeAssistant,
+    topic: str,
+    payload: PublishPayloadType,
+    qos: int | None = 0,
+    retain: bool | None = False,
+    encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to an MQTT topic."""
-    await hass.data[DATA_MQTT].async_publish(
-        topic, str(payload) if not isinstance(payload, bytes) else payload, qos, retain
-    )
+    """Publish message to a MQTT topic."""
+
+    outgoing_payload = payload
+    if not isinstance(payload, bytes):
+        if not encoding:
+            _LOGGER.error(
+                "Can't pass-through payload for publishing %s on %s with no encoding set, need 'bytes' got %s",
+                payload,
+                topic,
+                type(payload),
+            )
+            return
+        outgoing_payload = str(payload)
+        if encoding != DEFAULT_ENCODING:
+            # a string is encoded as utf-8 by default, other encoding requires bytes as payload
+            try:
+                outgoing_payload = outgoing_payload.encode(encoding)
+            except (AttributeError, LookupError, UnicodeEncodeError):
+                _LOGGER.error(
+                    "Can't encode payload for publishing %s on %s with encoding %s",
+                    payload,
+                    topic,
+                    encoding,
+                )
+                return
+
+    await hass.data[DATA_MQTT].async_publish(topic, outgoing_payload, qos, retain)
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
@@ -578,7 +686,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if payload_template is not None:
             try:
                 payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass
+                    template.Template(payload_template), hass=hass
                 ).async_render()
             except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
@@ -687,7 +795,9 @@ class MQTT:
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
     @staticmethod
-    async def async_config_entry_updated(hass, entry) -> None:
+    async def async_config_entry_updated(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
         """Handle signals of config entry being updated.
 
         This is a static method because a class method (bound method), can not be used with weak references.

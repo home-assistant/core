@@ -7,6 +7,7 @@ from unittest.mock import patch
 from homeassistant import setup
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 
 
 async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
@@ -223,3 +224,42 @@ async def test_update_with_unnecessary_json_attrs(caplog, hass: HomeAssistant) -
     assert entity_state.attributes["key"] == "some_json_value"
     assert entity_state.attributes["another_key"] == "another_json_value"
     assert "key_three" not in entity_state.attributes
+
+
+async def test_unique_id(hass):
+    """Test unique_id option and if it only creates one sensor per id."""
+    assert await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "platform": "command_line",
+                    "unique_id": "unique",
+                    "command": "echo 0",
+                },
+                {
+                    "platform": "command_line",
+                    "unique_id": "not-so-unique-anymore",
+                    "command": "echo 1",
+                },
+                {
+                    "platform": "command_line",
+                    "unique_id": "not-so-unique-anymore",
+                    "command": "echo 2",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+
+    assert len(ent_reg.entities) == 2
+    assert ent_reg.async_get_entity_id("sensor", "command_line", "unique") is not None
+    assert (
+        ent_reg.async_get_entity_id("sensor", "command_line", "not-so-unique-anymore")
+        is not None
+    )

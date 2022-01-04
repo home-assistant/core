@@ -34,7 +34,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     __version__,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -198,7 +201,12 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZAMG sensor platform."""
     name = config[CONF_NAME]
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -213,14 +221,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_STATION_ID,
             station_id,
         )
-        return False
+        return
 
     probe = ZamgData(station_id=station_id)
     try:
         probe.update()
     except (ValueError, TypeError) as err:
         _LOGGER.error("Received error from ZAMG: %s", err)
-        return False
+        return
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     add_entities(
