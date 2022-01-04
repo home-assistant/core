@@ -95,6 +95,7 @@ class BleBoxEntity(Entity):
             model=product.model,
             name=product.name,
             sw_version=product.firmware_version,
+            configuration_url=f"http://{product._session.host}:{product._session.port}",
         )
 
     async def async_update(self):
