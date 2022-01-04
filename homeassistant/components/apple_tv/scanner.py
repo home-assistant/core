@@ -128,11 +128,15 @@ class HassZeroconfScanner(BaseScanner):
                 atv_services.append(
                     mdns.Service(atv_type, name, address, info.port, decoded_properties)
                 )
-            self.handle_response(
-                mdns.Response(
-                    services=atv_services, deep_sleep=is_sleep_proxy, model=model
-                )
+            response = mdns.Response(
+                services=atv_services, deep_sleep=is_sleep_proxy, model=model
             )
+            import pprint
+
+            pprint.pprint(
+                ["services", atv_services, "deep_sleep", is_sleep_proxy, "model", model]
+            )
+            self.handle_response(response)
 
 
 async def scan(
