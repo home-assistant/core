@@ -1,4 +1,5 @@
 """The dhcp integration."""
+
 from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
