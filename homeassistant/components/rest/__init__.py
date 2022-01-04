@@ -24,7 +24,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, template
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
@@ -49,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     _async_setup_shared_data(hass)
 
-    async def reload_service_handler(service):
+    async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
         if (conf := await component.async_prepare_reload()) is None:
             return

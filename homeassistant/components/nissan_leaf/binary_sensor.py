@@ -1,22 +1,32 @@
 """Plugged In Status Support for the Nissan Leaf."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up of a Nissan Leaf binary sensor."""
     if discovery_info is None:
         return
 
-    devices = []
+    devices: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
         devices.append(LeafPluggedInSensor(datastore))

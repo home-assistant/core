@@ -5,7 +5,7 @@ from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -60,7 +60,7 @@ class VeluxModule:
             _LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
 
-        async def async_reboot_gateway(service_call):
+        async def async_reboot_gateway(service_call: ServiceCall) -> None:
             await self.pyvlx.reboot_gateway()
 
         self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "protect_version": "\u6240\u9700\u6700\u4f4e\u7248\u672c\u70ba V1.20.0\u3002\u8acb\u66f4\u65b0 UniFi \u76e3\u63a7\u5f8c\u518d\u91cd\u8a66\u4e00\u6b21\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
@@ -27,7 +28,7 @@
                     "override_connection_host": "\u7f6e\u63db\u9023\u7dda\u4e3b\u6a5f\u7aef"
                 },
                 "description": "\u50c5\u6709\u7576\u958b\u555f\u8a3a\u65b7\u50b3\u611f\u5668\u3001\u4e26\u9700\u8981\u5373\u6642\u66f4\u65b0\u6642\uff0c\u624d\u5efa\u8b70\u958b\u555f\u5373\u6642\u6307\u6a19\u9078\u9805\u3002\u672a\u555f\u7528\u72c0\u6cc1\u4e0b\u70ba\u6bcf 15 \u5206\u9418\u66f4\u65b0\u4e00\u6b21\u3002",
-                "title": "UniFi \u4fdd\u8b77\u9078\u9805"
+                "title": "UniFi \u76e3\u63a7\u9078\u9805"
             }
         }
     }
