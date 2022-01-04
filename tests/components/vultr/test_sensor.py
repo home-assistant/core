@@ -1,7 +1,4 @@
 """The tests for the Vultr sensor platform."""
-import json
-from unittest.mock import patch
-
 import pytest
 import voluptuous as vol
 
@@ -15,10 +12,6 @@ from homeassistant.const import (
     DATA_GIGABYTES,
 )
 from homeassistant.core import HomeAssistant
-
-from .test_init import VALID_CONFIG
-
-from tests.common import load_fixture
 
 CONFIGS = [
     {
@@ -39,7 +32,8 @@ CONFIGS = [
 ]
 
 
-def test_sensor(hass: HomeAssistant, requests_mock):
+@pytest.mark.usefixtures("valid_config")
+def test_sensor(hass: HomeAssistant):
     """Test the Vultr sensor class and methods."""
     hass_devices = []
 
@@ -48,18 +42,6 @@ def test_sensor(hass: HomeAssistant, requests_mock):
         for device in devices:
             device.hass = hass
             hass_devices.append(device)
-
-    requests_mock.get(
-        "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-        text=load_fixture("account_info.json", "vultr"),
-    )
-
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ):
-        # Setup hub
-        base_vultr.setup(hass, VALID_CONFIG)
 
     for config in CONFIGS:
         vultr.setup_platform(hass, config, add_entities, None)
@@ -130,7 +112,8 @@ def test_invalid_sensor_config():
         )
 
 
-def test_invalid_sensors(hass: HomeAssistant, requests_mock):
+@pytest.mark.usefixtures("valid_config")
+def test_invalid_sensors(hass: HomeAssistant):
     """Test the VultrSensor fails."""
     hass_devices = []
 
@@ -139,18 +122,6 @@ def test_invalid_sensors(hass: HomeAssistant, requests_mock):
         for device in devices:
             device.hass = hass
             hass_devices.append(device)
-
-    requests_mock.get(
-        "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-        text=load_fixture("account_info.json", "vultr"),
-    )
-
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ):
-        # Setup hub
-        base_vultr.setup(hass, VALID_CONFIG)
 
     bad_conf = {
         CONF_NAME: "Vultr {} {}",

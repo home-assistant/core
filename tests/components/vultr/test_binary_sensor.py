@@ -1,7 +1,4 @@
 """Test the Vultr binary sensor platform."""
-import json
-from unittest.mock import patch
-
 import pytest
 import voluptuous as vol
 
@@ -19,10 +16,6 @@ from homeassistant.components.vultr import (
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 
-from .test_init import VALID_CONFIG
-
-from tests.common import load_fixture
-
 CONFIGS = [
     {CONF_SUBSCRIPTION: "576965", CONF_NAME: "A Server"},
     {CONF_SUBSCRIPTION: "123456", CONF_NAME: "Failed Server"},
@@ -30,7 +23,8 @@ CONFIGS = [
 ]
 
 
-def test_binary_sensor(hass: HomeAssistant, requests_mock):
+@pytest.mark.usefixtures("valid_config")
+def test_binary_sensor(hass: HomeAssistant):
     """Test successful instance."""
     hass_devices = []
 
@@ -39,18 +33,6 @@ def test_binary_sensor(hass: HomeAssistant, requests_mock):
         for device in devices:
             device.hass = hass
             hass_devices.append(device)
-
-    requests_mock.get(
-        "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-        text=load_fixture("account_info.json", "vultr"),
-    )
-
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ):
-        # Setup hub
-        base_vultr.setup(hass, VALID_CONFIG)
 
     # Setup each of our test configs
     for config in CONFIGS:
@@ -99,7 +81,8 @@ def test_invalid_sensor_config():
         vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})
 
 
-def test_invalid_sensors(hass: HomeAssistant, requests_mock):
+@pytest.mark.usefixtures("valid_config")
+def test_invalid_sensors(hass: HomeAssistant):
     """Test the VultrBinarySensor fails."""
     hass_devices = []
 
@@ -108,18 +91,6 @@ def test_invalid_sensors(hass: HomeAssistant, requests_mock):
         for device in devices:
             device.hass = hass
             hass_devices.append(device)
-
-    requests_mock.get(
-        "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-        text=load_fixture("account_info.json", "vultr"),
-    )
-
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ):
-        # Setup hub
-        base_vultr.setup(hass, VALID_CONFIG)
 
     bad_conf = {}  # No subscription
 

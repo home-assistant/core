@@ -19,8 +19,6 @@ from homeassistant.components.vultr import (
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 
-from .test_init import VALID_CONFIG
-
 from tests.common import load_fixture
 
 CONFIGS = [
@@ -30,8 +28,9 @@ CONFIGS = [
 ]
 
 
-def test_switch(hass: HomeAssistant, requests_mock):
-    """Test successful instance."""
+@pytest.fixture(name="hass_devices")
+def load_hass_devices(hass: HomeAssistant):
+    """Load a valid config."""
     hass_devices = []
 
     def add_entities(devices, action):
@@ -40,21 +39,16 @@ def test_switch(hass: HomeAssistant, requests_mock):
             device.hass = hass
             hass_devices.append(device)
 
-    requests_mock.get(
-        "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-        text=load_fixture("account_info.json", "vultr"),
-    )
-
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ):
-        # Setup hub
-        base_vultr.setup(hass, VALID_CONFIG)
-
     # Setup each of our test configs
     for config in CONFIGS:
         vultr.setup_platform(hass, config, add_entities, None)
+
+    yield hass_devices
+
+
+@pytest.mark.usefixtures("valid_config")
+def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+    """Test successful instance."""
 
     assert len(hass_devices) == 3
 
@@ -99,42 +93,32 @@ def test_switch(hass: HomeAssistant, requests_mock):
     assert tested == 4
 
 
-def test_turn_on(requests_mock):
+@pytest.mark.usefixtures("valid_config")
+def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
     """Test turning a subscription on."""
-    hass_devices = []
-
-    def add_entities(devices, action):
-        """Mock add devices."""
-        for device in devices:
-            hass_devices.append(device)
-
     with patch(
         "vultr.Vultr.server_list",
         return_value=json.loads(load_fixture("server_list.json", "vultr")),
     ), patch("vultr.Vultr.server_start") as mock_start:
         for device in hass_devices:
             if device.name == "Failed Server":
+                device.update()
                 device.turn_on()
 
     # Turn on
     assert mock_start.call_count == 1
 
 
-def test_turn_off(requests_mock):
+@pytest.mark.usefixtures("valid_config")
+def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
     """Test turning a subscription off."""
-    hass_devices = []
-
-    def add_entities(devices, action):
-        """Mock add devices."""
-        for device in devices:
-            hass_devices.append(device)
-
     with patch(
         "vultr.Vultr.server_list",
         return_value=json.loads(load_fixture("server_list.json", "vultr")),
     ), patch("vultr.Vultr.server_halt") as mock_halt:
         for device in hass_devices:
             if device.name == "A Server":
+                device.update()
                 device.turn_off()
 
     # Turn off
@@ -147,7 +131,8 @@ def test_invalid_switch_config():
         vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})
 
 
-def test_invalid_switches(hass: HomeAssistant, requests_mock):
+@pytest.mark.usefixtures("valid_config")
+def test_invalid_switches(hass: HomeAssistant):
     """Test the VultrSwitch fails."""
     hass_devices = []
 
@@ -155,18 +140,6 @@ def test_invalid_switches(hass: HomeAssistant, requests_mock):
         """Mock add devices."""
         for device in devices:
             hass_devices.append(device)
-
-    requests_mock.get(
-        "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-        text=load_fixture("account_info.json", "vultr"),
-    )
-
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ):
-        # Setup hub
-        base_vultr.setup(hass, VALID_CONFIG)
 
     bad_conf = {}  # No subscription
 
