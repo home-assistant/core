@@ -7,16 +7,17 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from ...config_entries import ConfigEntry
 from .const import (
     DOMAIN,
-    FLAME_HEIGHT,
     FAN_SPEED,
+    FLAME_HEIGHT,
     INTELLIFIRE_SENSORS,
-    TIMER_TIME,
     TEMP,
     THERMOSTAT_TARGET,
+    TIMER_TIME,
 )
-from ...config_entries import ConfigEntry
 
 ATTRIBUTION = "Data provided by unpublished Intellifire API"
 

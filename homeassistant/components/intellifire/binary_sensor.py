@@ -4,22 +4,22 @@ from . import IntellifireDataUpdateCoordinator
 
 """Support for Intellifire Binary Sensors."""
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from typing import Any
-
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    POWER,
-    TIMER,
     HOT,
-    THERMOSTAT,
     INTELLIFIRE_BINARY_SENSORS,
     PILOT,
+    POWER,
+    THERMOSTAT,
+    TIMER,
 )
 
 

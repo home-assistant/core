@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
-from homeassistant.const import TIME_MINUTES, TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TIME_MINUTES
 
 DOMAIN = "intellifire"
 POWER = "on_off"

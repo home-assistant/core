@@ -2,18 +2,18 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
+import logging.handlers
 
+from async_timeout import timeout
 from intellifire4py import IntellifireAsync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from .const import DOMAIN
-from async_timeout import timeout
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-import logging
-import logging.handlers
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR]
