@@ -39,7 +39,7 @@ async def test_cleanup_legacy(hass, enable_custom_integrations):
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device3")}
     )
 
-    # Eevice with light + device tracker entity
+    # Device with light + device tracker entity
     entity1a = ent_reg.async_get_or_create(
         DOMAIN,
         "test",

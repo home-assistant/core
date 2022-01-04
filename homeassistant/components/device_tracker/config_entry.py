@@ -68,10 +68,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_register_mac(
     hass: HomeAssistant, domain: str, mac: str, unique_id: str
 ) -> None:
-    """Register a mac address with a unique ID.
-
-    If no unique ID given, it is assumed to be the unformatted mac.
-    """
+    """Register a mac address with a unique ID."""
     data_key = "device_tracker_mac"
     mac = dr.format_mac(mac)
     if data_key in hass.data:
