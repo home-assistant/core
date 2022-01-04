@@ -169,6 +169,9 @@ class TellstickDevice(Entity):
     Contains the common logic for all Tellstick devices.
     """
 
+    _attr_assumed_state = True
+    _attr_should_poll = False
+
     def __init__(self, tellcore_device, signal_repetitions):
         """Init the Tellstick device."""
         self._signal_repetitions = signal_repetitions
@@ -179,7 +182,8 @@ class TellstickDevice(Entity):
 
         # Look up our corresponding tellcore device
         self._tellcore_device = tellcore_device
-        self._name = tellcore_device.name
+        self._attr_name = tellcore_device.name
+        self._attr_unique_id = tellcore_device.id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -188,21 +192,6 @@ class TellstickDevice(Entity):
                 SIGNAL_TELLCORE_CALLBACK, self.update_from_callback
             )
         )
-
-    @property
-    def should_poll(self):
-        """Tell Home Assistant not to poll this device."""
-        return False
-
-    @property
-    def assumed_state(self):
-        """Tellstick devices are always assumed state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the device as reported by tellcore."""
-        return self._name
 
     @property
     def is_on(self):
