@@ -74,7 +74,7 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         self.entity_description = description
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
-        self._unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
 
     @property
     def max_value(self) -> float:
@@ -87,11 +87,6 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         return cast(
             Optional[float], self._coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
 
     async def async_set_value(self, value: float) -> None:
         """Set the value of the entity."""

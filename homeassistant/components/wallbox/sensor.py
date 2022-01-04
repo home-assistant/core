@@ -164,12 +164,7 @@ class WallboxSensor(WallboxEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{entry.title} {description.name}"
-        self._unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
+        self._attr_unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
 
     @property
     def native_value(self) -> StateType:
