@@ -82,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         # Remove now unsupported config parameters
-        import_info.pop(CONF_CIRCUIT, 0)
+        import_info.pop(CONF_CIRCUIT, None)
 
         # CONF_HEATING_TYPE is now required but was optional in yaml config. Add if missing.
         if import_info.get(CONF_HEATING_TYPE) is None:

@@ -93,7 +93,7 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, name, all_devices, sensor_descriptions, iterables, config_entry
+    hass, name, entities, sensor_descriptions, iterables, config_entry
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -109,7 +109,7 @@ async def _entities_from_descriptions(
                 description,
             )
             if entity is not None:
-                all_devices.append(entity)
+                entities.append(entity)
 
 
 async def async_setup_entry(
@@ -121,7 +121,7 @@ async def async_setup_entry(
     name = VICARE_NAME
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
-    all_devices = []
+    entities = []
 
     for description in CIRCUIT_SENSORS:
         for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
@@ -136,23 +136,23 @@ async def async_setup_entry(
                 description,
             )
             if entity is not None:
-                all_devices.append(entity)
+                entities.append(entity)
 
     try:
         await _entities_from_descriptions(
-            hass, name, all_devices, BURNER_SENSORS, api.burners, config_entry
+            hass, name, entities, BURNER_SENSORS, api.burners, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No burners found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, all_devices, COMPRESSOR_SENSORS, api.compressors, config_entry
+            hass, name, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No compressors found")
 
-    async_add_entities(all_devices)
+    async_add_entities(entities)
 
 
 class ViCareBinarySensor(BinarySensorEntity):

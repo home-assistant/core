@@ -72,12 +72,12 @@ def _build_entity(name, vicare_api, circuit, device_config, heating_type):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
 
-    all_devices = []
+    entities = []
     for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
         suffix = ""
         if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
@@ -90,9 +90,9 @@ async def async_setup_entry(
             config_entry.data[CONF_HEATING_TYPE],
         )
         if entity is not None:
-            all_devices.append(entity)
+            entities.append(entity)
 
-    async_add_devices(all_devices)
+    async_add_entities(entities)
 
 
 class ViCareWater(WaterHeaterEntity):

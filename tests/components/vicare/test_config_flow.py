@@ -197,7 +197,6 @@ async def test_import_single_instance_allowed(hass):
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=VICARE_NAME,
         data=ENTRY_CONFIG,
     )
     mock_entry.add_to_hass(hass)
@@ -215,7 +214,6 @@ async def test_dhcp_single_instance_allowed(hass):
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=VICARE_NAME,
         data=ENTRY_CONFIG,
     )
     mock_entry.add_to_hass(hass)
