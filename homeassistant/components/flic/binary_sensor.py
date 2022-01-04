@@ -21,6 +21,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +130,7 @@ class FlicButton(BinarySensorEntity):
     def __init__(self, hass, client, address, timeout, ignored_click_types):
         """Initialize the flic button."""
 
-        self._attr_unique_id = f"flic_{address.lower().replace(':', '')}"
+        self._attr_unique_id = format_mac(address)
         self._hass = hass
         self._address = address
         self._timeout = timeout
