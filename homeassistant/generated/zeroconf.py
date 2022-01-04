@@ -78,6 +78,11 @@ ZEROCONF = {
             "domain": "bond"
         }
     ],
+    "_companion-link._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_daap._tcp.local.": [
         {
             "domain": "forked_daapd"

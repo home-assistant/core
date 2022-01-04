@@ -80,6 +80,11 @@ class HassZeroconfScanner(BaseScanner):
         zeroconf = self.zc.zeroconf
         zc_types = {f"{service}." for service in self._services}
         zc_types.add(SLEEP_PROXY_TYPE)
+        import pprint
+
+        pprint.pprint(
+            ["requested services", self.hosts, self.identifiers, self._services]
+        )
         # Note this only works if a ServiceBrowser is already
         # running for the given type (since its in the manifest this is ok)
         infos = [
@@ -141,6 +146,9 @@ class HassZeroconfScanner(BaseScanner):
                 ),
                 model=model,
             )
+            import pprint
+
+            pprint.pprint(response)
             self.handle_response(response)
 
     async def process(self, timeout: int) -> None:

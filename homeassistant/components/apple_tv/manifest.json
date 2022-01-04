@@ -6,6 +6,7 @@
   "requirements": ["pyatv==0.9.8"],
   "zeroconf": [
     "_mediaremotetv._tcp.local.",
+    "_companion-link._tcp.local.",
     "_touch-able._tcp.local.",
     "_appletv-v2._tcp.local.",
     "_hscp._tcp.local.",
