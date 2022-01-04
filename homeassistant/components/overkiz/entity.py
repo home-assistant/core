@@ -74,7 +74,7 @@ class OverkizEntity(CoordinatorEntity):
             ),
             hw_version=self.device.controllable_name,
             suggested_area=self.coordinator.areas[self.device.place_oid],
-            via_device=self.executor.get_gateway_id(),
+            via_device=(DOMAIN, self.executor.get_gateway_id()),
             configuration_url=self.coordinator.client.server.configuration_url,
         )
 

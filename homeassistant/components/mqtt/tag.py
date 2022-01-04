@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import subscription
+from . import MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -143,12 +143,10 @@ class MQTTTagScanner:
         )
 
     def _setup_from_config(self, config):
-        self._value_template = lambda value, error_value: value
-        if CONF_VALUE_TEMPLATE in config:
-            value_template = config.get(CONF_VALUE_TEMPLATE)
-            value_template.hass = self.hass
-
-            self._value_template = value_template.async_render_with_possible_json_value
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE),
+            hass=self.hass,
+        ).async_render_with_possible_json_value
 
     async def setup(self):
         """Set up the MQTT tag scanner."""
@@ -171,7 +169,7 @@ class MQTTTagScanner:
         """Subscribe to MQTT topics."""
 
         async def tag_scanned(msg):
-            tag_id = self._value_template(msg.payload, error_value="").strip()
+            tag_id = self._value_template(msg.payload, "").strip()
             if not tag_id:  # No output from template, ignore
                 return
 

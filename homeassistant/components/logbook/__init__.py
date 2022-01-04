@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN,
+    HomeAssistant,
     ServiceCall,
     callback,
     split_entity_id,
@@ -50,6 +51,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
@@ -130,7 +132,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None, context=No
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data, context=context)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Logbook setup."""
     hass.data[DOMAIN] = {}
 

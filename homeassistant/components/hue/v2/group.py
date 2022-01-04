@@ -102,7 +102,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # Entities for Hue groups are disabled by default
         # unless they were enabled in old version (legacy option)
-        self._attr_entity_registry_enabled_default = bridge.config_entry.data.get(
+        self._attr_entity_registry_enabled_default = bridge.config_entry.options.get(
             CONF_ALLOW_HUE_GROUPS, False
         )
 
@@ -298,7 +298,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             supported_color_modes.add(COLOR_MODE_ONOFF)
         self._attr_supported_color_modes = supported_color_modes
         # pick a winner for the current colormode
-        if lights_in_colortemp_mode == lights_with_color_temp_support:
+        if (
+            lights_with_color_temp_support > 0
+            and lights_in_colortemp_mode == lights_with_color_temp_support
+        ):
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
         elif lights_with_color_support > 0:
             self._attr_color_mode = COLOR_MODE_XY

@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Permet grups Hue",
                     "allow_hue_scenes": "Permet escenes Hue",
-                    "allow_unreachable": "Permet que bombetes no accessibles puguin informar del seu estat correctament"
+                    "allow_unreachable": "Permet que bombetes no accessibles puguin informar del seu estat correctament",
+                    "ignore_availability": "Ignora l'estat de connexi\u00f3 dels dispositius establerts"
                 }
             }
         }

@@ -1,9 +1,11 @@
 """Support for AVM Fritz!Box functions."""
 import logging
 
-from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
-from fritzconnection.core.logger import fritzlogger
-from requests import exceptions
+from fritzconnection.core.exceptions import (
+    FritzConnectionException,
+    FritzResourceError,
+    FritzSecurityError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -15,13 +17,6 @@ from .const import DATA_FRITZ, DOMAIN, PLATFORMS
 from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
-
-level = _LOGGER.getEffectiveLevel()
-_LOGGER.info(
-    "Setting logging level of fritzconnection: %s", logging.getLevelName(level)
-)
-fritzlogger.set_level(level)
-fritzlogger.enable()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -39,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await fritz_tools.async_setup(entry.options)
     except FritzSecurityError as ex:
         raise ConfigEntryAuthFailed from ex
-    except (FritzConnectionException, exceptions.ConnectionError) as ex:
+    except (FritzConnectionException, FritzResourceError) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})

@@ -241,7 +241,7 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_import_cannot_connect_OSError(hass: HomeAssistant) -> None:
+async def test_import_cannot_connect_os_error(hass: HomeAssistant) -> None:
     """Test that cannot connect error is handled."""
     name = "Vallox 90 MV"
 
@@ -260,7 +260,7 @@ async def test_import_cannot_connect_OSError(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_import_cannot_connect_ValloxApiException(hass: HomeAssistant) -> None:
+async def test_import_cannot_connect_vallox_api_exception(hass: HomeAssistant) -> None:
     """Test that cannot connect error is handled."""
     name = "Vallox 90 MV"
 

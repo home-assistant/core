@@ -522,6 +522,8 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
+            ("name_by_user", name_by_user),
+            ("area_id", area_id),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("hw_version", hw_version),
@@ -529,12 +531,6 @@ class DeviceRegistry:
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
-
-        if area_id is not UNDEFINED and area_id != old.area_id:
-            changes["area_id"] = area_id
-
-        if name_by_user is not UNDEFINED and name_by_user != old.name_by_user:
-            changes["name_by_user"] = name_by_user
 
         if old.is_new:
             changes["is_new"] = False

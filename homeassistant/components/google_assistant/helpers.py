@@ -46,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _get_entity_and_device(
-    hass, entity_id
+    hass: HomeAssistant, entity_id: str
 ) -> tuple[RegistryEntry, DeviceEntry] | None:
     """Fetch the entity and device entries for a entity_id."""
     dev_reg, ent_reg = await gather(
@@ -60,7 +60,11 @@ async def _get_entity_and_device(
     return entity_entry, device_entry
 
 
-async def _get_area(hass, entity_entry, device_entry) -> AreaEntry | None:
+async def _get_area(
+    hass: HomeAssistant,
+    entity_entry: RegistryEntry | None,
+    device_entry: DeviceEntry | None,
+) -> AreaEntry | None:
     """Calculate the area for an entity."""
     if entity_entry and entity_entry.area_id:
         area_id = entity_entry.area_id
@@ -73,7 +77,7 @@ async def _get_area(hass, entity_entry, device_entry) -> AreaEntry | None:
     return area_reg.areas.get(area_id)
 
 
-async def _get_device_info(device_entry) -> dict[str, str] | None:
+async def _get_device_info(device_entry: DeviceEntry | None) -> dict[str, str] | None:
     """Retrieve the device info for a device."""
     if not device_entry:
         return None
@@ -593,7 +597,9 @@ def deep_update(target, source):
 
 
 @callback
-def async_get_entities(hass, config) -> list[GoogleEntity]:
+def async_get_entities(
+    hass: HomeAssistant, config: AbstractConfig
+) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
     entities = []
     for state in hass.states.async_all():

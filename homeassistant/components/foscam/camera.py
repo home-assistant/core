@@ -7,8 +7,11 @@ from libpyfoscam import FoscamCamera
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
@@ -42,7 +45,11 @@ ATTR_PRESET_NAME = "preset_name"
 PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a Foscam IP camera from a config entry."""
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

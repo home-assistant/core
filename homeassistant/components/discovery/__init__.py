@@ -12,10 +12,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_zeroconf
 import homeassistant.util.dt as dt_util
 
@@ -124,7 +125,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start a discovery service."""
 
     logger = logging.getLogger(__name__)

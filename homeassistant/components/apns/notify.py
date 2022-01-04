@@ -16,6 +16,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_state_change
@@ -188,7 +189,7 @@ class ApnsNotificationService(BaseNotificationService):
             for device in self.devices.values():
                 _write_device(out, device)
 
-    def register(self, call):
+    def register(self, call: ServiceCall) -> None:
         """Register a device to receive push messages."""
         push_id = call.data.get(ATTR_PUSH_ID)
 
@@ -204,13 +205,11 @@ class ApnsNotificationService(BaseNotificationService):
             self.devices[push_id] = device
             with open(self.yaml_path, "a", encoding="utf8") as out:
                 _write_device(out, device)
-            return True
+            return
 
         if device != current_device:
             self.devices[push_id] = device
             self.write_devices()
-
-        return True
 
     def send_message(self, message=None, **kwargs):
         """Send push message to registered devices."""

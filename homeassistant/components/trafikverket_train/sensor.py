@@ -1,4 +1,5 @@
 """Train information for departures and delays, provided by Trafikverket."""
+from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 import logging
@@ -12,8 +13,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_utc, get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +57,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the departure sensor."""
     httpsession = async_get_clientsession(hass)
     train_api = TrafikverketTrain(httpsession, config[CONF_API_KEY])

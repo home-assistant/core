@@ -73,6 +73,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+MAX_WEBHOOK_RETRIES = 3
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Netatmo component."""
@@ -146,6 +148,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    _webhook_retries = 0
+
     async def unregister_webhook(call: ServiceCall | None) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             return
@@ -162,6 +166,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug(
                 "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
             )
+
+        nonlocal _webhook_retries
+        if _webhook_retries < MAX_WEBHOOK_RETRIES:
+            _webhook_retries += 1
+            async_call_later(hass, 30, register_webhook)
 
     async def register_webhook(call: ServiceCall | None) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
