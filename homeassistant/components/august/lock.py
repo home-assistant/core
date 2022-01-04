@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
+from . import AugustData
 from .const import DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     async_add_entities([AugustLock(data, lock) for lock in data.locks])
 
 

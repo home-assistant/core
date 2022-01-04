@@ -60,7 +60,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_setup_august(hass, config_entry, august_gateway):
+async def async_setup_august(
+    hass: HomeAssistant, config_entry: ConfigEntry, august_gateway: AugustGateway
+) -> bool:
     """Set up the August component."""
 
     if CONF_PASSWORD in config_entry.data:
