@@ -1,5 +1,5 @@
 """Test Device Tracker config entry things."""
-from homeassistant.components.device_tracker import config_entry as ce
+from homeassistant.components.device_tracker import DOMAIN, config_entry as ce
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -20,6 +20,53 @@ def test_tracker_entity():
     instance.should_poll = True
 
     assert not instance.force_update
+
+
+async def test_cleanup_legacy(hass, enable_custom_integrations):
+    """Test we clean up devices created by old device tracker."""
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device1 = dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device1")}
+    )
+    device2 = dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device2")}
+    )
+
+    entity1a = ent_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "entity1a-unique",
+        config_entry=config_entry,
+        device_id=device1.id,
+    )
+    entity1b = ent_reg.async_get_or_create(
+        "light",
+        "test",
+        "entity1b-unique",
+        config_entry=config_entry,
+        device_id=device1.id,
+    )
+    entity2a = ent_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "entity2a-unique",
+        config_entry=config_entry,
+        device_id=device2.id,
+    )
+
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    await hass.async_block_till_done()
+
+    assert ent_reg.async_get(entity1a.entity_id) is not None
+    assert ent_reg.async_get(entity1b.entity_id) is not None
+    # We've removed device so device ID cleared
+    assert ent_reg.async_get(entity2a.entity_id).device_id is None
+    # Removed because only had device tracker entity
+    assert dev_reg.async_get(device2.id) is None
 
 
 async def test_register_mac(hass):

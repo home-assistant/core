@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
 
     # Clean up old devices created by device tracker entities in the past.
+    # Can be removed after 2022.6
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
@@ -44,15 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entity.device_id is None:
             continue
 
-        if entity.platform == DOMAIN:
+        if entity.domain == DOMAIN:
             devices_with_trackers.add(entity.device_id)
         else:
             devices_with_non_trackers.add(entity.device_id)
 
-    for device in devices_with_trackers - devices_with_non_trackers:
-        for entity in er.async_entries_for_device(ent_reg, device.id, True):
+    for device_id in devices_with_trackers - devices_with_non_trackers:
+        for entity in er.async_entries_for_device(ent_reg, device_id, True):
             ent_reg.async_update_entity(entity.entity_id, device_id=None)
-        dev_reg.async_remove_device(device.id)
+        dev_reg.async_remove_device(device_id)
 
     return await component.async_setup_entry(entry)
 
@@ -69,18 +70,20 @@ def _async_register_mac(
 ) -> None:
     """Register a mac address with a unique ID.
 
-    If no unique ID given, it is assumed to be the mac.
+    If no unique ID given, it is assumed to be the unformatted mac.
     """
     data_key = "device_tracker_mac"
+    if unique_id is None:
+        unique_id = mac
     mac = dr.format_mac(mac)
     if data_key in hass.data:
-        hass.data[data_key][mac] = (domain, unique_id or mac)
+        hass.data[data_key][mac] = (domain, unique_id)
         return
 
     # Setup listening.
 
     # dict mapping mac -> partial unique ID
-    data = hass.data[data_key] = {mac: (domain, unique_id or mac)}
+    data = hass.data[data_key] = {mac: (domain, unique_id)}
 
     @callback
     def handle_device_event(ev: Event) -> None:
