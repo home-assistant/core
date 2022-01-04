@@ -3,15 +3,20 @@ import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+import pprint
 from uuid import uuid4
 
 from aiohttp import ClientError, ClientResponseError
 from aiohttp.web import Request, Response
+from aiohttp.web_response import json_response
 import jwt
 
-# Typing imports
+from homeassistant.components import webhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
+
+# Typing imports
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
@@ -26,12 +31,15 @@ from .const import (
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    DOMAIN,
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
     REQUEST_SYNC_BASE_URL,
     SOURCE_CLOUD,
+    SOURCE_LOCAL,
+    STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
 from .helpers import AbstractConfig
 from .smart_home import async_handle_message
@@ -104,15 +112,9 @@ class GoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
 
-    @property
-    def local_sdk_webhook_id(self):
-        """Return the local SDK webhook ID."""
-        return self._store.webhook_id
-
-    @property
-    def local_sdk_user_id(self):
-        """Return the user ID to be used for actions received via the local SDK."""
-        return list(self._store.agent_user_ids.keys())[0]
+    def get_webhook_id(self, agent_user_id):
+        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        return self._store.agent_user_ids[agent_user_id][STORE_GOOGLE_LOCAL_WEBHOOK_ID]
 
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
@@ -228,6 +230,56 @@ class GoogleConfig(AbstractConfig):
             "payload": message,
         }
         await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
+
+    @callback
+    def async_enable_local_sdk(self):
+        """Enable the local SDK."""
+        for key, value in self._store.agent_user_ids.items():
+            try:
+                webhook.async_register(
+                    self.hass,
+                    DOMAIN,
+                    "Local Support for " + key,
+                    value[STORE_GOOGLE_LOCAL_WEBHOOK_ID],
+                    self._handle_local_webhook,
+                )
+            except ValueError:
+                _LOGGER.info("Webhook handler is already defined!")
+                return
+
+        self._local_sdk_active = True
+
+    @callback
+    def async_disable_local_sdk(self):
+        """Disable the local SDK."""
+        for _, value in self._store.agent_user_ids.items():
+            webhook.async_unregister(self.hass, value[STORE_GOOGLE_LOCAL_WEBHOOK_ID])
+        self._local_sdk_active = False
+
+    async def _handle_local_webhook(self, hass, webhook_id, request):
+        """Handle an incoming local SDK message."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from . import smart_home
+
+        payload = await request.json()
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Received local message:\n%s\n", pprint.pformat(payload))
+
+        for key, value in self._store.agent_user_ids.items():
+            if value[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
+                agent_user_id = key
+                break
+
+        result = await smart_home.async_handle_message(
+            self.hass, self, agent_user_id, payload, SOURCE_LOCAL
+        )
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Responding to local message:\n%s\n", pprint.pformat(result))
+
+        return json_response(result)
 
 
 class GoogleAssistantView(HomeAssistantView):

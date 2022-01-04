@@ -53,6 +53,58 @@ def registries(hass):
     return ret
 
 
+async def test_async_handle_message(hass):
+    """Test the async handle message method."""
+    config = MockConfig(
+        should_expose=lambda state: state.entity_id != "light.not_expose",
+        entity_config={
+            "light.demo_light": {
+                const.CONF_ROOM_HINT: "Living Room",
+                const.CONF_ALIASES: ["Hello", "World"],
+            }
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        config,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {"intent": "action.devices.SYNC"},
+                {"intent": "action.devices.SYNC"},
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {"errorCode": const.ERR_PROTOCOL_ERROR},
+    }
+
+    await hass.async_block_till_done()
+
+    result = await sh.async_handle_message(
+        hass,
+        config,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {"intent": "action.devices.DOES_NOT_EXIST"},
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {"errorCode": const.ERR_PROTOCOL_ERROR},
+    }
+
+    await hass.async_block_till_done()
+
+
 async def test_sync_message(hass):
     """Test a sync message."""
     light = DemoLight(

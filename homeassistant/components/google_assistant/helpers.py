@@ -158,6 +158,10 @@ class AbstractConfig(ABC):
         """Return the user ID to be used for actions received via the local SDK."""
         raise NotImplementedError
 
+    def get_webhook_id(self, agent_user_id):
+        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        return self.local_sdk_webhook_id
+
     @abstractmethod
     def get_agent_user_id(self, context):
         """Get agent user ID from context."""
@@ -331,34 +335,31 @@ class GoogleConfigStore:
         if (data := await self._store.async_load()) is None:
             data = {
                 STORE_AGENT_USER_IDS: {},
-                STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             }
             await self._store.async_save(data)
 
-        self._data = data
+        for key, value in data[STORE_AGENT_USER_IDS].items():
+            if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in value:
+                data[STORE_AGENT_USER_IDS][key] = {
+                    **value,
+                    STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+                }
+                await self._store.async_save(data)
 
-        if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in self._data:
-            self._data = {
-                **self._data,
-                STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
-            }
-            await self._store.async_save(self._data)
+        self._data = data
 
     @property
     def agent_user_ids(self):
         """Return a list of connected agent user_ids."""
         return self._data[STORE_AGENT_USER_IDS]
 
-    @property
-    def webhook_id(self):
-        """Return a non changing webhook id."""
-        return self._data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
-
     @callback
     def add_agent_user_id(self, agent_user_id):
         """Add an agent user id to store."""
         if agent_user_id not in self._data[STORE_AGENT_USER_IDS]:
-            self._data[STORE_AGENT_USER_IDS][agent_user_id] = {}
+            self._data[STORE_AGENT_USER_IDS][agent_user_id] = {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+            }
             self._store.async_delay_save(lambda: self._data, 1.0)
 
     @callback
@@ -522,7 +523,7 @@ class GoogleEntity:
         if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
-                "webhookId": self.config.local_sdk_webhook_id,
+                "webhookId": self.config.get_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
                 "uuid": await self.hass.helpers.instance_id.async_get(),
