@@ -1,0 +1,9 @@
+{
+    "fsBedType":0,
+    "fsBoardFaults":0,
+    "fsBoardFeatures":20,
+    "fsBoardHWRevisionCode":20,
+    "fsBoardStatus":0,
+    "fsLeftUnderbedLightPWM":100,
+    "fsRightUnderbedLightPWM":100
+}

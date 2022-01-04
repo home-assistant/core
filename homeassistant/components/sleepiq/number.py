@@ -34,9 +34,7 @@ async def async_setup_entry(
     actuator_entities = []
 
     for bed_id in coordinator.data:
-        foundation_features = await hass.async_add_executor_job(
-            coordinator.client.foundation_features, bed_id
-        )
+        single = coordinator.foundation_features.single
 
         for side in SIDES:
             if getattr(coordinator.data[bed_id][BED], side) is not None:
@@ -45,26 +43,22 @@ async def async_setup_entry(
                 )
 
             # For split foundations, create head and foot actuators for each side
-            if not foundation_features.single:
+            if not single:
                 actuator_entities.append(
-                    SleepIQFoundationActuator(
-                        coordinator, bed_id, side, HEAD, foundation_features.single
-                    )
+                    SleepIQFoundationActuator(coordinator, bed_id, side, HEAD, single)
                 )
 
         # For single foundations (not split), only create a one head actuator.
         # It doesn't matter which side is passed to the entity, either one will properly
         # control it
-        if foundation_features.single:
+        if single:
             actuator_entities.append(
-                SleepIQFoundationActuator(
-                    coordinator, bed_id, RIGHT, HEAD, foundation_features.single
-                )
+                SleepIQFoundationActuator(coordinator, bed_id, RIGHT, HEAD, single)
             )
 
         # Foot control will never be split, always create one entity
         # Again, the side doesn't matter
-        if foundation_features.hasFootControl:
+        if coordinator.foundation_features.hasFootControl:
             actuator_entities.append(
                 SleepIQFoundationActuator(coordinator, bed_id, RIGHT, FOOT, True)
             )

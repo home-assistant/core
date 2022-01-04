@@ -31,22 +31,16 @@ async def async_setup_entry(
     entities = []
 
     for bed_id in coordinator.data:
-        foundation_features = await hass.async_add_executor_job(
-            coordinator.client.foundation_features, bed_id
-        )
+        single = coordinator.foundation_features.single
 
-        if foundation_features.single:
+        if single:
             entities.append(
-                SleepIQFoundationPresetSelect(
-                    coordinator, bed_id, RIGHT, foundation_features.single
-                )
+                SleepIQFoundationPresetSelect(coordinator, bed_id, RIGHT, single)
             )
         else:
             for side in SIDES:
                 entities.append(
-                    SleepIQFoundationPresetSelect(
-                        coordinator, bed_id, side, foundation_features.single
-                    )
+                    SleepIQFoundationPresetSelect(coordinator, bed_id, side, single)
                 )
 
     async_add_entities(entities, True)

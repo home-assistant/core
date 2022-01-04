@@ -20,11 +20,7 @@ async def async_setup_entry(
     entities = []
 
     for bed_id in coordinator.data:
-        foundation_features = await hass.async_add_executor_job(
-            coordinator.client.foundation_features, bed_id
-        )
-
-        if foundation_features.hasUnderbedLight:
+        if coordinator.foundation_features.hasUnderbedLight:
             entities.append(SleepIQLight(coordinator, bed_id, UNDER_BED_LIGHT_ID))
 
     async_add_entities(entities, True)
