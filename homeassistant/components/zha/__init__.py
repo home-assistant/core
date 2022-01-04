@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .core import ZHAGateway
@@ -27,7 +28,6 @@ from .core.const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
-    DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
     DATA_ZHA_PLATFORM_LOADED,
     DATA_ZHA_SHUTDOWN_TASK,
@@ -72,7 +72,7 @@ CENTICELSIUS = "C-100"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
     hass.data[DATA_ZHA] = {}
 
@@ -83,7 +83,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+):
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
@@ -101,7 +103,6 @@ async def async_setup_entry(hass, config_entry):
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
-    zha_data[DATA_ZHA_DISPATCHERS] = []
     zha_data[DATA_ZHA_PLATFORM_LOADED] = []
     for platform in PLATFORMS:
         coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
@@ -131,17 +132,15 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+):
     """Unload ZHA config entry."""
     await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
     await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)
-
-    dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
-    for unsub_dispatcher in dispatchers:
-        unsub_dispatcher()
 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(

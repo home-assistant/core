@@ -1,5 +1,8 @@
 """Class to hold all switch accessories."""
+from __future__ import annotations
+
 import logging
+from typing import NamedTuple
 
 from pyhap.const import (
     CATEGORY_FAUCET,
@@ -9,6 +12,7 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
+from homeassistant.components import button, input_button
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.vacuum import (
@@ -38,7 +42,6 @@ from .const import (
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
     CHAR_VALVE_TYPE,
-    MAX_NAME_LENGTH,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
@@ -47,18 +50,27 @@ from .const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
+from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
 
-VALVE_TYPE = {
-    TYPE_FAUCET: (CATEGORY_FAUCET, 3),
-    TYPE_SHOWER: (CATEGORY_SHOWER_HEAD, 2),
-    TYPE_SPRINKLER: (CATEGORY_SPRINKLER, 1),
-    TYPE_VALVE: (CATEGORY_FAUCET, 0),
+
+class ValveInfo(NamedTuple):
+    """Category and type information for valve."""
+
+    category: int
+    valve_type: int
+
+
+VALVE_TYPE: dict[str, ValveInfo] = {
+    TYPE_FAUCET: ValveInfo(CATEGORY_FAUCET, 3),
+    TYPE_SHOWER: ValveInfo(CATEGORY_SHOWER_HEAD, 2),
+    TYPE_SPRINKLER: ValveInfo(CATEGORY_SPRINKLER, 1),
+    TYPE_VALVE: ValveInfo(CATEGORY_FAUCET, 0),
 }
 
 
-ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
+ACTIVATE_ONLY_SWITCH_DOMAINS = {"button", "input_button", "scene", "script"}
 
 ACTIVATE_ONLY_RESET_SECONDS = 10
 
@@ -138,6 +150,10 @@ class Switch(HomeAccessory):
         if self._domain == "script":
             service = self._object_id
             params = {}
+        elif self._domain == button.DOMAIN:
+            service = button.SERVICE_PRESS
+        elif self._domain == input_button.DOMAIN:
+            service = input_button.SERVICE_PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
 
@@ -199,7 +215,7 @@ class Valve(HomeAccessory):
         super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         valve_type = self.config[CONF_TYPE]
-        self.category = VALVE_TYPE[valve_type][0]
+        self.category = VALVE_TYPE[valve_type].category
 
         serv_valve = self.add_preload_service(SERV_VALVE)
         self.char_active = serv_valve.configure_char(
@@ -207,7 +223,7 @@ class Valve(HomeAccessory):
         )
         self.char_in_use = serv_valve.configure_char(CHAR_IN_USE, value=False)
         self.char_valve_type = serv_valve.configure_char(
-            CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type][1]
+            CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type].valve_type
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
@@ -247,8 +263,7 @@ class SelectSwitch(HomeAccessory):
                 SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
             )
             serv_option.configure_char(
-                CHAR_NAME,
-                value=f"{option}"[:MAX_NAME_LENGTH],
+                CHAR_NAME, value=cleanup_name_for_homekit(option)
             )
             serv_option.configure_char(CHAR_IN_USE, value=False)
             self.select_chars[option] = serv_option.configure_char(
@@ -270,6 +285,6 @@ class SelectSwitch(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
-        current_option = new_state.state
+        current_option = cleanup_name_for_homekit(new_state.state)
         for option, char in self.select_chars.items():
             char.set_value(option == current_option)

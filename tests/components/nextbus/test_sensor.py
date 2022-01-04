@@ -40,6 +40,7 @@ BASIC_RESULTS = {
                 {"minutes": "1", "epochTime": "1553807371000"},
                 {"minutes": "2", "epochTime": "1553807372000"},
                 {"minutes": "3", "epochTime": "1553807373000"},
+                {"minutes": "10", "epochTime": "1553807380000"},
             ],
         },
     }
@@ -128,7 +129,7 @@ async def test_verify_valid_state(
     assert state.attributes["route"] == VALID_ROUTE_TITLE
     assert state.attributes["stop"] == VALID_STOP_TITLE
     assert state.attributes["direction"] == "Outbound"
-    assert state.attributes["upcoming"] == "1, 2, 3"
+    assert state.attributes["upcoming"] == "1, 2, 3, 10"
 
 
 async def test_message_dict(

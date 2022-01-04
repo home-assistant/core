@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie"
@@ -18,7 +19,7 @@
             "user": {
                 "data": {
                     "area_id": "Identyfikator obszaru",
-                    "name": "[%key::common::config_flow::data::name%]",
+                    "name": "Nazwa",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 }

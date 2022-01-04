@@ -1,12 +1,16 @@
 """Support for Habitica sensors."""
 from collections import namedtuple
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME, HTTP_TOO_MANY_REQUESTS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -26,7 +30,7 @@ SENSORS_TYPES = {
     "exp": ST("EXP", "mdi:star", "EXP", ["stats", "exp"]),
     "toNextLevel": ST("Next Lvl", "mdi:star", "EXP", ["stats", "toNextLevel"]),
     "lvl": ST("Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]),
-    "gp": ST("Gold", "mdi:currency-usd-circle", "Gold", ["stats", "gp"]),
+    "gp": ST("Gold", "mdi:circle-multiple", "Gold", ["stats", "gp"]),
     "class": ST("Class", "mdi:sword", "", ["stats", "class"]),
 }
 
@@ -65,7 +69,11 @@ TASKS_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the habitica sensors."""
 
     entities = []
@@ -94,7 +102,7 @@ class HabitipyData:
         try:
             self.data = await self.api.user.get()
         except ClientResponseError as error:
-            if error.status == HTTP_TOO_MANY_REQUESTS:
+            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.warning(
                     "Sensor data update for %s has too many API requests;"
                     " Skipping the update",
@@ -111,7 +119,7 @@ class HabitipyData:
             try:
                 self.tasks[task_type] = await self.api.tasks.user.get(type=task_type)
             except ClientResponseError as error:
-                if error.status == HTTP_TOO_MANY_REQUESTS:
+                if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                     _LOGGER.warning(
                         "Sensor data update for %s has too many API requests;"
                         " Skipping the update",
@@ -213,8 +221,7 @@ class HabitipyTaskSensor(SensorEntity):
                 task_id = received_task[TASKS_MAP_ID]
                 task = {}
                 for map_key, map_value in TASKS_MAP.items():
-                    value = received_task.get(map_value)
-                    if value:
+                    if value := received_task.get(map_value):
                         task[map_key] = value
                 attrs[task_id] = task
             return attrs

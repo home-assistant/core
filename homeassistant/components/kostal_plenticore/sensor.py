@@ -1,15 +1,16 @@
 """Platform for Kostal Plenticore sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -64,6 +65,7 @@ async def async_setup_entry(
                 sensor_data,
                 PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
+                None,
             )
         )
 
@@ -95,6 +97,7 @@ async def async_setup_entry(
                 sensor_data,
                 PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
+                EntityCategory.DIAGNOSTIC,
             )
         )
 
@@ -115,6 +118,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         sensor_data: dict[str, Any],
         formatter: Callable[[str], Any],
         device_info: DeviceInfo,
+        entity_category: EntityCategory,
     ):
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)
@@ -128,6 +132,8 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         self._formatter = formatter
 
         self._device_info = device_info
+
+        self._attr_entity_category = entity_category
 
     @property
     def available(self) -> bool:

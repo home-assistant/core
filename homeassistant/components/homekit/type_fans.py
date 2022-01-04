@@ -39,11 +39,11 @@ from .const import (
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
-    MAX_NAME_LENGTH,
     PROP_MIN_STEP,
     SERV_FANV2,
     SERV_SWITCH,
 )
+from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,9 @@ class Fan(HomeAccessory):
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
                     CHAR_NAME,
-                    value=f"{self.display_name} {preset_mode}"[:MAX_NAME_LENGTH],
+                    value=cleanup_name_for_homekit(
+                        f"{self.display_name} {preset_mode}"
+                    ),
                 )
 
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
@@ -219,7 +221,7 @@ class Fan(HomeAccessory):
             # the rotation speed is mapped to 1 otherwise the update is ignored
             # in order to avoid this incorrect behavior.
             if percentage == 0 and state == STATE_ON:
-                percentage = 1
+                percentage = max(1, self.char_speed.properties[PROP_MIN_STEP])
             if percentage is not None:
                 self.char_speed.set_value(percentage)
 

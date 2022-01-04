@@ -3,24 +3,24 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.nut import PyNUTData
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import ATTR_STATE, CONF_RESOURCES, STATE_UNKNOWN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
+from . import PyNUTData
 from .const import (
     COORDINATOR,
     DOMAIN,
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
     PYNUT_DATA,
-    PYNUT_FIRMWARE,
-    PYNUT_MANUFACTURER,
-    PYNUT_MODEL,
-    PYNUT_NAME,
     PYNUT_UNIQUE_ID,
     SENSOR_TYPES,
     STATE_TYPES,
@@ -29,52 +29,34 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the NUT sensors."""
 
     pynut_data = hass.data[DOMAIN][config_entry.entry_id]
-    unique_id = pynut_data[PYNUT_UNIQUE_ID]
-    manufacturer = pynut_data[PYNUT_MANUFACTURER]
-    model = pynut_data[PYNUT_MODEL]
-    firmware = pynut_data[PYNUT_FIRMWARE]
-    name = pynut_data[PYNUT_NAME]
     coordinator = pynut_data[COORDINATOR]
     data = pynut_data[PYNUT_DATA]
-    status = data.status
+    unique_id = pynut_data[PYNUT_UNIQUE_ID]
+    status = coordinator.data
 
-    entities = []
+    resources = [sensor_id for sensor_id in SENSOR_TYPES if sensor_id in status]
+    # Display status is a special case that falls back to the status value
+    # of the UPS instead.
+    if KEY_STATUS in resources:
+        resources.append(KEY_STATUS_DISPLAY)
 
-    if CONF_RESOURCES in config_entry.options:
-        resources = config_entry.options[CONF_RESOURCES]
-    else:
-        resources = config_entry.data[CONF_RESOURCES]
-
-    for resource in resources:
-        sensor_type = resource.lower()
-
-        # Display status is a special case that falls back to the status value
-        # of the UPS instead.
-        if sensor_type in status or (
-            sensor_type == KEY_STATUS_DISPLAY and KEY_STATUS in status
-        ):
-            entities.append(
-                NUTSensor(
-                    coordinator,
-                    data,
-                    name.title(),
-                    SENSOR_TYPES[sensor_type],
-                    unique_id,
-                    manufacturer,
-                    model,
-                    firmware,
-                )
-            )
-        else:
-            _LOGGER.info(
-                "Sensor type: %s does not appear in the NUT status "
-                "output, cannot add",
-                sensor_type,
-            )
+    entities = [
+        NUTSensor(
+            coordinator,
+            SENSOR_TYPES[sensor_type],
+            data,
+            unique_id,
+        )
+        for sensor_type in resources
+    ]
 
     async_add_entities(entities, True)
 
@@ -85,64 +67,34 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        data: PyNUTData,
-        name: str,
         sensor_description: SensorEntityDescription,
+        data: PyNUTData,
         unique_id: str,
-        manufacturer: str | None,
-        model: str | None,
-        firmware: str | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = sensor_description
-        self._manufacturer = manufacturer
-        self._firmware = firmware
-        self._model = model
-        self._device_name = name
-        self._data = data
-        self._unique_id = unique_id
 
-        self._attr_name = f"{name} {sensor_description.name}"
-        if unique_id is not None:
-            self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
-
-    @property
-    def device_info(self):
-        """Device info for the ups."""
-        if not self._unique_id:
-            return None
-        device_info = {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._device_name,
-        }
-        if self._model:
-            device_info["model"] = self._model
-        if self._manufacturer:
-            device_info["manufacturer"] = self._manufacturer
-        if self._firmware:
-            device_info["sw_version"] = self._firmware
-        return device_info
+        device_name = data.name.title()
+        self._attr_name = f"{device_name} {sensor_description.name}"
+        self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device_name,
+        )
+        self._attr_device_info.update(data.device_info)
 
     @property
     def native_value(self):
         """Return entity state from ups."""
-        if not self._data.status:
-            return None
+        status = self.coordinator.data
         if self.entity_description.key == KEY_STATUS_DISPLAY:
-            return _format_display_state(self._data.status)
-        return self._data.status.get(self.entity_description.key)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the sensor attributes."""
-        return {ATTR_STATE: _format_display_state(self._data.status)}
+            return _format_display_state(status)
+        return status.get(self.entity_description.key)
 
 
 def _format_display_state(status):
     """Return UPS display state."""
-    if status is None:
-        return STATE_TYPES["OFF"]
     try:
         return " ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
     except KeyError:

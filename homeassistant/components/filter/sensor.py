@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.recorder import history
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
@@ -30,10 +31,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
 
@@ -163,7 +166,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template sensors."""
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -191,6 +199,7 @@ class SensorFilter(SensorEntity):
         self._filters = filters
         self._icon = None
         self._device_class = None
+        self._attr_state_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
@@ -247,6 +256,9 @@ class SensorFilter(SensorEntity):
             and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
         ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if self._attr_state_class is None:
+            self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(

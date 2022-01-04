@@ -1,4 +1,6 @@
 """Support for IPMA weather service."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -32,6 +34,7 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -39,9 +42,11 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_datetime
 
@@ -80,7 +85,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ipma platform.
 
     Deprecated.
@@ -100,7 +110,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([IPMAWeather(location, api, config)], True)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a weather entity from a config_entry."""
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
@@ -142,7 +156,7 @@ async def async_get_api(hass):
 
 async def async_get_location(hass, api, latitude, longitude):
     """Retrieve pyipma location, location name to be used as the entity name."""
-    with async_timeout.timeout(30):
+    async with async_timeout.timeout(30):
         location = await Location.get(api, float(latitude), float(longitude))
 
     _LOGGER.debug(
@@ -172,7 +186,7 @@ class IPMAWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update Condition and Forecast."""
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             new_observation = await self._location.observation(self._api)
             new_forecast = await self._location.forecast(self._api)
 

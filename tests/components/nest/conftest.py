@@ -49,6 +49,12 @@ class FakeAuth(AbstractAuth):
 
 
 @pytest.fixture
+def aiohttp_client(loop, aiohttp_client, socket_enabled):
+    """Return aiohttp_client and allow opening sockets."""
+    return aiohttp_client
+
+
+@pytest.fixture
 async def auth(aiohttp_client):
     """Fixture for an AbstractAuth."""
     auth = FakeAuth()

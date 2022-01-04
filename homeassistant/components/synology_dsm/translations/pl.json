@@ -39,6 +39,13 @@
                 "description": "Pow\u00f3d: {details}",
                 "title": "Ponownie uwierzytelnij integracj\u0119 Synology DSM"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Ponownie uwierzytelnij integracj\u0119 z Synology DSM"
+            },
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",

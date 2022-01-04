@@ -6,19 +6,37 @@
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "invalid_auth": "Autenticazione non valida"
+            "invalid_auth": "Autenticazione non valida",
+            "login_error": "Errore di accesso ({code}): {msg}"
         },
         "flow_title": "Configurazione di Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "country_code": "Prefisso internazionale",
+                    "endpoint": "Zona di disponibilit\u00e0",
+                    "password": "Password",
+                    "tuya_app_type": "App per dispositivi mobili",
+                    "username": "Account"
+                },
+                "description": "Inserisci le tue credenziali Tuya",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "Prefisso internazionale del tuo account (ad es. 1 per gli Stati Uniti o 86 per la Cina)",
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Nazione",
                     "password": "Password",
                     "platform": "L'app in cui \u00e8 registrato il tuo account",
-                    "username": "Nome utente"
+                    "region": "Area geografica",
+                    "tuya_project_type": "Tipo di progetto Tuya cloud",
+                    "username": "Account"
                 },
-                "description": "Inserisci le tue credenziali Tuya.",
-                "title": "Tuya"
+                "description": "Inserisci le tue credenziali Tuya",
+                "title": "Integrazione Tuya"
             }
         }
     },
@@ -27,7 +45,7 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "error": {
-            "dev_multi_type": "Pi\u00f9 dispositivi selezionati da configurare devono essere dello stesso tipo",
+            "dev_multi_type": "I dispositivi multipli selezionati da configurare devono essere dello stesso tipo",
             "dev_not_config": "Tipo di dispositivo non configurabile",
             "dev_not_found": "Dispositivo non trovato"
         },
@@ -53,8 +71,8 @@
             "init": {
                 "data": {
                     "discovery_interval": "Intervallo di scansione di rilevamento dispositivo in secondi",
-                    "list_devices": "Selezionare i dispositivi da configurare o lasciare vuoto per salvare la configurazione",
-                    "query_device": "Selezionare il dispositivo che utilizzer\u00e0 il metodo di interrogazione per un pi\u00f9 rapido aggiornamento dello stato",
+                    "list_devices": "Seleziona i dispositivi da configurare o lascia vuoto per salvare la configurazione",
+                    "query_device": "Seleziona il dispositivo che utilizzer\u00e0 il metodo di interrogazione per un pi\u00f9 rapido aggiornamento dello stato",
                     "query_interval": "Intervallo di scansione di interrogazione dispositivo in secondi"
                 },
                 "description": "Non impostare valori dell'intervallo di scansione troppo bassi o le chiamate non riusciranno a generare un messaggio di errore nel registro",

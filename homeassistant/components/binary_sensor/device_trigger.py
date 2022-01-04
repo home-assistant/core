@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 from . import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_CO,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
@@ -32,9 +33,11 @@ from . import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_RUNNING,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_UPDATE,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
@@ -49,6 +52,8 @@ CONF_BAT_LOW = "bat_low"
 CONF_NOT_BAT_LOW = "not_bat_low"
 CONF_CHARGING = "charging"
 CONF_NOT_CHARGING = "not_charging"
+CONF_CO = "co"
+CONF_NO_CO = "no_co"
 CONF_COLD = "cold"
 CONF_NOT_COLD = "not_cold"
 CONF_CONNECTED = "connected"
@@ -77,12 +82,16 @@ CONF_PRESENT = "present"
 CONF_NOT_PRESENT = "not_present"
 CONF_PROBLEM = "problem"
 CONF_NO_PROBLEM = "no_problem"
+CONF_RUNNING = "running"
+CONF_NOT_RUNNING = "not_running"
 CONF_UNSAFE = "unsafe"
 CONF_NOT_UNSAFE = "not_unsafe"
 CONF_SMOKE = "smoke"
 CONF_NO_SMOKE = "no_smoke"
 CONF_SOUND = "sound"
 CONF_NO_SOUND = "no_sound"
+CONF_TAMPERED = "tampered"
+CONF_NOT_TAMPERED = "not_tampered"
 CONF_UPDATE = "update"
 CONF_NO_UPDATE = "no_update"
 CONF_VIBRATION = "vibration"
@@ -93,6 +102,7 @@ CONF_NOT_OPENED = "not_opened"
 
 TURNED_ON = [
     CONF_BAT_LOW,
+    CONF_CO,
     CONF_COLD,
     CONF_CONNECTED,
     CONF_GAS,
@@ -108,11 +118,13 @@ TURNED_ON = [
     CONF_POWERED,
     CONF_PRESENT,
     CONF_PROBLEM,
+    CONF_RUNNING,
     CONF_SMOKE,
     CONF_SOUND,
     CONF_UNSAFE,
     CONF_UPDATE,
     CONF_VIBRATION,
+    CONF_TAMPERED,
     CONF_TURNED_ON,
 ]
 
@@ -129,11 +141,14 @@ TURNED_OFF = [
     CONF_NOT_PLUGGED_IN,
     CONF_NOT_POWERED,
     CONF_NOT_PRESENT,
+    CONF_NOT_TAMPERED,
     CONF_NOT_UNSAFE,
+    CONF_NO_CO,
     CONF_NO_GAS,
     CONF_NO_LIGHT,
     CONF_NO_MOTION,
     CONF_NO_PROBLEM,
+    CONF_NOT_RUNNING,
     CONF_NO_SMOKE,
     CONF_NO_SOUND,
     CONF_NO_VIBRATION,
@@ -147,6 +162,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_CHARGING},
         {CONF_TYPE: CONF_NOT_CHARGING},
     ],
+    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_CO}, {CONF_TYPE: CONF_NO_CO}],
     DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_COLD}, {CONF_TYPE: CONF_NOT_COLD}],
     DEVICE_CLASS_CONNECTIVITY: [
         {CONF_TYPE: CONF_CONNECTED},
@@ -170,10 +186,12 @@ ENTITY_TRIGGERS = {
     DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_POWERED}, {CONF_TYPE: CONF_NOT_POWERED}],
     DEVICE_CLASS_PRESENCE: [{CONF_TYPE: CONF_PRESENT}, {CONF_TYPE: CONF_NOT_PRESENT}],
     DEVICE_CLASS_PROBLEM: [{CONF_TYPE: CONF_PROBLEM}, {CONF_TYPE: CONF_NO_PROBLEM}],
+    DEVICE_CLASS_RUNNING: [{CONF_TYPE: CONF_RUNNING}, {CONF_TYPE: CONF_NOT_RUNNING}],
     DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_UNSAFE}, {CONF_TYPE: CONF_NOT_UNSAFE}],
     DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_SMOKE}, {CONF_TYPE: CONF_NO_SMOKE}],
     DEVICE_CLASS_SOUND: [{CONF_TYPE: CONF_SOUND}, {CONF_TYPE: CONF_NO_SOUND}],
     DEVICE_CLASS_UPDATE: [{CONF_TYPE: CONF_UPDATE}, {CONF_TYPE: CONF_NO_UPDATE}],
+    DEVICE_CLASS_TAMPER: [{CONF_TYPE: CONF_TAMPERED}, {CONF_TYPE: CONF_NOT_TAMPERED}],
     DEVICE_CLASS_VIBRATION: [
         {CONF_TYPE: CONF_VIBRATION},
         {CONF_TYPE: CONF_NO_VIBRATION},
@@ -208,7 +226,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

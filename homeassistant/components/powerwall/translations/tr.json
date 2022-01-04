@@ -1,18 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "unknown": "Beklenmeyen hata"
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata",
+            "wrong_version": "G\u00fc\u00e7 duvar\u0131n\u0131z desteklenmeyen bir yaz\u0131l\u0131m s\u00fcr\u00fcm\u00fc kullan\u0131yor. \u00c7\u00f6z\u00fclebilmesi i\u00e7in l\u00fctfen bu sorunu y\u00fckseltmeyi veya bildirmeyi d\u00fc\u015f\u00fcn\u00fcn."
         },
-        "flow_title": "Tesla Powerwall ( {ip_address} )",
+        "flow_title": "{ip_address}",
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "\u0130p Adresi"
-                }
+                    "ip_address": "\u0130p Adresi",
+                    "password": "Parola"
+                },
+                "description": "Parola genellikle Backup Gateway i\u00e7in seri numaras\u0131n\u0131n son 5 karakteridir ve Tesla uygulamas\u0131nda veya Backup Gateway 2 i\u00e7in kap\u0131n\u0131n i\u00e7inde bulunan parolan\u0131n son 5 karakterinde bulunabilir.",
+                "title": "Powerwall'a ba\u011flan\u0131n"
             }
         }
     }

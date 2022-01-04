@@ -10,12 +10,12 @@
         },
         "step": {
             "link": {
-                "description": "Kattintson a \u201eK\u00fcld\u00e9s\u201d gombra, majd \u00e9rintse meg a jobbra mutat\u00f3 nyilat az \u00fatv\u00e1laszt\u00f3n a Freebox regisztr\u00e1l\u00e1s\u00e1hoz a HomeAssistant seg\u00edts\u00e9g\u00e9vel. \n\n ! [A gomb helye az \u00fatv\u00e1laszt\u00f3n] (/static/images/config_freebox.png)",
+                "description": "Kattintson a \u201eK\u00fcld\u00e9s\u201d gombra, majd \u00e9rintse meg a jobbra mutat\u00f3 nyilat az \u00fatv\u00e1laszt\u00f3n a Freebox regisztr\u00e1l\u00e1s\u00e1hoz Home Assistant seg\u00edts\u00e9g\u00e9vel. \n\n![A gomb helye a routeren] (/static/images/config_freebox.png)",
                 "title": "Freebox \u00fatv\u00e1laszt\u00f3 linkel\u00e9se"
             },
             "user": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port"
                 },
                 "title": "Freebox"

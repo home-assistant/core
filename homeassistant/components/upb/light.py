@@ -8,7 +8,10 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpbAttachedEntity
 from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
@@ -18,7 +21,11 @@ SERVICE_LIGHT_FADE_STOP = "light_fade_stop"
 SERVICE_LIGHT_BLINK = "light_blink"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the UPB light based on a config entry."""
 
     upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
@@ -67,8 +74,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the light."""
-        flash = kwargs.get(ATTR_FLASH)
-        if flash:
+        if flash := kwargs.get(ATTR_FLASH):
             await self.async_light_blink(0.5 if flash == "short" else 1.5)
         else:
             rate = kwargs.get(ATTR_TRANSITION, -1)

@@ -176,6 +176,45 @@ async def test_discovered_by_websocket_scan_limited_by_description_matcher(
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
+async def test_most_targeted_matcher_wins(hass, hass_ws_client):
+    """Test that the most targeted matcher is used."""
+    new_usb = [
+        {"domain": "less", "vid": "3039", "pid": "3039"},
+        {"domain": "more", "vid": "3039", "pid": "3039", "description": "*2652*"},
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "more"
+
+
 async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
     hass, hass_ws_client
 ):
@@ -738,3 +777,24 @@ def test_human_readable_device_name():
     assert "Silicon Labs" in name
     assert "10C4" in name
     assert "8A2A" in name
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = usb.UsbServiceInfo(
+        device=slae_sh_device.device,
+        vid=12345,
+        pid=12345,
+        serial_number=slae_sh_device.serial_number,
+        manufacturer=slae_sh_device.manufacturer,
+        description=slae_sh_device.description,
+    )
+
+    # Ensure first call get logged
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["vid"] == 12345
+    assert "Detected integration that accessed discovery_info['vid']" in caplog.text

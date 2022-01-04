@@ -4,7 +4,13 @@ import logging
 from pylutron import Button, Lutron
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -12,7 +18,13 @@ from homeassistant.util import slugify
 
 DOMAIN = "lutron"
 
-PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
+PLATFORMS = [
+    Platform.LIGHT,
+    Platform.COVER,
+    Platform.SWITCH,
+    Platform.SCENE,
+    Platform.BINARY_SENSOR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,6 +143,9 @@ class LutronDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
+        # Temporary fix for https://github.com/thecynic/pylutron/issues/70
+        if self._lutron_device.uuid is None:
+            return None
         return f"{self._controller.guid}_{self._lutron_device.uuid}"
 
 

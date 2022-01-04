@@ -4,8 +4,12 @@
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
             "webhook_not_internet_accessible": "Webhook mesajlar\u0131n\u0131 alabilmek i\u00e7in Home Assistant \u00f6rne\u011finize internetten eri\u015filebilmelidir."
         },
+        "create_entry": {
+            "default": "Olaylar\u0131 Home Assistant'a g\u00f6ndermek i\u00e7in Traccar'da webhook \u00f6zelli\u011fini kurman\u0131z gerekir. \n\n \u015eu URL'yi kullan\u0131n: ` {webhook_url} ` \n\n Daha fazla ayr\u0131nt\u0131 i\u00e7in [belgelere]( {docs_url}"
+        },
         "step": {
             "user": {
+                "description": "Traccar'\u0131 kurmak istedi\u011finizden emin misiniz?",
                 "title": "Traccar'\u0131 kur"
             }
         }

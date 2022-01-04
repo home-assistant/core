@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Aantal seconden wachten tot het markeren van een apparaattracker als niet thuis nadat hij niet is gezien.",
                     "exclude": "Netwerkadressen (door komma's gescheiden) om uit te sluiten van scannen",
                     "home_interval": "Minimum aantal minuten tussen scans van actieve apparaten (batterij sparen)",
                     "hosts": "Netwerkadressen (gescheiden door komma's) om te scannen",

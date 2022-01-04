@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -21,8 +22,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
 from . import config_flow
@@ -41,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONFIG_ENTRY_LOCK = "point_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "point_config_entry_is_setup"
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -56,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Minut Point component."""
     if DOMAIN not in config:
         return True
@@ -138,7 +140,7 @@ async def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry, session):
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     session = hass.data[DOMAIN].pop(entry.entry_id)
@@ -185,7 +187,7 @@ class MinutPointClient:
 
     async def _sync(self):
         """Update local list of devices."""
-        if not await self._client.update() and self._is_available:
+        if not await self._client.update():
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
@@ -308,20 +310,20 @@ class MinutPointEntity(Entity):
         return attrs
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         device = self.device.device
-        return {
-            "connections": {
+        return DeviceInfo(
+            connections={
                 (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
             },
-            "identifieres": device["device_id"],
-            "manufacturer": "Minut",
-            "model": f"Point v{device['hardware_version']}",
-            "name": device["description"],
-            "sw_version": device["firmware"]["installed"],
-            "via_device": (DOMAIN, device["home"]),
-        }
+            identifiers={(DOMAIN, device["device_id"])},
+            manufacturer="Minut",
+            model=f"Point v{device['hardware_version']}",
+            name=device["description"],
+            sw_version=device["firmware"]["installed"],
+            via_device=(DOMAIN, device["home"]),
+        )
 
     @property
     def name(self):

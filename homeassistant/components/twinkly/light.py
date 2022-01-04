@@ -108,12 +108,12 @@ class TwinklyLight(LightEntity):
     def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return (
-            {
-                "identifiers": {(DOMAIN, self._id)},
-                "name": self.name,
-                "manufacturer": "LEDWORKS",
-                "model": self.model,
-            }
+            DeviceInfo(
+                identifiers={(DOMAIN, self._id)},
+                manufacturer="LEDWORKS",
+                model=self.model,
+                name=self.name,
+            )
             if self._id
             else None  # device_info is available only for entities configured from the UI
         )

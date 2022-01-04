@@ -26,8 +26,8 @@ from .const import (
     BPUP_SUBS,
     DOMAIN,
     HUB,
-    SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
-    SERVICE_SET_LIGHT_POWER_BELIEF,
+    SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+    SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
 from .utils import BondDevice
@@ -103,7 +103,7 @@ async def async_setup_entry(
     ]
 
     platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+        SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
         {
             vol.Required(ATTR_BRIGHTNESS): vol.All(
                 vol.Number(scale=0), vol.Range(0, 255)
@@ -113,7 +113,7 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_POWER_BELIEF,
+        SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
         {vol.Required(ATTR_POWER_STATE): vol.All(cv.boolean)},
         "async_set_power_belief",
     )
@@ -180,8 +180,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness:
+        if brightness := kwargs.get(ATTR_BRIGHTNESS):
             await self._hub.bond.action(
                 self._device.device_id,
                 Action.set_brightness(round((brightness * 100) / 255)),
@@ -273,8 +272,7 @@ class BondFireplace(BondEntity, LightEntity):
         """Turn the fireplace on."""
         _LOGGER.debug("Fireplace async_turn_on called with: %s", kwargs)
 
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness:
+        if brightness := kwargs.get(ATTR_BRIGHTNESS):
             flame = round((brightness * 100) / 255)
             await self._hub.bond.action(self._device.device_id, Action.set_flame(flame))
         else:

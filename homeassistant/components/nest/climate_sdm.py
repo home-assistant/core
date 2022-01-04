@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
-from google_nest_sdm.exceptions import GoogleNestException
+from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
     ThermostatHeatCoolTrait,
@@ -90,7 +90,7 @@ async def async_setup_sdm_entry(
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
         device_manager = await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         raise PlatformNotReady from err
 
     entities = []
@@ -153,8 +153,7 @@ class ThermostatEntity(ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
-        trait = self._target_temperature_trait
-        if not trait:
+        if not (trait := self._target_temperature_trait):
             return None
         if self.hvac_mode == HVAC_MODE_HEAT:
             return trait.heat_celsius
@@ -167,8 +166,7 @@ class ThermostatEntity(ClimateEntity):
         """Return the upper bound target temperature."""
         if self.hvac_mode != HVAC_MODE_HEAT_COOL:
             return None
-        trait = self._target_temperature_trait
-        if not trait:
+        if not (trait := self._target_temperature_trait):
             return None
         return trait.cool_celsius
 
@@ -177,8 +175,7 @@ class ThermostatEntity(ClimateEntity):
         """Return the lower bound target temperature."""
         if self.hvac_mode != HVAC_MODE_HEAT_COOL:
             return None
-        trait = self._target_temperature_trait
-        if not trait:
+        if not (trait := self._target_temperature_trait):
             return None
         return trait.heat_celsius
 

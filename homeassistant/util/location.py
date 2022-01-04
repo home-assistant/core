@@ -52,9 +52,7 @@ async def async_detect_location_info(
     session: aiohttp.ClientSession,
 ) -> LocationInfo | None:
     """Detect location information."""
-    data = await _get_whoami(session)
-
-    if data is None:
+    if (data := await _get_whoami(session)) is None:
         return None
 
     data["use_metric"] = data["country_code"] not in ("US", "MM", "LR")

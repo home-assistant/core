@@ -36,7 +36,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Subaru from a config entry."""
     config = entry.data
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -93,7 +93,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -125,8 +125,7 @@ async def refresh_subaru_data(config_entry, vehicle_info, controller):
         await controller.fetch(vin, force=True)
 
         # Update our local data that will go to entity states
-        received_data = await controller.get_data(vin)
-        if received_data:
+        if received_data := await controller.get_data(vin):
             data[vin] = received_data
 
     return data

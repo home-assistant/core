@@ -15,8 +15,10 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
@@ -32,7 +34,11 @@ COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Light from Config Entry."""
 
     @callback
@@ -177,8 +183,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             # transition specified by user
             new_value = int(max(0, min(7620, kwargs[ATTR_TRANSITION])))
             if ozw_version < (1, 6, 1205):
-                transition = kwargs[ATTR_TRANSITION]
-                if transition <= 127:
+                if (transition := kwargs[ATTR_TRANSITION]) <= 127:
                     new_value = int(transition)
                 else:
                     minutes = int(transition / 60)

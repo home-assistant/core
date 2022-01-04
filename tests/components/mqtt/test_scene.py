@@ -1,6 +1,5 @@
 """The tests for the MQTT scene platform."""
 import copy
-import json
 from unittest.mock import patch
 
 import pytest
@@ -19,6 +18,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_unchanged,
+    help_test_reloadable,
     help_test_unique_id,
 )
 
@@ -147,15 +147,13 @@ async def test_discovery_update_payload(hass, mqtt_mock, caplog):
     config1["payload_on"] = "ON"
     config2["payload_on"] = "ACTIVATE"
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         scene.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
     )
 
 
@@ -178,3 +176,10 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, scene.DOMAIN, data1, data2
     )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = scene.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)

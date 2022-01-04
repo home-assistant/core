@@ -3,15 +3,27 @@ import logging
 
 import gammu  # pylint: disable=import-error
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the GSM Signal Sensor sensor."""
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
     imei = await gateway.get_imei_async()
@@ -24,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 SensorEntityDescription(
                     key="signal",
                     name=f"gsm_signal_imei_{imei}",
-                    device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+                    device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                     native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
                     entity_registry_enabled_default=False,
                 ),
@@ -39,10 +51,10 @@ class GSMSignalSensor(SensorEntity):
 
     def __init__(self, hass, gateway, imei, description):
         """Initialize the GSM Signal sensor."""
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(imei))},
-            "name": "SMS Gateway",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(imei))},
+            name="SMS Gateway",
+        )
         self._attr_unique_id = str(imei)
         self._hass = hass
         self._gateway = gateway

@@ -11,9 +11,11 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ComfoConnect bridge."""
 
     conf = config[DOMAIN]
@@ -90,7 +92,6 @@ class ComfoConnectBridge:
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-        self.data = {}
         self.name = name
         self.hass = hass
         self.unique_id = bridge.uuid.hex()

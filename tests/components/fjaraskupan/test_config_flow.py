@@ -6,7 +6,7 @@ from unittest.mock import patch
 from bleak.backends.device import BLEDevice
 from pytest import fixture
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.fjaraskupan.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -19,7 +19,6 @@ from homeassistant.data_entry_flow import (
 @fixture(name="mock_setup_entry", autouse=True)
 async def fixture_mock_setup_entry(hass):
     """Fixture for config entry."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.fjaraskupan.async_setup_entry", return_value=True

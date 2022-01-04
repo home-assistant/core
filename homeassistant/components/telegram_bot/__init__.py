@@ -29,8 +29,10 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -298,7 +300,7 @@ def load_data(
     return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     if not config[DOMAIN]:
         return False
@@ -325,12 +327,11 @@ async def async_setup(hass, config):
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
 
-    async def async_send_telegram_message(service):
+    async def async_send_telegram_message(service: ServiceCall) -> None:
         """Handle sending Telegram Bot message service calls."""
 
         def _render_template_attr(data, attribute):
-            attribute_templ = data.get(attribute)
-            if attribute_templ:
+            if attribute_templ := data.get(attribute):
                 if any(
                     isinstance(attribute_templ, vtype) for vtype in (float, int, str)
                 ):
@@ -576,7 +577,7 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
+                self.hass.bus.fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out

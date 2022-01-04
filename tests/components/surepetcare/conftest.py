@@ -19,4 +19,5 @@ async def surepetcare():
         client = mock_client_class.return_value
         client.resources = {}
         client.call = _mock_call
+        client.get_token.return_value = "token"
         yield client

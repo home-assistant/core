@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -21,7 +21,7 @@
                     "longitude": "Hossz\u00fas\u00e1g",
                     "name": "N\u00e9v"
                 },
-                "description": "\u00c1ll\u00edtsa be az Ambee-t a Homeassistanttal val\u00f3 integr\u00e1ci\u00f3hoz."
+                "description": "Integr\u00e1lja \u00f6ssze Ambeet Home Assistanttal."
             }
         }
     }

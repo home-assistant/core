@@ -27,6 +27,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -125,13 +126,11 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None
     First try the statemachine, then entity registry.
     This is the equivalent of entity helper get_supported_features.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
     if not entry.capabilities:
         return None
@@ -204,25 +203,25 @@ LIGHT_TURN_ON_SCHEMA = {
     ),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+        vol.Coerce(tuple),
         vol.ExactSequence(
             (
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
             )
         ),
-        vol.Coerce(tuple),
     ),
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-        vol.ExactSequence((cv.byte,) * 3), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
     ),
     vol.Exclusive(ATTR_RGBW_COLOR, COLOR_GROUP): vol.All(
-        vol.ExactSequence((cv.byte,) * 4), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 4)
     ),
     vol.Exclusive(ATTR_RGBWW_COLOR, COLOR_GROUP): vol.All(
-        vol.ExactSequence((cv.byte,) * 5), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 5)
     ),
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-        vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
     ),
     vol.Exclusive(ATTR_WHITE, COLOR_GROUP): VALID_BRIGHTNESS,
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
@@ -254,16 +253,14 @@ def preprocess_turn_on_alternatives(hass, params):
     if ATTR_PROFILE in params:
         hass.data[DATA_PROFILES].apply_profile(params.pop(ATTR_PROFILE), params)
 
-    color_name = params.pop(ATTR_COLOR_NAME, None)
-    if color_name is not None:
+    if (color_name := params.pop(ATTR_COLOR_NAME, None)) is not None:
         try:
             params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
         except ValueError:
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)
 
-    kelvin = params.pop(ATTR_KELVIN, None)
-    if kelvin is not None:
+    if (kelvin := params.pop(ATTR_KELVIN, None)) is not None:
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
         params[ATTR_COLOR_TEMP] = int(mired)
 
@@ -320,7 +317,7 @@ def filter_turn_on_params(light, params):
     return params
 
 
-async def async_setup(hass, config):  # noqa: C901
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -386,14 +383,22 @@ async def async_setup(hass, config):  # noqa: C901
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
         # If a color temperature is specified, emulate it if not supported by the light
-        if (
-            ATTR_COLOR_TEMP in params
-            and COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes
-        ):
-            color_temp = params.pop(ATTR_COLOR_TEMP)
-            if color_supported(legacy_supported_color_modes):
-                temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
-                params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
+        if ATTR_COLOR_TEMP in params:
+            if (
+                supported_color_modes
+                and COLOR_MODE_COLOR_TEMP not in supported_color_modes
+                and COLOR_MODE_RGBWW in supported_color_modes
+            ):
+                color_temp = params.pop(ATTR_COLOR_TEMP)
+                brightness = params.get(ATTR_BRIGHTNESS, light.brightness)
+                params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
+                    color_temp, brightness, light.min_mireds, light.max_mireds
+                )
+            elif COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes:
+                color_temp = params.pop(ATTR_COLOR_TEMP)
+                if color_supported(legacy_supported_color_modes):
+                    temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
+                    params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
 
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes
@@ -403,6 +408,14 @@ async def async_setup(hass, config):  # noqa: C901
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
                 params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
+            elif (rgbw_color := params.pop(ATTR_RGBW_COLOR, None)) is not None:
+                rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
+                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+            elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
+                rgb_color = color_util.color_rgbww_to_rgb(
+                    *rgbww_color, light.min_mireds, light.max_mireds
+                )
+                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
         elif ATTR_HS_COLOR in params and COLOR_MODE_HS not in supported_color_modes:
             hs_color = params.pop(ATTR_HS_COLOR)
             if COLOR_MODE_RGB in supported_color_modes:
@@ -443,6 +456,34 @@ async def async_setup(hass, config):  # noqa: C901
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
+        elif ATTR_RGBW_COLOR in params and COLOR_MODE_RGBW not in supported_color_modes:
+            rgbw_color = params.pop(ATTR_RGBW_COLOR)
+            rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
+            if COLOR_MODE_RGB in supported_color_modes:
+                params[ATTR_RGB_COLOR] = rgb_color
+            elif COLOR_MODE_RGBWW in supported_color_modes:
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                    *rgb_color, light.min_mireds, light.max_mireds
+                )
+            elif COLOR_MODE_HS in supported_color_modes:
+                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+            elif COLOR_MODE_XY in supported_color_modes:
+                params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif (
+            ATTR_RGBWW_COLOR in params and COLOR_MODE_RGBWW not in supported_color_modes
+        ):
+            rgbww_color = params.pop(ATTR_RGBWW_COLOR)
+            rgb_color = color_util.color_rgbww_to_rgb(
+                *rgbww_color, light.min_mireds, light.max_mireds
+            )
+            if COLOR_MODE_RGB in supported_color_modes:
+                params[ATTR_RGB_COLOR] = rgb_color
+            elif COLOR_MODE_RGBW in supported_color_modes:
+                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
+            elif COLOR_MODE_HS in supported_color_modes:
+                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+            elif COLOR_MODE_XY in supported_color_modes:
+                params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
 
         # If both white and brightness are specified, override white
         if (
@@ -629,9 +670,7 @@ class Profiles:
     @callback
     def apply_profile(self, name: str, params: dict) -> None:
         """Apply a profile."""
-        profile = self.data.get(name)
-
-        if profile is None:
+        if (profile := self.data.get(name)) is None:
             return
 
         if profile.hs_color is not None:
@@ -679,9 +718,7 @@ class LightEntity(ToggleEntity):
     @property
     def _light_internal_color_mode(self) -> str:
         """Return the color mode of the light with backwards compatibility."""
-        color_mode = self.color_mode
-
-        if color_mode is None:
+        if (color_mode := self.color_mode) is None:
             # Backwards compatibility for color_mode added in 2021.4
             # Add warning in 2021.6, remove in 2021.10
             supported = self._light_internal_supported_color_modes
@@ -928,18 +965,6 @@ class LightEntity(ToggleEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._attr_supported_features
-
-
-class Light(LightEntity):
-    """Representation of a light (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "Light is deprecated, modify %s to extend LightEntity",
-            cls.__name__,
-        )
 
 
 def legacy_supported_features(

@@ -2,20 +2,20 @@
 from __future__ import annotations
 
 import math
-from typing import cast
 
-from aioesphomeapi import NumberInfo, NumberState
-import voluptuous as vol
+from aioesphomeapi import NumberInfo, NumberMode as EsphomeNumberMode, NumberState
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-ICON_SCHEMA = vol.Schema(cv.icon)
+from . import (
+    EsphomeEntity,
+    EsphomeEnumMapper,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -35,19 +35,21 @@ async def async_setup_entry(
     )
 
 
+NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapper(
+    {
+        EsphomeNumberMode.AUTO: NumberMode.AUTO,
+        EsphomeNumberMode.BOX: NumberMode.BOX,
+        EsphomeNumberMode.SLIDER: NumberMode.SLIDER,
+    }
+)
+
+
 # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
 # pylint: disable=invalid-overridden-method
 
 
 class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if not self._static_info.icon:
-            return None
-        return cast(str, ICON_SCHEMA(self._static_info.icon))
 
     @property
     def min_value(self) -> float:
@@ -63,6 +65,18 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     def step(self) -> float:
         """Return the increment/decrement step."""
         return super()._static_info.step
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        return super()._static_info.unit_of_measurement
+
+    @property
+    def mode(self) -> NumberMode:
+        """Return the mode of the entity."""
+        if self._static_info.mode:
+            return NUMBER_MODES.from_esphome(self._static_info.mode)
+        return NumberMode.AUTO
 
     @esphome_state_property
     def value(self) -> float | None:

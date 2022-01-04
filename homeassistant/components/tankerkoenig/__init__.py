@@ -15,9 +15,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SHOW_ON_MAP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_FUEL_TYPES, CONF_STATIONS, DOMAIN, FUEL_TYPES
 
@@ -61,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set the tankerkoenig component up."""
     if DOMAIN not in config:
         return True
@@ -132,8 +134,7 @@ class TankerkoenigData:
             return False
 
         # Add stations found via location + radius
-        nearby_stations = data["stations"]
-        if not nearby_stations:
+        if not (nearby_stations := data["stations"]):
             if not additional_stations:
                 _LOGGER.error(
                     "Could not find any station in range."
@@ -144,7 +145,7 @@ class TankerkoenigData:
                 "Could not find any station in range. Will only use manually specified stations"
             )
         else:
-            for station in data["stations"]:
+            for station in nearby_stations:
                 self.add_station(station)
 
         # Add manually specified additional stations

@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .. import subscription
+from .. import MqttValueTemplate, subscription
 from ... import mqtt
 from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
@@ -37,15 +37,15 @@ PLATFORM_SCHEMA_DISCOVERY = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_DISCOVERY.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):
     """Set up MQTT device tracker dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(
-        hass, device_tracker.DOMAIN, setup, PLATFORM_SCHEMA_DISCOVERY
-    )
+    await async_setup_entry_helper(hass, device_tracker.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -58,6 +58,8 @@ async def _async_setup_entity(
 class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
+    _entity_id_format = device_tracker.ENTITY_ID_FORMAT
+
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the tracker."""
         self._location_name = None
@@ -67,13 +69,13 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_DISCOVERY
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._value_template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -82,10 +84,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(payload)
+            payload = self._value_template(msg.payload)
             if payload == self._config[CONF_PAYLOAD_HOME]:
                 self._location_name = STATE_HOME
             elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:

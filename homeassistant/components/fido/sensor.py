@@ -26,7 +26,10 @@ from homeassistant.const import (
     DATA_KILOBITS,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,13 +47,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="fido_dollar",
         name="Fido dollar",
         native_unit_of_measurement=PRICE,
-        icon="mdi:cash-usd",
+        icon="mdi:cash",
     ),
     SensorEntityDescription(
         key="balance",
         name="Balance",
         native_unit_of_measurement=PRICE,
-        icon="mdi:cash-usd",
+        icon="mdi:cash",
     ),
     SensorEntityDescription(
         key="data_used",
@@ -176,7 +179,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Fido sensor."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -218,8 +226,7 @@ class FidoSensor(SensorEntity):
     async def async_update(self):
         """Get the latest data from Fido and update the state."""
         await self.fido_data.async_update()
-        sensor_type = self.entity_description.key
-        if sensor_type == "balance":
+        if (sensor_type := self.entity_description.key) == "balance":
             if self.fido_data.data.get(sensor_type) is not None:
                 self._attr_native_value = round(self.fido_data.data[sensor_type], 2)
         else:

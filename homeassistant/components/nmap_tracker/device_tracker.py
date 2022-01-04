@@ -1,8 +1,9 @@
 """Support for scanning a network with nmap."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -171,11 +172,11 @@ class NmapTrackerEntity(ScannerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac_address)},
-            "default_manufacturer": self._device.manufacturer,
-            "default_name": self.name,
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac_address)},
+            default_manufacturer=self._device.manufacturer,
+            default_name=self.name,
+        )
 
     @property
     def should_poll(self) -> bool:

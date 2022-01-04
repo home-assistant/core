@@ -152,7 +152,19 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (0x0405, 1, {"measured_value"}),
         (0x0406, 1, {"occupancy"}),
         (0x0702, 1, {"instantaneous_demand"}),
-        (0x0B04, 1, {"active_power"}),
+        (
+            0x0B04,
+            1,
+            {
+                "active_power",
+                "active_power_max",
+                "apparent_power",
+                "rms_current",
+                "rms_current_max",
+                "rms_voltage",
+                "rms_voltage_max",
+            },
+        ),
     ],
 )
 async def test_in_channel_config(
@@ -607,3 +619,23 @@ async def test_zll_device_groups(
             zigpy_coordinator_device.add_to_group.await_args_list[1][0][0]
             == group_2.group_id
         )
+
+
+@mock.patch(
+    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+)
+@mock.patch(
+    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
+    mock.MagicMock(),
+)
+async def test_cluster_no_ep_attribute(m1, zha_device_mock):
+    """Test channels for clusters without ep_attribute."""
+
+    zha_device = zha_device_mock(
+        {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
+    )
+
+    channels = zha_channels.Channels.new(zha_device)
+    pools = {pool.id: pool for pool in channels.pools}
+    assert "1:0x042e" in pools[1].all_channels
+    assert pools[1].all_channels["1:0x042e"].name

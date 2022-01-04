@@ -2,9 +2,10 @@
 import json
 import logging
 
-from plexapi.exceptions import NotFound
+from plexapi.exceptions import BadRequest, NotFound
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -26,10 +27,10 @@ _LOGGER = logging.getLogger(__package__)
 async def async_setup_services(hass):
     """Set up services for the Plex component."""
 
-    async def async_refresh_library_service(service_call):
+    async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)
 
-    async def async_scan_clients_service(_):
+    async def async_scan_clients_service(_: ServiceCall) -> None:
         _LOGGER.debug("Scanning for new Plex clients")
         for server_id in hass.data[DOMAIN][SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
@@ -47,7 +48,7 @@ async def async_setup_services(hass):
     return True
 
 
-def refresh_library(hass, service_call):
+def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     """Scan a Plex library for new and updated media."""
     plex_server_name = service_call.data.get("server_name")
     library_name = service_call.data["library_name"]
@@ -107,8 +108,7 @@ def lookup_plex_media(hass, content_type, content_id):
     plex_server_name = content.pop("plex_server", None)
     plex_server = get_plex_server(hass, plex_server_name)
 
-    playqueue_id = content.pop("playqueue_id", None)
-    if playqueue_id:
+    if playqueue_id := content.pop("playqueue_id", None):
         try:
             playqueue = plex_server.get_playqueue(playqueue_id)
         except NotFound as err:
@@ -133,7 +133,13 @@ def play_on_sonos(hass, content_type, content_id, speaker_name):
     Called by Sonos 'media_player.play_media' service.
     """
     media, plex_server = lookup_plex_media(hass, content_type, content_id)
-    sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
+    try:
+        sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
+    except BadRequest as exc:
+        raise HomeAssistantError(
+            "Sonos speakers not linked to Plex account, complete this step in the Plex app"
+        ) from exc
+
     if sonos_speaker is None:
         message = f"Sonos speaker '{speaker_name}' is not associated with '{plex_server.friendly_name}'"
         _LOGGER.error(message)

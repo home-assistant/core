@@ -4,11 +4,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 from collections import OrderedDict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from glob import glob
 import logging
 import os
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import core
@@ -21,7 +21,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==5.0.1",)
+REQUIREMENTS = ("colorlog==6.6.0",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access

@@ -72,8 +72,7 @@ def compile_policy(
     def apply_policy_funcs(object_id: str, key: str) -> bool:
         """Apply several policy functions."""
         for func in funcs:
-            result = func(object_id, key)
-            if result is not None:
+            if (result := func(object_id, key)) is not None:
                 return result
         return False
 

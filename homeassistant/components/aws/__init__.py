@@ -13,7 +13,9 @@ from homeassistant.const import (
     CONF_PROFILE_NAME,
     CONF_SERVICE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
 from .const import (
@@ -81,12 +83,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up AWS component."""
     hass.data[DATA_HASS_CONFIG] = config
 
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         # create a default conf using default profile
         conf = CONFIG_SCHEMA({ATTR_CREDENTIALS: DEFAULT_CREDENTIAL})
 
@@ -159,9 +160,7 @@ async def _validate_aws_credentials(hass, credential):
     del aws_config[CONF_NAME]
     del aws_config[CONF_VALIDATE]
 
-    profile = aws_config.get(CONF_PROFILE_NAME)
-
-    if profile is not None:
+    if (profile := aws_config.get(CONF_PROFILE_NAME)) is not None:
         session = aiobotocore.AioSession(profile=profile)
         del aws_config[CONF_PROFILE_NAME]
         if CONF_ACCESS_KEY_ID in aws_config:

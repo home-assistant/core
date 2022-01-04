@@ -13,13 +13,13 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
                 "description": "V\u00e1lasszon egy Roomba vagy Braava k\u00e9sz\u00fcl\u00e9ket.",
                 "title": "Automatikus csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
             },
             "link": {
-                "description": "Nyomja meg \u00e9s tartsa lenyomva a(z) {name} Kezd\u0151lap (Home) gombot, am\u00edg az eszk\u00f6z hangot ad (kb. K\u00e9t m\u00e1sodperc), majd engedje el 30 m\u00e1sodpercen bel\u00fcl.",
+                "description": "Nyomja meg \u00e9s tartsa lenyomva a {name} Home gombj\u00e1t, am\u00edg az eszk\u00f6z hangot ad (kb. k\u00e9t m\u00e1sodperc), majd engedje el 30 m\u00e1sodpercen bel\u00fcl.",
                 "title": "Jelsz\u00f3 lek\u00e9r\u00e9se"
             },
             "link_manual": {
@@ -32,9 +32,9 @@
             "manual": {
                 "data": {
                     "blid": "BLID",
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
-                "description": "A h\u00e1l\u00f3zaton egyetlen Roomba vagy Braava sem ker\u00fclt el\u0151. A BLID az eszk\u00f6z hostnev\u00e9nek az `iRobot-` vagy `Roomba -` ut\u00e1ni r\u00e9sze. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3ban ismertetett l\u00e9p\u00e9seket: {auth_help_url}",
+                "description": "A h\u00e1l\u00f3zaton egyetlen Roomba vagy Braava sem ker\u00fclt el\u0151.",
                 "title": "Manu\u00e1lis csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
             },
             "user": {
@@ -42,11 +42,11 @@
                     "blid": "BLID",
                     "continuous": "Folyamatos",
                     "delay": "K\u00e9sleltet\u00e9s",
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "password": "Jelsz\u00f3"
                 },
                 "description": "V\u00e1lasszon Roomba-t vagy Braava-t.",
-                "title": "Csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
+                "title": "Automatikus csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
             }
         }
     },

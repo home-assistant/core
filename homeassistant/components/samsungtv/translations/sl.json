@@ -9,7 +9,7 @@
         "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
-                "description": "Vnesite podatke o televizorju Samsung. \u010ce \u0161e nikoli niste povezali Home Assistant, bi morali na televizorju videli pojavno okno, ki zahteva va\u0161e dovoljenje. Ro\u010dna konfiguracija za ta TV bo prepisana.",
+                "description": "Vnesite podatke o televizorju Samsung {device}. \u010ce \u0161e nikoli niste povezali Home Assistant, bi morali na televizorju videli pojavno okno, ki zahteva va\u0161e dovoljenje. Ro\u010dna konfiguracija za ta TV bo prepisana.",
                 "title": "Samsung TV"
             },
             "user": {

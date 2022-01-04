@@ -23,7 +23,10 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SHARK
@@ -67,7 +70,11 @@ ATTR_RECHARGE_RESUME = "recharge_and_resume"
 ATTR_RSSI = "rssi"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Shark IQ vacuum cleaner."""
     coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
@@ -123,25 +130,20 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info dictionary."""
-        return {
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "name": self.name,
-            "manufacturer": SHARK,
-            "model": self.model,
-            "sw_version": self.sharkiq.get_property_value(
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial_number)},
+            manufacturer=SHARK,
+            model=self.model,
+            name=self.name,
+            sw_version=self.sharkiq.get_property_value(
                 Properties.ROBOT_FIRMWARE_VERSION
             ),
-        }
+        )
 
     @property
     def supported_features(self) -> int:
         """Flag vacuum cleaner robot features that are supported."""
         return SUPPORT_SHARKIQ
-
-    @property
-    def is_docked(self) -> bool | None:
-        """Is vacuum docked."""
-        return self.sharkiq.get_property_value(Properties.DOCKED_STATUS)
 
     @property
     def error_code(self) -> int | None:
@@ -175,7 +177,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         In the app, these are (usually) handled by showing the robot as stopped and sending the
         user a notification.
         """
-        if self.is_docked:
+        if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
             return STATE_DOCKED
         return self.operating_mode
 

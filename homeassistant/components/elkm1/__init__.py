@@ -22,11 +22,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -57,12 +58,12 @@ SYNC_TIMEOUT = 120
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "climate",
-    "light",
-    "scene",
-    "sensor",
-    "switch",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 SPEAK_SERVICE_SCHEMA = vol.Schema(
@@ -236,8 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     elk.connect()
 
     def _element_changed(element, changeset):
-        keypress = changeset.get("last_keypress")
-        if keypress is None:
+        if (keypress := changeset.get("last_keypress")) is None:
             return
 
         hass.bus.async_fire(
@@ -285,7 +285,7 @@ def _find_elk_by_prefix(hass, prefix):
             return hass.data[DOMAIN][entry_id]["elk"]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -320,7 +320,7 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             await event.wait()
     except asyncio.TimeoutError:
         _LOGGER.error(
@@ -342,13 +342,13 @@ def _create_elk_services(hass):
             raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
         return elk
 
-    def _speak_word_service(service):
+    def _speak_word_service(service: ServiceCall) -> None:
         _getelk(service).panel.speak_word(service.data["number"])
 
-    def _speak_phrase_service(service):
+    def _speak_phrase_service(service: ServiceCall) -> None:
         _getelk(service).panel.speak_phrase(service.data["number"])
 
-    def _set_time_service(service):
+    def _set_time_service(service: ServiceCall) -> None:
         _getelk(service).panel.set_time(dt_util.now())
 
     hass.services.async_register(
@@ -453,26 +453,26 @@ class ElkEntity(Entity):
         self._element_callback(self._element, {})
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
-        return {
-            "via_device": (DOMAIN, f"{self._prefix}_system"),
-        }
+        return DeviceInfo(
+            via_device=(DOMAIN, f"{self._prefix}_system"),
+        )
 
 
 class ElkAttachedEntity(ElkEntity):
     """An elk entity that is attached to the elk system."""
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for the underlying ElkM1 system."""
         device_name = "ElkM1"
         if self._prefix:
             device_name += f" {self._prefix}"
-        return {
-            "name": device_name,
-            "identifiers": {(DOMAIN, f"{self._prefix}_system")},
-            "sw_version": self._elk.panel.elkm1_version,
-            "manufacturer": "ELK Products, Inc.",
-            "model": "M1",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._prefix}_system")},
+            manufacturer="ELK Products, Inc.",
+            model="M1",
+            name=device_name,
+            sw_version=self._elk.panel.elkm1_version,
+        )

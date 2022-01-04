@@ -11,6 +11,10 @@ TRIGGERS = f"{DOMAIN}-triggers"
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
 
+IDENTIFIER_SERIAL_NUMBER = "serial-number"
+IDENTIFIER_ACCESSORY_ID = "accessory-id"
+
+
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
     "lightbulb": "light",
@@ -36,7 +40,6 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "leak": "binary_sensor",
     "fan": "fan",
     "fanv2": "fan",
-    "air-quality": "air_quality",
     "occupancy": "binary_sensor",
     "television": "media_player",
     "valve": "switch",
@@ -44,9 +47,19 @@ HOMEKIT_ACCESSORY_DISPATCH = {
 }
 
 CHARACTERISTIC_PLATFORMS = {
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_WATT: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS_20: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_KW_HOUR: "sensor",
+    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: "number",
+    CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: "number",
+    CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: "switch",
+    CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE: "switch",
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: "number",
+    CharacteristicsTypes.Vendor.HAA_SETUP: "button",
+    CharacteristicsTypes.Vendor.HAA_UPDATE: "button",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",

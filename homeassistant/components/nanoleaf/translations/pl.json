@@ -15,7 +15,7 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Naci\u015bnij i przytrzymaj przycisk zasilania na Nanoleaf przez 5 sekund, a\u017c dioda LED przycisku zacznie miga\u0107, a nast\u0119pnie kliknij **WY\u015aLIJ** w ci\u0105gu 30 sekund.",
+                "description": "Naci\u015bnij i przytrzymaj przycisk zasilania na Nanoleaf przez 5 sekund, a\u017c dioda LED przycisku zacznie miga\u0107, a nast\u0119pnie kliknij **ZATWIERD\u0179** w ci\u0105gu 30 sekund.",
                 "title": "Po\u0142\u0105czenie z Nanoleaf"
             },
             "user": {

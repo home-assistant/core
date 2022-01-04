@@ -2,15 +2,22 @@
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AbodeDevice
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Abode binary sensor devices."""
     data = hass.data[DOMAIN]
 
@@ -42,5 +49,5 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     def device_class(self):
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
-            return DEVICE_CLASS_WINDOW
+            return BinarySensorDeviceClass.WINDOW
         return self._device.generic_type

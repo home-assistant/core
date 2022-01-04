@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "invalid_sensors_data": "\u6b64\u76e3\u6e2c\u7ad9\u50b3\u611f\u5668\u8cc7\u6599\u7121\u6548\u3002",
+            "invalid_sensors_data": "\u6b64\u76e3\u6e2c\u7ad9\u611f\u6e2c\u5668\u8cc7\u6599\u7121\u6548\u3002",
             "wrong_station_id": "\u76e3\u6e2c\u7ad9 ID \u4e0d\u6b63\u78ba\u3002"
         },
         "step": {

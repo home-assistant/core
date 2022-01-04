@@ -1,5 +1,4 @@
 """BleBox cover entity."""
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     STATE_CLOSED,
@@ -11,12 +10,19 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_HASS_COVER_STATES, BLEBOX_TO_HASS_DEVICE_CLASSES
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a BleBox entry."""
 
     create_blebox_entities(
@@ -34,11 +40,6 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         position = SUPPORT_SET_POSITION if feature.is_slider else 0
         stop = SUPPORT_STOP if feature.has_stop else 0
         self._attr_supported_features = position | stop | SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def state(self):
-        """Return the equivalent HA cover state."""
-        return BLEBOX_TO_HASS_COVER_STATES[self._feature.state]
 
     @property
     def current_cover_position(self):
@@ -83,5 +84,5 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         await self._feature.async_stop()
 
     def _is_state(self, state_name):
-        value = self.state
+        value = BLEBOX_TO_HASS_COVER_STATES[self._feature.state]
         return None if value is None else value == state_name

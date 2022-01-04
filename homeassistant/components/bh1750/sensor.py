@@ -1,4 +1,6 @@
 """Support for BH1750 light sensor."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
@@ -6,9 +8,16 @@ from i2csense.bh1750 import BH1750  # pylint: disable=import-error
 import smbus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE, LIGHT_LUX
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, LIGHT_LUX
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,8 +67,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the BH1750 sensor."""
+    _LOGGER.warning(
+        "The BH1750 integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     name = config[CONF_NAME]
     bus_number = config[CONF_I2C_BUS]
@@ -81,7 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     if not sensor.sample_ok:
         _LOGGER.error("BH1750 sensor not detected at %s", i2c_address)
-        return False
+        return
 
     dev = [BH1750Sensor(sensor, name, LIGHT_LUX, config[CONF_MULTIPLIER])]
     _LOGGER.info(
@@ -96,7 +116,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BH1750Sensor(SensorEntity):
     """Implementation of the BH1750 sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_device_class = SensorDeviceClass.ILLUMINANCE
 
     def __init__(self, bh1750_sensor, name, unit, multiplier=1.0):
         """Initialize the sensor."""

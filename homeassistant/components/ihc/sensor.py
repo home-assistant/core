@@ -1,13 +1,23 @@
 """Support for IHC sensors."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, DEVICE_CLASS_TEMPERATURE
+from __future__ import annotations
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import TEMPERATURE_UNITS
 
 from . import IHC_CONTROLLER, IHC_INFO
 from .ihcdevice import IHCDevice
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the IHC sensor platform."""
     if discovery_info is None:
         return
@@ -42,7 +52,7 @@ class IHCSensor(IHCDevice, SensorEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return (
-            DEVICE_CLASS_TEMPERATURE
+            SensorDeviceClass.TEMPERATURE
             if self._unit_of_measurement in TEMPERATURE_UNITS
             else None
         )

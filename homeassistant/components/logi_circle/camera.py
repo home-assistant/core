@@ -5,7 +5,8 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.camera import ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
@@ -13,7 +14,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTRIBUTION,
@@ -31,15 +36,22 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a Logi Circle Camera. Obsolete."""
     _LOGGER.warning("Logi Circle no longer works with camera platform configuration")
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a Logi Circle Camera based on a config entry."""
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
-    ffmpeg = hass.data[DATA_FFMPEG]
+    ffmpeg = get_ffmpeg_manager(hass)
 
     cameras = [LogiCam(device, entry, ffmpeg) for device in devices]
 
@@ -116,15 +128,15 @@ class LogiCam(Camera):
         return SUPPORT_ON_OFF
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "name": self._camera.name,
-            "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
-            "model": self._camera.model_name,
-            "sw_version": self._camera.firmware,
-            "manufacturer": DEVICE_BRAND,
-        }
+        return DeviceInfo(
+            identifiers={(LOGI_CIRCLE_DOMAIN, self._camera.id)},
+            manufacturer=DEVICE_BRAND,
+            model=self._camera.model_name,
+            name=self._camera.name,
+            sw_version=self._camera.firmware,
+        )
 
     @property
     def extra_state_attributes(self):

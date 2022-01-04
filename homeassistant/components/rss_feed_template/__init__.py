@@ -5,8 +5,9 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_OK
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 CONTENT_TYPE_XML = "text/xml"
 DOMAIN = "rss_feed_template"
@@ -37,15 +38,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RSS feed template component."""
     for (feeduri, feedconfig) in config[DOMAIN].items():
         url = f"/api/rss_template/{feeduri}"
 
         requires_auth = feedconfig.get("requires_api_password")
 
-        title = feedconfig.get("title")
-        if title is not None:
+        if (title := feedconfig.get("title")) is not None:
             title.hass = hass
 
         items = feedconfig.get("items")
@@ -101,6 +101,4 @@ class RssView(HomeAssistantView):
 
         response += "</rss>\n"
 
-        return web.Response(
-            body=response, content_type=CONTENT_TYPE_XML, status=HTTP_OK
-        )
+        return web.Response(body=response, content_type=CONTENT_TYPE_XML)

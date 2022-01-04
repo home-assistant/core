@@ -1,9 +1,12 @@
 """Support for hunterdouglass_powerview sensors."""
 from aiopvapi.resources.shade import factory as PvShade
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     COORDINATOR,
@@ -20,7 +23,9 @@ from .const import (
 from .entity import ShadeEntity
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the hunter douglas shades sensors."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
@@ -49,6 +54,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
@@ -62,7 +69,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     @property
     def device_class(self):
         """Shade battery Class."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
     def unique_id(self):

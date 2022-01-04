@@ -1,4 +1,6 @@
 """Support for interface with an LG webOS Smart TV."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
@@ -9,7 +11,10 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -24,14 +29,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.webostv.const import (
-    ATTR_PAYLOAD,
-    ATTR_SOUND_OUTPUT,
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DOMAIN,
-    LIVE_TV_APP_ID,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
@@ -42,8 +39,20 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    ATTR_PAYLOAD,
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +73,12 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the LG webOS Smart TV platform."""
 
     if discovery_info is None:
@@ -143,8 +157,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     async def async_signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""
-        entity_ids = data[ATTR_ENTITY_ID]
-        if entity_ids == ENTITY_MATCH_NONE:
+        if (entity_ids := data[ATTR_ENTITY_ID]) == ENTITY_MATCH_NONE:
             return
 
         if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
@@ -239,7 +252,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def device_class(self):
         """Return the device class of the device."""
-        return DEVICE_CLASS_TV
+        return MediaPlayerDeviceClass.TV
 
     @property
     def state(self):
@@ -304,9 +317,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Flag media player features that are supported."""
         supported = SUPPORT_WEBOSTV
 
-        if (self._client.sound_output == "external_arc") or (
-            self._client.sound_output == "external_speaker"
-        ):
+        if self._client.sound_output in ("external_arc", "external_speaker"):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
@@ -370,8 +381,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_select_source(self, source):
         """Select input source."""
-        source_dict = self._source_list.get(source)
-        if source_dict is None:
+        if (source_dict := self._source_list.get(source)) is None:
             _LOGGER.warning("Source %s not found for %s", source, self.name)
             return
         if source_dict.get("title"):

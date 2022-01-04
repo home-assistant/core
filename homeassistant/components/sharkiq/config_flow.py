@@ -27,7 +27,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     )
 
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             _LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except (asyncio.TimeoutError, aiohttp.ClientError) as errors:

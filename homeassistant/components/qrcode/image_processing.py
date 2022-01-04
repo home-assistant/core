@@ -1,4 +1,6 @@
 """Support for the QR code image processing."""
+from __future__ import annotations
+
 import io
 
 from PIL import Image
@@ -10,10 +12,17 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     ImageProcessingEntity,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the QR code image processing platform."""
     # pylint: disable=unused-argument
     entities = []

@@ -151,7 +151,7 @@ class AlarmPanel:
             self.port,
         )
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.status.get("mac"))},
@@ -304,7 +304,9 @@ class AlarmPanel:
     def async_ds18b20_sensor_configuration(self):
         """Return the configuration map for syncing DS18B20 sensors."""
         return [
-            self.format_zone(sensor[CONF_ZONE])
+            self.format_zone(
+                sensor[CONF_ZONE], {CONF_POLL_INTERVAL: sensor[CONF_POLL_INTERVAL]}
+            )
             for sensor in self.stored_configuration[CONF_SENSORS]
             if sensor[CONF_TYPE] == "ds18b20"
         ]
@@ -347,9 +349,7 @@ class AlarmPanel:
     @callback
     def async_current_settings_payload(self):
         """Return a dict of configuration currently stored on the device."""
-        settings = self.status["settings"]
-        if not settings:
-            settings = {}
+        settings = self.status["settings"] or {}
 
         return {
             "sensors": [

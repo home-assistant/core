@@ -6,6 +6,7 @@ from typing import Final
 LOGGER: Final = logging.getLogger(__package__)
 
 DOMAIN: Final = "device_tracker"
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY: Final = "legacy"
 PLATFORM_TYPE_ENTITY: Final = "entity_platform"

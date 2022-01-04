@@ -1,4 +1,4 @@
-"""Fixtures for UniFi methods."""
+"""Fixtures for UniFi Network methods."""
 from __future__ import annotations
 
 from unittest.mock import patch

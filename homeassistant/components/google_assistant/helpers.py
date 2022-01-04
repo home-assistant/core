@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
+from http import HTTPStatus
 import logging
 import pprint
 
@@ -45,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _get_entity_and_device(
-    hass, entity_id
+    hass: HomeAssistant, entity_id: str
 ) -> tuple[RegistryEntry, DeviceEntry] | None:
     """Fetch the entity and device entries for a entity_id."""
     dev_reg, ent_reg = await gather(
@@ -53,14 +54,17 @@ async def _get_entity_and_device(
         hass.helpers.entity_registry.async_get_registry(),
     )
 
-    entity_entry = ent_reg.async_get(entity_id)
-    if not entity_entry:
+    if not (entity_entry := ent_reg.async_get(entity_id)):
         return None, None
     device_entry = dev_reg.devices.get(entity_entry.device_id)
     return entity_entry, device_entry
 
 
-async def _get_area(hass, entity_entry, device_entry) -> AreaEntry | None:
+async def _get_area(
+    hass: HomeAssistant,
+    entity_entry: RegistryEntry | None,
+    device_entry: DeviceEntry | None,
+) -> AreaEntry | None:
     """Calculate the area for an entity."""
     if entity_entry and entity_entry.area_id:
         area_id = entity_entry.area_id
@@ -73,7 +77,7 @@ async def _get_area(hass, entity_entry, device_entry) -> AreaEntry | None:
     return area_reg.areas.get(area_id)
 
 
-async def _get_device_info(device_entry) -> dict[str, str] | None:
+async def _get_device_info(device_entry: DeviceEntry | None) -> dict[str, str] | None:
     """Retrieve the device info for a device."""
     if not device_entry:
         return None
@@ -204,7 +208,7 @@ class AbstractConfig(ABC):
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
         status = await self._async_request_sync_devices(agent_user_id)
-        if status == 404:
+        if status == HTTPStatus.NOT_FOUND:
             await self.async_disconnect_agent_user(agent_user_id)
         return status
 
@@ -263,9 +267,7 @@ class AbstractConfig(ABC):
     @callback
     def async_enable_local_sdk(self):
         """Enable the local SDK."""
-        webhook_id = self.local_sdk_webhook_id
-
-        if webhook_id is None:
+        if (webhook_id := self.local_sdk_webhook_id) is None:
             return
 
         try:
@@ -348,8 +350,7 @@ class GoogleConfigStore:
 
     async def async_load(self):
         """Store current configuration to disk."""
-        data = await self._store.async_load()
-        if data:
+        if data := await self._store.async_load():
             self._data = data
 
 
@@ -500,8 +501,7 @@ class GoogleEntity:
         }
 
         # use aliases
-        aliases = entity_config.get(CONF_ALIASES)
-        if aliases:
+        if aliases := entity_config.get(CONF_ALIASES):
             device["name"]["nicknames"] = [name] + aliases
 
         if self.config.is_local_sdk_active and self.should_expose_local():
@@ -518,16 +518,14 @@ class GoogleEntity:
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
-        room = entity_config.get(CONF_ROOM_HINT)
-        if room:
+        if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
         else:
             area = await _get_area(self.hass, entity_entry, device_entry)
             if area and area.name:
                 device["roomHint"] = area.name
 
-        device_info = await _get_device_info(device_entry)
-        if device_info:
+        if device_info := await _get_device_info(device_entry):
             device["deviceInfo"] = device_info
 
         return device
@@ -599,7 +597,9 @@ def deep_update(target, source):
 
 
 @callback
-def async_get_entities(hass, config) -> list[GoogleEntity]:
+def async_get_entities(
+    hass: HomeAssistant, config: AbstractConfig
+) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
     entities = []
     for state in hass.states.async_all():

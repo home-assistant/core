@@ -4,37 +4,61 @@ Support for Homekit number ranges.
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
+from __future__ import annotations
+
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
-from homeassistant.components.number import NumberEntity
-from homeassistant.core import callback
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, CharacteristicEntity
 
-NUMBER_ENTITIES = {
-    CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: {
-        "name": "Spray Quantity",
-        "icon": "mdi:water",
-    },
-    CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: {
-        "name": "Elevation",
-        "icon": "mdi:elevation-rise",
-    },
+NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
+    CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+        name="Spray Quantity",
+        icon="mdi:water",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION,
+        name="Elevation",
+        icon="mdi:elevation-rise",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME,
+        name="Volume",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME,
+        name="Volume",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit numbers."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic):
-        kwargs = NUMBER_ENTITIES.get(char.type)
-        if not kwargs:
+        if not (description := NUMBER_ENTITIES.get(char.type)):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities([HomeKitNumber(conn, info, char, **kwargs)], True)
+        async_add_entities([HomeKitNumber(conn, info, char, description)], True)
         return True
 
     conn.add_char_factory(async_add_characteristic)
@@ -48,31 +72,22 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         conn,
         info,
         char,
-        device_class=None,
-        icon=None,
-        name=None,
-        **kwargs,
+        description: NumberEntityDescription,
     ):
         """Initialise a HomeKit number control."""
-        self._device_class = device_class
-        self._icon = icon
-        self._name = name
-
+        self.entity_description = description
         super().__init__(conn, info, char)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        if prefix := super().name:
+            return f"{prefix} {self.entity_description.name}"
+        return self.entity_description.name
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return self._device_class
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return self._icon
 
     @property
     def min_value(self) -> float:

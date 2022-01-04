@@ -51,9 +51,7 @@ def find_coordinates(
     hass: HomeAssistant, entity_id: str, recursion_history: list | None = None
 ) -> str | None:
     """Find the gps coordinates of the entity in the form of '90.000,180.000'."""
-    entity_state = hass.states.get(entity_id)
-
-    if entity_state is None:
+    if (entity_state := hass.states.get(entity_id)) is None:
         _LOGGER.error("Unable to find entity %s", entity_id)
         return None
 
@@ -88,7 +86,7 @@ def find_coordinates(
     # Check if state is valid coordinate set
     try:
         # Import here, not at top-level to avoid circular import
-        import homeassistant.helpers.config_validation as cv  # pylint: disable=import-outside-toplevel
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
         cv.gps(entity_state.state.split(","))
     except vol.Invalid:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import colorsys
 import math
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import attr
 
@@ -218,7 +218,7 @@ def color_RGB_to_xy(
 
 
 # Taken from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 # License: Code is given as is. Use at your own risk and discretion.
 def color_RGB_to_xy_brightness(
     iR: int, iG: int, iB: int, Gamut: GamutType | None = None
@@ -268,7 +268,7 @@ def color_xy_to_RGB(
 
 
 # Converted to Python from Obj-C, original source from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 def color_xy_brightness_to_RGB(
     vX: float, vY: float, ibrightness: int, Gamut: GamutType | None = None
 ) -> tuple[int, int, int]:
@@ -299,7 +299,7 @@ def color_xy_brightness_to_RGB(
     r, g, b = map(
         lambda x: (12.92 * x)
         if (x <= 0.0031308)
-        else ((1.0 + 0.055) * pow(x, (1.0 / 2.4)) - 0.055),
+        else ((1.0 + 0.055) * cast(float, pow(x, (1.0 / 2.4))) - 0.055),
         [r, g, b],
     )
 
@@ -404,8 +404,8 @@ def color_hs_to_xy(
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS), Gamut)
 
 
-def _match_max_scale(
-    input_colors: tuple[int, ...], output_colors: tuple[int, ...]
+def match_max_scale(
+    input_colors: tuple[int, ...], output_colors: tuple[float, ...]
 ) -> tuple[int, ...]:
     """Match the maximum value of the output to the input."""
     max_in = max(input_colors)
@@ -426,7 +426,7 @@ def color_rgb_to_rgbw(r: int, g: int, b: int) -> tuple[int, int, int, int]:
 
     # Match the output maximum value to the input. This ensures the full
     # channel range is used.
-    return _match_max_scale((r, g, b), rgbw)  # type: ignore
+    return match_max_scale((r, g, b), rgbw)  # type: ignore[return-value]
 
 
 def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
@@ -436,7 +436,7 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
 
     # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
-    return _match_max_scale((r, g, b, w), rgb)  # type: ignore
+    return match_max_scale((r, g, b, w), rgb)  # type: ignore[return-value]
 
 
 def color_rgb_to_rgbww(
@@ -450,7 +450,9 @@ def color_rgb_to_rgbww(
     w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
 
     # Find the ratio of the midpoint white in the input rgb channels
-    white_level = min(r / w_r, g / w_g, b / w_b)
+    white_level = min(
+        r / w_r if w_r else 0, g / w_g if w_g else 0, b / w_b if w_b else 0
+    )
 
     # Subtract the white portion from the rgb channels.
     rgb = (r - w_r * white_level, g - w_g * white_level, b - w_b * white_level)
@@ -458,7 +460,7 @@ def color_rgb_to_rgbww(
 
     # Match the output maximum value to the input. This ensures the full
     # channel range is used.
-    return _match_max_scale((r, g, b), rgbww)  # type: ignore
+    return match_max_scale((r, g, b), rgbww)  # type: ignore[return-value]
 
 
 def color_rgbww_to_rgb(
@@ -481,7 +483,7 @@ def color_rgbww_to_rgb(
 
     # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
-    return _match_max_scale((r, g, b, cw, ww), rgb)  # type: ignore
+    return match_max_scale((r, g, b, cw, ww), rgb)  # type: ignore[return-value]
 
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
@@ -526,6 +528,16 @@ def color_temperature_to_rgb(
     blue = _get_blue(tmp_internal)
 
     return red, green, blue
+
+
+def color_temperature_to_rgbww(
+    temperature: int, brightness: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int, int, int, int]:
+    """Convert color temperature to rgbcw."""
+    mired_range = max_mireds - min_mireds
+    warm = ((max_mireds - temperature) / mired_range) * brightness
+    cold = brightness - warm
+    return (0, 0, 0, round(cold), round(warm))
 
 
 def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:

@@ -11,7 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hostitel"
+                    "cloud_id": "Cloud ID",
+                    "host": "Hostitel",
+                    "install_code": "Instala\u010dn\u00ed k\u00f3d"
                 }
             }
         }

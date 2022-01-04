@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -28,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from . import sensor_types
 
@@ -171,7 +172,7 @@ class LTEData:
         return next(iter(self.modem_data.values()))
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
     if DATA_KEY not in hass.data:
         websession = async_create_clientsession(
@@ -179,7 +180,7 @@ async def async_setup(hass, config):
         )
         hass.data[DATA_KEY] = LTEData(websession)
 
-        async def service_handler(service):
+        async def service_handler(service: ServiceCall) -> None:
             """Apply a service."""
             host = service.data.get(ATTR_HOST)
             conf = {CONF_HOST: host}
@@ -193,12 +194,9 @@ async def async_setup(hass, config):
                 for sms_id in service.data[ATTR_SMS_ID]:
                     await modem_data.modem.delete_sms(sms_id)
             elif service.service == SERVICE_SET_OPTION:
-                failover = service.data.get(ATTR_FAILOVER)
-                if failover:
+                if failover := service.data.get(ATTR_FAILOVER):
                     await modem_data.modem.set_failover_mode(failover)
-
-                autoconnect = service.data.get(ATTR_AUTOCONNECT)
-                if autoconnect:
+                if autoconnect := service.data.get(ATTR_AUTOCONNECT):
                     await modem_data.modem.set_autoconnect_mode(autoconnect)
             elif service.service == SERVICE_CONNECT_LTE:
                 await modem_data.modem.connect_lte()

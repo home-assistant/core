@@ -1,18 +1,19 @@
 """Support for Fibaro sensors."""
+from __future__ import annotations
+
 from contextlib import suppress
 
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -21,7 +22,7 @@ SENSOR_TYPES = {
         "Temperature",
         None,
         None,
-        DEVICE_CLASS_TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE,
     ],
     "com.fibaro.smokeSensor": [
         "Smoke",
@@ -34,19 +35,24 @@ SENSOR_TYPES = {
         CONCENTRATION_PARTS_PER_MILLION,
         None,
         None,
-        DEVICE_CLASS_CO2,
+        SensorDeviceClass.CO2,
     ],
     "com.fibaro.humiditySensor": [
         "Humidity",
         PERCENTAGE,
         None,
-        DEVICE_CLASS_HUMIDITY,
+        SensorDeviceClass.HUMIDITY,
     ],
-    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
+    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, SensorDeviceClass.ILLUMINANCE],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Fibaro controller devices."""
     if discovery_info is None:
         return

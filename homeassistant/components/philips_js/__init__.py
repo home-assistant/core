@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 
@@ -15,6 +16,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
@@ -22,7 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_ALLOW_NOTIFY, DOMAIN
 
-PLATFORMS = ["media_player", "light", "remote"]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.LIGHT, Platform.REMOTE]
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

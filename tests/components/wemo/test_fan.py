@@ -3,14 +3,13 @@
 import pytest
 from pywemo.exceptions import ActionException
 
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.wemo import fan
 from homeassistant.components.wemo.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
@@ -85,7 +84,7 @@ async def test_available_after_update(
     pywemo_device.set_state.side_effect = ActionException
     pywemo_device.get_state.return_value = 1
     await entity_test_helpers.test_avaliable_after_update(
-        hass, pywemo_registry, pywemo_device, wemo_entity, FAN_DOMAIN
+        hass, pywemo_registry, pywemo_device, wemo_entity, Platform.FAN
     )
 
 

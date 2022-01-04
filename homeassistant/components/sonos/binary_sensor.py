@@ -5,24 +5,33 @@ import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_BATTERY
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
 
-_LOGGER = logging.getLogger(__name__)
-
 ATTR_BATTERY_POWER_SOURCE = "power_source"
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Sonos from a config entry."""
 
     async def _async_create_entity(speaker: SonosSpeaker) -> None:
+        _LOGGER.debug("Creating battery binary_sensor on %s", speaker.zone_name)
         entity = SonosPowerEntity(speaker)
         async_add_entities([entity])
 
@@ -34,22 +43,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return f"{self.soco.uid}-power"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self.speaker.zone_name} Power"
+    def __init__(self, speaker: SonosSpeaker) -> None:
+        """Initialize the power entity binary sensor."""
+        super().__init__(speaker)
+        self._attr_unique_id = f"{self.soco.uid}-power"
+        self._attr_name = f"{self.speaker.zone_name} Power"
 
-    @property
-    def device_class(self) -> str:
-        """Return the entity's device class."""
-        return DEVICE_CLASS_BATTERY_CHARGING
-
-    async def async_update(self) -> None:
+    async def _async_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 

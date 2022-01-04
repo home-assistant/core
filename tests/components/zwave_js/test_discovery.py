@@ -6,6 +6,9 @@ from homeassistant.components.zwave_js.discovery import (
     ZWaveDiscoverySchema,
     ZWaveValueDiscoverySchema,
 )
+from homeassistant.components.zwave_js.discovery_data_template import (
+    DynamicCurrentTempClimateDataTemplate,
+)
 
 
 async def test_iblinds_v2(hass, client, iblinds_v2, integration):
@@ -68,6 +71,11 @@ async def test_lock_popp_electric_strike_lock_control(
     )
 
 
+async def test_fortrez_ssa3_siren(hass, client, fortrezz_ssa3_siren, integration):
+    """Test Fortrezz SSA3 siren gets discovered correctly."""
+    assert hass.states.get("select.siren_and_strobe_alarm") is not None
+
+
 async def test_firmware_version_range_exception(hass):
     """Test FirmwareVersionRange exception."""
     with pytest.raises(ValueError):
@@ -75,4 +83,13 @@ async def test_firmware_version_range_exception(hass):
             "test",
             ZWaveValueDiscoverySchema(command_class=1),
             firmware_version_range=FirmwareVersionRange(),
+        )
+
+
+async def test_dynamic_climate_data_discovery_template_failure(hass, multisensor_6):
+    """Test that initing a DynamicCurrentTempClimateDataTemplate with no data raises."""
+    node = multisensor_6
+    with pytest.raises(ValueError):
+        DynamicCurrentTempClimateDataTemplate().resolve_data(
+            node.values[f"{node.node_id}-49-0-Ultraviolet"]
         )

@@ -3,7 +3,8 @@ import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-from wirelesstagpy import WirelessTags, WirelessTagsException
+from wirelesstagpy import WirelessTags
+from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -14,9 +15,11 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,16 +76,14 @@ class WirelessTagPlatform:
 
     def arm(self, switch):
         """Arm entity sensor monitoring."""
-        func_name = f"arm_{switch.sensor_type}"
-        arm_func = getattr(self.api, func_name)
-        if arm_func is not None:
+        func_name = f"arm_{switch.entity_description.key}"
+        if (arm_func := getattr(self.api, func_name)) is not None:
             arm_func(switch.tag_id, switch.tag_manager_mac)
 
     def disarm(self, switch):
         """Disarm entity sensor monitoring."""
-        func_name = f"disarm_{switch.sensor_type}"
-        disarm_func = getattr(self.api, func_name)
-        if disarm_func is not None:
+        func_name = f"disarm_{switch.entity_description.key}"
+        if (disarm_func := getattr(self.api, func_name)) is not None:
             disarm_func(switch.tag_id, switch.tag_manager_mac)
 
     def start_monitoring(self):
@@ -125,7 +126,7 @@ class WirelessTagPlatform:
         self.api.start_monitoring(push_callback)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Wireless Sensor Tag component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
@@ -199,8 +200,7 @@ class WirelessTagBaseSensor(Entity):
             return
 
         updated_tags = self._api.load_tags()
-        updated_tag = updated_tags[self._uuid]
-        if updated_tag is None:
+        if (updated_tag := updated_tags[self._uuid]) is None:
             _LOGGER.error('Unable to update tag: "%s"', self.name)
             return
 

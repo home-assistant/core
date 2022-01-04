@@ -6,9 +6,8 @@ from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOTION,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -39,28 +38,28 @@ DEFAULT_DELAY = 0
 ATTR_DELAY = "delay"
 
 DEVICE_CLASS_MAP = {
-    "Motion": DEVICE_CLASS_MOTION,
-    "Line Crossing": DEVICE_CLASS_MOTION,
-    "Field Detection": DEVICE_CLASS_MOTION,
+    "Motion": BinarySensorDeviceClass.MOTION,
+    "Line Crossing": BinarySensorDeviceClass.MOTION,
+    "Field Detection": BinarySensorDeviceClass.MOTION,
     "Video Loss": None,
-    "Tamper Detection": DEVICE_CLASS_MOTION,
+    "Tamper Detection": BinarySensorDeviceClass.MOTION,
     "Shelter Alarm": None,
     "Disk Full": None,
     "Disk Error": None,
-    "Net Interface Broken": DEVICE_CLASS_CONNECTIVITY,
-    "IP Conflict": DEVICE_CLASS_CONNECTIVITY,
+    "Net Interface Broken": BinarySensorDeviceClass.CONNECTIVITY,
+    "IP Conflict": BinarySensorDeviceClass.CONNECTIVITY,
     "Illegal Access": None,
     "Video Mismatch": None,
     "Bad Video": None,
-    "PIR Alarm": DEVICE_CLASS_MOTION,
-    "Face Detection": DEVICE_CLASS_MOTION,
-    "Scene Change Detection": DEVICE_CLASS_MOTION,
+    "PIR Alarm": BinarySensorDeviceClass.MOTION,
+    "Face Detection": BinarySensorDeviceClass.MOTION,
+    "Scene Change Detection": BinarySensorDeviceClass.MOTION,
     "I/O": None,
-    "Unattended Baggage": DEVICE_CLASS_MOTION,
-    "Attended Baggage": DEVICE_CLASS_MOTION,
+    "Unattended Baggage": BinarySensorDeviceClass.MOTION,
+    "Attended Baggage": BinarySensorDeviceClass.MOTION,
     "Recording Failure": None,
-    "Exiting Region": DEVICE_CLASS_MOTION,
-    "Entering Region": DEVICE_CLASS_MOTION,
+    "Exiting Region": BinarySensorDeviceClass.MOTION,
+    "Entering Region": BinarySensorDeviceClass.MOTION,
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema(

@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.23.3
+    rev: v2.29.0
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/psf/black
-    rev: 21.7b0
+    rev: 21.12b0
     hooks:
       - id: black
         args:
@@ -17,22 +17,22 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba
+          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,iif,ines,ist,lightsensor,mut,nd,pres,referer,rime,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba,haa
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
     hooks:
       - id: flake8
         additional_dependencies:
-          - pycodestyle==2.7.0
-          - pyflakes==2.3.1
+          - pycodestyle==2.8.0
+          - pyflakes==2.4.0
           - flake8-docstrings==1.6.0
-          - pydocstyle==6.0.0
-          - flake8-comprehensions==3.5.0
-          - flake8-noqa==1.1.0
+          - pydocstyle==6.1.1
+          - flake8-comprehensions==3.7.0
+          - flake8-noqa==1.2.1
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
@@ -45,7 +45,7 @@ repos:
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/isort
-    rev: 5.9.3
+    rev: 5.10.0
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -61,7 +61,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.1
+    rev: v1.26.3
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -101,11 +101,11 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/manifest\.json|\.pre-commit-config\.yaml)$
+        files: ^(homeassistant/.+/manifest\.json|setup\.py|\.pre-commit-config\.yaml)$
       - id: hassfest
         name: hassfest
         entry: script/run-in-env.sh python3 -m script.hassfest
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|homeassistant/.+/services\.yaml)$
+        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|\.strict-typing|homeassistant/.+/services\.yaml)$

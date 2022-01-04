@@ -1,16 +1,18 @@
 """Support for powerwall binary sensors."""
-from tesla_powerwall import GridStatus
+from tesla_powerwall import GridStatus, MeterType
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import DEVICE_CLASS_POWER
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
     POWERWALL_API_DEVICE_TYPE,
+    POWERWALL_API_GRID_SERVICES_ACTIVE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
     POWERWALL_API_SERIAL_NUMBERS,
@@ -22,7 +24,11 @@ from .const import (
 from .entity import PowerWallEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the August sensors."""
     powerwall_data = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -35,6 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     for sensor_class in (
         PowerWallRunningSensor,
+        PowerWallGridServicesActiveSensor,
         PowerWallGridStatusSensor,
         PowerWallConnectedSensor,
         PowerWallChargingStatusSensor,
@@ -59,7 +66,7 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_POWER
+        return BinarySensorDeviceClass.POWER
 
     @property
     def unique_id(self):
@@ -83,7 +90,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def unique_id(self):
@@ -94,6 +101,30 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     def is_on(self):
         """Get the powerwall connected to tesla state."""
         return self.coordinator.data[POWERWALL_API_SITEMASTER].is_connected_to_tesla
+
+
+class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
+    """Representation of a Powerwall grid services active sensor."""
+
+    @property
+    def name(self):
+        """Device Name."""
+        return "Grid Services Active"
+
+    @property
+    def device_class(self):
+        """Device Class."""
+        return BinarySensorDeviceClass.POWER
+
+    @property
+    def unique_id(self):
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_grid_services_active"
+
+    @property
+    def is_on(self):
+        """Grid services is active."""
+        return self.coordinator.data[POWERWALL_API_GRID_SERVICES_ACTIVE]
 
 
 class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
@@ -107,7 +138,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_POWER
+        return BinarySensorDeviceClass.POWER
 
     @property
     def unique_id(self):
@@ -131,7 +162,7 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_BATTERY_CHARGING
+        return BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
     def unique_id(self):
@@ -142,4 +173,8 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     def is_on(self):
         """Powerwall is charging."""
         # is_sending_to returns true for values greater than 100 watts
-        return self.coordinator.data[POWERWALL_API_METERS].battery.is_sending_to()
+        return (
+            self.coordinator.data[POWERWALL_API_METERS]
+            .get_meter(MeterType.BATTERY)
+            .is_sending_to()
+        )

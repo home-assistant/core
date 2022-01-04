@@ -4,18 +4,11 @@ import logging
 from tesla_powerwall import MeterType
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
-    POWER_KILO_WATT,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, POWER_KILO_WATT
 
 from .const import (
     ATTR_FREQUENCY,
@@ -53,7 +46,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     powerwalls_serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
 
     entities = []
-    for meter in MeterType:
+    # coordinator.data[POWERWALL_API_METERS].meters holds all meters that are available
+    for meter in coordinator.data[POWERWALL_API_METERS].meters:
         entities.append(
             PowerWallEnergySensor(
                 meter,
@@ -91,7 +85,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
 
     _attr_name = "Powerwall Charge"
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
     def unique_id(self):
@@ -107,9 +101,9 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = POWER_KILO_WATT
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = SensorDeviceClass.POWER
 
     def __init__(
         self,
@@ -154,9 +148,9 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_device_class = SensorDeviceClass.ENERGY
 
     def __init__(
         self,

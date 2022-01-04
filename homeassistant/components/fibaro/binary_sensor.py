@@ -1,28 +1,39 @@
 """Support for Fibaro binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_WINDOW,
     DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
-    "com.fibaro.motionSensor": ["Motion", "mdi:run", DEVICE_CLASS_MOTION],
-    "com.fibaro.doorSensor": ["Door", "mdi:window-open", DEVICE_CLASS_DOOR],
-    "com.fibaro.windowSensor": ["Window", "mdi:window-open", DEVICE_CLASS_WINDOW],
-    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", DEVICE_CLASS_SMOKE],
-    "com.fibaro.FGMS001": ["Motion", "mdi:run", DEVICE_CLASS_MOTION],
+    "com.fibaro.motionSensor": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
+    "com.fibaro.doorSensor": ["Door", "mdi:window-open", BinarySensorDeviceClass.DOOR],
+    "com.fibaro.windowSensor": [
+        "Window",
+        "mdi:window-open",
+        BinarySensorDeviceClass.WINDOW,
+    ],
+    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", BinarySensorDeviceClass.SMOKE],
+    "com.fibaro.FGMS001": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
     "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Fibaro controller devices."""
     if discovery_info is None:
         return

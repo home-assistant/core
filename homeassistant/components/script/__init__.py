@@ -26,7 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -96,9 +96,7 @@ def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_entities)
@@ -127,9 +125,7 @@ def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_devices)
@@ -158,9 +154,7 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_areas)
@@ -176,15 +170,14 @@ async def async_setup(hass, config):
     if not await _async_process_config(hass, config, component):
         await async_get_blueprints(hass).async_populate()
 
-    async def reload_service(service):
+    async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
 
         await _async_process_config(hass, conf, component)
 
-    async def turn_on_service(service):
+    async def turn_on_service(service: ServiceCall) -> None:
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
         for script_entity in await component.async_extract_from_service(service):
@@ -192,7 +185,7 @@ async def async_setup(hass, config):
                 variables=variables, context=service.context, wait=False
             )
 
-    async def turn_off_service(service):
+    async def turn_off_service(service: ServiceCall) -> None:
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
         script_entities = await component.async_extract_from_service(service)
@@ -207,7 +200,7 @@ async def async_setup(hass, config):
             ]
         )
 
-    async def toggle_service(service):
+    async def toggle_service(service: ServiceCall) -> None:
         """Toggle a script."""
         for script_entity in await component.async_extract_from_service(service):
             await script_entity.async_toggle(context=service.context, wait=False)
@@ -273,7 +266,7 @@ async def _async_process_config(hass, config, component) -> bool:
 
     await component.async_add_entities(entities)
 
-    async def service_handler(service):
+    async def service_handler(service: ServiceCall) -> None:
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
         script_entity = component.get_entity(entity_id)
@@ -404,8 +397,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
             script_trace.set_trace(trace_get())
             with trace_path("sequence"):
                 this = None
-                state = self.hass.states.get(self.entity_id)
-                if state:
+                if state := self.hass.states.get(self.entity_id):
                     this = state.as_dict()
                 script_vars = {"this": this, **(variables or {})}
                 return await self.script.async_run(script_vars, context)

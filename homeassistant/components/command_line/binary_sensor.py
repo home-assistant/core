@@ -1,4 +1,6 @@
 """Support for custom shell commands to retrieve values."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import voluptuous as vol
@@ -14,10 +16,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 from .sensor import CommandSensorData
@@ -38,11 +44,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Command line Binary Sensor."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -54,6 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     command_timeout = config.get(CONF_COMMAND_TIMEOUT)
+    unique_id = config.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
@@ -61,7 +74,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(
         [
             CommandBinarySensor(
-                hass, data, name, device_class, payload_on, payload_off, value_template
+                hass,
+                data,
+                name,
+                device_class,
+                payload_on,
+                payload_off,
+                value_template,
+                unique_id,
             )
         ],
         True,
@@ -72,7 +92,15 @@ class CommandBinarySensor(BinarySensorEntity):
     """Representation of a command line binary sensor."""
 
     def __init__(
-        self, hass, data, name, device_class, payload_on, payload_off, value_template
+        self,
+        hass,
+        data,
+        name,
+        device_class,
+        payload_on,
+        payload_off,
+        value_template,
+        unique_id,
     ):
         """Initialize the Command line binary sensor."""
         self._hass = hass
@@ -83,6 +111,7 @@ class CommandBinarySensor(BinarySensorEntity):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
+        self._attr_unique_id = unique_id
 
     @property
     def name(self):

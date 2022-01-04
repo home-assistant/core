@@ -1,21 +1,23 @@
 """Support for MelCloud device sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MelCloudDevice
 from .const import DOMAIN
@@ -42,7 +44,7 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         name="Room Temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda x: x.device.room_temperature,
         enabled=lambda x: True,
     ),
@@ -51,7 +53,7 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         name="Energy",
         icon="mdi:factory",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         value_fn=lambda x: x.device.total_energy_consumed,
         enabled=lambda x: x.device.has_energy_consumed_meter,
     ),
@@ -62,7 +64,7 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         name="Outside Temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda x: x.device.outside_temperature,
         enabled=lambda x: True,
     ),
@@ -71,7 +73,7 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         name="Tank Temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda x: x.device.tank_temperature,
         enabled=lambda x: True,
     ),
@@ -82,7 +84,7 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         name="Room Temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda zone: zone.room_temperature,
         enabled=lambda x: True,
     ),
@@ -91,7 +93,7 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         name="Flow Temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda zone: zone.flow_temperature,
         enabled=lambda x: True,
     ),
@@ -100,14 +102,16 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         name="Flow Return Temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda zone: zone.return_temperature,
         enabled=lambda x: True,
     ),
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up MELCloud device sensors based on config_entry."""
     mel_devices = hass.data[DOMAIN].get(entry.entry_id)
 
@@ -151,10 +155,10 @@ class MelDeviceSensor(SensorEntity):
         self._attr_name = f"{api.name} {description.name}"
         self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{description.key}"
 
-        if description.device_class == DEVICE_CLASS_ENERGY:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        if description.device_class == SensorDeviceClass.ENERGY:
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         else:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):

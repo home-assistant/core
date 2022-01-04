@@ -1,4 +1,5 @@
 """Support for functionality to have conversations with Home Assistant."""
+from http import HTTPStatus
 import logging
 import re
 
@@ -7,8 +8,9 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent
@@ -51,11 +53,11 @@ def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent):
     hass.data[DATA_AGENT] = agent
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
     hass.data[DATA_CONFIG] = config
 
-    async def handle_service(service):
+    async def handle_service(service: core.ServiceCall) -> None:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
@@ -146,7 +148,7 @@ class ConversationProcessView(http.HomeAssistantView):
                         "message": str(err),
                     },
                 },
-                status_code=HTTP_INTERNAL_SERVER_ERROR,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         return self.json(intent_result)
@@ -154,8 +156,7 @@ class ConversationProcessView(http.HomeAssistantView):
 
 async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
     """Get the active conversation agent."""
-    agent = hass.data.get(DATA_AGENT)
-    if agent is None:
+    if (agent := hass.data.get(DATA_AGENT)) is None:
         agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
         await agent.async_initialize(hass.data.get(DATA_CONFIG))
     return agent

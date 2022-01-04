@@ -17,6 +17,8 @@ from .const import (
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
+EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
+
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,9 +47,7 @@ async def _process(hass, data, message):
             "payload": {"errorCode": ERR_PROTOCOL_ERROR},
         }
 
-    handler = HANDLERS.get(inputs[0].get("intent"))
-
-    if handler is None:
+    if (handler := HANDLERS.get(inputs[0].get("intent"))) is None:
         return {
             "requestId": data.request_id,
             "payload": {"errorCode": ERR_PROTOCOL_ERROR},
@@ -131,9 +131,8 @@ async def async_devices_query(hass, data, payload):
     devices = {}
     for device in payload_devices:
         devid = device["id"]
-        state = hass.states.get(devid)
 
-        if not state:
+        if not (state := hass.states.get(devid)):
             # If we can't find a state, the device is offline
             devices[devid] = {"online": False}
             continue
@@ -199,9 +198,7 @@ async def handle_devices_execute(hass, data, payload):
                 executions[entity_id].append(execution)
                 continue
 
-            state = hass.states.get(entity_id)
-
-            if state is None:
+            if (state := hass.states.get(entity_id)) is None:
                 results[entity_id] = {
                     "ids": [entity_id],
                     "status": "ERROR",
@@ -212,16 +209,23 @@ async def handle_devices_execute(hass, data, payload):
             entities[entity_id] = GoogleEntity(hass, data.config, state)
             executions[entity_id] = [execution]
 
-    execute_results = await asyncio.gather(
-        *(
-            _entity_execute(entities[entity_id], data, execution)
-            for entity_id, execution in executions.items()
+    try:
+        execute_results = await asyncio.wait_for(
+            asyncio.shield(
+                asyncio.gather(
+                    *(
+                        _entity_execute(entities[entity_id], data, execution)
+                        for entity_id, execution in executions.items()
+                    )
+                )
+            ),
+            EXECUTE_LIMIT,
         )
-    )
-
-    for entity_id, result in zip(executions, execute_results):
-        if result is not None:
-            results[entity_id] = result
+        for entity_id, result in zip(executions, execute_results):
+            if result is not None:
+                results[entity_id] = result
+    except asyncio.TimeoutError:
+        pass
 
     final_results = list(results.values())
 

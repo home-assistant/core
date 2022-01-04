@@ -1,9 +1,11 @@
 """Support for Google Nest SDM Cameras."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
 import logging
-from typing import Any, Callable
+from pathlib import Path
+from typing import Any
 
 from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
@@ -11,17 +13,19 @@ from google_nest_sdm.camera_traits import (
     CameraLiveStreamTrait,
     EventImageGenerator,
     RtspStream,
+    StreamingProtocol,
 )
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import ImageEventBase
-from google_nest_sdm.exceptions import GoogleNestException
+from google_nest_sdm.exceptions import ApiException
 from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera.const import STREAM_TYPE_HLS, STREAM_TYPE_WEB_RTC
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -31,6 +35,8 @@ from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+PLACEHOLDER = Path(__file__).parent / "placeholder.png"
 
 # Used to schedule an alarm to refresh the stream before expiration
 STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
@@ -44,7 +50,7 @@ async def async_setup_sdm_entry(
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
         device_manager = await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         raise PlatformNotReady from err
 
     # Fetch initial data so we have data when entities subscribe.
@@ -73,6 +79,8 @@ class NestCamera(Camera):
         self._event_id: str | None = None
         self._event_image_bytes: bytes | None = None
         self._event_image_cleanup_unsub: Callable[[], None] | None = None
+        self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self._placeholder_image: bytes | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -113,14 +121,31 @@ class NestCamera(Camera):
             supported_features |= SUPPORT_STREAM
         return supported_features
 
-    async def stream_source(self) -> str | None:
-        """Return the source of the stream."""
+    @property
+    def frontend_stream_type(self) -> str | None:
+        """Return the type of stream supported by this camera."""
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
+        if StreamingProtocol.WEB_RTC in trait.supported_protocols:
+            return STREAM_TYPE_WEB_RTC
+        return STREAM_TYPE_HLS
+
+    async def stream_source(self) -> str | None:
+        """Return the source of the stream."""
+        if not self.supported_features & SUPPORT_STREAM:
+            return None
+        if CameraLiveStreamTrait.NAME not in self._device.traits:
+            return None
+        trait = self._device.traits[CameraLiveStreamTrait.NAME]
+        if StreamingProtocol.RTSP not in trait.supported_protocols:
+            return None
         if not self._stream:
             _LOGGER.debug("Fetching stream url")
-            self._stream = await trait.generate_rtsp_stream()
+            try:
+                self._stream = await trait.generate_rtsp_stream()
+            except ApiException as err:
+                raise HomeAssistantError(f"Nest API error: {err}") from err
             self._schedule_stream_refresh()
         assert self._stream
         if self._stream.expires_at < utcnow():
@@ -149,7 +174,7 @@ class NestCamera(Camera):
         _LOGGER.debug("Extending stream url")
         try:
             self._stream = await self._stream.extend_rtsp_stream()
-        except GoogleNestException as err:
+        except ApiException as err:
             _LOGGER.debug("Failed to extend stream: %s", err)
             # Next attempt to catch a url will get a new one
             self._stream = None
@@ -191,15 +216,22 @@ class NestCamera(Camera):
         # Fetch still image from the live stream
         stream_url = await self.stream_source()
         if not stream_url:
-            return None
+            if self.frontend_stream_type != STREAM_TYPE_WEB_RTC:
+                return None
+            # Nest Web RTC cams only have image previews for events, and not
+            # for "now" by design to save batter, and need a placeholder.
+            if not self._placeholder_image:
+                self._placeholder_image = await self.hass.async_add_executor_job(
+                    PLACEHOLDER.read_bytes
+                )
+            return self._placeholder_image
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
     async def _async_active_event_image(self) -> bytes | None:
         """Return image from any active events happening."""
         if CameraEventImageTrait.NAME not in self._device.traits:
             return None
-        trait = self._device.active_event_trait
-        if not trait:
+        if not (trait := self._device.active_event_trait):
             return None
         # Reuse image bytes if they have already been fetched
         if not isinstance(trait, EventImageGenerator):
@@ -222,16 +254,17 @@ class NestCamera(Camera):
         self, trait: EventImageGenerator
     ) -> bytes | None:
         """Return image bytes for an active event."""
+        # pylint: disable=no-self-use
         try:
             event_image = await trait.generate_active_event_image()
-        except GoogleNestException as err:
+        except ApiException as err:
             _LOGGER.debug("Unable to generate event image URL: %s", err)
             return None
         if not event_image:
             return None
         try:
             return await event_image.contents()
-        except GoogleNestException as err:
+        except ApiException as err:
             _LOGGER.debug("Unable to fetch event image: %s", err)
             return None
 
@@ -250,3 +283,12 @@ class NestCamera(Camera):
         self._event_id = None
         self._event_image_bytes = None
         self._event_image_cleanup_unsub = None
+
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str:
+        """Return the source of the stream."""
+        trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
+        try:
+            stream = await trait.generate_web_rtc_stream(offer_sdp)
+        except ApiException as err:
+            raise HomeAssistantError(f"Nest API error: {err}") from err
+        return stream.answer_sdp

@@ -1,31 +1,46 @@
 """Support for AVM FRITZ!Box classes."""
 from __future__ import annotations
 
+from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, TypedDict
+from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
+    FritzSecurityError,
     FritzServiceError,
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_entries_for_config_entry,
+    async_get,
+    format_mac,
+)
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
+    RegistryEntry,
+    async_entries_for_device,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -34,12 +49,47 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
-    TRACKER_SCAN_INTERVAL,
+    MeshRoles,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
+    """Check if device is already tracked."""
+    for tracked in current_devices:
+        if mac in tracked:
+            return True
+    return False
+
+
+def device_filter_out_from_trackers(
+    mac: str,
+    device: FritzDevice,
+    current_devices: ValuesView,
+) -> bool:
+    """Check if device should be filtered out from trackers."""
+    reason: str | None = None
+    if device.ip_address == "":
+        reason = "Missing IP"
+    elif _is_tracked(mac, current_devices):
+        reason = "Already tracked"
+
+    if reason:
+        _LOGGER.debug(
+            "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
+        )
+    return bool(reason)
+
+
+def _cleanup_entity_filter(device: RegistryEntry) -> bool:
+    """Filter only relevant entities."""
+    return device.domain == DEVICE_TRACKER_DOMAIN or (
+        device.domain == DEVICE_SWITCH_DOMAIN and "_internet_access" in device.entity_id
+    )
 
 
 class ClassSetupMissing(Exception):
@@ -54,9 +104,22 @@ class ClassSetupMissing(Exception):
 class Device:
     """FRITZ!Box device class."""
 
-    mac: str
+    connected: bool
+    connected_to: str
+    connection_type: str
     ip_address: str
     name: str
+    ssid: str | None
+    wan_access: bool
+
+
+class Interface(TypedDict):
+    """Interface details."""
+
+    device: str
+    mac: str
+    ssid: str | None
+    type: str
 
 
 class HostInfo(TypedDict):
@@ -68,7 +131,7 @@ class HostInfo(TypedDict):
     status: bool
 
 
-class FritzBoxTools:
+class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     """FrtizBoxTools class."""
 
     def __init__(
@@ -80,7 +143,13 @@ class FritzBoxTools:
         port: int = DEFAULT_PORT,
     ) -> None:
         """Initialize FritzboxTools class."""
-        self._cancel_scan: CALLBACK_TYPE | None = None
+        super().__init__(
+            hass=hass,
+            logger=_LOGGER,
+            name=f"{DOMAIN}-{host}-coordinator",
+            update_interval=timedelta(seconds=30),
+        )
+
         self._devices: dict[str, FritzDevice] = {}
         self._options: MappingProxyType[str, Any] | None = None
         self._unique_id: str | None = None
@@ -89,15 +158,21 @@ class FritzBoxTools:
         self.fritz_status: FritzStatus = None
         self.hass = hass
         self.host = host
+        self.mesh_role = MeshRoles.NONE
+        self.device_is_router: bool = True
         self.password = password
         self.port = port
         self.username = username
-        self._mac: str | None = None
         self._model: str | None = None
-        self._sw_version: str | None = None
+        self._current_firmware: str | None = None
+        self._latest_firmware: str | None = None
+        self._update_available: bool = False
 
-    async def async_setup(self) -> None:
+    async def async_setup(
+        self, options: MappingProxyType[str, Any] | None = None
+    ) -> None:
         """Wrap up FritzboxTools class setup."""
+        self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
     def setup(self) -> None:
@@ -121,25 +196,19 @@ class FritzBoxTools:
             self._unique_id = info["NewSerialNumber"]
 
         self._model = info.get("NewModelName")
-        self._sw_version = info.get("NewSoftwareVersion")
+        self._current_firmware = info.get("NewSoftwareVersion")
 
-    async def async_start(self, options: MappingProxyType[str, Any]) -> None:
-        """Start FritzHosts connection."""
-        self.fritz_hosts = FritzHosts(fc=self.connection)
-        self._options = options
-        await self.hass.async_add_executor_job(self.scan_devices)
-
-        self._cancel_scan = async_track_time_interval(
-            self.hass, self.scan_devices, timedelta(seconds=TRACKER_SCAN_INTERVAL)
-        )
+        self._update_available, self._latest_firmware = self._update_device_info()
+        self.device_is_router = "WANIPConn1" in self.connection.services
 
     @callback
-    def async_unload(self) -> None:
-        """Unload FritzboxTools class."""
-        _LOGGER.debug("Unloading FRITZ!Box router integration")
-        if self._cancel_scan is not None:
-            self._cancel_scan()
-            self._cancel_scan = None
+    async def _async_update_data(self) -> None:
+        """Update FritzboxTools data."""
+        try:
+            self.fritz_hosts = FritzHosts(fc=self.connection)
+            await self.async_scan_devices()
+        except (FritzSecurityError, FritzConnectionException) as ex:
+            raise update_coordinator.UpdateFailed from ex
 
     @property
     def unique_id(self) -> str:
@@ -156,11 +225,21 @@ class FritzBoxTools:
         return self._model
 
     @property
-    def sw_version(self) -> str:
-        """Return SW version."""
-        if not self._sw_version:
+    def current_firmware(self) -> str:
+        """Return current SW version."""
+        if not self._current_firmware:
             raise ClassSetupMissing()
-        return self._sw_version
+        return self._current_firmware
+
+    @property
+    def latest_firmware(self) -> str | None:
+        """Return latest SW version."""
+        return self._latest_firmware
+
+    @property
+    def update_available(self) -> bool:
+        """Return if new SW version is available."""
+        return self._update_available
 
     @property
     def mac(self) -> str:
@@ -170,7 +249,7 @@ class FritzBoxTools:
         return self._unique_id
 
     @property
-    def devices(self) -> dict[str, Any]:
+    def devices(self) -> dict[str, FritzDevice]:
         """Return devices."""
         return self._devices
 
@@ -184,14 +263,39 @@ class FritzBoxTools:
         """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
 
-    def _update_info(self) -> list[HostInfo]:
-        """Retrieve latest information from the FRITZ!Box."""
-        return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
+    def _update_hosts_info(self) -> list[HostInfo]:
+        """Retrieve latest hosts information from the FRITZ!Box."""
+        try:
+            return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
+        except Exception as ex:  # pylint: disable=[broad-except]
+            if not self.hass.is_stopping:
+                raise HomeAssistantError("Error refreshing hosts info") from ex
+        return []
+
+    def _update_device_info(self) -> tuple[bool, str | None]:
+        """Retrieve latest device information from the FRITZ!Box."""
+        version = self.connection.call_action("UserInterface1", "GetInfo").get(
+            "NewX_AVM-DE_Version"
+        )
+        return bool(version), version
+
+    async def async_scan_devices(self, now: datetime | None = None) -> None:
+        """Wrap up FritzboxTools class scan."""
+        await self.hass.async_add_executor_job(self.scan_devices, now)
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
-        _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
+        _LOGGER.debug("Checking host info for FRITZ!Box router %s", self.host)
+        self._update_available, self._latest_firmware = self._update_device_info()
+
+        try:
+            topology = self.fritz_hosts.get_mesh_topology()
+        except FritzActionError:
+            self.mesh_role = MeshRoles.SLAVE
+            return
+
+        _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
         if self._options:
             consider_home = self._options.get(
@@ -201,51 +305,176 @@ class FritzBoxTools:
             consider_home = _default_consider_home
 
         new_device = False
-        for known_host in self._update_info():
-            if not known_host.get("mac"):
+        hosts = {}
+        for host in self._update_hosts_info():
+            if not host.get("mac"):
                 continue
 
-            dev_mac = known_host["mac"]
-            dev_name = known_host["name"]
-            dev_ip = known_host["ip"]
-            dev_home = known_host["status"]
+            hosts[host["mac"]] = Device(
+                name=host["name"],
+                connected=host["status"],
+                connected_to="",
+                connection_type="",
+                ip_address=host["ip"],
+                ssid=None,
+                wan_access=False,
+            )
 
-            dev_info = Device(dev_mac, dev_ip, dev_name)
+        mesh_intf = {}
+        # first get all meshed devices
+        for node in topology["nodes"]:
+            if not node["is_meshed"]:
+                continue
 
-            if dev_mac in self._devices:
-                self._devices[dev_mac].update(dev_info, dev_home, consider_home)
-            else:
-                device = FritzDevice(dev_mac, dev_name)
-                device.update(dev_info, dev_home, consider_home)
-                self._devices[dev_mac] = device
-                new_device = True
+            for interf in node["node_interfaces"]:
+                int_mac = interf["mac_address"]
+                mesh_intf[interf["uid"]] = Interface(
+                    device=node["device_name"],
+                    mac=int_mac,
+                    ssid=interf.get("ssid", ""),
+                    type=interf["type"],
+                )
+                if format_mac(int_mac) == format_mac(self.mac):
+                    self.mesh_role = MeshRoles(node["mesh_role"])
+
+        # second get all client devices
+        for node in topology["nodes"]:
+            if node["is_meshed"]:
+                continue
+
+            for interf in node["node_interfaces"]:
+                dev_mac = interf["mac_address"]
+                for link in interf["node_links"]:
+                    intf = mesh_intf.get(link["node_interface_1_uid"])
+                    if (
+                        intf is not None
+                        and link["state"] == "CONNECTED"
+                        and dev_mac in hosts
+                    ):
+                        dev_info: Device = hosts[dev_mac]
+                        dev_info.wan_access = not self.connection.call_action(
+                            "X_AVM-DE_HostFilter:1",
+                            "GetWANAccessByIP",
+                            NewIPv4Address=dev_info.ip_address,
+                        ).get("NewDisallow")
+
+                        dev_info.connected_to = intf["device"]
+                        dev_info.connection_type = intf["type"]
+                        dev_info.ssid = intf.get("ssid")
+
+                        if dev_mac in self._devices:
+                            self._devices[dev_mac].update(dev_info, consider_home)
+                        else:
+                            device = FritzDevice(dev_mac, dev_info.name)
+                            device.update(dev_info, consider_home)
+                            self._devices[dev_mac] = device
+                            new_device = True
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
 
-    async def service_fritzbox(self, service: str) -> None:
+    async def async_trigger_firmware_update(self) -> bool:
+        """Trigger firmware update."""
+        results = await self.hass.async_add_executor_job(
+            self.connection.call_action, "UserInterface:1", "X_AVM-DE_DoUpdate"
+        )
+        return cast(bool, results["NewX_AVM-DE_UpdateState"])
+
+    async def async_trigger_reboot(self) -> None:
+        """Trigger device reboot."""
+        await self.hass.async_add_executor_job(
+            self.connection.call_action, "DeviceConfig1", "Reboot"
+        )
+
+    async def async_trigger_reconnect(self) -> None:
+        """Trigger device reconnect."""
+        await self.hass.async_add_executor_job(
+            self.connection.call_action, "WANIPConn1", "ForceTermination"
+        )
+
+    async def service_fritzbox(
+        self, service_call: ServiceCall, config_entry: ConfigEntry
+    ) -> None:
         """Define FRITZ!Box services."""
-        _LOGGER.debug("FRITZ!Box router: %s", service)
+        _LOGGER.debug("FRITZ!Box router: %s", service_call.service)
 
         if not self.connection:
             raise HomeAssistantError("Unable to establish a connection")
 
         try:
-            if service == SERVICE_REBOOT:
+            if service_call.service == SERVICE_REBOOT:
+                _LOGGER.warning(
+                    'Service "fritz.reboot" is deprecated, please use the corresponding button entity instead'
+                )
                 await self.hass.async_add_executor_job(
                     self.connection.call_action, "DeviceConfig1", "Reboot"
                 )
-            elif service == SERVICE_RECONNECT:
+                return
+
+            if service_call.service == SERVICE_RECONNECT:
+                _LOGGER.warning(
+                    'Service "fritz.reconnect" is deprecated, please use the corresponding button entity instead'
+                )
                 await self.hass.async_add_executor_job(
                     self.connection.call_action,
                     "WANIPConn1",
                     "ForceTermination",
                 )
+                return
+
+            if service_call.service == SERVICE_CLEANUP:
+                device_hosts_list: list = await self.hass.async_add_executor_job(
+                    self.fritz_hosts.get_hosts_info
+                )
+
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError("Service or parameter unknown") from ex
         except FritzConnectionException as ex:
             raise HomeAssistantError("Service not supported") from ex
+
+        entity_reg: EntityRegistry = (
+            await self.hass.helpers.entity_registry.async_get_registry()
+        )
+
+        ha_entity_reg_list: list[
+            RegistryEntry
+        ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
+            entity_reg, config_entry.entry_id
+        )
+        entities_removed: bool = False
+
+        device_hosts_macs = {device["mac"] for device in device_hosts_list}
+
+        for entry in ha_entity_reg_list:
+            if (
+                not _cleanup_entity_filter(entry)
+                or entry.unique_id.split("_")[0] in device_hosts_macs
+            ):
+                continue
+            _LOGGER.info("Removing entity: %s", entry.name or entry.original_name)
+            entity_reg.async_remove(entry.entity_id)
+            entities_removed = True
+
+        if entities_removed:
+            self._async_remove_empty_devices(entity_reg, config_entry)
+
+    @callback
+    def _async_remove_empty_devices(
+        self, entity_reg: EntityRegistry, config_entry: ConfigEntry
+    ) -> None:
+        """Remove devices with no entities."""
+
+        device_reg = async_get(self.hass)
+        device_list = async_entries_for_config_entry(device_reg, config_entry.entry_id)
+        for device_entry in device_list:
+            if not async_entries_for_device(
+                entity_reg,
+                device_entry.id,
+                include_disabled_entities=True,
+            ):
+                _LOGGER.info("Removing device: %s", device_entry.name)
+                device_reg.async_remove_device(device_entry.id)
 
 
 @dataclass
@@ -256,11 +485,12 @@ class FritzData:
     profile_switches: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(Entity):
+class FritzDeviceBase(update_coordinator.CoordinatorEntity):
     """Entity base class for a device connected to a FRITZ!Box router."""
 
     def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
+        super().__init__(router)
         self._router = router
         self._mac: str = device.mac_address
         self._name: str = device.hostname or DEFAULT_DEVICE_NAME
@@ -274,8 +504,7 @@ class FritzDeviceBase(Entity):
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         if self._mac:
-            device: FritzDevice = self._router.devices[self._mac]
-            return device.ip_address
+            return self._router.devices[self._mac].ip_address
         return None
 
     @property
@@ -287,33 +516,27 @@ class FritzDeviceBase(Entity):
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         if self._mac:
-            device: FritzDevice = self._router.devices[self._mac]
-            return device.hostname
+            return self._router.devices[self._mac].hostname
         return None
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "identifiers": {(DOMAIN, self._mac)},
-            "default_name": self.name,
-            "default_manufacturer": "AVM",
-            "default_model": "FRITZ!Box Tracked device",
-            "via_device": (
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=self.name,
+            identifiers={(DOMAIN, self._mac)},
+            via_device=(
                 DOMAIN,
                 self._router.unique_id,
             ),
-        }
+        )
 
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
-        return False
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
         return False
 
     async def async_process_update(self) -> None:
@@ -325,30 +548,23 @@ class FritzDeviceBase(Entity):
         await self.async_process_update()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Register state update callback."""
-        await self.async_process_update()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._router.signal_device_update,
-                self.async_on_demand_update,
-            )
-        )
-
 
 class FritzDevice:
     """Representation of a device connected to the FRITZ!Box."""
 
     def __init__(self, mac: str, name: str) -> None:
         """Initialize device info."""
-        self._mac = mac
-        self._name = name
+        self._connected = False
+        self._connected_to: str | None = None
+        self._connection_type: str | None = None
         self._ip_address: str | None = None
         self._last_activity: datetime | None = None
-        self._connected = False
+        self._mac = mac
+        self._name = name
+        self._ssid: str | None = None
+        self._wan_access = False
 
-    def update(self, dev_info: Device, dev_home: bool, consider_home: float) -> None:
+    def update(self, dev_info: Device, consider_home: float) -> None:
         """Update device info."""
         utc_point_in_time = dt_util.utcnow()
 
@@ -357,17 +573,31 @@ class FritzDevice:
                 utc_point_in_time - self._last_activity
             ).total_seconds() < consider_home
         else:
-            consider_home_evaluated = dev_home
+            consider_home_evaluated = dev_info.connected
 
         if not self._name:
             self._name = dev_info.name or self._mac.replace(":", "_")
 
-        self._connected = dev_home or consider_home_evaluated
+        self._connected = dev_info.connected or consider_home_evaluated
 
-        if dev_home:
+        if dev_info.connected:
             self._last_activity = utc_point_in_time
 
+        self._connected_to = dev_info.connected_to
+        self._connection_type = dev_info.connection_type
         self._ip_address = dev_info.ip_address
+        self._ssid = dev_info.ssid
+        self._wan_access = dev_info.wan_access
+
+    @property
+    def connected_to(self) -> str | None:
+        """Return connected status."""
+        return self._connected_to
+
+    @property
+    def connection_type(self) -> str | None:
+        """Return connected status."""
+        return self._connection_type
 
     @property
     def is_connected(self) -> bool:
@@ -393,6 +623,16 @@ class FritzDevice:
     def last_activity(self) -> datetime | None:
         """Return device last activity."""
         return self._last_activity
+
+    @property
+    def ssid(self) -> str | None:
+        """Return device connected SSID."""
+        return self._ssid
+
+    @property
+    def wan_access(self) -> bool:
+        """Return device wan access."""
+        return self._wan_access
 
 
 class SwitchInfo(TypedDict):
@@ -422,12 +662,12 @@ class FritzBoxBaseEntity:
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.mac_address)},
-            "identifiers": {(DOMAIN, self._fritzbox_tools.unique_id)},
-            "name": self._device_name,
-            "manufacturer": "AVM",
-            "model": self._fritzbox_tools.model,
-            "sw_version": self._fritzbox_tools.sw_version,
-        }
+        return DeviceInfo(
+            configuration_url=f"http://{self._fritzbox_tools.host}",
+            connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
+            identifiers={(DOMAIN, self._fritzbox_tools.unique_id)},
+            manufacturer="AVM",
+            model=self._fritzbox_tools.model,
+            name=self._device_name,
+            sw_version=self._fritzbox_tools.current_firmware,
+        )

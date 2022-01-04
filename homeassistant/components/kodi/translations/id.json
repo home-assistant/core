@@ -12,7 +12,7 @@
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Kodi: {name}",
+        "flow_title": "{name}",
         "step": {
             "credentials": {
                 "data": {

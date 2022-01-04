@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ID,
@@ -23,9 +24,10 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 from .const import (
@@ -44,7 +46,11 @@ DEFAULT_FLOOR_TEMP = False
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up an OpenTherm Gateway climate entity."""
     ents = []
     ents.append(
@@ -171,15 +177,15 @@ class OpenThermClimate(ClimateEntity):
         return self.friendly_name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway.gw_id)},
-            "name": self._gateway.name,
-            "manufacturer": "Schelte Bron",
-            "model": "OpenTherm Gateway",
-            "sw_version": self._gateway.gw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway.gw_id)},
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            name=self._gateway.name,
+            sw_version=self._gateway.gw_version,
+        )
 
     @property
     def unique_id(self):

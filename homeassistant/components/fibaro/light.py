@@ -1,4 +1,6 @@
 """Support for Fibaro lights."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 
@@ -13,6 +15,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_WHITE_VALUE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from . import CONF_COLOR, CONF_DIMMING, CONF_RESET_COLOR, FIBARO_DEVICES, FibaroDevice
@@ -35,7 +40,12 @@ def scaleto100(value):
     return max(0, min(100, ((value * 100.0) / 255.0)))
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Fibaro controller devices."""
     if discovery_info is None:
         return
@@ -60,10 +70,25 @@ class FibaroLight(FibaroDevice, LightEntity):
         devconf = fibaro_device.device_config
         self._reset_color = devconf.get(CONF_RESET_COLOR, False)
         supports_color = (
-            "color" in fibaro_device.properties and "setColor" in fibaro_device.actions
+            "color" in fibaro_device.properties
+            or "colorComponents" in fibaro_device.properties
+            or "RGB" in fibaro_device.type
+            or "rgb" in fibaro_device.type
+            or "color" in fibaro_device.baseType
+        ) and (
+            "setColor" in fibaro_device.actions
+            or "setColorComponents" in fibaro_device.actions
         )
-        supports_dimming = "levelChange" in fibaro_device.interfaces
-        supports_white_v = "setW" in fibaro_device.actions
+        supports_white_v = (
+            "setW" in fibaro_device.actions
+            or "RGBW" in fibaro_device.type
+            or "rgbw" in fibaro_device.type
+        )
+        supports_dimming = (
+            "levelChange" in fibaro_device.interfaces
+            or supports_color
+            or supports_white_v
+        )
 
         # Configuration can override default capability detection
         if devconf.get(CONF_DIMMING, supports_dimming):
