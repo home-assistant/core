@@ -515,6 +515,15 @@ class PrometheusMetrics:
 
         metric.labels(**self._labels(state)).inc()
 
+    def _handle_counter(self, state):
+        metric = self._metric(
+            "counter_value",
+            self.prometheus_cli.Gauge,
+            "Value of counter entities",
+        )
+
+        metric.labels(**self._labels(state)).set(self.state_as_number(state))
+
 
 class PrometheusView(HomeAssistantView):
     """Handle Prometheus requests."""

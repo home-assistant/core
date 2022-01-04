@@ -7,7 +7,7 @@ import unittest.mock as mock
 import prometheus_client
 import pytest
 
-from homeassistant.components import climate, humidifier, lock, sensor
+from homeassistant.components import climate, counter, humidifier, lock, sensor
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.demo.number import DemoNumber
@@ -659,6 +659,31 @@ async def test_lock(hass, hass_client):
         'lock_state{domain="lock",'
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
+    )
+
+
+async def test_counter(hass, hass_client):
+    """Test prometheus metrics for counter."""
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {},
+    )
+
+    client = await setup_prometheus_client(hass, hass_client, "")
+
+    await async_setup_component(
+        hass, counter.DOMAIN, {"counter": {"counter": {"initial": "2"}}}
+    )
+
+    await hass.async_block_till_done()
+
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'counter_value{domain="counter",'
+        'entity="counter.counter",'
+        'friendly_name="None"} 2.0' in body
     )
 
 
