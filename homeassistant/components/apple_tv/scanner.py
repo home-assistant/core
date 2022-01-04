@@ -14,9 +14,10 @@ from pyatv.protocols import PROTOCOLS
 from zeroconf import DNSPointer, DNSQuestionType
 from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
-from homeassistant.components.zeroconf import DEVICE_INFO_TYPE, async_get_async_instance
+from homeassistant.components.zeroconf import async_get_async_instance
 from homeassistant.core import HomeAssistant
 
+DEVICE_INFO_TYPE = "_device-info._tcp.local."
 NAME_USED_FOR_DEVICE_INFO = {"_airplay._tcp.local.", "_raop._tcp.local."}
 
 
