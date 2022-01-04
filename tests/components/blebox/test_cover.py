@@ -123,6 +123,7 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "gateController"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_init_shutterbox(shutterbox, hass, config):
@@ -153,6 +154,7 @@ async def test_init_shutterbox(shutterbox, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "shutterBox"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_init_gatebox(gatebox, hass, config):
@@ -185,6 +187,7 @@ async def test_init_gatebox(gatebox, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "gateBox"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])

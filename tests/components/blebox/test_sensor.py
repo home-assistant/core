@@ -57,6 +57,7 @@ async def test_init(tempsensor, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "tempSensor"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_update(tempsensor, hass, config):

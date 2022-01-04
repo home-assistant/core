@@ -66,6 +66,7 @@ async def test_switchbox_init(switchbox, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "switchBox"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_switchbox_update_when_off(switchbox, hass, config):
@@ -180,7 +181,7 @@ def switchbox_d_fixture():
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
     type(product).unique_id = PropertyMock(return_value="abcd0123ef5678")
-    type(product).address = PropertyMock(return_value="http://172.2.3.4:80")
+    type(product).address = PropertyMock(return_value="172.2.3.4:80")
 
     type(relay1).product = product
     type(relay2).product = product
@@ -213,6 +214,7 @@ async def test_switchbox_d_init(switchbox_d, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "switchBoxD"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.2.3.4:80"
 
     entry = entries[1]
     assert entry.unique_id == "BleBox-switchBoxD-1afe34e750b8-1.relay"
@@ -230,6 +232,7 @@ async def test_switchbox_d_init(switchbox_d, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "switchBoxD"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.2.3.4:80"
 
 
 async def test_switchbox_d_update_when_off(switchbox_d, hass, config):

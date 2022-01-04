@@ -87,6 +87,7 @@ async def test_init(saunabox, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "saunaBox"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_update(saunabox, hass, config):

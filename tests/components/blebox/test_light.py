@@ -65,6 +65,7 @@ async def test_dimmer_init(dimmer, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "dimmerBox"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_dimmer_update(dimmer, hass, config):
@@ -236,6 +237,7 @@ async def test_wlightbox_s_init(wlightbox_s, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "wLightBoxS"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_wlightbox_s_update(wlightbox_s, hass, config):
@@ -337,6 +339,7 @@ async def test_wlightbox_init(wlightbox, hass, config):
     assert device.manufacturer == "BleBox"
     assert device.model == "wLightBox"
     assert device.sw_version == "1.23"
+    assert device.configuration_url == "http://172.100.123.4:80"
 
 
 async def test_wlightbox_update(wlightbox, hass, config):
