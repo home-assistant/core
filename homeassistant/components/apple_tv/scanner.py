@@ -113,17 +113,18 @@ class HassZeroconfScanner(BaseScanner):
     async def process(self, timeout: int) -> None:
         """Start to process devices and services."""
         services_by_address = await self._async_services_by_addresses(timeout)
+        atv_services_by_address: dict[str, mdns.Service] = {}
         name_by_address: dict[str, str] = {}
-        responses_by_address: dict[str, mdns.Response] = {}
         for address, services in services_by_address.items():
             if self.hosts and address not in self.hosts:
                 continue
             atv_services = []
             for service in services:
                 atv_type = service.type[:-1]
-                name = _service_short_name(service)
-                if address not in name_by_address:
-                    name_by_address[address] = name
+                if address not in name_by_address and (
+                    device_info_name := _device_info_name(service)
+                ):
+                    name_by_address[address] = device_info_name
                 try:
                     decoded_properties = {
                         k.decode("ascii"): v.decode("utf-8")
@@ -133,25 +134,31 @@ class HassZeroconfScanner(BaseScanner):
                     continue
                 atv_services.append(
                     mdns.Service(
-                        atv_type, name, address, service.port, decoded_properties
+                        atv_type,
+                        _service_short_name(service),
+                        address,
+                        service.port,
+                        decoded_properties,
                     )
                 )
-            responses_by_address[address] = mdns.Response(
-                services=atv_services,
-                deep_sleep=all(service.port == 0 for service in services),
-                model=None,
-            )
-        if not responses_by_address:
+            atv_services_by_address[address] = atv_services
+        if not atv_services_by_address:
             return
         name_to_model = await self._async_models_by_name(
             name_by_address.values(), timeout
         )
-        import pprint
-
-        for address, response in responses_by_address.items():
+        for address, atv_services in atv_services_by_address.items():
+            model = None
             if (name_for_address := name_by_address.get(address)) is not None:
-                if model := name_to_model.get(name_for_address):
-                    response.model = model
+                if possible_model := name_to_model.get(name_for_address):
+                    model = possible_model
+            response = mdns.Response(
+                services=atv_services,
+                deep_sleep=all(service.port == 0 for service in atv_services),
+                model=model,
+            )
+            import pprint
+
             pprint.pprint(response)
             self.handle_response(response)
 
