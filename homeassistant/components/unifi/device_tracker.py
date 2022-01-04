@@ -15,7 +15,7 @@ from aiounifi.events import (
     WIRELESS_GUEST_ROAMRADIO,
 )
 
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN, async_register_mac
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.config_entries import ConfigEntry
@@ -88,7 +88,7 @@ async def async_setup_entry(
     ) -> None:
         """Update the values of the controller."""
         if controller.option_track_clients:
-            add_client_entities(controller, async_add_entities, clients)
+            add_client_entities(hass, controller, async_add_entities, clients)
 
         if controller.option_track_devices:
             add_device_entities(controller, async_add_entities, devices)
@@ -102,7 +102,7 @@ async def async_setup_entry(
 
 
 @callback
-def add_client_entities(controller, async_add_entities, clients):
+def add_client_entities(hass, controller, async_add_entities, clients):
     """Add new client tracker entities from the controller."""
     trackers = []
 
@@ -123,6 +123,7 @@ def add_client_entities(controller, async_add_entities, clients):
             continue
 
         trackers.append(UniFiClientTracker(client, controller))
+        async_register_mac(hass, UNIFI_DOMAIN, mac, f"{mac}-{controller.site}")
 
     if trackers:
         async_add_entities(trackers)

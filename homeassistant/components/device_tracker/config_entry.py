@@ -196,6 +196,7 @@ class ScannerEntity(BaseTrackerEntity):
             not self.registry_entry
             or not self.platform
             or not self.platform.config_entry
+            or not self.mac_address
             # Entities should not have a device info. We opt them out
             # of this logic if they do.
             or self.device_info
