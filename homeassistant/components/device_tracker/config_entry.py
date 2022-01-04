@@ -1,6 +1,7 @@
 """Code to set up a device tracker platform using a config entry."""
 from __future__ import annotations
 
+import asyncio
 from typing import final
 
 from homeassistant.components import zone
@@ -13,10 +14,11 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
 
 from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, LOGGER
@@ -36,6 +38,77 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
     component: EntityComponent = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
+
+
+@callback
+def _async_register_mac(
+    hass: HomeAssistant, domain: str, mac: str, unique_id: str | None = None
+) -> None:
+    """Register a mac address with a unique ID.
+
+    If no unique ID given, it is assumed to be the mac.
+    """
+    data_key = "device_tracker_mac"
+    mac = dr.format_mac(mac)
+    if data_key in hass.data:
+        hass.data[data_key][mac] = (domain, unique_id or mac)
+        return
+
+    # Setup listening.
+
+    # dict mapping mac -> partial unique ID
+    data = hass.data[data_key] = {mac: (domain, unique_id or mac)}
+
+    @callback
+    def handle_device_event(ev: Event) -> None:
+        """Enable the online status entity for the mac of a newly created device."""
+        # Only for new devices
+        if ev.data["action"] != "create":
+            return
+
+        dev_reg = dr.async_get(hass)
+        device_entry = dev_reg.async_get(ev.data["device_id"])
+
+        if device_entry is None:
+            return
+
+        # Check if device has a mac
+        mac = None
+        for conn in device_entry.connections:
+            if conn[0] == dr.CONNECTION_NETWORK_MAC:
+                mac = conn[1]
+                break
+
+        if mac is None:
+            return
+
+        # Check if we have an entity for this mac
+        if (unique_id := data.get(mac)) is None:
+            return
+
+        ent_reg = er.async_get(hass)
+        entity_id = ent_reg.async_get_entity_id(DOMAIN, *unique_id)
+
+        if entity_id is None:
+            return
+
+        entity_entry = ent_reg.async_get(entity_id)
+
+        if entity_entry is None:
+            return
+
+        # Make sure entity has a config entry and was disabled by the
+        # default disable logic in the integration.
+        if (
+            entity_entry.config_entry_id is None
+            or entity_entry.disabled_by != er.RegistryEntryDisabler.INTEGRATION
+        ):
+            return
+
+        # Enable entity
+        ent_reg.async_update_entity(entity_id, disabled_by=None)
+
+    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
 
 
 class BaseTrackerEntity(Entity):
@@ -180,6 +253,21 @@ class ScannerEntity(BaseTrackerEntity):
         """Return if entity is enabled by default."""
         return self.find_device_entry() is not None
 
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+        if self.mac_address:
+            _async_register_mac(
+                hass, platform.platform_name, self.mac_address, self.unique_id
+            )
+
+    @callback
     def find_device_entry(self) -> dr.DeviceEntry | None:
         """Return device entry."""
         if self.mac_address is None:
