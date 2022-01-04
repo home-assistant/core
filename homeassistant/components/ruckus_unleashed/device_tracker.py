@@ -90,8 +90,8 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         self._name = name
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
+    def mac_address(self) -> str:
+        """Return a mac address."""
         return self._mac
 
     @property
