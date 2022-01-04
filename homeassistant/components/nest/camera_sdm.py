@@ -1,6 +1,7 @@
 """Support for Google Nest SDM Cameras."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import datetime
 import logging
@@ -74,6 +75,7 @@ class NestCamera(Camera):
         self._device = device
         self._device_info = NestDeviceInfo(device)
         self._stream: RtspStream | None = None
+        self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
         # Cache of most recent event image
         self._event_id: str | None = None
@@ -140,13 +142,14 @@ class NestCamera(Camera):
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
         if StreamingProtocol.RTSP not in trait.supported_protocols:
             return None
-        if not self._stream:
-            _LOGGER.debug("Fetching stream url")
-            try:
-                self._stream = await trait.generate_rtsp_stream()
-            except ApiException as err:
-                raise HomeAssistantError(f"Nest API error: {err}") from err
-            self._schedule_stream_refresh()
+        async with self._create_stream_url_lock:
+            if not self._stream:
+                _LOGGER.debug("Fetching stream url")
+                try:
+                    self._stream = await trait.generate_rtsp_stream()
+                except ApiException as err:
+                    raise HomeAssistantError(f"Nest API error: {err}") from err
+                self._schedule_stream_refresh()
         assert self._stream
         if self._stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
