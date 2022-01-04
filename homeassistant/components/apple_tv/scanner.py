@@ -74,6 +74,7 @@ class HassZeroconfScanner(BaseScanner):
     async def _async_services_by_addresses(
         self, timeout: int
     ) -> dict[str, list[AsyncServiceInfo]]:
+        """Lookup services and aggregate them by address."""
         infos: list[AsyncServiceInfo] = []
         zc_timeout = timeout * 1000
         zeroconf = self.zc.zeroconf
@@ -98,6 +99,7 @@ class HassZeroconfScanner(BaseScanner):
     async def _async_models_by_name(
         self, names: Iterable[str], timeout: int
     ) -> dict[str, str]:
+        """Probe the DEVICE_INFO_TYPE."""
         zc_timeout = timeout * 1000
         zeroconf = self.zc.zeroconf
         name_to_model: dict[str, str] = {}
@@ -118,6 +120,28 @@ class HassZeroconfScanner(BaseScanner):
                 with contextlib.suppress(UnicodeDecodeError):
                     name_to_model[name] = possible_model.decode("utf-8")
         return name_to_model
+
+    def _async_process_responses(
+        self,
+        atv_services_by_address: dict[str, mdns.Service],
+        name_to_model: dict[str, str],
+        name_by_address: dict[str, str],
+    ):
+        """Process and callback each aggregated response to the base handler."""
+        for address, atv_services in atv_services_by_address.items():
+            model = None
+            if (name_for_address := name_by_address.get(address)) is not None:
+                if possible_model := name_to_model.get(name_for_address):
+                    model = possible_model
+            response = mdns.Response(
+                services=atv_services,
+                deep_sleep=all(
+                    service.port == 0 and service.type != SLEEP_PROXY_TYPE
+                    for service in atv_services
+                ),
+                model=model,
+            )
+            self.handle_response(response)
 
     async def process(self, timeout: int) -> None:
         """Start to process devices and services."""
@@ -156,17 +180,9 @@ class HassZeroconfScanner(BaseScanner):
         name_to_model = await self._async_models_by_name(
             name_by_address.values(), timeout
         )
-        for address, atv_services in atv_services_by_address.items():
-            model = None
-            if (name_for_address := name_by_address.get(address)) is not None:
-                if possible_model := name_to_model.get(name_for_address):
-                    model = possible_model
-            response = mdns.Response(
-                services=atv_services,
-                deep_sleep=all(service.port == 0 for service in atv_services),
-                model=model,
-            )
-            self.handle_response(response)
+        self._async_process_responses(
+            atv_services_by_address, name_to_model, name_by_address
+        )
 
 
 async def scan(
