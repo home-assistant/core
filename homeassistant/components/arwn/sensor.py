@@ -130,7 +130,6 @@ async def async_setup_platform(
                 store[sensor.name].set_event(event)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
-    return
 
 
 class ArwnSensor(SensorEntity):
