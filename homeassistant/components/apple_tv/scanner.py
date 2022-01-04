@@ -20,10 +20,14 @@ from homeassistant.core import HomeAssistant
 NAME_USED_FOR_DEVICE_INFO = {"_airplay._tcp.local.", "_raop._tcp.local."}
 
 
+def _service_short_name(info: AsyncServiceInfo) -> str:
+    return info.name[: -(len(info.type) + 1)]
+
+
 def _device_info_name(info: AsyncServiceInfo) -> str | None:
     if info.type not in NAME_USED_FOR_DEVICE_INFO:
         return None
-    short_name = info.name[: -(len(info.type) + 1)]
+    short_name = _service_short_name(info)
     if "@" in short_name:
         return short_name.split("@")[1]
     return short_name
@@ -107,7 +111,7 @@ class HassZeroconfScanner(BaseScanner):
             model = None
             for service in services:
                 atv_type = service.type[:-1]
-                name = info.name[: -(len(info.type) + 1)]
+                name = _service_short_name(info)
                 if model is None and (
                     device_info := service.properties.get(short_name)
                 ):
@@ -117,7 +121,7 @@ class HassZeroconfScanner(BaseScanner):
                 try:
                     decoded_properties = {
                         k.decode("ascii"): v.decode("utf-8")
-                        for k, v in service.properties
+                        for k, v in service.properties.items()
                     }
                 except UnicodeDecodeError:
                     continue
@@ -126,7 +130,7 @@ class HassZeroconfScanner(BaseScanner):
                 )
             self.handle_response(
                 mdns.Response(
-                    service=atv_services, deep_sleep=is_sleep_proxy, model=model
+                    services=atv_services, deep_sleep=is_sleep_proxy, model=model
                 )
             )
 
