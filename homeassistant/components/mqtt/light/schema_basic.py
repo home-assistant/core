@@ -972,9 +972,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             # Make sure the brightness is not rounded down to 0
             device_brightness = max(device_brightness, 1)
-            tpl = self._command_templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]
-            if tpl:
-                device_brightness = tpl({"value": device_brightness})
+            if tpl := self._command_templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]:
+                device_brightness = tpl(variables={"value": device_brightness})
             await publish(CONF_BRIGHTNESS_COMMAND_TOPIC, device_brightness)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
@@ -1043,9 +1042,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_EFFECT in kwargs and self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
             effect = kwargs[ATTR_EFFECT]
             if effect in self._config.get(CONF_EFFECT_LIST):
-                tpl = self._command_templates[CONF_EFFECT_COMMAND_TEMPLATE]
-                if tpl:
-                    effect = tpl({"value": effect})
+                if tpl := self._command_templates[CONF_EFFECT_COMMAND_TEMPLATE]:
+                    effect = tpl(variables={"value": effect})
                 await publish(CONF_EFFECT_COMMAND_TOPIC, effect)
                 should_update |= set_optimistic(ATTR_EFFECT, effect)
 
