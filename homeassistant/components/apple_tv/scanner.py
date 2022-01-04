@@ -53,6 +53,19 @@ def _first_non_link_local_or_v6_address(addresses: list[bytes]) -> str | None:
     return None
 
 
+class AsyncDeviceInfoServiceInfo(AsyncServiceInfo):
+    """A version of AsyncServiceInfo that does not expect addresses."""
+
+    @property
+    def _is_complete(self) -> bool:
+        """Check if ServiceInfo has all expected properties.
+
+        The _device-info._tcp.local. does not return an address
+        so do not wait for it.
+        """
+        return self.text is not None
+
+
 class HassZeroconfScanner(BaseScanner):
     """Service discovery using zeroconf."""
 
@@ -104,7 +117,9 @@ class HassZeroconfScanner(BaseScanner):
         zeroconf = self.zc.zeroconf
         name_to_model: dict[str, str] = {}
         device_infos = {
-            name: AsyncServiceInfo(DEVICE_INFO_TYPE, f"{name}.{DEVICE_INFO_TYPE}")
+            name: AsyncDeviceInfoServiceInfo(
+                DEVICE_INFO_TYPE, f"{name}.{DEVICE_INFO_TYPE}"
+            )
             for name in names
         }
         await asyncio.gather(
