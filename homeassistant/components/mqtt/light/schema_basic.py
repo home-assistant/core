@@ -77,6 +77,7 @@ CONF_COLOR_TEMP_COMMAND_TEMPLATE = "color_temp_command_template"
 CONF_COLOR_TEMP_COMMAND_TOPIC = "color_temp_command_topic"
 CONF_COLOR_TEMP_STATE_TOPIC = "color_temp_state_topic"
 CONF_COLOR_TEMP_VALUE_TEMPLATE = "color_temp_value_template"
+CONF_EFFECT_COMMAND_TEMPLATE = "effect_command_template"
 CONF_EFFECT_COMMAND_TOPIC = "effect_command_topic"
 CONF_EFFECT_LIST = "effect_list"
 CONF_EFFECT_STATE_TOPIC = "effect_state_topic"
@@ -143,6 +144,7 @@ VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
 COMMAND_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,
     CONF_COLOR_TEMP_COMMAND_TEMPLATE,
+    CONF_EFFECT_COMMAND_TEMPLATE,
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGBW_COMMAND_TEMPLATE,
     CONF_RGBWW_COMMAND_TEMPLATE,
@@ -177,6 +179,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_EFFECT_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -1040,6 +1043,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_EFFECT in kwargs and self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
             effect = kwargs[ATTR_EFFECT]
             if effect in self._config.get(CONF_EFFECT_LIST):
+                tpl = self._command_templates[CONF_EFFECT_COMMAND_TEMPLATE]
+                if tpl:
+                    effect = tpl({"value": effect})
                 await publish(CONF_EFFECT_COMMAND_TOPIC, effect)
                 should_update |= set_optimistic(ATTR_EFFECT, effect)
 
