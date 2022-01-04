@@ -1,6 +1,7 @@
 """Support for ADS covers."""
 from __future__ import annotations
 
+import pyads
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -125,13 +126,11 @@ class AdsCover(AdsEntity, CoverEntity):
     async def async_added_to_hass(self):
         """Register device notification."""
         if self._ads_var is not None:
-            await self.async_initialize_device(
-                self._ads_var, self._ads_hub.PLCTYPE_BOOL
-            )
+            await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
         if self._ads_var_position is not None:
             await self.async_initialize_device(
-                self._ads_var_position, self._ads_hub.PLCTYPE_BYTE, STATE_KEY_POSITION
+                self._ads_var_position, pyads.PLCTYPE_BYTE, STATE_KEY_POSITION
             )
 
     @property
@@ -151,33 +150,27 @@ class AdsCover(AdsEntity, CoverEntity):
     def stop_cover(self, **kwargs):
         """Fire the stop action."""
         if self._ads_var_stop:
-            self._ads_hub.write_by_name(
-                self._ads_var_stop, True, self._ads_hub.PLCTYPE_BOOL
-            )
+            self._ads_hub.write_by_name(self._ads_var_stop, True, pyads.PLCTYPE_BOOL)
 
     def set_cover_position(self, **kwargs):
         """Set cover position."""
         position = kwargs[ATTR_POSITION]
         if self._ads_var_pos_set is not None:
             self._ads_hub.write_by_name(
-                self._ads_var_pos_set, position, self._ads_hub.PLCTYPE_BYTE
+                self._ads_var_pos_set, position, pyads.PLCTYPE_BYTE
             )
 
     def open_cover(self, **kwargs):
         """Move the cover up."""
         if self._ads_var_open is not None:
-            self._ads_hub.write_by_name(
-                self._ads_var_open, True, self._ads_hub.PLCTYPE_BOOL
-            )
+            self._ads_hub.write_by_name(self._ads_var_open, True, pyads.PLCTYPE_BOOL)
         elif self._ads_var_pos_set is not None:
             self.set_cover_position(position=100)
 
     def close_cover(self, **kwargs):
         """Move the cover down."""
         if self._ads_var_close is not None:
-            self._ads_hub.write_by_name(
-                self._ads_var_close, True, self._ads_hub.PLCTYPE_BOOL
-            )
+            self._ads_hub.write_by_name(self._ads_var_close, True, pyads.PLCTYPE_BOOL)
         elif self._ads_var_pos_set is not None:
             self.set_cover_position(position=0)
 

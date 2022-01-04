@@ -16,9 +16,10 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +32,15 @@ ADSTYPE_DINT = "dint"
 ADSTYPE_INT = "int"
 ADSTYPE_UDINT = "udint"
 ADSTYPE_UINT = "uint"
+
+ADS_TYPEMAP = {
+    ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
+    ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
+    ADSTYPE_DINT: pyads.PLCTYPE_DINT,
+    ADSTYPE_INT: pyads.PLCTYPE_INT,
+    ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
+    ADSTYPE_UINT: pyads.PLCTYPE_UINT,
+}
 
 CONF_ADS_FACTOR = "factor"
 CONF_ADS_TYPE = "adstype"
@@ -78,7 +88,7 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
 
     conf = config[DOMAIN]
@@ -88,23 +98,6 @@ def setup(hass, config):
     port = conf[CONF_PORT]
 
     client = pyads.Connection(net_id, port, ip_address)
-
-    AdsHub.ADS_TYPEMAP = {
-        ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
-        ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
-        ADSTYPE_DINT: pyads.PLCTYPE_DINT,
-        ADSTYPE_INT: pyads.PLCTYPE_INT,
-        ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
-        ADSTYPE_UINT: pyads.PLCTYPE_UINT,
-    }
-
-    AdsHub.ADSError = pyads.ADSError
-    AdsHub.PLCTYPE_BOOL = pyads.PLCTYPE_BOOL
-    AdsHub.PLCTYPE_BYTE = pyads.PLCTYPE_BYTE
-    AdsHub.PLCTYPE_DINT = pyads.PLCTYPE_DINT
-    AdsHub.PLCTYPE_INT = pyads.PLCTYPE_INT
-    AdsHub.PLCTYPE_UDINT = pyads.PLCTYPE_UDINT
-    AdsHub.PLCTYPE_UINT = pyads.PLCTYPE_UINT
 
     try:
         ads = AdsHub(client)
@@ -122,12 +115,12 @@ def setup(hass, config):
 
     def handle_write_data_by_name(call: ServiceCall) -> None:
         """Write a value to the connected ADS device."""
-        ads_var = call.data.get(CONF_ADS_VAR)
-        ads_type = call.data.get(CONF_ADS_TYPE)
-        value = call.data.get(CONF_ADS_VALUE)
+        ads_var = call.data[CONF_ADS_VAR]
+        ads_type = call.data[CONF_ADS_TYPE]
+        value = call.data[CONF_ADS_VALUE]
 
         try:
-            ads.write_by_name(ads_var, value, ads.ADS_TYPEMAP[ads_type])
+            ads.write_by_name(ads_var, value, ADS_TYPEMAP[ads_type])
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
@@ -247,17 +240,17 @@ class AdsHub:
             return
 
         # Parse data to desired datatype
-        if notification_item.plc_datatype == self.PLCTYPE_BOOL:
+        if notification_item.plc_datatype == pyads.PLCTYPE_BOOL:
             value = bool(struct.unpack("<?", bytearray(data))[0])
-        elif notification_item.plc_datatype == self.PLCTYPE_INT:
+        elif notification_item.plc_datatype == pyads.PLCTYPE_INT:
             value = struct.unpack("<h", bytearray(data))[0]
-        elif notification_item.plc_datatype == self.PLCTYPE_BYTE:
+        elif notification_item.plc_datatype == pyads.PLCTYPE_BYTE:
             value = struct.unpack("<B", bytearray(data))[0]
-        elif notification_item.plc_datatype == self.PLCTYPE_UINT:
+        elif notification_item.plc_datatype == pyads.PLCTYPE_UINT:
             value = struct.unpack("<H", bytearray(data))[0]
-        elif notification_item.plc_datatype == self.PLCTYPE_DINT:
+        elif notification_item.plc_datatype == pyads.PLCTYPE_DINT:
             value = struct.unpack("<i", bytearray(data))[0]
-        elif notification_item.plc_datatype == self.PLCTYPE_UDINT:
+        elif notification_item.plc_datatype == pyads.PLCTYPE_UDINT:
             value = struct.unpack("<I", bytearray(data))[0]
         else:
             value = bytearray(data)
