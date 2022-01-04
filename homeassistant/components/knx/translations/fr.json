@@ -47,7 +47,7 @@
                 "data": {
                     "connection_type": "Type de connexion KNX",
                     "individual_address": "Adresse individuelle par d\u00e9faut",
-                    "local_ip": "IP locale (laisser vide en cas de doute)",
+                    "local_ip": "IP locale de Home Assistant (utilisez 0.0.0.0 pour la d\u00e9tection automatique)",
                     "multicast_group": "Groupe de multidiffusion utilis\u00e9 pour le routage et la d\u00e9couverte",
                     "multicast_port": "Port de multidiffusion utilis\u00e9 pour le routage et la d\u00e9couverte",
                     "rate_limit": "Nombre maximal de t\u00e9l\u00e9grammes sortants par seconde",
