@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date, datetime
 import logging
-from typing import Callable
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -162,7 +161,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 @callback
 def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively and increases the interval when failed."""
-    remove: type = Callable  # type: ignore
+    remove = None
     interval = min_interval
 
     async def interval_listener():
@@ -181,8 +180,7 @@ def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TY
 
     def remove_listener():
         """Remove interval listener."""
-        if remove:
-            remove()
+        remove()  # pylint: disable=not-callable
 
     return remove_listener
 
