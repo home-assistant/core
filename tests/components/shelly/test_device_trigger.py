@@ -198,7 +198,7 @@ async def test_get_triggers_non_initialized_devices(hass):
     expected_triggers = []
 
     triggers = await async_get_device_automations(
-        hass, DeviceAutomationType.TRIGGER, coap_wrapper.device_id
+        hass, "trigger", coap_wrapper.device_id
     )
 
     assert_lists_same(triggers, expected_triggers)
