@@ -1,12 +1,11 @@
 """ATAG water heater component."""
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE,
     STATE_ECO,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, TEMP_CELSIUS, Platform
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
