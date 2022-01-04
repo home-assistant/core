@@ -271,7 +271,9 @@ class AppleTVManager:
         }
 
         _LOGGER.debug("Discovering device %s", self.config_entry.title)
-        atvs = await scan(identifier=identifiers, protocol=protocols, hosts=[address])
+        atvs = await scan(
+            self.hass, identifier=identifiers, protocols=protocols, hosts=[address]
+        )
         if atvs:
             return atvs[0]
 

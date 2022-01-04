@@ -21,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
+from .scanner import scan
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +33,8 @@ DEFAULT_START_OFF = False
 
 DISCOVERY_AGGREGATION_TIME = 15  # seconds
 
-from .scanner import scan
 
-
-async def device_scan(identifier):
+async def device_scan(hass, identifier):
     """Scan for a specific device using identifier as filter."""
 
     def _filter_device(dev):
@@ -55,7 +54,7 @@ async def device_scan(identifier):
 
     # If we have an address, only probe that address to avoid
     # broadcast traffic on the network
-    scan_result = await scan(timeout=3, hosts=_host_filter())
+    scan_result = await scan(hass, protocols=set(), timeout=3, hosts=_host_filter())
     matches = [atv for atv in scan_result if _filter_device(atv)]
 
     if matches:
@@ -280,7 +279,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_find_device(self, allow_exist=False):
         """Scan for the selected device to discover services."""
-        self.atv, self.atv_identifiers = await device_scan(self.scan_filter)
+        self.atv, self.atv_identifiers = await device_scan(self.hass, self.scan_filter)
         if not self.atv:
             raise DeviceNotFound()
 
