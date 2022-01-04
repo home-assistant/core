@@ -24,7 +24,7 @@ DATA_SCHEMA = vol.Schema({vol.Required(DATA_SERVER_URL): str})
 class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """RTSPtoWebRTC config flow."""
 
-    _hassio_discovery: dict[str, Any] | None = None
+    _hassio_discovery: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -83,7 +83,6 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm Add-on discovery."""
-        assert self._hassio_discovery
         errors = None
         if user_input is not None:
             # Validate server connection once user has confirmed
