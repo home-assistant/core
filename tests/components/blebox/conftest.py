@@ -56,7 +56,7 @@ def mock_feature(category, spec, **kwargs):
     type(feature_mock.product).brand = PropertyMock(return_value="BleBox")
     type(feature_mock.product).firmware_version = PropertyMock(return_value="1.23")
     type(feature_mock.product).unique_id = PropertyMock(return_value="abcd0123ef5678")
-    type(feature_mock.product).configuration_url = PropertyMock(
+    type(feature_mock.product).address = PropertyMock(
         return_value="http://172.100.123.4:80"
     )
     type(feature_mock).product = PropertyMock(return_value=product)
