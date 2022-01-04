@@ -1016,7 +1016,7 @@ meteofrance-api==1.0.2
 mficlient==0.3.0
 
 # homeassistant.components.xiaomi_miio
-micloud==0.4
+micloud==0.5
 
 # homeassistant.components.miflora
 miflora==0.7.0
