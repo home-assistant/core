@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import contextlib
 from ipaddress import IPv4Address, ip_address
 from typing import cast
@@ -61,8 +62,9 @@ class HassZeroconfScanner(BaseScanner):
         )
         self.loop = asyncio.get_running_loop()
 
-    async def process(self, timeout: int) -> None:
-        """Start to process devices and services."""
+    async def _async_services_by_addresses(
+        self, timeout: int
+    ) -> dict[str, list[AsyncServiceInfo]]:
         infos: list[AsyncServiceInfo] = []
         zc_timeout = timeout * 1000
         zeroconf = self.zc.zeroconf
@@ -77,48 +79,51 @@ class HassZeroconfScanner(BaseScanner):
         await asyncio.gather(
             *[info.async_request(zeroconf, zc_timeout) for info in infos]
         )
-        short_names: set[str] = set()
-        for info in infos:
-            if short_name := _device_info_name(info):
-                short_names.add(short_name)
-        device_infos: dict[str, AsyncServiceInfo] = {}
-        if short_names:
-            device_infos = {
-                name: AsyncServiceInfo(DEVICE_INFO_TYPE, f"{name}.{DEVICE_INFO_TYPE}")
-                for name in short_names
-            }
-            await asyncio.gather(
-                *[
-                    info.async_request(
-                        zeroconf, zc_timeout, question_type=DNSQuestionType.QU
-                    )
-                    for info in device_infos.values()
-                ]
-            )
         services_by_address: dict[str, list[AsyncServiceInfo]] = {}
-        name_by_address: dict[str, str] = {}
-
         for info in infos:
             if address := _first_non_link_local_or_v6_address(info.addresses):
                 services_by_address.setdefault(address, []).append(info)
-                if short_name := _device_info_name(info):
-                    name_by_address[address] = short_name
 
+        return services_by_address
+
+    async def _async_models_by_name(
+        self, names: Iterable[str], timeout: int
+    ) -> dict[str, str]:
+        zc_timeout = timeout * 1000
+        zeroconf = self.zc.zeroconf
+        name_to_model: dict[str, str] = {}
+        device_infos = {
+            name: AsyncServiceInfo(DEVICE_INFO_TYPE, f"{name}.{DEVICE_INFO_TYPE}")
+            for name in names
+        }
+        await asyncio.gather(
+            *[
+                info.async_request(
+                    zeroconf, zc_timeout, question_type=DNSQuestionType.QU
+                )
+                for info in device_infos.values()
+            ]
+        )
+        for name, info in device_infos.items():
+            if possible_model := info.properties.get(b"model"):
+                with contextlib.suppress(UnicodeDecodeError):
+                    name_to_model[name] = possible_model.decode("utf-8")
+        return name_to_model
+
+    async def process(self, timeout: int) -> None:
+        """Start to process devices and services."""
+        services_by_address = await self._async_services_by_addresses(timeout)
+        name_by_address: dict[str, str] = {}
+        responses_by_address: dict[str, mdns.Response] = {}
         for address, services in services_by_address.items():
             if self.hosts and address not in self.hosts:
                 continue
-            is_sleep_proxy = all(service.port == 0 for service in services)
             atv_services = []
-            model = None
             for service in services:
                 atv_type = service.type[:-1]
-                name = _service_short_name(info)
-                if model is None and (
-                    device_info := service.properties.get(short_name)
-                ):
-                    if possible_model := device_info.properties.get(b"model"):
-                        with contextlib.suppress(UnicodeDecodeError):
-                            model = possible_model.decode("utf-8")
+                name = _service_short_name(service)
+                if address not in name_by_address:
+                    name_by_address[address] = name
                 try:
                     decoded_properties = {
                         k.decode("ascii"): v.decode("utf-8")
@@ -127,16 +132,27 @@ class HassZeroconfScanner(BaseScanner):
                 except UnicodeDecodeError:
                     continue
                 atv_services.append(
-                    mdns.Service(atv_type, name, address, info.port, decoded_properties)
+                    mdns.Service(
+                        atv_type, name, address, service.port, decoded_properties
+                    )
                 )
-            response = mdns.Response(
-                services=atv_services, deep_sleep=is_sleep_proxy, model=model
+            responses_by_address[address] = mdns.Response(
+                services=atv_services,
+                deep_sleep=all(service.port == 0 for service in services),
+                model=None,
             )
-            import pprint
+        if not responses_by_address:
+            return
+        name_to_model = await self._async_models_by_name(
+            name_by_address.values(), timeout
+        )
+        import pprint
 
-            pprint.pprint(
-                ["services", atv_services, "deep_sleep", is_sleep_proxy, "model", model]
-            )
+        for address, response in responses_by_address.items():
+            if (name_for_address := name_by_address.get(address)) is not None:
+                if model := name_to_model.get(name_for_address):
+                    response.model = model
+            pprint.pprint(response)
             self.handle_response(response)
 
 
