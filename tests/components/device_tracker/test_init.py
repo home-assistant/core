@@ -23,12 +23,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import device_registry, discovery, entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
     mock_registry,
@@ -641,3 +642,36 @@ def test_see_schema_allowing_ios_calls():
             "hostname": "beer",
         }
     )
+
+
+async def test_register_mac(hass):
+    """Test registering a mac."""
+    dev_reg = device_registry.async_get(hass)
+    ent_reg = entity_registry.async_get(hass)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mac1 = "12:34:56:AB:CD:EF"
+
+    entity_entry_1 = ent_reg.async_get_or_create(
+        "device_tracker",
+        "test",
+        mac1 + "yo1",
+        original_name="name 1",
+        config_entry=config_entry,
+        disabled_by=entity_registry.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    device_tracker.async_register_mac(hass, "test", mac1, mac1 + "yo1")
+
+    dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, mac1)},
+    )
+
+    await hass.async_block_till_done()
+
+    entity_entry_1 = ent_reg.async_get(entity_entry_1.entity_id)
+
+    assert entity_entry_1.disabled_by is None

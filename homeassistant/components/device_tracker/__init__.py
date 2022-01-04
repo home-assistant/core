@@ -55,6 +55,7 @@ def async_register_mac(
     If no unique ID given, it is assumed to be the mac.
     """
     data_key = "device_tracker_mac"
+    mac = dr.format_mac(mac)
     if data_key in hass.data:
         hass.data[data_key][mac] = (domain, unique_id or mac)
         return
@@ -106,7 +107,7 @@ def async_register_mac(
         # default disable logic in the integration.
         if (
             entity_entry.config_entry_id is None
-            or entity_entry.disabled_by != er.DISABLED_INTEGRATION
+            or entity_entry.disabled_by != er.RegistryEntryDisabler.INTEGRATION
         ):
             return
 
