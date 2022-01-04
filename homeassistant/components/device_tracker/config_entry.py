@@ -140,6 +140,7 @@ def _async_register_mac(
 class BaseTrackerEntity(Entity):
     """Represent a tracked device."""
 
+    _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
