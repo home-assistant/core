@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
@@ -252,6 +253,15 @@ async def async_setup_entry(
         return
 
     for feature, description in NUMBER_TYPES.items():
+        if feature == FEATURE_SET_LED_BRIGHTNESS and model != MODEL_FAN_ZA5:
+            # Delete LED bightness entity created by mistake if it exists
+            entity_reg = hass.helpers.entity_registry.async_get()
+            entity_id = entity_reg.async_get_entity_id(
+                PLATFORM_DOMAIN, DOMAIN, f"{description.key}_{config_entry.unique_id}"
+            )
+            if entity_id:
+                entity_reg.async_remove(entity_id)
+            continue
         if feature & features:
             if (
                 description.key == ATTR_OSCILLATION_ANGLE
