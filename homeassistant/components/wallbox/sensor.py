@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import WallboxCoordinator
+from . import WallboxCoordinator, WallboxEntity
 from .const import (
     CONF_ADDED_ENERGY_KEY,
     CONF_ADDED_RANGE_KEY,
@@ -40,7 +40,6 @@ from .const import (
     CONF_STATUS_DESCRIPTION_KEY,
     DOMAIN,
 )
-from .model import WallboxEntity
 
 CONF_STATION = "station"
 UPDATE_INTERVAL = 30

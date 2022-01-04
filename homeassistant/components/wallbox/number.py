@@ -10,7 +10,7 @@ from homeassistant.const import DEVICE_CLASS_CURRENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InvalidAuth, WallboxCoordinator
+from . import InvalidAuth, WallboxCoordinator, WallboxEntity
 from .const import (
     CONF_DATA_KEY,
     CONF_MAX_AVAILABLE_POWER_KEY,
@@ -18,7 +18,6 @@ from .const import (
     CONF_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
-from .model import WallboxEntity
 
 
 @dataclass
