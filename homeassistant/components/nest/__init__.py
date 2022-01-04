@@ -11,6 +11,7 @@ from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
     ConfigurationException,
+    DecodeException,
     SubscriberException,
 )
 import voluptuous as vol
@@ -337,7 +338,9 @@ class NestEventMediaView(HomeAssistantView):
                 event_token
             )
         except DecodeException as err:
-            raise HomeAssistantError("Even token was invalid: %s" % event_token) from err
+            raise HomeAssistantError(
+                "Even token was invalid: %s" % event_token
+            ) from err
         except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
         if not media:
