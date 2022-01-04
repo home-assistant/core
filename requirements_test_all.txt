@@ -565,7 +565,7 @@ ifaddr==0.1.7
 influxdb-client==1.14.0
 
 # homeassistant.components.influxdb
-influxdb==5.2.3
+influxdb==5.3.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
