@@ -313,6 +313,14 @@ ZEROCONF = {
             }
         }
     ],
+    "_sleep-proxy._udp.local.": [
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "_browse_only": "-1"
+            }
+        }
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
