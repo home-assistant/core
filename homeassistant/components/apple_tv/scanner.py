@@ -9,6 +9,7 @@ from pyatv.const import Protocol
 from pyatv.core.scan import BaseScanner
 from pyatv.protocols import PROTOCOLS
 from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
+from pyatv.helpers import get_unique_id
 
 from homeassistant.components.zeroconf import async_get_async_instance
 from homeassistant.core import HomeAssistant
@@ -37,7 +38,7 @@ class ZeroconfScanner(BaseScanner):
         zeroconf = self.zc.zeroconf
         zc_types = [f"{service}." for service in self._services]
         infos = [
-            AsyncServiceInfo(zc_type, record.name)
+            AsyncServiceInfo(zc_type, record.alias)
             for zc_type in zc_types
             for record in zeroconf.cache.entries_with_name(zc_type)
         ]
@@ -45,8 +46,9 @@ class ZeroconfScanner(BaseScanner):
             *[info.async_request(zeroconf, zc_timeout) for info in infos]
         )
         import pprint
-
-        pprint.pprint(infos)
+        for info in infos:
+            unique_id = get_unique_id(info.type, info.name, {k.decode('ascii'):v.decode('utf-8') for k,v in info.properties.items()})
+            pprint.pprint([unique_id, info])
 
 
 async def scan(
