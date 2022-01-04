@@ -37,6 +37,14 @@ ZEROCONF = {
             }
         }
     ],
+    "_airport._tcp.local.": [
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "_browse_only": "-1"
+            }
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -80,7 +88,10 @@ ZEROCONF = {
     ],
     "_companion-link._tcp.local.": [
         {
-            "domain": "apple_tv"
+            "domain": "apple_tv",
+            "properties": {
+                "_browse_only": "-1"
+            }
         }
     ],
     "_daap._tcp.local.": [
