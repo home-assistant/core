@@ -145,15 +145,11 @@ def test_invalid_switches(hass: HomeAssistant):
 
     bad_conf = {}  # No subscription
 
-    no_subs_setup = vultr.setup_platform(hass, bad_conf, add_entities, None)
-
-    assert no_subs_setup is not None
+    vultr.setup_platform(hass, bad_conf, add_entities, None)
 
     bad_conf = {
         CONF_NAME: "Missing Server",
         CONF_SUBSCRIPTION: "665544",
     }  # Sub not associated with API key (not in server_list)
 
-    wrong_subs_setup = vultr.setup_platform(hass, bad_conf, add_entities, None)
-
-    assert wrong_subs_setup is not None
+    vultr.setup_platform(hass, bad_conf, add_entities, None)
