@@ -238,7 +238,7 @@ async def async_setup(hass, config):
                 hass, "binary_sensor", "envisalink", {CONF_ZONES: zones}, config
             )
         )
-        """Only DSC panels support getting zone bypass status"""
+        # Only DSC panels support getting zone bypass status
         if panel_type == PANEL_TYPE_DSC:
             hass.async_create_task(
                 async_load_platform(
