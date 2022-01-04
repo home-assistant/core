@@ -1,11 +1,11 @@
 """Support for Prometheus metrics export."""
+from contextlib import suppress
 import logging
 import string
 
 from aiohttp import web
 import prometheus_client
 import voluptuous as vol
-from contextlib import suppress
 
 from homeassistant import core as hacore
 from homeassistant.components.climate.const import (
