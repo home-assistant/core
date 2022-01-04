@@ -169,6 +169,9 @@ class TellstickDevice(Entity):
     Contains the common logic for all Tellstick devices.
     """
 
+    _attr_assumed_state = True
+    _attr_should_poll = False
+
     def __init__(self, tellcore_device, signal_repetitions):
         """Init the Tellstick device."""
         self._signal_repetitions = signal_repetitions
@@ -179,9 +182,7 @@ class TellstickDevice(Entity):
 
         # Look up our corresponding tellcore device
         self._tellcore_device = tellcore_device
-        self._attr_assumed_state = True
         self._attr_name = tellcore_device.name
-        self._attr_should_poll = False
         self._attr_unique_id = tellcore_device.id
 
     async def async_added_to_hass(self):
