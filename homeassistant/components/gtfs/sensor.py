@@ -613,7 +613,9 @@ class GTFSDepartureSensor(SensorEntity):
             if not self._departure:
                 self._state = None
             else:
-                self._state = self._departure["departure_time"]
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
 
             # Fetch trip and route details once, unless updated
             if not self._departure:
