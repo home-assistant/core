@@ -295,7 +295,11 @@ async def test_zeroconf_match_macaddress(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {
             "_http._tcp.local.": [
-                {"domain": "shelly", "name": "shelly*", "macaddress": "FFAADD*"}
+                {
+                    "domain": "shelly",
+                    "name": "shelly*",
+                    "properties": {"macaddress": "ffaadd*"},
+                }
             ]
         },
         clear=True,
@@ -330,7 +334,11 @@ async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "samsungtv", "properties": {"manufacturer": "samsung*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -363,7 +371,11 @@ async def test_zeroconf_match_model(hass, mock_async_zeroconf):
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "appletv", "model": "appletv*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "appletv", "properties": {"model": "appletv*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -396,7 +408,11 @@ async def test_zeroconf_match_manufacturer_not_present(hass, mock_async_zeroconf
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "samsungtv", "properties": {"manufacturer": "samsung*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -460,7 +476,11 @@ async def test_zeroconf_no_match_manufacturer(hass, mock_async_zeroconf):
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "samsungtv", "properties": {"manufacturer": "samsung*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"

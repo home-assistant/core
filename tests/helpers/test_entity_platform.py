@@ -838,6 +838,7 @@ async def test_device_info_called(hass):
                         "model": "test-model",
                         "name": "test-name",
                         "sw_version": "test-sw",
+                        "hw_version": "test-hw",
                         "suggested_area": "Heliport",
                         "entry_type": dr.DeviceEntryType.SERVICE,
                         "via_device": ("hue", "via-id"),
@@ -869,6 +870,7 @@ async def test_device_info_called(hass):
     assert device.name == "test-name"
     assert device.suggested_area == "Heliport"
     assert device.sw_version == "test-sw"
+    assert device.hw_version == "test-hw"
     assert device.via_device_id == via.id
 
 

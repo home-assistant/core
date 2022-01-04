@@ -19,6 +19,7 @@ from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CHAR_FIRMWARE_REVISION,
+    CHAR_HARDWARE_REVISION,
     CHAR_MANUFACTURER,
     CHAR_MODEL,
     CHAR_NAME,
@@ -33,6 +34,7 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SERVICE,
@@ -215,6 +217,36 @@ async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
     assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+    assert isinstance(acc.to_HAP(), dict)
+
+
+async def test_accessory_with_hardware_revision(hass, hk_driver):
+    """Test HomeAccessory class with hardware revision."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, "on")
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory",
+        entity_id,
+        3,
+        {
+            ATTR_MODEL: None,
+            ATTR_MANUFACTURER: None,
+            ATTR_SW_VERSION: None,
+            ATTR_HW_VERSION: "1.2.3",
+            ATTR_INTEGRATION: None,
+        },
+    )
+    acc.driver = hk_driver
+    serv = acc.get_service(SERV_ACCESSORY_INFO)
+    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+    assert serv.get_characteristic(CHAR_HARDWARE_REVISION).value == "1.2.3"
+    assert isinstance(acc.to_HAP(), dict)
 
 
 async def test_battery_service(hass, hk_driver, caplog):

@@ -3,8 +3,6 @@ import logging
 
 DOMAIN = "honeywell"
 
-DEFAULT_COOL_AWAY_TEMPERATURE = 88
-DEFAULT_HEAT_AWAY_TEMPERATURE = 61
 CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
 CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
 CONF_DEV_ID = "thermostat"

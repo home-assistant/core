@@ -6,6 +6,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zwave_js import DOMAIN, device_action
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntry
@@ -66,7 +67,9 @@ async def test_get_actions(
             "subtype": f"{node.node_id}-112-0-3 (Beeper)",
         },
     ]
-    actions = await async_get_device_automations(hass, "action", device.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device.id
+    )
     for action in expected_actions:
         assert action in actions
 
@@ -82,7 +85,9 @@ async def test_get_actions_meter(
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device({get_device_id(client, node)})
     assert device
-    actions = await async_get_device_automations(hass, "action", device.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device.id
+    )
     filtered_actions = [action for action in actions if action["type"] == "reset_meter"]
     assert len(filtered_actions) > 0
 

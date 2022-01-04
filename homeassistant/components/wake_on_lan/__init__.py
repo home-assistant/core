@@ -6,7 +6,9 @@ import voluptuous as vol
 import wakeonlan
 
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -23,10 +25,10 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the wake on LAN component."""
 
-    async def send_magic_packet(call):
+    async def send_magic_packet(call: ServiceCall) -> None:
         """Send magic packet to wake up a device."""
         mac_address = call.data.get(CONF_MAC)
         broadcast_address = call.data.get(CONF_BROADCAST_ADDRESS)

@@ -10,10 +10,13 @@ on:
   pull_request: ~
 
 env:
-  CACHE_VERSION: 4
+  CACHE_VERSION: 5
+  PIP_CACHE_VERSION: 1
   DEFAULT_PYTHON: 3.8
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
+  PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
+  PYTHONASYNCIODEBUG: 1
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -147,6 +150,11 @@ jobs:
             hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}"
+      - name: Generate partial pip restore key
+        id: generate-pip-key
+        run: >-
+          echo "::set-output name=key::base-pip-${{ env.PIP_CACHE_VERSION }}-$(
+            date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -155,17 +163,32 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-python-key.outputs.key }}
+          # Temporary disabling the restore of environments when bumping
+          # a dependency. It seems that we are experiencing issues with
+          # restoring environments in GitHub Actions, although unclear why.
+          # First attempt: https://github.com/home-assistant/core/pull/62383
+          #
+          # restore-keys: |
+          #   ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_test.txt') }}-
+          #   ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-
+          #   ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-
+      - name: Restore pip wheel cache
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        uses: actions/cache@v2.1.7
+        with:
+          path: ${{ env.PIP_CACHE }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-pip-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_test.txt') }}-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U "pip<20.3" setuptools
-          pip install -r requirements.txt -r requirements_test.txt
+          pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt
       - name: Generate partial pre-commit restore key
         id: generate-pre-commit-key
         run: >-
@@ -233,7 +256,8 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/* --show-diff-on-failure
+          shopt -s globstar
+          pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
   lint-flake8:
     name: Check flake8
@@ -285,7 +309,8 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/*
+          shopt -s globstar
+          pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/*
 
   lint-isort:
     name: Check isort
@@ -375,7 +400,8 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/* --show-diff-on-failure
+          shopt -s globstar
+          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
       - name: Register yamllint problem matcher
         run: |
@@ -431,7 +457,8 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/* --show-diff-on-failure
+          shopt -s globstar
+          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
   hassfest:
     name: Check hassfest
@@ -509,6 +536,11 @@ jobs:
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}"
+      - name: Generate partial pip restore key
+        id: generate-pip-key
+        run: >-
+          echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-$(
+            date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.7
@@ -517,10 +549,25 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ matrix.python-version }}-${{
             steps.generate-python-key.outputs.key }}
+          # Temporary disabling the restore of environments when bumping
+          # a dependency. It seems that we are experiencing issues with
+          # restoring environments in GitHub Actions, although unclear why.
+          # First attempt: https://github.com/home-assistant/core/pull/62383
+          #
+          # restore-keys: |
+          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}-
+          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-
+          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-
+      - name: Restore pip wheel cache
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        uses: actions/cache@v2.1.7
+        with:
+          path: ${{ env.PIP_CACHE }}
+          key: >-
+            ${{ runner.os }}-${{ matrix.python-version }}-${{
+            steps.generate-pip-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}-
-            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-
-            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-
+            ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-
       - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -530,9 +577,9 @@ jobs:
 
           python -m venv venv
           . venv/bin/activate
-          pip install -U "pip<20.3" setuptools wheel
-          pip install -r requirements_all.txt
-          pip install -r requirements_test.txt
+          pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
+          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
           pip install -e .
 
   pylint:

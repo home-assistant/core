@@ -69,7 +69,9 @@ CLIENT_REDIRECT_URI = "https://example.com/app/callback"
 
 
 async def async_get_device_automations(
-    hass: HomeAssistant, automation_type: str, device_id: str
+    hass: HomeAssistant,
+    automation_type: device_automation.DeviceAutomationType,
+    device_id: str,
 ) -> Any:
     """Get a device automation for a single device id."""
     automations = await device_automation.async_get_device_automations(
@@ -284,7 +286,12 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
 
-    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries = config_entries.ConfigEntries(
+        hass,
+        {
+            "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
+        },
+    )
     hass.config_entries._entries = {}
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
 

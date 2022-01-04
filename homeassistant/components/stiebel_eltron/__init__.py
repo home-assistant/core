@@ -7,8 +7,10 @@ import voluptuous as vol
 
 from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 DOMAIN = "stiebel_eltron"
@@ -30,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the STIEBEL ELTRON unit.
 
     Will automatically load climate platform.

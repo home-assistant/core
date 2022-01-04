@@ -1,72 +1,28 @@
 """Platform for the opengarage.io cover component."""
 import logging
 
-import voluptuous as vol
-
-from homeassistant import config_entries
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.const import (
-    CONF_COVERS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_DEVICE_KEY, DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_KEY): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    }
-)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the OpenGarage covers."""
-    _LOGGER.warning(
-        "Open Garage YAML configuration is deprecated, "
-        "it has been imported into the UI automatically and can be safely removed"
-    )
-    devices = config.get(CONF_COVERS)
-    for device_config in devices.values():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=device_config,
-            )
-        )
-
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the OpenGarage covers."""
     async_add_entities(
         [OpenGarageCover(hass.data[DOMAIN][entry.entry_id], entry.unique_id)]

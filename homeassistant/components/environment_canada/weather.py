@@ -24,18 +24,16 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
-from . import trigger_import
-from .const import CONF_STATION, DOMAIN
-
-CONF_FORECAST = "forecast"
+from .const import DOMAIN
 
 
 def validate_station(station):
@@ -46,16 +44,6 @@ def validate_station(station):
         raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
     return station
 
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): validate_station,
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_FORECAST, default="daily"): vol.In(["daily", "hourly"]),
-    }
-)
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
@@ -75,12 +63,11 @@ ICON_CONDITION_MAP = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entries, discovery_info=None):
-    """Set up the Environment Canada weather."""
-    trigger_import(hass, config)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
     async_add_entities([ECWeather(coordinator, False), ECWeather(coordinator, True)])

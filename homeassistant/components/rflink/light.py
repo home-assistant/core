@@ -1,4 +1,6 @@
 """Support for Rflink lights."""
+from __future__ import annotations
+
 import logging
 import re
 
@@ -11,7 +13,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ALIASES,
@@ -141,7 +146,12 @@ def devices_from_config(domain_config):
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Rflink light platform."""
     async_add_entities(devices_from_config(config))
 

@@ -12,12 +12,12 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import RequiredParameterMissing
-from homeassistant.helpers import storage
-from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
+from . import storage
 from .debounce import Debouncer
+from .frame import report
 from .typing import UNDEFINED, UndefinedType
 
 # mypy: disallow_any_generics
@@ -522,6 +522,8 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
+            ("name_by_user", name_by_user),
+            ("area_id", area_id),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("hw_version", hw_version),
@@ -529,12 +531,6 @@ class DeviceRegistry:
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
-
-        if area_id is not UNDEFINED and area_id != old.area_id:
-            changes["area_id"] = area_id
-
-        if name_by_user is not UNDEFINED and name_by_user != old.name_by_user:
-            changes["name_by_user"] = name_by_user
 
         if old.is_new:
             changes["is_new"] = False

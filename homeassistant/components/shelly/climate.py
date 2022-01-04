@@ -69,7 +69,6 @@ async def async_setup_climate_entities(
 ) -> None:
     """Set up online climate devices."""
 
-    _LOGGER.info("Setup online climate device %s", wrapper.name)
     device_block: Block | None = None
     sensor_block: Block | None = None
 
@@ -82,6 +81,7 @@ async def async_setup_climate_entities(
             sensor_block = block
 
     if sensor_block and device_block:
+        _LOGGER.debug("Setup online climate device %s", wrapper.name)
         async_add_entities([BlockSleepingClimate(wrapper, sensor_block, device_block)])
 
 
@@ -92,7 +92,6 @@ async def async_restore_climate_entities(
     wrapper: BlockDeviceWrapper,
 ) -> None:
     """Restore sleeping climate devices."""
-    _LOGGER.info("Setup sleeping climate device %s", wrapper.name)
 
     ent_reg = await entity_registry.async_get_registry(hass)
     entries = entity_registry.async_entries_for_config_entry(
@@ -104,6 +103,7 @@ async def async_restore_climate_entities(
         if entry.domain != CLIMATE_DOMAIN:
             continue
 
+        _LOGGER.debug("Setup sleeping climate device %s", wrapper.name)
         _LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
         async_add_entities([BlockSleepingClimate(wrapper, None, None, entry)])
 

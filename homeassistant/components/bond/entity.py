@@ -11,6 +11,7 @@ from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
 from homeassistant.const import (
+    ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
@@ -78,6 +79,8 @@ class BondEntity(Entity):
                 device_info[ATTR_MODEL] = self._hub.model
             if self._hub.fw_ver is not None:
                 device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+            if self._hub.mcu_ver is not None:
+                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
         else:
             model_data = []
             if self._device.branding_profile:

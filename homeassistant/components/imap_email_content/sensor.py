@@ -1,4 +1,6 @@
 """Email sensor support."""
+from __future__ import annotations
+
 from collections import deque
 import datetime
 import email
@@ -17,7 +19,10 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_TEXT_PLAIN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Email sensor platform."""
     reader = EmailReader(
         config.get(CONF_USERNAME),
@@ -67,8 +77,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if sensor.connected:
         add_entities([sensor], True)
-    else:
-        return False
 
 
 class EmailReader:

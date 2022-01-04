@@ -29,6 +29,7 @@ from .test_common import (
     help_test_discovery_update_attr,
     help_test_discovery_update_availability,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_category,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
@@ -42,6 +43,7 @@ from .test_common import (
     help_test_entity_disabled_by_default,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -83,27 +85,27 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
 @pytest.mark.parametrize(
     "device_class,native_value,state_value,log",
     [
-        (sensor.DEVICE_CLASS_DATE, "2021-11-18", "2021-11-18", False),
-        (sensor.DEVICE_CLASS_DATE, "invalid", STATE_UNKNOWN, True),
+        (sensor.SensorDeviceClass.DATE, "2021-11-18", "2021-11-18", False),
+        (sensor.SensorDeviceClass.DATE, "invalid", STATE_UNKNOWN, True),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18T20:25:00+00:00",
             "2021-11-18T20:25:00+00:00",
             False,
         ),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18 20:25:00+00:00",
             "2021-11-18T20:25:00+00:00",
             False,
         ),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18 20:25:00+01:00",
             "2021-11-18T19:25:00+00:00",
             False,
         ),
-        (sensor.DEVICE_CLASS_TIMESTAMP, "invalid", STATE_UNKNOWN, True),
+        (sensor.SensorDeviceClass.TIMESTAMP, "invalid", STATE_UNKNOWN, True),
     ],
 )
 async def test_setting_sensor_native_value_handling_via_mqtt_message(
@@ -919,3 +921,34 @@ async def test_value_template_with_entity_id(hass, mqtt_mock):
     state = hass.states.get("sensor.test")
 
     assert state.state == "101"
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = sensor.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "2.21", None, "2.21"),
+        ("state_topic", "beer", None, "beer"),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        sensor.DOMAIN,
+        DEFAULT_CONFIG[sensor.DOMAIN],
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )

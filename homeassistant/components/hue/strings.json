@@ -70,7 +70,8 @@
         "data": {
           "allow_hue_groups": "Allow Hue groups",
           "allow_hue_scenes": "Allow Hue scenes",
-          "allow_unreachable": "Allow unreachable bulbs to report their state correctly"
+          "allow_unreachable": "Allow unreachable bulbs to report their state correctly",
+          "ignore_availability": "Ignore connectivity status for the given devices"
         }
       }
     }

@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -74,10 +74,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
     @callback
-    def alarm_keypress_handler(service):
+    def alarm_keypress_handler(service: ServiceCall) -> None:
         """Map services to methods on Alarm."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        keypress = service.data.get(ATTR_KEYPRESS)
+        entity_ids = service.data[ATTR_ENTITY_ID]
+        keypress = service.data[ATTR_KEYPRESS]
 
         target_devices = [
             device for device in devices if device.entity_id in entity_ids

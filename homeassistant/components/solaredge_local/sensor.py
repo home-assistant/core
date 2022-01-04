@@ -14,13 +14,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
-    DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
@@ -29,7 +29,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 DOMAIN = "solaredge_local"
@@ -129,7 +132,7 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         name="Average Optimizer Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:solar-panel",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SolarEdgeLocalSensorEntityDescription(
         key="optimizervoltage",
@@ -144,7 +147,7 @@ SENSOR_TYPE_INVERTER_TEMPERATURE = SolarEdgeLocalSensorEntityDescription(
     name="Inverter Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
     extra_attribute="operating_mode",
-    device_class=DEVICE_CLASS_TEMPERATURE,
+    device_class=SensorDeviceClass.TEMPERATURE,
 )
 
 SENSOR_TYPES_ENERGY_IMPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
@@ -187,7 +190,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the SolarEdge Monitoring API sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     platform_name = config[CONF_NAME]
