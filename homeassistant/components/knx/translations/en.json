@@ -47,13 +47,9 @@
                 "data": {
                     "connection_type": "KNX Connection Type",
                     "individual_address": "Default individual address",
-<<<<<<< HEAD
-=======
                     "local_ip": "Local IP of Home Assistant (use 0.0.0.0 for automatic detection)",
->>>>>>> b9247f3952 (Fix local_ip handling in KNX options flow (#62969))
                     "multicast_group": "Multicast group used for routing and discovery",
                     "multicast_port": "Multicast port used for routing and discovery",
-                    "local_ip": "Local IP (leave empty if unsure)",
                     "rate_limit": "Maximum outgoing telegrams per second",
                     "state_updater": "Globally enable reading states from the KNX Bus"
                 }
