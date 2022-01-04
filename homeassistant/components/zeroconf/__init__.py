@@ -48,6 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "zeroconf"
 
+DEVICE_INFO_TYPE = "_device-info._tcp.local."
 ZEROCONF_TYPE = "_home-assistant._tcp.local."
 HOMEKIT_TYPES = [
     "_hap._tcp.local.",
@@ -383,7 +384,7 @@ class ZeroconfDiscovery:
         # We want to make sure we know about other HomeAssistant
         # instances as soon as possible to avoid name conflicts
         # so we always browse for ZEROCONF_TYPE
-        for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
+        for hk_type in (DEVICE_INFO_TYPE, ZEROCONF_TYPE, *HOMEKIT_TYPES):
             if hk_type not in self.zeroconf_types:
                 types.append(hk_type)
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
