@@ -549,11 +549,14 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
             )
 
             if not last_stats:
+                # First time we insert 5 years of data (if available)
                 hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
 
                 _sum = 0
                 last_stats_time = None
             else:
+                # hourly_consumption_data contains the last 30 days of consumption data.
+                # We update the statistics with the last 30 days of data to handle corrections in the data.
                 hourly_consumption_data = home.hourly_consumption_data
 
                 start = dt_util.parse_datetime(
