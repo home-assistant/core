@@ -88,6 +88,6 @@ class RokuBinarySensorEntity(RokuEntity, BinarySensorEntity):
     entity_description: RokuBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return bool(self.entity_description.value_fn(self.coordinator.data))
+        return self.entity_description.value_fn(self.coordinator.data)
