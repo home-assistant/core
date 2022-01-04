@@ -285,9 +285,7 @@ class PrometheusMetrics:
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_input_number(self, state):
-        unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
-
-        if unit:
+        if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
             metric = self._metric(
                 f"input_number_state_{unit}",
                 self.prometheus_cli.Gauge,
@@ -300,13 +298,11 @@ class PrometheusMetrics:
                 "State of the input number",
             )
 
-        try:
+        with suppress(ValueError):
             value = self.state_as_number(state)
             if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
                 value = fahrenheit_to_celsius(value)
             metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
 
     def _handle_device_tracker(self, state):
         metric = self._metric(
