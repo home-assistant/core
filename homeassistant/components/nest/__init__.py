@@ -35,7 +35,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
@@ -47,9 +47,6 @@ from .const import (
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-    OOB_REDIRECT_URI,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
@@ -86,57 +83,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Platforms for SDM API
 PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
-WEB_AUTH_DOMAIN = DOMAIN
-INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
 # Fetch media events with a disk backed cache, with a limit for each camera
 # device. The largest media items are mp4 clips at ~120kb each, and we target
 # ~125MB of storage per camera to try to balance a reasonable user experience
 # for event history not not filling the disk.
 EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
-
-
-class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """OAuth implementation using OAuth for web applications."""
-
-    name = "OAuth for Web"
-
-    def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
-    ) -> None:
-        """Initialize WebAuth."""
-        super().__init__(
-            hass,
-            WEB_AUTH_DOMAIN,
-            client_id,
-            client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        )
-
-
-class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """OAuth implementation using OAuth for installed applications."""
-
-    name = "OAuth for Apps"
-
-    def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
-    ) -> None:
-        """Initialize InstalledAppAuth."""
-        super().__init__(
-            hass,
-            INSTALLED_AUTH_DOMAIN,
-            client_id,
-            client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        )
-
-    @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        return OOB_REDIRECT_URI
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -151,25 +103,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
 
-    project_id = config[DOMAIN][CONF_PROJECT_ID]
-    config_flow.NestFlowHandler.async_register_implementation(
-        hass,
-        InstalledAppAuth(
-            hass,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            project_id,
-        ),
-    )
-    config_flow.NestFlowHandler.async_register_implementation(
-        hass,
-        WebAuth(
-            hass,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            project_id,
-        ),
-    )
+    config_flow.register_flow_implementation_from_config(hass, config)
 
     hass.http.register_view(NestEventMediaView(hass))
 
