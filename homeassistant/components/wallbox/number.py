@@ -23,7 +23,6 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CONF_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
-        device_class="current",
         min_value=6,
     ),
 }
