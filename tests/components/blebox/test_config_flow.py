@@ -32,6 +32,7 @@ def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
     type(product).unique_id = PropertyMock(return_value="abcd0123ef5678")
+    type(product).configuration_url = PropertyMock(return_value="http://172.2.3.4:80")
 
     return feature
 
