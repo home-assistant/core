@@ -19,7 +19,14 @@ from homeassistant.components.zeroconf import async_get_async_instance
 from homeassistant.core import HomeAssistant
 
 DEVICE_INFO_TYPE = "_device-info._tcp.local."
-NAME_USED_FOR_DEVICE_INFO = {"_airplay._tcp.local.", "_raop._tcp.local."}
+RAOP_TYPE = "_raop._tcp.local."
+SLEEP_PROXY_TYPE = "_sleep-proxy._udp.local."
+NAME_USED_FOR_DEVICE_INFO = {
+    "_companion-link._tcp.local.",
+    "_airplay._tcp.local.",
+    RAOP_TYPE,
+    SLEEP_PROXY_TYPE,
+}
 
 
 def _service_short_name(info: AsyncServiceInfo) -> str:
@@ -30,8 +37,10 @@ def _device_info_name(info: AsyncServiceInfo) -> str | None:
     if info.type not in NAME_USED_FOR_DEVICE_INFO:
         return None
     short_name = _service_short_name(info)
-    if "@" in short_name:
-        return short_name.split("@")[1]
+    if info.type == RAOP_TYPE:
+        return short_name.split("@", 2)[1]
+    if info.type == SLEEP_PROXY_TYPE:
+        return short_name.split(" ", 2)[1]
     return short_name
 
 
@@ -68,7 +77,8 @@ class HassZeroconfScanner(BaseScanner):
         infos: list[AsyncServiceInfo] = []
         zc_timeout = timeout * 1000
         zeroconf = self.zc.zeroconf
-        zc_types = [f"{service}." for service in self._services]
+        zc_types = {f"{service}." for service in self._services}
+        zc_types.add(SLEEP_PROXY_TYPE)
         # Note this only works if a ServiceBrowser is already
         # running for the given type (since its in the manifest this is ok)
         infos = [
@@ -83,7 +93,6 @@ class HassZeroconfScanner(BaseScanner):
         for info in infos:
             if address := _first_non_link_local_or_v6_address(info.addresses):
                 services_by_address.setdefault(address, []).append(info)
-
         return services_by_address
 
     async def _async_models_by_name(
