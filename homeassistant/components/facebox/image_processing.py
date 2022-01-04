@@ -10,9 +10,6 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
@@ -20,9 +17,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ID,
     ATTR_NAME,
+    CONF_ENTITY_ID,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SOURCE,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
