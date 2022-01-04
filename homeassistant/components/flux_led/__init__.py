@@ -16,7 +16,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_change,
+    async_track_time_interval,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -122,6 +125,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     hass.config_entries.async_setup_platforms(entry, platforms)
+
+    async def _async_sync_time(*args: Any) -> None:
+        """Set the time every morning at 02:40:30."""
+        await device.async_set_time()
+
+    await _async_sync_time()  # set at startup
+    entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 4, 30))  # type: ignore[arg-type]
 
     return True
 

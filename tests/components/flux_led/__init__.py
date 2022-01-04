@@ -73,6 +73,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.requires_turn_on = True
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.effect_list = ["some_effect"]
+    bulb.async_set_time = AsyncMock()
     bulb.async_set_music_mode = AsyncMock()
     bulb.async_set_custom_pattern = AsyncMock()
     bulb.async_set_preset_pattern = AsyncMock()
@@ -131,6 +132,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
         channel4=PowerRestoreState.LAST_STATE,
     )
     switch.requires_turn_on = True
+    switch.async_set_time = AsyncMock()
     switch.async_reboot = AsyncMock()
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_set_power_restore = AsyncMock()
