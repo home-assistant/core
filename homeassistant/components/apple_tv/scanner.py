@@ -157,9 +157,6 @@ class HassZeroconfScanner(BaseScanner):
                 deep_sleep=all(service.port == 0 for service in atv_services),
                 model=model,
             )
-            import pprint
-
-            pprint.pprint(response)
             self.handle_response(response)
 
 
