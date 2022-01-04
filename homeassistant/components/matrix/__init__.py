@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -59,7 +60,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_HOMESERVER): cv.url,
                 vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
                 vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
-                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(vol.Any(CONF_PASSWORD, CONF_ACCESS_TOKEN)): cv.string,
+                vol.Optional(vol.Any(CONF_PASSWORD, CONF_ACCESS_TOKEN)): cv.string,
                 vol.Optional(CONF_ROOMS, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -93,7 +95,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[CONF_HOMESERVER],
             config[CONF_VERIFY_SSL],
             config[CONF_USERNAME],
-            config[CONF_PASSWORD],
+            config[CONF_PASSWORD] if CONF_PASSWORD in config else "",
+            config[CONF_ACCESS_TOKEN] if CONF_ACCESS_TOKEN in config else "",
             config[CONF_ROOMS],
             config[CONF_COMMANDS],
         )
@@ -123,6 +126,7 @@ class MatrixBot:
         verify_ssl,
         username,
         password,
+        auth_token: str,
         listening_rooms,
         commands,
     ):
@@ -136,6 +140,8 @@ class MatrixBot:
         self._verify_tls = verify_ssl
         self._mx_id = username
         self._password = password
+        # If access token is specified and valid, password will be ignored.
+        self._auth_token_from_config: str = auth_token
 
         self._listening_rooms = listening_rooms
 
@@ -296,7 +302,7 @@ class MatrixBot:
         client = None
 
         # If we have an authentication token
-        if self._mx_id in self._auth_tokens:
+        if self._auth_token_from_config or self._mx_id in self._auth_tokens:
             try:
                 client = self._login_by_token()
                 _LOGGER.debug("Logged in using stored token")
@@ -327,9 +333,15 @@ class MatrixBot:
 
     def _login_by_token(self):
         """Login using authentication token and return the client."""
+        # Prefer the token from configuration
+        if self._auth_token_from_config:
+            token = self._auth_token_from_config
+        else:
+            token = self._auth_tokens[self._mx_id]
+
         return MatrixClient(
             base_url=self._homeserver,
-            token=self._auth_tokens[self._mx_id],
+            token=token,
             user_id=self._mx_id,
             valid_cert_check=self._verify_tls,
         )
