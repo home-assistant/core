@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import StateType
 
@@ -170,9 +170,8 @@ class ScannerEntity(BaseTrackerEntity):
         """Return unique ID of the entity."""
         return self.mac_address
 
-    @final
     @property
-    def device_info(self) -> None:
+    def device_info(self) -> DeviceInfo | None:
         """Device tracker entities should not create device registry entries."""
         return None
 
@@ -197,7 +196,12 @@ class ScannerEntity(BaseTrackerEntity):
             not self.registry_entry
             or not self.platform
             or not self.platform.config_entry
+            # Entities should not have a device info. We opt them out
+            # of this logic if they do.
+            or self.device_info
         ):
+            if self.device_info:
+                LOGGER.warning("Entity %s unexpectedly has a device info")
             await super().async_internal_added_to_hass()
             return
 
@@ -210,6 +214,9 @@ class ScannerEntity(BaseTrackerEntity):
             and len(device_entry.config_entries) == 1
             and self.platform.config_entry.entry_id in device_entry.config_entries
         ):
+            self.registry_entry = er.async_get(self.hass).async_update_entity(
+                self.entity_id, device_id=None
+            )
             dr.async_get(self.hass).async_remove_device(device_entry.id)
             device_entry = None
 
