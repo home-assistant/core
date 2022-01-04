@@ -1,6 +1,8 @@
 """Tests for Flic button integration."""
-from unittest import mock
+import contextlib
+from unittest.mock import MagicMock, patch
 
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -23,38 +25,27 @@ class _MockFlicClient:
         pass
 
     def add_scan_wizard(self, wizard):
-        assert isinstance(wizard, _MockScanWizard)
         self.scan_wizard = wizard
 
     def add_connection_channel(self, channel):
-        assert channel is None
-
-
-class _MockScanWizard:
-    on_completed = None
+        self.channel = channel
 
 
 async def test_button_uid(hass):
     """Test UID assignment for Flic buttons."""
-    address_to_uid = {
-        "80:e4:da:78:6e:11": "flic_80e4da786e11",
-        "80:E4:DA:78:6E:12": "flic_80e4da786e12",  # Uppercase address should not change uid.
+    address_to_name = {
+        "80:e4:da:78:6e:11": "binary_sensor.flic_80e4da786e11",
+        "80:E4:DA:78:6E:12": "binary_sensor.flic_80e4da786e12",  # Uppercase address should not change uid.
     }
 
-    flic_client = _MockFlicClient(tuple(address_to_uid))
+    flic_client = _MockFlicClient(tuple(address_to_name))
 
-    with mock.patch(
-        "homeassistant.components.flic.binary_sensor.FlicClient",
-        lambda _, __: flic_client,
-    ), mock.patch(
-        "homeassistant.components.flic.binary_sensor.FlicButton._create_channel",
-        lambda _: None,
-    ), mock.patch(
-        "homeassistant.components.flic.binary_sensor.ScanWizard",
-        _MockScanWizard,
-    ), assert_setup_component(
-        1, "binary_sensor"
-    ):
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(patch("pyflic.FlicClient", lambda _, __: flic_client))
+        stack.enter_context(patch("pyflic.ButtonConnectionChannel", MagicMock))
+        stack.enter_context(patch("pyflic.ScanWizard", MagicMock))
+        stack.enter_context(assert_setup_component(1, "binary_sensor"))
+
         assert await async_setup_component(
             hass,
             "binary_sensor",
@@ -63,6 +54,8 @@ async def test_button_uid(hass):
 
         await hass.async_block_till_done()
 
-        assert hass.states.async_entity_ids("binary_sensor") == [
-            f"binary_sensor.{uid}" for uid in address_to_uid.values()
-        ]
+        entity_registry = er.async_get(hass)
+        for address, name in address_to_name.items():
+            entry = entity_registry.async_get(name)
+            assert entry
+            assert entry.unique_id == address.lower()
