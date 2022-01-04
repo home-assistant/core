@@ -8,7 +8,7 @@ from pyatv import interface
 from pyatv.const import Protocol
 from pyatv.core.scan import BaseScanner
 from pyatv.protocols import PROTOCOLS
-from zeroconf.asyncio import AsyncZeroconf
+from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
 from homeassistant.components.zeroconf import async_get_async_instance
 from homeassistant.core import HomeAssistant
@@ -32,10 +32,21 @@ class ZeroconfScanner(BaseScanner):
 
     async def process(self, timeout: int) -> None:
         """Start to process devices and services."""
+        infos: list[AsyncServiceInfo] = []
+        zc_timeout = timeout * 1000
+        zeroconf = self.zc.zeroconf
+        zc_types = [f"{service}." for service in self._services]
+        infos = [
+            AsyncServiceInfo(zc_type, record.name)
+            for zc_type in zc_types
+            for record in zeroconf.cache.entries_with_name(zc_type)
+        ]
+        await asyncio.gather(
+            *[info.async_request(zeroconf, zc_timeout) for info in infos]
+        )
         import pprint
 
-        for service in self._services:
-            pprint.pprint(["Process service", service])
+        pprint.pprint(infos)
 
 
 async def scan(

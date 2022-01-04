@@ -54,7 +54,7 @@ async def device_scan(hass, identifier):
 
     # If we have an address, only probe that address to avoid
     # broadcast traffic on the network
-    scan_result = await scan(hass, protocols=set(), timeout=3, hosts=_host_filter())
+    scan_result = await scan(hass, protocol=set(), timeout=3, hosts=_host_filter())
     matches = [atv for atv in scan_result if _filter_device(atv)]
 
     if matches:
