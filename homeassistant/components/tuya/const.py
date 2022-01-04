@@ -189,6 +189,8 @@ class DPCode(StrEnum):
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
+    FEED_REPORT = "feed_report"
+    FEED_STATE = "feed_state"
     FILTER_LIFE = "filter"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
@@ -209,6 +211,7 @@ class DPCode(StrEnum):
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
     MACH_OPERATE = "mach_operate"
+    MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     MOTION_RECORD = "motion_record"
@@ -257,6 +260,7 @@ class DPCode(StrEnum):
     SHOCK_STATE = "shock_state"  # Vibration status
     SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
+    SLOW_FEED = "slow_feed"
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
@@ -315,6 +319,7 @@ class DPCode(StrEnum):
     VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"
+    VOICE_TIMES = "voice_times"
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
