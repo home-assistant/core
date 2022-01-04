@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
@@ -28,8 +28,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an entry."""
     component: EntityComponent | None = hass.data.get(DOMAIN)
 
-    if component is None:
-        component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
+    if component is not None:
+        return await component.async_setup_entry(entry)
+
+    component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
+
+    # Clean up old devices created by device tracker entities in the past.
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+
+    devices_with_trackers = set()
+    devices_with_non_trackers = set()
+
+    for entity in ent_reg.entities.values():
+        if entity.device_id is None:
+            continue
+
+        if entity.platform == DOMAIN:
+            devices_with_trackers.add(entity.device_id)
+        else:
+            devices_with_non_trackers.add(entity.device_id)
+
+    for device in devices_with_trackers - devices_with_non_trackers:
+        for entity in er.async_entries_for_device(ent_reg, device.id, True):
+            ent_reg.async_update_entity(entity.entity_id, device_id=None)
+        dev_reg.async_remove_device(device.id)
 
     return await component.async_setup_entry(entry)
 
@@ -113,6 +136,8 @@ def _async_register_mac(
 
 class BaseTrackerEntity(Entity):
     """Represent a tracked device."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def battery_level(self) -> int | None:
@@ -243,6 +268,7 @@ class ScannerEntity(BaseTrackerEntity):
         """Return unique ID of the entity."""
         return self.mac_address
 
+    @final
     @property
     def device_info(self) -> DeviceInfo | None:
         """Device tracker entities should not create device registry entries."""
@@ -295,19 +321,7 @@ class ScannerEntity(BaseTrackerEntity):
             return
 
         device_entry = self.find_device_entry()
-
-        # Temporary to fix old approach to device trackers.
-        # Clean up device entry if device was created because of device tracker
-        if (
-            device_entry
-            and len(device_entry.config_entries) == 1
-            and self.platform.config_entry.entry_id in device_entry.config_entries
-        ):
-            self.registry_entry = er.async_get(self.hass).async_update_entity(
-                self.entity_id, device_id=None
-            )
-            dr.async_get(self.hass).async_remove_device(device_entry.id)
-            device_entry = None
+        assert device_entry is not None
 
         if device_entry is not None:
             # Attach entry to device
