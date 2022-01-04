@@ -1,14 +1,18 @@
 """Platform for solarlog sensors."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.util.dt import as_local
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SolarlogData
 from .const import DOMAIN, SENSOR_TYPES, SolarLogSensorEntityDescription
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add solarlog entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
@@ -41,14 +45,7 @@ class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the native sensor value."""
-        if self.entity_description.key == "time":
-            state = as_local(
-                getattr(self.coordinator.data, self.entity_description.key)
-            )
-        else:
-            result = getattr(self.coordinator.data, self.entity_description.key)
-            if self.entity_description.factor:
-                state = round(result * self.entity_description.factor, 3)
-            else:
-                state = result
-        return state
+        raw_attr = getattr(self.coordinator.data, self.entity_description.key)
+        if self.entity_description.value:
+            return self.entity_description.value(raw_attr)
+        return raw_attr

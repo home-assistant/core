@@ -4,8 +4,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOVING,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 import homeassistant.helpers.config_validation as cv
@@ -49,49 +49,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LinodeBinarySensor(BinarySensorEntity):
     """Representation of a Linode droplet sensor."""
 
-    _attr_device_class = DEVICE_CLASS_MOVING
+    _attr_device_class = BinarySensorDeviceClass.MOVING
 
     def __init__(self, li, node_id):  # pylint: disable=invalid-name
         """Initialize a new Linode sensor."""
         self._linode = li
         self._node_id = node_id
-        self._state = None
-        self.data = None
-        self._attrs = {}
-        self._name = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the Linode Node."""
-        return self._attrs
+        self._attr_extra_state_attributes = {}
+        self._attr_name = None
 
     def update(self):
         """Update state of sensor."""
+        data = None
         self._linode.update()
         if self._linode.data is not None:
             for node in self._linode.data:
                 if node.id == self._node_id:
-                    self.data = node
-        if self.data is not None:
-            self._state = self.data.status == "running"
-            self._attrs = {
-                ATTR_CREATED: self.data.created,
-                ATTR_NODE_ID: self.data.id,
-                ATTR_NODE_NAME: self.data.label,
-                ATTR_IPV4_ADDRESS: self.data.ipv4,
-                ATTR_IPV6_ADDRESS: self.data.ipv6,
-                ATTR_MEMORY: self.data.specs.memory,
-                ATTR_REGION: self.data.region.country,
-                ATTR_VCPUS: self.data.specs.vcpus,
+                    data = node
+
+        if data is not None:
+            self._attr_is_on = data.status == "running"
+            self._attr_extra_state_attributes = {
+                ATTR_CREATED: data.created,
+                ATTR_NODE_ID: data.id,
+                ATTR_NODE_NAME: data.label,
+                ATTR_IPV4_ADDRESS: data.ipv4,
+                ATTR_IPV6_ADDRESS: data.ipv6,
+                ATTR_MEMORY: data.specs.memory,
+                ATTR_REGION: data.region.country,
+                ATTR_VCPUS: data.specs.vcpus,
             }
-            self._name = self.data.label
+            self._attr_name = data.label

@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -17,8 +18,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import ValloxDataUpdateCoordinator
 from .const import (
@@ -104,7 +106,7 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         days_remaining_delta = timedelta(days=days_remaining)
         now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
-        return now + days_remaining_delta
+        return (now + days_remaining_delta).astimezone(dt_util.UTC)
 
 
 class ValloxCellStateSensor(ValloxSensor):
@@ -218,18 +220,12 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-    if discovery_info is None:
-        return
-
-    name = hass.data[DOMAIN]["name"]
-    coordinator = hass.data[DOMAIN]["coordinator"]
+    name = hass.data[DOMAIN][entry.entry_id]["name"]
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
     async_add_entities(
         [

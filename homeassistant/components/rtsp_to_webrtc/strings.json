@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure RTSPtoWebRTC",
+        "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.",
+        "data": {
+          "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Must be a valid RTSPtoWebRTC server URL e.g. https://example.com",
+      "server_failure": "RTSPtoWebRTC server returned an error. Check logs for more information.",
+      "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  }
+}

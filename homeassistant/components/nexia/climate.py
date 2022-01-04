@@ -11,6 +11,7 @@ from nexia.const import (
     SYSTEM_STATUS_IDLE,
     UNIT_FAHRENHEIT,
 )
+from nexia.util import find_humidity_setpoint
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -37,10 +38,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_AIRCLEANER_MODE,
@@ -57,6 +61,8 @@ from .const import (
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
 from .util import percent_conv
+
+PARALLEL_UPDATES = 1  # keep data in sync with only one connection at a time
 
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
@@ -103,7 +109,11 @@ NEXIA_TO_HA_HVAC_MODE_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up climate for a Nexia device."""
     coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     nexia_home = coordinator.nexia_home
@@ -231,9 +241,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     def set_humidity(self, humidity):
         """Dehumidify target."""
         if self._thermostat.has_dehumidify_support():
-            self._thermostat.set_dehumidify_setpoint(humidity / 100.0)
+            self.set_dehumidify_setpoint(humidity)
         else:
-            self._thermostat.set_humidify_setpoint(humidity / 100.0)
+            self.set_humidify_setpoint(humidity)
         self._signal_thermostat_update()
 
     @property
@@ -453,7 +463,22 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     def set_humidify_setpoint(self, humidity):
         """Set the humidify setpoint."""
-        self._thermostat.set_humidify_setpoint(humidity / 100.0)
+        target_humidity = find_humidity_setpoint(humidity / 100.0)
+        if self._thermostat.get_humidify_setpoint() == target_humidity:
+            # Trying to set the humidify setpoint to the
+            # same value will cause the api to timeout
+            return
+        self._thermostat.set_humidify_setpoint(target_humidity)
+        self._signal_thermostat_update()
+
+    def set_dehumidify_setpoint(self, humidity):
+        """Set the dehumidify setpoint."""
+        target_humidity = find_humidity_setpoint(humidity / 100.0)
+        if self._thermostat.get_dehumidify_setpoint() == target_humidity:
+            # Trying to set the dehumidify setpoint to the
+            # same value will cause the api to timeout
+            return
+        self._thermostat.set_dehumidify_setpoint(target_humidity)
         self._signal_thermostat_update()
 
     def _signal_thermostat_update(self):

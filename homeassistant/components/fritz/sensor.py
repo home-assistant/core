@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
+from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,6 +152,7 @@ class FritzSensorEntityDescription(SensorEntityDescription, FritzRequireKeysMixi
     """Describes Fritz sensor entity."""
 
     connection_type: Literal["dsl"] | None = None
+    exclude_mesh_role: MeshRoles = MeshRoles.SLAVE
 
 
 SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
@@ -167,6 +168,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
+        exclude_mesh_role=MeshRoles.NONE,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
@@ -281,13 +283,6 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
-    if (
-        not fritzbox_tools.connection
-        or "WANIPConn1" not in fritzbox_tools.connection.services
-    ):
-        # Only routers are supported at the moment
-        return
-
     dsl: bool = False
     try:
         dslinterface = await hass.async_add_executor_job(
@@ -307,7 +302,8 @@ async def async_setup_entry(
     entities = [
         FritzBoxSensor(fritzbox_tools, entry.title, description)
         for description in SENSOR_TYPES
-        if dsl or description.connection_type != DSL_CONNECTION
+        if (dsl or description.connection_type != DSL_CONNECTION)
+        and description.exclude_mesh_role != fritzbox_tools.mesh_role
     ]
 
     async_add_entities(entities, True)

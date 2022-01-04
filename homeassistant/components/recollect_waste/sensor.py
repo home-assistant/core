@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from aiorecollect.client import PickupType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FRIENDLY_NAME, DEVICE_CLASS_DATE
+from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -47,7 +47,7 @@ async def async_setup_entry(
 class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_DATE
+    _attr_device_class = SensorDeviceClass.DATE
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""

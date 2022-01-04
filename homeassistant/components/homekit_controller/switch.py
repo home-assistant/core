@@ -1,21 +1,53 @@
 """Support for Homekit switches."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 from aiohomekit.model.characteristics import (
+    Characteristic,
     CharacteristicsTypes,
     InUseValues,
     IsConfiguredValues,
 )
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 
 OUTLET_IN_USE = "outlet_in_use"
 
 ATTR_IN_USE = "in_use"
 ATTR_IS_CONFIGURED = "is_configured"
 ATTR_REMAINING_DURATION = "remaining_duration"
+
+
+@dataclass
+class DeclarativeSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Homekit button."""
+
+    true_value: bool = True
+    false_value: bool = False
+
+
+SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
+    CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE,
+        name="Pairing Mode",
+        icon="mdi:lock-open",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE,
+        name="Pairing Mode",
+        icon="mdi:lock-open",
+        entity_category=EntityCategory.CONFIG,
+    ),
+}
 
 
 class HomeKitSwitch(HomeKitEntity, SwitchEntity):
@@ -96,6 +128,49 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
         return attrs
 
 
+class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
+    """Representation of a Homekit switch backed by a single characteristic."""
+
+    def __init__(
+        self,
+        conn,
+        info,
+        char,
+        description: DeclarativeSwitchEntityDescription,
+    ):
+        """Initialise a HomeKit switch."""
+        self.entity_description = description
+        super().__init__(conn, info, char)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        if prefix := super().name:
+            return f"{prefix} {self.entity_description.name}"
+        return self.entity_description.name
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        return [self._char.type]
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._char.value == self.entity_description.true_value
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the specified switch on."""
+        await self.async_put_characteristics(
+            {self._char.type: self.entity_description.true_value}
+        )
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the specified switch off."""
+        await self.async_put_characteristics(
+            {self._char.type: self.entity_description.false_value}
+        )
+
+
 ENTITY_TYPES = {
     ServicesTypes.SWITCH: HomeKitSwitch,
     ServicesTypes.OUTLET: HomeKitSwitch,
@@ -103,7 +178,11 @@ ENTITY_TYPES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit switches."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
@@ -117,3 +196,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return True
 
     conn.add_listener(async_add_service)
+
+    @callback
+    def async_add_characteristic(char: Characteristic):
+        if not (description := SWITCH_ENTITIES.get(char.type)):
+            return False
+
+        info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
+        async_add_entities(
+            [DeclarativeCharacteristicSwitch(conn, info, char, description)], True
+        )
+        return True
+
+    conn.add_char_factory(async_add_characteristic)

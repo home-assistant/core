@@ -25,8 +25,9 @@ import attr
 import voluptuous as vol
 import yarl
 
-from homeassistant import async_timeout_backcompat, block_async_io, loader, util
-from homeassistant.const import (
+from . import async_timeout_backcompat, block_async_io, loader, util
+from .backports.enum import StrEnum
+from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
@@ -52,7 +53,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
     __version__,
 )
-from homeassistant.exceptions import (
+from .exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
@@ -60,22 +61,20 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location
-from homeassistant.util.async_ import (
+from .util import dt as dt_util, location, uuid as uuid_util
+from .util.async_ import (
     fire_coroutine_threadsafe,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.util.timeout import TimeoutManager
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
-import homeassistant.util.uuid as uuid_util
+from .util.timeout import TimeoutManager
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.auth import AuthManager
-    from homeassistant.components.http import HomeAssistantHTTP
-    from homeassistant.config_entries import ConfigEntries
+    from .auth import AuthManager
+    from .components.http import HomeAssistantHTTP
+    from .config_entries import ConfigEntries
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -86,9 +85,10 @@ async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
-_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
+# Internal; not helpers.typing.UNDEFINED due to circular dependency
+_UNDEF: dict[Any, Any] = {}
 # pylint: disable=invalid-name
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable[..., Any])
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
 
@@ -103,10 +103,20 @@ BLOCK_LOG_TIMEOUT = 60
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Source of core configuration
-SOURCE_DISCOVERED = "discovered"
-SOURCE_STORAGE = "storage"
-SOURCE_YAML = "yaml"
+
+class ConfigSource(StrEnum):
+    """Source of core configuration."""
+
+    DEFAULT = "default"
+    DISCOVERED = "discovered"
+    STORAGE = "storage"
+    YAML = "yaml"
+
+
+# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
+SOURCE_DISCOVERED = ConfigSource.DISCOVERED.value
+SOURCE_STORAGE = ConfigSource.STORAGE.value
+SOURCE_YAML = ConfigSource.YAML.value
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -226,7 +236,7 @@ class HomeAssistant:
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
-        self.data: dict = {}
+        self.data: dict[str, Any] = {}
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -275,7 +285,7 @@ class HomeAssistant:
         await self.async_start()
         if attach_signals:
             # pylint: disable=import-outside-toplevel
-            from homeassistant.helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
 
@@ -323,7 +333,10 @@ class HomeAssistant:
         _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
-        """Add job to the executor pool.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         target: target to call.
         args: parameters for method to call.
@@ -336,7 +349,10 @@ class HomeAssistant:
     def async_add_job(
         self, target: Callable[..., Any], *args: Any
     ) -> asyncio.Future | None:
-        """Add a job from within the event loop.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         This method must be run in the event loop.
 
@@ -347,7 +363,7 @@ class HomeAssistant:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_add_hass_job(HassJob(target), *args)
 
@@ -447,7 +463,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_run_hass_job(HassJob(target), *args)
 
@@ -1315,7 +1331,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1332,7 +1348,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1551,7 +1567,7 @@ class Config:
         self.external_url: str | None = None
         self.currency: str = "EUR"
 
-        self.config_source: str = "default"
+        self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
@@ -1631,7 +1647,7 @@ class Config:
 
         return False
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Create a dictionary representation of the configuration.
 
         Async friendly.
@@ -1670,7 +1686,7 @@ class Config:
     def _update(
         self,
         *,
-        source: str,
+        source: ConfigSource,
         latitude: float | None = None,
         longitude: float | None = None,
         elevation: int | None = None,
@@ -1678,8 +1694,8 @@ class Config:
         location_name: str | None = None,
         time_zone: str | None = None,
         # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        external_url: str | dict | None = _UNDEF,
-        internal_url: str | dict | None = _UNDEF,
+        external_url: str | dict[Any, Any] | None = _UNDEF,
+        internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
@@ -1708,7 +1724,7 @@ class Config:
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
-        self._update(source=SOURCE_STORAGE, **kwargs)
+        self._update(source=ConfigSource.STORAGE, **kwargs)
         await self.async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
@@ -1736,7 +1752,7 @@ class Config:
             _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
 
         self._update(
-            source=SOURCE_STORAGE,
+            source=ConfigSource.STORAGE,
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             elevation=data.get("elevation"),

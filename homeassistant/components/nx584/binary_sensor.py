@@ -8,9 +8,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASSES,
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -25,7 +25,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = "5007"
 DEFAULT_SSL = False
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: vol.In(DEVICE_CLASSES)})
+ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     zone_sensors = {
         zone["number"]: NX584ZoneSensor(
-            zone, zone_types.get(zone["number"], DEVICE_CLASS_OPENING)
+            zone, zone_types.get(zone["number"], BinarySensorDeviceClass.OPENING)
         )
         for zone in zones
         if zone["number"] not in exclude

@@ -7,9 +7,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_RECEIVER,
-    DEVICE_CLASS_TV,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
@@ -28,6 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
@@ -36,7 +36,9 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
 from . import roku_exception_handler
@@ -64,7 +66,9 @@ SUPPORT_ROKU = (
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Roku config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
@@ -104,9 +108,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def device_class(self) -> str | None:
         """Return the class of this device."""
         if self.coordinator.data.info.device_type == "tv":
-            return DEVICE_CLASS_TV
+            return MediaPlayerDeviceClass.TV
 
-        return DEVICE_CLASS_RECEIVER
+        return MediaPlayerDeviceClass.RECEIVER
 
     @property
     def state(self) -> str | None:

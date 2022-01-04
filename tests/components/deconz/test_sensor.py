@@ -5,19 +5,11 @@ from unittest.mock import patch
 
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.deconz.sensor import ATTR_DAYLIGHT
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -97,12 +89,17 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
-    assert light_level_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ILLUMINANCE
+    assert (
+        light_level_sensor.attributes[ATTR_DEVICE_CLASS]
+        == SensorDeviceClass.ILLUMINANCE
+    )
     assert light_level_sensor.attributes[ATTR_DAYLIGHT] == 6955
 
     light_level_temp = hass.states.get("sensor.light_level_sensor_temperature")
     assert light_level_temp.state == "0.1"
-    assert light_level_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
+    assert (
+        light_level_temp.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    )
 
     assert not hass.states.get("sensor.presence_sensor")
     assert not hass.states.get("sensor.switch_1")
@@ -111,21 +108,24 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
 
     switch_2_battery_level = hass.states.get("sensor.switch_2_battery_level")
     assert switch_2_battery_level.state == "100"
-    assert switch_2_battery_level.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY
+    assert (
+        switch_2_battery_level.attributes[ATTR_DEVICE_CLASS]
+        == SensorDeviceClass.BATTERY
+    )
     assert (
         ent_reg.async_get("sensor.switch_2_battery_level").entity_category
-        == ENTITY_CATEGORY_DIAGNOSTIC
+        == EntityCategory.DIAGNOSTIC
     )
 
     assert not hass.states.get("sensor.daylight_sensor")
 
     power_sensor = hass.states.get("sensor.power_sensor")
     assert power_sensor.state == "6"
-    assert power_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
+    assert power_sensor.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
 
     consumption_sensor = hass.states.get("sensor.consumption_sensor")
     assert consumption_sensor.state == "0.002"
-    assert consumption_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
+    assert consumption_sensor.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
 
     assert not hass.states.get("sensor.clip_light_level_sensor")
 

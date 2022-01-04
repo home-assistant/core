@@ -9,7 +9,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import split_entity_id
-from homeassistant.helpers import config_validation as cv
+
+from . import config_validation as cv
 
 CONF_INCLUDE_DOMAINS = "include_domains"
 CONF_INCLUDE_ENTITY_GLOBS = "include_entity_globs"

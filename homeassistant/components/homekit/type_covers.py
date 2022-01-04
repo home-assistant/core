@@ -319,7 +319,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
 
 @TYPES.register("Window")
 class Window(OpeningDevice):
-    """Generate a Window accessory for a cover entity with DEVICE_CLASS_WINDOW.
+    """Generate a Window accessory for a cover entity with WINDOW device class.
 
     The entity must support: set_cover_position.
     """

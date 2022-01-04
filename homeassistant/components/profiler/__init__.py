@@ -56,15 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     lock = asyncio.Lock()
     domain_data = hass.data[DOMAIN] = {}
 
-    async def _async_run_profile(call: ServiceCall):
+    async def _async_run_profile(call: ServiceCall) -> None:
         async with lock:
             await _async_generate_profile(hass, call)
 
-    async def _async_run_memory_profile(call: ServiceCall):
+    async def _async_run_memory_profile(call: ServiceCall) -> None:
         async with lock:
             await _async_generate_memory_profile(hass, call)
 
-    async def _async_start_log_objects(call: ServiceCall):
+    async def _async_start_log_objects(call: ServiceCall) -> None:
         if LOG_INTERVAL_SUB in domain_data:
             domain_data[LOG_INTERVAL_SUB]()
 
@@ -78,14 +78,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, _log_objects, call.data[CONF_SCAN_INTERVAL]
         )
 
-    async def _async_stop_log_objects(call: ServiceCall):
+    async def _async_stop_log_objects(call: ServiceCall) -> None:
         if LOG_INTERVAL_SUB not in domain_data:
             return
 
         hass.components.persistent_notification.async_dismiss("profile_object_logging")
         domain_data.pop(LOG_INTERVAL_SUB)()
 
-    def _dump_log_objects(call: ServiceCall):
+    def _dump_log_objects(call: ServiceCall) -> None:
         obj_type = call.data[CONF_TYPE]
 
         _LOGGER.critical(
