@@ -13,12 +13,15 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_HEATING_TYPE,
@@ -70,7 +73,11 @@ def _build_entity(name, vicare_api, circuit, device_config, heating_type):
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the ViCare climate platform."""
     name = config_entry.data[CONF_NAME]
 

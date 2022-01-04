@@ -6,6 +6,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rpi_gpio"
 PLATFORMS = [
@@ -15,7 +17,7 @@ PLATFORMS = [
 ]
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Raspberry PI GPIO component."""
 
     def cleanup_gpio(event):

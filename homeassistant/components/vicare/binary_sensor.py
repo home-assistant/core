@@ -17,7 +17,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
 from .const import DOMAIN, VICARE_API, VICARE_CIRCUITS, VICARE_DEVICE_CONFIG
@@ -104,7 +107,11 @@ async def _entities_from_descriptions(
                 all_devices.append(entity)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Create the ViCare binary sensor devices."""
     name = config_entry.data[CONF_NAME]
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]

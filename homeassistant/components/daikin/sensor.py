@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
@@ -19,6 +20,9 @@ from homeassistant.const import (
     POWER_KILO_WATT,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
@@ -111,7 +115,12 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Old way of setting up the Daikin sensors.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -119,7 +128,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
     sensors = [ATTR_INSIDE_TEMPERATURE]

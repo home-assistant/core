@@ -1,4 +1,6 @@
 """Support for interface with an LG webOS Smart TV."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
@@ -37,8 +39,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_PAYLOAD,
@@ -68,7 +73,12 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the LG webOS Smart TV platform."""
 
     if discovery_info is None:

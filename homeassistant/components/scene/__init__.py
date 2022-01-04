@@ -14,6 +14,7 @@ from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -58,7 +59,7 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the scenes."""
     component = hass.data[DOMAIN] = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass

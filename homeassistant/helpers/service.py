@@ -716,7 +716,7 @@ def async_register_admin_service(
     hass: HomeAssistant,
     domain: str,
     service: str,
-    service_func: Callable[[ServiceCall], Awaitable | None],
+    service_func: Callable[[ServiceCall], Awaitable[None] | None],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""

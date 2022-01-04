@@ -113,7 +113,7 @@ class VersionSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_{entity_description.key}"
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
 
     @property

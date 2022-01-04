@@ -305,6 +305,7 @@ CPU_SENSOR_PREFIXES = [
     "soc_thermal 1",
     "Tctl",
     "cpu0-thermal",
+    "cpu0_thermal",
 ]
 
 

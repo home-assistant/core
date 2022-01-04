@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera
@@ -26,14 +26,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture
+from .conftest import MockEntityFixture, assert_entity_counts
 
 
 @pytest.fixture(name="camera")
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera with only the media_player platform active, camera has speaker."""
+    """Fixture for a single camera for testing the media_player platform."""
 
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
@@ -50,16 +50,10 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
     }
 
-    with patch(
-        "homeassistant.components.unifiprotect.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 1
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
     yield (camera_obj, "media_player.test_camera_speaker")
 
@@ -104,6 +98,7 @@ async def test_media_player_update(
     new_camera.talkback_stream.is_running = True
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
@@ -148,6 +143,7 @@ async def test_media_player_stop(
     new_camera.talkback_stream.is_running = True
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
