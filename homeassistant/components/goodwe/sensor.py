@@ -135,8 +135,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(entities)
 
-    return True
-
 
 class InverterSensor(CoordinatorEntity, SensorEntity):
     """Entity representing individual inverter sensor."""
