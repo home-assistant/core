@@ -118,7 +118,7 @@ class Interface(TypedDict):
 
     device: str
     mac: str
-    mode: str
+    op_mode: str
     ssid: str | None
     type: str
 
@@ -332,7 +332,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 mesh_intf[interf["uid"]] = Interface(
                     device=node["device_name"],
                     mac=int_mac,
-                    mode=interf.get("op_mode", ""),
+                    op_mode=interf.get("op_mode", ""),
                     ssid=interf.get("ssid", ""),
                     type=interf["type"],
                 )
@@ -354,7 +354,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                         and dev_mac in hosts
                     ):
                         dev_info: Device = hosts[dev_mac]
-                        if intf["mode"] != "AP_GUEST":
+                        if intf["op_mode"] != "AP_GUEST":
                             dev_info.wan_access = not self.connection.call_action(
                                 "X_AVM-DE_HostFilter:1",
                                 "GetWANAccessByIP",
