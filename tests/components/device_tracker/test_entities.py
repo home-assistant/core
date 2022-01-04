@@ -25,7 +25,7 @@ async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
     dr.async_get(hass).async_get_or_create(
         name="Device from other integration",
         config_entry_id=MockConfigEntry().entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "ad:de:ef:be:ed:fe:")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "ad:de:ef:be:ed:fe")},
     )
 
     config_entry = MockConfigEntry(domain="test")
@@ -40,7 +40,7 @@ async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
         ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
         ATTR_BATTERY_LEVEL: 100,
         ATTR_IP: "0.0.0.0",
-        ATTR_MAC: "ad:de:ef:be:ed:fe:",
+        ATTR_MAC: "ad:de:ef:be:ed:fe",
         ATTR_HOST_NAME: "test.hostname.org",
     }
     assert entity_state.state == STATE_NOT_HOME
