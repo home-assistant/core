@@ -3,7 +3,7 @@ import asyncio
 import logging
 from random import randrange
 
-from pyatv import connect, exceptions, scan
+from pyatv import connect, exceptions
 from pyatv.const import DeviceModel, Protocol
 from pyatv.convert import model_str
 
@@ -32,6 +32,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
+from .scanner import scan
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,7 +272,7 @@ class AppleTVManager:
 
         _LOGGER.debug("Discovering device %s", self.config_entry.title)
         atvs = await scan(
-            self.hass.loop, identifier=identifiers, protocol=protocols, hosts=[address]
+            self.hass, identifier=identifiers, protocol=protocols, hosts=[address]
         )
         if atvs:
             return atvs[0]
