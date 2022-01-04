@@ -35,7 +35,11 @@ async def test_cleanup_legacy(hass, enable_custom_integrations):
     device2 = dev_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device2")}
     )
+    device3 = dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "device3")}
+    )
 
+    # Eevice with light + device tracker entity
     entity1a = ent_reg.async_get_or_create(
         DOMAIN,
         "test",
@@ -50,6 +54,7 @@ async def test_cleanup_legacy(hass, enable_custom_integrations):
         config_entry=config_entry,
         device_id=device1.id,
     )
+    # Just device tracker entity
     entity2a = ent_reg.async_get_or_create(
         DOMAIN,
         "test",
@@ -57,12 +62,35 @@ async def test_cleanup_legacy(hass, enable_custom_integrations):
         config_entry=config_entry,
         device_id=device2.id,
     )
+    # Device with no device tracker entities
+    entity3a = ent_reg.async_get_or_create(
+        "light",
+        "test",
+        "entity3a-unique",
+        config_entry=config_entry,
+        device_id=device3.id,
+    )
+    # Device tracker but no device
+    entity4a = ent_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "entity4a-unique",
+        config_entry=config_entry,
+    )
+    # Completely different entity
+    entity5a = ent_reg.async_get_or_create(
+        "light",
+        "test",
+        "entity4a-unique",
+        config_entry=config_entry,
+    )
 
     await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
     await hass.async_block_till_done()
 
-    assert ent_reg.async_get(entity1a.entity_id) is not None
-    assert ent_reg.async_get(entity1b.entity_id) is not None
+    for entity in (entity1a, entity1b, entity3a, entity4a, entity5a):
+        assert ent_reg.async_get(entity.entity_id) is not None
+
     # We've removed device so device ID cleared
     assert ent_reg.async_get(entity2a.entity_id).device_id is None
     # Removed because only had device tracker entity

@@ -66,15 +66,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @callback
 def _async_register_mac(
-    hass: HomeAssistant, domain: str, mac: str, unique_id: str | None = None
+    hass: HomeAssistant, domain: str, mac: str, unique_id: str
 ) -> None:
     """Register a mac address with a unique ID.
 
     If no unique ID given, it is assumed to be the unformatted mac.
     """
     data_key = "device_tracker_mac"
-    if unique_id is None:
-        unique_id = mac
     mac = dr.format_mac(mac)
     if data_key in hass.data:
         hass.data[data_key][mac] = (domain, unique_id)
@@ -292,7 +290,7 @@ class ScannerEntity(BaseTrackerEntity):
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.mac_address:
+        if self.mac_address and self.unique_id:
             _async_register_mac(
                 hass, platform.platform_name, self.mac_address, self.unique_id
             )
