@@ -1,4 +1,6 @@
 """Test the Vultr switch platform."""
+from __future__ import annotations
+
 import json
 from unittest.mock import patch
 
