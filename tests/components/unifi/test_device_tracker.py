@@ -38,7 +38,9 @@ async def test_no_entities(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
 
 
-async def test_tracked_wireless_clients(hass, aioclient_mock, mock_unifi_websocket):
+async def test_tracked_wireless_clients(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Verify tracking of wireless clients."""
     client = {
         "ap_mac": "00:00:00:00:02:01",
@@ -157,7 +159,9 @@ async def test_tracked_wireless_clients(hass, aioclient_mock, mock_unifi_websock
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
 
-async def test_tracked_clients(hass, aioclient_mock, mock_unifi_websocket):
+async def test_tracked_clients(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Test the update_items function with some clients."""
     client_1 = {
         "ap_mac": "00:00:00:00:02:01",
@@ -234,7 +238,9 @@ async def test_tracked_clients(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("device_tracker.client_1").state == STATE_HOME
 
 
-async def test_tracked_devices(hass, aioclient_mock, mock_unifi_websocket):
+async def test_tracked_devices(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Test the update_items function with some devices."""
     device_1 = {
         "board_rev": 3,
@@ -321,45 +327,10 @@ async def test_tracked_devices(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("device_tracker.device_1").state == STATE_UNAVAILABLE
     assert hass.states.get("device_tracker.device_2").state == STATE_HOME
 
-    # Update device registry when device is upgraded
 
-    event = {
-        "_id": "5eae7fe02ab79c00f9d38960",
-        "datetime": "2020-05-09T20:06:37Z",
-        "key": "EVT_SW_Upgraded",
-        "msg": f'Switch[{device_2["mac"]}] was upgraded from "{device_2["version"]}" to "4.3.13.11253"',
-        "subsystem": "lan",
-        "sw": device_2["mac"],
-        "sw_name": device_2["name"],
-        "time": 1589054797635,
-        "version_from": {device_2["version"]},
-        "version_to": "4.3.13.11253",
-    }
-
-    device_2["version"] = event["version_to"]
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MESSAGE_DEVICE},
-            "data": [device_2],
-        }
-    )
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MESSAGE_EVENT},
-            "data": [event],
-        }
-    )
-    await hass.async_block_till_done()
-
-    # Verify device registry has been updated
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("device_tracker.device_2")
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(entry.device_id)
-    assert device.sw_version == event["version_to"]
-
-
-async def test_remove_clients(hass, aioclient_mock, mock_unifi_websocket):
+async def test_remove_clients(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Test the remove_items function with some clients."""
     client_1 = {
         "essid": "ssid",
@@ -399,7 +370,7 @@ async def test_remove_clients(hass, aioclient_mock, mock_unifi_websocket):
 
 
 async def test_remove_client_but_keep_device_entry(
-    hass, aioclient_mock, mock_unifi_websocket
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
 ):
     """Test that unifi entity base remove config entry id from a multi integration device registry entry."""
     client_1 = {
@@ -424,7 +395,7 @@ async def test_remove_client_but_keep_device_entry(
         "unique_id",
         device_id=device_entry.id,
     )
-    assert len(device_entry.config_entries) == 2
+    assert len(device_entry.config_entries) == 3
 
     mock_unifi_websocket(
         data={
@@ -438,10 +409,12 @@ async def test_remove_client_but_keep_device_entry(
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
 
     device_entry = device_registry.async_get(other_entity.device_id)
-    assert len(device_entry.config_entries) == 1
+    assert len(device_entry.config_entries) == 2
 
 
-async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocket):
+async def test_controller_state_change(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Verify entities state reflect on controller becoming unavailable."""
     client = {
         "essid": "ssid",
@@ -495,7 +468,7 @@ async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocke
 
 
 async def test_controller_state_change_client_to_listen_on_all_state_changes(
-    hass, aioclient_mock, mock_unifi_websocket
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
 ):
     """Verify entities state reflect on controller becoming unavailable."""
     client = {
@@ -579,7 +552,7 @@ async def test_controller_state_change_client_to_listen_on_all_state_changes(
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
 
-async def test_option_track_clients(hass, aioclient_mock):
+async def test_option_track_clients(hass, aioclient_mock, mock_device_registry):
     """Test the tracking of clients can be turned off."""
     wireless_client = {
         "essid": "ssid",
@@ -645,7 +618,7 @@ async def test_option_track_clients(hass, aioclient_mock):
     assert hass.states.get("device_tracker.device")
 
 
-async def test_option_track_wired_clients(hass, aioclient_mock):
+async def test_option_track_wired_clients(hass, aioclient_mock, mock_device_registry):
     """Test the tracking of wired clients can be turned off."""
     wireless_client = {
         "essid": "ssid",
@@ -711,7 +684,7 @@ async def test_option_track_wired_clients(hass, aioclient_mock):
     assert hass.states.get("device_tracker.device")
 
 
-async def test_option_track_devices(hass, aioclient_mock):
+async def test_option_track_devices(hass, aioclient_mock, mock_device_registry):
     """Test the tracking of devices can be turned off."""
     client = {
         "hostname": "client",
@@ -764,7 +737,9 @@ async def test_option_track_devices(hass, aioclient_mock):
     assert hass.states.get("device_tracker.device")
 
 
-async def test_option_ssid_filter(hass, aioclient_mock, mock_unifi_websocket):
+async def test_option_ssid_filter(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Test the SSID filter works.
 
     Client will travel from a supported SSID to an unsupported ssid.
@@ -896,7 +871,7 @@ async def test_option_ssid_filter(hass, aioclient_mock, mock_unifi_websocket):
 
 
 async def test_wireless_client_go_wired_issue(
-    hass, aioclient_mock, mock_unifi_websocket
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
 ):
     """Test the solution to catch wireless device go wired UniFi issue.
 
@@ -979,7 +954,9 @@ async def test_wireless_client_go_wired_issue(
     assert client_state.attributes["is_wired"] is False
 
 
-async def test_option_ignore_wired_bug(hass, aioclient_mock, mock_unifi_websocket):
+async def test_option_ignore_wired_bug(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Test option to ignore wired bug."""
     client = {
         "ap_mac": "00:00:00:00:02:01",
@@ -1061,7 +1038,7 @@ async def test_option_ignore_wired_bug(hass, aioclient_mock, mock_unifi_websocke
     assert client_state.attributes["is_wired"] is False
 
 
-async def test_restoring_client(hass, aioclient_mock):
+async def test_restoring_client(hass, aioclient_mock, mock_device_registry):
     """Verify clients are restored from clients_all if they ever was registered to entity registry."""
     client = {
         "hostname": "client",
@@ -1115,7 +1092,7 @@ async def test_restoring_client(hass, aioclient_mock):
     assert not hass.states.get("device_tracker.not_restored")
 
 
-async def test_dont_track_clients(hass, aioclient_mock):
+async def test_dont_track_clients(hass, aioclient_mock, mock_device_registry):
     """Test don't track clients config works."""
     wireless_client = {
         "essid": "ssid",
@@ -1175,7 +1152,7 @@ async def test_dont_track_clients(hass, aioclient_mock):
     assert hass.states.get("device_tracker.device")
 
 
-async def test_dont_track_devices(hass, aioclient_mock):
+async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
     """Test don't track devices config works."""
     client = {
         "hostname": "client",
@@ -1224,7 +1201,7 @@ async def test_dont_track_devices(hass, aioclient_mock):
     assert hass.states.get("device_tracker.device")
 
 
-async def test_dont_track_wired_clients(hass, aioclient_mock):
+async def test_dont_track_wired_clients(hass, aioclient_mock, mock_device_registry):
     """Test don't track wired clients config works."""
     wireless_client = {
         "essid": "ssid",
