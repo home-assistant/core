@@ -80,7 +80,7 @@ class FreeboxDevice(ScannerEntity):
             self._attrs = device["attrs"]
 
     @property
-    def unique_id(self) -> str:
+    def mac_address(self) -> str:
         """Return a unique ID."""
         return self._mac
 

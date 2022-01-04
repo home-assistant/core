@@ -276,7 +276,8 @@ class ScannerEntity(BaseTrackerEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
-        return self.find_device_entry() is not None
+        # If mac_address is None, we can never find a device entry.
+        return self.mac_address is None or self.find_device_entry() is not None
 
     @callback
     def add_to_platform_start(
@@ -295,8 +296,7 @@ class ScannerEntity(BaseTrackerEntity):
     @callback
     def find_device_entry(self) -> dr.DeviceEntry | None:
         """Return device entry."""
-        if self.mac_address is None:
-            return None
+        assert self.mac_address is not None
 
         return dr.async_get(self.hass).async_get_device(
             set(), {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
