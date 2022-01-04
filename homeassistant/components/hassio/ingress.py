@@ -134,7 +134,7 @@ class HassIOIngress(HomeAssistantView):
             if (
                 hdrs.CONTENT_LENGTH in result.headers
                 and int(result.headers.get(hdrs.CONTENT_LENGTH, 0)) < 4194000
-            ):
+            ) or result.status in (204, 304):
                 # Return Response
                 body = await result.read()
                 return web.Response(
