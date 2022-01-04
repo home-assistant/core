@@ -80,11 +80,6 @@ class HassZeroconfScanner(BaseScanner):
         zeroconf = self.zc.zeroconf
         zc_types = {f"{service}." for service in self._services}
         zc_types.add(SLEEP_PROXY_TYPE)
-        import pprint
-
-        pprint.pprint(
-            ["requested services", self.hosts, self.identifiers, self._services]
-        )
         # Note this only works if a ServiceBrowser is already
         # running for the given type (since its in the manifest this is ok)
         infos = [
@@ -138,18 +133,16 @@ class HassZeroconfScanner(BaseScanner):
             if (name_for_address := name_by_address.get(address)) is not None:
                 if possible_model := name_to_model.get(name_for_address):
                     model = possible_model
-            response = mdns.Response(
-                services=atv_services,
-                deep_sleep=all(
-                    service.port == 0 and service.type != SLEEP_PROXY_TYPE
-                    for service in atv_services
-                ),
-                model=model,
+            self.handle_response(
+                mdns.Response(
+                    services=atv_services,
+                    deep_sleep=all(
+                        service.port == 0 and service.type != SLEEP_PROXY_TYPE
+                        for service in atv_services
+                    ),
+                    model=model,
+                )
             )
-            import pprint
-
-            pprint.pprint(response)
-            self.handle_response(response)
 
     async def process(self, timeout: int) -> None:
         """Start to process devices and services."""
