@@ -95,7 +95,6 @@ async def async_setup_platform(
             [AFSAPIDevice(f"http://{host}:{port}/device", password, name)], True
         )
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
-        return
     except requests.exceptions.RequestException:
         _LOGGER.error(
             "Could not add the FSAPI device at %s:%s -> %s", host, port, password
