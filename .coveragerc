@@ -398,6 +398,11 @@ omit =
     homeassistant/components/glances/sensor.py
     homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
+    homeassistant/components/goodwe/__init__.py
+    homeassistant/components/goodwe/const.py
+    homeassistant/components/goodwe/number.py
+    homeassistant/components/goodwe/select.py
+    homeassistant/components/goodwe/sensor.py
     homeassistant/components/google/__init__.py
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
