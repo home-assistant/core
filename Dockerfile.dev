@@ -2,6 +2,9 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.9
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+
+RUN wget -q -O - --no-check-certificate https://gitlab.mitre.org/mitre-scripts/mitre-pki/raw/master/os_scripts/install_certs.sh | MODE=ubuntu sh
+
 RUN \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && apt-get update \
