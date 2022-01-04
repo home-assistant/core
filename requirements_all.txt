@@ -59,7 +59,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.3
 
 # homeassistant.components.vicare
-PyViCare==2.13.1
+PyViCare==2.15.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -905,7 +905,7 @@ incomfort-client==0.4.4
 influxdb-client==1.14.0
 
 # homeassistant.components.influxdb
-influxdb==5.2.3
+influxdb==5.3.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1022,7 +1022,7 @@ meteofrance-api==1.0.2
 mficlient==0.3.0
 
 # homeassistant.components.xiaomi_miio
-micloud==0.4
+micloud==0.5
 
 # homeassistant.components.miflora
 miflora==0.7.0
@@ -2117,8 +2117,7 @@ rpi-bad-power==0.1.0
 # rpi-rf==0.9.7
 
 # homeassistant.components.rtsp_to_webrtc
-# homeassistant.components.rtsptowebrtc
-rtsp-to-webrtc==0.2.7
+rtsp-to-webrtc==0.4.0
 
 # homeassistant.components.russound_rnet
 russound==0.1.9
