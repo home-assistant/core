@@ -7,12 +7,15 @@ from ipaddress import IPv4Address
 from pyatv import interface
 from pyatv.const import Protocol
 from pyatv.core.scan import BaseScanner
-from pyatv.protocols import PROTOCOLS
-from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 from pyatv.helpers import get_unique_id
+from pyatv.protocols import PROTOCOLS
+from zeroconf import DNSQuestionType
+from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
-from homeassistant.components.zeroconf import async_get_async_instance
+from homeassistant.components.zeroconf import DEVICE_INFO_TYPE, async_get_async_instance
 from homeassistant.core import HomeAssistant
+
+NAME_USED_FOR_DEVICE_INFO = {"_airplay._tcp.local.", "_raop._tcp.local."}
 
 
 class ZeroconfScanner(BaseScanner):
@@ -45,10 +48,30 @@ class ZeroconfScanner(BaseScanner):
         await asyncio.gather(
             *[info.async_request(zeroconf, zc_timeout) for info in infos]
         )
-        import pprint
+        short_names: set[str] = set()
         for info in infos:
-            unique_id = get_unique_id(info.type, info.name, {k.decode('ascii'):v.decode('utf-8') for k,v in info.properties.items()})
-            pprint.pprint([unique_id, info])
+            if info.type in NAME_USED_FOR_DEVICE_INFO:
+                short_name = info.name[: len(info.type)]
+                if "@" in short_name:
+                    short_name = short_name.split("@")[1]
+                short_names.add(short_name)
+        device_infos = []
+        if short_names:
+            device_infos = [
+                AsyncServiceInfo(DEVICE_INFO_TYPE, f"{name}.{DEVICE_INFO_TYPE}")
+                for name in short_names
+            ]
+            await asyncio.gather(
+                *[
+                    info.async_request(
+                        zeroconf, zc_timeout, question_type=DNSQuestionType.QU
+                    )
+                    for info in device_infos
+                ]
+            )
+        import pprint
+
+        pprint.pprint([infos, device_infos])
 
 
 async def scan(
