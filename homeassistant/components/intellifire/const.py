@@ -46,13 +46,6 @@ INTELLIFIRE_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
-    # SensorEntityDescription(
-    #     key=ATTR_API_PM25,
-    #     icon="mdi:blur",
-    #     name=ATTR_API_PM25,
-    #     native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    #     state_class=SensorStateClass.MEASUREMENT,
-    # ),
     SensorEntityDescription(
         key=FAN_SPEED,
         icon="mdi:fan",
@@ -83,12 +76,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=PILOT, name="Pilot Light On", icon="mdi:fire-alert", device_class=None
     ),
-    # BinarySensorEntityDescription(
-    #     key=HOT,
-    #     name="Is Hot",
-    #     icon="mdi:fire",
-    #     # device_class=BinarySensorDeviceClass.HEAT
-    # ),
     BinarySensorEntityDescription(
         key=THERMOSTAT,
         name="Thermostat On",
