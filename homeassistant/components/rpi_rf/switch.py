@@ -57,6 +57,12 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Find and return switches controlled by a generic RF device via GPIO."""
+    _LOGGER.warning(
+        "The Raspberry Pi RF integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
     rpi_rf = importlib.import_module("rpi_rf")
 
     gpio = config[CONF_GPIO]
