@@ -1,4 +1,6 @@
 """Support for August sensors."""
+from __future__ import annotations
+
 import logging
 
 from tesla_powerwall import MeterType
@@ -8,7 +10,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, POWER_KILO_WATT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_FREQUENCY,
@@ -34,7 +39,11 @@ _METER_DIRECTIONS = [_METER_DIRECTION_EXPORT, _METER_DIRECTION_IMPORT]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the August sensors."""
     powerwall_data = hass.data[DOMAIN][config_entry.entry_id]
     _LOGGER.debug("Powerwall_data: %s", powerwall_data)
@@ -45,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     status = powerwall_data[POWERWALL_API_STATUS]
     powerwalls_serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
 
-    entities = []
+    entities: list[SensorEntity] = []
     # coordinator.data[POWERWALL_API_METERS].meters holds all meters that are available
     for meter in coordinator.data[POWERWALL_API_METERS].meters:
         entities.append(
