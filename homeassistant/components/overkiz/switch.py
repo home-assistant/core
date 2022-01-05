@@ -25,7 +25,7 @@ from .entity import OverkizDescriptiveEntity
 
 @dataclass
 class OverkizSwitchDescriptionMixin:
-    """Define an entity description mixin for number entities."""
+    """Define an entity description mixin for switch entities."""
 
     turn_on: Callable[[Callable], Awaitable[None]]
     turn_off: Callable[[Callable], Awaitable[None]]
@@ -34,7 +34,7 @@ class OverkizSwitchDescriptionMixin:
 
 @dataclass
 class OverkizSwitchDescription(SwitchEntityDescription, OverkizSwitchDescriptionMixin):
-    """Class to describe an Overkiz number."""
+    """Class to describe an Overkiz switch."""
 
 
 SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
