@@ -32,17 +32,19 @@ ATTR_TRIGGER_2_DESC = "trigger_2_description"
 ATTR_TRIGGER_3_DESC = "trigger_3_description"
 ATTR_TRIGGER_4_DESC = "trigger_4_description"
 
+# Attr of services data supported by the valve switch entities
+ATTR_TRIGGER = "trigger"
+ATTR_TRIGGER_INDEX = "trigger_index"
+
 # Service of features supported by the valve switch entities
 SERVICE_SET_WATERING_TIME = "set_watering_time"
 SERVICE_SET_PAUSE_TIME = "set_pause_time"
-SERVICE_SET_TRIGGER_1 = "set_trigger_1"
-SERVICE_SET_TRIGGER_2 = "set_trigger_2"
-SERVICE_SET_TRIGGER_3 = "set_trigger_3"
-SERVICE_SET_TRIGGER_4 = "set_trigger_4"
+SERVICE_SET_TRIGGER = "set_trigger"
 
 # Range of features supported by the valve switch entities
 RANGE_WATERING_TIME = 1800
 RANGE_PAUSE_TIME = 24
+RANGE_TRIGGER_INDEX = 4
 
 # Service call validation schemas
 VALID_WATERING_TIME = vol.All(
@@ -50,6 +52,9 @@ VALID_WATERING_TIME = vol.All(
 )
 VALID_PAUSE_TIME = vol.All(vol.Coerce(int), vol.Range(min=1, max=RANGE_PAUSE_TIME))
 VALID_TRIGGER = wl_trigger
+VALID_TRIGGER_INDEX = vol.All(
+    vol.Coerce(int), vol.Range(min=1, max=RANGE_TRIGGER_INDEX)
+)
 
 # Service schemas
 SERVICE_SCHEMA_WATERING_TIME = vol.Schema(
@@ -64,28 +69,11 @@ SERVICE_SCHEMA_PAUSE_TIME = vol.Schema(
         vol.Required(ATTR_PAUSE_TIME): VALID_PAUSE_TIME,
     }
 )
-SERVICE_SCHEMA_TRIGGER_1 = vol.Schema(
+SERVICE_SCHEMA_TRIGGER = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TRIGGER_1): VALID_TRIGGER,
-    }
-)
-SERVICE_SCHEMA_TRIGGER_2 = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TRIGGER_2): VALID_TRIGGER,
-    }
-)
-SERVICE_SCHEMA_TRIGGER_3 = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TRIGGER_3): VALID_TRIGGER,
-    }
-)
-SERVICE_SCHEMA_TRIGGER_4 = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TRIGGER_4): VALID_TRIGGER,
+        vol.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
+        vol.Required(ATTR_TRIGGER): VALID_TRIGGER,
     }
 )
 
@@ -137,41 +125,17 @@ async def async_setup_entry(
                     watering_time = service.data[ATTR_WATERING_TIME]
                     await entity.async_set_switch_time(watering_time=watering_time)
 
-    async def set_trigger_1(service):
+    async def set_trigger(service):
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for entity in entities:
             if entity.entity_id == entity_id:
                 if isinstance(entity, WiLightValveSwitch):
-                    trigger_1 = service.data[ATTR_TRIGGER_1]
-                    await entity.async_set_trigger_1(trigger_1=trigger_1)
-
-    async def set_trigger_2(service):
-        entity_id = service.data[ATTR_ENTITY_ID]
-
-        for entity in entities:
-            if entity.entity_id == entity_id:
-                if isinstance(entity, WiLightValveSwitch):
-                    trigger_2 = service.data[ATTR_TRIGGER_2]
-                    await entity.async_set_trigger_2(trigger_2=trigger_2)
-
-    async def set_trigger_3(service):
-        entity_id = service.data[ATTR_ENTITY_ID]
-
-        for entity in entities:
-            if entity.entity_id == entity_id:
-                if isinstance(entity, WiLightValveSwitch):
-                    trigger_3 = service.data[ATTR_TRIGGER_3]
-                    await entity.async_set_trigger_3(trigger_3=trigger_3)
-
-    async def set_trigger_4(service):
-        entity_id = service.data[ATTR_ENTITY_ID]
-
-        for entity in entities:
-            if entity.entity_id == entity_id:
-                if isinstance(entity, WiLightValveSwitch):
-                    trigger_4 = service.data[ATTR_TRIGGER_4]
-                    await entity.async_set_trigger_4(trigger_4=trigger_4)
+                    trigger_index = service.data[ATTR_TRIGGER_INDEX]
+                    trigger = service.data[ATTR_TRIGGER]
+                    await entity.async_set_trigger(
+                        trigger_index=trigger_index, trigger=trigger
+                    )
 
     async def set_pause_time(service):
         entity_id = service.data[ATTR_ENTITY_ID]
@@ -191,30 +155,9 @@ async def async_setup_entry(
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_TRIGGER_1,
-        set_trigger_1,
-        schema=SERVICE_SCHEMA_TRIGGER_1,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_TRIGGER_2,
-        set_trigger_2,
-        schema=SERVICE_SCHEMA_TRIGGER_2,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_TRIGGER_3,
-        set_trigger_3,
-        schema=SERVICE_SCHEMA_TRIGGER_3,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_TRIGGER_4,
-        set_trigger_4,
-        schema=SERVICE_SCHEMA_TRIGGER_4,
+        SERVICE_SET_TRIGGER,
+        set_trigger,
+        schema=SERVICE_SCHEMA_TRIGGER,
     )
 
     hass.services.async_register(
@@ -371,29 +314,19 @@ class WiLightValveSwitch(WiLightDevice, ToggleEntity):
             target_time = kwargs[ATTR_WATERING_TIME]
             await self._client.set_switch_time(self._index, target_time)
 
-    async def async_set_trigger_1(self, **kwargs):
-        """Set the trigger 1."""
-        if ATTR_TRIGGER_1 in kwargs:
-            trigger_1 = kwargs[ATTR_TRIGGER_1]
-            await self._client.set_switch_trigger_1(self._index, trigger_1)
-
-    async def async_set_trigger_2(self, **kwargs):
-        """Set the trigger 2."""
-        if ATTR_TRIGGER_2 in kwargs:
-            trigger_2 = kwargs[ATTR_TRIGGER_2]
-            await self._client.set_switch_trigger_2(self._index, trigger_2)
-
-    async def async_set_trigger_3(self, **kwargs):
-        """Set the trigger 3."""
-        if ATTR_TRIGGER_3 in kwargs:
-            trigger_3 = kwargs[ATTR_TRIGGER_3]
-            await self._client.set_switch_trigger_3(self._index, trigger_3)
-
-    async def async_set_trigger_4(self, **kwargs):
-        """Set the trigger 4."""
-        if ATTR_TRIGGER_4 in kwargs:
-            trigger_4 = kwargs[ATTR_TRIGGER_4]
-            await self._client.set_switch_trigger_4(self._index, trigger_4)
+    async def async_set_trigger(self, **kwargs):
+        """Set the trigger according to index."""
+        if (ATTR_TRIGGER_INDEX in kwargs) & (ATTR_TRIGGER in kwargs):
+            trigger_index = kwargs[ATTR_TRIGGER_INDEX]
+            trigger = kwargs[ATTR_TRIGGER]
+            if trigger_index == 1:
+                await self._client.set_switch_trigger_1(self._index, trigger)
+            if trigger_index == 2:
+                await self._client.set_switch_trigger_2(self._index, trigger)
+            if trigger_index == 3:
+                await self._client.set_switch_trigger_3(self._index, trigger)
+            if trigger_index == 4:
+                await self._client.set_switch_trigger_4(self._index, trigger)
 
 
 class WiLightValvePauseSwitch(WiLightDevice, ToggleEntity):

@@ -8,16 +8,15 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wilight import DOMAIN as WILIGHT_DOMAIN
 from homeassistant.components.wilight.switch import (
     ATTR_PAUSE_TIME,
+    ATTR_TRIGGER,
     ATTR_TRIGGER_1,
     ATTR_TRIGGER_2,
     ATTR_TRIGGER_3,
     ATTR_TRIGGER_4,
+    ATTR_TRIGGER_INDEX,
     ATTR_WATERING_TIME,
     SERVICE_SET_PAUSE_TIME,
-    SERVICE_SET_TRIGGER_1,
-    SERVICE_SET_TRIGGER_2,
-    SERVICE_SET_TRIGGER_3,
-    SERVICE_SET_TRIGGER_4,
+    SERVICE_SET_TRIGGER,
     SERVICE_SET_WATERING_TIME,
 )
 from homeassistant.const import (
@@ -187,9 +186,10 @@ async def test_switch_services(
     # Set trigger_1
     await hass.services.async_call(
         WILIGHT_DOMAIN,
-        SERVICE_SET_TRIGGER_1,
+        SERVICE_SET_TRIGGER,
         {
-            ATTR_TRIGGER_1: "12715301",
+            ATTR_TRIGGER_INDEX: "1",
+            ATTR_TRIGGER: "12715301",
             ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
@@ -203,9 +203,10 @@ async def test_switch_services(
     # Set trigger_2
     await hass.services.async_call(
         WILIGHT_DOMAIN,
-        SERVICE_SET_TRIGGER_2,
+        SERVICE_SET_TRIGGER,
         {
-            ATTR_TRIGGER_2: "12707301",
+            ATTR_TRIGGER_INDEX: "2",
+            ATTR_TRIGGER: "12707301",
             ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
@@ -219,9 +220,10 @@ async def test_switch_services(
     # Set trigger_3
     await hass.services.async_call(
         WILIGHT_DOMAIN,
-        SERVICE_SET_TRIGGER_3,
+        SERVICE_SET_TRIGGER,
         {
-            ATTR_TRIGGER_3: "00015301",
+            ATTR_TRIGGER_INDEX: "3",
+            ATTR_TRIGGER: "00015301",
             ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
@@ -235,9 +237,10 @@ async def test_switch_services(
     # Set trigger_4
     await hass.services.async_call(
         WILIGHT_DOMAIN,
-        SERVICE_SET_TRIGGER_4,
+        SERVICE_SET_TRIGGER,
         {
-            ATTR_TRIGGER_4: "00008300",
+            ATTR_TRIGGER_INDEX: "4",
+            ATTR_TRIGGER: "00008300",
             ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
