@@ -1,4 +1,5 @@
 """Support for monitoring a Sense energy sensor."""
+from datetime import timedelta
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -15,7 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
-from datetime import timedelta
 
 from .const import (
     ACTIVE_NAME,
