@@ -10,6 +10,7 @@ from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,
+    FritzLookUpError,
     FritzSecurityError,
     FritzServiceError,
 )
@@ -90,10 +91,16 @@ def service_call_action(
             exc_info=True,
         )
         return None
-    except (FritzActionError, FritzActionFailedError, FritzServiceError):
+    except (
+        FritzActionError,
+        FritzActionFailedError,
+        FritzServiceError,
+        FritzLookUpError,
+    ):
         _LOGGER.error(
-            "Service/Action Error: cannot execute service %s",
+            "Service/Action Error: cannot execute service %s with action %s",
             service_name,
+            action_name,
             exc_info=True,
         )
         return None
