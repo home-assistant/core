@@ -14,6 +14,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
+    SUPPORT_SEND_COMMAND,
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STATUS,
@@ -89,6 +90,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
+        self._supported_features |= SUPPORT_SEND_COMMAND
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._supported_features |= SUPPORT_PAUSE
 
@@ -185,3 +187,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
+
+    def send_command(self, command, params, **kwargs):
+        """Send raw command."""
+        self._send_command(command)
