@@ -1021,7 +1021,7 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
         ("garage", "action.devices.types.GARAGE"),
-        ("gate", "action.devices.types.GATE"),
+        ("gate", "action.devices.types.GARAGE"),
         ("awning", "action.devices.types.AWNING"),
         ("shutter", "action.devices.types.SHUTTER"),
         ("curtain", "action.devices.types.CURTAIN"),
