@@ -1,6 +1,8 @@
 """Support for Sense Hat LEDs."""
 from __future__ import annotations
 
+import logging
+
 from sense_hat import SenseHat
 import voluptuous as vol
 
@@ -27,6 +29,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -35,6 +39,12 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Sense Hat Light platform."""
+    _LOGGER.warning(
+        "The Sense HAT integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     sensehat = SenseHat()
 
