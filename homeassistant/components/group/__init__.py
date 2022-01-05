@@ -42,7 +42,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -223,12 +222,10 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     return groups
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass, config):
     """Set up all groups found defined in the configuration."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
-
-    component = hass.data[DOMAIN]
+    if (component := hass.data.get(DOMAIN)) is None:
+        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
