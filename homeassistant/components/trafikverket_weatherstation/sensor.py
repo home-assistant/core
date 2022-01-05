@@ -38,7 +38,14 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util import Throttle
 
-from .const import ATTR_ACTIVE, ATTR_MEASURE_TIME, ATTRIBUTION, CONF_STATION, DOMAIN
+from .const import (
+    ATTR_ACTIVE,
+    ATTR_MEASURE_TIME,
+    ATTRIBUTION,
+    CONF_STATION,
+    DOMAIN,
+    NONE_IS_ZERO_SENSORS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -229,7 +236,7 @@ class TrafikverketWeatherStation(SensorEntity):
         )
         if (
             self._attr_native_value is None
-            and self.entity_description.state_class == SensorStateClass.MEASUREMENT
+            and self.entity_description.key in NONE_IS_ZERO_SENSORS
         ):
             self._attr_native_value = 0
 
