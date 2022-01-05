@@ -25,6 +25,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
+from homeassistant.helpers.typing import ConfigType
 
 from .alarms import SonosAlarms
 from .const import (
@@ -97,7 +98,7 @@ class SonosData:
         self.mdns_names: dict[str, str] = {}
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sonos component."""
     conf = config.get(DOMAIN)
 

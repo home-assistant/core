@@ -448,7 +448,7 @@ def stream_worker(
         container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
-            "Error opening stream %s" % redact_credentials(str(source))
+            f"Error opening stream ({err.type}, {err.strerror}) {redact_credentials(str(source))}"
         ) from err
     try:
         video_stream = container.streams.video[0]

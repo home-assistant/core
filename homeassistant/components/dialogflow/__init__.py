@@ -4,7 +4,9 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_flow, intent, template
 
@@ -61,7 +63,7 @@ async def handle_webhook(hass, webhook_id, request):
         )
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
     hass.components.webhook.async_register(
         DOMAIN, "DialogFlow", entry.data[CONF_WEBHOOK_ID], handle_webhook
@@ -69,7 +71,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     return True

@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util import slugify
 
 from .const import (
     ATTR_VERSION_SOURCE,
@@ -47,9 +46,11 @@ from .const import (
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Version."""
 
-    _entry_data: dict[str, Any] = DEFAULT_CONFIGURATION.copy()
-
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the Version config flow."""
+        self._entry_data: dict[str, Any] = DEFAULT_CONFIGURATION.copy()
 
     async def async_step_user(
         self,
@@ -141,9 +142,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         self._entry_data = _convert_imported_configuration(import_config)
 
-        for entry in self._async_current_entries():
-            if _fingerprint(entry.data) == _fingerprint(self._entry_data):
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({**DEFAULT_CONFIGURATION, **self._entry_data})
 
         return self.async_create_entry(
             title=self._config_entry_name, data=self._entry_data
@@ -161,12 +160,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return f"{name} {channel.title()}"
 
         return name
-
-
-def _fingerprint(data) -> str:
-    """Return a fingerprint of the configuration."""
-    configuration = {**DEFAULT_CONFIGURATION, **data}
-    return slugify("_".join(configuration.values()))
 
 
 def _convert_imported_configuration(config: dict[str, Any]) -> Any:

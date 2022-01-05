@@ -10,12 +10,17 @@ from typing import Any, Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Version
-from pyunifiprotect.data.websocket import WSSubscriptionMessage
+from pyunifiprotect.data import Camera, Light, Version, WSSubscriptionMessage
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data.devices import Viewer
+from pyunifiprotect.data.nvr import DoorbellMessage, Liveview
+from pyunifiprotect.data.types import DoorbellMessageType, ModelType
 
 from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -32,6 +37,27 @@ class MockPortData:
 
 
 @dataclass
+class MockDoorbellSettings:
+    """Mock Port information."""
+
+    default_message_text = "Welcome"
+    all_messages = [
+        DoorbellMessage(
+            type=DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR,
+            text=DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR.value.replace("_", " "),
+        ),
+        DoorbellMessage(
+            type=DoorbellMessageType.DO_NOT_DISTURB,
+            text=DoorbellMessageType.DO_NOT_DISTURB.value.replace("_", " "),
+        ),
+        DoorbellMessage(
+            type=DoorbellMessageType.CUSTOM_MESSAGE,
+            text="Test",
+        ),
+    ]
+
+
+@dataclass
 class MockNvrData:
     """Mock for NVR."""
 
@@ -40,6 +66,9 @@ class MockNvrData:
     name: str
     id: str
     ports: MockPortData = MockPortData()
+    doorbell_settings = MockDoorbellSettings()
+    update_all_messages = Mock()
+    model: ModelType = ModelType.NVR
 
 
 @dataclass
@@ -51,6 +80,15 @@ class MockBootstrap:
     lights: dict[str, Any]
     sensors: dict[str, Any]
     viewers: dict[str, Any]
+    liveviews: dict[str, Any]
+
+    def reset_objects(self) -> None:
+        """Reset all devices on bootstrap for tests."""
+        self.cameras = {}
+        self.lights = {}
+        self.sensors = {}
+        self.viewers = {}
+        self.liveviews = {}
 
 
 @dataclass
@@ -69,7 +107,7 @@ MOCK_OLD_NVR_DATA = MockNvrData(
 )
 
 MOCK_BOOTSTRAP = MockBootstrap(
-    nvr=MOCK_NVR_DATA, cameras={}, lights={}, sensors={}, viewers={}
+    nvr=MOCK_NVR_DATA, cameras={}, lights={}, sensors={}, viewers={}, liveviews={}
 )
 
 
@@ -95,7 +133,9 @@ def mock_client():
 
 
 @pytest.fixture
-def mock_entry(hass: HomeAssistant, mock_client):
+def mock_entry(
+    hass: HomeAssistant, mock_client  # pylint: disable=redefined-outer-name
+):
     """Mock ProtectApiClient for testing."""
 
     with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
@@ -119,50 +159,100 @@ def mock_entry(hass: HomeAssistant, mock_client):
 
 
 @pytest.fixture
+def mock_liveview():
+    """Mock UniFi Protect Camera device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_liveview.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    yield Liveview.from_unifi_dict(**data)
+
+
+@pytest.fixture
 def mock_camera():
     """Mock UniFi Protect Camera device."""
 
     path = Path(__file__).parent / "sample_data" / "sample_camera.json"
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
 
     yield Camera.from_unifi_dict(**data)
 
 
 @pytest.fixture
-async def simple_camera(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
-):
-    """Fixture for a single camera, no extra setup."""
+def mock_light():
+    """Mock UniFi Protect Camera device."""
 
-    camera = mock_camera.copy(deep=True)
-    camera._api = mock_entry.api
-    camera.channels[0]._api = mock_entry.api
-    camera.channels[1]._api = mock_entry.api
-    camera.channels[2]._api = mock_entry.api
-    camera.name = "Test Camera"
-    camera.channels[0].is_rtsp_enabled = True
-    camera.channels[0].name = "High"
-    camera.channels[1].is_rtsp_enabled = False
-    camera.channels[2].is_rtsp_enabled = False
+    path = Path(__file__).parent / "sample_data" / "sample_light.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
 
-    mock_entry.api.bootstrap.cameras = {
-        camera.id: camera,
-    }
-
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 2
-
-    yield (camera, "camera.test_camera_high")
+    yield Light.from_unifi_dict(**data)
 
 
-async def time_changed(hass, seconds):
+@pytest.fixture
+def mock_viewer():
+    """Mock UniFi Protect Viewport device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_viewport.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    yield Viewer.from_unifi_dict(**data)
+
+
+async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
+
+
+async def enable_entity(
+    hass: HomeAssistant, entry_id: str, entity_id: str
+) -> er.RegistryEntry:
+    """Enable a disabled entity."""
+    entity_registry = er.async_get(hass)
+
+    updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
+    assert not updated_entity.disabled
+    await hass.config_entries.async_reload(entry_id)
+    await hass.async_block_till_done()
+
+    return updated_entity
+
+
+def assert_entity_counts(
+    hass: HomeAssistant, platform: Platform, total: int, enabled: int
+) -> None:
+    """Assert entity counts for a given platform."""
+
+    entity_registry = er.async_get(hass)
+
+    entities = [
+        e for e in entity_registry.entities if split_entity_id(e)[0] == platform.value
+    ]
+
+    assert len(entities) == total
+    assert len(hass.states.async_all(platform.value)) == enabled
+
+
+def ids_from_device_description(
+    platform: Platform,
+    device: ProtectAdoptableDeviceModel,
+    description: EntityDescription,
+) -> tuple[str, str]:
+    """Return expected unique_id and entity_id for a give platform/device/description combination."""
+
+    entity_name = (
+        device.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
+    )
+    description_entity_name = (
+        description.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
+    )
+
+    unique_id = f"{device.id}_{description.key}"
+    entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
+
+    return unique_id, entity_id

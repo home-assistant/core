@@ -637,6 +637,11 @@ DEVICES = [
             "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_zone",
             "sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_basic_rssi",
             "sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_basic_lqi",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_warningmode",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_sirenlevel",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_strobelevel",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_strobe",
+            "siren.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -658,6 +663,31 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_basic_lqi",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_warningmode",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_sirenlevel",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_strobelevel",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd_strobe",
+            },
+            ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHASiren",
+                DEV_SIG_ENT_MAP_ID: "siren.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_wd",
             },
         },
     },
@@ -777,6 +807,11 @@ DEVICES = [
             "binary_sensor.heiman_smokesensor_em_77665544_ias_zone",
             "sensor.heiman_smokesensor_em_77665544_basic_rssi",
             "sensor.heiman_smokesensor_em_77665544_basic_lqi",
+            "select.heiman_smokesensor_em_77665544_ias_wd_warningmode",
+            "select.heiman_smokesensor_em_77665544_ias_wd_sirenlevel",
+            "select.heiman_smokesensor_em_77665544_ias_wd_strobelevel",
+            "select.heiman_smokesensor_em_77665544_ias_wd_strobe",
+            "siren.heiman_smokesensor_em_77665544_ias_wd",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -803,6 +838,31 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.heiman_smokesensor_em_77665544_basic_lqi",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_77665544_ias_wd_warningmode",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_77665544_ias_wd_sirenlevel",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_77665544_ias_wd_strobelevel",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_77665544_ias_wd_strobe",
+            },
+            ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHASiren",
+                DEV_SIG_ENT_MAP_ID: "siren.heiman_smokesensor_em_77665544_ias_wd",
             },
         },
     },
@@ -867,12 +927,36 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
             "button.heiman_warningdevice_77665544_identify",
-            "siren.heiman_warningdevice_77665544_ias_wd",
             "binary_sensor.heiman_warningdevice_77665544_ias_zone",
             "sensor.heiman_warningdevice_77665544_basic_rssi",
             "sensor.heiman_warningdevice_77665544_basic_lqi",
+            "select.heiman_warningdevice_77665544_ias_wd_warningmode",
+            "select.heiman_warningdevice_77665544_ias_wd_sirenlevel",
+            "select.heiman_warningdevice_77665544_ias_wd_strobelevel",
+            "select.heiman_warningdevice_77665544_ias_wd_strobe",
+            "siren.heiman_warningdevice_77665544_ias_wd",
         ],
         DEV_SIG_ENT_MAP: {
+            ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_77665544_ias_wd_warningmode",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_77665544_ias_wd_sirenlevel",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_77665544_ias_wd_strobelevel",
+            },
+            ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_77665544_ias_wd_strobe",
+            },
             ("siren", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHASiren",

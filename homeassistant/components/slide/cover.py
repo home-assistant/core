@@ -1,4 +1,5 @@
 """Support for Slide slides."""
+from __future__ import annotations
 
 import logging
 
@@ -11,13 +12,21 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import ATTR_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import API, DEFAULT_OFFSET, DOMAIN, SLIDES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up cover(s) for Slide platform."""
 
     if discovery_info is None:
