@@ -3,6 +3,7 @@ from ipaddress import IPv4Address
 from unittest.mock import MagicMock, Mock, patch
 
 import ifaddr
+import pytest
 
 from homeassistant.components import network
 from homeassistant.components.network.const import (
@@ -13,6 +14,7 @@ from homeassistant.components.network.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 _NO_LOOPBACK_IPADDR = "192.168.1.5"
@@ -602,3 +604,49 @@ async def test_async_get_ipv4_broadcast_addresses_multiple(hass, hass_storage):
         IPv4Address("192.168.1.255"),
         IPv4Address("169.254.255.255"),
     }
+
+
+async def test_async_get_source_ip_no_enabled_addresses(hass, hass_storage, caplog):
+    """Test getting the source ip address when all adapters are disabled."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[],
+    ), patch(
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket(["192.168.1.5"]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+
+        assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
+
+    assert "source address detection may be inaccurate" in caplog.text
+
+
+async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses(
+    hass, hass_storage, caplog
+):
+    """Test getting the source ip address when all adapters are disabled and getting it fails."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[],
+    ), patch(
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([None]),
+    ):
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+        with pytest.raises(HomeAssistantError):
+            await network.async_get_source_ip(hass, MDNS_TARGET_IP)
