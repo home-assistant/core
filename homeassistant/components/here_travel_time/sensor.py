@@ -8,10 +8,6 @@ import herepy
 from herepy.here_enum import RouteMode
 import voluptuous as vol
 
-from homeassistant.components.here_travel_time import (
-    HereTravelTimeDataUpdateCoordinator,
-)
-from homeassistant.components.here_travel_time.const import HERETravelTimeConfig
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -29,6 +25,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import HereTravelTimeDataUpdateCoordinator
+from .const import HERETravelTimeConfig
 
 _LOGGER = logging.getLogger(__name__)
 
