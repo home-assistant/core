@@ -1,5 +1,7 @@
 """Test the webhook component."""
 from http import HTTPStatus
+from ipaddress import ip_address
+from unittest.mock import patch
 
 import pytest
 
@@ -143,6 +145,37 @@ async def test_webhook_head(hass, mock_client):
     assert hooks[0][2].method == "HEAD"
 
 
+async def test_webhook_local_only(hass, mock_client):
+    """Test posting a webhook with local only."""
+    hooks = []
+    webhook_id = hass.components.webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append((args[0], args[1], await args[2].text()))
+
+    hass.components.webhook.async_register(
+        "test", "Test hook", webhook_id, handle, local_only=True
+    )
+
+    resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
+    assert resp.status == HTTPStatus.OK
+    assert len(hooks) == 1
+    assert hooks[0][0] is hass
+    assert hooks[0][1] == webhook_id
+    assert hooks[0][2] == '{"data": true}'
+
+    # Request from remote IP
+    with patch(
+        "homeassistant.components.webhook.ip_address",
+        return_value=ip_address("123.123.123.123"),
+    ):
+        resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
+    assert resp.status == HTTPStatus.OK
+    # No hook received
+    assert len(hooks) == 1
+
+
 async def test_listing_webhook(
     hass, hass_ws_client, hass_access_token, enable_custom_integrations
 ):
@@ -151,6 +184,9 @@ async def test_listing_webhook(
     client = await hass_ws_client(hass, hass_access_token)
 
     hass.components.webhook.async_register("test", "Test hook", "my-id", None)
+    hass.components.webhook.async_register(
+        "test", "Test hook", "my-2", None, local_only=True
+    )
 
     await client.send_json({"id": 5, "type": "webhook/list"})
 
@@ -158,5 +194,16 @@ async def test_listing_webhook(
     assert msg["id"] == 5
     assert msg["success"]
     assert msg["result"] == [
-        {"webhook_id": "my-id", "domain": "test", "name": "Test hook"}
+        {
+            "webhook_id": "my-id",
+            "domain": "test",
+            "name": "Test hook",
+            "local_only": False,
+        },
+        {
+            "webhook_id": "my-2",
+            "domain": "test",
+            "name": "Test hook",
+            "local_only": True,
+        },
     ]
