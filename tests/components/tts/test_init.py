@@ -65,11 +65,6 @@ def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request
     if request.node.rep_call.passed:
         return
 
-    # Print contents of dir if failed
-    print("Content of dir for", request.node.nodeid)
-    for fil in tmp_path.iterdir():
-        print(fil.relative_to(tmp_path))
-
     # To show the log.
     assert False
 
