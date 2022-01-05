@@ -1,8 +1,6 @@
 """Platform for binary sensor integration."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from smarttub import SpaError, SpaReminder
 import voluptuous as vol
 
@@ -60,9 +58,7 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
-    if TYPE_CHECKING:
-        assert platform
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         "snooze_reminder",

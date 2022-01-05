@@ -1,6 +1,5 @@
 """Platform for sensor integration."""
 from enum import Enum
-from typing import TYPE_CHECKING
 
 import smarttub
 import voluptuous as vol
@@ -71,9 +70,7 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
-    if TYPE_CHECKING:
-        assert platform
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         "set_primary_filtration",
