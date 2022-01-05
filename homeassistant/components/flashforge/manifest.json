@@ -9,9 +9,15 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": [],
+  "dependencies": ["network"],
   "codeowners": [
     "@joseffallman"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "dhcp" : [
+    {
+      "hostname": "shenzhen_*",
+      "macaddress": "68B9D3*"
+    }
+  ]
 }

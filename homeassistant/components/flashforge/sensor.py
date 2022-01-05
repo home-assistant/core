@@ -1,7 +1,7 @@
 """Add FlashForge sensors."""
 from __future__ import annotations
 
-from ffpp.Printer import Printer
+from ffpp.Printer import Printer, ToolHandler
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -40,14 +40,22 @@ async def async_setup_entry(
             for temp_type in types:
                 entities.append(
                     FlashForgeTemperatureSensor(
-                        coordinator, tool.name, temp_type, "extruder", device_id
+                        coordinator,
+                        tool.name,
+                        temp_type,
+                        printer.extruder_tools,
+                        device_id,
                     )
                 )
         for tool in printer.bed_tools:
             for temp_type in types:
                 entities.append(
                     FlashForgeTemperatureSensor(
-                        coordinator, tool.name, temp_type, "bed", device_id
+                        coordinator,
+                        tool.name,
+                        temp_type,
+                        printer.bed_tools,
+                        device_id,
                     )
                 )
 
@@ -95,9 +103,6 @@ class FlashForgeStatusSensor(FlashForgeSensorBase):
     def native_value(self):
         """Return sensor state."""
         status: str = self.coordinator.printer.status
-        if not status:
-            return None
-
         return status
 
     @property
@@ -121,11 +126,17 @@ class FlashForgeJobPercentageSensor(FlashForgeSensorBase):
     @property
     def native_value(self):
         """Return sensor state."""
-        percent: str = self.coordinator.printer.print_percent  # .data["status"]
-        if not percent:
-            return None
+        percent: str = self.coordinator.printer.print_percent
 
         return percent
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.printer.print_percent
+        )
 
 
 class FlashForgeTemperatureSensor(FlashForgeSensorBase):
@@ -140,29 +151,19 @@ class FlashForgeTemperatureSensor(FlashForgeSensorBase):
         coordinator: FlashForgeDataUpdateCoordinator,
         tool_name: str,
         temp_type: str,
-        tool_type: str,
+        tool_handler: ToolHandler,
         device_id: str,
     ) -> None:
         """Initialize a new FlashForge sensor."""
         super().__init__(coordinator, f"{tool_name} {temp_type} temp", device_id)
         self._temp_type = temp_type
-        self._tool_type = tool_type
         self._tool_name = tool_name
+        self.tool_handler = tool_handler
 
     @property
     def native_value(self):
         """Return sensor state."""
-        printer: Printer = self.coordinator.printer
-        if not printer:
-            return None
-
-        if self._tool_type == "extruder":
-            tool = printer.extruder_tools.get(self._tool_name)
-        else:
-            tool = printer.bed_tools.get(self._tool_name)
-
-        if tool is None:
-            return None
+        tool = self.tool_handler.get(self._tool_name)
 
         temp = tool.now
         if self._temp_type == "target":
@@ -173,6 +174,6 @@ class FlashForgeTemperatureSensor(FlashForgeSensorBase):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            self.coordinator.last_update_success and self.coordinator.printer.connected
+        return self.coordinator.last_update_success and self.tool_handler.get(
+            self._tool_name
         )

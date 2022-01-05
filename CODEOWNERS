@@ -285,6 +285,7 @@ homeassistant/components/fixer/* @fabaff
 homeassistant/components/fjaraskupan/* @elupus
 tests/components/fjaraskupan/* @elupus
 homeassistant/components/flashforge/* @joseffallman
+tests/components/flashforge/* @joseffallman
 homeassistant/components/flick_electric/* @ZephireNZ
 tests/components/flick_electric/* @ZephireNZ
 homeassistant/components/flipr/* @cnico

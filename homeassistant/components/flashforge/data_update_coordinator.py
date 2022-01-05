@@ -3,10 +3,11 @@
 from datetime import timedelta
 import logging
 
-from ffpp.Printer import Printer
+from ffpp.Printer import ConnectionStatus, Printer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -46,10 +47,10 @@ class FlashForgeDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via API."""
         try:
             await self.printer.update()
-        except TimeoutError as e:
-            raise UpdateFailed(e) from e
-        except ConnectionError as e:
-            raise UpdateFailed(e) from e
+        except TimeoutError as err:
+            raise UpdateFailed(err) from err
+        except ConnectionError as err:
+            raise UpdateFailed(err) from err
 
         return {
             "status": self.printer.status,
@@ -58,11 +59,12 @@ class FlashForgeDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_config_entry_first_refresh(self):
         """Connect to printer and update with machine info."""
         try:
-            await self.printer.updateMachineInfo(disconnect=False)
-        except TimeoutError as e:
-            raise UpdateFailed(e) from e
-        except ConnectionError as e:
-            raise UpdateFailed(e) from e
+            self.printer.connected = ConnectionStatus.DISCONNECTED
+            await self.printer.connect()
+        except TimeoutError as err:
+            raise ConfigEntryNotReady(err) from err
+        except ConnectionError as err:
+            raise ConfigEntryNotReady(err) from err
 
         return await super().async_config_entry_first_refresh()
 

@@ -27,7 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Save the printer, and coordinator object to be able to access it later on.
-    hass.data[DOMAIN][entry.entry_id] = {"printer": printer, "coordinator": coordinator}
+    hass.data[DOMAIN][entry.entry_id] = {
+        "printer": printer,
+        "coordinator": coordinator,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

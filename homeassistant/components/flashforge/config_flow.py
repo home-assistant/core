@@ -1,26 +1,31 @@
 """Config flow for FlashForge 3D Printer."""
+import typing
+from typing import Any
+
+from ffpp import Discovery
 from ffpp.Printer import Printer
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN
 
-'''
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-# TODO Check if there are any devices that can be discovered in the network.
-    devices = await hass.async_add_executor_job(ffpp.Printer.discover)
-    return len(devices) > 0
+# async def _async_has_devices(hass: HomeAssistant) -> bool:
+#     """Return if there are devices that can be discovered."""
+# T O D O Check if there are any devices that can be discovered in the network.
+#     devices = await hass.async_add_executor_job(ffpp.Printer.discover)
+#     return len(devices) > 0
 
 
-config_entry_flow.register_discovery_flow(
-    DOMAIN, "FlashForge 3D Printer", _async_has_devices
-)
-'''
+# config_entry_flow.register_discovery_flow(
+#     DOMAIN, "FlashForge 3D Printer", _async_has_devices
+# )
 
 
 class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -38,11 +43,16 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Run when user trying to add component."""
         # Default values.
         errors = {}
-        port = 8899
-        ip_addr = None
+        self.port = 8899
+        self.ip_addr = None
 
         # Validate user data
         if user_input is not None:
+
+            if CONF_IP_ADDRESS not in user_input:
+                # Try to discover printers on network and
+                # then show the confirm form.
+                return await self.async_step_auto()
 
             # Update fields to the last state.
             self.ip_addr = user_input[CONF_IP_ADDRESS]
@@ -55,23 +65,100 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
 
-        # The form fields to be presented in the form.
+        return self._async_show_form(errors=errors)
+
+    async def async_step_auto(self) -> FlowResult:
+        """Try to discover ip of printer and return a confirm form."""
+
+        ip = None
+        port = 8899
+        local_ip = await async_get_source_ip(self.hass)
+        discovered_printers = await Discovery.getPrinters(
+            self.hass.loop,
+            limit=1,
+            host_ip=local_ip,
+        )
+        # Get the first discovered printer ip
+        for _, ip_addr in discovered_printers:
+            ip = ip_addr
+            break
+
+        if ip is None:
+            return self.async_abort(reason="no_devices_found")
+
+        try:
+            await self._get_printer_info(
+                self.hass, {CONF_IP_ADDRESS: ip, CONF_PORT: port}
+            )
+        except CannotConnect:
+            return self.async_abort(reason="no_devices_found")
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="auto_confirm",
+            description_placeholders={
+                "machine_name": self.printer.machine_name,
+                "ip_addr": ip,
+            },
+        )
+
+    async def async_step_auto_confirm(
+        self, _: typing.Dict[str, Any] = None
+    ) -> FlowResult:
+        """User confirmed to add device to Home Assistant."""
+        return self._async_create_entry()
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Config step for dhcp discovery."""
+
+        ip = discovery_info.ip
+        port = 8899
+
+        try:
+            await self._get_printer_info(
+                self.hass, {CONF_IP_ADDRESS: ip, CONF_PORT: port}
+            )
+        except CannotConnect:
+            return self.async_abort(reason="no_devices_found")
+        # return await super().async_step_dhcp(discovery_info)
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="auto_confirm",
+            description_placeholders={
+                "machine_name": self.printer.machine_name,
+                "ip_addr": ip,
+            },
+        )
+
+    @callback
+    def _async_show_form(
+        self,
+        errors: typing.Dict[str, str] = None,
+    ) -> FlowResult:
+        """Create and show the form for user."""
+
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_IP_ADDRESS, default=ip_addr): str,
-                vol.Optional(CONF_PORT, default=port): int,
+                vol.Optional(
+                    CONF_IP_ADDRESS,
+                    description={"suggested_value": self.ip_addr},
+                ): str,
+                vol.Optional(CONF_PORT, default=self.port): cv.port,
             }
         )
 
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
-            errors=errors,
+            errors=errors or {},
         )
 
-    async def _get_printer_info(self, hass: HomeAssistant, data: dict) -> None:
+    async def _get_printer_info(self, hass: HomeAssistant, user_input: dict) -> None:
         """Try to get info from given ip."""
 
+        self.ip_addr = user_input[CONF_IP_ADDRESS]
+        self.port = user_input[CONF_PORT]
         self.printer = Printer(self.ip_addr, self.port)
 
         try:
