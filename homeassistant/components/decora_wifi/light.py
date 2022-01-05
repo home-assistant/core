@@ -1,4 +1,5 @@
 """Interfaces with the myLeviton API for Decora Smart WiFi products."""
+from __future__ import annotations
 
 import logging
 
@@ -18,7 +19,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +35,12 @@ NOTIFICATION_ID = "leviton_notification"
 NOTIFICATION_TITLE = "myLeviton Decora Setup"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Decora WiFi platform."""
 
     email = config[CONF_USERNAME]
@@ -48,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             hass.components.persistent_notification.create(
                 msg, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID
             )
-            return False
+            return
 
         # Gather all the available devices...
         perms = session.user.get_residential_permissions()

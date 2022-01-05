@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.components.remote import RemoteEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -17,7 +20,11 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Panasonic Viera TV Remote from a config entry."""
 
     config = config_entry.data

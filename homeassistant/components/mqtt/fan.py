@@ -40,7 +40,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import PLATFORMS, MqttCommandTemplate, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -183,16 +183,6 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
-    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are deprecated, support will be removed with release 2021.9
-    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
-    cv.removed(CONF_PAYLOAD_LOW_SPEED),
-    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.removed(CONF_SPEED_COMMAND_TOPIC),
-    cv.removed(CONF_SPEED_LIST),
-    cv.removed(CONF_SPEED_STATE_TOPIC),
-    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -201,7 +191,7 @@ PLATFORM_SCHEMA = vol.All(
 DISCOVERY_SCHEMA = vol.All(
     # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
     # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are deprecated, support will be removed with release 2021.9
+    # are no longer supported, support was removed in release 2021.12
     cv.removed(CONF_PAYLOAD_HIGH_SPEED),
     cv.removed(CONF_PAYLOAD_LOW_SPEED),
     cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
@@ -352,15 +342,14 @@ class MqttFan(MqttEntity, FanEntity):
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
-                tpl, self.hass
+                tpl, entity=self
             ).async_render
 
         for key, tpl in self._value_templates.items():
-            if tpl is None:
-                self._value_templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._value_templates[key] = tpl.async_render_with_possible_json_value
+            self._value_templates[key] = MqttValueTemplate(
+                tpl,
+                entity=self,
+            ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -385,6 +374,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_STATE_TOPIC],
                 "msg_callback": state_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
 
         @callback
@@ -429,6 +419,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_PERCENTAGE_STATE_TOPIC],
                 "msg_callback": percentage_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._percentage = None
 
@@ -461,6 +452,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_PRESET_MODE_STATE_TOPIC],
                 "msg_callback": preset_mode_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._preset_mode = None
 
@@ -483,6 +475,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_OSCILLATION_STATE_TOPIC],
                 "msg_callback": oscillation_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._oscillation = False
 

@@ -10,6 +10,7 @@ from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,
+    FritzLookUpError,
     FritzSecurityError,
     FritzServiceError,
 )
@@ -19,8 +20,9 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -89,10 +91,16 @@ def service_call_action(
             exc_info=True,
         )
         return None
-    except (FritzActionError, FritzActionFailedError, FritzServiceError):
+    except (
+        FritzActionError,
+        FritzActionFailedError,
+        FritzServiceError,
+        FritzLookUpError,
+    ):
         _LOGGER.error(
-            "Service/Action Error: cannot execute service %s",
+            "Service/Action Error: cannot execute service %s with action %s",
             service_name,
+            action_name,
             exc_info=True,
         )
         return None
@@ -604,6 +612,21 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     def is_on(self) -> bool:
         """Switch status."""
         return self._router.devices[self._mac].wan_access
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=self.name,
+            identifiers={(DOMAIN, self._mac)},
+            via_device=(
+                DOMAIN,
+                self._router.unique_id,
+            ),
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""

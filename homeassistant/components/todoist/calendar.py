@@ -9,9 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEventDevice
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 from .const import (
@@ -98,7 +100,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
 

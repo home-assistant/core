@@ -12,10 +12,12 @@ from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
 )
+import homeassistant.core as ha
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, template
@@ -158,7 +160,7 @@ async def test_publish(hass, mqtt_mock):
 
 async def test_convert_outgoing_payload(hass):
     """Test the converting of outgoing MQTT payloads without template."""
-    command_template = mqtt.MqttCommandTemplate(None, hass)
+    command_template = mqtt.MqttCommandTemplate(None, hass=hass)
     assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
 
     assert (
@@ -179,14 +181,90 @@ async def test_command_template_value(hass):
     variables = {"id": 1234, "some_var": "beer"}
 
     # test rendering value
-    tpl = template.Template("{{ value + 1 }}", hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    tpl = template.Template("{{ value + 1 }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
     assert cmd_tpl.async_render(4321) == "4322"
 
     # test variables at rendering
-    tpl = template.Template("{{ some_var }}", hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    tpl = template.Template("{{ some_var }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
     assert cmd_tpl.async_render(None, variables=variables) == "beer"
+
+
+async def test_command_template_variables(hass, mqtt_mock):
+    """Test the rendering of enitity_variables."""
+    topic = "test/select"
+
+    fake_state = ha.State("select.test", "milk")
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        assert await async_setup_component(
+            hass,
+            "select",
+            {
+                "select": {
+                    "platform": "mqtt",
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                    "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}"}',
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == "milk"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.test_select", "option": "beer"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic,
+        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select"}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("select.test_select")
+    assert state.state == "beer"
+
+
+async def test_value_template_value(hass):
+    """Test the rendering of MQTT value template."""
+
+    variables = {"id": 1234, "some_var": "beer"}
+
+    # test rendering value
+    tpl = template.Template("{{ value_json.id }}", hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
+
+    # test variables at rendering
+    tpl = template.Template("{{ value_json.id }} {{ some_var }}", hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert (
+        val_tpl.async_render_with_possible_json_value(
+            '{"id": 4321}', variables=variables
+        )
+        == "4321 beer"
+    )
+
+    # test with default value if an error occurs due to an invalid template
+    tpl = template.Template("{{ value_json.id | as_datetime }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    assert (
+        val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
+        == "my default"
+    )
 
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):

@@ -33,7 +33,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import subscription
+from .. import MqttValueTemplate, subscription
 from ... import mqtt
 from ..const import (
     CONF_COMMAND_TOPIC,
@@ -160,7 +160,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
-                tpl.hass = self.hass
+                tpl = MqttValueTemplate(tpl, entity=self)
 
         last_state = await self.async_get_last_state()
 
@@ -254,6 +254,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         "topic": self._topics[CONF_STATE_TOPIC],
                         "msg_callback": state_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )

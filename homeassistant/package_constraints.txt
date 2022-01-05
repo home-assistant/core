@@ -4,7 +4,7 @@ aiodiscover==1.4.5
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.23.2
+async-upnp-client==0.23.3
 async_timeout==4.0.0
 atomicwrites==1.4.0
 attrs==21.2.0
@@ -29,6 +29,7 @@ pyyaml==6.0
 requests==2.26.0
 scapy==2.4.5
 sqlalchemy==1.4.27
+typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.12.2
 yarl==1.6.3
@@ -51,16 +52,6 @@ h11>=0.12.0
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
-
-# gRPC 1.32+ currently causes issues on ARMv7, see:
-# https://github.com/home-assistant/core/issues/40148
-# Newer versions of some other libraries pin a higher version of grpcio,
-# so those also need to be kept at an old version until the grpcio pin
-# is reverted, see:
-# https://github.com/home-assistant/core/issues/53427
-grpcio==1.31.0
-google-cloud-pubsub==2.1.0
-google-api-core<=1.31.2
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

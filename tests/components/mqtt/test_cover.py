@@ -54,6 +54,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -62,6 +63,7 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -934,12 +936,11 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
                 "position_closed": 0,
                 "set_position_topic": "set-position-topic",
                 "set_position_template": "{{position-1}}",
-                "tilt_command_template": '\
-                {% if state_attr(entity_id, "friendly_name") != "test" %}\
-                  {{ 5 }}\
-                {% else %}\
-                  {{ 23 }}\
-                {% endif %}',
+                "tilt_command_template": "{"
+                '"enitity_id": "{{ entity_id }}",'
+                '"value": {{ value }},'
+                '"tilt_position": {{ tilt_position }}'
+                "}",
                 "payload_open": "OPEN",
                 "payload_close": "CLOSE",
                 "payload_stop": "STOP",
@@ -951,12 +952,57 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 99},
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 45},
         blocking=True,
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "23", 0, False
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 45,"tilt_position": 45}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 0,"tilt_position": 0}',
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic",
+        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        0,
+        False,
     )
 
 
@@ -3112,4 +3158,38 @@ async def test_publishing_with_custom_encoding(
         parameters,
         payload,
         template,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = cover.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "open", None, None),
+        ("state_topic", "closing", None, None),
+        ("position_topic", "40", "current_position", 40),
+        ("tilt_status_topic", "60", "current_tilt_position", 60),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        cover.DOMAIN,
+        DEFAULT_CONFIG[cover.DOMAIN],
+        topic,
+        value,
+        attribute,
+        attribute_value,
+        skip_raw_test=True,
     )

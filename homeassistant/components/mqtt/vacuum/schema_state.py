@@ -8,8 +8,6 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -23,7 +21,12 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    STATE_IDLE,
+    STATE_PAUSED,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -214,6 +217,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "topic": self._config.get(CONF_STATE_TOPIC),
                 "msg_callback": state_message_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics

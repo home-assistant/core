@@ -1,6 +1,7 @@
 """Native Home Assistant iOS app component."""
 import datetime
 from http import HTTPStatus
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -11,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
 from .const import (
@@ -247,13 +249,16 @@ def device_name_for_push_id(hass, push_id):
     return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
     conf = config.get(DOMAIN)
 
     ios_config = await hass.async_add_executor_job(
         load_json, hass.config.path(CONFIGURATION_FILE)
     )
+
+    if TYPE_CHECKING:
+        assert isinstance(ios_config, dict)
 
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}

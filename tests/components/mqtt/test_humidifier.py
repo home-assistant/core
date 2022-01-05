@@ -13,7 +13,12 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
-from homeassistant.components.mqtt.humidifier import MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.humidifier import (
+    CONF_MODE_COMMAND_TOPIC,
+    CONF_MODE_STATE_TOPIC,
+    CONF_TARGET_HUMIDITY_STATE_TOPIC,
+    MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -36,6 +41,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -44,6 +50,7 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -674,6 +681,34 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("state_topic", "ON", None, "on"),
+        (CONF_MODE_STATE_TOPIC, "auto", ATTR_MODE, "auto"),
+        (CONF_TARGET_HUMIDITY_STATE_TOPIC, "45", ATTR_HUMIDITY, 45),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[humidifier.DOMAIN])
+    config["modes"] = ["eco", "auto"]
+    config[CONF_MODE_COMMAND_TOPIC] = "humidifier/some_mode_command_topic"
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        humidifier.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )
+
+
 async def test_attributes(hass, mqtt_mock, caplog):
     """Test attributes."""
     assert await async_setup_component(
@@ -1123,3 +1158,10 @@ async def test_publishing_with_custom_encoding(
         payload,
         template,
     )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = humidifier.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)

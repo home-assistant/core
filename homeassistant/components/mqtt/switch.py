@@ -24,7 +24,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -128,9 +128,9 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         self._optimistic = config[CONF_OPTIMISTIC]
 
-        template = self._config.get(CONF_VALUE_TEMPLATE)
-        if template is not None:
-            template.hass = self.hass
+        self._value_template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -139,10 +139,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
-            payload = msg.payload
-            template = self._config.get(CONF_VALUE_TEMPLATE)
-            if template is not None:
-                payload = template.async_render_with_possible_json_value(payload)
+            payload = self._value_template(msg.payload)
             if payload == self._state_on:
                 self._state = True
             elif payload == self._state_off:
@@ -162,6 +159,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                         "topic": self._config.get(CONF_STATE_TOPIC),
                         "msg_callback": state_message_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )

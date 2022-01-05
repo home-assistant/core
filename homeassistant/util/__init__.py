@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
-import enum
 from functools import wraps
 import random
 import re
@@ -19,7 +18,6 @@ from .dt import as_local, utcnow
 
 T = TypeVar("T")
 U = TypeVar("U")  # pylint: disable=invalid-name
-ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)  # pylint: disable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")

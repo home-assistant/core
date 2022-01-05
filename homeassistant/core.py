@@ -85,9 +85,10 @@ async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
-_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
+# Internal; not helpers.typing.UNDEFINED due to circular dependency
+_UNDEF: dict[Any, Any] = {}
 # pylint: disable=invalid-name
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable[..., Any])
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
 
@@ -235,7 +236,7 @@ class HomeAssistant:
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
-        self.data: dict = {}
+        self.data: dict[str, Any] = {}
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -879,6 +880,9 @@ class EventBus:
             )
 
 
+_StateT = TypeVar("_StateT", bound="State")
+
+
 class State:
     """Object to represent a state within the state machine.
 
@@ -945,7 +949,7 @@ class State:
             "_", " "
         )
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -970,7 +974,7 @@ class State:
         return self._as_dict
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> Any:
+    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -1041,7 +1045,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> list[str]:
         """List of entity ids that are being tracked.
 
@@ -1061,7 +1065,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids_count(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> int:
         """Count the entity ids that are being tracked.
 
@@ -1077,14 +1081,16 @@ class StateMachine:
             [None for state in self._states.values() if state.domain in domain_filter]
         )
 
-    def all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(
             self._loop, self.async_all, domain_filter
         ).result()
 
     @callback
-    def async_all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def async_all(
+        self, domain_filter: str | Iterable[str] | None = None
+    ) -> list[State]:
         """Create a list of all states matching the filter.
 
         This method must be run in the event loop.
@@ -1646,7 +1652,7 @@ class Config:
 
         return False
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Create a dictionary representation of the configuration.
 
         Async friendly.
@@ -1693,8 +1699,8 @@ class Config:
         location_name: str | None = None,
         time_zone: str | None = None,
         # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        external_url: str | dict | None = _UNDEF,
-        internal_url: str | dict | None = _UNDEF,
+        external_url: str | dict[Any, Any] | None = _UNDEF,
+        internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""

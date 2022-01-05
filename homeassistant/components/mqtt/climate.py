@@ -56,7 +56,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, MqttCommandTemplate, subscription
+from . import (
+    MQTT_BASE_PLATFORM_SCHEMA,
+    PLATFORMS,
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    subscription,
+)
 from .. import mqtt
 from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
@@ -372,24 +378,25 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         value_templates = {}
         for key in VALUE_TEMPLATE_KEYS:
-            value_templates[key] = lambda value: value
+            value_templates[key] = None
         if CONF_VALUE_TEMPLATE in config:
-            value_template = config.get(CONF_VALUE_TEMPLATE)
-            value_template.hass = self.hass
             value_templates = {
-                key: value_template.async_render_with_possible_json_value
-                for key in VALUE_TEMPLATE_KEYS
+                key: config.get(CONF_VALUE_TEMPLATE) for key in VALUE_TEMPLATE_KEYS
             }
         for key in VALUE_TEMPLATE_KEYS & config.keys():
-            tpl = config[key]
-            value_templates[key] = tpl.async_render_with_possible_json_value
-            tpl.hass = self.hass
-        self._value_templates = value_templates
+            value_templates[key] = config[key]
+        self._value_templates = {
+            key: MqttValueTemplate(
+                template,
+                entity=self,
+            ).async_render_with_possible_json_value
+            for key, template in value_templates.items()
+        }
 
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
             command_templates[key] = MqttCommandTemplate(
-                config.get(key), self.hass
+                config.get(key), entity=self
             ).async_render
 
         self._command_templates = command_templates
@@ -405,6 +412,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                     "topic": self._topic[topic],
                     "msg_callback": msg_callback,
                     "qos": qos,
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
 
         def render_template(msg, template_name):

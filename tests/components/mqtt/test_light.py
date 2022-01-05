@@ -158,15 +158,23 @@ from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant import config as hass_config
 from homeassistant.components import light
 from homeassistant.components.mqtt.light.schema_basic import (
+    CONF_BRIGHTNESS_COMMAND_TOPIC,
+    CONF_COLOR_TEMP_COMMAND_TOPIC,
+    CONF_EFFECT_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_HS_COMMAND_TOPIC,
+    CONF_RGB_COMMAND_TOPIC,
+    CONF_RGBW_COMMAND_TOPIC,
+    CONF_RGBWW_COMMAND_TOPIC,
+    CONF_WHITE_VALUE_COMMAND_TOPIC,
+    CONF_XY_COMMAND_TOPIC,
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
 )
@@ -183,6 +191,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -191,6 +200,7 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -199,11 +209,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_mqtt_message,
-    get_fixture_path,
-)
+from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -1109,37 +1115,6 @@ async def test_controlling_state_via_topic_with_templates(hass, mqtt_mock):
     assert state.attributes.get("xy_color") == (0.123, 0.123)
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "xy"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
-
-
-async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock, caplog):
-    """Test the setting of the state with undocumented value_template."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test_light_rgb/status",
-            "command_topic": "test_light_rgb/set",
-            "value_template": "{{ value_json.hello }}",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert "The 'value_template' option is deprecated" in caplog.text
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "ON"}')
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", '{"hello": "OFF"}')
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
 
 
 async def test_legacy_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
@@ -2283,7 +2258,7 @@ async def test_on_command_white(hass, mqtt_mock):
             "platform": "mqtt",
             "name": "test",
             "command_topic": "tasmota_B94927/cmnd/POWER",
-            "value_template": "{{ value_json.POWER }}",
+            "state_value_template": "{{ value_json.POWER }}",
             "payload_off": "OFF",
             "payload_on": "ON",
             "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
@@ -2592,7 +2567,7 @@ async def test_white_state_update(hass, mqtt_mock):
             "name": "test",
             "state_topic": "tasmota_B94927/tele/STATE",
             "command_topic": "tasmota_B94927/cmnd/POWER",
-            "value_template": "{{ value_json.POWER }}",
+            "state_value_template": "{{ value_json.POWER }}",
             "payload_off": "OFF",
             "payload_on": "ON",
             "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
@@ -3378,39 +3353,6 @@ async def test_max_mireds(hass, mqtt_mock):
     assert state.attributes.get("max_mireds") == 370
 
 
-async def test_reloadable(hass, mqtt_mock):
-    """Test reloading an mqtt light."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "command_topic": "test/set",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("light.test")
-    assert len(hass.states.async_all("light")) == 1
-
-    yaml_path = get_fixture_path("configuration.yaml", "mqtt")
-
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            "mqtt",
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("light")) == 1
-
-    assert hass.states.get("light.test") is None
-    assert hass.states.get("light.reload")
-
-
 @pytest.mark.parametrize(
     "service,topic,parameters,payload,template,tpl_par,tpl_output",
     [
@@ -3530,4 +3472,74 @@ async def test_publishing_with_custom_encoding(
         template,
         tpl_par=tpl_par,
         tpl_output=tpl_output,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = light.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value,init_payload",
+    [
+        ("state_topic", "ON", None, "on", None),
+        ("brightness_state_topic", "60", "brightness", 60, ("state_topic", "ON")),
+        (
+            "color_mode_state_topic",
+            "200",
+            "color_mode",
+            "200",
+            ("state_topic", "ON"),
+        ),
+        ("color_temp_state_topic", "200", "color_temp", 200, ("state_topic", "ON")),
+        ("effect_state_topic", "random", "effect", "random", ("state_topic", "ON")),
+        ("hs_state_topic", "200,50", "hs_color", (200, 50), ("state_topic", "ON")),
+        (
+            "xy_state_topic",
+            "128,128",
+            "xy_color",
+            (128, 128),
+            ("state_topic", "ON"),
+        ),
+        (
+            "rgb_state_topic",
+            "255,0,240",
+            "rgb_color",
+            (255, 0, 240),
+            ("state_topic", "ON"),
+        ),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value, init_payload
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[light.DOMAIN])
+    config[CONF_EFFECT_COMMAND_TOPIC] = "light/CONF_EFFECT_COMMAND_TOPIC"
+    config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
+    config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
+    config[CONF_COLOR_TEMP_COMMAND_TOPIC] = "light/CONF_COLOR_TEMP_COMMAND_TOPIC"
+    config[CONF_HS_COMMAND_TOPIC] = "light/CONF_HS_COMMAND_TOPIC"
+    config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
+    config[CONF_RGBW_COMMAND_TOPIC] = "light/CONF_RGBW_COMMAND_TOPIC"
+    config[CONF_RGBWW_COMMAND_TOPIC] = "light/CONF_RGBWW_COMMAND_TOPIC"
+    config[CONF_XY_COMMAND_TOPIC] = "light/CONF_XY_COMMAND_TOPIC"
+    config[CONF_EFFECT_LIST] = ["colorloop", "random"]
+    if attribute and attribute == "brightness":
+        config[CONF_WHITE_VALUE_COMMAND_TOPIC] = "light/CONF_WHITE_VALUE_COMMAND_TOPIC"
+
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        light.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+        init_payload,
     )

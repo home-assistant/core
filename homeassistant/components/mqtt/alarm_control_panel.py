@@ -38,7 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -165,11 +165,12 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._value_template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
+        ).async_render_with_possible_json_value
         self._command_template = MqttCommandTemplate(
-            self._config[CONF_COMMAND_TEMPLATE], self.hass
+            self._config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
     async def _subscribe_topics(self):
@@ -179,12 +180,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Run when new MQTT message has been received."""
-            payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
-                    msg.payload, self._state
-                )
+            payload = self._value_template(msg.payload)
             if payload not in (
                 STATE_ALARM_DISARMED,
                 STATE_ALARM_ARMED_HOME,
@@ -210,6 +206,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                     "topic": self._config[CONF_STATE_TOPIC],
                     "msg_callback": message_received,
                     "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
         )
