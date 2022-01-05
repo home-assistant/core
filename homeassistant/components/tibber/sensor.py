@@ -541,7 +541,7 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
                 continue
 
             statistic_id = (
-                f"{TIBBER_DOMAIN}:{home.home_id.replace('-', '')}_energy_consumption"
+                f"{TIBBER_DOMAIN}:energy_consumption_{home.home_id.replace('-', '')}"
             )
 
             last_stats = await self.hass.async_add_executor_job(

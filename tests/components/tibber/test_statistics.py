@@ -46,7 +46,7 @@ async def test_async_setup_entry(hass):
     await coordinator._async_update_data()
     await async_wait_recording_done_without_instance(hass)
 
-    statistic_id = "tibber:home_id_energy_consumption"
+    statistic_id = "tibber:energy_consumption_home_id"
 
     stats = await hass.async_add_executor_job(
         statistics_during_period,
