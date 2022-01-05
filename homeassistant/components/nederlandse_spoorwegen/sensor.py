@@ -45,7 +45,7 @@ ROUTE_SCHEMA = vol.Schema(
 ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Required(CONF_ROUTES): ROUTES_SCHEMA}
+    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
 )
 
 
@@ -72,7 +72,7 @@ def setup_platform(
         return
 
     sensors = []
-    for departure in config[CONF_ROUTES]:
+    for departure in config.get(CONF_ROUTES, {}):
         if not valid_stations(
             stations,
             [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
