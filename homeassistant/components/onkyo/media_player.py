@@ -80,7 +80,7 @@ DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
@@ -181,7 +181,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Onkyo platform."""
-    host: str = config[CONF_HOST]
     hosts: list[OnkyoDevice] = []
 
     def service_handle(service: ServiceCall) -> None:
@@ -200,7 +199,7 @@ def setup_platform(
         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
     )
 
-    if CONF_HOST in config and host not in KNOWN_HOSTS:
+    if CONF_HOST in config and (host := config[CONF_HOST]) not in KNOWN_HOSTS:
         try:
             receiver = eiscp.eISCP(host)
             hosts.append(
