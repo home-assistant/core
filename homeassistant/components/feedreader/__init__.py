@@ -9,10 +9,8 @@ import feedparser
 import voluptuous as vol
 
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = getLogger(__name__)
 
@@ -42,11 +40,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+def setup(hass, config):
     """Set up the Feedreader component."""
-    urls = config[DOMAIN][CONF_URLS]
-    scan_interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
-    max_entries = config[DOMAIN].get(CONF_MAX_ENTRIES)
+    urls = config.get(DOMAIN)[CONF_URLS]
+    scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
+    max_entries = config.get(DOMAIN).get(CONF_MAX_ENTRIES)
     data_file = hass.config.path(f"{DOMAIN}.pickle")
     storage = StoredData(data_file)
     feeds = [
