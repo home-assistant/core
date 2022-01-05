@@ -90,17 +90,13 @@ def entities_from_discovered_wilight(hass, api_device):
     """Parse configuration and add WiLight light entities."""
     entities = []
     for item in api_device.items:
-        if item["type"] != ITEM_SWITCH:
-            continue
-        index = item["index"]
-        item_name = item["name"]
-        if item["sub_type"] == SWITCH_VALVE:
-            entity = WiLightValveSwitch(api_device, index, item_name)
-        elif item["sub_type"] == SWITCH_PAUSE_VALVE:
-            entity = WiLightValvePauseSwitch(api_device, index, item_name)
-        else:
-            continue
-        entities.append(entity)
+        if item["type"] == ITEM_SWITCH:
+            index = item["index"]
+            item_name = item["name"]
+            if item["sub_type"] == SWITCH_VALVE:
+                entities.append(WiLightValveSwitch(api_device, index, item_name))
+            elif item["sub_type"] == SWITCH_PAUSE_VALVE:
+                entities.append(WiLightValvePauseSwitch(api_device, index, item_name))
 
     return entities
 

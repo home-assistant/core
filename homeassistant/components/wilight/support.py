@@ -10,29 +10,30 @@ import voluptuous as vol
 
 def wilight_trigger(value: Any) -> str:
     """Check rules for WiLight Trigger."""
-    if value is None:
-        raise vol.Invalid("Value is None")
+    err_desc = "Value is None"
+    if value is not None:
 
-    if not isinstance(value, str):
-        raise vol.Invalid("Expected a string")
+        err_desc = "Expected a string"
+        if isinstance(value, str):
 
-    regex = re.compile(r"^([0-9]{8})$")
-    if not regex.search(value):
-        raise vol.Invalid("String should only contain 8 decimals character")
+            err_desc = "String should only contain 8 decimals character"
+            regex = re.compile(r"^([0-9]{8})$")
+            if regex.search(value):
 
-    if int(value[0:3]) > 127:
-        raise vol.Invalid("First 3 character should be less than 127")
+                err_desc = "First 3 character should be less than 128"
+                if int(value[0:3]) < 128:
 
-    if int(value[3:5]) > 23:
-        raise vol.Invalid("Hour part should be less than 24")
+                    err_desc = "Hour part should be less than 24"
+                    if int(value[3:5]) < 24:
 
-    if int(value[5:7]) > 59:
-        raise vol.Invalid("Minute part should be less than 60")
+                        err_desc = "Minute part should be less than 60"
+                        if int(value[5:7]) < 60:
 
-    if int(value[7:8]) > 1:
-        raise vol.Invalid("Active part shoul be less than 2")
+                            err_desc = "Active part shoul be less than 2"
+                            if int(value[7:8]) < 21:
+                                return str(value)
 
-    return str(value)
+    raise vol.Invalid(err_desc)
 
 
 def wilight_to_hass_trigger(value):
