@@ -21,6 +21,7 @@ from homeassistant.const import ATTR_LAST_TRIP_TIME, ATTR_MODEL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, RING_INTERVAL
@@ -216,8 +217,8 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                     _LOGGER.debug("Canceling doorbell ring callback")
                     self._doorbell_callback()
                     self._doorbell_callback = None
-                self._doorbell_callback = self.hass.helpers.event.async_call_later(
-                    RING_INTERVAL.total_seconds(), self._async_reset_doorbell
+                self._doorbell_callback = async_call_later(
+                    self.hass, RING_INTERVAL, self._async_reset_doorbell
                 )
             self._attr_is_on = is_ringing
         else:
