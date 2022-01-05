@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import base64
 import json
+import struct
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -98,6 +100,17 @@ class ElectricityTypeData:
     def from_json(cls, data: str) -> ElectricityTypeData:
         """Load JSON string and return a ElectricityTypeData object."""
         return cls(**json.loads(data.lower()))
+
+    @classmethod
+    def from_raw(cls, data: str) -> ElectricityTypeData:
+        """Decode base64 string and return a ElectricityTypeData object."""
+        raw = base64.b64decode(data)
+        voltage = struct.unpack('>H', raw[0:2])[0] / 10.0
+        electriccurrent = struct.unpack('>L', b'\x00' + raw[2:5])[0] / 1000.0
+        power = struct.unpack('>L', b'\x00' + raw[5:8])[0] / 1000.0
+        return cls(electriccurrent=str(electriccurrent),
+                   power=str(power),
+                   voltage=str(voltage))
 
 
 class TuyaEntity(Entity):

@@ -589,6 +589,86 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             subkey="voltage",
         ),
     ),
+    "dlq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_FORWARD_ENERGY,
+            name="Total Energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_A,
+            name="Phase A Current",
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            subkey="electriccurrent",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_A,
+            name="Phase A Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=POWER_KILO_WATT,
+            subkey="power",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_A,
+            name="Phase A Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            subkey="voltage",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_B,
+            name="Phase B Current",
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            subkey="electriccurrent",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_B,
+            name="Phase B Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=POWER_KILO_WATT,
+            subkey="power",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_B,
+            name="Phase B Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            subkey="voltage",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_C,
+            name="Phase C Current",
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            subkey="electriccurrent",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_C,
+            name="Phase C Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=POWER_KILO_WATT,
+            subkey="power",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PHASE_C,
+            name="Phase C Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            subkey="voltage",
+        ),
+    ),
     # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
@@ -765,6 +845,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             "String",
             "Enum",
             "Json",
+            "Raw",
         ):
             return None
 
@@ -792,6 +873,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             if self.entity_description.subkey is None:
                 return None
             values = ElectricityTypeData.from_json(value)
+            return getattr(values, self.entity_description.subkey)
+
+        if self._status_range.type == "Raw":
+            if self.entity_description.subkey is None:
+                return None
+            values = ElectricityTypeData.from_raw(value)
             return getattr(values, self.entity_description.subkey)
 
         # Valid string or enum value
