@@ -8,8 +8,6 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_FAN_SPEED,
@@ -25,6 +23,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
