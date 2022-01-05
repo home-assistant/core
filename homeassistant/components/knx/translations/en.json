@@ -12,7 +12,7 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "Individual address for the connection",
-                    "local_ip": "Local IP (leave empty if unsure)",
+                    "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)",
                     "port": "Port",
                     "route_back": "Route Back / NAT Mode"
                 },
@@ -21,9 +21,9 @@
             "routing": {
                 "data": {
                     "individual_address": "Individual address for the routing connection",
+                    "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)",
                     "multicast_group": "The multicast group used for routing",
-                    "multicast_port": "The multicast port used for routing",
-                    "local_ip": "Local IP (leave empty if unsure)"
+                    "multicast_port": "The multicast port used for routing"
                 },
                 "description": "Please configure the routing options."
             },
@@ -47,9 +47,9 @@
                 "data": {
                     "connection_type": "KNX Connection Type",
                     "individual_address": "Default individual address",
+                    "local_ip": "Local IP of Home Assistant (use 0.0.0.0 for automatic detection)",
                     "multicast_group": "Multicast group used for routing and discovery",
                     "multicast_port": "Multicast port used for routing and discovery",
-                    "local_ip": "Local IP (leave empty if unsure)",
                     "rate_limit": "Maximum outgoing telegrams per second",
                     "state_updater": "Globally enable reading states from the KNX Bus"
                 }

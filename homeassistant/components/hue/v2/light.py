@@ -91,6 +91,9 @@ class HueLight(HueBaseEntity, LightEntity):
                 self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= SUPPORT_TRANSITION
+        self._last_xy: tuple[float, float] | None = self.xy_color
+        self._last_color_temp: int = self.color_temp
+        self._set_color_mode()
 
     @property
     def brightness(self) -> int | None:
@@ -99,18 +102,6 @@ class HueLight(HueBaseEntity, LightEntity):
             # Hue uses a range of [0, 100] to control brightness.
             return round((dimming.brightness / 100) * 255)
         return None
-
-    @property
-    def color_mode(self) -> str:
-        """Return the current color mode of the light."""
-        if color_temp := self.resource.color_temperature:
-            if color_temp.mirek_valid and color_temp.mirek is not None:
-                return COLOR_MODE_COLOR_TEMP
-        if self.resource.supports_color:
-            return COLOR_MODE_XY
-        if self.resource.supports_dimming:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
 
     @property
     def is_on(self) -> bool:
@@ -157,6 +148,11 @@ class HueLight(HueBaseEntity, LightEntity):
             "mode": self.resource.mode.value,
             "dynamics": self.resource.dynamics.status.value,
         }
+
+    @callback
+    def on_update(self) -> None:
+        """Call on update event."""
+        self._set_color_mode()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -212,3 +208,43 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             short=flash == FLASH_SHORT,
         )
+
+    @callback
+    def _set_color_mode(self) -> None:
+        """Set current colormode of light."""
+        last_xy = self._last_xy
+        last_color_temp = self._last_color_temp
+        self._last_xy = self.xy_color
+        self._last_color_temp = self.color_temp
+
+        # Certified Hue lights return `mired_valid` to indicate CT is active
+        if color_temp := self.resource.color_temperature:
+            if color_temp.mirek_valid and color_temp.mirek is not None:
+                self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+                return
+
+        # Non-certified lights do not report their current color mode correctly
+        # so we keep track of the color values to determine which is active
+        if last_color_temp != self.color_temp:
+            self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+            return
+        if last_xy != self.xy_color:
+            self._attr_color_mode = COLOR_MODE_XY
+            return
+
+        # if we didn't detect any changes, abort and use previous values
+        if self._attr_color_mode is not None:
+            return
+
+        # color mode not yet determined, work it out here
+        # Note that for lights that do not correctly report `mirek_valid`
+        # we might have an invalid startup state which will be auto corrected
+        if self.resource.supports_color:
+            self._attr_color_mode = COLOR_MODE_XY
+        elif self.resource.supports_color_temperature:
+            self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+        elif self.resource.supports_dimming:
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+        else:
+            # fallback to on_off
+            self._attr_color_mode = COLOR_MODE_ONOFF
