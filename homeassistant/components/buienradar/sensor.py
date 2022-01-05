@@ -209,7 +209,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Rain last 24h",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:weather-pouring",
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
@@ -217,7 +216,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Rain last hour",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:weather-pouring",
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="temperature_1d",
