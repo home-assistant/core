@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_interface
+import logging
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
@@ -11,6 +12,8 @@ from . import util
 from .const import IPV4_BROADCAST_ADDR, PUBLIC_TARGET_IP
 from .models import Adapter
 from .network import Network, async_get_network
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -32,6 +35,12 @@ async def async_get_source_ip(
             all_ipv4s.extend([ipv4["address"] for ipv4 in ipv4s])
 
     source_ip = util.async_get_source_ip(target_ip)
+    if not all_ipv4s:
+        _LOGGER.warning(
+            "Because the system does not have any enabled IPv4 addresses, source address detection may be inaccurate"
+        )
+        return source_ip
+
     return source_ip if source_ip in all_ipv4s else all_ipv4s[0]
 
 
