@@ -10,7 +10,7 @@ from homeassistant.core import Event, HassJob, HomeAssistant, callback
 
 @callback
 def async_at_start(
-    hass: HomeAssistant, at_start_cb: Callable[[HomeAssistant], Any]
+    hass: HomeAssistant, at_start_cb: Callable[[HomeAssistant], Awaitable[None] | None]
 ) -> None:
     """Execute something when Home Assistant is started.
 
