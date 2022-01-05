@@ -31,9 +31,6 @@ PyFlick==0.0.2
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
-# homeassistant.components.arduino
-PyMata==2.20
-
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.4.0
