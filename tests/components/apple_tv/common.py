@@ -49,10 +49,10 @@ def create_conf(name, address, *services):
     return atv
 
 
-def mrp_service(enabled=True):
+def mrp_service(enabled=True, unique_id="mrpid"):
     """Create example MRP service."""
     return conf.ManualService(
-        "mrpid",
+        unique_id,
         Protocol.MRP,
         5555,
         {},
@@ -67,6 +67,17 @@ def airplay_service():
         "airplayid",
         Protocol.AirPlay,
         7777,
+        {},
+        pairing_requirement=const.PairingRequirement.Mandatory,
+    )
+
+
+def raop_service():
+    """Create example RAOP service."""
+    return conf.ManualService(
+        "AABBCCDDEEFF",
+        Protocol.RAOP,
+        7000,
         {},
         pairing_requirement=const.PairingRequirement.Mandatory,
     )

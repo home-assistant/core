@@ -3,8 +3,7 @@ from datetime import datetime
 import logging
 import time
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -149,7 +148,7 @@ class RepetierJobSensor(RepetierSensor):
 class RepetierJobEndSensor(RepetierSensor):
     """Class to create and populate a Repetier Job End timestamp Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def update(self):
         """Update the sensor."""
@@ -173,7 +172,7 @@ class RepetierJobEndSensor(RepetierSensor):
 class RepetierJobStartSensor(RepetierSensor):
     """Class to create and populate a Repetier Job Start timestamp Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def update(self):
         """Update the sensor."""

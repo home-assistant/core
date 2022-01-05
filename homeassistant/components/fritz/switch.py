@@ -19,8 +19,9 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -39,6 +40,7 @@ from .const import (
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_WIFINETWORK,
+    MeshRoles,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -310,6 +312,10 @@ def all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
+
+    if fritzbox_tools.mesh_role == MeshRoles.SLAVE:
+        return []
+
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
@@ -595,23 +601,25 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
 
-    async def async_process_update(self) -> None:
-        """Update device."""
-        if not self._mac or not self.ip_address:
-            return
+    @property
+    def is_on(self) -> bool:
+        """Switch status."""
+        return self._router.devices[self._mac].wan_access
 
-        wan_disable_info = await async_service_call_action(
-            self._router,
-            "X_AVM-DE_HostFilter",
-            "1",
-            "GetWANAccessByIP",
-            NewIPv4Address=self.ip_address,
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=self.name,
+            identifiers={(DOMAIN, self._mac)},
+            via_device=(
+                DOMAIN,
+                self._router.unique_id,
+            ),
         )
-
-        if wan_disable_info is None:
-            return
-
-        self._attr_is_on = not wan_disable_info["NewDisallow"]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
@@ -624,7 +632,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
         await self._async_switch_on_off(turn_on)
-        self._attr_is_on = turn_on
         self.async_write_ha_state()
         return True
 

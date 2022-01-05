@@ -23,18 +23,6 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
     StatisticResult,
 )
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-    STATE_CLASSES,
-)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -65,7 +53,20 @@ import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 import homeassistant.util.volume as volume_util
 
-from . import ATTR_LAST_RESET, DOMAIN
+from . import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASSES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,6 +140,8 @@ WARN_NEGATIVE = "sensor_warn_total_increasing_negative"
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
 WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
+# Link to dev statistics where issues around LTS can be fixed
+LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
 
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
@@ -243,10 +246,12 @@ def _normalize_states(
                         )
                     _LOGGER.warning(
                         "The unit of %s is changing, got multiple %s, generation of long term "
-                        "statistics will be suppressed unless the unit is stable%s",
+                        "statistics will be suppressed unless the unit is stable%s. "
+                        "Go to %s to fix this",
                         entity_id,
                         all_units,
                         extra,
+                        LINK_DEV_STATISTICS,
                     )
                 return None, []
             unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -297,7 +302,9 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     return report_issue
 
 
-def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
+def warn_dip(
+    hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
+) -> None:
     """Log a warning once if a sensor with state_class_total has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
@@ -318,11 +325,12 @@ def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
             return
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Triggered by state %s with last_updated set to %s. "
+            "not strictly increasing. Triggered by state %s (%s) with last_updated set to %s. "
             "Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
             state.state,
+            previous_fstate,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
@@ -358,7 +366,7 @@ def reset_detected(
         return False
 
     if 0.9 * previous_fstate <= fstate < previous_fstate:
-        warn_dip(hass, entity_id, state)
+        warn_dip(hass, entity_id, state, previous_fstate)
 
     if fstate < 0:
         warn_negative(hass, entity_id, state)
@@ -484,12 +492,14 @@ def _compile_statistics(  # noqa: C901
                     _LOGGER.warning(
                         "The %sunit of %s (%s) does not match the unit of already "
                         "compiled statistics (%s). Generation of long term statistics "
-                        "will be suppressed unless the unit changes back to %s",
+                        "will be suppressed unless the unit changes back to %s. "
+                        "Go to %s to fix this",
                         "normalized " if device_class in DEVICE_CLASS_UNITS else "",
                         entity_id,
                         unit,
                         old_metadata[1]["unit_of_measurement"],
                         old_metadata[1]["unit_of_measurement"],
+                        LINK_DEV_STATISTICS,
                     )
                 continue
 

@@ -5,6 +5,7 @@ from unittest.mock import ANY, patch
 
 import pytest
 
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import (
@@ -609,7 +610,9 @@ async def test_cleanup_device_with_entity_and_trigger_1(
     device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 3  # 2 binary_sensor triggers + device trigger
 
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", "")
@@ -669,7 +672,9 @@ async def test_cleanup_device_with_entity2(hass, device_reg, entity_reg, mqtt_mo
     device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 3  # 2 binary_sensor triggers + device trigger
 
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", "")

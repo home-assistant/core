@@ -1,11 +1,6 @@
 """Test Z-Wave Sensors."""
 from homeassistant.components.ozw.const import DOMAIN
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESSURE,
-    DOMAIN as SENSOR_DOMAIN,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.helpers import entity_registry as er
 
@@ -24,15 +19,15 @@ async def test_sensor(hass, generic_data):
 
     # Test device classes
     state = hass.states.get("sensor.trisensor_relative_humidity")
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_HUMIDITY
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.HUMIDITY
     state = hass.states.get("sensor.trisensor_pressure")
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_PRESSURE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.PRESSURE
     state = hass.states.get("sensor.trisensor_fake_power")
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     state = hass.states.get("sensor.trisensor_fake_energy")
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     state = hass.states.get("sensor.trisensor_fake_electric")
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
 
     # Test ZWaveListSensor disabled by default
     registry = er.async_get(hass)
@@ -43,7 +38,7 @@ async def test_sensor(hass, generic_data):
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
     updated_entry = registry.async_update_entity(

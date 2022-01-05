@@ -3,6 +3,8 @@ Support for getting the state of a Thermoworks Smoke Thermometer.
 
 Requires Smoke Gateway Wifi with an internet connection.
 """
+from __future__ import annotations
+
 import logging
 
 from requests import RequestException
@@ -11,17 +13,23 @@ from stringcase import camelcase, snakecase
 import thermoworks_smoke
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_EMAIL,
     CONF_EXCLUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
-    DEVICE_CLASS_TEMPERATURE,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +71,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the thermoworks sensor."""
 
     email = config[CONF_EMAIL]
@@ -106,7 +119,7 @@ class ThermoworksSmokeSensor(SensorEntity):
         self._unique_id = f"{serial}-{sensor_type}"
         self.serial = serial
         self.mgr = mgr
-        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self.update_unit()
 
     @property

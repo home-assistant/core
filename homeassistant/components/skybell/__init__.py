@@ -11,8 +11,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     __version__,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Skybell component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)

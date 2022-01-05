@@ -12,6 +12,7 @@ from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
+    WebsocketError,
 )
 from simplipy.system import SystemNotification
 from simplipy.system.v3 import (
@@ -54,7 +55,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -238,7 +243,7 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -367,7 +372,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await func(call, system)
             except SimplipyError as err:
-                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+                raise HomeAssistantError(
+                    f'Error while executing "{call.service}": {err}'
+                ) from err
 
         return wrapper
 
@@ -396,8 +403,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Set one or more system parameters."""
         if not isinstance(system, SystemV3):
-            LOGGER.error("Can only set system properties on V3 systems")
-            return
+            raise HomeAssistantError("Can only set system properties on V3 systems")
 
         await system.async_set_properties(
             {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
@@ -473,6 +479,7 @@ class SimpliSafe:
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
+        self._websocket_reconnect_task: asyncio.Task | None = None
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.systems: dict[int, SystemType] = {}
@@ -517,11 +524,44 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
-    async def _async_websocket_on_connect(self) -> None:
-        """Define a callback for connecting to the websocket."""
+    async def _async_start_websocket_loop(self) -> None:
+        """Start a websocket reconnection loop."""
         if TYPE_CHECKING:
             assert self._api.websocket
-        await self._api.websocket.async_listen()
+
+        should_reconnect = True
+
+        try:
+            await self._api.websocket.async_connect()
+            await self._api.websocket.async_listen()
+        except asyncio.CancelledError:
+            LOGGER.debug("Request to cancel websocket loop received")
+            raise
+        except WebsocketError as err:
+            LOGGER.error("Failed to connect to websocket: %s", err)
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Unknown exception while connecting to websocket: %s", err)
+
+        if should_reconnect:
+            LOGGER.info("Disconnected from websocket; reconnecting")
+            await self._async_cancel_websocket_loop()
+            self._websocket_reconnect_task = self._hass.async_create_task(
+                self._async_start_websocket_loop()
+            )
+
+    async def _async_cancel_websocket_loop(self) -> None:
+        """Stop any existing websocket reconnection loop."""
+        if self._websocket_reconnect_task:
+            self._websocket_reconnect_task.cancel()
+            try:
+                await self._websocket_reconnect_task
+            except asyncio.CancelledError:
+                LOGGER.debug("Websocket reconnection task successfully canceled")
+                self._websocket_reconnect_task = None
+
+            if TYPE_CHECKING:
+                assert self._api.websocket
+            await self._api.websocket.async_disconnect()
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
@@ -561,17 +601,17 @@ class SimpliSafe:
             assert self._api.refresh_token
             assert self._api.websocket
 
-        self._api.websocket.add_connect_callback(self._async_websocket_on_connect)
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        asyncio.create_task(self._api.websocket.async_connect())
+        self._websocket_reconnect_task = asyncio.create_task(
+            self._async_start_websocket_loop()
+        )
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
             """Define an event handler to disconnect from the websocket."""
             if TYPE_CHECKING:
                 assert self._api.websocket
 
-            if self._api.websocket.connected:
-                await self._api.websocket.async_disconnect()
+            await self._async_cancel_websocket_loop()
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
@@ -613,10 +653,24 @@ class SimpliSafe:
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
+        async def async_handle_refresh_token(token: str) -> None:
+            """Handle a new refresh token."""
+            async_save_refresh_token(token)
+
+            if TYPE_CHECKING:
+                assert self._api.websocket
+
+            # Open a new websocket connection with the fresh token:
+            await self._async_cancel_websocket_loop()
+            self._websocket_reconnect_task = self._hass.async_create_task(
+                self._async_start_websocket_loop()
+            )
+
         self.entry.async_on_unload(
-            self._api.add_refresh_token_callback(async_save_refresh_token)
+            self._api.add_refresh_token_callback(async_handle_refresh_token)
         )
 
+        # Save the refresh token we got on entry setup:
         async_save_refresh_token(self._api.refresh_token)
 
     async def async_update(self) -> None:

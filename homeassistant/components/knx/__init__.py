@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -44,6 +45,7 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -80,6 +82,7 @@ CONF_KNX_EVENT_FILTER: Final = "event_filter"
 SERVICE_KNX_SEND: Final = "send"
 SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
 SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_RESPONSE: Final = "response"
 SERVICE_KNX_ATTR_REMOVE: Final = "remove"
 SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
 SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
@@ -140,6 +143,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
     vol.Schema(
@@ -152,6 +156,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
 )
@@ -195,6 +200,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
+    hass.data[DATA_HASS_CONFIG] = config
     conf: ConfigType | None = config.get(DOMAIN)
 
     if conf is None:
@@ -251,15 +257,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     hass.config_entries.async_setup_platforms(
-        entry, [platform for platform in SUPPORTED_PLATFORMS if platform in config]
+        entry,
+        [
+            platform
+            for platform in SUPPORTED_PLATFORMS
+            if platform in config and platform is not Platform.NOTIFY
+        ],
     )
 
-    # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform.
-    if NotifySchema.PLATFORM in conf:
+    # set up notify platform, no entry support for notify component yet
+    if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, conf[NotifySchema.PLATFORM], config
+                hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
 
@@ -312,6 +322,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             platform
             for platform in SUPPORTED_PLATFORMS
             if platform in hass.data[DATA_KNX_CONFIG]
+            and platform is not Platform.NOTIFY
         ],
     )
     if unload_ok:
@@ -383,6 +394,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
+                local_ip=self.config.get(ConnectionSchema.CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
             )
         if _conn_type == CONF_KNX_TUNNELING:
@@ -542,6 +554,7 @@ class KNXModule:
         attr_address = call.data[KNX_ADDRESS]
         attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
+        attr_response = call.data[SERVICE_KNX_ATTR_RESPONSE]
 
         payload: DPTBinary | DPTArray
         if attr_type is not None:
@@ -557,7 +570,9 @@ class KNXModule:
         for address in attr_address:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
-                payload=GroupValueWrite(payload),
+                payload=GroupValueResponse(payload)
+                if attr_response
+                else GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
 

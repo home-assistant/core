@@ -1,21 +1,20 @@
 """Support for monitoring a Sense energy sensor."""
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -85,7 +84,11 @@ def sense_to_mdi(sense_icon):
     return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Sense sensor."""
     base_data = hass.data[DOMAIN][config_entry.entry_id]
     data = base_data[SENSE_DATA]
@@ -154,10 +157,10 @@ class SenseActiveSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
     _attr_available = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -207,7 +210,7 @@ class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
     _attr_should_poll = False
     _attr_available = False
@@ -250,10 +253,10 @@ class SenseVoltageSensor(SensorEntity):
 class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Sense energy sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
     _attr_should_poll = False
 
@@ -299,10 +302,10 @@ class SenseEnergyDevice(SensorEntity):
     """Implementation of a Sense energy device."""
 
     _attr_available = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = SensorDeviceClass.POWER
     _attr_should_poll = False
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
