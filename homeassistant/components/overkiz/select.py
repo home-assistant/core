@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -21,8 +22,10 @@ from .entity import OverkizDescriptiveEntity
 class OverkizSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
-    options: list[str]
-    select_option: Callable[[str, Callable], Awaitable]
+    options: list[str | OverkizCommandParam]
+    select_option: Callable[
+        [str, Callable[[str | OverkizCommand, None | Any], Awaitable]], Awaitable
+    ]
 
 
 @dataclass
@@ -45,7 +48,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
                 OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
                 OverkizCommandParam.OPEN: OverkizCommand.OPEN,
                 OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
-            }[option]
+            }[OverkizCommandParam(option)]
         ),
     ),
     OverkizSelectDescription(
@@ -103,7 +106,7 @@ class OverkizSelect(OverkizDescriptiveEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
-            return state.value
+            return str(state.value)
 
         return None
 
