@@ -71,7 +71,7 @@ class NextLaunchSensor(LLBaseEntity):
         return next_launch.name if next_launch else None
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the attributes of the sensor."""
         if not (next_launch := self.get_next_launch()):
             return None
