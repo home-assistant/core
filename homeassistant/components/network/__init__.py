@@ -5,6 +5,7 @@ from ipaddress import IPv4Address, IPv6Address, ip_interface
 import logging
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -39,6 +40,10 @@ async def async_get_source_ip(
         _LOGGER.warning(
             "Because the system does not have any enabled IPv4 addresses, source address detection may be inaccurate"
         )
+        if source_ip is None:
+            raise HomeAssistantError(
+                "Could not determine source ip because the system does not have any enabled IPv4 addresses and creating a socket failed"
+            )
         return source_ip
 
     return source_ip if source_ip in all_ipv4s else all_ipv4s[0]
