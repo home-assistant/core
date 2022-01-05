@@ -74,7 +74,7 @@ class NextLaunchSensor(LLBaseEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the sensor."""
         if not (next_launch := self.get_next_launch()):
-            return {}
+            return None
         return {
             ATTR_LAUNCH_TIME: next_launch.net,
             ATTR_AGENCY: next_launch.launch_service_provider.name,
