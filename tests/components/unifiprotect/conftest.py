@@ -76,7 +76,7 @@ def mock_old_nvr_fixture():
 
     data = json.loads(load_fixture("sample_nvr.json", integration=DOMAIN))
     data["version"] = "1.19.0"
-    yield NVR.from_unifi_dict(**data)
+    return NVR.from_unifi_dict(**data)
 
 
 @pytest.fixture(name="mock_bootstrap")
@@ -142,7 +142,7 @@ def mock_liveview():
     """Mock UniFi Protect Camera device."""
 
     data = json.loads(load_fixture("sample_liveview.json", integration=DOMAIN))
-    yield Liveview.from_unifi_dict(**data)
+    return Liveview.from_unifi_dict(**data)
 
 
 @pytest.fixture
@@ -150,7 +150,7 @@ def mock_camera():
     """Mock UniFi Protect Camera device."""
 
     data = json.loads(load_fixture("sample_camera.json", integration=DOMAIN))
-    yield Camera.from_unifi_dict(**data)
+    return Camera.from_unifi_dict(**data)
 
 
 @pytest.fixture
@@ -158,7 +158,7 @@ def mock_light():
     """Mock UniFi Protect Camera device."""
 
     data = json.loads(load_fixture("sample_light.json", integration=DOMAIN))
-    yield Light.from_unifi_dict(**data)
+    return Light.from_unifi_dict(**data)
 
 
 @pytest.fixture
@@ -166,7 +166,7 @@ def mock_viewer():
     """Mock UniFi Protect Viewport device."""
 
     data = json.loads(load_fixture("sample_viewport.json", integration=DOMAIN))
-    yield Viewer.from_unifi_dict(**data)
+    return Viewer.from_unifi_dict(**data)
 
 
 @pytest.fixture
@@ -174,7 +174,7 @@ def mock_sensor():
     """Mock UniFi Protect Sensor device."""
 
     data = json.loads(load_fixture("sample_sensor.json", integration=DOMAIN))
-    yield Sensor.from_unifi_dict(**data)
+    return Sensor.from_unifi_dict(**data)
 
 
 async def time_changed(hass: HomeAssistant, seconds: int) -> None:

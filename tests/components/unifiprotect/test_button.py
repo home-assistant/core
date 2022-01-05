@@ -37,7 +37,7 @@ async def camera_fixture(
 
     assert_entity_counts(hass, Platform.BUTTON, 1, 0)
 
-    yield (camera_obj, "button.test_camera_reboot_device")
+    return (camera_obj, "button.test_camera_reboot_device")
 
 
 async def test_button(
