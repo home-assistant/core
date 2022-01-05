@@ -314,7 +314,7 @@ class AbstractConfig(ABC):
         if not self._local_sdk_active:
             return
 
-        for agent_user_id, _ in self._store.agent_user_ids.items():
+        for agent_user_id in self._store.agent_user_ids:
             webhook.async_unregister(
                 self.hass, self.get_local_webhook_id(agent_user_id)
             )
