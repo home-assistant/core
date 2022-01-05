@@ -200,7 +200,9 @@ async def test_google_config_local_fulfillment(hass, aioclient_mock, hass_storag
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 
-    assert config.get_webhook_id(agent_user_id) == local_webhook_id
+    assert config.get_local_webhook_id(agent_user_id) == local_webhook_id
+    assert config.get_local_agent_user_id(local_webhook_id) == agent_user_id
+    assert config.get_local_agent_user_id("INCORRECT") is None
 
 
 async def test_secure_device_pin_config(hass):
@@ -265,7 +267,7 @@ async def test_missing_service_account(hass):
     assert config._access_token_renew is renew
 
 
-async def test_async_enable_local_sdk(hass, hass_client, hass_storage):
+async def test_async_enable_local_sdk(hass, hass_client, hass_storage, caplog):
     """Test the google config enable and disable local sdk."""
     command_events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
@@ -343,3 +345,65 @@ async def test_async_enable_local_sdk(hass, hass_client, hass_storage):
     }
     config.async_enable_local_sdk()
     assert config.is_local_sdk_active is False
+
+    config._store._data = {
+        STORE_AGENT_USER_IDS: {
+            "agent_1": {STORE_GOOGLE_LOCAL_WEBHOOK_ID: None},
+        },
+    }
+    config.async_enable_local_sdk()
+    assert config.is_local_sdk_active is False
+
+    config._store._data = {
+        STORE_AGENT_USER_IDS: {
+            "agent_2": {STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock_webhook_id"},
+            "agent_1": {STORE_GOOGLE_LOCAL_WEBHOOK_ID: None},
+        },
+    }
+    config.async_enable_local_sdk()
+    assert config.is_local_sdk_active is False
+
+    config.async_disable_local_sdk()
+
+    config._store._data = {
+        STORE_AGENT_USER_IDS: {
+            "agent_1": {STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock_webhook_id"},
+        },
+    }
+    config.async_enable_local_sdk()
+
+    config._store.pop_agent_user_id("agent_1")
+
+    caplog.clear()
+
+    resp = await client.post(
+        "/api/webhook/mock_webhook_id",
+        json={
+            "inputs": [
+                {
+                    "context": {"locale_country": "US", "locale_language": "en"},
+                    "intent": "action.devices.EXECUTE",
+                    "payload": {
+                        "commands": [
+                            {
+                                "devices": [{"id": "light.ceiling_lights"}],
+                                "execution": [
+                                    {
+                                        "command": "action.devices.commands.OnOff",
+                                        "params": {"on": True},
+                                    }
+                                ],
+                            }
+                        ],
+                        "structureData": {},
+                    },
+                }
+            ],
+            "requestId": "mock_req_id",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    assert (
+        "Cannot process request for webhook mock_webhook_id as no linked agent user is found:"
+        in caplog.text
+    )

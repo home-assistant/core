@@ -145,22 +145,22 @@ class AbstractConfig(ABC):
         """Return if states should be proactively reported."""
         return False
 
-    @property
-    def local_sdk_webhook_id(self):
-        """Return the local SDK webhook ID.
+    def get_local_agent_user_id(self, webhook_id):
+        """Return the user ID to be used for actions received via the local SDK.
 
-        Return None to disable the local SDK.
+        Return None is no agent user id is found.
         """
-        return None
+        found_agent_user_id = None
+        for agent_user_id, agent_user_data in self._store.agent_user_ids.items():
+            if agent_user_data[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
+                found_agent_user_id = agent_user_id
+                break
 
-    @property
-    def local_sdk_user_id(self):
-        """Return the user ID to be used for actions received via the local SDK."""
-        raise NotImplementedError
+        return found_agent_user_id
 
-    def get_webhook_id(self, agent_user_id):
+    def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
-        return self.local_sdk_webhook_id
+        return self._store.agent_user_ids[agent_user_id][STORE_GOOGLE_LOCAL_WEBHOOK_ID]
 
     @abstractmethod
     def get_agent_user_id(self, context):
@@ -268,22 +268,41 @@ class AbstractConfig(ABC):
     @callback
     def async_enable_local_sdk(self):
         """Enable the local SDK."""
-        if (webhook_id := self.local_sdk_webhook_id) is None:
-            return
+        setup_successfull = True
+        setup_webhook_ids = []
 
-        try:
-            webhook.async_register(
-                self.hass,
-                DOMAIN,
-                "Local Support",
-                webhook_id,
-                self._handle_local_webhook,
+        for user_agent_id, _ in self._store.agent_user_ids.items():
+
+            if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
+                setup_successfull = False
+                break
+            else:
+                try:
+                    webhook.async_register(
+                        self.hass,
+                        DOMAIN,
+                        "Local Support for " + user_agent_id,
+                        webhook_id,
+                        self._handle_local_webhook,
+                    )
+                    setup_webhook_ids.append(webhook_id)
+                except ValueError:
+                    _LOGGER.warning(
+                        "Webhook handler %s for agent user id %s is already defined!",
+                        webhook_id,
+                        user_agent_id,
+                    )
+                    setup_successfull = False
+                    break
+
+        if not setup_successfull:
+            _LOGGER.warning(
+                "Local fulfillment failed to setup, falling back to cloud fulfillment"
             )
-        except ValueError:
-            _LOGGER.info("Webhook handler is already defined!")
-            return
+            for setup_webhook_id in setup_webhook_ids:
+                webhook.async_unregister(self.hass, setup_webhook_id)
 
-        self._local_sdk_active = True
+        self._local_sdk_active = setup_successfull
 
     @callback
     def async_disable_local_sdk(self):
@@ -291,7 +310,11 @@ class AbstractConfig(ABC):
         if not self._local_sdk_active:
             return
 
-        webhook.async_unregister(self.hass, self.local_sdk_webhook_id)
+        for agent_user_id, _ in self._store.agent_user_ids.items():
+            webhook.async_unregister(
+                self.hass, self.get_local_webhook_id(agent_user_id)
+            )
+
         self._local_sdk_active = False
 
     async def _handle_local_webhook(self, hass, webhook_id, request):
@@ -308,8 +331,23 @@ class AbstractConfig(ABC):
         if not self.enabled:
             return json_response(smart_home.turned_off_response(payload))
 
+        if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
+            # No agent user linked to this webhook, means that the user has somehow unregistered
+            # removing webhook and stopping processing of this request.
+            _LOGGER.error(
+                "Cannot process request for webhook %s as no linked agent user is found:\n%s\n",
+                webhook_id,
+                pprint.pformat(payload),
+            )
+            webhook.async_unregister(self.hass, webhook_id)
+            return None
+
         result = await smart_home.async_handle_message(
-            self.hass, self, self.local_sdk_user_id, payload, SOURCE_LOCAL
+            self.hass,
+            self,
+            agent_user_id,
+            payload,
+            SOURCE_LOCAL,
         )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -332,19 +370,26 @@ class GoogleConfigStore:
 
     async def async_initialize(self):
         """Finish initializing the ConfigStore."""
+        should_save_data = False
         if (data := await self._store.async_load()) is None:
+            # if the store is not found create an empty one
+            # Note that the first request is always a cloud request,
+            # and that will store the correct agent user id to be used for local requests
             data = {
                 STORE_AGENT_USER_IDS: {},
             }
-            await self._store.async_save(data)
+            should_save_data = True
 
-        for key, value in data[STORE_AGENT_USER_IDS].items():
-            if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in value:
-                data[STORE_AGENT_USER_IDS][key] = {
-                    **value,
+        for agent_user_id, agent_user_data in data[STORE_AGENT_USER_IDS].items():
+            if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in agent_user_data:
+                data[STORE_AGENT_USER_IDS][agent_user_id] = {
+                    **agent_user_data,
                     STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
                 }
-                await self._store.async_save(data)
+                should_save_data = True
+
+        if should_save_data:
+            await self._store.async_save(data)
 
         self._data = data
 
@@ -523,7 +568,7 @@ class GoogleEntity:
         if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
-                "webhookId": self.config.get_webhook_id(agent_user_id),
+                "webhookId": self.config.get_local_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
                 "uuid": await self.hass.helpers.instance_id.async_get(),
