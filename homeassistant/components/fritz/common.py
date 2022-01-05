@@ -326,8 +326,11 @@ class FritzBoxTools:
                 return
 
             if service_call.service == SERVICE_CLEANUP:
-                device_hosts_list: list = await self.hass.async_add_executor_job(
-                    self.fritz_hosts.get_hosts_info
+                device_hosts_list: list = (
+                    await self.hass.async_add_executor_job(
+                        self.fritz_hosts.get_hosts_info
+                    )
+                    or []
                 )
 
         except (FritzServiceError, FritzActionError) as ex:
@@ -353,7 +356,8 @@ class FritzBoxTools:
             device_hosts_names.add(device["name"])
 
         for entry in ha_entity_reg_list:
-            assert entry.original_name
+            if entry.original_name is None:
+                continue
             entry_name = entry.name or entry.original_name
             entry_host = entry_name.split(" ")[0]
             entry_mac = entry.unique_id.split("_")[0]
