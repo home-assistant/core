@@ -13,9 +13,11 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, STATE_IDLE, Camera
 from homeassistant.components.camera.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Push Camera platform."""
     if PUSH_CAMERA_DATA not in hass.data:
         hass.data[PUSH_CAMERA_DATA] = {}

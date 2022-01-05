@@ -1,6 +1,9 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
@@ -8,7 +11,11 @@ SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smappee Comfort Plugs."""
     smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 

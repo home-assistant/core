@@ -1,5 +1,4 @@
 """Representation of Z-Wave sensors."""
-
 import logging
 
 from openzwavemqtt.const import CommandClass, ValueType
@@ -9,9 +8,11 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
@@ -19,7 +20,11 @@ from .entity import ZWaveDeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave sensor from config entry."""
 
     @callback

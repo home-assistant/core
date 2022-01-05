@@ -19,8 +19,9 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -39,6 +40,7 @@ from .const import (
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_WIFINETWORK,
+    MeshRoles,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -310,6 +312,10 @@ def all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
+
+    if fritzbox_tools.mesh_role == MeshRoles.SLAVE:
+        return []
+
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
@@ -599,6 +605,21 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     def is_on(self) -> bool:
         """Switch status."""
         return self._router.devices[self._mac].wan_access
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=self.name,
+            identifiers={(DOMAIN, self._mac)},
+            via_device=(
+                DOMAIN,
+                self._router.unique_id,
+            ),
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""

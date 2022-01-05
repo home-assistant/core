@@ -161,3 +161,5 @@ MAX_RPC_KEY_INSTANCES = 4
 
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
+
+SHELLY_GAS_MODELS = ["SHGS-1"]

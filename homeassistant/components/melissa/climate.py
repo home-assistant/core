@@ -1,4 +1,6 @@
 """Support for Melissa Climate A/C."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.climate import ClimateEntity
@@ -17,6 +19,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_MELISSA
 
@@ -35,7 +40,12 @@ OP_MODES = [
 FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Iterate through and add all Melissa devices."""
     api = hass.data[DATA_MELISSA]
     devices = (await api.async_fetch_devices()).values()

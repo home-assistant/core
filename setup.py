@@ -52,6 +52,7 @@ REQUIRES = [
     "python-slugify==4.0.1",
     "pyyaml==6.0",
     "requests==2.26.0",
+    "typing-extensions>=3.10.0.2,<5.0",
     "voluptuous==0.12.2",
     "voluptuous-serialize==2.5.0",
     "yarl==1.6.3",

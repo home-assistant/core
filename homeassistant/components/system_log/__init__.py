@@ -10,8 +10,9 @@ import voluptuous as vol
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 CONF_MAX_ENTRIES = "max_entries"
 CONF_FIRE_EVENT = "fire_event"
@@ -194,7 +195,7 @@ class LogErrorHandler(logging.Handler):
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
     if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
@@ -225,7 +226,7 @@ async def async_setup(hass, config):
 
     hass.http.register_view(AllErrorsView(handler))
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
         if service.service == "clear":
             handler.records.clear()

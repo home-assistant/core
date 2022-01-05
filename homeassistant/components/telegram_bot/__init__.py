@@ -29,8 +29,10 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -298,7 +300,7 @@ def load_data(
     return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     if not config[DOMAIN]:
         return False
@@ -325,7 +327,7 @@ async def async_setup(hass, config):
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
 
-    async def async_send_telegram_message(service):
+    async def async_send_telegram_message(service: ServiceCall) -> None:
         """Handle sending Telegram Bot message service calls."""
 
         def _render_template_attr(data, attribute):

@@ -24,11 +24,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = pysensibo.SensiboClient(
         entry.data[CONF_API_KEY], session=async_get_clientsession(hass), timeout=TIMEOUT
     )
-    devicelist = []
+    devices = []
     try:
         async with async_timeout.timeout(TIMEOUT):
             for dev in await client.async_get_devices(_INITIAL_FETCH_FIELDS):
-                devicelist.append(dev)
+                devices.append(dev)
     except (
         aiohttp.client_exceptions.ClientConnectorError,
         asyncio.TimeoutError,
@@ -38,11 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Failed to get devices from Sensibo servers: {err}"
         ) from err
 
-    if not devicelist:
+    if not devices:
         return False
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "devices": devicelist,
+        "devices": devices,
         "client": client,
     }
 

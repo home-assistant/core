@@ -1,4 +1,6 @@
 """Support for WebDav Calendar."""
+from __future__ import annotations
+
 import copy
 from datetime import datetime, timedelta
 import logging
@@ -22,8 +24,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +68,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, disc_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    disc_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WebDav Calendar platform."""
     url = config[CONF_URL]
     username = config.get(CONF_USERNAME)

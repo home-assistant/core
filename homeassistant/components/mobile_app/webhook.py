@@ -91,6 +91,7 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
+    SCHEMA_APP_DATA,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
@@ -332,7 +333,7 @@ async def webhook_update_location(hass, config_entry, data):
 @WEBHOOK_COMMANDS.register("update_registration")
 @validate_schema(
     {
-        vol.Optional(ATTR_APP_DATA, default={}): dict,
+        vol.Optional(ATTR_APP_DATA): SCHEMA_APP_DATA,
         vol.Required(ATTR_APP_VERSION): cv.string,
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_MANUFACTURER): cv.string,

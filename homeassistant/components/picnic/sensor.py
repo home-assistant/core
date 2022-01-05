@@ -1,6 +1,7 @@
 """Definition of Picnic sensors."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
@@ -62,8 +63,8 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
 
     @property
-    def native_value(self) -> StateType:
-        """Return the state of the entity."""
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
         data_set = (
             self.coordinator.data.get(self.entity_description.data_type, {})
             if self.coordinator.data is not None
@@ -73,8 +74,8 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self.state is not None
+        """Return True if last update was successful."""
+        return self.coordinator.last_update_success
 
     @property
     def device_info(self) -> DeviceInfo:

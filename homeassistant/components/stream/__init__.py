@@ -437,6 +437,8 @@ class Stream:
         hass.add_executor_job underneath the hood.
         """
 
+        self.add_provider(HLS_PROVIDER)
+        self.start()
         return await self._keyframe_converter.async_get_image(
             width=width, height=height
         )
