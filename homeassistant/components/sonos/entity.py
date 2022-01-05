@@ -61,7 +61,7 @@ class SonosEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up when entity is removed."""
-        self.hass.data[DATA_SONOS].entity_id_mappings.pop(self.entity_id, None)
+        del self.hass.data[DATA_SONOS].entity_id_mappings[self.entity_id]
 
     async def async_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
