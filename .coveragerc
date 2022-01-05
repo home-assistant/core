@@ -66,7 +66,6 @@ omit =
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/media_player.py
     homeassistant/components/arcam_fmj/__init__.py
-    homeassistant/components/arduino/*
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
