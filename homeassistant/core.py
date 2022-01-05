@@ -23,8 +23,8 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    NamedTuple,
     Optional,
-    Tuple,
     TypeVar,
     Union,
     cast,
@@ -685,7 +685,13 @@ class Event:
 
 _ListenerType = Callable[[Event], Union[None, Awaitable[None]]]
 _EventFilterType = Callable[[Event], bool]
-_FilterableJobType = Tuple[HassJob, Union[_EventFilterType, None]]
+
+
+class _FilterableJob(NamedTuple):
+    """Event listener job to be executed with optional filter."""
+
+    job: HassJob
+    event_filter: _EventFilterType | None
 
 
 class EventBus:
@@ -693,7 +699,7 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[_FilterableJobType]] = {}
+        self._listeners: dict[str, list[_FilterableJob]] = {}
         self._hass = hass
 
     @callback
@@ -801,12 +807,12 @@ class EventBus:
         if event_filter is not None and not is_callback(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
         return self._async_listen_filterable_job(
-            event_type, (HassJob(listener), event_filter)
+            event_type, _FilterableJob(HassJob(listener), event_filter)
         )
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: _FilterableJobType
+        self, event_type: str, filterable_job: _FilterableJob
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
 
@@ -847,7 +853,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: _FilterableJobType | None = None
+        filterable_job: _FilterableJob | None = None
 
         @callback
         def _onetime_listener(event: Event) -> None:
@@ -869,13 +875,13 @@ class EventBus:
             _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
         )
 
-        filterable_job = (HassJob(_onetime_listener), None)
+        filterable_job = _FilterableJob(HassJob(_onetime_listener), None)
 
         return self._async_listen_filterable_job(event_type, filterable_job)
 
     @callback
     def _async_remove_listener(
-        self, event_type: str, filterable_job: _FilterableJobType
+        self, event_type: str, filterable_job: _FilterableJob
     ) -> None:
         """Remove a listener of a specific event_type.
 
