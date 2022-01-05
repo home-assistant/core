@@ -397,7 +397,7 @@ async def test_stream_response_already_expired(hass, auth):
 
 
 async def test_camera_removed(hass, auth):
-    """Test case where entities are removed and stream tokens expired."""
+    """Test case where entities are removed and stream tokens revoked."""
     subscriber = await async_setup_camera(
         hass,
         DEVICE_TRAITS,
@@ -427,6 +427,35 @@ async def test_camera_removed(hass, auth):
     image = await async_get_image(hass)
     assert image.content == IMAGE_BYTES_FROM_EVENT
 
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_camera_remove_failure(hass, auth):
+    """Test case where revoking the stream token fails on unload."""
+    await async_setup_camera(
+        hass,
+        DEVICE_TRAITS,
+        auth=auth,
+    )
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_STREAMING
+
+    # Start a stream, exercising cleanup on remove
+    auth.responses = [
+        make_stream_url_response(),
+        # Stop command will get a failure response
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
+    ]
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+
+    # Unload should succeed even if an RPC fails
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()

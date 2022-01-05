@@ -194,7 +194,12 @@ class NestCamera(Camera):
         """Invalidates the RTSP token when unloaded."""
         if self._stream:
             _LOGGER.debug("Invalidating stream")
-            await self._stream.stop_rtsp_stream()
+            try:
+                await self._stream.stop_rtsp_stream()
+            except ApiException as err:
+                _LOGGER.debug(
+                    "Failed to revoke stream token, will rely on ttl: %s", err
+                )
         if self._stream_refresh_unsub:
             self._stream_refresh_unsub()
         self._event_id = None
