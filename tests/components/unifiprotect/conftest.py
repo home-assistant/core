@@ -177,6 +177,12 @@ def mock_sensor():
     return Sensor.from_unifi_dict(**data)
 
 
+@pytest.fixture
+def now():
+    """Return datetime object that will be consistent throughout test."""
+    return dt_util.utcnow()
+
+
 async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
