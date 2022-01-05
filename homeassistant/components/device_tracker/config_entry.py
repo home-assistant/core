@@ -277,7 +277,13 @@ class ScannerEntity(BaseTrackerEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
         # If mac_address is None, we can never find a device entry.
-        return self.mac_address is None or self.find_device_entry() is not None
+        return (
+            # Do not disable if we won't activate our attach to device logic
+            self.mac_address is None
+            or self.device_info is not None
+            # Disable if we automatically attach but there is no device
+            or self.find_device_entry() is not None
+        )
 
     @callback
     def add_to_platform_start(
@@ -316,7 +322,7 @@ class ScannerEntity(BaseTrackerEntity):
             or self.device_info
         ):
             if self.device_info:
-                LOGGER.warning("Entity %s unexpectedly has a device info")
+                LOGGER.debug("Entity %s unexpectedly has a device info", self.entity_id)
             await super().async_internal_added_to_hass()
             return
 

@@ -474,9 +474,7 @@ class ZHADevice(LogMixin):
         device_info["entities"] = [
             {
                 "entity_id": entity_ref.reference_id,
-                ATTR_NAME: entity_ref.device_info[ATTR_NAME]
-                if entity_ref.device_info
-                else None,
+                ATTR_NAME: entity_ref.device_info[ATTR_NAME],
             }
             for entity_ref in self.gateway.device_registry[self.ieee]
         ]
