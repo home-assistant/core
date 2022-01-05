@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
-DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[DataType], Any]] = {
+DATA_TYPE_TO_PYTHON: dict[DataType, Callable] = {
     DataType.INTEGER: int,
     DataType.DATE: int,
     DataType.STRING: str,
