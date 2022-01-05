@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -11,10 +10,8 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
 from .util import remap_value
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -151,5 +148,5 @@ class TuyaEntity(Entity):
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
-        _LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
+        LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         self.device_manager.send_commands(self.device.id, commands)

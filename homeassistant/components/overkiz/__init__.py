@@ -1,4 +1,8 @@
 """The Overkiz (by Somfy) integration."""
+from __future__ import annotations
+
+import asyncio
+from collections import defaultdict
 from dataclasses import dataclass
 import logging
 
@@ -10,9 +14,10 @@ from pyoverkiz.exceptions import (
     MaintenanceException,
     TooManyRequestsException,
 )
+from pyoverkiz.models import Device, Scenario
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -21,6 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import (
     CONF_HUB,
     DOMAIN,
+    OVERKIZ_DEVICE_TO_PLATFORM,
     PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
@@ -35,6 +41,7 @@ class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
+    platforms: defaultdict[Platform, list[Device | Scenario]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -51,7 +58,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await client.login()
-        setup = await client.get_setup()
+
+        setup, scenarios = await asyncio.gather(
+            *[
+                client.get_setup(),
+                client.get_scenarios(),
+            ]
+        )
     except BadCredentialsException:
         _LOGGER.error("Invalid authentication")
         return False
@@ -61,9 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
-    except Exception as exception:  # pylint: disable=broad-except
-        _LOGGER.exception(exception)
-        return False
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -85,20 +95,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
+    platforms: defaultdict[Platform, list[Device | Scenario]] = defaultdict(list)
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
         coordinator=coordinator,
+        platforms=platforms,
     )
 
-    # Map Overkiz device to Home Assistant platform
+    # Map Overkiz entities to Home Assistant platform
+    platforms[Platform.SCENE] = scenarios
+
     for device in coordinator.data.values():
         _LOGGER.debug(
             "The following device has been retrieved. Report an issue if not supported correctly (%s)",
             device,
         )
 
+        if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(
+            device.widget
+        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
+            platforms[platform].append(device)
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     for gateway in setup.gateways:
         _LOGGER.debug("Added gateway (%s)", gateway)

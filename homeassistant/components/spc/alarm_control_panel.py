@@ -1,4 +1,6 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
+from __future__ import annotations
+
 from pyspcwebgw.const import AreaMode
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -14,8 +16,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_API, SIGNAL_UPDATE_ALARM
 
@@ -35,7 +39,12 @@ def _get_alarm_state(area):
     return mode_to_state.get(area.mode)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SPC alarm control panel platform."""
     if discovery_info is None:
         return

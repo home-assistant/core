@@ -6,7 +6,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.conversation.util import create_matcher
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher, intent
 import homeassistant.helpers.config_validation as cv
 
@@ -95,7 +97,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config):
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up a config entry."""
     try:
         bot = HangoutsBot(
@@ -152,7 +154,7 @@ async def async_setup_entry(hass, config):
     return True
 
 
-async def async_unload_entry(hass, _):
+async def async_unload_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
     """Unload a config entry."""
     bot = hass.data[DOMAIN].pop(CONF_BOT)
     await bot.async_disconnect()

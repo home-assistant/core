@@ -1,4 +1,6 @@
 """Support for ADS covers."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -12,7 +14,10 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ADS_VAR,
@@ -44,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the cover platform for ADS."""
     ads_hub = hass.data[DATA_ADS]
 

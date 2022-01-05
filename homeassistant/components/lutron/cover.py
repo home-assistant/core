@@ -1,4 +1,6 @@
 """Support for Lutron shades."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.cover import (
@@ -8,13 +10,21 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     CoverEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Lutron shades."""
     devs = []
     for (area_name, device) in hass.data[LUTRON_DEVICES]["cover"]:
@@ -22,7 +32,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devs.append(dev)
 
     add_entities(devs, True)
-    return True
 
 
 class LutronCover(LutronDevice, CoverEntity):

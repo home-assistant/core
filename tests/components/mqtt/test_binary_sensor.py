@@ -28,6 +28,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -35,6 +36,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_unique_id,
@@ -758,6 +760,36 @@ async def test_discovery_update_binary_sensor_template(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        ("json_attributes_topic", '{ "id": 123 }', "id", 123),
+        (
+            "json_attributes_topic",
+            '{ "id": 123, "temperature": 34.0 }',
+            "temperature",
+            34.0,
+        ),
+        ("state_topic", "ON", None, "on"),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        binary_sensor.DOMAIN,
+        DEFAULT_CONFIG[binary_sensor.DOMAIN],
+        topic,
+        value,
+        attribute,
+        attribute_value,
+    )
+
+
 async def test_discovery_update_unchanged_binary_sensor(hass, mqtt_mock, caplog):
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
@@ -829,3 +861,10 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = binary_sensor.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)

@@ -716,7 +716,10 @@ async def test_worker_log(hass, caplog):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         run_worker(hass, stream, "https://abcd:efgh@foo.bar")
         await hass.async_block_till_done()
-    assert str(err.value) == "Error opening stream https://****:****@foo.bar"
+    assert (
+        str(err.value)
+        == "Error opening stream (ERRORTYPE_-2, error) https://****:****@foo.bar"
+    )
     assert "https://abcd:efgh@foo.bar" not in caplog.text
 
 
@@ -892,6 +895,6 @@ async def test_get_image(hass, record_worker_sync):
 
     await record_worker_sync.join()
 
-    assert await stream.get_image() == EMPTY_8_6_JPEG
+    assert await stream.async_get_image() == EMPTY_8_6_JPEG
 
     stream.stop()
