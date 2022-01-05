@@ -7,8 +7,6 @@ from pyatv import connect, exceptions, scan
 from pyatv.const import DeviceModel, Protocol
 from pyatv.convert import model_str
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -21,6 +19,7 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -43,7 +42,7 @@ BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 SIGNAL_CONNECTED = "apple_tv_connected"
 SIGNAL_DISCONNECTED = "apple_tv_disconnected"
 
-PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

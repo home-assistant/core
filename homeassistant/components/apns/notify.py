@@ -7,7 +7,6 @@ from apns2.errors import Unregistered
 from apns2.payload import Payload
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
@@ -15,7 +14,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM, Platform
 from homeassistant.core import ServiceCall
 from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
@@ -102,7 +101,7 @@ class ApnsDevice:
         The full id of a device that is tracked by the device
         tracking component.
         """
-        return f"{DEVICE_TRACKER_DOMAIN}.{self.tracking_id}"
+        return f"{Platform.DEVICE_TRACKER}.{self.tracking_id}"
 
     @property
     def disabled(self):

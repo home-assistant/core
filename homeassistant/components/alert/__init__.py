@@ -4,12 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
-    DOMAIN as DOMAIN_NOTIFY,
-)
+from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -22,6 +17,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import event, service
@@ -307,7 +303,7 @@ class Alert(ToggleEntity):
 
         for target in self._notifiers:
             await self.hass.services.async_call(
-                DOMAIN_NOTIFY, target, msg_payload, context=self._context
+                Platform.NOTIFY, target, msg_payload, context=self._context
             )
 
     async def async_turn_on(self, **kwargs):

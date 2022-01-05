@@ -8,11 +8,10 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return an Actiontec scanner."""
-    scanner = ActiontecDeviceScanner(config[DOMAIN])
+    scanner = ActiontecDeviceScanner(config[Platform.DEVICE_TRACKER])
     return scanner if scanner.success_init else None
 
 

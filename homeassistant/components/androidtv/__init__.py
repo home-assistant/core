@@ -6,7 +6,6 @@ from adb_shell.auth.keygen import keygen
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.setup_async import setup
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -106,7 +105,7 @@ def _migrate_aftv_entity(hass, aftv, entry_unique_id):
     entity_reg = er.async_get(hass)
 
     entity_unique_id = entry_unique_id
-    if entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, entity_unique_id):
+    if entity_reg.async_get_entity_id(Platform.MEDIA_PLAYER, DOMAIN, entity_unique_id):
         # entity already exist, nothing to do
         return
 
@@ -115,7 +114,9 @@ def _migrate_aftv_entity(hass, aftv, entry_unique_id):
         # serial no not found, exit
         return
 
-    migr_entity = entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, old_unique_id)
+    migr_entity = entity_reg.async_get_entity_id(
+        Platform.MEDIA_PLAYER, DOMAIN, old_unique_id
+    )
     if not migr_entity:
         # old entity not found, exit
         return

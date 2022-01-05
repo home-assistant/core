@@ -5,11 +5,10 @@ from arris_tg2492lg import ConnectBox, Device
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 import homeassistant.helpers.config_validation as cv
 
 DEFAULT_HOST = "192.168.178.1"
@@ -24,7 +23,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Return the Arris device scanner."""
-    conf = config[DOMAIN]
+    conf = config[Platform.DEVICE_TRACKER]
     url = f"http://{conf[CONF_HOST]}"
     connect_box = ConnectBox(url, conf[CONF_PASSWORD])
     return ArrisDeviceScanner(connect_box)
