@@ -325,12 +325,10 @@ class FritzBoxTools:
                 )
                 return
 
+            device_hosts_list: list[dict] = []
             if service_call.service == SERVICE_CLEANUP:
-                device_hosts_list: list = (
-                    await self.hass.async_add_executor_job(
-                        self.fritz_hosts.get_hosts_info
-                    )
-                    or []
+                device_hosts_list = await self.hass.async_add_executor_job(
+                    self.fritz_hosts.get_hosts_info
                 )
 
         except (FritzServiceError, FritzActionError) as ex:
