@@ -14,8 +14,6 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -29,7 +27,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE
+from homeassistant.const import ATTR_MODE, STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
