@@ -94,7 +94,6 @@ default_config:
 tts:
   - platform: google_translate
 
-group: !include {GROUP_CONFIG_PATH}
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
 scene: !include {SCENE_CONFIG_PATH}
@@ -298,7 +297,6 @@ def _write_default_config(config_dir: str) -> bool:
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     secret_path = os.path.join(config_dir, SECRET_YAML)
     version_path = os.path.join(config_dir, VERSION_FILE)
-    group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
     scene_yaml_path = os.path.join(config_dir, SCENE_CONFIG_PATH)
@@ -315,10 +313,6 @@ def _write_default_config(config_dir: str) -> bool:
 
         with open(version_path, "wt", encoding="utf8") as version_file:
             version_file.write(__version__)
-
-        if not os.path.isfile(group_yaml_path):
-            with open(group_yaml_path, "wt", encoding="utf8"):
-                pass
 
         if not os.path.isfile(automation_yaml_path):
             with open(automation_yaml_path, "wt", encoding="utf8") as automation_file:

@@ -22,9 +22,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import NmapDevice, NmapDeviceScanner, short_hostname, signal_device_update
@@ -168,15 +166,6 @@ class NmapTrackerEntity(ScannerEntity):
     def source_type(self) -> str:
         """Return tracker source type."""
         return SOURCE_TYPE_ROUTER
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac_address)},
-            default_manufacturer=self._device.manufacturer,
-            default_name=self.name,
-        )
 
     @property
     def should_poll(self) -> bool:

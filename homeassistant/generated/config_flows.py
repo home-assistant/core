@@ -118,6 +118,7 @@ FLOWS = [
     "glances",
     "goalzero",
     "gogogate2",
+    "goodwe",
     "google_travel_time",
     "gpslogger",
     "gree",

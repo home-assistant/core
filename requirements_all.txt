@@ -31,9 +31,6 @@ PyFlick==0.0.2
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
-# homeassistant.components.arduino
-PyMata==2.20
-
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.4.0
@@ -678,7 +675,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.39
+flux_led==0.27.40
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -747,6 +744,9 @@ gntp==1.0.3
 
 # homeassistant.components.goalzero
 goalzero==0.2.1
+
+# homeassistant.components.goodwe
+goodwe==0.2.10
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -833,7 +833,7 @@ hlk-sw16==0.0.9
 hole==0.7.0
 
 # homeassistant.components.workday
-holidays==0.11.3.1
+holidays==0.12
 
 # homeassistant.components.frontend
 home-assistant-frontend==20211229.0
@@ -1350,7 +1350,7 @@ pyRFXtrx==0.27.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.21.4
+pyTibber==0.21.6
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1482,7 +1482,7 @@ pyedimax==0.2.1
 pyefergy==0.1.5
 
 # homeassistant.components.eight_sleep
-pyeight==0.1.9
+pyeight==0.2.0
 
 # homeassistant.components.emby
 pyemby==1.8

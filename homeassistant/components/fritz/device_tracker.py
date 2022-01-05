@@ -131,6 +131,11 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         return f"{self._mac}_tracker"
 
     @property
+    def mac_address(self) -> str:
+        """Return mac_address."""
+        return self._mac
+
+    @property
     def icon(self) -> str:
         """Return device icon."""
         if self.is_connected:
