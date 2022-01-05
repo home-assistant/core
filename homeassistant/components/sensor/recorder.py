@@ -82,7 +82,7 @@ DEFAULT_STATISTICS = {
 }
 
 # Normalized units which will be stored in the statistics table
-DEVICE_CLASS_UNITS = {
+DEVICE_CLASS_UNITS: dict[str, str] = {
     SensorDeviceClass.ENERGY: ENERGY_KILO_WATT_HOUR,
     SensorDeviceClass.POWER: POWER_WATT,
     SensorDeviceClass.PRESSURE: PRESSURE_PA,
