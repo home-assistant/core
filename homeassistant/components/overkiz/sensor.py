@@ -395,7 +395,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if not state:
+        if not state or not state.value:
             return None
 
         # Transform the value with a lambda function
