@@ -141,15 +141,6 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
             return self.async_abort(reason="not_dmr")
 
-        # Abort if a migration flow for the device's location is in progress
-        for progress in self._async_in_progress(include_uninitialized=True):
-            if progress["context"].get("unique_id") == self._location:
-                LOGGER.debug(
-                    "Aborting SSDP setup because migration for %s is in progress",
-                    self._location,
-                )
-                return self.async_abort(reason="already_in_progress")
-
         # Abort if another config entry has the same location, in case the
         # device doesn't have a static and unique UDN (breaking the UPnP spec).
         self._async_abort_entries_match({CONF_URL: self._location})

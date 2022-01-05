@@ -173,7 +173,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         duration = params.pop(ATTR_HEAT_DURATION, 0)
 
         for sens in sensor:
-            side = sens[0]
+            side = sens.split("_")[1]
             userid = eight.fetch_userid(side)
             usrobj = eight.users[userid]
             await usrobj.set_heating_level(target, duration)

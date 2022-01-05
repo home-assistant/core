@@ -9,38 +9,29 @@ from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Callable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
 import weakref
 
-from homeassistant import data_entry_flow, loader
-from homeassistant.backports.enum import StrEnum
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
-from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.helpers.event import Event
-from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    DiscoveryInfoType,
-    UndefinedType,
-)
-from homeassistant.setup import async_process_deps_reqs, async_setup_component
-from homeassistant.util.decorator import Registry
-import homeassistant.util.uuid as uuid_util
+from . import data_entry_flow, loader
+from .backports.enum import StrEnum
+from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from .core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from .helpers import device_registry, entity_registry
+from .helpers.event import Event
+from .helpers.frame import report
+from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .setup import async_process_deps_reqs, async_setup_component
+from .util import uuid as uuid_util
+from .util.decorator import Registry
 
 if TYPE_CHECKING:
-    from homeassistant.components.dhcp import DhcpServiceInfo
-    from homeassistant.components.hassio import HassioServiceInfo
-    from homeassistant.components.mqtt import MqttServiceInfo
-    from homeassistant.components.ssdp import SsdpServiceInfo
-    from homeassistant.components.usb import UsbServiceInfo
-    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+    from .components.dhcp import DhcpServiceInfo
+    from .components.hassio import HassioServiceInfo
+    from .components.mqtt import MqttServiceInfo
+    from .components.ssdp import SsdpServiceInfo
+    from .components.usb import UsbServiceInfo
+    from .components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +70,8 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
+_T = TypeVar("_T", bound="ConfigEntryState")
+
 
 class ConfigEntryState(Enum):
     """Config entry state."""
@@ -98,12 +91,12 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(cls: type[object], value: str, recoverable: bool) -> ConfigEntryState:
+    def __new__(cls: type[_T], value: str, recoverable: bool) -> _T:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
         obj._recoverable = recoverable
-        return cast("ConfigEntryState", obj)
+        return obj
 
     @property
     def recoverable(self) -> bool:
@@ -330,7 +323,7 @@ class ConfigEntry:
         error_reason = None
 
         try:
-            result = await component.async_setup_entry(hass, self)  # type: ignore
+            result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error(
@@ -469,7 +462,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_unload_entry(hass, self)  # type: ignore
+            result = await component.async_unload_entry(hass, self)
 
             assert isinstance(result, bool)
 
@@ -480,7 +473,8 @@ class ConfigEntry:
 
             self._async_process_on_unload()
 
-            return result
+            # https://github.com/python/mypy/issues/11839
+            return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
@@ -508,7 +502,7 @@ class ConfigEntry:
         if not hasattr(component, "async_remove_entry"):
             return
         try:
-            await component.async_remove_entry(hass, self)  # type: ignore
+            await component.async_remove_entry(hass, self)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
@@ -545,7 +539,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(hass, self)  # type: ignore
+            result = await component.async_migrate_entry(hass, self)
             if not isinstance(result, bool):
                 _LOGGER.error(
                     "%s.async_migrate_entry did not return boolean", self.domain
@@ -554,7 +548,8 @@ class ConfigEntry:
             if result:
                 # pylint: disable=protected-access
                 hass.config_entries._async_schedule_save()
-            return result
+            # https://github.com/python/mypy/issues/11839
+            return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
@@ -1178,7 +1173,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     def __init_subclass__(cls, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
-        super().__init_subclass__(**kwargs)  # type: ignore
+        super().__init_subclass__(**kwargs)
         if domain is not None:
             HANDLERS.register(domain)(cls)
 

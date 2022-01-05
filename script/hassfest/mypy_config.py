@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from typing import Final
 
+from homeassistant.const import REQUIRED_PYTHON_VER
+
 from .model import Config, Integration
 
 # Modules which have type hints which known to be broken.
@@ -47,7 +49,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.homekit.*",
     "homeassistant.components.homekit_controller.*",
     "homeassistant.components.honeywell.*",
-    "homeassistant.components.humidifier.*",
     "homeassistant.components.iaqualink.*",
     "homeassistant.components.icloud.*",
     "homeassistant.components.image.*",
@@ -67,7 +68,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.litejet.*",
     "homeassistant.components.litterrobot.*",
     "homeassistant.components.lovelace.*",
-    "homeassistant.components.luftdaten.*",
     "homeassistant.components.lutron_caseta.*",
     "homeassistant.components.lyric.*",
     "homeassistant.components.melcloud.*",
@@ -144,7 +144,7 @@ HEADER: Final = """
 """.lstrip()
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
-    "python_version": "3.8",
+    "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.

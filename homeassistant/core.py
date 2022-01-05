@@ -25,9 +25,9 @@ import attr
 import voluptuous as vol
 import yarl
 
-from homeassistant import async_timeout_backcompat, block_async_io, loader, util
-from homeassistant.backports.enum import StrEnum
-from homeassistant.const import (
+from . import async_timeout_backcompat, block_async_io, loader, util
+from .backports.enum import StrEnum
+from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
@@ -53,7 +53,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
     __version__,
 )
-from homeassistant.exceptions import (
+from .exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
@@ -61,22 +61,20 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location
-from homeassistant.util.async_ import (
+from .util import dt as dt_util, location, uuid as uuid_util
+from .util.async_ import (
     fire_coroutine_threadsafe,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.util.timeout import TimeoutManager
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
-import homeassistant.util.uuid as uuid_util
+from .util.timeout import TimeoutManager
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.auth import AuthManager
-    from homeassistant.components.http import HomeAssistantHTTP
-    from homeassistant.config_entries import ConfigEntries
+    from .auth import AuthManager
+    from .components.http import HomeAssistantHTTP
+    from .config_entries import ConfigEntries
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -87,9 +85,10 @@ async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
-_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
+# Internal; not helpers.typing.UNDEFINED due to circular dependency
+_UNDEF: dict[Any, Any] = {}
 # pylint: disable=invalid-name
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable[..., Any])
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
 
@@ -237,7 +236,7 @@ class HomeAssistant:
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
-        self.data: dict = {}
+        self.data: dict[str, Any] = {}
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -286,7 +285,7 @@ class HomeAssistant:
         await self.async_start()
         if attach_signals:
             # pylint: disable=import-outside-toplevel
-            from homeassistant.helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
 
@@ -364,7 +363,7 @@ class HomeAssistant:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_add_hass_job(HassJob(target), *args)
 
@@ -464,7 +463,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_run_hass_job(HassJob(target), *args)
 
@@ -881,6 +880,9 @@ class EventBus:
             )
 
 
+_StateT = TypeVar("_StateT", bound="State")
+
+
 class State:
     """Object to represent a state within the state machine.
 
@@ -947,7 +949,7 @@ class State:
             "_", " "
         )
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -972,7 +974,7 @@ class State:
         return self._as_dict
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> Any:
+    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -1043,7 +1045,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> list[str]:
         """List of entity ids that are being tracked.
 
@@ -1063,7 +1065,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids_count(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> int:
         """Count the entity ids that are being tracked.
 
@@ -1079,14 +1081,16 @@ class StateMachine:
             [None for state in self._states.values() if state.domain in domain_filter]
         )
 
-    def all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(
             self._loop, self.async_all, domain_filter
         ).result()
 
     @callback
-    def async_all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def async_all(
+        self, domain_filter: str | Iterable[str] | None = None
+    ) -> list[State]:
         """Create a list of all states matching the filter.
 
         This method must be run in the event loop.
@@ -1332,7 +1336,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1349,7 +1353,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1648,7 +1652,7 @@ class Config:
 
         return False
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Create a dictionary representation of the configuration.
 
         Async friendly.
@@ -1695,8 +1699,8 @@ class Config:
         location_name: str | None = None,
         time_zone: str | None = None,
         # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        external_url: str | dict | None = _UNDEF,
-        internal_url: str | dict | None = _UNDEF,
+        external_url: str | dict[Any, Any] | None = _UNDEF,
+        internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""

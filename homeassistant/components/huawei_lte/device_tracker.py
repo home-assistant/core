@@ -1,11 +1,11 @@
 """Support for device tracking of Huawei LTE routers."""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import logging
 import re
 from typing import Any, Dict, List, cast
 
-import attr
 from stringcase import snakecase
 
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -173,16 +173,16 @@ def _better_snakecase(text: str) -> str:
     return cast(str, snakecase(text))
 
 
-@attr.s
+@dataclass
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    _mac_address: str = attr.ib()
+    _mac_address: str
 
-    _ip_address: str | None = attr.ib(init=False, default=None)
-    _is_connected: bool = attr.ib(init=False, default=False)
-    _hostname: str | None = attr.ib(init=False, default=None)
-    _extra_state_attributes: dict[str, Any] = attr.ib(init=False, factory=dict)
+    _ip_address: str | None = field(default=None, init=False)
+    _is_connected: bool = field(default=False, init=False)
+    _hostname: str | None = field(default=None, init=False)
+    _extra_state_attributes: dict[str, Any] = field(default_factory=dict, init=False)
 
     @property
     def _entity_name(self) -> str:

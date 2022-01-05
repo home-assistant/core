@@ -8,6 +8,7 @@ from typing import Any, Final, cast
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import ATTR_ID
+from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
@@ -15,7 +16,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_change,
+    async_track_time_interval,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -45,16 +49,18 @@ PLATFORMS_BY_TYPE: Final = {
         Platform.NUMBER,
         Platform.SWITCH,
     ],
-    DeviceType.Switch: [Platform.BUTTON, Platform.SWITCH],
+    DeviceType.Switch: [Platform.BUTTON, Platform.SELECT, Platform.SWITCH],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
 
 
 @callback
-def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
+def async_wifi_bulb_for_host(
+    host: str, discovery: FluxLEDDiscovery | None
+) -> AIOWifiLedBulb:
     """Create a AIOWifiLedBulb from a host."""
-    return AIOWifiLedBulb(host)
+    return AIOWifiLedBulb(host, discovery=discovery)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -78,7 +84,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
-    device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
+    directed_discovery = None
+    if discovery := async_get_discovery(hass, host):
+        directed_discovery = False
+    device: AIOWifiLedBulb = async_wifi_bulb_for_host(host, discovery=discovery)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
 
     @callback
@@ -94,10 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     # UDP probe after successful connect only
-    directed_discovery = None
-    if discovery := async_get_discovery(hass, host):
-        directed_discovery = False
-    elif discovery := await async_discover_device(hass, host):
+    if not discovery and (discovery := await async_discover_device(hass, host)):
         directed_discovery = True
 
     if discovery:
@@ -119,6 +125,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     hass.config_entries.async_setup_platforms(entry, platforms)
+
+    async def _async_sync_time(*args: Any) -> None:
+        """Set the time every morning at 02:40:30."""
+        await device.async_set_time()
+
+    await _async_sync_time()  # set at startup
+    entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 4, 30))  # type: ignore[arg-type]
 
     return True
 

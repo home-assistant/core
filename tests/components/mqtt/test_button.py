@@ -23,6 +23,8 @@ from .test_common import (
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -321,3 +323,37 @@ async def test_valid_device_class(hass, mqtt_mock):
     assert state.attributes["device_class"] == button.ButtonDeviceClass.RESTART
     state = hass.states.get("button.test_3")
     assert "device_class" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (button.SERVICE_PRESS, "command_topic", None, "PRESS", None),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass, mqtt_mock, caplog, service, topic, parameters, payload, template
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = button.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = button.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)

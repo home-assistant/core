@@ -10,8 +10,10 @@ from flux_led.const import (
     COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
     COLOR_MODES_RGB_W as FLUX_COLOR_MODES_RGB_W,
+    MODE_MUSIC,
     MultiColorEffects,
 )
+from flux_led.protocol import MusicMode
 import pytest
 
 from homeassistant.components import flux_led
@@ -25,6 +27,12 @@ from homeassistant.components.flux_led.const import (
     CONF_TRANSITION,
     DOMAIN,
     TRANSITION_JUMP,
+)
+from homeassistant.components.flux_led.light import (
+    ATTR_BACKGROUND_COLOR,
+    ATTR_FOREGROUND_COLOR,
+    ATTR_LIGHT_SCREEN,
+    ATTR_SENSITIVITY,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -1191,3 +1199,47 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     bulb.async_turn_on.assert_called_once()
     bulb.async_turn_on.reset_mock()
     await async_mock_device_turn_on(hass, bulb)
+
+
+async def test_music_mode_service(hass: HomeAssistant) -> None:
+    """Test music mode service."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.raw_state = bulb.raw_state._replace(model_num=0xA3)  # has music mode
+    bulb.microphone = True
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.bulb_rgbcw_ddeeff"
+    assert hass.states.get(entity_id)
+
+    bulb.effect = MODE_MUSIC
+    bulb.is_on = False
+    await hass.services.async_call(
+        DOMAIN,
+        "set_music_mode",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_EFFECT: 12,
+            ATTR_LIGHT_SCREEN: True,
+            ATTR_SENSITIVITY: 50,
+            ATTR_BRIGHTNESS: 50,
+            ATTR_FOREGROUND_COLOR: [255, 0, 0],
+            ATTR_BACKGROUND_COLOR: [0, 255, 0],
+        },
+        blocking=True,
+    )
+    bulb.async_set_music_mode.assert_called_once_with(
+        sensitivity=50,
+        brightness=50,
+        mode=MusicMode.LIGHT_SCREEN.value,
+        effect=12,
+        foreground_color=(255, 0, 0),
+        background_color=(0, 255, 0),
+    )

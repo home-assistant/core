@@ -1,7 +1,6 @@
 """Test the init functions for AEH."""
 from datetime import timedelta
 import logging
-from time import monotonic
 from unittest.mock import patch
 
 from azure.eventhub.exceptions import EventHubError
@@ -96,7 +95,7 @@ async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
     await hass.async_block_till_done()
     mock_send_batch.assert_called_once()
     mock_send_batch.reset_mock()
-
+    hass.states.async_set("sensor.test2", STATE_ON)
     async_fire_time_changed(
         hass,
         utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
@@ -108,8 +107,8 @@ async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
 async def test_late_event(hass, entry_with_one_event, mock_create_batch):
     """Test the check on late events."""
     with patch(
-        f"{AZURE_EVENT_HUB_PATH}.time.monotonic",
-        return_value=monotonic() + timedelta(hours=1).seconds,
+        f"{AZURE_EVENT_HUB_PATH}.utcnow",
+        return_value=utcnow() + timedelta(hours=1),
     ):
         async_fire_time_changed(
             hass,

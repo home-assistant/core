@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from .common import FritzBoxTools
 from .const import DOMAIN
@@ -90,7 +89,8 @@ class FritzButton(ButtonEntity):
         self.router = router
 
         self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = slugify(self._attr_name)
+        self._attr_unique_id = f"{self.router.unique_id}-{description.key}"
+
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, router.mac)}
         )

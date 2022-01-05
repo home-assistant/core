@@ -4,8 +4,9 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
 from homeassistant.components.binary_sensor.device_trigger import ENTITY_TRIGGERS
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -52,7 +53,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    for device_class in DEVICE_CLASSES:
+    for device_class in BinarySensorDeviceClass:
         entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -71,10 +72,12 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in BinarySensorDeviceClass
         for trigger in ENTITY_TRIGGERS[device_class]
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert triggers == expected_triggers
 
 
@@ -90,7 +93,7 @@ async def test_get_triggers_no_state(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    for device_class in DEVICE_CLASSES:
+    for device_class in BinarySensorDeviceClass:
         entity_ids[device_class] = entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -109,10 +112,12 @@ async def test_get_triggers_no_state(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": entity_ids[device_class],
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in BinarySensorDeviceClass
         for trigger in ENTITY_TRIGGERS[device_class]
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert triggers == expected_triggers
 
 
@@ -130,10 +135,12 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == expected_capabilities
 

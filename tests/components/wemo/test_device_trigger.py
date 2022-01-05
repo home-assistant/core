@@ -3,6 +3,7 @@ import pytest
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -70,6 +71,13 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_DOMAIN: Platform.SWITCH,
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
+            CONF_TYPE: "toggled",
+        },
+        {
+            CONF_DEVICE_ID: wemo_entity.device_id,
+            CONF_DOMAIN: Platform.SWITCH,
+            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_PLATFORM: "device",
             CONF_TYPE: "turned_off",
         },
         {
@@ -81,7 +89,7 @@ async def test_get_triggers(hass, wemo_entity):
         },
     ]
     triggers = await async_get_device_automations(
-        hass, "trigger", wemo_entity.device_id
+        hass, DeviceAutomationType.TRIGGER, wemo_entity.device_id
     )
     assert_lists_same(triggers, expected_triggers)
 

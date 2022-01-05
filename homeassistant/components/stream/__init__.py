@@ -50,7 +50,7 @@ from .const import (
     STREAM_RESTART_RESET_TIME,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings
+from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
 from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,6 +137,8 @@ def filter_libav_logging() -> None:
 
     # Set log level to error for libav.mp4
     logging.getLogger("libav.mp4").setLevel(logging.ERROR)
+    # Suppress "deprecated pixel format" WARNING
+    logging.getLogger("libav.swscaler").setLevel(logging.ERROR)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -214,6 +216,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
+        self._keyframe_converter = KeyFrameConverter(hass)
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -327,6 +330,7 @@ class Stream:
                     self.source,
                     self.options,
                     stream_state,
+                    self._keyframe_converter,
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
@@ -419,3 +423,22 @@ class Stream:
             # Wait for latest segment, then add the lookback
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments:])
+
+    async def async_get_image(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes | None:
+        """
+        Fetch an image from the Stream and return it as a jpeg in bytes.
+
+        Calls async_get_image from KeyFrameConverter. async_get_image should only be
+        called directly from the main loop and not from an executor thread as it uses
+        hass.add_executor_job underneath the hood.
+        """
+
+        self.add_provider(HLS_PROVIDER)
+        self.start()
+        return await self._keyframe_converter.async_get_image(
+            width=width, height=height
+        )
