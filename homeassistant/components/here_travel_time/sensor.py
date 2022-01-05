@@ -271,10 +271,14 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
                 ATTR_TRAFFIC_MODE: self._traffic_mode,
                 **self.coordinator.data,
             }
-            if res[ATTR_ATTRIBUTION] is None:
-                res.pop(ATTR_ATTRIBUTION)
+            res.pop(ATTR_ATTRIBUTION)
             return res
         return None
+
+    @property
+    def attribution(self) -> str | None:
+        """Return the attribution."""
+        return self.coordinator.data.get(ATTR_ATTRIBUTION)
 
     @property
     def native_unit_of_measurement(self) -> str:
