@@ -205,6 +205,7 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
         "IPWeatherSensorBasic",
         "IPThermostatWall",
         "IPThermostatWall2",
+        "CO2SensorIP",
     ]
 }
 
