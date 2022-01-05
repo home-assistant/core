@@ -280,24 +280,24 @@ class AbstractConfig(ABC):
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
                 setup_successfull = False
                 break
-            else:
-                try:
-                    webhook.async_register(
-                        self.hass,
-                        DOMAIN,
-                        "Local Support for " + user_agent_id,
-                        webhook_id,
-                        self._handle_local_webhook,
-                    )
-                    setup_webhook_ids.append(webhook_id)
-                except ValueError:
-                    _LOGGER.warning(
-                        "Webhook handler %s for agent user id %s is already defined!",
-                        webhook_id,
-                        user_agent_id,
-                    )
-                    setup_successfull = False
-                    break
+
+            try:
+                webhook.async_register(
+                    self.hass,
+                    DOMAIN,
+                    "Local Support for " + user_agent_id,
+                    webhook_id,
+                    self._handle_local_webhook,
+                )
+                setup_webhook_ids.append(webhook_id)
+            except ValueError:
+                _LOGGER.warning(
+                    "Webhook handler %s for agent user id %s is already defined!",
+                    webhook_id,
+                    user_agent_id,
+                )
+                setup_successfull = False
+                break
 
         if not setup_successfull:
             _LOGGER.warning(
