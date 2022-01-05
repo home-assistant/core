@@ -1,4 +1,6 @@
 """Sensor for monitoring the size of a file."""
+from __future__ import annotations
+
 import datetime
 import logging
 import os
@@ -7,8 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import DATA_MEGABYTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -23,13 +28,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the file size sensor."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
-    for path in config.get(CONF_FILE_PATHS):
+    for path in config[CONF_FILE_PATHS]:
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Filepath %s is not valid or allowed", path)
             continue
