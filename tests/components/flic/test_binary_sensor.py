@@ -1,11 +1,8 @@
 """Tests for Flic button integration."""
-import contextlib
-from unittest.mock import MagicMock, patch
+from unittest import mock
 
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 
 class _MockFlicClient:
@@ -35,17 +32,18 @@ async def test_button_uid(hass):
     """Test UID assignment for Flic buttons."""
     address_to_name = {
         "80:e4:da:78:6e:11": "binary_sensor.flic_80e4da786e11",
-        "80:E4:DA:78:6E:12": "binary_sensor.flic_80e4da786e12",  # Uppercase address should not change uid.
+        # Uppercase address should not change uid.
+        "80:E4:DA:78:6E:12": "binary_sensor.flic_80e4da786e12",
     }
 
     flic_client = _MockFlicClient(tuple(address_to_name))
 
-    with contextlib.ExitStack() as stack:
-        stack.enter_context(patch("pyflic.FlicClient", lambda _, __: flic_client))
-        stack.enter_context(patch("pyflic.ButtonConnectionChannel", MagicMock))
-        stack.enter_context(patch("pyflic.ScanWizard", MagicMock))
-        stack.enter_context(assert_setup_component(1, "binary_sensor"))
-
+    with mock.patch.multiple(
+        "pyflic",
+        FlicClient=lambda _, __: flic_client,
+        ButtonConnectionChannel=mock.DEFAULT,
+        ScanWizard=mock.DEFAULT,
+    ):
         assert await async_setup_component(
             hass,
             "binary_sensor",
