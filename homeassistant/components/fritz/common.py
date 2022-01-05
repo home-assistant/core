@@ -426,8 +426,9 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 )
                 return
 
+            device_hosts_list: list[dict] = []
             if service_call.service == SERVICE_CLEANUP:
-                device_hosts_list: list = await self.hass.async_add_executor_job(
+                device_hosts_list = await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_hosts_info
                 )
 
@@ -447,15 +448,30 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         )
         entities_removed: bool = False
 
-        device_hosts_macs = {device["mac"] for device in device_hosts_list}
+        device_hosts_macs = set()
+        device_hosts_names = set()
+        for device in device_hosts_list:
+            device_hosts_macs.add(device["mac"])
+            device_hosts_names.add(device["name"])
 
         for entry in ha_entity_reg_list:
-            if (
-                not _cleanup_entity_filter(entry)
-                or entry.unique_id.split("_")[0] in device_hosts_macs
-            ):
+            if entry.original_name is None:
                 continue
-            _LOGGER.info("Removing entity: %s", entry.name or entry.original_name)
+            entry_name = entry.name or entry.original_name
+            entry_host = entry_name.split(" ")[0]
+            entry_mac = entry.unique_id.split("_")[0]
+
+            if not _cleanup_entity_filter(entry) or (
+                entry_mac in device_hosts_macs and entry_host in device_hosts_names
+            ):
+                _LOGGER.debug(
+                    "Skipping entity %s [mac=%s, host=%s]",
+                    entry_name,
+                    entry_mac,
+                    entry_host,
+                )
+                continue
+            _LOGGER.info("Removing entity: %s", entry_name)
             entity_reg.async_remove(entry.entity_id)
             entities_removed = True
 
