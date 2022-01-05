@@ -43,7 +43,8 @@ class RokuEntity(CoordinatorEntity):
                 for mac_address in (
                     self.coordinator.data.info.wifi_mac,
                     self.coordinator.data.info.ethernet_mac,
-                ) if mac_address is not None
+                )
+                if mac_address is not None
             },
             name=self.coordinator.data.info.name,
             manufacturer=self.coordinator.data.info.brand,
