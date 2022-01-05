@@ -51,7 +51,7 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import ConfigType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, ServiceDataType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -286,7 +286,7 @@ class MqttCommandTemplate:
     def async_render(
         self,
         value: PublishPayloadType = None,
-        variables: template.TemplateVarsType = None,
+        variables: TemplateVarsType = None,
     ) -> PublishPayloadType:
         """Render or convert the command template with given value or variables."""
 
@@ -328,7 +328,7 @@ class MqttValueTemplate:
         *,
         hass: HomeAssistant | None = None,
         entity: Entity | None = None,
-        config_attributes: template.TemplateVarsType = None,
+        config_attributes: TemplateVarsType = None,
     ) -> None:
         """Instantiate a value template."""
         self._value_template = value_template
@@ -347,7 +347,7 @@ class MqttValueTemplate:
         self,
         payload: ReceivePayloadType,
         default: ReceivePayloadType | object = _SENTINEL,
-        variables: template.TemplateVarsType = None,
+        variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
         if self._value_template is None:
