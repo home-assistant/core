@@ -844,6 +844,54 @@ async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock):
     )
 
 
+async def test_entity_play_media_plex(hass: HomeAssistant, plex_mock):
+    """Test playing media."""
+    entity_id = "media_player.speaker"
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.cast.media_player.lookup_plex_media",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                media_player.ATTR_MEDIA_CONTENT_TYPE: "music",
+                media_player.ATTR_MEDIA_CONTENT_ID: 'plex://{"library_name": "Music", "artist.title": "Not an Artist"}',
+            },
+            blocking=True,
+        )
+    assert not plex_mock.play_media.called
+
+    mock_plex_media = MagicMock()
+    with patch(
+        "homeassistant.components.cast.media_player.lookup_plex_media",
+        return_value=mock_plex_media,
+    ):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                media_player.ATTR_MEDIA_CONTENT_TYPE: "music",
+                media_player.ATTR_MEDIA_CONTENT_ID: 'plex://{"library_name": "Music", "artist.title": "Artist"}',
+            },
+            blocking=True,
+        )
+    plex_mock.play_media.assert_called_once_with(mock_plex_media)
+
+
 async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):
     """Test playing media."""
     entity_id = "media_player.speaker"
