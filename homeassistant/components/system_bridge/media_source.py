@@ -52,7 +52,7 @@ class SystemBridgeSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        path, mime_type = tuple(item.identifier.split("~~", 1))
+        path, mime_type = item.identifier.split("~~", 1)
         return PlayMedia(
             self.bridge.get_filesystem_file_data_url(path),
             mime_type,
@@ -80,12 +80,12 @@ class SystemBridgeSource(MediaSource):
             children=[
                 _build_media_item(path, file)
                 for file in files
-                    if file.isDirectory
-                    or (
-                        file.isFile
-                        and file.mimeType is not None
-                        and file.mimeType.startswith(MEDIA_MIME_TYPES)
-                    )
+                if file.isDirectory
+                or (
+                    file.isFile
+                    and file.mimeType is not None
+                    and file.mimeType.startswith(MEDIA_MIME_TYPES)
+                )
             ],
         )
 
