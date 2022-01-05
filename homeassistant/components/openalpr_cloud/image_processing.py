@@ -10,17 +10,17 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.image_processing import (
-    CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
-    PLATFORM_SCHEMA,
-)
+from homeassistant.components.image_processing import CONF_CONFIDENCE, PLATFORM_SCHEMA
 from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity,
 )
-from homeassistant.const import CONF_API_KEY, CONF_REGION
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_REGION,
+    CONF_SOURCE,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
