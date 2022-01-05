@@ -8,3 +8,5 @@ ATTR_LAUNCH_TIME = "launch_time"
 ATTR_STREAM = "stream"
 
 ATTRIBUTION = "Data provided by Launch Library."
+
+DEFAULT_NAME = "Next launch"

@@ -1,14 +1,19 @@
 """Support for Launch Library sensors."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pylaunches.objects.launch import Launch
+import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -20,8 +25,35 @@ from .const import (
     ATTR_LAUNCH_TIME,
     ATTR_STREAM,
     ATTRIBUTION,
+    DEFAULT_NAME,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import Launch Library configuration from yaml."""
+    _LOGGER.warning(
+        "Loading Launch Library via platform setup is deprecated. Please remove it from your yaml configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 async def async_setup_entry(
