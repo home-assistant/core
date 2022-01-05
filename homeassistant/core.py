@@ -26,7 +26,6 @@ from typing import (
     NamedTuple,
     Optional,
     TypeVar,
-    Union,
     cast,
 )
 from urllib.parse import urlparse
@@ -683,15 +682,11 @@ class Event:
         )
 
 
-_ListenerType = Callable[[Event], Union[None, Awaitable[None]]]
-_EventFilterType = Callable[[Event], bool]
-
-
 class _FilterableJob(NamedTuple):
     """Event listener job to be executed with optional filter."""
 
     job: HassJob
-    event_filter: _EventFilterType | None
+    event_filter: Callable[[Event], bool] | None
 
 
 class EventBus:
@@ -770,7 +765,11 @@ class EventBus:
                     continue
             self._hass.async_add_hass_job(job, event)
 
-    def listen(self, event_type: str, listener: _ListenerType) -> CALLBACK_TYPE:
+    def listen(
+        self,
+        event_type: str,
+        listener: Callable[[Event], None | Awaitable[None]],
+    ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -790,8 +789,8 @@ class EventBus:
     def async_listen(
         self,
         event_type: str,
-        listener: _ListenerType,
-        event_filter: _EventFilterType | None = None,
+        listener: Callable[[Event], None | Awaitable[None]],
+        event_filter: Callable[[Event], bool] | None = None,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -822,7 +821,9 @@ class EventBus:
 
         return remove_listener
 
-    def listen_once(self, event_type: str, listener: _ListenerType) -> CALLBACK_TYPE:
+    def listen_once(
+        self, event_type: str, listener: Callable[[Event], None | Awaitable[None]]
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -842,7 +843,7 @@ class EventBus:
 
     @callback
     def async_listen_once(
-        self, event_type: str, listener: _ListenerType
+        self, event_type: str, listener: Callable[[Event], None | Awaitable[None]]
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
