@@ -33,7 +33,7 @@ DEFAULT_START_OFF = False
 DISCOVERY_AGGREGATION_TIME = 15  # seconds
 
 
-async def device_scan(identifier, loop):
+async def device_scan(hass, identifier, loop):
     """Scan for a specific device using identifier as filter."""
 
     def _filter_device(dev):
@@ -53,7 +53,10 @@ async def device_scan(identifier, loop):
 
     # If we have an address, only probe that address to avoid
     # broadcast traffic on the network
-    scan_result = await scan(loop, timeout=3, hosts=_host_filter())
+    aiozc = await zeroconf.async_get_async_instance(hass)
+    scan_result = await scan(
+        loop, timeout=3, hosts=_host_filter(), async_zeroconf=aiozc
+    )
     matches = [atv for atv in scan_result if _filter_device(atv)]
 
     if matches:
@@ -279,7 +282,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_find_device(self, allow_exist=False):
         """Scan for the selected device to discover services."""
         self.atv, self.atv_identifiers = await device_scan(
-            self.scan_filter, self.hass.loop
+            self.hass, self.scan_filter, self.hass.loop
         )
         if not self.atv:
             raise DeviceNotFound()
