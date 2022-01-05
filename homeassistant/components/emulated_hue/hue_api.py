@@ -7,16 +7,7 @@ import logging
 import time
 
 from homeassistant import core
-from homeassistant.components import (
-    climate,
-    cover,
-    fan,
-    humidifier,
-    light,
-    media_player,
-    scene,
-    script,
-)
+from homeassistant.components import light, script
 from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -64,6 +55,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.network import is_local
@@ -347,7 +339,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Get the entity's supported features
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if entity.domain == light.DOMAIN:
+        if entity.domain == Platform.LIGHT:
             color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
 
         # Parse the request
@@ -393,23 +385,23 @@ class HueOneLightChangeView(HomeAssistantView):
                 return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
 
         if HUE_API_STATE_BRI in request_json:
-            if entity.domain == light.DOMAIN:
+            if entity.domain == Platform.LIGHT:
                 if light.brightness_supported(color_modes):
                     parsed[STATE_ON] = parsed[STATE_BRIGHTNESS] > 0
                 else:
                     parsed[STATE_BRIGHTNESS] = None
 
-            elif entity.domain == scene.DOMAIN:
+            elif entity.domain == Platform.SCENE:
                 parsed[STATE_BRIGHTNESS] = None
                 parsed[STATE_ON] = True
 
             elif entity.domain in [
                 script.DOMAIN,
-                media_player.DOMAIN,
-                fan.DOMAIN,
-                cover.DOMAIN,
-                climate.DOMAIN,
-                humidifier.DOMAIN,
+                Platform.MEDIA_PLAYER,
+                Platform.FAN,
+                Platform.COVER,
+                Platform.CLIMATE,
+                Platform.HUMIDIFIER,
             ]:
                 # Convert 0-254 to 0-100
                 level = (parsed[STATE_BRIGHTNESS] / HUE_API_STATE_BRI_MAX) * 100
@@ -430,7 +422,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a light, set the brightness, hue,
         # saturation and color temp
-        if entity.domain == light.DOMAIN:
+        if entity.domain == Platform.LIGHT:
             if parsed[STATE_ON]:
                 if (
                     light.brightness_supported(color_modes)
@@ -483,7 +475,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 data["variables"]["requested_level"] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a climate, set the temperature
-        elif entity.domain == climate.DOMAIN:
+        elif entity.domain == Platform.CLIMATE:
             # We don't support turning climate devices on or off,
             # only setting the temperature
             service = None
@@ -497,7 +489,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a humidifier, set the humidity
-        elif entity.domain == humidifier.DOMAIN:
+        elif entity.domain == Platform.HUMIDIFIER:
             if parsed[STATE_BRIGHTNESS] is not None:
                 turn_on_needed = True
                 domain = entity.domain
@@ -505,7 +497,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a media player, convert to volume
-        elif entity.domain == media_player.DOMAIN:
+        elif entity.domain == Platform.MEDIA_PLAYER:
             if (
                 entity_features & SUPPORT_VOLUME_SET
                 and parsed[STATE_BRIGHTNESS] is not None
@@ -517,7 +509,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
 
         # If the requested entity is a cover, convert to open_cover/close_cover
-        elif entity.domain == cover.DOMAIN:
+        elif entity.domain == Platform.COVER:
             domain = entity.domain
             if service == SERVICE_TURN_ON:
                 service = SERVICE_OPEN_COVER
@@ -534,7 +526,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a fan, convert to speed
         elif (
-            entity.domain == fan.DOMAIN
+            entity.domain == Platform.FAN
             and entity_features & SUPPORT_SET_SPEED
             and parsed[STATE_BRIGHTNESS] is not None
         ):
@@ -664,21 +656,21 @@ def get_entity_state(config, entity):
             data[STATE_SATURATION] = 0
             data[STATE_COLOR_TEMP] = 0
 
-        if entity.domain == climate.DOMAIN:
+        if entity.domain == Platform.CLIMATE:
             temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
             # Convert 0-100 to 0-254
             data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
-        elif entity.domain == humidifier.DOMAIN:
+        elif entity.domain == Platform.HUMIDIFIER:
             humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
             # Convert 0-100 to 0-254
             data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
-        elif entity.domain == media_player.DOMAIN:
+        elif entity.domain == Platform.MEDIA_PLAYER:
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
             )
             # Convert 0.0-1.0 to 0-254
             data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
-        elif entity.domain == fan.DOMAIN:
+        elif entity.domain == Platform.FAN:
             speed = entity.attributes.get(ATTR_SPEED, 0)
             # Convert 0.0-1.0 to 0-254
             data[STATE_BRIGHTNESS] = 0
@@ -688,7 +680,7 @@ def get_entity_state(config, entity):
                 data[STATE_BRIGHTNESS] = 170
             elif speed == SPEED_HIGH:
                 data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX
-        elif entity.domain == cover.DOMAIN:
+        elif entity.domain == Platform.COVER:
             level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
             data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     else:
