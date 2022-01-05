@@ -24,7 +24,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    SERVICE_SET_COVER_POSITION,
     SUPPORT_SET_POSITION,
 )
 from homeassistant.components.fan import (
@@ -58,6 +57,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_SET,
