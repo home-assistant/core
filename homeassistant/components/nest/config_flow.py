@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+from collections.abc import Iterable
 from enum import Enum
 import logging
 import os
@@ -34,10 +35,12 @@ from typing import Any
 
 import async_timeout
 from google_nest_sdm.exceptions import (
+    ApiException,
     AuthException,
     ConfigurationException,
     SubscriberException,
 )
+from google_nest_sdm.structure import InfoTrait, Structure
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -128,6 +131,17 @@ class UnexpectedStateError(HomeAssistantError):
     """Raised when the config flow is invoked in a 'should not happen' case."""
 
 
+def generate_config_title(structures: Iterable[Structure]) -> str | None:
+    """Pick a user friendly config title based on the Google Home name(s)."""
+    names: list[str] = []
+    for structure in structures:
+        if (trait := structure.traits.get(InfoTrait.NAME)) and trait.custom_name:
+            names.append(trait.custom_name)
+    if not names:
+        return None
+    return ", ".join(names)
+
+
 class NestFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -141,6 +155,8 @@ class NestFlowHandler(
         super().__init__()
         self._reauth = False
         self._data: dict[str, Any] = {DATA_SDM: {}}
+        # Possible name to use for config entry based on the Google Home name
+        self._structure_config_title: str | None = None
 
     @property
     def config_mode(self) -> ConfigMode:
@@ -298,8 +314,18 @@ class NestFlowHandler(
             except SubscriberException as err:
                 _LOGGER.error("Error creating subscription: %s", err)
                 errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
-
             if not errors:
+
+                try:
+                    device_manager = await subscriber.async_get_device_manager()
+                except ApiException as err:
+                    # Generating a user friendly home name is best effort
+                    _LOGGER.debug("Error fetching structures: %s", err)
+                else:
+                    self._structure_config_title = generate_config_title(
+                        device_manager.structures.values()
+                    )
+
                 self._data.update(
                     {
                         CONF_SUBSCRIBER_ID: subscriber_id,
@@ -339,7 +365,10 @@ class NestFlowHandler(
                 )
                 await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
-        return await super().async_oauth_create_entry(self._data)
+        title = self.flow_impl.name
+        if self._structure_config_title:
+            title = self._structure_config_title
+        return self.async_create_entry(title=title, data=self._data)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
