@@ -26,7 +26,7 @@ class OverkizExecutor:
     @property
     def device(self) -> Device:
         """Return Overkiz device linked to this entity."""
-        return self.coordinator.data[self.device_url]
+        return cast(Device, self.coordinator.data[self.device_url])
 
     def select_command(self, *commands: str) -> str | None:
         """Select first existing command in a list of commands."""

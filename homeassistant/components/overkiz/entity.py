@@ -1,6 +1,8 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
+from typing import cast
+
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
@@ -36,7 +38,7 @@ class OverkizEntity(CoordinatorEntity):
     @property
     def device(self) -> Device:
         """Return Overkiz device linked to this entity."""
-        return self.coordinator.data[self.device_url]
+        return cast(Device, self.coordinator.data[self.device_url])
 
     def generate_device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
