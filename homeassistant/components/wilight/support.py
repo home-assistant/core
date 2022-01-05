@@ -10,6 +10,7 @@ import voluptuous as vol
 
 def wilight_trigger(value: Any) -> str:
     """Check rules for WiLight Trigger."""
+    # used if nested blocks to reduce not covered by tests
     err_desc = "Value is None"
     if value is not None:
 
@@ -23,15 +24,17 @@ def wilight_trigger(value: Any) -> str:
                 err_desc = "First 3 character should be less than 128"
                 if int(value[0:3]) < 128:
 
-                    err_desc = "Hour part should be less than 24"
-                    if int(value[3:5]) < 24:
+                    # changed test mode due to 5 nested blocks limit in pylint 3.8
+                    if int(value[3:5]) >= 24:
+                        raise vol.Invalid("Hour part should be less than 24")
 
-                        err_desc = "Minute part should be less than 60"
-                        if int(value[5:7]) < 60:
+                    if int(value[5:7]) >= 60:
+                        raise vol.Invalid("Minute part should be less than 60")
 
-                            err_desc = "Active part shoul be less than 2"
-                            if int(value[7:8]) < 21:
-                                return str(value)
+                    if int(value[7:8]) >= 2:
+                        raise vol.Invalid("Active part shoul be less than 2")
+
+                    return str(value)
 
     raise vol.Invalid(err_desc)
 
@@ -41,7 +44,6 @@ def wilight_to_hass_trigger(value):
     if value is None:
         return value
 
-    # locale.setlocale(locale.LC_ALL, 'pt_BR')
     locale.setlocale(locale.LC_ALL, "")
     week_days = list(calendar.day_abbr)
     days = bin(int(value[0:3]))[2:].zfill(8)
