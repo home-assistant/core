@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import voluptuous as vol
 
@@ -34,7 +34,9 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.state import async_reproduce_state
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
 
@@ -162,7 +164,12 @@ def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(entity.scene_config.states)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Home Assistant scene entries."""
     _process_scenes_config(hass, async_add_entities, config)
 
@@ -252,6 +259,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         scene_config = SceneConfig(None, call.data[CONF_SCENE_ID], None, entities)
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
         if (old := platform.entities.get(entity_id)) is not None:
+            if TYPE_CHECKING:
+                assert isinstance(old, HomeAssistantScene)
             if not old.from_service:
                 _LOGGER.warning("The scene %s already exists", entity_id)
                 return
