@@ -35,7 +35,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NeatoHub
 from .const import (
     ACTION,
     ALERTS,
@@ -48,6 +47,7 @@ from .const import (
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
 )
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
