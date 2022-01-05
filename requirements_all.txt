@@ -1479,7 +1479,7 @@ pyedimax==0.2.1
 pyefergy==0.1.5
 
 # homeassistant.components.eight_sleep
-pyeight==0.1.9
+pyeight==0.2.0
 
 # homeassistant.components.emby
 pyemby==1.8
