@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.21
+flux_led==0.27.32
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -467,7 +467,7 @@ google-nest-sdm==0.4.9
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==0.12.5
+greeclimate==1.0.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -612,7 +612,7 @@ meteofrance-api==1.0.2
 mficlient==0.3.0
 
 # homeassistant.components.xiaomi_miio
-micloud==0.4
+micloud==0.5
 
 # homeassistant.components.mill
 mill-local==0.1.0
@@ -832,7 +832,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==6.2.0
+pyatmo==6.2.2
 
 # homeassistant.components.apple_tv
 pyatv==0.8.2
@@ -1136,7 +1136,7 @@ python-ecobee-api==0.2.14
 python-forecastio==1.4.0
 
 # homeassistant.components.izone
-python-izone==1.1.8
+python-izone==1.2.3
 
 # homeassistant.components.juicenet
 python-juicenet==1.0.2
