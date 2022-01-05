@@ -132,9 +132,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
             elif event.name == EventName.DEVICE_STATE_CHANGED:
                 for state in event.device_states:
                     device = self.devices[event.device_url]
-                    if state.name not in device.states:
-                        device.states[state.name] = state
-                    device.states[state.name].value = self._get_state(state)
+
+                    if (device_state := device.states[state.name]) is None:
+                        device_state = state
+                        device.states[state.name] = device_state
+
+                    device_state.value = self._get_state(state)
 
             elif event.name == EventName.EXECUTION_REGISTERED:
                 if event.exec_id not in self.executions:
