@@ -6,11 +6,10 @@ from btsmarthub_devicelist import BTSmartHub
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Return a BT Smart Hub scanner if successful."""
-    info = config[DOMAIN]
+    info = config[Platform.DEVICE_TRACKER]
     smarthub_client = BTSmartHub(
         router_ip=info[CONF_HOST], smarthub_model=info.get(CONF_SMARTHUB_MODEL)
     )

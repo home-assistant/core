@@ -6,11 +6,10 @@ from clearpasspy import ClearPass
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_API_KEY, CONF_CLIENT_ID, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_CLIENT_ID, CONF_HOST, Platform
 import homeassistant.helpers.config_validation as cv
 
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -32,10 +31,10 @@ def get_scanner(hass, config):
     """Initialize Scanner."""
 
     data = {
-        "server": config[DOMAIN][CONF_HOST],
+        "server": config[Platform.DEVICE_TRACKER][CONF_HOST],
         "grant_type": GRANT_TYPE,
-        "secret": config[DOMAIN][CONF_API_KEY],
-        "client": config[DOMAIN][CONF_CLIENT_ID],
+        "secret": config[Platform.DEVICE_TRACKER][CONF_API_KEY],
+        "client": config[Platform.DEVICE_TRACKER][CONF_CLIENT_ID],
     }
     cppm = ClearPass(data)
     if cppm.access_token is None:

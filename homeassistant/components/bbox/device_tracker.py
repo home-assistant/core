@@ -9,11 +9,10 @@ import pybbox
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -31,7 +30,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Bbox scanner."""
-    scanner = BboxDeviceScanner(config[DOMAIN])
+    scanner = BboxDeviceScanner(config[Platform.DEVICE_TRACKER])
 
     return scanner if scanner.success_init else None
 

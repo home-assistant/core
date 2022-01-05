@@ -10,7 +10,6 @@ from bimmer_connected.country_selector import get_region_from_name
 from bimmer_connected.vehicle import ConnectedDriveVehicle
 import voluptuous as vol
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -163,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
-            NOTIFY_DOMAIN,
+            Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: DOMAIN},
             hass.data[DOMAIN][DATA_HASS_CONFIG],
@@ -191,7 +190,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for vehicle in hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id][
         CONF_ACCOUNT
     ].account.vehicles:
-        hass.services.async_remove(NOTIFY_DOMAIN, slugify(f"{DOMAIN}_{vehicle.name}"))
+        hass.services.async_remove(Platform.NOTIFY, slugify(f"{DOMAIN}_{vehicle.name}"))
 
     if unload_ok:
         hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id][UNDO_UPDATE_LISTENER]()
