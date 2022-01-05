@@ -214,10 +214,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
             )
             _LOGGER.warning("%s, %s, %s", last_ring, now, is_ringing)
             if is_ringing:
-                if self._doorbell_callback is not None:
-                    _LOGGER.debug("Canceling doorbell ring callback")
-                    self._doorbell_callback()
-                    self._doorbell_callback = None
+                self._async_cancel_doorbell_callback()
                 self._doorbell_callback = async_call_later(
                     self.hass, RING_INTERVAL, self._async_reset_doorbell
                 )
@@ -227,10 +224,22 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 self.device, self.entity_description.ufp_value
             )
 
+    @callback
+    def _async_cancel_doorbell_callback(self) -> None:
+        if self._doorbell_callback is not None:
+            _LOGGER.debug("Canceling doorbell ring callback")
+            self._doorbell_callback()
+            self._doorbell_callback = None
+
     async def _async_reset_doorbell(self, now: datetime) -> None:
         _LOGGER.debug("Doorbell ring ended")
         self._doorbell_callback = None
         self._async_updated_event()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self._async_cancel_doorbell_callback()
+        return await super().async_will_remove_from_hass()
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
