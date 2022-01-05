@@ -66,7 +66,6 @@ def teardown():
     if os.path.isfile(VERSION_PATH):
         os.remove(VERSION_PATH)
 
-
     if os.path.isfile(AUTOMATIONS_PATH):
         os.remove(AUTOMATIONS_PATH)
 
