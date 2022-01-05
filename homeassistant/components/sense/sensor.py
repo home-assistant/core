@@ -1,5 +1,6 @@
 """Support for monitoring a Sense energy sensor."""
 from datetime import timedelta
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
