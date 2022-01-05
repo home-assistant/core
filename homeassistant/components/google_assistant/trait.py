@@ -17,11 +17,9 @@ from homeassistant.components import (
     light,
     lock,
     media_player,
-    scene,
     script,
     select,
     sensor,
-    switch,
     vacuum,
 )
 from homeassistant.components.climate import const as climate
@@ -64,6 +62,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
@@ -231,7 +230,7 @@ class BrightnessTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
-        if domain == light.DOMAIN:
+        if domain == Platform.LIGHT:
             color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
             return light.brightness_supported(color_modes)
 
@@ -246,7 +245,7 @@ class BrightnessTrait(_Trait):
         domain = self.state.domain
         response = {}
 
-        if domain == light.DOMAIN:
+        if domain == Platform.LIGHT:
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS)
             if brightness is not None:
                 response["brightness"] = int(100 * (brightness / 255))
@@ -257,9 +256,9 @@ class BrightnessTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a brightness command."""
-        if self.state.domain == light.DOMAIN:
+        if self.state.domain == Platform.LIGHT:
             await self.hass.services.async_call(
-                light.DOMAIN,
+                Platform.LIGHT,
                 light.SERVICE_TURN_ON,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -285,7 +284,7 @@ class CameraStreamTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == camera.DOMAIN:
+        if domain == Platform.CAMERA:
             return features & camera.SUPPORT_STREAM
 
         return False
@@ -329,11 +328,11 @@ class OnOffTrait(_Trait):
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
-            switch.DOMAIN,
-            fan.DOMAIN,
-            light.DOMAIN,
-            media_player.DOMAIN,
-            humidifier.DOMAIN,
+            Platform.SWITCH,
+            Platform.FAN,
+            Platform.LIGHT,
+            Platform.MEDIA_PLAYER,
+            Platform.HUMIDIFIER,
         )
 
     def sync_attributes(self):
@@ -378,7 +377,7 @@ class ColorSettingTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
-        if domain != light.DOMAIN:
+        if domain != Platform.LIGHT:
             return False
 
         color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
@@ -462,7 +461,7 @@ class ColorSettingTrait(_Trait):
                 )
 
             await self.hass.services.async_call(
-                light.DOMAIN,
+                Platform.LIGHT,
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_COLOR_TEMP: temp},
                 blocking=not self.config.should_report_state,
@@ -477,7 +476,7 @@ class ColorSettingTrait(_Trait):
             )
 
             await self.hass.services.async_call(
-                light.DOMAIN,
+                Platform.LIGHT,
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_HS_COLOR: color},
                 blocking=not self.config.should_report_state,
@@ -490,7 +489,7 @@ class ColorSettingTrait(_Trait):
             brightness = color["value"] * 255
 
             await self.hass.services.async_call(
-                light.DOMAIN,
+                Platform.LIGHT,
                 SERVICE_TURN_ON,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -516,9 +515,9 @@ class SceneTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain in (
-            button.DOMAIN,
+            Platform.BUTTON,
             input_button.DOMAIN,
-            scene.DOMAIN,
+            Platform.SCENE,
             script.DOMAIN,
         )
 
@@ -534,7 +533,7 @@ class SceneTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a scene command."""
         service = SERVICE_TURN_ON
-        if self.state.domain == button.DOMAIN:
+        if self.state.domain == Platform.BUTTON:
             service = button.SERVICE_PRESS
         elif self.state.domain == input_button.DOMAIN:
             service = input_button.SERVICE_PRESS
@@ -546,7 +545,7 @@ class SceneTrait(_Trait):
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=(not self.config.should_report_state)
             and self.state.domain
-            not in (button.DOMAIN, input_button.DOMAIN, script.DOMAIN),
+            not in (Platform.BUTTON, input_button.DOMAIN, script.DOMAIN),
             context=data.context,
         )
 
@@ -564,7 +563,7 @@ class DockTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN
+        return domain == Platform.VACUUM
 
     def sync_attributes(self):
         """Return dock attributes for a sync request."""
@@ -598,7 +597,7 @@ class LocatorTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_LOCATE
+        return domain == Platform.VACUUM and features & vacuum.SUPPORT_LOCATE
 
     def sync_attributes(self):
         """Return locator attributes for a sync request."""
@@ -638,7 +637,7 @@ class EnergyStorageTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_BATTERY
+        return domain == Platform.VACUUM and features & vacuum.SUPPORT_BATTERY
 
     def sync_attributes(self):
         """Return EnergyStorage attributes for a sync request."""
@@ -693,10 +692,10 @@ class StartStopTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == vacuum.DOMAIN:
+        if domain == Platform.VACUUM:
             return True
 
-        if domain == cover.DOMAIN and features & cover.SUPPORT_STOP:
+        if domain == Platform.COVER and features & cover.SUPPORT_STOP:
             return True
 
         return False
@@ -704,13 +703,13 @@ class StartStopTrait(_Trait):
     def sync_attributes(self):
         """Return StartStop attributes for a sync request."""
         domain = self.state.domain
-        if domain == vacuum.DOMAIN:
+        if domain == Platform.VACUUM:
             return {
                 "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
                 & vacuum.SUPPORT_PAUSE
                 != 0
             }
-        if domain == cover.DOMAIN:
+        if domain == Platform.COVER:
             return {}
 
     def query_attributes(self):
@@ -718,21 +717,21 @@ class StartStopTrait(_Trait):
         domain = self.state.domain
         state = self.state.state
 
-        if domain == vacuum.DOMAIN:
+        if domain == Platform.VACUUM:
             return {
                 "isRunning": state == vacuum.STATE_CLEANING,
                 "isPaused": state == vacuum.STATE_PAUSED,
             }
 
-        if domain == cover.DOMAIN:
+        if domain == Platform.COVER:
             return {"isRunning": state in (cover.STATE_CLOSING, cover.STATE_OPENING)}
 
     async def execute(self, command, data, params, challenge):
         """Execute a StartStop command."""
         domain = self.state.domain
-        if domain == vacuum.DOMAIN:
+        if domain == Platform.VACUUM:
             return await self._execute_vacuum(command, data, params, challenge)
-        if domain == cover.DOMAIN:
+        if domain == Platform.COVER:
             return await self._execute_cover(command, data, params, challenge)
 
     async def _execute_vacuum(self, command, data, params, challenge):
@@ -818,7 +817,7 @@ class TemperatureControlTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return (
-            domain == sensor.DOMAIN
+            domain == Platform.SENSOR
             and device_class == sensor.SensorDeviceClass.TEMPERATURE
         )
 
@@ -884,7 +883,7 @@ class TemperatureSettingTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == climate.DOMAIN
+        return domain == Platform.CLIMATE
 
     @property
     def climate_google_modes(self):
@@ -1003,7 +1002,7 @@ class TemperatureSettingTrait(_Trait):
                 )
 
             await self.hass.services.async_call(
-                climate.DOMAIN,
+                Platform.CLIMATE,
                 climate.SERVICE_SET_TEMPERATURE,
                 {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
                 blocking=not self.config.should_report_state,
@@ -1051,7 +1050,7 @@ class TemperatureSettingTrait(_Trait):
                 svc_data[ATTR_TEMPERATURE] = (temp_high + temp_low) / 2
 
             await self.hass.services.async_call(
-                climate.DOMAIN,
+                Platform.CLIMATE,
                 climate.SERVICE_SET_TEMPERATURE,
                 svc_data,
                 blocking=not self.config.should_report_state,
@@ -1064,7 +1063,7 @@ class TemperatureSettingTrait(_Trait):
 
             if target_mode == "on":
                 await self.hass.services.async_call(
-                    climate.DOMAIN,
+                    Platform.CLIMATE,
                     SERVICE_TURN_ON,
                     {ATTR_ENTITY_ID: self.state.entity_id},
                     blocking=not self.config.should_report_state,
@@ -1074,7 +1073,7 @@ class TemperatureSettingTrait(_Trait):
 
             if target_mode == "off":
                 await self.hass.services.async_call(
-                    climate.DOMAIN,
+                    Platform.CLIMATE,
                     SERVICE_TURN_OFF,
                     {ATTR_ENTITY_ID: self.state.entity_id},
                     blocking=not self.config.should_report_state,
@@ -1084,7 +1083,7 @@ class TemperatureSettingTrait(_Trait):
 
             if target_mode in self.google_to_preset:
                 await self.hass.services.async_call(
-                    climate.DOMAIN,
+                    Platform.CLIMATE,
                     climate.SERVICE_SET_PRESET_MODE,
                     {
                         climate.ATTR_PRESET_MODE: self.google_to_preset[target_mode],
@@ -1096,7 +1095,7 @@ class TemperatureSettingTrait(_Trait):
                 return
 
             await self.hass.services.async_call(
-                climate.DOMAIN,
+                Platform.CLIMATE,
                 climate.SERVICE_SET_HVAC_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -1120,11 +1119,11 @@ class HumiditySettingTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == humidifier.DOMAIN:
+        if domain == Platform.HUMIDIFIER:
             return True
 
         return (
-            domain == sensor.DOMAIN
+            domain == Platform.SENSOR
             and device_class == sensor.SensorDeviceClass.HUMIDITY
         )
 
@@ -1134,12 +1133,12 @@ class HumiditySettingTrait(_Trait):
         attrs = self.state.attributes
         domain = self.state.domain
 
-        if domain == sensor.DOMAIN:
+        if domain == Platform.SENSOR:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 response["queryOnlyHumiditySetting"] = True
 
-        elif domain == humidifier.DOMAIN:
+        elif domain == Platform.HUMIDIFIER:
             response["humiditySetpointRange"] = {
                 "minPercent": round(
                     float(self.state.attributes[humidifier.ATTR_MIN_HUMIDITY])
@@ -1157,14 +1156,14 @@ class HumiditySettingTrait(_Trait):
         attrs = self.state.attributes
         domain = self.state.domain
 
-        if domain == sensor.DOMAIN:
+        if domain == Platform.SENSOR:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 current_humidity = self.state.state
                 if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
-        elif domain == humidifier.DOMAIN:
+        elif domain == Platform.HUMIDIFIER:
             target_humidity = attrs.get(humidifier.ATTR_HUMIDITY)
             if target_humidity is not None:
                 response["humiditySetpointPercent"] = round(float(target_humidity))
@@ -1173,14 +1172,14 @@ class HumiditySettingTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a humidity command."""
-        if self.state.domain == sensor.DOMAIN:
+        if self.state.domain == Platform.SENSOR:
             raise SmartHomeError(
                 ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
             )
 
         if command == COMMAND_SET_HUMIDITY:
             await self.hass.services.async_call(
-                humidifier.DOMAIN,
+                Platform.HUMIDIFIER,
                 humidifier.SERVICE_SET_HUMIDITY,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -1204,7 +1203,7 @@ class LockUnlockTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == lock.DOMAIN
+        return domain == Platform.LOCK
 
     @staticmethod
     def might_2fa(domain, features, device_class):
@@ -1232,7 +1231,7 @@ class LockUnlockTrait(_Trait):
             service = lock.SERVICE_UNLOCK
 
         await self.hass.services.async_call(
-            lock.DOMAIN,
+            Platform.LOCK,
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=not self.config.should_report_state,
@@ -1269,7 +1268,7 @@ class ArmDisArmTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == alarm_control_panel.DOMAIN
+        return domain == Platform.ALARM_CONTROL_PANEL
 
     @staticmethod
     def might_2fa(domain, features, device_class):
@@ -1352,7 +1351,7 @@ class ArmDisArmTrait(_Trait):
             service = SERVICE_ALARM_DISARM
 
         await self.hass.services.async_call(
-            alarm_control_panel.DOMAIN,
+            Platform.ALARM_CONTROL_PANEL,
             service,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
@@ -1376,9 +1375,9 @@ class FanSpeedTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == fan.DOMAIN:
+        if domain == Platform.FAN:
             return features & fan.SUPPORT_SET_SPEED
-        if domain == climate.DOMAIN:
+        if domain == Platform.CLIMATE:
             return features & climate.SUPPORT_FAN_MODE
         return False
 
@@ -1388,7 +1387,7 @@ class FanSpeedTrait(_Trait):
         speeds = []
         result = {}
 
-        if domain == fan.DOMAIN:
+        if domain == Platform.FAN:
             reversible = bool(
                 self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
                 & fan.SUPPORT_DIRECTION
@@ -1401,7 +1400,7 @@ class FanSpeedTrait(_Trait):
                 }
             )
 
-        elif domain == climate.DOMAIN:
+        elif domain == Platform.CLIMATE:
             modes = self.state.attributes.get(climate.ATTR_FAN_MODES) or []
             for mode in modes:
                 speed = {
@@ -1425,11 +1424,11 @@ class FanSpeedTrait(_Trait):
         attrs = self.state.attributes
         domain = self.state.domain
         response = {}
-        if domain == climate.DOMAIN:
+        if domain == Platform.CLIMATE:
             speed = attrs.get(climate.ATTR_FAN_MODE) or "off"
             response["currentFanSpeedSetting"] = speed
 
-        if domain == fan.DOMAIN:
+        if domain == Platform.FAN:
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             response["currentFanSpeedPercent"] = percent
 
@@ -1438,9 +1437,9 @@ class FanSpeedTrait(_Trait):
     async def execute_fanspeed(self, data, params):
         """Execute an SetFanSpeed command."""
         domain = self.state.domain
-        if domain == climate.DOMAIN:
+        if domain == Platform.CLIMATE:
             await self.hass.services.async_call(
-                climate.DOMAIN,
+                Platform.CLIMATE,
                 climate.SERVICE_SET_FAN_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -1450,9 +1449,9 @@ class FanSpeedTrait(_Trait):
                 context=data.context,
             )
 
-        if domain == fan.DOMAIN:
+        if domain == Platform.FAN:
             await self.hass.services.async_call(
-                fan.DOMAIN,
+                Platform.FAN,
                 fan.SERVICE_SET_PERCENTAGE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -1464,14 +1463,14 @@ class FanSpeedTrait(_Trait):
 
     async def execute_reverse(self, data, params):
         """Execute a Reverse command."""
-        if self.state.domain == fan.DOMAIN:
+        if self.state.domain == Platform.FAN:
             if self.state.attributes.get(fan.ATTR_DIRECTION) == fan.DIRECTION_FORWARD:
                 direction = fan.DIRECTION_REVERSE
             else:
                 direction = fan.DIRECTION_FORWARD
 
             await self.hass.services.async_call(
-                fan.DOMAIN,
+                Platform.FAN,
                 fan.SERVICE_SET_DIRECTION,
                 {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_DIRECTION: direction},
                 blocking=not self.config.should_report_state,
@@ -1505,7 +1504,7 @@ class ModesTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == fan.DOMAIN and features & fan.SUPPORT_PRESET_MODE:
+        if domain == Platform.FAN and features & fan.SUPPORT_PRESET_MODE:
             return True
 
         if domain == input_select.DOMAIN:
@@ -1514,13 +1513,13 @@ class ModesTrait(_Trait):
         if domain == select.DOMAIN:
             return True
 
-        if domain == humidifier.DOMAIN and features & humidifier.SUPPORT_MODES:
+        if domain == Platform.HUMIDIFIER and features & humidifier.SUPPORT_MODES:
             return True
 
-        if domain == light.DOMAIN and features & light.SUPPORT_EFFECT:
+        if domain == Platform.LIGHT and features & light.SUPPORT_EFFECT:
             return True
 
-        if domain != media_player.DOMAIN:
+        if domain != Platform.MEDIA_PLAYER:
             return False
 
         return features & media_player.SUPPORT_SELECT_SOUND_MODE
@@ -1554,12 +1553,12 @@ class ModesTrait(_Trait):
         modes = []
 
         for domain, attr, name in (
-            (fan.DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
-            (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
+            (Platform.FAN, fan.ATTR_PRESET_MODES, "preset mode"),
+            (Platform.MEDIA_PLAYER, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
             (select.DOMAIN, select.ATTR_OPTIONS, "option"),
-            (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
-            (light.DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
+            (Platform.HUMIDIFIER, humidifier.ATTR_AVAILABLE_MODES, "mode"),
+            (Platform.LIGHT, light.ATTR_EFFECT_LIST, "effect"),
         ):
             if self.state.domain != domain:
                 continue
@@ -1580,20 +1579,20 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if self.state.domain == fan.DOMAIN:
+        if self.state.domain == Platform.FAN:
             if fan.ATTR_PRESET_MODES in attrs:
                 mode_settings["preset mode"] = attrs.get(fan.ATTR_PRESET_MODE)
-        elif self.state.domain == media_player.DOMAIN:
+        elif self.state.domain == Platform.MEDIA_PLAYER:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
         elif self.state.domain == select.DOMAIN:
             mode_settings["option"] = self.state.state
-        elif self.state.domain == humidifier.DOMAIN:
+        elif self.state.domain == Platform.HUMIDIFIER:
             if ATTR_MODE in attrs:
                 mode_settings["mode"] = attrs.get(ATTR_MODE)
-        elif self.state.domain == light.DOMAIN and light.ATTR_EFFECT in attrs:
+        elif self.state.domain == Platform.LIGHT and light.ATTR_EFFECT in attrs:
             mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
@@ -1606,10 +1605,10 @@ class ModesTrait(_Trait):
         """Execute a SetModes command."""
         settings = params.get("updateModeSettings")
 
-        if self.state.domain == fan.DOMAIN:
+        if self.state.domain == Platform.FAN:
             preset_mode = settings["preset mode"]
             await self.hass.services.async_call(
-                fan.DOMAIN,
+                Platform.FAN,
                 fan.SERVICE_SET_PRESET_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -1648,10 +1647,10 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain == humidifier.DOMAIN:
+        if self.state.domain == Platform.HUMIDIFIER:
             requested_mode = settings["mode"]
             await self.hass.services.async_call(
-                humidifier.DOMAIN,
+                Platform.HUMIDIFIER,
                 humidifier.SERVICE_SET_MODE,
                 {
                     ATTR_MODE: requested_mode,
@@ -1662,10 +1661,10 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain == light.DOMAIN:
+        if self.state.domain == Platform.LIGHT:
             requested_effect = settings["effect"]
             await self.hass.services.async_call(
-                light.DOMAIN,
+                Platform.LIGHT,
                 SERVICE_TURN_ON,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -1676,11 +1675,11 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain == media_player.DOMAIN and (
+        if self.state.domain == Platform.MEDIA_PLAYER and (
             sound_mode := settings.get("sound mode")
         ):
             await self.hass.services.async_call(
-                media_player.DOMAIN,
+                Platform.MEDIA_PLAYER,
                 media_player.SERVICE_SELECT_SOUND_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
@@ -1712,7 +1711,7 @@ class InputSelectorTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == media_player.DOMAIN and (
+        if domain == Platform.MEDIA_PLAYER and (
             features & media_player.SUPPORT_SELECT_SOURCE
         ):
             return True
@@ -1754,7 +1753,7 @@ class InputSelectorTrait(_Trait):
             raise SmartHomeError(ERR_UNSUPPORTED_INPUT, "Unsupported input")
 
         await self.hass.services.async_call(
-            media_player.DOMAIN,
+            Platform.MEDIA_PLAYER,
             media_player.SERVICE_SELECT_SOURCE,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
@@ -1785,10 +1784,10 @@ class OpenCloseTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == cover.DOMAIN:
+        if domain == Platform.COVER:
             return True
 
-        return domain == binary_sensor.DOMAIN and device_class in (
+        return domain == Platform.BINARY_SENSOR and device_class in (
             binary_sensor.BinarySensorDeviceClass.DOOR,
             binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
             binary_sensor.BinarySensorDeviceClass.LOCK,
@@ -1799,18 +1798,18 @@ class OpenCloseTrait(_Trait):
     @staticmethod
     def might_2fa(domain, features, device_class):
         """Return if the trait might ask for 2FA."""
-        return domain == cover.DOMAIN and device_class in OpenCloseTrait.COVER_2FA
+        return domain == Platform.COVER and device_class in OpenCloseTrait.COVER_2FA
 
     def sync_attributes(self):
         """Return opening direction."""
         response = {}
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if self.state.domain == binary_sensor.DOMAIN:
+        if self.state.domain == Platform.BINARY_SENSOR:
             response["queryOnlyOpenClose"] = True
             response["discreteOnlyOpenClose"] = True
         elif (
-            self.state.domain == cover.DOMAIN
+            self.state.domain == Platform.COVER
             and features & cover.SUPPORT_SET_POSITION == 0
         ):
             response["discreteOnlyOpenClose"] = True
@@ -1838,7 +1837,7 @@ class OpenCloseTrait(_Trait):
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             return response
 
-        if domain == cover.DOMAIN:
+        if domain == Platform.COVER:
             if self.state.state == STATE_UNKNOWN:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "Querying state is not supported"
@@ -1853,7 +1852,7 @@ class OpenCloseTrait(_Trait):
             else:
                 response["openPercent"] = 0
 
-        elif domain == binary_sensor.DOMAIN:
+        elif domain == Platform.BINARY_SENSOR:
             if self.state.state == STATE_ON:
                 response["openPercent"] = 100
             else:
@@ -1866,7 +1865,7 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if domain == cover.DOMAIN:
+        if domain == Platform.COVER:
             svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
             should_verify = False
             if command == COMMAND_OPENCLOSE_RELATIVE:
@@ -1904,7 +1903,7 @@ class OpenCloseTrait(_Trait):
                 _verify_pin_challenge(data, self.state, challenge)
 
             await self.hass.services.async_call(
-                cover.DOMAIN,
+                Platform.COVER,
                 service,
                 svc_params,
                 blocking=not self.config.should_report_state,
@@ -1925,7 +1924,7 @@ class VolumeTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if trait is supported."""
-        if domain == media_player.DOMAIN:
+        if domain == Platform.MEDIA_PLAYER:
             return features & (
                 media_player.SUPPORT_VOLUME_SET | media_player.SUPPORT_VOLUME_STEP
             )
@@ -1964,7 +1963,7 @@ class VolumeTrait(_Trait):
 
     async def _set_volume_absolute(self, data, level):
         await self.hass.services.async_call(
-            media_player.DOMAIN,
+            Platform.MEDIA_PLAYER,
             media_player.SERVICE_VOLUME_SET,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
@@ -2003,7 +2002,7 @@ class VolumeTrait(_Trait):
 
             for _ in range(relative):
                 await self.hass.services.async_call(
-                    media_player.DOMAIN,
+                    Platform.MEDIA_PLAYER,
                     svc,
                     {ATTR_ENTITY_ID: self.state.entity_id},
                     blocking=not self.config.should_report_state,
@@ -2022,7 +2021,7 @@ class VolumeTrait(_Trait):
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
         await self.hass.services.async_call(
-            media_player.DOMAIN,
+            Platform.MEDIA_PLAYER,
             media_player.SERVICE_VOLUME_MUTE,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
@@ -2111,7 +2110,7 @@ class TransportControlTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == media_player.DOMAIN:
+        if domain == Platform.MEDIA_PLAYER:
             for feature in MEDIA_COMMAND_SUPPORT_MAPPING.values():
                 if features & feature:
                     return True
@@ -2122,7 +2121,7 @@ class TransportControlTrait(_Trait):
         """Return opening direction."""
         response = {}
 
-        if self.state.domain == media_player.DOMAIN:
+        if self.state.domain == Platform.MEDIA_PLAYER:
             features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
             support = []
@@ -2187,7 +2186,7 @@ class TransportControlTrait(_Trait):
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
         await self.hass.services.async_call(
-            media_player.DOMAIN,
+            Platform.MEDIA_PLAYER,
             service,
             service_attrs,
             blocking=not self.config.should_report_state,
@@ -2230,7 +2229,7 @@ class MediaStateTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == media_player.DOMAIN
+        return domain == Platform.MEDIA_PLAYER
 
     def sync_attributes(self):
         """Return attributes for a sync request."""
@@ -2258,7 +2257,7 @@ class ChannelTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if (
-            domain == media_player.DOMAIN
+            domain == Platform.MEDIA_PLAYER
             and (features & media_player.SUPPORT_PLAY_MEDIA)
             and device_class == media_player.MediaPlayerDeviceClass.TV
         ):
@@ -2288,7 +2287,7 @@ class ChannelTrait(_Trait):
             )
 
         await self.hass.services.async_call(
-            media_player.DOMAIN,
+            Platform.MEDIA_PLAYER,
             media_player.SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
@@ -2325,7 +2324,7 @@ class SensorStateTrait(_Trait):
     @classmethod
     def supported(cls, domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == sensor.DOMAIN and device_class in cls.sensor_types
+        return domain == Platform.SENSOR and device_class in cls.sensor_types
 
     def sync_attributes(self):
         """Return attributes for a sync request."""
