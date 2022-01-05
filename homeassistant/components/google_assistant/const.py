@@ -177,6 +177,7 @@ CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
 
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
