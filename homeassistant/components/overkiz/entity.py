@@ -69,10 +69,10 @@ class OverkizEntity(CoordinatorEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.executor.base_device_url)},
             name=self.device.label,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=self.executor.select_attribute(
-                OverkizAttribute.CORE_FIRMWARE_REVISION
+            manufacturer=str(manufacturer),
+            model=str(model),
+            sw_version=str(
+                self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION)
             ),
             hw_version=self.device.controllable_name,
             suggested_area=self.coordinator.areas[self.device.place_oid],

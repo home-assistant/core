@@ -402,7 +402,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         if self.entity_description.native_value:
             return self.entity_description.native_value(state.value)
 
-        return cast(str, state.value)
+        return state.value
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
