@@ -318,7 +318,7 @@ class Integration:
         cls, hass: HomeAssistant, root_module: ModuleType, domain: str
     ) -> Integration | None:
         """Resolve an integration from a root module."""
-        for base in root_module.__path__:  # type: ignore
+        for base in root_module.__path__:
             manifest_path = pathlib.Path(base) / domain / "manifest.json"
 
             if not manifest_path.is_file():

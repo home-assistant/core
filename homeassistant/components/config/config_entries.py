@@ -311,6 +311,8 @@ async def config_entry_update(hass, connection, msg):
 async def config_entry_disable(hass, connection, msg):
     """Disable config entry."""
     disabled_by = msg["disabled_by"]
+    if disabled_by is not None:
+        disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
     result = False
     try:

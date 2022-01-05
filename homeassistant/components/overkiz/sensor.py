@@ -1,11 +1,16 @@
 """Support for Overkiz sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import cast
+
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -24,11 +29,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizDescriptiveEntity, OverkizEntity, OverkizSensorDescription
+from .entity import OverkizDescriptiveEntity, OverkizEntity
+
+
+@dataclass
+class OverkizSensorDescription(SensorEntityDescription):
+    """Class to describe an Overkiz sensor."""
+
+    native_value: Callable[[str | int | float], str | int | float] | None = None
+
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
@@ -42,7 +56,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY,
         name="Battery",
-        device_class=SensorDeviceClass.BATTERY,
         native_value=lambda value: str(value).capitalize(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -54,6 +67,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_value=lambda value: round(float(value)),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_EXPECTED_NUMBER_OF_SHOWER,
@@ -114,7 +128,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_FOSSIL_ENERGY_CONSUMPTION,
         name="Fossil Energy Consumption",
-        device_class=SensorDeviceClass.ENERGY,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_GAS_CONSUMPTION,
@@ -280,7 +293,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_SUN_ENERGY,
         name="Sun Energy",
         native_value=lambda value: round(float(value), 2),
-        device_class=SensorDeviceClass.ENERGY,
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -318,7 +330,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Discrete RSSI Level",
         entity_registry_enabled_default=False,
         native_value=lambda value: str(value).capitalize(),
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
@@ -337,7 +348,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz sensors from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = []
@@ -347,20 +358,6 @@ async def async_setup_entry(
     }
 
     for device in data.coordinator.data.values():
-        if (
-            device.widget not in IGNORED_OVERKIZ_DEVICES
-            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
-        ):
-            for state in device.definition.states:
-                if description := key_supported_states.get(state.qualified_name):
-                    entities.append(
-                        OverkizStateSensor(
-                            device.device_url,
-                            data.coordinator,
-                            description,
-                        )
-                    )
-
         if device.widget == UIWidget.HOMEKIT_STACK:
             entities.append(
                 OverkizHomeKitSetupCodeSensor(
@@ -369,14 +366,32 @@ async def async_setup_entry(
                 )
             )
 
+        if (
+            device.widget in IGNORED_OVERKIZ_DEVICES
+            or device.ui_class in IGNORED_OVERKIZ_DEVICES
+        ):
+            continue
+
+        for state in device.definition.states:
+            if description := key_supported_states.get(state.qualified_name):
+                entities.append(
+                    OverkizStateSensor(
+                        device.device_url,
+                        data.coordinator,
+                        description,
+                    )
+                )
+
     async_add_entities(entities)
 
 
 class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     """Representation of an Overkiz Sensor."""
 
+    entity_description: OverkizSensorDescription
+
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
@@ -384,10 +399,10 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             return None
 
         # Transform the value with a lambda function
-        if hasattr(self.entity_description, "native_value"):
+        if self.entity_description.native_value:
             return self.entity_description.native_value(state.value)
 
-        return state.value
+        return cast(str, state.value)
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
@@ -404,9 +419,11 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         self._attr_name = "HomeKit Setup Code"
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the value of the sensor."""
-        return self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE).value
+        if state := self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE):
+            return cast(str, state.value)
+        return None
 
     @property
     def device_info(self) -> DeviceInfo:

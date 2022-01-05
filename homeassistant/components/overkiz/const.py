@@ -18,9 +18,12 @@ UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SCENE,
     Platform.SENSOR,
 ]
 
@@ -32,4 +35,5 @@ IGNORED_OVERKIZ_DEVICES: list[UIClass | UIWidget] = [
 # Used to map the Somfy widget and ui_class to the Home Assistant platform
 OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
     UIClass.DOOR_LOCK: Platform.LOCK,
+    UIClass.LIGHT: Platform.LIGHT,
 }

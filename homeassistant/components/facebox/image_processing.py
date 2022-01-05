@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import ServiceCall, split_entity_id
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SERVICE_TEACH_FACE
@@ -187,7 +187,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data[DATA_FACEBOX].append(facebox)
     add_entities(entities)
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
         entity_ids = service.data.get("entity_id")
 

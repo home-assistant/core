@@ -362,7 +362,7 @@ class HomeAssistant:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_add_hass_job(HassJob(target), *args)
 
@@ -462,7 +462,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_run_hass_job(HassJob(target), *args)
 
@@ -1330,7 +1330,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1347,7 +1347,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
