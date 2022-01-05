@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
@@ -29,7 +30,9 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -119,9 +122,13 @@ DIAG_SENSOR = GoodweSensorEntityDescription(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the GoodWe inverter from a config entry."""
-    entities = []
+    entities: list[InverterSensor] = []
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
