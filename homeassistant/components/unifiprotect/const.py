@@ -1,5 +1,7 @@
 """Constant definitions for UniFi Protect Integration."""
 
+from datetime import timedelta
+
 from pyunifiprotect.data.types import ModelType, Version
 import voluptuous as vol
 
@@ -32,6 +34,8 @@ DEFAULT_BRAND = "Ubiquiti"
 DEFAULT_SCAN_INTERVAL = 5
 DEFAULT_VERIFY_SSL = False
 
+RING_INTERVAL = timedelta(seconds=3)
+
 DEVICE_TYPE_CAMERA = "camera"
 DEVICES_THAT_ADOPT = {
     ModelType.CAMERA,
@@ -50,6 +54,7 @@ SERVICE_SET_DOORBELL_MESSAGE = "set_doorbell_message"
 TYPE_EMPTY_VALUE = ""
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.LIGHT,

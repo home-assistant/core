@@ -13,6 +13,7 @@ from pyunifiprotect.data import (
     StateType,
     Viewer,
 )
+from pyunifiprotect.data.nvr import NVR
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
@@ -168,3 +169,37 @@ class ProtectDeviceEntity(Entity):
                 self.device.id, self._async_updated_event
             )
         )
+
+
+class ProtectNVREntity(ProtectDeviceEntity):
+    """Base class for unifi protect entities."""
+
+    def __init__(
+        self,
+        entry: ProtectData,
+        device: NVR,
+        description: EntityDescription | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        # ProtectNVREntity is intentionally a separate base class
+        self.device: NVR = device  # type: ignore
+        super().__init__(entry, description=description)
+
+    @callback
+    def _async_set_device_info(self) -> None:
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
+            identifiers={(DOMAIN, self.device.mac)},
+            manufacturer=DEFAULT_BRAND,
+            name=self.device.name,
+            model=self.device.type,
+            sw_version=str(self.device.version),
+            configuration_url=self.device.api.base_url,
+        )
+
+    @callback
+    def _async_update_device_from_protect(self) -> None:
+        if self.data.last_update_success:
+            self.device = self.data.api.bootstrap.nvr
+
+        self._attr_available = self.data.last_update_success
