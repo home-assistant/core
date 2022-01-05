@@ -332,6 +332,9 @@ async def test_select_update_doorbell_settings(
 
     expected_length += 1
     new_nvr = copy(mock_entry.api.bootstrap.nvr)
+    new_nvr.__fields__["update_all_messages"] = Mock()
+    new_nvr.update_all_messages = Mock()
+
     new_nvr.doorbell_settings.all_messages = [
         *new_nvr.doorbell_settings.all_messages,
         DoorbellMessage(
