@@ -520,21 +520,6 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity):
         return None
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=self.name,
-            identifiers={(DOMAIN, self._mac)},
-            via_device=(
-                DOMAIN,
-                self._router.unique_id,
-            ),
-        )
-
-    @property
     def should_poll(self) -> bool:
         """No polling needed."""
         return False

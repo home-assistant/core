@@ -19,16 +19,12 @@ from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
@@ -243,6 +239,11 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.async_write_ha_state()
 
     @property
+    def device_info(self) -> None:
+        """Return no device info."""
+        return None
+
+    @property
     def is_connected(self):
         """Return true if the client is connected to the network."""
         if (
@@ -365,13 +366,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             self._is_connected = True
             self.schedule_update = True
 
-        elif (
-            self.device.last_updated == SOURCE_EVENT
-            and self.device.event.event in DEVICE_UPGRADED
-        ):
-            self.hass.async_create_task(self.async_update_device_registry())
-            return
-
         if self.schedule_update:
             self.schedule_update = False
             self.controller.async_heartbeat(
@@ -411,28 +405,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     def available(self) -> bool:
         """Return if controller is available."""
         return not self.device.disabled and self.controller.available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=self.device.model,
-            sw_version=self.device.version,
-        )
-
-        if self.device.name:
-            info[ATTR_NAME] = self.device.name
-
-        return info
-
-    async def async_update_device_registry(self) -> None:
-        """Update device registry."""
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
-            config_entry_id=self.controller.config_entry.entry_id, **self.device_info
-        )
 
     @property
     def extra_state_attributes(self):
