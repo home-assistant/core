@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -173,6 +174,12 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
     for entry in entity_registry.async_entries_for_device(registry, device_id):
+        # If an entry is unavailable, it is possible that the underlying value
+        # is no longer valid. Additionally, if an entry is disabled, its
+        # underlying value is not being monitored by HA so we shouldn't allow
+        # actions against it.
+        if hass.states.get(entry.entity_id) == STATE_UNAVAILABLE or entry.disabled:
+            continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
         if entry.domain == LOCK_DOMAIN:
