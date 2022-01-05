@@ -41,7 +41,8 @@ class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
-    platforms: defaultdict[Platform, list[Device | Scenario]]
+    platforms: defaultdict[Platform, list[Device]]
+    scenarios: list[Scenario]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -95,16 +96,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
-    platforms: defaultdict[Platform, list[Device | Scenario]] = defaultdict(list)
+    platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
-        coordinator=coordinator,
-        platforms=platforms,
+        coordinator=coordinator, platforms=platforms, scenarios=scenarios
     )
 
     # Map Overkiz entities to Home Assistant platform
-    platforms[Platform.SCENE] = scenarios
-
     for device in coordinator.data.values():
         _LOGGER.debug(
             "The following device has been retrieved. Report an issue if not supported correctly (%s)",
