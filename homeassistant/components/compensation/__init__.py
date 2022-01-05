@@ -12,8 +12,10 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_COMPENSATION,
@@ -67,11 +69,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Compensation sensor."""
     hass.data[DATA_COMPENSATION] = {}
 
-    for compensation, conf in config.get(DOMAIN).items():
+    for compensation, conf in config[DOMAIN].items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, compensation)
 
         degree = conf[CONF_DEGREE]
