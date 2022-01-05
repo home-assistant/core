@@ -1,7 +1,6 @@
 """Support for Wi-Fi enabled iRobot Roombas."""
-from typing import Type
+from __future__ import annotations
 
-from homeassistant.components.roomba.irobot_base import IRobotVacuum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -9,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import roomba_reported_state
 from .braava import BraavaJet
 from .const import BLID, DOMAIN, ROOMBA_SESSION
+from .irobot_base import IRobotVacuum
 from .roomba import RoombaVacuum, RoombaVacuumCarpetBoost
 
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
     capabilities = state.get("cap", {})
     cap_carpet_boost = capabilities.get("carpetBoost")
     detected_pad = state.get("detectedPad")
-    constructor: Type[IRobotVacuum]
+    constructor: type[IRobotVacuum]
     if detected_pad is not None:
         constructor = BraavaJet
     elif cap_carpet_boost == 1:
