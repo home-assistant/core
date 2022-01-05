@@ -54,6 +54,10 @@ async def test_button_uid(hass):
 
         entity_registry = er.async_get(hass)
         for address, name in address_to_name.items():
+            state = hass.states.get(name)
+            assert state
+            assert state.attributes.get("address") == address
+
             entry = entity_registry.async_get(name)
             assert entry
             assert entry.unique_id == address.lower()
