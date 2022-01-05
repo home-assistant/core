@@ -8,6 +8,7 @@ from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -255,7 +256,7 @@ async def async_setup_entry(
     for feature, description in NUMBER_TYPES.items():
         if feature == FEATURE_SET_LED_BRIGHTNESS and model != MODEL_FAN_ZA5:
             # Delete LED bightness entity created by mistake if it exists
-            entity_reg = hass.helpers.entity_registry.async_get()
+            entity_reg = er.async_get(hass)
             entity_id = entity_reg.async_get_entity_id(
                 PLATFORM_DOMAIN, DOMAIN, f"{description.key}_{config_entry.unique_id}"
             )
