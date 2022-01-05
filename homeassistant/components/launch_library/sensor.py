@@ -45,7 +45,10 @@ async def async_setup_platform(
 ) -> None:
     """Import Launch Library configuration from yaml."""
     _LOGGER.warning(
-        "Loading Launch Library via platform setup is deprecated. Please remove it from your yaml configuration"
+        "Configuration of the launch_library platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
