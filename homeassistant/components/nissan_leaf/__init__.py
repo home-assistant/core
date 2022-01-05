@@ -28,35 +28,32 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
+from .const import (
+    CONF_CHARGING_INTERVAL,
+    CONF_CLIMATE_INTERVAL,
+    CONF_FORCE_MILES,
+    CONF_INTERVAL,
+    CONF_VALID_REGIONS,
+    DATA_BATTERY,
+    DATA_CHARGING,
+    DATA_CLIMATE,
+    DATA_LEAF,
+    DATA_PLUGGED_IN,
+    DATA_RANGE_AC,
+    DATA_RANGE_AC_OFF,
+    DEFAULT_CHARGING_INTERVAL,
+    DEFAULT_CLIMATE_INTERVAL,
+    DEFAULT_INTERVAL,
+    DOMAIN,
+    INITIAL_UPDATE,
+    MAX_RESPONSE_ATTEMPTS,
+    MIN_UPDATE_INTERVAL,
+    PYCARWINGS2_SLEEP,
+    RESTRICTED_BATTERY,
+    RESTRICTED_INTERVAL,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nissan_leaf"
-DATA_LEAF = "nissan_leaf_data"
-
-DATA_BATTERY = "battery"
-DATA_CHARGING = "charging"
-DATA_PLUGGED_IN = "plugged_in"
-DATA_CLIMATE = "climate"
-DATA_RANGE_AC = "range_ac_on"
-DATA_RANGE_AC_OFF = "range_ac_off"
-
-CONF_INTERVAL = "update_interval"
-CONF_CHARGING_INTERVAL = "update_interval_charging"
-CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
-CONF_FORCE_MILES = "force_miles"
-
-INITIAL_UPDATE = timedelta(seconds=15)
-MIN_UPDATE_INTERVAL = timedelta(minutes=2)
-DEFAULT_INTERVAL = timedelta(hours=1)
-DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
-DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
-RESTRICTED_BATTERY = 2
-RESTRICTED_INTERVAL = timedelta(hours=12)
-
-MAX_RESPONSE_ATTEMPTS = 3
-
-PYCARWINGS2_SLEEP = 30
 
 CONFIG_SCHEMA = vol.Schema(
     {

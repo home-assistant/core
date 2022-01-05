@@ -116,6 +116,7 @@ class ZigbeeChannel(LogMixin):
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
+        self.data_cache = {}
 
     @property
     def id(self) -> str:

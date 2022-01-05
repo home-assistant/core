@@ -1,11 +1,16 @@
 """Allows to configure a switch using BeagleBone Black GPIO."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components import bbb_gpio
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_PINS = "pins"
 CONF_INITIAL = "initial"
@@ -24,7 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the BeagleBone Black GPIO devices."""
     pins = config[CONF_PINS]
 

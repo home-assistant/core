@@ -1,4 +1,6 @@
 """Component for facial detection and identification via facebox."""
+from __future__ import annotations
+
 import base64
 from http import HTTPStatus
 import logging
@@ -23,8 +25,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import ServiceCall, split_entity_id
+from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, SERVICE_TEACH_FACE
 
@@ -158,7 +162,12 @@ def valid_file_path(file_path):
         return False
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the classifier."""
     if DATA_FACEBOX not in hass.data:
         hass.data[DATA_FACEBOX] = []

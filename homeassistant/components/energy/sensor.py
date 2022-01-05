@@ -5,7 +5,7 @@ import asyncio
 import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, TypeVar, cast
+from typing import Any, Final, Literal, cast
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -57,9 +57,6 @@ async def async_setup_platform(
     """Set up the energy sensors."""
     sensor_manager = SensorManager(await async_get_manager(hass), async_add_entities)
     await sensor_manager.async_start()
-
-
-T = TypeVar("T")
 
 
 @dataclass
