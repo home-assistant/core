@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -29,11 +30,12 @@ from homeassistant.const import (
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -227,16 +229,18 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = hass.data.get(TIBBER_DOMAIN)
+    tibber_connection = hass.data[TIBBER_DOMAIN]
 
     entity_registry = async_get_entity_reg(hass)
     device_registry = async_get_dev_reg(hass)
 
-    coordinator = None
-    entities = []
+    coordinator: update_coordinator.DataUpdateCoordinator | None = None
+    entities: list[TibberSensor] = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
             await home.update_info()
