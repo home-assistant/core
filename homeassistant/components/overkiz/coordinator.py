@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import Any, cast
+from typing import Any, cast, TYPE_CHECKING
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -173,7 +173,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
         value = cast_to_python(state.value)
 
-        assert isinstance(value, (str, float, int, bool))
+        if TYPE_CHECKING:
+            assert isinstance(value, (str, float, int, bool))
 
         return value
 
