@@ -364,7 +364,7 @@ directv==0.4.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.31
+dsmr_parser==0.32
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
