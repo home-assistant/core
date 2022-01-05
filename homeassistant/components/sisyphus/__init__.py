@@ -6,9 +6,11 @@ from sisyphus_control import Table
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the sisyphus component."""
 
     class SocketIONoiseFilter(logging.Filter):
@@ -41,7 +43,7 @@ async def async_setup(hass, config):
 
     logging.getLogger("socketIO-client").addFilter(SocketIONoiseFilter())
     tables = hass.data.setdefault(DATA_SISYPHUS, {})
-    table_configs = config.get(DOMAIN)
+    table_configs = config[DOMAIN]
     session = async_get_clientsession(hass)
 
     async def add_table(host, name=None):
