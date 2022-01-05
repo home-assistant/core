@@ -1216,7 +1216,7 @@ class Script:
                         self._hass,
                         run_variables,
                     )
-                except template.TemplateError as err:
+                except exceptions.TemplateError as err:
                     self._log("Error rendering variables: %s", err, level=logging.ERROR)
                     raise
             elif run_variables:
