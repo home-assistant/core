@@ -248,8 +248,10 @@ class ConfiguredDoorBird:
         if self.custom_url is not None:
             hass_url = self.custom_url
 
+        favorites = self.device.favorites()
+
         for event in self.doorstation_events:
-            self._register_event(hass_url, event)
+            self._register_event(hass_url, event, favs=favorites)
 
             _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
 
@@ -261,15 +263,15 @@ class ConfiguredDoorBird:
     def _get_event_name(self, event):
         return f"{self.slug}_{event}"
 
-    def _register_event(self, hass_url, event):
+    def _register_event(self, hass_url, event, favs=None):
         """Add a schedule entry in the device for a sensor."""
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
-        if not self.webhook_is_registered(url):
+        if not self.webhook_is_registered(url, favs=favs):
             self.device.change_favorite("http", f"Home Assistant ({event})", url)
 
-        if not self.get_webhook_id(url):
+        if not self.get_webhook_id(url, favs=favs):
             _LOGGER.warning(
                 'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
                 url,
