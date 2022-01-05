@@ -6,10 +6,11 @@ from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_ALARM_NAME = "satel_integra"
 DEFAULT_PORT = 7094
@@ -90,9 +91,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Satel Integra component."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
 
     zones = conf.get(CONF_ZONES)
     outputs = conf.get(CONF_OUTPUTS)
