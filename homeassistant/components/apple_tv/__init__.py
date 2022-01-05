@@ -3,10 +3,11 @@ import asyncio
 import logging
 from random import randrange
 
-from pyatv import connect, exceptions
+from pyatv import connect, exceptions, scan
 from pyatv.const import DeviceModel, Protocol
 from pyatv.convert import model_str
 
+from homeassistant.components import zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -32,7 +33,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
-from .scanner import scan
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,8 +271,13 @@ class AppleTVManager:
         }
 
         _LOGGER.debug("Discovering device %s", self.config_entry.title)
+        aiozc = await zeroconf.async_get_async_instance(self.hass)
         atvs = await scan(
-            self.hass, identifier=identifiers, protocol=protocols, hosts=[address]
+            self.hass.loop,
+            identifier=identifiers,
+            protocol=protocols,
+            hosts=[address],
+            async_zeroconf=aiozc,
         )
         if atvs:
             return atvs[0]
