@@ -95,8 +95,11 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        next_launch = self.get_next_launch()
-        return next_launch.name if next_launch else None
+        if next_launch := self.get_next_launch():
+            self._attr_available = True
+            return next_launch.name
+        self._attr_available = False
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
