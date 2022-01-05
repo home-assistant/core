@@ -132,6 +132,7 @@ jobs:
   prepare-base:
     name: Prepare base dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
       pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
@@ -520,6 +521,7 @@ jobs:
   prepare-tests:
     name: Prepare tests for Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         python-version: [3.8, 3.9]
@@ -585,6 +587,7 @@ jobs:
   pylint:
     name: Check pylint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs:
       - changes
       - prepare-tests
@@ -712,6 +715,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Run pytest (fully)
         if: needs.changes.outputs.test_full_suite == 'true'
+        timeout-minutes: 45
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \
@@ -729,6 +733,7 @@ jobs:
             tests
       - name: Run pytest (partially)
         if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
+        timeout-minutes: 10
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \
@@ -746,6 +751,7 @@ jobs:
             tests/components/${{ matrix.group }}
       - name: Run pytest (partially); no coverage
         if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version == '3.8'
+        timeout-minutes: 10
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \
