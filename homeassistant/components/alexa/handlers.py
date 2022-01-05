@@ -44,6 +44,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
 from homeassistant.helpers import network
 import homeassistant.util.color as color_util
@@ -123,17 +124,17 @@ async def async_api_turn_on(hass, config, directive, context):
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
-    if domain == cover.DOMAIN:
+    if domain == Platform.COVER:
         service = cover.SERVICE_OPEN_COVER
-    elif domain == fan.DOMAIN:
+    elif domain == Platform.FAN:
         service = fan.SERVICE_TURN_ON
-    elif domain == vacuum.DOMAIN:
+    elif domain == Platform.VACUUM:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
             service = vacuum.SERVICE_START
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_START
-    elif domain == media_player.DOMAIN:
+    elif domain == Platform.MEDIA_PLAYER:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
@@ -159,11 +160,11 @@ async def async_api_turn_off(hass, config, directive, context):
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_OFF
-    if entity.domain == cover.DOMAIN:
+    if entity.domain == Platform.COVER:
         service = cover.SERVICE_CLOSE_COVER
-    elif domain == fan.DOMAIN:
+    elif domain == Platform.FAN:
         service = fan.SERVICE_TURN_OFF
-    elif domain == vacuum.DOMAIN:
+    elif domain == Platform.VACUUM:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
             not supported & vacuum.SUPPORT_TURN_OFF
@@ -172,7 +173,7 @@ async def async_api_turn_off(hass, config, directive, context):
             service = vacuum.SERVICE_RETURN_TO_BASE
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_CANCEL
-    elif domain == media_player.DOMAIN:
+    elif domain == Platform.MEDIA_PLAYER:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
@@ -316,7 +317,7 @@ async def async_api_activate(hass, config, directive, context):
     domain = entity.domain
 
     service = SERVICE_TURN_ON
-    if domain == button.DOMAIN:
+    if domain == Platform.BUTTON:
         service = button.SERVICE_PRESS
     elif domain == input_button.DOMAIN:
         service = input_button.SERVICE_PRESS
@@ -370,7 +371,7 @@ async def async_api_set_percentage(hass, config, directive, context):
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.domain == fan.DOMAIN:
+    if entity.domain == Platform.FAN:
         service = fan.SERVICE_SET_PERCENTAGE
         percentage = int(directive.payload["percentage"])
         data[fan.ATTR_PERCENTAGE] = percentage
@@ -390,7 +391,7 @@ async def async_api_adjust_percentage(hass, config, directive, context):
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.domain == fan.DOMAIN:
+    if entity.domain == Platform.FAN:
         service = fan.SERVICE_SET_PERCENTAGE
         current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
@@ -819,7 +820,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
 
     response = directive.response()
     await hass.services.async_call(
-        climate.DOMAIN, service, data, blocking=False, context=context
+        Platform.CLIMATE, service, data, blocking=False, context=context
     )
     response.add_context_property(
         {
@@ -923,14 +924,14 @@ async def async_api_set_mode(hass, config, directive, context):
     mode = directive.payload["mode"]
 
     # Fan Direction
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
+    if instance == f"{Platform.FAN}.{fan.ATTR_DIRECTION}":
         direction = mode.split(".")[1]
         if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
 
     # Fan preset_mode
-    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+    elif instance == f"{Platform.FAN}.{fan.ATTR_PRESET_MODE}":
         preset_mode = mode.split(".")[1]
         if preset_mode != PRESET_MODE_NA and preset_mode in entity.attributes.get(
             fan.ATTR_PRESET_MODES
@@ -942,7 +943,7 @@ async def async_api_set_mode(hass, config, directive, context):
             raise AlexaInvalidValueError(msg)
 
     # Cover Position
-    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+    elif instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
 
         if position == cover.STATE_CLOSED:
@@ -996,7 +997,7 @@ async def async_api_toggle_on(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     # Fan Oscillating
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+    if instance == f"{Platform.FAN}.{fan.ATTR_OSCILLATING}":
         service = fan.SERVICE_OSCILLATE
         data[fan.ATTR_OSCILLATING] = True
     else:
@@ -1030,7 +1031,7 @@ async def async_api_toggle_off(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     # Fan Oscillating
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+    if instance == f"{Platform.FAN}.{fan.ATTR_OSCILLATING}":
         service = fan.SERVICE_OSCILLATE
         data[fan.ATTR_OSCILLATING] = False
     else:
@@ -1065,7 +1066,7 @@ async def async_api_set_range(hass, config, directive, context):
     range_value = directive.payload["rangeValue"]
 
     # Cover Position
-    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+    if instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
         range_value = int(range_value)
         if range_value == 0:
             service = cover.SERVICE_CLOSE_COVER
@@ -1076,7 +1077,7 @@ async def async_api_set_range(hass, config, directive, context):
             data[cover.ATTR_POSITION] = range_value
 
     # Cover Tilt
-    elif instance == f"{cover.DOMAIN}.tilt":
+    elif instance == f"{Platform.COVER}.tilt":
         range_value = int(range_value)
         if range_value == 0:
             service = cover.SERVICE_CLOSE_COVER_TILT
@@ -1087,7 +1088,7 @@ async def async_api_set_range(hass, config, directive, context):
             data[cover.ATTR_TILT_POSITION] = range_value
 
     # Fan Speed
-    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+    elif instance == f"{Platform.FAN}.{fan.ATTR_PERCENTAGE}":
         range_value = int(range_value)
         if range_value == 0:
             service = fan.SERVICE_TURN_OFF
@@ -1108,7 +1109,7 @@ async def async_api_set_range(hass, config, directive, context):
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Vacuum Fan Speed
-    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+    elif instance == f"{Platform.VACUUM}.{vacuum.ATTR_FAN_SPEED}":
         service = vacuum.SERVICE_SET_FAN_SPEED
         speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
         speed = next(
@@ -1155,7 +1156,7 @@ async def async_api_adjust_range(hass, config, directive, context):
     response_value = 0
 
     # Cover Position
-    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+    if instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
         if not (current := entity.attributes.get(cover.ATTR_POSITION)):
@@ -1170,7 +1171,7 @@ async def async_api_adjust_range(hass, config, directive, context):
             data[cover.ATTR_POSITION] = position
 
     # Cover Tilt
-    elif instance == f"{cover.DOMAIN}.tilt":
+    elif instance == f"{Platform.COVER}.tilt":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
@@ -1186,7 +1187,7 @@ async def async_api_adjust_range(hass, config, directive, context):
             data[cover.ATTR_TILT_POSITION] = tilt_position
 
     # Fan speed percentage
-    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+    elif instance == f"{Platform.FAN}.{fan.ATTR_PERCENTAGE}":
         percentage_step = entity.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 20
         range_delta = (
             int(range_delta * percentage_step)
@@ -1215,7 +1216,7 @@ async def async_api_adjust_range(hass, config, directive, context):
         )
 
     # Vacuum Fan Speed
-    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+    elif instance == f"{Platform.VACUUM}.{vacuum.ATTR_FAN_SPEED}":
         range_delta = int(range_delta)
         service = vacuum.SERVICE_SET_FAN_SPEED
         speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
@@ -1359,7 +1360,7 @@ async def async_api_seek(hass, config, directive, context):
     }
 
     await hass.services.async_call(
-        media_player.DOMAIN,
+        Platform.MEDIA_PLAYER,
         media_player.SERVICE_MEDIA_SEEK,
         data,
         blocking=False,
@@ -1422,7 +1423,7 @@ async def async_api_hold(hass, config, directive, context):
     if entity.domain == timer.DOMAIN:
         service = timer.SERVICE_PAUSE
 
-    elif entity.domain == vacuum.DOMAIN:
+    elif entity.domain == Platform.VACUUM:
         service = vacuum.SERVICE_START_PAUSE
 
     else:
@@ -1445,7 +1446,7 @@ async def async_api_resume(hass, config, directive, context):
     if entity.domain == timer.DOMAIN:
         service = timer.SERVICE_START
 
-    elif entity.domain == vacuum.DOMAIN:
+    elif entity.domain == Platform.VACUUM:
         service = vacuum.SERVICE_START_PAUSE
 
     else:

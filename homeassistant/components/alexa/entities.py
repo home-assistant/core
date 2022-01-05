@@ -5,25 +5,19 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components import (
-    alarm_control_panel,
     alert,
     automation,
     binary_sensor,
-    button,
     camera,
     cover,
     fan,
     group,
-    image_processing,
     input_boolean,
     input_button,
     input_number,
     light,
-    lock,
     media_player,
-    scene,
     script,
-    sensor,
     switch,
     timer,
     vacuum,
@@ -38,6 +32,7 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
     __version__,
 )
 from homeassistant.core import HomeAssistant, State, callback
@@ -405,7 +400,7 @@ class GenericCapabilities(AlexaEntity):
         ]
 
 
-@ENTITY_ADAPTERS.register(switch.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.SWITCH)
 class SwitchCapabilities(AlexaEntity):
     """Class to represent Switch capabilities."""
 
@@ -426,7 +421,7 @@ class SwitchCapabilities(AlexaEntity):
         ]
 
 
-@ENTITY_ADAPTERS.register(button.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.BUTTON)
 @ENTITY_ADAPTERS.register(input_button.DOMAIN)
 class ButtonCapabilities(AlexaEntity):
     """Class to represent Button capabilities."""
@@ -443,7 +438,7 @@ class ButtonCapabilities(AlexaEntity):
         ]
 
 
-@ENTITY_ADAPTERS.register(climate.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.CLIMATE)
 class ClimateCapabilities(AlexaEntity):
     """Class to represent Climate capabilities."""
 
@@ -465,7 +460,7 @@ class ClimateCapabilities(AlexaEntity):
         yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(cover.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.COVER)
 class CoverCapabilities(AlexaEntity):
     """Class to represent Cover capabilities."""
 
@@ -503,19 +498,19 @@ class CoverCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaRangeController(
-                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
+                self.entity, instance=f"{Platform.COVER}.{cover.ATTR_POSITION}"
             )
         elif supported & (cover.SUPPORT_CLOSE | cover.SUPPORT_OPEN):
             yield AlexaModeController(
-                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
+                self.entity, instance=f"{Platform.COVER}.{cover.ATTR_POSITION}"
             )
         if supported & cover.SUPPORT_SET_TILT_POSITION:
-            yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
+            yield AlexaRangeController(self.entity, instance=f"{Platform.COVER}.tilt")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(light.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.LIGHT)
 class LightCapabilities(AlexaEntity):
     """Class to represent Light capabilities."""
 
@@ -539,7 +534,7 @@ class LightCapabilities(AlexaEntity):
         yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(fan.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.FAN)
 class FanCapabilities(AlexaEntity):
     """Class to represent Fan capabilities."""
 
@@ -554,17 +549,17 @@ class FanCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_OSCILLATE:
             yield AlexaToggleController(
-                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
+                self.entity, instance=f"{Platform.FAN}.{fan.ATTR_OSCILLATING}"
             )
             force_range_controller = False
         if supported & fan.SUPPORT_PRESET_MODE:
             yield AlexaModeController(
-                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
+                self.entity, instance=f"{Platform.FAN}.{fan.ATTR_PRESET_MODE}"
             )
             force_range_controller = False
         if supported & fan.SUPPORT_DIRECTION:
             yield AlexaModeController(
-                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}"
+                self.entity, instance=f"{Platform.FAN}.{fan.ATTR_DIRECTION}"
             )
             force_range_controller = False
 
@@ -574,14 +569,14 @@ class FanCapabilities(AlexaEntity):
         # As a workaround, we add a range controller which can only be set to 0% or 100%.
         if force_range_controller or supported & fan.SUPPORT_SET_SPEED:
             yield AlexaRangeController(
-                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
+                self.entity, instance=f"{Platform.FAN}.{fan.ATTR_PERCENTAGE}"
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(lock.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.LOCK)
 class LockCapabilities(AlexaEntity):
     """Class to represent Lock capabilities."""
 
@@ -598,7 +593,7 @@ class LockCapabilities(AlexaEntity):
         ]
 
 
-@ENTITY_ADAPTERS.register(media_player.const.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.MEDIA_PLAYER)
 class MediaPlayerCapabilities(AlexaEntity):
     """Class to represent MediaPlayer capabilities."""
 
@@ -663,7 +658,7 @@ class MediaPlayerCapabilities(AlexaEntity):
         yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(scene.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.SCENE)
 class SceneCapabilities(AlexaEntity):
     """Class to represent Scene capabilities."""
 
@@ -702,7 +697,7 @@ class ScriptCapabilities(AlexaEntity):
         ]
 
 
-@ENTITY_ADAPTERS.register(sensor.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.SENSOR)
 class SensorCapabilities(AlexaEntity):
     """Class to represent Sensor capabilities."""
 
@@ -721,7 +716,7 @@ class SensorCapabilities(AlexaEntity):
             yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.BINARY_SENSOR)
 class BinarySensorCapabilities(AlexaEntity):
     """Class to represent BinarySensor capabilities."""
 
@@ -785,7 +780,7 @@ class BinarySensorCapabilities(AlexaEntity):
             return self.TYPE_PRESENCE
 
 
-@ENTITY_ADAPTERS.register(alarm_control_panel.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.ALARM_CONTROL_PANEL)
 class AlarmControlPanelCapabilities(AlexaEntity):
     """Class to represent Alarm capabilities."""
 
@@ -801,7 +796,7 @@ class AlarmControlPanelCapabilities(AlexaEntity):
             yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(image_processing.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.IMAGE_PROCESSING)
 class ImageProcessingCapabilities(AlexaEntity):
     """Class to represent image_processing capabilities."""
 
@@ -849,7 +844,7 @@ class TimerCapabilities(AlexaEntity):
         yield Alexa(self.entity)
 
 
-@ENTITY_ADAPTERS.register(vacuum.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.VACUUM)
 class VacuumCapabilities(AlexaEntity):
     """Class to represent vacuum capabilities."""
 
@@ -870,7 +865,7 @@ class VacuumCapabilities(AlexaEntity):
 
         if supported & vacuum.SUPPORT_FAN_SPEED:
             yield AlexaRangeController(
-                self.entity, instance=f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}"
+                self.entity, instance=f"{Platform.VACUUM}.{vacuum.ATTR_FAN_SPEED}"
             )
 
         if supported & vacuum.SUPPORT_PAUSE:
@@ -883,7 +878,7 @@ class VacuumCapabilities(AlexaEntity):
         yield Alexa(self.hass)
 
 
-@ENTITY_ADAPTERS.register(camera.DOMAIN)
+@ENTITY_ADAPTERS.register(Platform.CAMERA)
 class CameraCapabilities(AlexaEntity):
     """Class to represent Camera capabilities."""
 

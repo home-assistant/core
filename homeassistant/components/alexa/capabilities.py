@@ -3,15 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components import (
-    cover,
-    fan,
-    image_processing,
-    input_number,
-    light,
-    timer,
-    vacuum,
-)
+from homeassistant.components import cover, fan, input_number, light, timer, vacuum
 from homeassistant.components.alarm_control_panel import FORMAT_NUMBER
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -40,6 +32,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
+    Platform,
 )
 from homeassistant.core import State
 import homeassistant.util.color as color_util
@@ -390,11 +383,11 @@ class AlexaPowerController(AlexaCapability):
         if name != "powerState":
             raise UnsupportedProperty(name)
 
-        if self.entity.domain == climate.DOMAIN:
+        if self.entity.domain == Platform.CLIMATE:
             is_on = self.entity.state != climate.HVAC_MODE_OFF
-        elif self.entity.domain == fan.DOMAIN:
+        elif self.entity.domain == Platform.FAN:
             is_on = self.entity.state == fan.STATE_ON
-        elif self.entity.domain == vacuum.DOMAIN:
+        elif self.entity.domain == Platform.VACUUM:
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
             is_on = self.entity.state != STATE_IDLE
@@ -673,10 +666,10 @@ class AlexaPercentageController(AlexaCapability):
         if name != "percentage":
             raise UnsupportedProperty(name)
 
-        if self.entity.domain == fan.DOMAIN:
+        if self.entity.domain == Platform.FAN:
             return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
-        if self.entity.domain == cover.DOMAIN:
+        if self.entity.domain == Platform.COVER:
             return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
 
         return 0
@@ -880,7 +873,7 @@ class AlexaTemperatureSensor(AlexaCapability):
 
         unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         temp = self.entity.state
-        if self.entity.domain == climate.DOMAIN:
+        if self.entity.domain == Platform.CLIMATE:
             unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
 
@@ -1301,19 +1294,19 @@ class AlexaModeController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         # Fan Direction
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_DIRECTION}":
             mode = self.entity.attributes.get(fan.ATTR_DIRECTION, None)
             if mode in (fan.DIRECTION_FORWARD, fan.DIRECTION_REVERSE, STATE_UNKNOWN):
                 return f"{fan.ATTR_DIRECTION}.{mode}"
 
         # Fan preset_mode
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_PRESET_MODE}":
             mode = self.entity.attributes.get(fan.ATTR_PRESET_MODE, None)
             if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, None):
                 return f"{fan.ATTR_PRESET_MODE}.{mode}"
 
         # Cover Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
             # Return state instead of position when using ModeController.
             mode = self.entity.state
             if mode in (
@@ -1338,7 +1331,7 @@ class AlexaModeController(AlexaCapability):
         """Return capabilityResources object."""
 
         # Fan Direction Resource
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_DIRECTION}":
             self._resource = AlexaModeResource(
                 [AlexaGlobalCatalog.SETTING_DIRECTION], False
             )
@@ -1351,7 +1344,7 @@ class AlexaModeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Fan preset_mode
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_PRESET_MODE}":
             self._resource = AlexaModeResource(
                 [AlexaGlobalCatalog.SETTING_PRESET], False
             )
@@ -1369,7 +1362,7 @@ class AlexaModeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
             self._resource = AlexaModeResource(
                 ["Position", AlexaGlobalCatalog.SETTING_OPENING], False
             )
@@ -1394,7 +1387,7 @@ class AlexaModeController(AlexaCapability):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         # Cover Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
             lower_labels = [AlexaSemantics.ACTION_LOWER]
             raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
@@ -1492,15 +1485,15 @@ class AlexaRangeController(AlexaCapability):
             return None
 
         # Cover Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
             return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION)
 
         # Cover Tilt
-        if self.instance == f"{cover.DOMAIN}.tilt":
+        if self.instance == f"{Platform.COVER}.tilt":
             return self.entity.attributes.get(cover.ATTR_CURRENT_TILT_POSITION)
 
         # Fan speed percentage
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_PERCENTAGE}":
             supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
             if supported and fan.SUPPORT_SET_SPEED:
                 return self.entity.attributes.get(fan.ATTR_PERCENTAGE)
@@ -1511,7 +1504,7 @@ class AlexaRangeController(AlexaCapability):
             return float(self.entity.state)
 
         # Vacuum Fan Speed
-        if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+        if self.instance == f"{Platform.VACUUM}.{vacuum.ATTR_FAN_SPEED}":
             speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
             speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
             if speed_list is not None and speed is not None:
@@ -1533,7 +1526,7 @@ class AlexaRangeController(AlexaCapability):
         """Return capabilityResources object."""
 
         # Fan Speed Percentage Resources
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_PERCENTAGE}":
             percentage_step = self.entity.attributes.get(fan.ATTR_PERCENTAGE_STEP)
             self._resource = AlexaPresetResource(
                 labels=["Percentage", AlexaGlobalCatalog.SETTING_FAN_SPEED],
@@ -1547,7 +1540,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
             self._resource = AlexaPresetResource(
                 ["Position", AlexaGlobalCatalog.SETTING_OPENING],
                 min_value=0,
@@ -1558,7 +1551,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Cover Tilt Resources
-        if self.instance == f"{cover.DOMAIN}.tilt":
+        if self.instance == f"{Platform.COVER}.tilt":
             self._resource = AlexaPresetResource(
                 ["Tilt", "Angle", AlexaGlobalCatalog.SETTING_DIRECTION],
                 min_value=0,
@@ -1591,7 +1584,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Vacuum Fan Speed Resources
-        if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+        if self.instance == f"{Platform.VACUUM}.{vacuum.ATTR_FAN_SPEED}":
             speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
             max_value = len(speed_list) - 1
             self._resource = AlexaPresetResource(
@@ -1617,7 +1610,7 @@ class AlexaRangeController(AlexaCapability):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         # Cover Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{Platform.COVER}.{cover.ATTR_POSITION}":
             lower_labels = [AlexaSemantics.ACTION_LOWER]
             raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
@@ -1642,7 +1635,7 @@ class AlexaRangeController(AlexaCapability):
             return self._semantics.serialize_semantics()
 
         # Cover Tilt
-        if self.instance == f"{cover.DOMAIN}.tilt":
+        if self.instance == f"{Platform.COVER}.tilt":
             self._semantics = AlexaSemantics()
             self._semantics.add_action_to_directive(
                 [AlexaSemantics.ACTION_CLOSE], "SetRangeValue", {"rangeValue": 0}
@@ -1657,7 +1650,7 @@ class AlexaRangeController(AlexaCapability):
             return self._semantics.serialize_semantics()
 
         # Fan Speed Percentage
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_PERCENTAGE}":
             lower_labels = [AlexaSemantics.ACTION_LOWER]
             raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
@@ -1733,7 +1726,7 @@ class AlexaToggleController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         # Fan Oscillating
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_OSCILLATING}":
             is_on = bool(self.entity.attributes.get(fan.ATTR_OSCILLATING))
             return "ON" if is_on else "OFF"
 
@@ -1743,7 +1736,7 @@ class AlexaToggleController(AlexaCapability):
         """Return capabilityResources object."""
 
         # Fan Oscillating Resource
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+        if self.instance == f"{Platform.FAN}.{fan.ATTR_OSCILLATING}":
             self._resource = AlexaCapabilityResource(
                 [AlexaGlobalCatalog.SETTING_OSCILLATE, "Rotate", "Rotation"]
             )
@@ -1900,7 +1893,7 @@ class AlexaEventDetectionSensor(AlexaCapability):
         if state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
             return None
 
-        if self.entity.domain == image_processing.DOMAIN:
+        if self.entity.domain == Platform.IMAGE_PROCESSING:
             if int(state):
                 human_presence = "DETECTED"
         elif state == STATE_ON:
