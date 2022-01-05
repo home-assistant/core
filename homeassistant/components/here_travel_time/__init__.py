@@ -7,7 +7,7 @@ import logging
 import async_timeout
 from herepy import NoRouteFoundError, RouteMode, RoutingApi, RoutingResponse
 
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM_IMPERIAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -31,7 +31,7 @@ from .const import (
     HERETravelTimeConfig,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
