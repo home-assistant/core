@@ -1,4 +1,6 @@
 """Numeric integration of data coming from a source sensor over time."""
+from __future__ import annotations
+
 from decimal import Decimal, DecimalException
 import logging
 
@@ -22,10 +24,12 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -77,7 +81,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the integration sensor."""
     integral = IntegrationSensor(
         config[CONF_SOURCE_SENSOR],
@@ -97,14 +106,14 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
     def __init__(
         self,
-        source_entity,
-        name,
-        round_digits,
-        unit_prefix,
-        unit_time,
-        unit_of_measurement,
-        integration_method,
-    ):
+        source_entity: str,
+        name: str | None,
+        round_digits: int,
+        unit_prefix: str | None,
+        unit_time: str,
+        unit_of_measurement: str | None,
+        integration_method: str,
+    ) -> None:
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
