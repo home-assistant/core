@@ -28,13 +28,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    TYPE_SOLARRADIATION,
-    TYPE_SOLARRADIATION_LX,
-    AmbientStation,
-    AmbientWeatherEntity,
-)
-from .const import ATTR_LAST_DATA, DOMAIN
+from . import AmbientStation, AmbientWeatherEntity
+from .const import ATTR_LAST_DATA, DOMAIN, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 
 TYPE_24HOURRAININ = "24hourrainin"
 TYPE_BAROMABSIN = "baromabsin"
