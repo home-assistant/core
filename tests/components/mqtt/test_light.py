@@ -3575,6 +3575,7 @@ async def test_encoding_subscribable_topics(
         init_payload,
     )
 
+
 async def test_sending_mqtt_brightness_command_with_template(hass, mqtt_mock):
     """Test the sending of Brightness command with template."""
     config = {
@@ -3610,6 +3611,7 @@ async def test_sending_mqtt_brightness_command_with_template(hass, mqtt_mock):
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == 100
 
+
 async def test_sending_mqtt_effect_command_with_template(hass, mqtt_mock):
     """Test the sending of Effect command with template."""
     config = {
@@ -3619,7 +3621,7 @@ async def test_sending_mqtt_effect_command_with_template(hass, mqtt_mock):
             "command_topic": "test_light_brightness/set",
             "brightness_command_topic": "test_light_brightness/brightness/set",
             "effect_command_topic": "test_light_brightness/effect/set",
-            "effect_command_template": '{{ "{\"effect\": %s}" | format(value|string) }}',
+            "effect_command_template": '{{ "{"effect": %s}" | format(value|string) }}',
             "effect_list": ["colorloop", "random"],
             "payload_on": "on",
             "payload_off": "off",
@@ -3644,4 +3646,4 @@ async def test_sending_mqtt_effect_command_with_template(hass, mqtt_mock):
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("effect") == "\"effect\": colorloop"
+    assert state.attributes.get("effect") == '"effect": colorloop'
