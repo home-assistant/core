@@ -63,38 +63,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
 
+    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+
     coordinator = hass.data[DOMAIN]
 
     async_add_entities(
         [
-            NextLaunchSensor(coordinator, entry.entry_id),
+            NextLaunchSensor(coordinator, entry.entry_id, name),
         ]
     )
 
 
-class LLBaseEntity(CoordinatorEntity, SensorEntity):
-    """Sensor base entity."""
-
-    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
-        """Initialize a Launch Library entity."""
-        super().__init__(coordinator)
-
-    def get_next_launch(self) -> Launch | None:
-        """Return next launch."""
-        return next((launch for launch in self.coordinator.data), None)
-
-
-class NextLaunchSensor(LLBaseEntity):
+class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     """Representation of the next launch sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = "mdi:rocket-launch"
-    _attr_name = "Next launch"
 
-    def __init__(self, coordinator: DataUpdateCoordinator, entry_id: str) -> None:
-        """Create Next launch sensor from base entity."""
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, entry_id: str, name: str
+    ) -> None:
+        """Initialize a Launch Library entity."""
         super().__init__(coordinator)
+        self._attr_name = name
         self._attr_unique_id = f"{entry_id}_next_launch"
+
+    def get_next_launch(self) -> Launch | None:
+        """Return next launch."""
+        return next((launch for launch in self.coordinator.data), None)
 
     @property
     def native_value(self) -> str | None:

@@ -1,5 +1,6 @@
 """Config flow to configure launch library component."""
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
@@ -21,4 +22,6 @@ class LaunchLibraryFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user")
 
-    async_step_import = async_step_user
+    async def async_step_import(self, conf: dict) -> FlowResult:
+        """Import a configuration from config.yaml."""
+        return await self.async_step_user(user_input={CONF_NAME: conf[CONF_NAME]})
