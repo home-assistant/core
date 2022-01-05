@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from contextvars import ContextVar
 import logging
-from typing import TYPE_CHECKING, Any, List, cast
+from typing import Any, List, cast
 
 import voluptuous as vol
 
@@ -225,10 +225,10 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all groups found defined in the configuration."""
-    if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
-    if TYPE_CHECKING:  # Can't be None - see previous line
-        assert component is not None
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    component = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
@@ -238,8 +238,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
-        if TYPE_CHECKING:  # Can't be None - see async_setup
-            assert component is not None
         auto = list(filter(lambda e: not e.user_defined, component.entities))
 
         if (conf := await component.async_prepare_reload()) is None:
@@ -263,8 +261,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def groups_service_handler(service: ServiceCall) -> None:
         """Handle dynamic group service functions."""
-        if TYPE_CHECKING:  # Can't be None - see async_setup
-            assert component is not None
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
         group = component.get_entity(entity_id)
