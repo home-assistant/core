@@ -14,6 +14,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import homeassistant.util.dt as dt_util
+from datetime import timedelta
 
 from .const import (
     ACTIVE_NAME,
@@ -58,6 +60,7 @@ ACTIVE_SENSOR_TYPE = SensorConfig(ACTIVE_NAME, ACTIVE_TYPE)
 
 # Sensor types/ranges
 TRENDS_SENSOR_TYPES = {
+    "hourly": SensorConfig("Hourly", "HOUR"),
     "daily": SensorConfig("Daily", "DAY"),
     "weekly": SensorConfig("Weekly", "WEEK"),
     "monthly": SensorConfig("Monthly", "MONTH"),
@@ -273,6 +276,27 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._variant_id = variant_id
         self._had_any_update = False
+        self._last_update = None
+        if self._sensor_type == "DAY":
+            self._last_update = dt_util.now().day
+            self._attr_last_reset = dt_util.now().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+        elif self._sensor_type == "WEEK":
+            self._last_update = dt_util.now().day
+            self._attr_last_reset = (dt_util.now() - timedelta(days=7)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+        elif self._sensor_type == "MONTH":
+            self._last_update = dt_util.now().month
+            self._attr_last_reset = dt_util.now().replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+        elif self._sensor_type == "YEAR":
+            self._last_update = dt_util.now().year
+            self._attr_last_reset = dt_util.now().replace(
+                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
         if variant_id in [PRODUCTION_PCT_ID, SOLAR_POWERED_ID]:
             self._attr_native_unit_of_measurement = PERCENTAGE
             self._attr_entity_registry_enabled_default = False
@@ -290,6 +314,29 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return round(self._data.get_trend(self._sensor_type, self._variant_id), 1)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        if self._sensor_type == "DAY":
+            new_update = dt_util.now().day
+        elif self._sensor_type == "WEEK":
+            new_update = dt_util.now().day
+        elif self._sensor_type == "MONTH":
+            new_update = dt_util.now().month
+        elif self._sensor_type == "YEAR":
+            new_update = dt_util.now().year
+        else:
+            new_update = -1
+        if self._last_update != new_update:
+            self._last_update = new_update
+            if self._sensor_type == "WEEK":
+                # Week trend sensor is a rolling window of the past 7 days, not a calendar week
+                self._attr_last_reset = dt_util.utcnow() - timedelta(days=7)
+            else:
+                self._attr_last_reset = dt_util.utcnow()
+        super()._handle_coordinator_update()
 
 
 class SenseEnergyDevice(SensorEntity):

@@ -19,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ACTIVE_UPDATE_RATE,
@@ -91,11 +92,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SENSE_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
+    async def _update_func():
+        await gateway.update_trend_data(dt_util.now())
+
     trends_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"Sense Trends {email}",
-        update_method=gateway.update_trend_data,
+        update_method=_update_func,
         update_interval=timedelta(seconds=300),
     )
     # Start out as unavailable so we do not report 0 data
