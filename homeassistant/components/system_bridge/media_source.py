@@ -79,15 +79,13 @@ class SystemBridgeSource(MediaSource):
             can_expand=True,
             children=[
                 _build_media_item(path, file)
-                for file in filter(
-                    lambda file: file.isDirectory
+                for file in files
+                    if file.isDirectory
                     or (
                         file.isFile
                         and file.mimeType is not None
                         and file.mimeType.startswith(MEDIA_MIME_TYPES)
-                    ),
-                    files,
-                )
+                    )
             ],
         )
 
