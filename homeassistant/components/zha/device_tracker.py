@@ -108,8 +108,12 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return self._battery_level
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(  # pylint: disable=overridden-final-method
+        self,
+    ) -> DeviceInfo | None:
         """Return device info."""
+        # We opt ZHA device tracker back into overriding this method because
+        # it doesn't track IP-based devices.
         # Call Super because ScannerEntity overrode it.
         return super(ZhaEntity, self).device_info
 
