@@ -14,9 +14,8 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import (
@@ -144,7 +143,7 @@ async def async_setup_platform(
     serial_number = await hass.async_add_executor_job(lambda: device.api.serial_number)  # type: ignore[no-any-return]
     serial_number = serial_number.strip()
     registry = entity_registry.async_get(hass)
-    entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
+    entity_id = registry.async_get_entity_id(Platform.CAMERA, DOMAIN, serial_number)
     if entity_id is not None:
         _LOGGER.debug("Updating unique id for camera %s", entity_id)
         new_unique_id = f"{serial_number}-{device.resolution}-{device.channel}"
