@@ -7,7 +7,6 @@
         "error": {
             "connection_error": "Failed to connect"
         },
-        "flow_title": "GoodWe",
         "step": {
             "user": {
                 "data": {
