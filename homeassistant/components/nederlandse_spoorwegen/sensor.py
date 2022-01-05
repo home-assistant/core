@@ -1,4 +1,6 @@
 """Support for Nederlandse Spoorwegen public transport."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 
@@ -9,8 +11,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,11 +45,16 @@ ROUTE_SCHEMA = vol.Schema(
 ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
+    {vol.Required(CONF_API_KEY): cv.string, vol.Required(CONF_ROUTES): ROUTES_SCHEMA}
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the departure sensor."""
 
     nsapi = ns_api.NSAPI(config[CONF_API_KEY])
@@ -62,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for departure in config.get(CONF_ROUTES):
+    for departure in config[CONF_ROUTES]:
         if not valid_stations(
             stations,
             [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
