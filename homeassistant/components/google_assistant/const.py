@@ -62,6 +62,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "vacuum",
 ]
 
+# https://developers.google.com/assistant/smarthome/guides
 PREFIX_TYPES = "action.devices.types."
 TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
 TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
@@ -85,6 +86,7 @@ TYPE_SETTOP = f"{PREFIX_TYPES}SETTOP"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
 TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
 TYPE_RECEIVER = f"{PREFIX_TYPES}AUDIO_VIDEO_RECEIVER"
+TYPE_CURTAIN = f"{PREFIX_TYPES}CURTAIN"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
@@ -149,6 +151,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
     (cover.DOMAIN, cover.CoverDeviceClass.AWNING): TYPE_AWNING,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
+    (cover.DOMAIN, cover.CoverDeviceClass.CURTAIN): TYPE_CURTAIN,
     (switch.DOMAIN, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
     (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
     (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.DOOR): TYPE_DOOR,

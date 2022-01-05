@@ -1021,10 +1021,14 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
         ("garage", "action.devices.types.GARAGE"),
+        ("gate", "action.devices.types.GARAGE"),
+        ("awning", "action.devices.types.AWNING"),
+        ("shutter", "action.devices.types.SHUTTER"),
+        ("curtain", "action.devices.types.CURTAIN"),
     ],
 )
 async def test_device_class_cover(hass, device_class, google_type):
-    """Test that a binary entity syncs to the correct device type."""
+    """Test that a cover entity syncs to the correct device type."""
     sensor = DemoCover(None, hass, "Demo Sensor", device_class=device_class)
     sensor.hass = hass
     sensor.entity_id = "cover.demo_sensor"
