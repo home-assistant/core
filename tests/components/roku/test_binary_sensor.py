@@ -68,6 +68,10 @@ async def test_roku_binary_sensors(
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, UPNP_SERIAL)}
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "b0:a7:37:96:4d:fb"),
+        (dr.CONNECTION_NETWORK_MAC,"b0:a7:37:96:4d:fa"),
+    }
     assert device_entry.manufacturer == "Roku"
     assert device_entry.model == "Roku 3"
     assert device_entry.name == "My Roku 3"
