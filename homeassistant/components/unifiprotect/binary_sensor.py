@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import Any, Final
 
@@ -226,7 +227,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 self.device, self.entity_description.ufp_value
             )
 
-    async def _async_reset_doorbell(self, now: datetime.datetime) -> None:
+    async def _async_reset_doorbell(self, now: datetime) -> None:
         _LOGGER.debug("Doorbell ring ended")
         self._doorbell_callback = None
         self._async_updated_event()
