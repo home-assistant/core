@@ -1,7 +1,7 @@
 """Nuki.io lock platform."""
 from abc import ABC, abstractmethod
 
-from pynuki import MODE_OPENER_CONTINUOUS
+from pynuki.constants import MODE_OPENER_CONTINUOUS
 import voluptuous as vol
 
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
