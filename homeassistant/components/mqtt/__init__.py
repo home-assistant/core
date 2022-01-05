@@ -17,6 +17,7 @@ import uuid
 
 import attr
 import certifi
+import jinja2
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -665,7 +666,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     msg_topic_template, hass
                 ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish: rendering topic template of %s "
                     "failed because %s",
@@ -688,7 +689,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 payload = MqttCommandTemplate(
                     template.Template(payload_template), hass=hass
                 ).async_render()
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",
