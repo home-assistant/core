@@ -7,7 +7,6 @@ from pylaunches.objects.launch import Launch
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -36,7 +35,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            NextLaunchSensor(coordinator),
+            NextLaunchSensor(coordinator, entry.entry_id),
         ]
     )
 
@@ -56,9 +55,14 @@ class LLBaseEntity(CoordinatorEntity, SensorEntity):
 class NextLaunchSensor(LLBaseEntity):
     """Representation of the next launch sensor."""
 
-    _attr_icon = "mdi:orbit"
+    _attr_attribution = ATTRIBUTION
+    _attr_icon = "mdi:rocket-launch"
     _attr_name = "Next launch"
-    _attr_unique_id = "next_launch"
+
+    def __init__(self, coordinator: DataUpdateCoordinator, entry_id: str) -> None:
+        """Create Next launch sensor from base entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry_id}_next_launch"
 
     @property
     def native_value(self) -> str | None:
@@ -69,15 +73,11 @@ class NextLaunchSensor(LLBaseEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the sensor."""
-        next_launch = self.get_next_launch()
-        return (
-            {
-                ATTR_LAUNCH_TIME: next_launch.net,
-                ATTR_AGENCY: next_launch.launch_service_provider.name,
-                ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
-                ATTR_STREAM: next_launch.webcast_live,
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-            }
-            if next_launch
-            else {}
-        )
+        if not (next_launch := self.get_next_launch()):
+            return {}
+        return {
+            ATTR_LAUNCH_TIME: next_launch.net,
+            ATTR_AGENCY: next_launch.launch_service_provider.name,
+            ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
+            ATTR_STREAM: next_launch.webcast_live,
+        }
