@@ -10,13 +10,12 @@ from typing import Any, Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Light, Version, WSSubscriptionMessage
+from pyunifiprotect.data import Camera, Light, WSSubscriptionMessage
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
-from pyunifiprotect.data.devices import Viewer
-from pyunifiprotect.data.nvr import DoorbellMessage, Liveview
-from pyunifiprotect.data.types import DoorbellMessageType, ModelType
+from pyunifiprotect.data.devices import Sensor, Viewer
+from pyunifiprotect.data.nvr import NVR, Liveview
 
-from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
+from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
@@ -29,53 +28,10 @@ MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
 
 @dataclass
-class MockPortData:
-    """Mock Port information."""
-
-    rtsp: int = 7441
-    rtsps: int = 7447
-
-
-@dataclass
-class MockDoorbellSettings:
-    """Mock Port information."""
-
-    default_message_text = "Welcome"
-    all_messages = [
-        DoorbellMessage(
-            type=DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR,
-            text=DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR.value.replace("_", " "),
-        ),
-        DoorbellMessage(
-            type=DoorbellMessageType.DO_NOT_DISTURB,
-            text=DoorbellMessageType.DO_NOT_DISTURB.value.replace("_", " "),
-        ),
-        DoorbellMessage(
-            type=DoorbellMessageType.CUSTOM_MESSAGE,
-            text="Test",
-        ),
-    ]
-
-
-@dataclass
-class MockNvrData:
-    """Mock for NVR."""
-
-    version: Version
-    mac: str
-    name: str
-    id: str
-    ports: MockPortData = MockPortData()
-    doorbell_settings = MockDoorbellSettings()
-    update_all_messages = Mock()
-    model: ModelType = ModelType.NVR
-
-
-@dataclass
 class MockBootstrap:
     """Mock for Bootstrap."""
 
-    nvr: MockNvrData
+    nvr: NVR
     cameras: dict[str, Any]
     lights: dict[str, Any]
     sensors: dict[str, Any]
@@ -99,28 +55,59 @@ class MockEntityFixture:
     api: Mock
 
 
-MOCK_NVR_DATA = MockNvrData(
-    version=MIN_REQUIRED_PROTECT_V, mac=MAC_ADDR, name="UnifiProtect", id="test_id"
-)
-MOCK_OLD_NVR_DATA = MockNvrData(
-    version=Version("1.19.0"), mac=MAC_ADDR, name="UnifiProtect", id="test_id"
-)
+@pytest.fixture(name="mock_nvr")
+def mock_nvr_fixture():
+    """Mock UniFi Protect Camera device."""
 
-MOCK_BOOTSTRAP = MockBootstrap(
-    nvr=MOCK_NVR_DATA, cameras={}, lights={}, sensors={}, viewers={}, liveviews={}
-)
+    path = Path(__file__).parent / "sample_data" / "sample_nvr.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    nvr = NVR.from_unifi_dict(**data)
+
+    # disable pydantic validation so mocking can happen
+    NVR.__config__.validate_assignment = False
+    nvr.__fields__["update_all_messages"] = Mock()
+    nvr.update_all_messages = Mock()
+
+    yield nvr
+
+    NVR.__config__.validate_assignment = True
+
+
+@pytest.fixture(name="mock_old_nvr")
+def mock_old_nvr_fixture():
+    """Mock UniFi Protect Camera device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_nvr.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    data["version"] = "1.19.0"
+    yield NVR.from_unifi_dict(**data)
+
+
+@pytest.fixture(name="mock_bootstrap")
+def mock_bootstrap_fixture(mock_nvr: NVR):
+    """Mock Bootstrap fixture."""
+    return MockBootstrap(
+        nvr=mock_nvr, cameras={}, lights={}, sensors={}, viewers={}, liveviews={}
+    )
 
 
 @pytest.fixture
-def mock_client():
+def mock_client(mock_bootstrap: MockBootstrap):
     """Mock ProtectApiClient for testing."""
     client = Mock()
-    client.bootstrap = MOCK_BOOTSTRAP
+    client.bootstrap = mock_bootstrap
+
+    nvr = mock_bootstrap.nvr
+    nvr._api = client
 
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
-    client.get_nvr = AsyncMock(return_value=MOCK_NVR_DATA)
-    client.update = AsyncMock(return_value=MOCK_BOOTSTRAP)
+    client.get_nvr = AsyncMock(return_value=nvr)
+    client.update = AsyncMock(return_value=mock_bootstrap)
     client.async_disconnect_ws = AsyncMock()
 
     def subscribe(ws_callback: Callable[[WSSubscriptionMessage], None]) -> Any:
@@ -200,6 +187,17 @@ def mock_viewer():
         data = json.load(json_file)
 
     yield Viewer.from_unifi_dict(**data)
+
+
+@pytest.fixture
+def mock_sensor():
+    """Mock UniFi Protect Sensor device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_sensor.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    yield Sensor.from_unifi_dict(**data)
 
 
 async def time_changed(hass: HomeAssistant, seconds: int) -> None:
