@@ -1,12 +1,10 @@
 """This component provides binary sensors for UniFi Protect."""
 from __future__ import annotations
 
-import asyncio
 from copy import copy
 from dataclasses import dataclass
-from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 from pyunifiprotect.data import NVR, Camera, Light, Sensor
 
@@ -20,7 +18,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LAST_TRIP_TIME, ATTR_MODEL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -32,13 +30,6 @@ from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
-
-
-# Remove when 3.8 support is dropped
-if TYPE_CHECKING:
-    TaskClass = asyncio.Task[None]
-else:
-    TaskClass = asyncio.Task
 
 
 @dataclass
@@ -175,7 +166,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
             self.device: Camera | Light | Sensor = device
         self.entity_description: ProtectBinaryEntityDescription = description
         super().__init__(data)
-        self._doorbell_callback: TaskClass | None = None
+        self._doorbell_callback: CALLBACK_TYPE | None = None
 
     @callback
     def _async_update_extra_attrs_from_protect(self) -> dict[str, Any]:
@@ -219,11 +210,14 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
             is_ringing = (
                 False if last_ring is None else (now - last_ring) < RING_INTERVAL
             )
+            _LOGGER.warning("%s, %s, %s", last_ring, now, is_ringing)
             if is_ringing:
                 if self._doorbell_callback is not None:
-                    self._doorbell_callback.cancel()
-                self._doorbell_callback = asyncio.ensure_future(
-                    self._async_wait_for_doorbell(last_ring + RING_INTERVAL)
+                    _LOGGER.debug("Canceling doorbell ring callback")
+                    self._doorbell_callback()
+                    self._doorbell_callback = None
+                self._doorbell_callback = self.hass.helpers.event.async_call_later(
+                    RING_INTERVAL.total_seconds(), self._async_reset_doorbell
                 )
             self._attr_is_on = is_ringing
         else:
@@ -231,12 +225,9 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 self.device, self.entity_description.ufp_value
             )
 
-    @callback
-    async def _async_wait_for_doorbell(self, end_time: datetime) -> None:
-        _LOGGER.debug("Doorbell callback started")
-        while utcnow() < end_time:
-            await asyncio.sleep(1)
-        _LOGGER.debug("Doorbell callback ended")
+    async def _async_reset_doorbell(self, *args: Any, **kwargs: Any) -> None:
+        _LOGGER.debug("Doorbell ring ended")
+        self._doorbell_callback = None
         self._async_updated_event()
 
 

@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
-import asyncio
 from copy import copy
 from datetime import datetime, timedelta
 from unittest.mock import Mock
@@ -35,6 +34,7 @@ from .conftest import (
     MockEntityFixture,
     assert_entity_counts,
     ids_from_device_description,
+    time_changed,
 )
 
 
@@ -318,7 +318,9 @@ async def test_binary_sensor_update_doorbell(
     assert state
     assert state.state == STATE_ON
 
-    await asyncio.sleep(RING_INTERVAL.total_seconds() + 1)
+    # since time is not really changing, switch the last ring back to allow turn off
+    new_camera.last_ring = utcnow() - RING_INTERVAL
+    await time_changed(hass, RING_INTERVAL.total_seconds())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
