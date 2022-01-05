@@ -4,6 +4,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from pyunifiprotect import NotAuthorized, NvrError
+from pyunifiprotect.data.nvr import NVR
 
 from homeassistant import config_entries
 from homeassistant.components.unifiprotect.const import (
@@ -20,12 +21,12 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import MAC_ADDR, MOCK_NVR_DATA, MOCK_OLD_NVR_DATA
+from .conftest import MAC_ADDR
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_nvr: NVR) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -35,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=MOCK_NVR_DATA,
+        return_value=mock_nvr,
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
@@ -63,7 +64,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_version_too_old(hass: HomeAssistant) -> None:
+async def test_form_version_too_old(hass: HomeAssistant, mock_old_nvr: NVR) -> None:
     """Test we handle the version being too old."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +72,7 @@ async def test_form_version_too_old(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=MOCK_OLD_NVR_DATA,
+        return_value=mock_old_nvr,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -132,7 +133,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_reauth_auth(hass: HomeAssistant) -> None:
+async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
     """Test we handle reauth auth."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -176,7 +177,7 @@ async def test_form_reauth_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=MOCK_NVR_DATA,
+        return_value=mock_nvr,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],

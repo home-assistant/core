@@ -70,7 +70,7 @@ async def camera_fixture(
 
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
-    yield (camera_obj, "camera.test_camera_high")
+    return (camera_obj, "camera.test_camera_high")
 
 
 def validate_default_camera_entity(

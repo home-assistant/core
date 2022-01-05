@@ -200,10 +200,10 @@ async def test_number_setup_camera_missing_attr(
 
 
 @pytest.mark.parametrize("description", LIGHT_NUMBERS)
-async def test_switch_light_simple(
+async def test_number_light_simple(
     hass: HomeAssistant, light: Light, description: ProtectNumberEntityDescription
 ):
-    """Tests all simple switches for lights."""
+    """Tests all simple numbers for lights."""
 
     assert description.ufp_set_function is not None
 
@@ -224,10 +224,10 @@ async def test_switch_light_simple(
 
 
 @pytest.mark.parametrize("description", CAMERA_NUMBERS)
-async def test_switch_camera_simple(
+async def test_number_camera_simple(
     hass: HomeAssistant, camera: Camera, description: ProtectNumberEntityDescription
 ):
-    """Tests all simple switches for cameras."""
+    """Tests all simple numbers for cameras."""
 
     assert description.ufp_set_function is not None
 
