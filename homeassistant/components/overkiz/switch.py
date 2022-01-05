@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Awaitable
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIClass, UIWidget
@@ -27,8 +27,8 @@ from .entity import OverkizDescriptiveEntity
 class OverkizSwitchDescriptionMixin:
     """Define an entity description mixin for number entities."""
 
-    turn_on: Callable[[Callable], None]
-    turn_off: Callable[[Callable], None]
+    turn_on: Callable[[Callable], Awaitable[None]]
+    turn_off: Callable[[Callable], Awaitable[None]]
     is_on: Callable[[Callable], bool]
 
 
@@ -66,6 +66,24 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         is_on=lambda select_state: (
             select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
         ),
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.RTD_INDOOR_SIREN,
+        turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
+        turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
+        is_on=lambda select_state: (
+            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
+        ),
+        icon="mdi:bell",
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.RTD_OUTDOOR_SIREN,
+        turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
+        turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
+        is_on=lambda select_state: (
+            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
+        ),
+        icon="mdi:bell",
     ),
 ]
 
