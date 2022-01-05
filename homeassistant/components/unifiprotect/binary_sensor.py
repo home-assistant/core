@@ -226,7 +226,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 self.device, self.entity_description.ufp_value
             )
 
-    async def _async_reset_doorbell(self, *args: Any, **kwargs: Any) -> None:
+    async def _async_reset_doorbell(self, now: datetime.datetime) -> None:
         _LOGGER.debug("Doorbell ring ended")
         self._doorbell_callback = None
         self._async_updated_event()
