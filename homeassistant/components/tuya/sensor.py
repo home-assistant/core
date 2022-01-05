@@ -589,6 +589,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             subkey="voltage",
         ),
     ),
+    # Circuit Breaker
+    # https://developer.tuya.com/en/docs/iot/dlq?id=Kb0kidk9enyh8
     "dlq": (
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_FORWARD_ENERGY,
