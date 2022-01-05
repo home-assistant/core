@@ -14,6 +14,7 @@ from pyatv.core.scan import BaseScanner
 from pyatv.protocols import PROTOCOLS
 from zeroconf import DNSPointer, DNSQuestionType
 from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
+from zeroconf.const import _CLASS_IN, _TYPE_PTR
 
 from homeassistant.components.zeroconf import async_get_async_instance
 from homeassistant.core import HomeAssistant
@@ -91,14 +92,15 @@ class HassZeroconfScanner(BaseScanner):
         infos: list[AsyncServiceInfo] = []
         zc_timeout = timeout * 1000
         zeroconf = self.zc.zeroconf
-        zc_types = {f"{service}." for service in self._services}
-        zc_types.add(SLEEP_PROXY_TYPE)
+        zc_types = {SLEEP_PROXY_TYPE, *(f"{service}." for service in self._services)}
         # Note this only works if a ServiceBrowser is already
         # running for the given type (since its in the manifest this is ok)
         infos = [
             AsyncServiceInfo(zc_type, cast(DNSPointer, record).alias)
             for zc_type in zc_types
-            for record in zeroconf.cache.entries_with_name(zc_type)
+            for record in zeroconf.cache.async_all_by_details(
+                zc_type, _TYPE_PTR, _CLASS_IN
+            )
         ]
         await asyncio.gather(
             *[info.async_request(zeroconf, zc_timeout) for info in infos]
