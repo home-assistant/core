@@ -15,10 +15,9 @@ import weakref
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from .core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry
-from .helpers.event import Event
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import async_process_deps_reqs, async_setup_component
