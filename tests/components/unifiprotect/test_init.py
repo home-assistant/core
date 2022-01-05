@@ -4,12 +4,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from pyunifiprotect import NotAuthorized, NvrError
+from pyunifiprotect.data import NVR
 
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_OLD_NVR_DATA, MockEntityFixture
+from .conftest import MockEntityFixture
 
 
 async def test_setup(hass: HomeAssistant, mock_entry: MockEntityFixture):
@@ -51,10 +52,12 @@ async def test_unload(hass: HomeAssistant, mock_entry: MockEntityFixture):
     assert mock_entry.api.async_disconnect_ws.called
 
 
-async def test_setup_too_old(hass: HomeAssistant, mock_entry: MockEntityFixture):
+async def test_setup_too_old(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_old_nvr: NVR
+):
     """Test setup of unifiprotect entry with too old of version of UniFi Protect."""
 
-    mock_entry.api.get_nvr.return_value = MOCK_OLD_NVR_DATA
+    mock_entry.api.get_nvr.return_value = mock_old_nvr
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
