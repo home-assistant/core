@@ -1,6 +1,7 @@
 """Config flow for Hyundai / Kia Connect integration."""
 from __future__ import annotations
 
+import hashlib
 import logging
 from typing import Any
 
@@ -8,13 +9,7 @@ from hyundai_kia_connect_api import Token, VehicleManager
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_REGION,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -36,15 +31,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Token:
     """Validate the user input allows us to connect."""
-    vehicle_manager = VehicleManager()
-    api = vehicle_manager.get_implementation_by_region_brand(
-        region=user_input[CONF_REGION],
-        brand=user_input[CONF_BRAND],
-        username=user_input[CONF_USERNAME],
-        password=user_input[CONF_PASSWORD],
-        pin=user_input[CONF_PIN],
+    api = VehicleManager.get_implementation_by_region_brand(
+        user_input[CONF_REGION],
+        user_input[CONF_BRAND],
     )
-    token: Token = await hass.async_add_executor_job(api.login)
+    token: Token = await hass.async_add_executor_job(
+        api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+    )
 
     if token is None:
         raise InvalidAuth
@@ -70,17 +63,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            token = await validate_input(self.hass, user_input)
+            await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(token.vehicle_id)
+            title = f"{BRANDS[user_input[CONF_BRAND]]} {REGIONS[user_input[CONF_REGION]]} {user_input[CONF_USERNAME]}"
+            await self.async_set_unique_id(
+                hashlib.sha256(title.encode("utf-8")).hexdigest()
+            )
             self._abort_if_unique_id_configured()
-            user_input[CONF_TOKEN] = vars(token)
-            return self.async_create_entry(title=token.vehicle_name, data=user_input)
+            return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

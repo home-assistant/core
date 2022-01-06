@@ -19,9 +19,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "hyundai_kia_connect_api.KiaUvoApiEU.login",
-        return_value=Token(
-            {"vehicle_name": "kia niro", "key": "value", "vehicle_id": "123456789"}
-        ),
+        return_value=Token(),
     ), patch(
         "homeassistant.components.hyundai_kia_connect.async_setup_entry",
         return_value=True,
@@ -38,19 +36,12 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "kia niro"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
         "region": 1,
         "brand": 1,
         "pin": "",
-        "token": {
-            "key": "value",
-            "valid_until": "1-01-01 00:00:00.000000",
-            "vehicle_name": "kia niro",
-            "vehicle_id": "123456789",
-        },
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

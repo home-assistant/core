@@ -3,7 +3,7 @@
   "name": "Hyundai / Kia Connect",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hyundai_kia_connect",
-  "requirements": ["hyundai_kia_connect_api==1.10.4"],
+  "requirements": ["hyundai_kia_connect_api==1.14.4"],
   "dependencies": [],
   "codeowners": ["@fuatakgun", "@cdnninja"],
   "iot_class": "cloud_polling"

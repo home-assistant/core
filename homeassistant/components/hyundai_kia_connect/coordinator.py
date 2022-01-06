@@ -4,16 +4,10 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from hyundai_kia_connect_api import Token, VehicleManager
+from hyundai_kia_connect_api import VehicleManager
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_REGION,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -28,9 +22,7 @@ class HyundaiKiaConnectDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize."""
         self.platforms: set[str] = set()
-        token = Token(config_entry.data[CONF_TOKEN])
-        self.vehicle_manager = VehicleManager()
-        api = self.vehicle_manager.get_implementation_by_region_brand(
+        self.vehicle_manager = VehicleManager(
             region=config_entry.data.get(CONF_REGION),
             brand=config_entry.data.get(CONF_BRAND),
             username=config_entry.data.get(CONF_USERNAME),
@@ -38,40 +30,32 @@ class HyundaiKiaConnectDataUpdateCoordinator(DataUpdateCoordinator):
             pin=config_entry.data.get(CONF_PIN),
         )
 
-        self.vehicle_manager.add(token, api)
-
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=60)
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> VehicleManager:
         """Update data via library."""
-        return await self.async_update()
+        return await self.async_update_all()
 
-    async def async_update(self):
+    async def async_update_all(self) -> VehicleManager:
         """Update vehicle data via library."""
         await self.async_check_and_refresh_token()
         await self.hass.async_add_executor_job(
-            self.vehicle_manager.update_vehicle, self.config_entry.unique_id
+            self.vehicle_manager.update_all_vehicles_with_cached_state
         )
-        return self.vehicle_manager.get_vehicle(self.config_entry.unique_id)
+        return self.vehicle_manager
 
-    async def async_force_update(self):
+    async def async_force_update_all(self):
         """Force update vehicle data via library."""
         await self.async_check_and_refresh_token()
         await self.hass.async_add_executor_job(
-            self.vehicle_manager.force_update_vehicle, self.config_entry.unique_id
+            self.vehicle_manager.force_refresh_all_vehicles_states
         )
+        return await self.async_update_all()
 
     async def async_check_and_refresh_token(self):
         """Refresh token if needed via library."""
-        if await self.hass.async_add_executor_job(
-            self.vehicle_manager.check_and_refresh_token, self.config_entry.unique_id
-        ):
-            data = self.config_entry.data.copy()
-            data[CONF_TOKEN] = vars(
-                self.vehicle_manager.get_token(self.config_entry.unique_id)
-            )
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, options=self.config_entry.options
-            )
+        await self.hass.async_add_executor_job(
+            self.vehicle_manager.check_and_refresh_token
+        )
