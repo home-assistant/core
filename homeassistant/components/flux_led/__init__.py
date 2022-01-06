@@ -131,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.async_set_time()
 
     await _async_sync_time()  # set at startup
-    entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 4, 30))  # type: ignore[arg-type]
+    entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 40, 30))  # type: ignore[arg-type]
 
     return True
 
