@@ -97,7 +97,8 @@ class OneWireHub:
                 "Using the 1-Wire integration via SysBus is deprecated and will be removed "
                 "in Home Assistant Core 2022.6; this integration is being adjusted to comply "
                 "with Architectural Decision Record 0019, more information can be found here: "
-                "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+                "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md "
+                "Access via OWServer is still supported"
             )
 
             await self.check_mount_dir(mount_dir)
