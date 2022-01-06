@@ -12,7 +12,9 @@ from pyunifiprotect.data.nvr import NVR
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
+    CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
+    NVR_DISABLED_SENSORS,
     NVR_SENSORS,
     SENSE_SENSORS,
 )
@@ -191,9 +193,6 @@ async def test_sensor_setup_nvr(
         "50.0",
         "50.0",
         "50.0",
-        "50.0",
-        "50.0",
-        "50.0",
         "50",
     )
     for index, description in enumerate(NVR_SENSORS):
@@ -214,6 +213,24 @@ async def test_sensor_setup_nvr(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
+    expected_values = ("50.0", "50.0", "50.0")
+    for index, description in enumerate(NVR_DISABLED_SENSORS):
+        unique_id, entity_id = ids_from_device_description(
+            Platform.SENSOR, nvr, description
+        )
+
+        entity = entity_registry.async_get(entity_id)
+        assert entity
+        assert entity.disabled is not description.entity_registry_enabled_default
+        assert entity.unique_id == unique_id
+
+        await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_values[index]
+        assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
 
 async def test_sensor_setup_camera(
     hass: HomeAssistant, mock_entry: MockEntityFixture, camera: Camera, now: datetime
@@ -223,8 +240,6 @@ async def test_sensor_setup_camera(
     entity_registry = er.async_get(hass)
 
     expected_values = (
-        "100",
-        "100",
         now.replace(second=0, microsecond=0).isoformat(),
         "100",
         "100.0",
@@ -240,8 +255,23 @@ async def test_sensor_setup_camera(
         assert entity.disabled is not description.entity_registry_enabled_default
         assert entity.unique_id == unique_id
 
-        if not description.entity_registry_enabled_default:
-            await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_values[index]
+        assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+    expected_values = ("100", "100")
+    for index, description in enumerate(CAMERA_DISABLED_SENSORS):
+        unique_id, entity_id = ids_from_device_description(
+            Platform.SENSOR, camera, description
+        )
+
+        entity = entity_registry.async_get(entity_id)
+        assert entity
+        assert entity.disabled is not description.entity_registry_enabled_default
+        assert entity.unique_id == unique_id
+
+        await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
 
         state = hass.states.get(entity_id)
         assert state
