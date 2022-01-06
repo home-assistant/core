@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import webhook
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
@@ -19,19 +20,19 @@ def mock_client(hass, hass_client):
 async def test_unregistering_webhook(hass, mock_client):
     """Test unregistering a webhook."""
     hooks = []
-    webhook_id = hass.components.webhook.async_generate_id()
+    webhook_id = webhook.async_generate_id()
 
     async def handle(*args):
         """Handle webhook."""
         hooks.append(args)
 
-    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}")
     assert resp.status == HTTPStatus.OK
     assert len(hooks) == 1
 
-    hass.components.webhook.async_unregister(webhook_id)
+    webhook.async_unregister(hass, webhook_id)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}")
     assert resp.status == HTTPStatus.OK
@@ -44,14 +45,14 @@ async def test_generate_webhook_url(hass):
         hass,
         {"external_url": "https://example.com"},
     )
-    url = hass.components.webhook.async_generate_url("some_id")
+    url = webhook.async_generate_url(hass, "some_id")
 
     assert url == "https://example.com/api/webhook/some_id"
 
 
 async def test_async_generate_path(hass):
     """Test generating just the path component of the url correctly."""
-    path = hass.components.webhook.async_generate_path("some_id")
+    path = webhook.async_generate_path("some_id")
     assert path == "/api/webhook/some_id"
 
 
@@ -63,7 +64,7 @@ async def test_posting_webhook_nonexisting(hass, mock_client):
 
 async def test_posting_webhook_invalid_json(hass, mock_client):
     """Test posting to a nonexisting webhook."""
-    hass.components.webhook.async_register("test", "Test hook", "hello", None)
+    webhook.async_register(hass, "test", "Test hook", "hello", None)
     resp = await mock_client.post("/api/webhook/hello", data="not-json")
     assert resp.status == HTTPStatus.OK
 
@@ -71,13 +72,13 @@ async def test_posting_webhook_invalid_json(hass, mock_client):
 async def test_posting_webhook_json(hass, mock_client):
     """Test posting a webhook with JSON data."""
     hooks = []
-    webhook_id = hass.components.webhook.async_generate_id()
+    webhook_id = webhook.async_generate_id()
 
     async def handle(*args):
         """Handle webhook."""
         hooks.append((args[0], args[1], await args[2].text()))
 
-    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
     assert resp.status == HTTPStatus.OK
@@ -90,13 +91,13 @@ async def test_posting_webhook_json(hass, mock_client):
 async def test_posting_webhook_no_data(hass, mock_client):
     """Test posting a webhook with no data."""
     hooks = []
-    webhook_id = hass.components.webhook.async_generate_id()
+    webhook_id = webhook.async_generate_id()
 
     async def handle(*args):
         """Handle webhook."""
         hooks.append(args)
 
-    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}")
     assert resp.status == HTTPStatus.OK
@@ -110,13 +111,13 @@ async def test_posting_webhook_no_data(hass, mock_client):
 async def test_webhook_put(hass, mock_client):
     """Test sending a put request to a webhook."""
     hooks = []
-    webhook_id = hass.components.webhook.async_generate_id()
+    webhook_id = webhook.async_generate_id()
 
     async def handle(*args):
         """Handle webhook."""
         hooks.append(args)
 
-    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.put(f"/api/webhook/{webhook_id}")
     assert resp.status == HTTPStatus.OK
@@ -129,13 +130,13 @@ async def test_webhook_put(hass, mock_client):
 async def test_webhook_head(hass, mock_client):
     """Test sending a head request to a webhook."""
     hooks = []
-    webhook_id = hass.components.webhook.async_generate_id()
+    webhook_id = webhook.async_generate_id()
 
     async def handle(*args):
         """Handle webhook."""
         hooks.append(args)
 
-    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.head(f"/api/webhook/{webhook_id}")
     assert resp.status == HTTPStatus.OK
@@ -148,14 +149,14 @@ async def test_webhook_head(hass, mock_client):
 async def test_webhook_local_only(hass, mock_client):
     """Test posting a webhook with local only."""
     hooks = []
-    webhook_id = hass.components.webhook.async_generate_id()
+    webhook_id = webhook.async_generate_id()
 
     async def handle(*args):
         """Handle webhook."""
         hooks.append((args[0], args[1], await args[2].text()))
 
-    hass.components.webhook.async_register(
-        "test", "Test hook", webhook_id, handle, local_only=True
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, local_only=True
     )
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
@@ -183,10 +184,8 @@ async def test_listing_webhook(
     assert await async_setup_component(hass, "webhook", {})
     client = await hass_ws_client(hass, hass_access_token)
 
-    hass.components.webhook.async_register("test", "Test hook", "my-id", None)
-    hass.components.webhook.async_register(
-        "test", "Test hook", "my-2", None, local_only=True
-    )
+    webhook.async_register(hass, "test", "Test hook", "my-id", None)
+    webhook.async_register(hass, "test", "Test hook", "my-2", None, local_only=True)
 
     await client.send_json({"id": 5, "type": "webhook/list"})
 
