@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Nombre del sitio"
+                }
+            }
+        }
+    }
+}
