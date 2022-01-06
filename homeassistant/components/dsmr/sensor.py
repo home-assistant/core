@@ -82,9 +82,7 @@ async def async_setup_entry(
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
-    is_rfxtrx = False
-    if CONF_IS_RFXTRX in entry.data:
-        is_rfxtrx = entry.data[CONF_IS_RFXTRX]
+    is_rfxtrx = entry.data.get(CONF_IS_RFXTRX)
     if CONF_HOST in entry.data:
         reader_factory = partial(
             create_tcp_dsmr_reader if not is_rfxtrx else create_rfxtrx_tcp_dsmr_reader,
