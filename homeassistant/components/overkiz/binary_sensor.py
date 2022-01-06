@@ -24,7 +24,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensor entities."""
 
-    value_fn: Callable[[str], bool]
+    value_fn: Callable[[None | int | float | str | bool], bool]
 
 
 @dataclass
@@ -144,6 +144,6 @@ class OverkizBinarySensor(OverkizDescriptiveEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         if state := self.device.states.get(self.entity_description.key):
-            return self.entity_description.value_fn(str(state.value))
+            return self.entity_description.value_fn(state.value)
 
         return None
