@@ -27,6 +27,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
@@ -194,7 +195,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key=_KEY_LIGHT,
         name="Light Level",
-        native_unit_of_measurement="lx",
+        native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.light.value",
@@ -202,7 +203,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key=_KEY_HUMIDITY,
         name="Humidity Level",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.humidity.value",
