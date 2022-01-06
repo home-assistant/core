@@ -41,7 +41,7 @@ from .entity import OverkizDescriptiveEntity, OverkizEntity
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
-    native_value: Callable[[int | float | str | bool], str | int | float] | None = None
+    native_value: Callable[[int | float | str | bool], StateType] | None = None
 
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
