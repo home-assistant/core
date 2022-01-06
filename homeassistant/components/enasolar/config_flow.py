@@ -11,7 +11,9 @@ import pyenasolar
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import OptionsFlow
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -62,7 +64,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if serial == entry.unique_id
         )
 
-    async def _try_connect(self, host):
+    async def _try_connect(self, host) -> str | None:
         """Needed to mock connection when running tests."""
         error = None
         try:
@@ -82,11 +84,11 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry) -> OptionsFlow:
         """Get options flow for this handler."""
         return EnaSolarOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Step when user initializes an integration."""
         _errors = {}
 
@@ -124,7 +126,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    async def async_step_inverter(self, user_input=None):
+    async def async_step_inverter(self, user_input=None) -> FlowResult:
         """Give the user the opportunities to override inverter config."""
 
         _errors = {}
@@ -173,7 +175,7 @@ class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self._options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Allow user to reset the Polling times."""
 
         _errors = {}
@@ -186,9 +188,7 @@ class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
                 _errors[CONF_SUN_DOWN] = "time_invalid"
                 input_valid = False
             if input_valid:
-                if dt_util.parse_time(user_input[CONF_SUN_UP]) >= dt_util.parse_time(
-                    user_input[CONF_SUN_DOWN]
-                ):
+                if dt_util.parse_time(user_input[CONF_SUN_UP]) >= dt_util.parse_time(user_input[CONF_SUN_DOWN]):  # type: ignore
                     _errors[CONF_SUN_DOWN] = "time_range"
                     input_valid = False
             if input_valid:
@@ -196,10 +196,7 @@ class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data=self._options)
         else:
             user_input = {}
-            if not self._options:
-                user_input[CONF_SUN_UP] = DEFAULT_SUN_UP
-                user_input[CONF_SUN_DOWN] = DEFAULT_SUN_DOWN
-            else:
+            if self._options:
                 user_input.update(self._options)
 
         return self.async_show_form(
@@ -207,10 +204,11 @@ class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_SUN_UP, default=user_input[CONF_SUN_UP]
+                        CONF_SUN_UP, default=user_input.get(CONF_SUN_UP, DEFAULT_SUN_UP)
                     ): cv.string,
                     vol.Required(
-                        CONF_SUN_DOWN, default=user_input[CONF_SUN_DOWN]
+                        CONF_SUN_DOWN,
+                        default=user_input.get(CONF_SUN_DOWN, DEFAULT_SUN_DOWN),
                     ): cv.string,
                 }
             ),

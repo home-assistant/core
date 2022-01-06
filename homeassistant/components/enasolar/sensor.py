@@ -237,7 +237,7 @@ class EnaSolarSensor(SensorEntity):
 
         if unknown_state and self._native_value is not None:
             update = True
-            self.native_value = None
+            self._native_value = None
 
         if update:
             self.async_write_ha_state()

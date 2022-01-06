@@ -25,7 +25,8 @@
       "time_range": "Polling must cease after polling starts",
       "capability_invalid": "Invalid - See documentation for capability",
       "unexpected_response": "Unexpected response from Inverter",
-      "invalid_host": "IP address or FQDN is invalid"
+      "invalid_host": "IP address or FQDN is invalid",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

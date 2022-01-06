@@ -4,13 +4,13 @@ import logging
 import pyenasolar
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, ENASOLAR
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the config entry."""
     host = config_entry.data[CONF_HOST]
-    _LOGGER.debug("Instantiate an EnaSolar Inverter at '%s'", host)
     enasolar = pyenasolar.EnaSolar()
 
     try:
@@ -28,8 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             f"Connection to EnaSolar Inverter '{host}' failed ({conerr})"
         ) from conerr
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {ENASOLAR: enasolar}
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {ENASOLAR: enasolar}
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
