@@ -17,6 +17,7 @@ def get_update_manager(device):
         "A1": BroadlinkA1UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
         "LB1": BroadlinkLB1UpdateManager,
+        "LB2": BroadlinkLB2UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,
@@ -180,6 +181,13 @@ class BroadlinkSP4UpdateManager(BroadlinkUpdateManager):
 
 class BroadlinkLB1UpdateManager(BroadlinkUpdateManager):
     """Manages updates for Broadlink LB1 devices."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        return await self.device.async_request(self.device.api.get_state)
+
+class BroadlinkLB2UpdateManager(BroadlinkUpdateManager):
+    """Manages updates for Broadlink LB2 devices."""
 
     async def async_fetch_data(self):
         """Fetch data from the device."""
