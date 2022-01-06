@@ -1,8 +1,6 @@
 """Support for Steamist sensors."""
 from __future__ import annotations
 
-from typing import cast
-
 from aiosteamist import SteamistStatus
 
 from homeassistant.config_entries import ConfigEntry
