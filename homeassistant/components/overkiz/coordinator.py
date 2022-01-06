@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Dict
+from typing import Any, Dict
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -24,7 +24,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
-DATA_TYPE_TO_PYTHON: dict[DataType, Callable] = {
+DATA_TYPE_TO_PYTHON: dict[
+    DataType, Callable[[Any], str | float | int | bool | dict | list]
+] = {
     DataType.INTEGER: int,
     DataType.DATE: int,
     DataType.STRING: str,
@@ -175,9 +177,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Device]]):
 
         cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
         value = cast_to_python(state.value)
-
-        if TYPE_CHECKING:
-            assert isinstance(value, (str, float, int, bool, dict, list))
 
         return value
 
