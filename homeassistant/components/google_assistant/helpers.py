@@ -288,6 +288,7 @@ class AbstractConfig(ABC):
                     "Local Support for " + user_agent_id,
                     webhook_id,
                     self._handle_local_webhook,
+                    local_only=True,
                 )
                 setup_webhook_ids.append(webhook_id)
             except ValueError:
