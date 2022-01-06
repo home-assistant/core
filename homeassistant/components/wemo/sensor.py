@@ -100,17 +100,14 @@ class AttributeSensor(WemoEntity, SensorEntity):
     @property
     def unique_id_suffix(self) -> str | None:
         """Suffix to append to the WeMo device's unique ID."""
-        if (suffix := self.entity_description.unique_id_suffix) is not None:
-            return suffix
-        return super().unique_id_suffix
+        assert self.entity_description.unique_id_suffix
+        return self.entity_description.unique_id_suffix
 
     def convert_state(self, value: StateType) -> StateType:
         """Convert native state to a value appropriate for the sensor."""
-        if value is None:
-            return value
-        if (convert := self.entity_description.state_conversion) is None:
-            return value
-        return convert(value)
+        assert value is not None
+        assert self.entity_description.state_conversion
+        return self.entity_description.state_conversion(value)
 
     @property
     def native_value(self) -> StateType:
