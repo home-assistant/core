@@ -229,7 +229,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
         name="US EPA Primary Pollutant",
         value_map=PrimaryPollutantType,
-        icon="mdi:hair-dryer",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_EPA_HEALTH_CONCERN,
@@ -247,7 +246,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
         name="China MEP Primary Pollutant",
         value_map=PrimaryPollutantType,
-        icon="mdi:hair-dryer",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_HEALTH_CONCERN,
