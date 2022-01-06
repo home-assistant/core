@@ -22,7 +22,7 @@ from homeassistant.components.remootio.const import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_IP_ADDRESS,
+    CONF_HOST,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_capture_events
 
-TDV_IP_ADDRESS = "127.0.0.1"
+TDV_HOST = "127.0.0.1"
 TDV_CREDENTIAL = "123456789A123456789B123456789C123456789D123456789E123456789FVXYZ"
 TDV_SERIAL_NUMBER = "1234567890"
 TDV_TITLE = "remootio"
@@ -45,7 +45,7 @@ remootio_client_event_listeners: List[Listener[Event]] = []
 remootio_client: Mock = None
 
 
-@patch("homeassistant.components.remootio.cover.create_client")
+@patch("homeassistant.components.remootio.create_client")
 async def test_open_when_closed(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the opening of the Remootio controlled device."""
     global remootio_client
@@ -60,7 +60,7 @@ async def test_open_when_closed(remootio_create_client: Mock, hass: HomeAssistan
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_IP_ADDRESS: TDV_IP_ADDRESS,
+            CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
             CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
@@ -91,7 +91,7 @@ async def test_open_when_closed(remootio_create_client: Mock, hass: HomeAssistan
     _assert_state_changed_event(state_changed_events[2], STATE_OPENING, STATE_OPEN)
 
 
-@patch("homeassistant.components.remootio.cover.create_client")
+@patch("homeassistant.components.remootio.create_client")
 async def test_open_when_open(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the opening of the Remootio controlled device when it is open. In this case no state change should be occur."""
     global remootio_client
@@ -106,7 +106,7 @@ async def test_open_when_open(remootio_create_client: Mock, hass: HomeAssistant)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_IP_ADDRESS: TDV_IP_ADDRESS,
+            CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
             CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
@@ -135,7 +135,7 @@ async def test_open_when_open(remootio_create_client: Mock, hass: HomeAssistant)
     _assert_state_changed_event(state_changed_events[0], None, STATE_OPEN)
 
 
-@patch("homeassistant.components.remootio.cover.create_client")
+@patch("homeassistant.components.remootio.create_client")
 async def test_close_when_open(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the closing of the Remootio controlled device."""
     global remootio_client
@@ -150,7 +150,7 @@ async def test_close_when_open(remootio_create_client: Mock, hass: HomeAssistant
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_IP_ADDRESS: TDV_IP_ADDRESS,
+            CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
             CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
@@ -181,7 +181,7 @@ async def test_close_when_open(remootio_create_client: Mock, hass: HomeAssistant
     _assert_state_changed_event(state_changed_events[2], STATE_CLOSING, STATE_CLOSED)
 
 
-@patch("homeassistant.components.remootio.cover.create_client")
+@patch("homeassistant.components.remootio.create_client")
 async def test_close_when_closed(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the closing the Remootio controlled device when it is closed. In this case no state change should be occur."""
     global remootio_client
@@ -196,7 +196,7 @@ async def test_close_when_closed(remootio_create_client: Mock, hass: HomeAssista
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_IP_ADDRESS: TDV_IP_ADDRESS,
+            CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
             CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
@@ -225,7 +225,7 @@ async def test_close_when_closed(remootio_create_client: Mock, hass: HomeAssista
     _assert_state_changed_event(state_changed_events[0], None, STATE_CLOSED)
 
 
-@patch("homeassistant.components.remootio.cover.create_client")
+@patch("homeassistant.components.remootio.create_client")
 async def test_event_left_open(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the handling of the LEFT_OPEN event fired by Remootio if the controlled device has been left open."""
     global remootio_client
@@ -240,7 +240,7 @@ async def test_event_left_open(remootio_create_client: Mock, hass: HomeAssistant
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_IP_ADDRESS: TDV_IP_ADDRESS,
+            CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
             CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,

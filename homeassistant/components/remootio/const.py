@@ -11,19 +11,11 @@ REMOOTIO_DELAY = 0.5
 
 # Expected minimum Remootio Websocket API version supported by this integration
 EXPECTED_MINIMUM_API_VERSION = 2
-
-# Keys used by the Config flow
 CONF_API_SECRET_KEY = "secret__api_secret_key"
 CONF_API_AUTH_KEY = "secret__api_auth_key"
 CONF_TITLE = "title"
 CONF_SERIAL_NUMBER = "serial_number"
-CONF_DATA = "data"
-
-# Keys for event data fired by remootio.cover.RemootioCoverEventListener
-ATTR_SERIAL_NUMBER = CONF_SERIAL_NUMBER
-
-# Key for the dictionary entry which holds the instance of aioremootio.RemootioClient to connect to the Remootio device using the Remootio Websocket API
+ED_SERIAL_NUMBER = CONF_SERIAL_NUMBER
+ED_NAME = "name"
+ED_ENTITY_ID = "entity_id"
 REMOOTIO_CLIENT = "remootio_client"
-
-# Key for the dictionary entry which holds reference to the callback to be invoked to handle events triggered by the Remootio device
-EVENT_HANDLER_CALLBACK = "event_handler_callback"

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/remootio",
   "requirements": [
-    "aioremootio==1.0.0a11"
+    "aioremootio==1.0.0a13"
   ],
   "ssdp": [],
   "homekit": {},
