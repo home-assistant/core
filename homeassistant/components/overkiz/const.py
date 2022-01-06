@@ -37,3 +37,16 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
     UIClass.DOOR_LOCK: Platform.LOCK,
     UIClass.LIGHT: Platform.LIGHT,
 }
+
+# Map Overkiz camelCase to Home Assistant snake_case
+OVERKIZ_STATE_TO_TRANSLATION: dict[str, str] = {
+    "externalGateway": "external_gateway",
+    "localUser": "local_user",
+    "lowBattery": "low_battery",
+    "LSC": "lsc",
+    "maintenanceRequired": "maintenance_required",
+    "noDefect": "no_defect",
+    "SAAC": "saac",
+    "SFC": "sfc",
+    "UPS": "ups",
+}
