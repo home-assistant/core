@@ -7,8 +7,7 @@ from urllib.parse import urlparse
 
 from pyoverkiz.models import Command, Device
 
-from homeassistant.components.overkiz.const import OverkizStateType
-
+from .const import OverkizStateType
 from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
