@@ -370,7 +370,7 @@ directv==0.4.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.31
+dsmr_parser==0.32
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -571,7 +571,7 @@ icmplib==3.0
 ifaddr==0.1.7
 
 # homeassistant.components.influxdb
-influxdb-client==1.14.0
+influxdb-client==1.24.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
@@ -878,7 +878,7 @@ pybotvac==0.0.22
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==10.2.2
+pychromecast==10.2.3
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -921,6 +921,9 @@ pyfido==2.1.1
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
+
+# homeassistant.components.flic
+pyflic==2.0.3
 
 # homeassistant.components.flume
 pyflume==0.6.5
@@ -1053,7 +1056,7 @@ pynetgear==0.8.0
 pynina==0.1.4
 
 # homeassistant.components.nuki
-pynuki==1.4.1
+pynuki==1.5.2
 
 # homeassistant.components.nut
 pynut2==2.1.2

@@ -575,7 +575,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.31
+dsmr_parser==0.32
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.4
@@ -902,7 +902,7 @@ ihcsdk==2.7.0
 incomfort-client==0.4.4
 
 # homeassistant.components.influxdb
-influxdb-client==1.14.0
+influxdb-client==1.24.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
@@ -1419,7 +1419,7 @@ pycfdns==1.2.2
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==10.2.2
+pychromecast==10.2.3
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1693,7 +1693,7 @@ pynetio==0.1.9.1
 pynina==0.1.4
 
 # homeassistant.components.nuki
-pynuki==1.4.1
+pynuki==1.5.2
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -1981,7 +1981,7 @@ python-vlc==1.1.2
 python_awair==0.2.1
 
 # homeassistant.components.swiss_public_transport
-python_opendata_transport==0.2.1
+python_opendata_transport==0.3.0
 
 # homeassistant.components.egardia
 pythonegardia==1.0.40

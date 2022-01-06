@@ -1,9 +1,6 @@
 """BleBox cover entity."""
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPENING,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -11,6 +8,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

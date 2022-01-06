@@ -4,8 +4,11 @@ import logging
 from goodwe import Inverter, InverterError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
@@ -27,7 +30,11 @@ OPERATION_MODE = SelectEntityDescription(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the inverter select entities from a config entry."""
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]

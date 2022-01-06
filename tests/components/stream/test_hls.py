@@ -262,7 +262,6 @@ async def test_stream_keepalive(hass):
     cur_time = 0
 
     def time_side_effect():
-        print("stream.available=%s", stream.available)
         nonlocal cur_time
         if cur_time >= 80:
             stream.keepalive = False  # Thread should exit and be joinable.

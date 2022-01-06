@@ -15,8 +15,11 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -85,16 +88,21 @@ def due_in_minutes(timestamp: datetime) -> int:
     return int(diff.total_seconds() / 60)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Entur public transport sensor."""
 
-    expand = config.get(CONF_EXPAND_PLATFORMS)
-    line_whitelist = config.get(CONF_WHITELIST_LINES)
-    name = config.get(CONF_NAME)
-    show_on_map = config.get(CONF_SHOW_ON_MAP)
-    stop_ids = config.get(CONF_STOP_IDS)
-    omit_non_boarding = config.get(CONF_OMIT_NON_BOARDING)
-    number_of_departures = config.get(CONF_NUMBER_OF_DEPARTURES)
+    expand = config[CONF_EXPAND_PLATFORMS]
+    line_whitelist = config[CONF_WHITELIST_LINES]
+    name = config[CONF_NAME]
+    show_on_map = config[CONF_SHOW_ON_MAP]
+    stop_ids = config[CONF_STOP_IDS]
+    omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
+    number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]

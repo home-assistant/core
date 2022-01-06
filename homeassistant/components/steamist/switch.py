@@ -28,7 +28,7 @@ async def async_setup_entry(
 
 
 class SteamistSwitchEntity(SteamistEntity, SwitchEntity):
-    """Representation of an Steamist binary sensor."""
+    """Representation of an Steamist steam switch."""
 
     @property
     def is_on(self) -> bool:
@@ -36,11 +36,11 @@ class SteamistSwitchEntity(SteamistEntity, SwitchEntity):
         return self._status.active
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the specified device on."""
+        """Turn the steam on."""
         await self.coordinator.client.async_turn_on_steam()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the specified device off."""
+        """Turn the steam off."""
         await self.coordinator.client.async_turn_off_steam()
         await self.coordinator.async_request_refresh()

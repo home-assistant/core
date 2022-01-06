@@ -1,19 +1,27 @@
 """Support for control of ElkM1 lighting (X10, UPB, etc)."""
+from __future__ import annotations
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Elk light platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
+    entities: list[ElkLight] = []
     elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.lights, "plc", ElkLight, entities)
     async_add_entities(entities, True)

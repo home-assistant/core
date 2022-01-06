@@ -74,7 +74,6 @@ VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
 DATA_CUSTOMIZE = "hass_customize"
 
-GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"

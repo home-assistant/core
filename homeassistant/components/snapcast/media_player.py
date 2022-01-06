@@ -1,4 +1,6 @@
 """Support for interacting with Snapcast clients."""
+from __future__ import annotations
+
 import logging
 import socket
 
@@ -21,7 +23,10 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_LATENCY,
@@ -52,7 +57,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Snapcast platform."""
 
     host = config.get(CONF_HOST)
@@ -82,9 +92,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Note: Host part is needed, when using multiple snapservers
     hpid = f"{host}:{port}"
 
-    groups = [SnapcastGroupDevice(group, hpid) for group in server.groups]
-    clients = [SnapcastClientDevice(client, hpid) for client in server.clients]
-    devices = groups + clients
+    devices: list[MediaPlayerEntity] = [
+        SnapcastGroupDevice(group, hpid) for group in server.groups
+    ]
+    devices.extend(SnapcastClientDevice(client, hpid) for client in server.clients)
     hass.data[DATA_KEY] = devices
     async_add_entities(devices)
 
