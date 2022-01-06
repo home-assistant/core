@@ -354,7 +354,9 @@ async def handle_render_template(
             return
 
     @callback
-    def _template_listener(event: Event, updates: list[TrackTemplateResult]) -> None:
+    def _template_listener(
+        event: Event | None, updates: list[TrackTemplateResult]
+    ) -> None:
         nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
