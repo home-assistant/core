@@ -157,14 +157,17 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
         Platform.HUMIDIFIER,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
     ): TYPE_DEHUMIDIFIER,
-    (humidifier.DOMAIN, humidifier.HumidifierDeviceClass.HUMIDIFIER): TYPE_HUMIDIFIER,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
-    (sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
-    (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
-    (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
-    (switch.DOMAIN, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
+    (Platform.HUMIDIFIER, humidifier.HumidifierDeviceClass.HUMIDIFIER): TYPE_HUMIDIFIER,
+    (
+        Platform.MEDIA_PLAYER,
+        media_player.MediaPlayerDeviceClass.RECEIVER,
+    ): TYPE_RECEIVER,
+    (Platform.MEDIA_PLAYER, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
+    (Platform.MEDIA_PLAYER, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
+    (Platform.SENSOR, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
+    (Platform.SENSOR, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
+    (Platform.SWITCH, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
+    (Platform.SWITCH, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
