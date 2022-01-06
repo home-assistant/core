@@ -16,6 +16,7 @@ from matrix_client.room import Room
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -115,6 +116,27 @@ def setup_bot(hass: HomeAssistant, config: ConfigType) -> bool:
         bot.handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
     )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up the Matrix bot from config entry."""
+
+    status: Final[bool] = await hass.async_add_executor_job(
+        setup_bot, hass, config_entry.data
+    )
+
+    return status
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload config entry."""
+
+    # Remove the registered service
+    hass.services.async_remove(DOMAIN, SERVICE_SEND_MESSAGE)
+    # Remove the bot
+    del hass.data[DOMAIN]
 
     return True
 

@@ -1,8 +1,13 @@
 {
   "domain": "matrix",
   "name": "Matrix",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/matrix",
-  "requirements": ["matrix-client==0.4.0"],
-  "codeowners": ["@tinloaf"],
+  "requirements": [
+    "matrix-client==0.4.0"
+  ],
+  "codeowners": [
+    "@tinloaf"
+  ],
   "iot_class": "cloud_push"
 }
