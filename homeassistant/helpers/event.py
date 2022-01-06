@@ -1152,7 +1152,7 @@ def async_track_template_result(
 def async_track_same_state(
     hass: HomeAssistant,
     period: timedelta,
-    action: Callable[..., Awaitable[None] | None],
+    action: Callable[[], Awaitable[None] | None],
     async_check_same_func: Callable[[str, State | None, State | None], bool],
     entity_ids: str | Iterable[str] = MATCH_ALL,
 ) -> CALLBACK_TYPE:
@@ -1221,7 +1221,7 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[..., Awaitable[None] | None],
+    action: HassJob | Callable[[datetime], Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
@@ -1242,7 +1242,7 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[..., Awaitable[None] | None],
+    action: HassJob | Callable[[datetime], Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
@@ -1294,7 +1294,7 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
-    action: HassJob | Callable[..., Awaitable[None] | None],
+    action: HassJob | Callable[[datetime], Awaitable[None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     if not isinstance(delay, timedelta):
@@ -1309,7 +1309,7 @@ call_later = threaded_listener_factory(async_call_later)
 @bind_hass
 def async_track_time_interval(
     hass: HomeAssistant,
-    action: Callable[..., Awaitable[None] | None],
+    action: Callable[[datetime], Awaitable[None] | None],
     interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
@@ -1409,7 +1409,7 @@ class SunListener:
 @callback
 @bind_hass
 def async_track_sunrise(
-    hass: HomeAssistant, action: Callable[..., None], offset: timedelta | None = None
+    hass: HomeAssistant, action: Callable[[], None], offset: timedelta | None = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunrise daily."""
     listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNRISE, offset)
@@ -1423,7 +1423,7 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 @callback
 @bind_hass
 def async_track_sunset(
-    hass: HomeAssistant, action: Callable[..., None], offset: timedelta | None = None
+    hass: HomeAssistant, action: Callable[[], None], offset: timedelta | None = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunset daily."""
     listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNSET, offset)
@@ -1441,7 +1441,7 @@ time_tracker_utcnow = dt_util.utcnow
 @bind_hass
 def async_track_utc_time_change(
     hass: HomeAssistant,
-    action: Callable[..., Awaitable[None] | None],
+    action: Callable[[datetime], Awaitable[None] | None],
     hour: Any | None = None,
     minute: Any | None = None,
     second: Any | None = None,
@@ -1456,7 +1456,7 @@ def async_track_utc_time_change(
         @callback
         def time_change_listener(event: Event) -> None:
             """Fire every time event that comes in."""
-            hass.async_run_hass_job(job, event.data[ATTR_NOW])
+            hass.async_run_hass_job(job, cast(datetime, event.data[ATTR_NOW]))
 
         return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
 
@@ -1507,7 +1507,7 @@ track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 @bind_hass
 def async_track_time_change(
     hass: HomeAssistant,
-    action: Callable[..., None],
+    action: Callable[[datetime], Awaitable[None] | None],
     hour: Any | None = None,
     minute: Any | None = None,
     second: Any | None = None,
