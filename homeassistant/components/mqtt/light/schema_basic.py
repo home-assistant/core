@@ -1045,7 +1045,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 if tpl := self._command_templates[CONF_EFFECT_COMMAND_TEMPLATE]:
                     effect = tpl(variables={"value": effect})
                 await publish(CONF_EFFECT_COMMAND_TOPIC, effect)
-                should_update |= set_optimistic(ATTR_EFFECT, effect)
+                should_update |= set_optimistic(ATTR_EFFECT, kwargs[ATTR_EFFECT])
 
         if ATTR_WHITE in kwargs and self._topic[CONF_WHITE_COMMAND_TOPIC] is not None:
             percent_white = float(kwargs[ATTR_WHITE]) / 255
