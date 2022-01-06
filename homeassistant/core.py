@@ -773,7 +773,7 @@ class Event:
 class _FilterableJob(NamedTuple):
     """Event listener job to be executed with optional filter."""
 
-    job: HassJob
+    job: HassJob[None | Awaitable[None]]
     event_filter: Callable[[Event], bool] | None
 
 
