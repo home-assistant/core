@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+from ipaddress import ip_address
 import logging
 import secrets
 
@@ -15,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util import network
 from homeassistant.util.aiohttp import MockRequest
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +40,8 @@ def async_register(
     name: str,
     webhook_id: str,
     handler: Callable[[HomeAssistant, str, Request], Awaitable[Response | None]],
+    *,
+    local_only=False,
 ) -> None:
     """Register a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
@@ -45,7 +49,12 @@ def async_register(
     if webhook_id in handlers:
         raise ValueError("Handler is already defined!")
 
-    handlers[webhook_id] = {"domain": domain, "name": name, "handler": handler}
+    handlers[webhook_id] = {
+        "domain": domain,
+        "name": name,
+        "handler": handler,
+        "local_only": local_only,
+    }
 
 
 @callback
@@ -101,6 +110,17 @@ async def async_handle_webhook(hass, webhook_id, request):
         _LOGGER.debug("%s", content)
         return Response(status=HTTPStatus.OK)
 
+    if webhook["local_only"]:
+        try:
+            remote = ip_address(request.remote)
+        except ValueError:
+            _LOGGER.debug("Unable to parse remote ip %s", request.remote)
+            return Response(status=HTTPStatus.OK)
+
+        if not network.is_local(remote):
+            _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
+            return Response(status=HTTPStatus.OK)
+
     try:
         response = await webhook["handler"](hass, webhook_id, request)
         if response is None:
@@ -145,7 +165,12 @@ def websocket_list(hass, connection, msg):
     """Return a list of webhooks."""
     handlers = hass.data.setdefault(DOMAIN, {})
     result = [
-        {"webhook_id": webhook_id, "domain": info["domain"], "name": info["name"]}
+        {
+            "webhook_id": webhook_id,
+            "domain": info["domain"],
+            "name": info["name"],
+            "local_only": info["local_only"],
+        }
         for webhook_id, info in handlers.items()
     ]
 
