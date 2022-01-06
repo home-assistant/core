@@ -153,7 +153,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     if hass.is_running:
-        start_update_interval()
+        start_update_interval(None)
     else:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
 
