@@ -64,6 +64,7 @@ homeassistant.components.homeassistant.triggers.event
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
+homeassistant.components.hyundai_kia_connect.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
