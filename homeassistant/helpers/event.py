@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Callable, List, cast
+from typing import Any, Callable, List, Union, cast
 
 import attr
 
@@ -721,7 +721,7 @@ def async_track_template(
 
     @callback
     def _template_changed_listener(
-        event: Event, updates: list[TrackTemplateResult]
+        event: Event | None, updates: list[TrackTemplateResult]
     ) -> None:
         """Check if condition is correct and run action."""
         track_result = updates.pop()
@@ -769,7 +769,7 @@ class _TrackTemplateResultInfo:
         self,
         hass: HomeAssistant,
         track_templates: Sequence[TrackTemplate],
-        action: Callable,
+        action: Callable[[Event | None, list[TrackTemplateResult]], None],
         has_super_template: bool = False,
     ) -> None:
         """Handle removal / refresh of tracker init."""
@@ -986,7 +986,7 @@ class _TrackTemplateResultInfo:
         replayed is True if the event is being replayed because the
         rate limit was hit.
         """
-        updates = []
+        updates: list[TrackTemplateResult] = []
         info_changed = False
         now = event.time_fired if not replayed and event else dt_util.utcnow()
 
@@ -1075,7 +1075,7 @@ class _TrackTemplateResultInfo:
 
 TrackTemplateResultListener = Callable[
     [
-        Event,
+        Union[Event, None],
         List[TrackTemplateResult],
     ],
     None,
