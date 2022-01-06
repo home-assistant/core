@@ -1,11 +1,12 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
-from enum import Enum, unique
+from enum import unique
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -101,7 +102,7 @@ class OverkizDescriptiveEntity(OverkizEntity):
 
 # Used by translations of state and select sensors
 @unique
-class OverkizDeviceClass(str, Enum):
+class OverkizDeviceClass(StrEnum):
     """Device class for Overkiz specific devices."""
 
     OPEN_CLOSED_PEDESTRIAN = "overkiz__open_closed_pedestrian"
