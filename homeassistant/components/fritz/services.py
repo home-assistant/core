@@ -1,6 +1,7 @@
 """Services for Fritz integration."""
 import logging
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -62,7 +63,11 @@ async def _async_get_configured_avm_device(
     list_entry_id: list = []
     for entry_id in await async_extract_config_entry_ids(hass, service_call):
         config_entry = hass.config_entries.async_get_entry(entry_id)
-        if config_entry and config_entry.domain == DOMAIN:
+        if (
+            config_entry
+            and config_entry.domain == DOMAIN
+            and config_entry.state == ConfigEntryState.LOADED
+        ):
             list_entry_id.append(entry_id)
     return list_entry_id
 
