@@ -34,4 +34,4 @@ class SteamistEntity(CoordinatorEntity, Entity):
     @property
     def _status(self) -> SteamistStatus:
         """Return the steamist status."""
-        return cast(SteamistStatus, self.coordinator.data)
+        return self.coordinator.data
