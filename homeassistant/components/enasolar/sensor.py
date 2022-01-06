@@ -164,7 +164,7 @@ def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TY
     remove = None
     interval = min_interval
 
-    async def interval_listener():
+    async def interval_listener(now=None):
         """Handle elapsed interval with backoff."""
         nonlocal interval, remove
 
