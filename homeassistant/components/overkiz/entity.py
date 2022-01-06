@@ -1,6 +1,8 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
+from enum import Enum, unique
+
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
@@ -95,3 +97,12 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self.entity_description = description
         self._attr_name = f"{super().name} {self.entity_description.name}"
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
+
+
+# Used by translations of state and select sensors
+@unique
+class OverkizDeviceClass(str, Enum):
+    """Device class for Overkiz specific devices."""
+
+    OPEN_CLOSED_PEDESTRIAN = "overkiz__open_closed_pedestrian"
+    MEMORIZED_SIMPLE_VOLUME = "overkiz__memorized_simple_volume"

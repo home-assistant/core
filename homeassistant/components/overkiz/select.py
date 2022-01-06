@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
-from .entity import OverkizDescriptiveEntity
+from .entity import OverkizDescriptiveEntity, OverkizDeviceClass
 
 
 @dataclass
@@ -48,8 +48,10 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
                 OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
                 OverkizCommandParam.OPEN: OverkizCommand.OPEN,
                 OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
-            }[OverkizCommandParam(option)]
+            }[OverkizCommandParam(option)],
+            None,
         ),
+        device_class=OverkizDeviceClass.OPEN_CLOSED_PEDESTRIAN,
     ),
     OverkizSelectDescription(
         key=OverkizState.IO_MEMORIZED_SIMPLE_VOLUME,
@@ -60,6 +62,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
             OverkizCommand.SET_MEMORIZED_SIMPLE_VOLUME, option
         ),
         entity_category=EntityCategory.CONFIG,
+        device_class=OverkizDeviceClass.MEMORIZED_SIMPLE_VOLUME,
     ),
 ]
 
