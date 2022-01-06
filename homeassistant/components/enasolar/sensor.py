@@ -139,7 +139,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         return values
 
-    def start_update_interval():
+    def start_update_interval(event):
         """Start the update interval scheduling."""
         config_entry.async_on_unload(
             async_track_time_interval_backoff(
