@@ -730,6 +730,7 @@ async def test_structure_missing_trait(hass, oauth, subscriber):
     # Fallback to default name
     assert entry.title == "OAuth for Apps"
 
+
 async def test_dhcp_discovery_without_config(hass, oauth):
     """Exercise discovery dhcp with no config present (can't run)."""
     result = await hass.config_entries.flow.async_init(
