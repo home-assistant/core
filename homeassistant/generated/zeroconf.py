@@ -39,10 +39,7 @@ ZEROCONF = {
     ],
     "_airport._tcp.local.": [
         {
-            "domain": "apple_tv",
-            "properties": {
-                "_browse_only": "-1"
-            }
+            "domain": "apple_tv"
         }
     ],
     "_api._udp.local.": [
@@ -88,10 +85,7 @@ ZEROCONF = {
     ],
     "_companion-link._tcp.local.": [
         {
-            "domain": "apple_tv",
-            "properties": {
-                "_browse_only": "-1"
-            }
+            "domain": "apple_tv"
         }
     ],
     "_daap._tcp.local.": [
@@ -315,10 +309,7 @@ ZEROCONF = {
     ],
     "_sleep-proxy._udp.local.": [
         {
-            "domain": "apple_tv",
-            "properties": {
-                "_browse_only": "-1"
-            }
+            "domain": "apple_tv"
         }
     ],
     "_sonos._tcp.local.": [
