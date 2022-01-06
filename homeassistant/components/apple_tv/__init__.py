@@ -277,7 +277,7 @@ class AppleTVManager:
             identifier=identifiers,
             protocol=protocols,
             hosts=[address],
-            async_zeroconf=aiozc,
+            aiozc=aiozc,
         )
         if atvs:
             return atvs[0]
