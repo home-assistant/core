@@ -91,6 +91,7 @@ async def async_setup_entry(
         location[CONF_LATITUDE],
         location[CONF_LONGITUDE],
         session=session,
+        entry_id=config_entry.entry_id,
     )
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
 
@@ -106,6 +107,7 @@ class SmhiWeather(WeatherEntity):
         latitude: str,
         longitude: str,
         session: aiohttp.ClientSession,
+        entry_id: str,
     ) -> None:
         """Initialize the SMHI weather entity."""
 
@@ -115,11 +117,7 @@ class SmhiWeather(WeatherEntity):
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return f"{self._latitude}, {self._longitude}"
+        self._attr_unique_id = f"{entry_id}, {self._latitude}, {self._longitude}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
