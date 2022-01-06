@@ -12,6 +12,7 @@ import time
 from typing import Any, Callable, List, cast
 
 import attr
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -60,6 +61,8 @@ _DOMAINS_LISTENER = "domains"
 _ENTITIES_LISTENER = "entities"
 
 _LOGGER = logging.getLogger(__name__)
+
+_P = ParamSpec("_P")
 
 
 @dataclass
@@ -110,20 +113,20 @@ class TrackTemplateResult:
 
 
 def threaded_listener_factory(
-    async_factory: Callable[..., Any]
-) -> Callable[..., CALLBACK_TYPE]:
+    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]  # type: ignore[misc]
+) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:  # type: ignore[misc]
     """Convert an async event helper to a threaded one."""
 
     @ft.wraps(async_factory)
-    def factory(*args: Any, **kwargs: Any) -> CALLBACK_TYPE:
+    def factory(
+        hass: HomeAssistant, *args: _P.args, **kwargs: _P.kwargs
+    ) -> CALLBACK_TYPE:
         """Call async event helper safely."""
-        hass = args[0]
-
         if not isinstance(hass, HomeAssistant):
             raise TypeError("First parameter needs to be a hass instance")
 
         async_remove = run_callback_threadsafe(
-            hass.loop, ft.partial(async_factory, *args, **kwargs)
+            hass.loop, ft.partial(async_factory, hass, *args, **kwargs)
         ).result()
 
         def remove() -> None:
