@@ -120,6 +120,7 @@ omit =
     homeassistant/components/bmp280/sensor.py
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
+    homeassistant/components/bmw_connected_drive/button.py
     homeassistant/components/bmw_connected_drive/device_tracker.py
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
