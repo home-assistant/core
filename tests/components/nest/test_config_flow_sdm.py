@@ -12,6 +12,7 @@ from google_nest_sdm.structure import Structure
 import pytest
 
 from homeassistant import config_entries, setup
+from homeassistant.components import dhcp
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -41,6 +42,11 @@ WEB_AUTH_DOMAIN = DOMAIN
 APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
+
+
+FAKE_DHCP_DATA = dhcp.DhcpServiceInfo(
+    ip="127.0.0.2", macaddress="00:11:22:33:44:55", hostname="fake_hostname"
+)
 
 
 @pytest.fixture
@@ -723,3 +729,43 @@ async def test_structure_missing_trait(hass, oauth, subscriber):
 
     # Fallback to default name
     assert entry.title == "OAuth for Apps"
+
+
+async def test_dhcp_discovery_without_config(hass, oauth):
+    """Exercise discovery dhcp with no config present (can't run)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "missing_configuration"
+
+
+async def test_dhcp_discovery(hass, oauth):
+    """Discover via dhcp when config is present."""
+    assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+
+    # DHCP discovery invokes the config flow
+    result = await oauth.async_pick_flow(result, WEB_AUTH_DOMAIN)
+    await oauth.async_oauth_web_flow(result)
+    entry = await oauth.async_finish_setup(result)
+    assert entry.title == "OAuth for Web"
+
+    # Discovery does not run once configured
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
