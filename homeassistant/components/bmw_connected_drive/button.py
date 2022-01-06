@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
+from bimmer_connected.remote_services import RemoteServiceStatus
 from bimmer_connected.vehicle import ConnectedDriveVehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -25,8 +25,10 @@ class BMWButtonEntityDescription(ButtonEntityDescription):
     """Class describing BMW button entities."""
 
     enabled_when_read_only: bool = False
-    remote_function: Callable[[ConnectedDriveVehicle], Any] | None = None
-    account_function: Callable[[BMWConnectedDriveAccount], Any] | None = None
+    remote_function: Callable[
+        [ConnectedDriveVehicle], RemoteServiceStatus
+    ] | None = None
+    account_function: Callable[[BMWConnectedDriveAccount], None] | None = None
 
 
 BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
