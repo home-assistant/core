@@ -28,7 +28,7 @@ from .wemo_device import DeviceCoordinator
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
-    state_conversion: Callable[[AttributeSensor, StateType], StateType] | None = None
+    state_conversion: Callable[[StateType], StateType] | None = None
     unique_id_suffix: str | None = None
 
 
@@ -40,7 +40,7 @@ ATTRIBUTE_SENSORS = (
         native_unit_of_measurement=POWER_WATT,
         key="current_power_watts",
         unique_id_suffix="currentpower",
-        state_conversion=lambda sensor, state: round(cast(float, state), 2),
+        state_conversion=lambda state: round(cast(float, state), 2),
     ),
     AttributeSensorDescription(
         name="Today Energy",
@@ -49,7 +49,7 @@ ATTRIBUTE_SENSORS = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         key="today_kwh",
         unique_id_suffix="todaymw",
-        state_conversion=lambda sensor, state: round(cast(float, state), 2),
+        state_conversion=lambda state: round(cast(float, state), 2),
     ),
 )
 
@@ -110,7 +110,7 @@ class AttributeSensor(WemoEntity, SensorEntity):
             return value
         if (convert := self.entity_description.state_conversion) is None:
             return value
-        return convert(self, value)
+        return convert(value)
 
     @property
     def native_value(self) -> StateType:
