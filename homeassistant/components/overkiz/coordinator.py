@@ -177,7 +177,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Device]]):
         value = cast_to_python(state.value)
 
         if TYPE_CHECKING:
-            assert isinstance(value, (str, float, int, bool))
+            assert isinstance(value, (str, float, int, bool, dict, list))
 
         return value
 
