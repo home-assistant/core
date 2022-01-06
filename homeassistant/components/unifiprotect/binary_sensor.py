@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Final
 
@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, RING_INTERVAL
+from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
 from .models import ProtectRequiredKeysMixin
@@ -49,6 +49,7 @@ _KEY_BATTERY_LOW = "battery_low"
 _KEY_DISK_HEALTH = "disk_health"
 
 DEVICE_CLASS_RING: Final = "unifiprotect__ring"
+RING_INTERVAL = timedelta(seconds=3)
 
 
 CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
