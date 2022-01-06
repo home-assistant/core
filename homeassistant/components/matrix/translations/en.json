@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "homeserver": "URL",
+                    "password": "Password",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "duplicate_name": "Name already in use"
+        },
+        "step": {
+            "add_command": {
+                "data": {
+                    "expression": "Expression",
+                    "name": "Name",
+                    "rooms": "Rooms (Split multiple rooms with commas \",\")",
+                    "word": "Word"
+                }
+            },
+            "init": {
+                "data": {
+                    "add_command": "Add command...",
+                    "commands": "Commands",
+                    "list_command": "--Commands--",
+                    "rooms": "Rooms (Split multiple rooms with commas \",\")"
+                }
+            },
+            "modify_command": {
+                "data": {
+                    "delete_command": "Delete command",
+                    "expression": "Expression",
+                    "name": "Name",
+                    "rooms": "Rooms (Split multiple rooms with commas \",\")",
+                    "word": "Word"
+                }
+            }
+        }
+    }
+}
