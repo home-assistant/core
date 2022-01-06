@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
 
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OverkizStateType
 from .entity import OverkizDescriptiveEntity
 
 
@@ -24,7 +25,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensor entities."""
 
-    value_fn: Callable[[None | int | float | str | bool], bool]
+    value_fn: Callable[[OverkizStateType], bool]
 
 
 @dataclass
@@ -98,6 +99,16 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
         value_fn=lambda state: state == OverkizCommandParam.DETECTED,
+    ),
+    # DomesticHotWaterProduction/WaterHeatingSystem
+    OverkizBinarySensorDescription(
+        key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
+        name="Energy Demand Status",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_fn=lambda state: cast(dict, state).get(
+            OverkizCommandParam.ENERGY_DEMAND_STATUS
+        )
+        == 1,
     ),
 ]
 

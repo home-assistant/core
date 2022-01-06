@@ -22,11 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, UPDATE_INTERVAL, OverkizStateType
 
-DATA_TYPE_TO_PYTHON: dict[
-    DataType, Callable[[Any], str | float | int | bool | dict | list]
-] = {
+DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[Any], OverkizStateType]] = {
     DataType.INTEGER: int,
     DataType.DATE: int,
     DataType.STRING: str,
@@ -168,7 +166,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Device]]):
     @staticmethod
     def _get_state(
         state: State,
-    ) -> dict[Any, Any] | list[Any] | float | int | bool | str | None:
+    ) -> OverkizStateType:
         """Cast string value to the right type."""
         data_type = DataType(state.type)
 
