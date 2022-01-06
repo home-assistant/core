@@ -34,10 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up component from a config entry."""
     _LOGGER.debug(f"Setup item from config entry: {entry.data}.")
     # Forward the setup to the sensor platform.
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
