@@ -4,33 +4,23 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioremootio import (
-    ConnectionOptions,
-    Event,
-    EventType,
-    Listener,
-    RemootioClient,
-    State,
-    StateChange,
-)
+from aioremootio import Event, EventType, Listener, RemootioClient, State, StateChange
 
 from homeassistant.components import cover
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_IP_ADDRESS
+from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_API_AUTH_KEY,
-    CONF_API_SECRET_KEY,
     CONF_SERIAL_NUMBER,
     DOMAIN,
     ED_ENTITY_ID,
     ED_NAME,
     ED_SERIAL_NUMBER,
+    REMOOTIO_CLIENT,
 )
-from .utils import create_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,19 +32,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up an ``RemootioCover`` entity based on the given configuration entry."""
 
-    _LOGGER.debug("config_entry [%s]" % config_entry.as_dict())
-
-    connection_options: ConnectionOptions = ConnectionOptions(
-        config_entry.data[CONF_IP_ADDRESS],
-        config_entry.data[CONF_API_SECRET_KEY],
-        config_entry.data[CONF_API_AUTH_KEY],
+    _LOGGER.debug(f"config_entry [{config_entry.as_dict()}]")
+    _LOGGER.debug(
+        f"hass.data[{DOMAIN}][{config_entry.entry_id}] [{hass.data[DOMAIN][config_entry.entry_id]}]]"
     )
+
     serial_number: str = config_entry.data[CONF_SERIAL_NUMBER]
     device_class: str = config_entry.data[CONF_DEVICE_CLASS]
-
-    remootio_client: RemootioClient = await create_client(
-        hass, connection_options, _LOGGER, serial_number
-    )
+    remootio_client: RemootioClient = hass.data[DOMAIN][config_entry.entry_id][
+        REMOOTIO_CLIENT
+    ]
 
     async_add_entities(
         [
@@ -115,23 +102,17 @@ class RemootioCover(cover.CoverEntity):
     @property
     def is_opening(self):
         """Return True when the Remootio controlled garage door or gate is currently opening."""
-        result: bool = self.__remootio_client.state == State.OPENING
-        _LOGGER.debug(f"is_opening [{result}]")
-        return result
+        return self.__remootio_client.state == State.OPENING
 
     @property
     def is_closing(self):
         """Return True when the Remootio controlled garage door or gate is currently closing."""
-        result: bool = self.__remootio_client.state == State.CLOSING
-        _LOGGER.debug(f"is_closing [{result}]")
-        return result
+        return self.__remootio_client.state == State.CLOSING
 
     @property
     def is_closed(self):
         """Return True when the Remootio controlled garage door or gate is currently closed."""
-        result: bool = self.__remootio_client.state == State.CLOSED
-        _LOGGER.debug(f"is_closed [{result}]")
-        return result
+        return self.__remootio_client.state == State.CLOSED
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the Remootio controlled garage door or gate."""
