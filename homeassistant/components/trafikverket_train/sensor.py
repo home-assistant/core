@@ -112,7 +112,7 @@ def next_weekday(fromdate: date, weekday: int) -> date:
     return fromdate + timedelta(days_ahead)
 
 
-def next_departuredate(departure: list) -> date:
+def next_departuredate(departure: list[str]) -> date:
     """Calculate the next departuredate from an array input of short days."""
     today_date = date.today()
     today_weekday = date.weekday(today_date)
