@@ -118,7 +118,7 @@ async def async_handle_webhook(hass, webhook_id, request):
             return Response(status=HTTPStatus.OK)
 
         if not network.is_local(remote):
-            _LOGGER.debug("Received remote request for local webhook %s", webhook_id)
+            _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
             return Response(status=HTTPStatus.OK)
 
     try:
