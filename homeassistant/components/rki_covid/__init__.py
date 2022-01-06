@@ -9,13 +9,13 @@ from rki_covid_parser.parser import RkiCovidParser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
 from homeassistant.helpers import aiohttp_client, update_coordinator
 
 from .const import DOMAIN
 from .data import DistrictData, StateData
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -34,14 +34,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up component from a config entry."""
     _LOGGER.debug(f"Setup item from config entry: {entry.data}.")
     # Forward the setup to the sensor platform.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, Platform.SENSOR)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, Platform.SENSOR)
 
 
 async def get_coordinator(hass: HomeAssistant, parser: RkiCovidParser):
