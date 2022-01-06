@@ -23,8 +23,8 @@ class BMWButtonEntityDescription(ButtonEntityDescription):
     """Class describing BMW button entities."""
 
     enabled_when_read_only: bool = False
-    remote_function: str | None = None
-    account_function: str | None = None
+    remote_function: Callable[[ConnectedDriveVehicle], Callable[[], None]] | None = None
+    account_function: Callable[[BMWConnectedDriveAccount], Callable[[], None]] | None = None
 
 
 BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
@@ -32,37 +32,37 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         key="light_flash",
         icon="mdi:car-light-alert",
         name="Flash Lights",
-        remote_function="trigger_remote_light_flash",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_light_flash,
     ),
     BMWButtonEntityDescription(
         key="sound_horn",
         icon="mdi:bullhorn",
         name="Sound Horn",
-        remote_function="trigger_remote_horn",
+        remote_function=lambda lambda vehicle: vehicle.remote_services.trigger_remote_horn,
     ),
     BMWButtonEntityDescription(
         key="activate_air_conditioning",
         icon="mdi:hvac",
         name="Activate Air Conditioning",
-        remote_function="trigger_remote_air_conditioning",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning,
     ),
     BMWButtonEntityDescription(
         key="deactivate_air_conditioning",
         icon="mdi:hvac-off",
         name="Deactivate Air Conditioning",
-        remote_function="trigger_remote_air_conditioning_stop",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop,
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
         icon="mdi:crosshairs-question",
         name="Find Vehicle",
-        remote_function="trigger_remote_vehicle_finder",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder,
     ),
     BMWButtonEntityDescription(
         key="refresh",
         icon="mdi:refresh",
         name="Refresh from cloud",
-        account_function="update",
+        account_function=lambda account: account.update,
         enabled_when_read_only=True,
     ),
 )
@@ -110,16 +110,9 @@ class BMWButton(BMWConnectedDriveBaseEntity, ButtonEntity):
         self._attr_name = f"{vehicle.name} {description.name}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-    async def async_press(self) -> None:
+   def press(self) -> None:
         """Process the button press."""
-        if self.entity_description.remote_function:
-            function_call = getattr(
-                self._vehicle.remote_services,
-                str(self.entity_description.remote_function),
-            )
-        elif self.entity_description.account_function:
-            function_call = getattr(
-                self._account, str(self.entity_description.account_function)
-            )
-
-        await self.hass.async_add_executor_job(function_call)
+        if function_call := self.entity_description.remote_function(self._vehicle):
+           function_call()
+        elif function_call := self.entity_description.account_function(self._account):
+            function_call()
