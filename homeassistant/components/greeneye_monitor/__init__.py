@@ -127,13 +127,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_GREENEYE_MONITOR] = monitors
 
     server_config = config[DOMAIN]
-    server = await monitors.start_server(server_config[CONF_PORT])
+    await monitors.start_server(server_config[CONF_PORT])
 
-    async def close_server(event: Event) -> None:
-        """Close the monitoring server."""
-        await server.close()
+    async def close_monitors(event: Event) -> None:
+        """Close the Monitors object."""
+        await monitors.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_server)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_monitors)
 
     all_sensors = []
     for monitor_config in server_config[CONF_MONITORS]:

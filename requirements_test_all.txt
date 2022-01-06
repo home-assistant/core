@@ -34,7 +34,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.6.3
+PyTurboJPEG==1.6.4
 
 # homeassistant.components.vicare
 PyViCare==2.15.0
@@ -492,7 +492,7 @@ googlemaps==2.5.1
 greeclimate==1.0.1
 
 # homeassistant.components.greeneye_monitor
-greeneye_monitor==2.1
+greeneye_monitor==3.0.1
 
 # homeassistant.components.growatt_server
 growattServer==1.1.0
@@ -695,7 +695,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.4
+numpy==1.22.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -1340,7 +1340,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.25.2
+soco==0.25.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2

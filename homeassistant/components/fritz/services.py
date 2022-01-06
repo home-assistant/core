@@ -31,7 +31,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         """Call correct Fritz service."""
 
         if not (
-            fritzbox_entry_ids := await _async_get_configured_fritz_tools(
+            fritzbox_entry_ids := await _async_get_configured_avm_device(
                 hass, service_call
             )
         ):
@@ -41,9 +41,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
         for entry_id in fritzbox_entry_ids:
             _LOGGER.debug("Executing service %s", service_call.service)
-            fritz_tools: FritzBoxTools = hass.data[DOMAIN][entry_id]
+            avm_device: FritzBoxTools = hass.data[DOMAIN][entry_id]
             if config_entry := hass.config_entries.async_get_entry(entry_id):
-                await fritz_tools.service_fritzbox(service_call, config_entry)
+                await avm_device.service_fritzbox(service_call, config_entry)
             else:
                 _LOGGER.error(
                     "Executing service %s failed, no config entry found",
@@ -54,7 +54,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
 
 
-async def _async_get_configured_fritz_tools(
+async def _async_get_configured_avm_device(
     hass: HomeAssistant, service_call: ServiceCall
 ) -> list:
     """Get FritzBoxTools class from config entry."""

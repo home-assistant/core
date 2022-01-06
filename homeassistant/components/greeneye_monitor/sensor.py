@@ -1,7 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Optional, Union, cast
+from typing import Any, Union
 
 import greeneye
 
@@ -96,9 +96,9 @@ async def async_setup_platform(
 
 UnderlyingSensorType = Union[
     greeneye.monitor.Channel,
-    greeneye.monitor.Monitor,
     greeneye.monitor.PulseCounter,
     greeneye.monitor.TemperatureSensor,
+    greeneye.monitor.VoltageSensor,
 ]
 
 
@@ -178,7 +178,7 @@ class CurrentSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(Optional[float], self._sensor.watts)
+        return self._sensor.watts
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -229,7 +229,7 @@ class PulseCounter(GEMSensor):
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return cast(float, result)
+        return result
 
     @property
     def _seconds_per_time_unit(self) -> int:
@@ -281,7 +281,7 @@ class TemperatureSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(Optional[float], self._sensor.temperature)
+        return self._sensor.temperature
 
 
 class VoltageSensor(GEMSensor):
@@ -295,9 +295,9 @@ class VoltageSensor(GEMSensor):
         super().__init__(monitor_serial_number, name, "volts", number)
 
     @property
-    def _sensor(self) -> greeneye.monitor.Monitor | None:
+    def _sensor(self) -> greeneye.monitor.VoltageSensor | None:
         """Wire the updates to the monitor itself, since there is no voltage element in the API."""
-        return self._monitor
+        return self._monitor.voltage_sensor if self._monitor else None
 
     @property
     def native_value(self) -> float | None:
@@ -305,4 +305,4 @@ class VoltageSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(Optional[float], self._sensor.voltage)
+        return self._sensor.voltage

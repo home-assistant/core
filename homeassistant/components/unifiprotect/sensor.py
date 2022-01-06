@@ -128,24 +128,6 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 
 CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
-        key=_KEY_RX,
-        name="Received Data",
-        native_unit_of_measurement=DATA_BYTES,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        ufp_value="stats.rx_bytes",
-    ),
-    ProtectSensorEntityDescription(
-        key=_KEY_TX,
-        name="Transferred Data",
-        native_unit_of_measurement=DATA_BYTES,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        ufp_value="stats.tx_bytes",
-    ),
-    ProtectSensorEntityDescription(
         key=_KEY_OLDEST,
         name="Oldest Recording",
         device_class=DEVICE_CLASS_TIMESTAMP,
@@ -181,6 +163,27 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         # (i.e. is not G4 Doorbell or not on 1.20.1+)
         ufp_required_field="voltage",
         precision=2,
+    ),
+)
+
+CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key=_KEY_RX,
+        name="Received Data",
+        native_unit_of_measurement=DATA_BYTES,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        ufp_value="stats.rx_bytes",
+    ),
+    ProtectSensorEntityDescription(
+        key=_KEY_TX,
+        name="Transferred Data",
+        native_unit_of_measurement=DATA_BYTES,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        ufp_value="stats.tx_bytes",
     ),
 )
 
@@ -228,36 +231,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="up_since",
-    ),
-    ProtectSensorEntityDescription(
-        key=_KEY_CPU,
-        name="CPU Utilization",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:speedometer",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="system_info.cpu.average_load",
-    ),
-    ProtectSensorEntityDescription(
-        key=_KEY_CPU_TEMP,
-        name="CPU Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="system_info.cpu.temperature",
-    ),
-    ProtectSensorEntityDescription(
-        key=_KEY_MEMORY,
-        name="Memory Utilization",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        precision=2,
     ),
     ProtectSensorEntityDescription(
         key=_KEY_DISK,
@@ -340,6 +313,39 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key=_KEY_CPU,
+        name="CPU Utilization",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:speedometer",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_value="system_info.cpu.average_load",
+    ),
+    ProtectSensorEntityDescription(
+        key=_KEY_CPU_TEMP,
+        name="CPU Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_value="system_info.cpu.temperature",
+    ),
+    ProtectSensorEntityDescription(
+        key=_KEY_MEMORY,
+        name="Memory Utilization",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        precision=2,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -352,7 +358,7 @@ async def async_setup_entry(
         data,
         ProtectDeviceSensor,
         all_descs=ALL_DEVICES_SENSORS,
-        camera_descs=CAMERA_SENSORS,
+        camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
         sense_descs=SENSE_SENSORS,
     )
     entities += _async_nvr_entities(data)
@@ -366,7 +372,7 @@ def _async_nvr_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     device = data.api.bootstrap.nvr
-    for description in NVR_SENSORS:
+    for description in NVR_SENSORS + NVR_DISABLED_SENSORS:
         entities.append(ProtectNVRSensor(data, device, description))
         _LOGGER.debug("Adding NVR sensor entity %s", description.name)
 
