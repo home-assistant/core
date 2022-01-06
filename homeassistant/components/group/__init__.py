@@ -604,8 +604,7 @@ class Group(Entity):
     @callback
     def _async_start(self, *_):
         """Start tracking members and write state."""
-        if self.tracking:
-            self._reset_tracked_state()
+        self._reset_tracked_state()
         self._async_start_tracking()
         self.async_write_ha_state()
 
