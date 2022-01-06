@@ -161,7 +161,7 @@ light:
   command_topic: "office/rgb1/light/switch"
   brightness_state_topic: "office/rgb1/brightness/status"
   brightness_command_topic: "office/rgb1/brightness/set"
-  brightness_command_template": '{ "brightness": "{{ value }}" }'
+  brightness_command_template: '{ "brightness": "{{ value }}" }'
   qos: 0
   payload_on: "on"
   payload_off: "off"
