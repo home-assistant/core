@@ -35,6 +35,10 @@ class OverkizBinarySensorDescription(
     """Class to describe an Overkiz binary sensor."""
 
 
+def _get_value_for_io_operation_mode_capabilities(state: OverkizStateType) -> bool:
+    return cast(dict, state).get(OverkizCommandParam.ENERGY_DEMAND_STATUS) == 1
+
+
 BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     # RainSensor/RainSensor
     OverkizBinarySensorDescription(
@@ -105,10 +109,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
         name="Energy Demand Status",
         device_class=BinarySensorDeviceClass.HEAT,
-        value_fn=lambda state: cast(dict, state).get(
-            OverkizCommandParam.ENERGY_DEMAND_STATUS
-        )
-        == 1,
+        value_fn=_get_value_for_io_operation_mode_capabilities,
     ),
 ]
 
