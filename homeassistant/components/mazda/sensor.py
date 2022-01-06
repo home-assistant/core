@@ -41,92 +41,142 @@ class MazdaSensorEntityDescription(SensorEntityDescription):
     ] = lambda data, unit_system: None
 
 
+def _get_distance_unit(unit_system):
+    return (
+        LENGTH_MILES
+        if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL
+        else LENGTH_KILOMETERS
+    )
+
+
+def _fuel_remaining_percentage_supported(data):
+    """Determine if fuel remaining percentage is supported."""
+    return data["status"]["fuelRemainingPercent"] is not None
+
+
+def _fuel_distance_remaining_supported(data):
+    """Determine if fuel distance remaining is supported."""
+    return data["status"]["fuelDistanceRemainingKm"] is not None
+
+
+def _odometer_supported(data):
+    """Determine if odometer is supported."""
+    return data["status"]["odometerKm"] is not None
+
+
+def _front_left_tire_pressure_supported(data):
+    """Determine if front left tire pressure is supported."""
+    return data["status"]["tirePressure"]["frontLeftTirePressurePsi"] is not None
+
+
+def _front_right_tire_pressure_supported(data):
+    """Determine if front right tire pressure is supported."""
+    return data["status"]["tirePressure"]["frontRightTirePressurePsi"] is not None
+
+
+def _rear_left_tire_pressure_supported(data):
+    """Determine if rear left tire pressure is supported."""
+    return data["status"]["tirePressure"]["rearLeftTirePressurePsi"] is not None
+
+
+def _rear_right_tire_pressure_supported(data):
+    """Determine if rear right tire pressure is supported."""
+    return data["status"]["tirePressure"]["rearRightTirePressurePsi"] is not None
+
+
+def _fuel_remaining_percentage_value(data, unit_system):
+    """Get the fuel remaining percentage value."""
+    return data["status"]["fuelRemainingPercent"]
+
+
+def _fuel_distance_remaining_value(data, unit_system):
+    """Get the fuel distance remaining value."""
+    return round(
+        unit_system.length(data["status"]["fuelDistanceRemainingKm"], LENGTH_KILOMETERS)
+    )
+
+
+def _odometer_value(data, unit_system):
+    """Get the odometer value."""
+    return round(unit_system.length(data["status"]["odometerKm"], LENGTH_KILOMETERS))
+
+
+def _front_left_tire_pressure_value(data, unit_system):
+    """Get the front left tire pressure value."""
+    return round(data["status"]["tirePressure"]["frontLeftTirePressurePsi"])
+
+
+def _front_right_tire_pressure_value(data, unit_system):
+    """Get the front right tire pressure value."""
+    return round(data["status"]["tirePressure"]["frontRightTirePressurePsi"])
+
+
+def _rear_left_tire_pressure_value(data, unit_system):
+    """Get the rear left tire pressure value."""
+    return round(data["status"]["tirePressure"]["rearLeftTirePressurePsi"])
+
+
+def _rear_right_tire_pressure_value(data, unit_system):
+    """Get the rear right tire pressure value."""
+    return round(data["status"]["tirePressure"]["rearRightTirePressurePsi"])
+
+
 SENSOR_ENTITIES = [
     MazdaSensorEntityDescription(
         key="fuel_remaining_percentage",
         name_suffix="Fuel Remaining Percentage",
         icon="mdi:gas-station",
         unit=lambda unit_system: PERCENTAGE,
-        is_supported=lambda data: data["status"]["fuelRemainingPercent"] is not None,
-        value=lambda data, unit_system: data["status"]["fuelRemainingPercent"],
+        is_supported=_fuel_remaining_percentage_supported,
+        value=_fuel_remaining_percentage_value,
     ),
     MazdaSensorEntityDescription(
         key="fuel_distance_remaining",
         name_suffix="Fuel Distance Remaining",
         icon="mdi:gas-station",
-        unit=lambda unit_system: LENGTH_MILES
-        if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL
-        else LENGTH_KILOMETERS,
-        is_supported=lambda data: data["status"]["fuelDistanceRemainingKm"] is not None,
-        value=lambda data, unit_system: round(
-            unit_system.length(
-                data["status"]["fuelDistanceRemainingKm"], LENGTH_KILOMETERS
-            )
-        ),
+        unit=_get_distance_unit,
+        is_supported=_fuel_distance_remaining_supported,
+        value=_fuel_distance_remaining_value,
     ),
     MazdaSensorEntityDescription(
         key="odometer",
         name_suffix="Odometer",
         icon="mdi:speedometer",
-        unit=lambda unit_system: LENGTH_MILES
-        if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL
-        else LENGTH_KILOMETERS,
-        is_supported=lambda data: data["status"]["odometerKm"] is not None,
-        value=lambda data, unit_system: round(
-            unit_system.length(data["status"]["odometerKm"], LENGTH_KILOMETERS)
-        ),
+        unit=_get_distance_unit,
+        is_supported=_odometer_supported,
+        value=_odometer_value,
     ),
     MazdaSensorEntityDescription(
         key="front_left_tire_pressure",
         name_suffix="Front Left Tire Pressure",
         icon="mdi:car-tire-alert",
         unit=lambda unit_system: PRESSURE_PSI,
-        is_supported=lambda data: data["status"]["tirePressure"][
-            "frontLeftTirePressurePsi"
-        ]
-        is not None,
-        value=lambda data, unit_system: round(
-            data["status"]["tirePressure"]["frontLeftTirePressurePsi"]
-        ),
+        is_supported=_front_left_tire_pressure_supported,
+        value=_front_left_tire_pressure_value,
     ),
     MazdaSensorEntityDescription(
         key="front_right_tire_pressure",
         name_suffix="Front Right Tire Pressure",
         icon="mdi:car-tire-alert",
         unit=lambda unit_system: PRESSURE_PSI,
-        is_supported=lambda data: data["status"]["tirePressure"][
-            "frontRightTirePressurePsi"
-        ]
-        is not None,
-        value=lambda data, unit_system: round(
-            data["status"]["tirePressure"]["frontRightTirePressurePsi"]
-        ),
+        is_supported=_front_right_tire_pressure_supported,
+        value=_front_right_tire_pressure_value,
     ),
     MazdaSensorEntityDescription(
         key="rear_left_tire_pressure",
         name_suffix="Rear Left Tire Pressure",
         icon="mdi:car-tire-alert",
         unit=lambda unit_system: PRESSURE_PSI,
-        is_supported=lambda data: data["status"]["tirePressure"][
-            "rearLeftTirePressurePsi"
-        ]
-        is not None,
-        value=lambda data, unit_system: round(
-            data["status"]["tirePressure"]["rearLeftTirePressurePsi"]
-        ),
+        is_supported=_rear_left_tire_pressure_supported,
+        value=_rear_left_tire_pressure_value,
     ),
     MazdaSensorEntityDescription(
         key="rear_right_tire_pressure",
         name_suffix="Rear Right Tire Pressure",
         icon="mdi:car-tire-alert",
         unit=lambda unit_system: PRESSURE_PSI,
-        is_supported=lambda data: data["status"]["tirePressure"][
-            "rearRightTirePressurePsi"
-        ]
-        is not None,
-        value=lambda data, unit_system: round(
-            data["status"]["tirePressure"]["rearRightTirePressurePsi"]
-        ),
+        is_supported=_rear_right_tire_pressure_supported,
+        value=_rear_right_tire_pressure_value,
     ),
 ]
 
