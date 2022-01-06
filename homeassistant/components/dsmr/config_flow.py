@@ -226,7 +226,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT): int,
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
-                vol.Optional(CONF_IS_RFXTRX): bool,
+                vol.Required(CONF_IS_RFXTRX): bool,
             }
         )
         return self.async_show_form(
@@ -273,7 +273,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_PORT): vol.In(list_of_ports),
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
-                vol.Optional(CONF_IS_RFXTRX): bool,
+                vol.Required(CONF_IS_RFXTRX): bool,
             }
         )
         return self.async_show_form(
