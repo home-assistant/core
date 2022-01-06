@@ -87,13 +87,13 @@ class AttributeSensor(WemoEntity, SensorEntity):
     def __init__(
         self, coordinator: DeviceCoordinator, description: AttributeSensorDescription
     ) -> None:
-        """Init InsightSensor."""
+        """Init AttributeSensor."""
         super().__init__(coordinator)
         self.entity_description = description
 
     @property
     def name_suffix(self) -> str:
-        """Return the name of the entity if any."""
+        """Return the name of the entity."""
         assert self.entity_description.name
         return self.entity_description.name
 
