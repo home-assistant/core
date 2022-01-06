@@ -533,7 +533,7 @@ class _TrackStateChangeFiltered:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._action = action
-        self._listeners: dict[str, Callable] = {}
+        self._listeners: dict[str, Callable[[], None]] = {}
         self._last_track_states: TrackStates = track_states
 
     @callback
