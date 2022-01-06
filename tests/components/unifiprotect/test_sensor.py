@@ -59,7 +59,7 @@ async def sensor_fixture(
     await hass.async_block_till_done()
 
     # 2 from all, 4 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 18, 4)
+    assert_entity_counts(hass, Platform.SENSOR, 18, 15)
 
     yield sensor_obj
 
@@ -106,7 +106,7 @@ async def camera_fixture(
     await hass.async_block_till_done()
 
     # 3 from all, 6 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 21, 0)
+    assert_entity_counts(hass, Platform.SENSOR, 21, 16)
 
     yield camera_obj
 
@@ -142,10 +142,11 @@ async def test_sensor_setup_sensor(
 
     entity = entity_registry.async_get(entity_id)
     assert entity
-    assert entity.disabled is True
+    assert entity.disabled is not description.entity_registry_enabled_default
     assert entity.unique_id == unique_id
 
-    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    if not description.entity_registry_enabled_default:
+        await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
 
     state = hass.states.get(entity_id)
     assert state
@@ -178,7 +179,7 @@ async def test_sensor_setup_nvr(
     await hass.async_block_till_done()
 
     # 2 from all, 4 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 12, 0)
+    assert_entity_counts(hass, Platform.SENSOR, 12, 9)
 
     entity_registry = er.async_get(hass)
 
@@ -203,10 +204,11 @@ async def test_sensor_setup_nvr(
 
         entity = entity_registry.async_get(entity_id)
         assert entity
-        assert entity.disabled is True
+        assert entity.disabled is not description.entity_registry_enabled_default
         assert entity.unique_id == unique_id
 
-        await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+        if not description.entity_registry_enabled_default:
+            await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
 
         state = hass.states.get(entity_id)
         assert state
@@ -236,10 +238,11 @@ async def test_sensor_setup_camera(
 
         entity = entity_registry.async_get(entity_id)
         assert entity
-        assert entity.disabled is True
+        assert entity.disabled is not description.entity_registry_enabled_default
         assert entity.unique_id == unique_id
 
-        await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+        if not description.entity_registry_enabled_default:
+            await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
 
         state = hass.states.get(entity_id)
         assert state
@@ -253,10 +256,7 @@ async def test_sensor_setup_camera(
 
     entity = entity_registry.async_get(entity_id)
     assert entity
-    assert entity.disabled is True
     assert entity.unique_id == unique_id
-
-    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
 
     state = hass.states.get(entity_id)
     assert state
@@ -270,10 +270,7 @@ async def test_sensor_setup_camera(
 
     entity = entity_registry.async_get(entity_id)
     assert entity
-    assert entity.disabled is True
     assert entity.unique_id == unique_id
-
-    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
 
     state = hass.states.get(entity_id)
     assert state

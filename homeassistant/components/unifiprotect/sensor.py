@@ -9,7 +9,11 @@ from typing import Any
 from pyunifiprotect.data import NVR
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
@@ -48,6 +52,25 @@ class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescr
     precision: int | None = None
 
 
+_KEY_UPTIME = "uptime"
+_KEY_BLE = "ble_signal"
+_KEY_WIRED = "phy_rate"
+_KEY_WIFI = "wifi_signal"
+
+_KEY_RX = "stats_rx"
+_KEY_TX = "stats_tx"
+_KEY_OLDEST = "oldest_recording"
+_KEY_USED = "storage_used"
+_KEY_WRITE_RATE = "write_rate"
+_KEY_VOLTAGE = "voltage"
+
+_KEY_BATTERY = "battery_level"
+_KEY_LIGHT = "light_level"
+_KEY_HUMIDITY = "humidity_level"
+_KEY_TEMP = "temperature_level"
+
+_KEY_CPU = "cpu_utilization"
+_KEY_CPU_TEMP = "cpu_temperature"
 _KEY_MEMORY = "memory_utilization"
 _KEY_DISK = "storage_utilization"
 _KEY_RECORD_ROTATE = "record_rotating"
@@ -60,40 +83,40 @@ _KEY_CAPACITY = "record_capacity"
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
-        key="uptime",
+        key=_KEY_UPTIME,
         name="Uptime",
         icon="mdi:clock",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="up_since",
     ),
     ProtectSensorEntityDescription(
-        key="ble_signal",
+        key=_KEY_BLE,
         name="Bluetooth Signal Strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="bluetooth_connection_state.signal_strength",
         ufp_required_field="bluetooth_connection_state.signal_strength",
     ),
     ProtectSensorEntityDescription(
-        key="phy_rate",
+        key=_KEY_WIRED,
         name="Link Speed",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="wired_connection_state.phy_rate",
         ufp_required_field="wired_connection_state.phy_rate",
     ),
     ProtectSensorEntityDescription(
-        key="wifi_signal",
+        key=_KEY_WIFI,
         name="WiFi Signal Strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="wifi_connection_state.signal_strength",
         ufp_required_field="wifi_connection_state.signal_strength",
     ),
@@ -101,52 +124,55 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 
 CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
-        key="stats_rx",
+        key=_KEY_RX,
         name="Received Data",
         native_unit_of_measurement=DATA_BYTES,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         ufp_value="stats.rx_bytes",
     ),
     ProtectSensorEntityDescription(
-        key="stats_tx",
+        key=_KEY_TX,
         name="Transferred Data",
         native_unit_of_measurement=DATA_BYTES,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         ufp_value="stats.tx_bytes",
     ),
     ProtectSensorEntityDescription(
-        key="oldest_recording",
+        key=_KEY_OLDEST,
         name="Oldest Recording",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.video.recording_start",
     ),
     ProtectSensorEntityDescription(
-        key="storage_used",
+        key=_KEY_USED,
         name="Storage Used",
         native_unit_of_measurement=DATA_BYTES,
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.used",
     ),
     ProtectSensorEntityDescription(
-        key="write_rate",
+        key=_KEY_WRITE_RATE,
         name="Disk Write Rate",
         native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.rate",
         precision=2,
     ),
     ProtectSensorEntityDescription(
-        key="voltage",
+        key=_KEY_VOLTAGE,
         name="Voltage",
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="voltage",
         # no feature flag, but voltage will be null if device does not have voltage sensor
         # (i.e. is not G4 Doorbell or not on 1.20.1+)
@@ -157,62 +183,68 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 
 SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
-        key="battery_level",
+        key=_KEY_BATTERY,
         name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="battery_status.percentage",
     ),
     ProtectSensorEntityDescription(
-        key="light_level",
+        key=_KEY_LIGHT,
         name="Light Level",
         native_unit_of_measurement="lx",
         device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.light.value",
     ),
     ProtectSensorEntityDescription(
-        key="humidity_level",
+        key=_KEY_HUMIDITY,
         name="Humidity Level",
         native_unit_of_measurement="%",
         device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.humidity.value",
     ),
     ProtectSensorEntityDescription(
-        key="temperature_level",
+        key=_KEY_TEMP,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
     ),
 )
 
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
-        key="uptime",
+        key=_KEY_UPTIME,
         name="Uptime",
         icon="mdi:clock",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="up_since",
     ),
     ProtectSensorEntityDescription(
-        key="cpu_utilization",
+        key=_KEY_CPU,
         name="CPU Utilization",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:speedometer",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="system_info.cpu.average_load",
     ),
     ProtectSensorEntityDescription(
-        key="cpu_temperature",
+        key=_KEY_CPU_TEMP,
         name="CPU Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="system_info.cpu.temperature",
     ),
     ProtectSensorEntityDescription(
@@ -222,6 +254,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=2,
     ),
     ProtectSensorEntityDescription(
@@ -229,8 +262,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Storage Utilization",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.utilization",
         precision=2,
     ),
@@ -239,8 +272,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Type: Timelapse Video",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:server",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.timelapse_recordings.percentage",
         precision=2,
     ),
@@ -249,8 +282,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Type: Continuous Video",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:server",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.continuous_recordings.percentage",
         precision=2,
     ),
@@ -259,8 +292,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Type: Detections Video",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:server",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.detections_recordings.percentage",
         precision=2,
     ),
@@ -269,8 +302,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Resolution: HD Video",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cctv",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.hd_usage.percentage",
         precision=2,
     ),
@@ -279,8 +312,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Resolution: 4K Video",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cctv",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.uhd_usage.percentage",
         precision=2,
     ),
@@ -289,8 +322,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Resolution: Free Space",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cctv",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.free.percentage",
         precision=2,
     ),
@@ -299,8 +332,8 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Recording Capacity",
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:record-rec",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.capacity",
     ),
 )
@@ -383,7 +416,7 @@ class ProtectDeviceSensor(SensorValueMixin, ProtectDeviceEntity, SensorEntity):
 class ProtectNVRSensor(SensorValueMixin, ProtectNVREntity, SensorEntity):
     """A Ubiquiti UniFi Protect Sensor."""
 
-	entity_description: ProtectSensorEntityDescription
+    entity_description: ProtectSensorEntityDescription
 
     def __init__(
         self,
