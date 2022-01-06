@@ -1,6 +1,8 @@
 """Support for Steamist sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from aiosteamist import SteamistStatus
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,4 +34,4 @@ class SteamistEntity(CoordinatorEntity, Entity):
     @property
     def _status(self) -> SteamistStatus:
         """Return the steamist status."""
-        return self.coordinator.data
+        return cast(SteamistStatus, self.coordinator.data)
