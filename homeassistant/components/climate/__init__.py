@@ -138,7 +138,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
-        {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)},
+        {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)},
         "async_set_humidity",
         [SUPPORT_TARGET_HUMIDITY],
     )

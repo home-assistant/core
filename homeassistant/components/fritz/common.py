@@ -110,7 +110,7 @@ class Device:
     ip_address: str
     name: str
     ssid: str | None
-    wan_access: bool
+    wan_access: bool = True
 
 
 class Interface(TypedDict):
@@ -118,6 +118,7 @@ class Interface(TypedDict):
 
     device: str
     mac: str
+    op_mode: str
     ssid: str | None
     type: str
 
@@ -286,7 +287,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
-        _LOGGER.debug("Checking host info for FRITZ!Box router %s", self.host)
+        _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
 
         try:
@@ -295,7 +296,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             self.mesh_role = MeshRoles.SLAVE
             return
 
-        _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
+        _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
         if self._options:
             consider_home = self._options.get(
@@ -331,6 +332,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 mesh_intf[interf["uid"]] = Interface(
                     device=node["device_name"],
                     mac=int_mac,
+                    op_mode=interf.get("op_mode", ""),
                     ssid=interf.get("ssid", ""),
                     type=interf["type"],
                 )
@@ -352,11 +354,12 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                         and dev_mac in hosts
                     ):
                         dev_info: Device = hosts[dev_mac]
-                        dev_info.wan_access = not self.connection.call_action(
-                            "X_AVM-DE_HostFilter:1",
-                            "GetWANAccessByIP",
-                            NewIPv4Address=dev_info.ip_address,
-                        ).get("NewDisallow")
+                        if intf["op_mode"] != "AP_GUEST":
+                            dev_info.wan_access = not self.connection.call_action(
+                                "X_AVM-DE_HostFilter:1",
+                                "GetWANAccessByIP",
+                                NewIPv4Address=dev_info.ip_address,
+                            ).get("NewDisallow")
 
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
@@ -397,7 +400,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self, service_call: ServiceCall, config_entry: ConfigEntry
     ) -> None:
         """Define FRITZ!Box services."""
-        _LOGGER.debug("FRITZ!Box router: %s", service_call.service)
+        _LOGGER.debug("FRITZ!Box service: %s", service_call.service)
 
         if not self.connection:
             raise HomeAssistantError("Unable to establish a connection")
@@ -423,8 +426,9 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 )
                 return
 
+            device_hosts_list: list[dict] = []
             if service_call.service == SERVICE_CLEANUP:
-                device_hosts_list: list = await self.hass.async_add_executor_job(
+                device_hosts_list = await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_hosts_info
                 )
 
@@ -444,15 +448,30 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         )
         entities_removed: bool = False
 
-        device_hosts_macs = {device["mac"] for device in device_hosts_list}
+        device_hosts_macs = set()
+        device_hosts_names = set()
+        for device in device_hosts_list:
+            device_hosts_macs.add(device["mac"])
+            device_hosts_names.add(device["name"])
 
         for entry in ha_entity_reg_list:
-            if (
-                not _cleanup_entity_filter(entry)
-                or entry.unique_id.split("_")[0] in device_hosts_macs
-            ):
+            if entry.original_name is None:
                 continue
-            _LOGGER.info("Removing entity: %s", entry.name or entry.original_name)
+            entry_name = entry.name or entry.original_name
+            entry_host = entry_name.split(" ")[0]
+            entry_mac = entry.unique_id.split("_")[0]
+
+            if not _cleanup_entity_filter(entry) or (
+                entry_mac in device_hosts_macs and entry_host in device_hosts_names
+            ):
+                _LOGGER.debug(
+                    "Skipping entity %s [mac=%s, host=%s]",
+                    entry_name,
+                    entry_mac,
+                    entry_host,
+                )
+                continue
+            _LOGGER.info("Removing entity: %s", entry_name)
             entity_reg.async_remove(entry.entity_id)
             entities_removed = True
 
@@ -486,12 +505,12 @@ class FritzData:
 
 
 class FritzDeviceBase(update_coordinator.CoordinatorEntity):
-    """Entity base class for a device connected to a FRITZ!Box router."""
+    """Entity base class for a device connected to a FRITZ!Box device."""
 
-    def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
+    def __init__(self, avm_device: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
-        super().__init__(router)
-        self._router = router
+        super().__init__(avm_device)
+        self._avm_device = avm_device
         self._mac: str = device.mac_address
         self._name: str = device.hostname or DEFAULT_DEVICE_NAME
 
@@ -504,7 +523,7 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity):
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         if self._mac:
-            return self._router.devices[self._mac].ip_address
+            return self._avm_device.devices[self._mac].ip_address
         return None
 
     @property
@@ -516,23 +535,8 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity):
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         if self._mac:
-            return self._router.devices[self._mac].hostname
+            return self._avm_device.devices[self._mac].hostname
         return None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=self.name,
-            identifiers={(DOMAIN, self._mac)},
-            via_device=(
-                DOMAIN,
-                self._router.unique_id,
-            ),
-        )
 
     @property
     def should_poll(self) -> bool:
@@ -649,25 +653,25 @@ class SwitchInfo(TypedDict):
 class FritzBoxBaseEntity:
     """Fritz host entity base class."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, device_name: str) -> None:
+    def __init__(self, avm_device: FritzBoxTools, device_name: str) -> None:
         """Init device info class."""
-        self._fritzbox_tools = fritzbox_tools
+        self._avm_device = avm_device
         self._device_name = device_name
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the main device."""
-        return self._fritzbox_tools.mac
+        return self._avm_device.mac
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
-            configuration_url=f"http://{self._fritzbox_tools.host}",
+            configuration_url=f"http://{self._avm_device.host}",
             connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self._fritzbox_tools.unique_id)},
+            identifiers={(DOMAIN, self._avm_device.unique_id)},
             manufacturer="AVM",
-            model=self._fritzbox_tools.model,
+            model=self._avm_device.model,
             name=self._device_name,
-            sw_version=self._fritzbox_tools.current_firmware,
+            sw_version=self._avm_device.current_firmware,
         )

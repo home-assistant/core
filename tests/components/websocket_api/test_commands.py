@@ -24,6 +24,63 @@ from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
 
 
+async def test_fire_event(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+            "event_data": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {"hello": "world"}
+
+
+async def test_fire_event_without_data(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {}
+
+
 async def test_call_service(hass, websocket_client):
     """Test call service command."""
     calls = async_mock_service(hass, "domain_test", "test_service")

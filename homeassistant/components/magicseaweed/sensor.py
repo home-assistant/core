@@ -18,7 +18,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -75,7 +78,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Magicseaweed sensor."""
     name = config.get(CONF_NAME)
     spot_id = config[CONF_SPOT_ID]
@@ -102,16 +110,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for description in SENSOR_TYPES
         if description.key in monitored_conditions
     ]
-    sensors.extend(
-        [
-            MagicSeaweedSensor(forecast_data, name, units, description, hour)
-            for description in SENSOR_TYPES
-            if description.key in monitored_conditions
-            and "forecast" not in description.key
-            for hour in hours
-            if hour is not None
-        ]
-    )
+    if hours is not None:
+        sensors.extend(
+            [
+                MagicSeaweedSensor(forecast_data, name, units, description, hour)
+                for description in SENSOR_TYPES
+                if description.key in monitored_conditions
+                and "forecast" not in description.key
+                for hour in hours
+            ]
+        )
     add_entities(sensors, True)
 
 

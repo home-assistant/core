@@ -34,6 +34,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
+    LightEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -41,6 +42,8 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -104,7 +107,7 @@ FORWARDED_ATTRIBUTES = frozenset(
 )
 
 
-class LightGroup(GroupEntity, light.LightEntity):
+class LightGroup(GroupEntity, LightEntity):
     """Representation of a light group."""
 
     _attr_available = False
@@ -159,7 +162,7 @@ class LightGroup(GroupEntity, light.LightEntity):
 
         await self.hass.services.async_call(
             light.DOMAIN,
-            light.SERVICE_TURN_ON,
+            SERVICE_TURN_ON,
             data,
             blocking=True,
             context=self._context,
@@ -174,7 +177,7 @@ class LightGroup(GroupEntity, light.LightEntity):
 
         await self.hass.services.async_call(
             light.DOMAIN,
-            light.SERVICE_TURN_OFF,
+            SERVICE_TURN_OFF,
             data,
             blocking=True,
             context=self._context,

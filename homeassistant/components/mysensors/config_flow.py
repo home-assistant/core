@@ -22,26 +22,21 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import (
-    CONF_DEVICE,
-    CONF_RETAIN,
-    CONF_VERSION,
-    DEFAULT_BAUD_RATE,
-    DEFAULT_TCP_PORT,
-    DEFAULT_VERSION,
-    is_persistence_file,
-)
+from . import DEFAULT_BAUD_RATE, DEFAULT_TCP_PORT, DEFAULT_VERSION, is_persistence_file
 from .const import (
     CONF_BAUD_RATE,
+    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_ALL,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_GATEWAY_TYPE_TCP,
     CONF_PERSISTENCE_FILE,
+    CONF_RETAIN,
     CONF_TCP_PORT,
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
+    CONF_VERSION,
     DOMAIN,
     ConfGatewayType,
 )

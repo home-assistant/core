@@ -9,6 +9,10 @@
             "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the RTSPtoWebRTC server provided by the add-on: {addon}?",
+                "title": "RTSPtoWebRTC via Home Assistant add-on"
+            },
             "user": {
                 "data": {
                     "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"

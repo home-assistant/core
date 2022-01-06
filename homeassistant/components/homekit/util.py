@@ -92,6 +92,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
+NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
+VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+
+
 MAX_PORT = 65535
 VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
 VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
@@ -412,9 +417,11 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
-def format_sw_version(version):
+def format_version(version):
     """Extract the version string in a format homekit can consume."""
-    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
+    split_ver = str(version).replace("-", ".")
+    num_only = NUMBERS_ONLY_RE.sub("", split_ver)
+    match = VERSION_RE.search(num_only)
     if match:
         return match.group(0)
     return None

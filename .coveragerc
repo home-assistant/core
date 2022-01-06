@@ -66,7 +66,6 @@ omit =
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/media_player.py
     homeassistant/components/arcam_fmj/__init__.py
-    homeassistant/components/arduino/*
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
@@ -121,6 +120,7 @@ omit =
     homeassistant/components/bmp280/sensor.py
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
+    homeassistant/components/bmw_connected_drive/button.py
     homeassistant/components/bmw_connected_drive/device_tracker.py
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
@@ -398,6 +398,11 @@ omit =
     homeassistant/components/glances/sensor.py
     homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
+    homeassistant/components/goodwe/__init__.py
+    homeassistant/components/goodwe/const.py
+    homeassistant/components/goodwe/number.py
+    homeassistant/components/goodwe/select.py
+    homeassistant/components/goodwe/sensor.py
     homeassistant/components/google/__init__.py
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
@@ -827,6 +832,7 @@ omit =
     homeassistant/components/philips_js/light.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/philips_js/remote.py
+    homeassistant/components/philips_js/switch.py
     homeassistant/components/pi_hole/sensor.py
     homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
     homeassistant/components/pi4ioe5v9xxxx/switch.py
@@ -864,9 +870,6 @@ omit =
     homeassistant/components/pushbullet/sensor.py
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
-    homeassistant/components/pvoutput/__init__.py
-    homeassistant/components/pvoutput/coordinator.py
-    homeassistant/components/pvoutput/sensor.py
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/sensor.py
     homeassistant/components/qnap/sensor.py
