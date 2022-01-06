@@ -303,6 +303,7 @@ class Dishwasher(
     """Dishwasher class."""
 
     PROGRAMS = [
+        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
         {"name": "Dishcare.Dishwasher.Program.Auto1"},
         {"name": "Dishcare.Dishwasher.Program.Auto2"},
         {"name": "Dishcare.Dishwasher.Program.Auto3"},
@@ -325,7 +326,6 @@ class Dishwasher(
         {"name": "Dishcare.Dishwasher.Program.MachineCare"},
         {"name": "Dishcare.Dishwasher.Program.SteamFresh"},
         {"name": "Dishcare.Dishwasher.Program.MaximumCleaning"},
-        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
     ]
 
     def get_entity_info(self):
