@@ -603,6 +603,34 @@ async def test_tcp(hass, dsmr_connection_fixture):
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
+async def test_rfxtrx_tcp(hass, rfxtrx_dsmr_connection_fixture):
+    """If proper config provided RFXtrx TCP connection should be made."""
+    (connection_factory, transport, protocol) = rfxtrx_dsmr_connection_fixture
+
+    entry_data = {
+        "host": "localhost",
+        "port": "1234",
+        "dsmr_version": "2.2",
+        "is_rfxtrx": True,
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert connection_factory.call_args_list[0][0][0] == "localhost"
+    assert connection_factory.call_args_list[0][0][1] == "1234"
+
+
 async def test_connection_errors_retry(hass, dsmr_connection_fixture):
     """Connection should be retried on error during setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
