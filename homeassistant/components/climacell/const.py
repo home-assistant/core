@@ -247,6 +247,7 @@ CC_SENSOR_TYPES = (
         name="Precipitation Type",
         value_map=PrecipitationType,
         device_class="climacell__precipitation_type",
+        icon="mdi:weather-snowy-rainy",
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_OZONE,
@@ -345,6 +346,7 @@ CC_SENSOR_TYPES = (
     ClimaCellSensorEntityDescription(
         CC_ATTR_FIRE_INDEX,
         name="Fire Index",
+        icon="mdi:fire",
     ),
 )
 
