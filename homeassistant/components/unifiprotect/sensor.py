@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Sequence
+from typing import Any
 
 from pyunifiprotect.data import NVR
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .data import ProtectData
@@ -309,7 +310,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Sequence[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
