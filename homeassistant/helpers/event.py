@@ -236,7 +236,7 @@ def async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
     action: Callable[[Event], Any],
-) -> Callable[[], None]:
+) -> CALLBACK_TYPE:
     """Track specific state change events indexed by entity_id.
 
     Unlike async_track_state_change, async_track_state_change_event
@@ -332,7 +332,7 @@ def async_track_entity_registry_updated_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
     action: Callable[[Event], Any],
-) -> Callable[[], None]:
+) -> CALLBACK_TYPE:
     """Track specific entity registry updated events indexed by entity_id.
 
     Similar to async_track_state_change_event.
@@ -417,7 +417,7 @@ def async_track_state_added_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
     action: Callable[[Event], Any],
-) -> Callable[[], None]:
+) -> CALLBACK_TYPE:
     """Track state change events when an entity is added to domains."""
     if not (domains := _async_string_to_lower_list(domains)):
         return _remove_empty_listener
@@ -469,7 +469,7 @@ def async_track_state_removed_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
     action: Callable[[Event], Any],
-) -> Callable[[], None]:
+) -> CALLBACK_TYPE:
     """Track state change events when an entity is removed from domains."""
     if not (domains := _async_string_to_lower_list(domains)):
         return _remove_empty_listener
@@ -683,7 +683,7 @@ def async_track_template(
     template: Template,
     action: Callable[[str, State | None, State | None], Awaitable[None] | None],
     variables: TemplateVarsType | None = None,
-) -> Callable[[], None]:
+) -> CALLBACK_TYPE:
     """Add a listener that fires when a a template evaluates to 'true'.
 
     Listen for the result of the template becoming true, or a true-like
