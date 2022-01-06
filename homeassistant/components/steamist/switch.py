@@ -41,6 +41,6 @@ class SteamistSwitchEntity(SteamistEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the specified device off."""
+        """Turn the steam off."""
         await self.coordinator.client.async_turn_off_steam()
         await self.coordinator.async_request_refresh()
