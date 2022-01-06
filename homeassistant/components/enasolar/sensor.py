@@ -139,7 +139,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         return values
 
-    def start_update_interval(event):
+    def start_update_interval(event):  # pylint: disable=unused-argument
         """Start the update interval scheduling."""
         config_entry.async_on_unload(
             async_track_time_interval_backoff(
@@ -164,7 +164,7 @@ def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TY
     remove = None
     interval = min_interval
 
-    async def interval_listener(now=None):
+    async def interval_listener(now=None):  # pylint: disable=unused-argument
         """Handle elapsed interval with backoff."""
         nonlocal interval, remove
 
@@ -191,7 +191,10 @@ class EnaSolarSensor(SensorEntity):
     def __init__(self, pyenasolar_sensor, inverter_name=None, serial_no=None):
         """Initialize the EnaSolar sensor."""
         self.sensor = pyenasolar_sensor
-        self._inverter_name = inverter_name
+        if inverter_name:
+            self._attr_name = f"enasolar_{inverter_name}_{self.sensor.name}"
+        else:
+            self._attr_name = f"enasolar_{self.sensor.name}"
         self.serial_no = serial_no
         self._native_value = self.sensor.value
 
@@ -203,12 +206,11 @@ class EnaSolarSensor(SensorEntity):
         self._attr_should_poll = False
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the sensor."""
-        if self._inverter_name:
-            return f"enasolar_{self._inverter_name}_{self.sensor.name}"
-
-        return f"enasolar_{self.sensor.name}"
+        if hasattr(self, "_attr_name"):
+            return self._attr_name
+        return None
 
     @property
     def native_value(self):
