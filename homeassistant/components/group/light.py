@@ -180,7 +180,8 @@ class LightGroup(GroupEntity, LightEntity):
             context=self._context,
         )
 
-    def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))

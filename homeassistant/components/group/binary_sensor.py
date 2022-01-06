@@ -104,7 +104,8 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
 
         await super().async_added_to_hass()
 
-    def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Query all members and determine the binary sensor group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         filtered_states: list[str] = [x.state for x in all_states if x is not None]

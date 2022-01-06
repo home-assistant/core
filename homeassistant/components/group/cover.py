@@ -250,7 +250,8 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
-    def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Update state and attributes."""
         self._attr_assumed_state = False
 

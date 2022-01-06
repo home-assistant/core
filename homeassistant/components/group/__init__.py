@@ -401,7 +401,7 @@ class GroupEntity(Entity):
         """Register listeners."""
 
         async def _update_at_start(_):
-            self.async_update()
+            self.async_update_group_state()
             self.async_write_ha_state()
 
         start.async_at_start(self.hass, _update_at_start)
@@ -412,11 +412,11 @@ class GroupEntity(Entity):
         if not self.hass.is_running:
             return
 
-        self.async_update()
+        self.async_update_group_state()
         self.async_write_ha_state()
 
     @abstractmethod
-    def async_update(self) -> None:
+    def async_update_group_state(self) -> None:
         """Abstract method to update the entity."""
 
 
@@ -632,7 +632,8 @@ class Group(Entity):
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
 
-    def async_update(self):
+    @callback
+    def async_update_group_state(self):
         """Query all members and determine current group state."""
         self._state = None
         self._async_update_group_state()

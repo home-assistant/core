@@ -241,7 +241,8 @@ class FanGroup(GroupEntity, FanEntity):
         setattr(self, attr, most_frequent_attribute(states, entity_attr))
         self._attr_assumed_state |= not attribute_equal(states, entity_attr)
 
-    def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Update state and attributes."""
         self._attr_assumed_state = False
 
