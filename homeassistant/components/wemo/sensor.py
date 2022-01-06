@@ -63,16 +63,11 @@ async def async_setup_entry(
 
     async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
-        sensors: list[SensorEntity] = []
-
-        # Add attribute sensors.
-        sensors.extend(
+        async_add_entities(
             AttributeSensor(coordinator, description)
             for description in ATTRIBUTE_SENSORS
             if hasattr(coordinator.wemo, description.key)
         )
-
-        async_add_entities(sensors)
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
 
