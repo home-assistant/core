@@ -653,25 +653,25 @@ class SwitchInfo(TypedDict):
 class FritzBoxBaseEntity:
     """Fritz host entity base class."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, device_name: str) -> None:
+    def __init__(self, avm_device: FritzBoxTools, device_name: str) -> None:
         """Init device info class."""
-        self._fritzbox_tools = fritzbox_tools
+        self._avm_device = avm_device
         self._device_name = device_name
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the main device."""
-        return self._fritzbox_tools.mac
+        return self._avm_device.mac
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
-            configuration_url=f"http://{self._fritzbox_tools.host}",
+            configuration_url=f"http://{self._avm_device.host}",
             connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self._fritzbox_tools.unique_id)},
+            identifiers={(DOMAIN, self._avm_device.unique_id)},
             manufacturer="AVM",
-            model=self._fritzbox_tools.model,
+            model=self._avm_device.model,
             name=self._device_name,
-            sw_version=self._fritzbox_tools.current_firmware,
+            sw_version=self._avm_device.current_firmware,
         )
