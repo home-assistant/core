@@ -13,12 +13,10 @@ from pyunifiprotect.data.devices import Sensor
 from homeassistant.components.unifiprotect.binary_sensor import (
     CAMERA_SENSORS,
     LIGHT_SENSORS,
+    RING_INTERVAL,
     SENSE_SENSORS,
 )
-from homeassistant.components.unifiprotect.const import (
-    DEFAULT_ATTRIBUTION,
-    RING_INTERVAL,
-)
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LAST_TRIP_TIME,

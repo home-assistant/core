@@ -19,21 +19,18 @@ from pyunifiprotect.data import (
     Viewer,
 )
 from pyunifiprotect.data.devices import LCDMessage
+import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    DOMAIN,
-    SERVICE_SET_DOORBELL_MESSAGE,
-    SET_DOORBELL_LCD_MESSAGE_SCHEMA,
-    TYPE_EMPTY_VALUE,
-)
+from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import ProtectRequiredKeysMixin
@@ -54,7 +51,6 @@ INFRARED_MODES = [
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "Auto (Filter Only, no LED's)"},
     {"id": IRLEDMode.OFF.value, "name": "Always Disable"},
 ]
-
 
 LIGHT_MODE_MOTION = "On Motion - Always"
 LIGHT_MODE_MOTION_DARK = "On Motion - When Dark"
@@ -84,6 +80,16 @@ DEVICE_RECORDING_MODES = [
 ]
 
 DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
+
+SERVICE_SET_DOORBELL_MESSAGE = "set_doorbell_message"
+
+SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_DURATION, default=""): cv.string,
+    }
+)
 
 
 @dataclass
