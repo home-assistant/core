@@ -304,7 +304,10 @@ def purge_device_registry(
             references_entry_data.add(device.id)
 
     orphaned_ids = (
-        set(device_registry.devices)
+        {
+            entry.id
+            for entry in dr.async_entries_for_config_entry(device_registry, entry_id)
+        }
         - references_entities
         - references_host
         - references_entry_data
