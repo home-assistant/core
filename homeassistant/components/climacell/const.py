@@ -246,6 +246,7 @@ CC_SENSOR_TYPES = (
         key=CC_ATTR_PRECIPITATION_TYPE,
         name="Precipitation Type",
         value_map=PrecipitationType,
+        device_class="climacell__precipitation_type",
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_OZONE,
@@ -301,6 +302,8 @@ CC_SENSOR_TYPES = (
         key=CC_ATTR_EPA_HEALTH_CONCERN,
         name="US EPA Health Concern",
         value_map=HealthConcernType,
+        device_class="climacell__health_concern",
+        icon="mdi:hospital",
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_CHINA_AQI,
@@ -315,21 +318,29 @@ CC_SENSOR_TYPES = (
         key=CC_ATTR_CHINA_HEALTH_CONCERN,
         name="China MEP Health Concern",
         value_map=HealthConcernType,
+        device_class="climacell__health_concern",
+        icon="mdi:hospital",
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_POLLEN_TREE,
         name="Tree Pollen Index",
         value_map=PollenIndex,
+        device_class="climacell__pollen_index",
+        icon="mdi:flower-pollen",
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_POLLEN_WEED,
         name="Weed Pollen Index",
         value_map=PollenIndex,
+        device_class="climacell__pollen_index",
+        icon="mdi:flower-pollen",
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_POLLEN_GRASS,
         name="Grass Pollen Index",
         value_map=PollenIndex,
+        device_class="climacell__pollen_index",
+        icon="mdi:flower-pollen",
     ),
     ClimaCellSensorEntityDescription(
         CC_ATTR_FIRE_INDEX,
