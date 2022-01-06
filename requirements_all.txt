@@ -773,7 +773,7 @@ gps3==0.33.3
 greeclimate==1.0.1
 
 # homeassistant.components.greeneye_monitor
-greeneye_monitor==2.1
+greeneye_monitor==3.0.1
 
 # homeassistant.components.greenwave
 greenwavereality==0.5.1

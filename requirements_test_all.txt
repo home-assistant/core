@@ -489,7 +489,7 @@ googlemaps==2.5.1
 greeclimate==1.0.1
 
 # homeassistant.components.greeneye_monitor
-greeneye_monitor==2.1
+greeneye_monitor==3.0.1
 
 # homeassistant.components.growatt_server
 growattServer==1.1.0
