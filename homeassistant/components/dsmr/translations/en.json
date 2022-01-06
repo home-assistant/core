@@ -15,16 +15,14 @@
                 "data": {
                     "dsmr_version": "Select DSMR version",
                     "host": "Host",
-                    "port": "Port",
-                    "is_rfxtrx": "RFXtrx with integrated P1 reader"
+                    "port": "Port"
                 },
                 "title": "Select connection address"
             },
             "setup_serial": {
                 "data": {
                     "dsmr_version": "Select DSMR version",
-                    "port": "Select device",
-                    "is_rfxtrx": "RFXtrx with integrated P1 reader"
+                    "port": "Select device"
                 },
                 "title": "Device"
             },
