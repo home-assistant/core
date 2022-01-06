@@ -15,13 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a 1-Wire proxy for a config entry."""
-    _LOGGER.warning(
-        "The 1-Wire integration is deprecated and will be removed "
-        "in Home Assistant Core 2022.6; this integration is removed under "
-        "Architectural Decision Record 0019, more information can be found here: "
-        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
-    )
-
     hass.data.setdefault(DOMAIN, {})
 
     onewirehub = OneWireHub(hass)
