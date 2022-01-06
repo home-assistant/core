@@ -958,8 +958,8 @@ tests/components/trace/* @home-assistant/core
 homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
 tests/components/tractive/* @Danielhiversen @zhulik @bieniu
 homeassistant/components/trafikverket_train/* @endor-force
-homeassistant/components/trafikverket_weatherstation/* @endor-force
-tests/components/trafikverket_weatherstation/* @endor-force
+homeassistant/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
+tests/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 tests/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
