@@ -38,7 +38,6 @@ from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
-DETECTED_OBJECT_NONE = "none"
 
 
 @dataclass
