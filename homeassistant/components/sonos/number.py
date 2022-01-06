@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from string import capwords
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -71,7 +70,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         """Initialize the level entity."""
         super().__init__(speaker)
         self._attr_unique_id = f"{self.soco.uid}-{level_type}"
-        name_suffix = capwords(level_type.replace("_", " "))
+        name_suffix = level_type.replace("_", " ").title()
         self._attr_name = f"{self.speaker.zone_name} {name_suffix}"
         self.level_type = level_type
         self._attr_min_value, self._attr_max_value = valid_range
