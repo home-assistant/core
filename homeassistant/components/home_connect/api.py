@@ -325,6 +325,7 @@ class Dishwasher(
         {"name": "Dishcare.Dishwasher.Program.MachineCare"},
         {"name": "Dishcare.Dishwasher.Program.SteamFresh"},
         {"name": "Dishcare.Dishwasher.Program.MaximumCleaning"},
+        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
     ]
 
     def get_entity_info(self):
