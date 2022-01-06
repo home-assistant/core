@@ -224,28 +224,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_STORAGE_TEMPERATURE,
-        name="Solar Storage Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        value_getter=lambda api: api.getSolarStorageTemperature(),
-        device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_COLLECTOR_TEMPERATURE,
-        name="Solar Collector Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        value_getter=lambda api: api.getSolarCollectorTemperature(),
-        device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION,
-        name="Solar Power Production",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getSolarPowerProduction(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -331,6 +309,31 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
 )
 
+SOLAR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key=SENSOR_SOLAR_STORAGE_TEMPERATURE,
+        name="Solar Storage Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getSolarStorageTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COLLECTOR_TEMPERATURE,
+        name="Solar Collector Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getSolarCollectorTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_SOLAR_POWER_PRODUCTION,
+        name="Solar Power Production",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getSolarPowerProduction(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+)
+
 
 def _build_entity(name, vicare_api, device_config, sensor):
     """Create a ViCare sensor entity."""
@@ -389,6 +392,17 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     all_devices = []
     for description in GLOBAL_SENSORS:
+        entity = await hass.async_add_executor_job(
+            _build_entity,
+            f"{name} {description.name}",
+            api,
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            description,
+        )
+        if entity is not None:
+            all_devices.append(entity)
+
+    for description in SOLAR_SENSORS:
         entity = await hass.async_add_executor_job(
             _build_entity,
             f"{name} {description.name}",
