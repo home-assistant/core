@@ -28,7 +28,7 @@ async def async_setup_entry(
 
 
 class SteamistSwitchEntity(SteamistEntity, SwitchEntity):
-    """Representation of an Steamist binary sensor."""
+    """Representation of an Steamist steam switch."""
 
     @property
     def is_on(self) -> bool:
