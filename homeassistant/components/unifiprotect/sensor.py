@@ -89,7 +89,6 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="up_since",
     ),
     ProtectSensorEntityDescription(
@@ -147,7 +146,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Oldest Recording",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.video.recording_start",
     ),
     ProtectSensorEntityDescription(
@@ -225,7 +223,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
         ufp_value="up_since",
     ),
     ProtectSensorEntityDescription(
