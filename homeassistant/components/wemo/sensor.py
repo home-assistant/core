@@ -115,10 +115,7 @@ class AttributeSensor(WemoEntity, SensorEntity):
             return value
         if (convert := self.entity_description.state_conversion) is None:
             return value
-        try:
-            return convert(self, value)
-        except ValueError:
-            return None
+        return convert(self, value)
 
     @property
     def native_value(self) -> StateType:
