@@ -42,26 +42,10 @@ class MazdaSensorEntityDescription(SensorEntityDescription):
 
 
 def _get_distance_unit(unit_system):
-    return (
-        LENGTH_MILES
-        if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL
-        else LENGTH_KILOMETERS
-    )
-
-
-def _fuel_remaining_percentage_supported(data):
-    """Determine if fuel remaining percentage is supported."""
-    return data["status"]["fuelRemainingPercent"] is not None
-
-
-def _fuel_distance_remaining_supported(data):
-    """Determine if fuel distance remaining is supported."""
-    return data["status"]["fuelDistanceRemainingKm"] is not None
-
-
-def _odometer_supported(data):
-    """Determine if odometer is supported."""
-    return data["status"]["odometerKm"] is not None
+    """Return the distance unit for the given unit system."""
+    if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
+        return LENGTH_MILES
+    return LENGTH_KILOMETERS
 
 
 def _front_left_tire_pressure_supported(data):
@@ -82,11 +66,6 @@ def _rear_left_tire_pressure_supported(data):
 def _rear_right_tire_pressure_supported(data):
     """Determine if rear right tire pressure is supported."""
     return data["status"]["tirePressure"]["rearRightTirePressurePsi"] is not None
-
-
-def _fuel_remaining_percentage_value(data, unit_system):
-    """Get the fuel remaining percentage value."""
-    return data["status"]["fuelRemainingPercent"]
 
 
 def _fuel_distance_remaining_value(data, unit_system):
@@ -127,15 +106,15 @@ SENSOR_ENTITIES = [
         name_suffix="Fuel Remaining Percentage",
         icon="mdi:gas-station",
         unit=lambda unit_system: PERCENTAGE,
-        is_supported=_fuel_remaining_percentage_supported,
-        value=_fuel_remaining_percentage_value,
+        is_supported=lambda data: data["status"]["fuelRemainingPercent"] is not None,
+        value=lambda data, unit_system: data["status"]["fuelRemainingPercent"],
     ),
     MazdaSensorEntityDescription(
         key="fuel_distance_remaining",
         name_suffix="Fuel Distance Remaining",
         icon="mdi:gas-station",
         unit=_get_distance_unit,
-        is_supported=_fuel_distance_remaining_supported,
+        is_supported=lambda data: data["status"]["fuelDistanceRemainingKm"] is not None,
         value=_fuel_distance_remaining_value,
     ),
     MazdaSensorEntityDescription(
@@ -143,7 +122,7 @@ SENSOR_ENTITIES = [
         name_suffix="Odometer",
         icon="mdi:speedometer",
         unit=_get_distance_unit,
-        is_supported=_odometer_supported,
+        is_supported=lambda data: data["status"]["odometerKm"] is not None,
         value=_odometer_value,
     ),
     MazdaSensorEntityDescription(
