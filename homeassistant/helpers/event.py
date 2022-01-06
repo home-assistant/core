@@ -786,7 +786,7 @@ class _TrackTemplateResultInfo:
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}
         self._track_state_changes: _TrackStateChangeFiltered | None = None
-        self._time_listeners: dict[Template, Callable] = {}
+        self._time_listeners: dict[Template, Callable[[], None]] = {}
 
     def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
         """Activation of template tracking."""
