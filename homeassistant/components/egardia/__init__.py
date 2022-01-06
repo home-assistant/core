@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -129,13 +130,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return False
 
     discovery.load_platform(
-        hass, "alarm_control_panel", DOMAIN, discovered=conf, hass_config=config
+        hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, discovered=conf, hass_config=config
     )
 
     # Get the sensors from the device and add those
     sensors = device.getsensors()
     discovery.load_platform(
-        hass, "binary_sensor", DOMAIN, {ATTR_DISCOVER_DEVICES: sensors}, config
+        hass, Platform.BINARY_SENSOR, DOMAIN, {ATTR_DISCOVER_DEVICES: sensors}, config
     )
 
     return True
