@@ -1,10 +1,14 @@
 """The Matrix bot component."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 import mimetypes
 import os
+from typing import Any
 
-from matrix_client.client import MatrixClient, MatrixRequestError
+from matrix_client.client import MatrixClient
+from matrix_client.errors import MatrixHttpLibError, MatrixRequestError
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -22,17 +26,18 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import (
+    CONF_COMMANDS,
+    CONF_EXPRESSION,
+    CONF_HOMESERVER,
+    CONF_ROOMS,
+    CONF_WORD,
+    DOMAIN,
+    SERVICE_SEND_MESSAGE,
+    SESSION_FILE,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-SESSION_FILE = ".matrix.conf"
-
-CONF_HOMESERVER = "homeserver"
-CONF_ROOMS = "rooms"
-CONF_COMMANDS = "commands"
-CONF_WORD = "word"
-CONF_EXPRESSION = "expression"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
@@ -52,7 +57,7 @@ COMMAND_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
@@ -82,9 +87,8 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+def setup_bot(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
-    config = config[DOMAIN]
 
     try:
         bot = MatrixBot(
@@ -94,11 +98,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[CONF_VERIFY_SSL],
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
-            config[CONF_ROOMS],
-            config[CONF_COMMANDS],
         )
         hass.data[DOMAIN] = bot
-    except MatrixRequestError as exception:
+
+    except (MatrixHttpLibError, MatrixRequestError) as exception:
         _LOGGER.error("Matrix failed to log in: %s", str(exception))
         return False
 
@@ -112,45 +115,172 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class MatrixBot:
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Matrix bot component from YAML."""
+    if (new_config := config.get(DOMAIN)) is None:
+        return True
+
+    return setup_bot(hass, new_config)
+
+
+class MatrixAuthentication:
+    """The authentication part of Matrix Bot, inherited by class MatrixBot."""
+
+    def __init__(
+        self,
+        config_file: str,
+        homeserver: str,
+        verify_ssl: bool,
+        username: str,
+        password: str,
+    ) -> None:
+        """Set up the authentication part."""
+        self._session_filepath: str = config_file
+        self._auth_tokens: dict[str, str] = self._get_auth_tokens()
+
+        self._homeserver: str = homeserver
+        self._verify_tls: bool = verify_ssl
+        self._mx_id: str = username
+        self._password: str = password
+
+    def auth_token(self, username: str) -> str | None:
+        """Get the authentication token for a specified username from config file."""
+        return self._auth_tokens.get(username)
+
+    def login(self) -> MatrixClient:
+        """Login to the Matrix homeserver and return the client instance."""
+        # Attempt to generate a valid client using either of the two possible
+        # login methods:
+        client: MatrixClient | str = None
+
+        # If we have an authentication token
+        if self._mx_id in self._auth_tokens:
+            client = self._login_by_token()
+
+        # If we still don't have a client try password
+        if not client:
+            # Will throw an exception if it fails to log in
+            client = self._login_by_password()
+
+        return client
+
+    def _get_auth_tokens(self):
+        """
+        Read sorted authentication tokens from disk.
+
+        :return: The auth_tokens dictionary.
+        """
+        try:
+            auth_tokens = load_json(self._session_filepath)
+
+            return auth_tokens
+        except HomeAssistantError as ex:
+            _LOGGER.warning(
+                "Loading authentication tokens from file '%s' failed: %s",
+                self._session_filepath,
+                str(ex),
+            )
+            return {}
+
+    def _store_auth_token(self, token: str) -> None:
+        """Store authentication token to session and persistent storage."""
+        self._auth_tokens[self._mx_id] = token
+
+        save_json(self._session_filepath, self._auth_tokens)
+
+    def _login_by_token(self) -> MatrixClient | None:
+        """
+        Login using authentication token and return the client.
+
+        :return: a MatrixClient if login is successful, otherwise None.
+        """
+
+        client: MatrixClient | None = None
+
+        try:
+            client = MatrixClient(
+                base_url=self._homeserver,
+                token=self._auth_tokens[self._mx_id],
+                user_id=self._mx_id,
+                valid_cert_check=self._verify_tls,
+            )
+            _LOGGER.debug("Logged in using stored token")
+
+        except MatrixRequestError as ex:
+            _LOGGER.warning(
+                "Login by token failed, falling back to password: %d, %s",
+                ex.code,
+                ex.content,
+            )
+
+        return client
+
+    def _login_by_password(self) -> MatrixClient:
+        """Login using password authentication and return the client."""
+        try:
+            client: MatrixClient = MatrixClient(
+                base_url=self._homeserver, valid_cert_check=self._verify_tls
+            )
+            client.login_with_password(self._mx_id, self._password)
+
+            self._store_auth_token(client.token)
+
+            _LOGGER.debug("Logged in using password")
+
+        except MatrixRequestError as ex:
+            _LOGGER.error(
+                "Login failed, both token and username/password invalid: %d, %s",
+                ex.code,
+                ex.content,
+            )
+            # Re-raise the error so _setup can catch it
+            raise
+
+        return client
+
+
+class MatrixBot(MatrixAuthentication):
     """The Matrix Bot."""
 
     def __init__(
         self,
-        hass,
-        config_file,
-        homeserver,
-        verify_ssl,
-        username,
-        password,
-        listening_rooms,
-        commands,
-    ):
+        hass: HomeAssistant,
+        config_file: str,
+        homeserver: str,
+        verify_ssl: bool,
+        username: str,
+        password: str,
+        listening_rooms: list[str] = [],
+        commands: list[dict[str, Any]] = [],
+    ) -> None:
         """Set up the client."""
-        self.hass = hass
+        self.hass: HomeAssistant = hass
 
-        self._session_filepath = config_file
-        self._auth_tokens = self._get_auth_tokens()
+        # Authentication
+        MatrixAuthentication.__init__(
+            self,
+            config_file=config_file,
+            homeserver=homeserver,
+            verify_ssl=verify_ssl,
+            username=username,
+            password=password,
+        )
 
-        self._homeserver = homeserver
-        self._verify_tls = verify_ssl
-        self._mx_id = username
-        self._password = password
-
-        self._listening_rooms = listening_rooms
+        # Rooms
+        self._listening_rooms: list[str] = listening_rooms
 
         # We have to fetch the aliases for every room to make sure we don't
         # join it twice by accident. However, fetching aliases is costly,
         # so we only do it once per room.
-        self._aliases_fetched_for = set()
+        self._aliases_fetched_for: set = set()
 
         # Word commands are stored dict-of-dict: First dict indexes by room ID
         #  / alias, second dict indexes by the word
-        self._word_commands = {}
+        self._word_commands: dict = {}
 
         # Regular expression commands are stored as a list of commands per
         # room, i.e., a dict-of-list
-        self._expression_commands = {}
+        self._expression_commands: dict = {}
 
         for command in commands:
             if not command.get(CONF_ROOMS):
@@ -168,7 +298,7 @@ class MatrixBot:
                     self._expression_commands[room_id].append(command)
 
         # Log in. This raises a MatrixRequestError if login is unsuccessful
-        self._client = self._login()
+        self._client: MatrixClient = self.login()
 
         def handle_matrix_exception(exception):
             """Handle exceptions raised inside the Matrix SDK."""
@@ -264,87 +394,6 @@ class MatrixBot:
 
             except MatrixRequestError as ex:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
-
-    def _get_auth_tokens(self):
-        """
-        Read sorted authentication tokens from disk.
-
-        Returns the auth_tokens dictionary.
-        """
-        try:
-            auth_tokens = load_json(self._session_filepath)
-
-            return auth_tokens
-        except HomeAssistantError as ex:
-            _LOGGER.warning(
-                "Loading authentication tokens from file '%s' failed: %s",
-                self._session_filepath,
-                str(ex),
-            )
-            return {}
-
-    def _store_auth_token(self, token):
-        """Store authentication token to session and persistent storage."""
-        self._auth_tokens[self._mx_id] = token
-
-        save_json(self._session_filepath, self._auth_tokens)
-
-    def _login(self):
-        """Login to the Matrix homeserver and return the client instance."""
-        # Attempt to generate a valid client using either of the two possible
-        # login methods:
-        client = None
-
-        # If we have an authentication token
-        if self._mx_id in self._auth_tokens:
-            try:
-                client = self._login_by_token()
-                _LOGGER.debug("Logged in using stored token")
-
-            except MatrixRequestError as ex:
-                _LOGGER.warning(
-                    "Login by token failed, falling back to password: %d, %s",
-                    ex.code,
-                    ex.content,
-                )
-
-        # If we still don't have a client try password
-        if not client:
-            try:
-                client = self._login_by_password()
-                _LOGGER.debug("Logged in using password")
-
-            except MatrixRequestError as ex:
-                _LOGGER.error(
-                    "Login failed, both token and username/password invalid: %d, %s",
-                    ex.code,
-                    ex.content,
-                )
-                # Re-raise the error so _setup can catch it
-                raise
-
-        return client
-
-    def _login_by_token(self):
-        """Login using authentication token and return the client."""
-        return MatrixClient(
-            base_url=self._homeserver,
-            token=self._auth_tokens[self._mx_id],
-            user_id=self._mx_id,
-            valid_cert_check=self._verify_tls,
-        )
-
-    def _login_by_password(self):
-        """Login using password authentication and return the client."""
-        _client = MatrixClient(
-            base_url=self._homeserver, valid_cert_check=self._verify_tls
-        )
-
-        _client.login_with_password(self._mx_id, self._password)
-
-        self._store_auth_token(_client.token)
-
-        return _client
 
     def _send_image(self, img, target_rooms):
         _LOGGER.debug("Uploading file from path, %s", img)
