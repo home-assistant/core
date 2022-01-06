@@ -384,6 +384,8 @@ class ProtectDeviceSensor(SensorValueMixin, ProtectDeviceEntity, SensorEntity):
 class ProtectNVRSensor(SensorValueMixin, ProtectNVREntity, SensorEntity):
     """A Ubiquiti UniFi Protect Sensor."""
 
+	entity_description: ProtectSensorEntityDescription
+
     def __init__(
         self,
         data: ProtectData,
@@ -391,7 +393,7 @@ class ProtectNVRSensor(SensorValueMixin, ProtectNVREntity, SensorEntity):
         description: ProtectSensorEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect sensor."""
-        self.entity_description: ProtectSensorEntityDescription = description
+        self.entity_description = description
         super().__init__(data, device)
 
     @callback
