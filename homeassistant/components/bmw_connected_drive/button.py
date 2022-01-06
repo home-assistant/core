@@ -1,8 +1,9 @@
 """Support for BMW connected drive button entities."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from bimmer_connected.vehicle import ConnectedDriveVehicle
 
