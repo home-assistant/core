@@ -7,10 +7,6 @@ from typing import Any
 
 from pysiaalarm import SIAEvent
 
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelEntityDescription,
-)
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -32,22 +28,6 @@ class SIARequiredKeysMixin:
 
     code_consequences: dict[str, Any]
     always_reset_availability: bool
-
-
-@dataclass
-class SIAAlarmControlPanelEntityDescription(
-    AlarmControlPanelEntityDescription,
-    SIARequiredKeysMixin,
-):
-    """Describes SIA alarm control panel entity."""
-
-
-@dataclass
-class SIABinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    SIARequiredKeysMixin,
-):
-    """Describes SIA sensor entity."""
 
 
 def get_name(

@@ -1,9 +1,14 @@
 """Module for SIA Alarm Control Panels."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pysiaalarm import SIAEvent
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
@@ -27,7 +32,16 @@ from .const import (
     SIA_UNIQUE_ID_FORMAT_ALARM,
 )
 from .sia_entity_base import SIABaseEntity
-from .utils import SIAAlarmControlPanelEntityDescription
+from .utils import SIARequiredKeysMixin
+
+
+@dataclass
+class SIAAlarmControlPanelEntityDescription(
+    AlarmControlPanelEntityDescription,
+    SIARequiredKeysMixin,
+):
+    """Describes SIA alarm control panel entity."""
+
 
 PREVIOUS_STATE = "previous_state"
 

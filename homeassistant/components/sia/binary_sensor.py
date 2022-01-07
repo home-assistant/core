@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -24,7 +26,16 @@ from .const import (
     SIA_UNIQUE_ID_FORMAT_BINARY,
 )
 from .sia_entity_base import SIABaseEntity
-from .utils import SIABinarySensorEntityDescription
+from .utils import SIARequiredKeysMixin
+
+
+@dataclass
+class SIABinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    SIARequiredKeysMixin,
+):
+    """Describes SIA sensor entity."""
+
 
 entity_description_power = SIABinarySensorEntityDescription(
     key="power",

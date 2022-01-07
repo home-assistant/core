@@ -11,14 +11,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .alarm_control_panel import SIAAlarmControlPanelEntityDescription
+from .binary_sensor import SIABinarySensorEntityDescription
 from .const import DOMAIN, LOGGER, SIA_EVENT, SIA_HUB_ZONE
-from .utils import (
-    SIAAlarmControlPanelEntityDescription,
-    SIABinarySensorEntityDescription,
-    get_attr_from_sia_event,
-    get_name,
-    get_unavailability_interval,
-)
+from .utils import get_attr_from_sia_event, get_name, get_unavailability_interval
 
 
 class SIABaseEntity(RestoreEntity):
