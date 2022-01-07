@@ -320,6 +320,7 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     def _handle_scale_change_on_value_updated(self, event_data: dict) -> None:
         """Handle scale changes for this value on value updated event."""
         value_data = event_data["args"]
+        # If this event is for a different value, we can return early
         if (
             value_data["commandClass"] != self.info.primary_value.command_class
             or value_data["property"] != self.info.primary_value.property_
@@ -327,8 +328,7 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             or value_data.get("propertyKey") != self.info.primary_value.property_key
         ):
             return
-
-        # If the scale hasn't changed, we don't need to update the entity
+        # If the scale hasn't changed, we can return early
         if self._scale == (
             new_scale := self.info.primary_value.metadata.cc_specific.get(
                 CC_SPECIFIC_SCALE
@@ -337,7 +337,6 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             return
 
         self._scale = new_scale
-
         self._attr_native_unit_of_measurement = (
             NumericSensorDataTemplate()
             .resolve_data(self.info.primary_value)
