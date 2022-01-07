@@ -111,12 +111,6 @@ async def test_unknwon_error(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
 
-
-# mock_poll_data = Mock()
-# mock_poll_data.serial = '1234'
-# mock_poll_data.return_value = mock_poll_data
-
-
 async def test_validate_input(hass: HomeAssistant) -> None:
     """Test."""
 
