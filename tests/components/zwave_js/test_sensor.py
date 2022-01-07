@@ -391,5 +391,22 @@ async def test_unit_change(hass, zp3111, client, integration):
         },
     )
     zp3111.receive_event(event)
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": 71.56,
+                "prevValue": 21.98,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "-5.57"
+    assert hass.states.get(entity_id).state == "21.98"

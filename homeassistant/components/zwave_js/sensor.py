@@ -9,6 +9,7 @@ import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, ConfigurationValueType, NodeStatus
 from zwave_js_server.const.command_class.meter import (
+    CC_SPECIFIC_SCALE,
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
 )
@@ -299,9 +300,25 @@ class ZWaveStringSensor(ZwaveSensorBase):
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+        entity_description: SensorEntityDescription,
+        unit_of_measurement: str | None = None,
+    ) -> None:
+        """Initialize a ZWaveNumericSensor entity."""
+        super().__init__(
+            config_entry, client, info, entity_description, unit_of_measurement
+        )
+        self._scale = self.info.primary_value.metadata.cc_specific.get(
+            CC_SPECIFIC_SCALE
+        )
+
     @callback
-    def _handle_metadata_updated(self, event_data: dict) -> None:
-        """Handle metadata updated event."""
+    def _handle_scale_change_on_value_updated(self, event_data: dict) -> None:
+        """Handle scale changes for this value on value updated event."""
         value_data = event_data["args"]
         if (
             value_data["commandClass"] != self.info.primary_value.command_class
@@ -310,6 +327,16 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             or value_data.get("propertyKey") != self.info.primary_value.property_key
         ):
             return
+
+        # If the scale hasn't changed, we don't need to update the entity
+        if self._scale == (
+            new_scale := self.info.primary_value.metadata.cc_specific.get(
+                CC_SPECIFIC_SCALE
+            )
+        ):
+            return
+
+        self._scale = new_scale
 
         self._attr_native_unit_of_measurement = (
             NumericSensorDataTemplate()
@@ -321,7 +348,7 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
-        self.info.node.on("metadata updated", self._handle_metadata_updated)
+        self.info.node.on("value updated", self._handle_scale_change_on_value_updated)
 
     @property
     def native_value(self) -> float:
