@@ -113,15 +113,11 @@ async def async_setup_entry(
     if coordinator is None or coordinator.data is None:
         raise PlatformNotReady("Data coordinator could not be initialized!")
 
-    try:
-        district = config_entry.data[ATTR_COUNTY]
-        sensors = [
-            RKICovidNumbersSensor(coordinator, district, info_type)
-            for info_type in SENSORS
-        ]
-        async_add_entities(sensors, update_before_add=True)
-    except KeyError:
-        _LOGGER.error("Could not determine %s from config!", ATTR_COUNTY)
+    district = config_entry.data[ATTR_COUNTY]
+    sensors = [
+        RKICovidNumbersSensor(coordinator, district, info_type) for info_type in SENSORS
+    ]
+    async_add_entities(sensors, update_before_add=True)
 
 
 class RKICovidNumbersSensor(CoordinatorEntity):
