@@ -30,10 +30,6 @@ PING_INTERVAL_MARGIN = 30
 class SIARequiredKeysMixin:
     """Mixin for required keys."""
 
-    port: int
-    account: str
-    zone: int | None
-    ping_interval: int
     code_consequences: dict[str, Any]
     always_reset_availability: bool
 
@@ -54,8 +50,12 @@ class SIABinarySensorEntityDescription(
     """Describes SIA sensor entity."""
 
 
-def get_name(port: int, account: str, zone: int | None, device_class: str) -> str:
+def get_name(
+    port: int, account: str, zone: int | None, device_class: str | None
+) -> str:
     """Return the name of the zone."""
+    if not device_class:
+        device_class = "none"
     if zone is None or zone == 0:
         return SIA_NAME_FORMAT_HUB.format(port, account, device_class)
     return SIA_NAME_FORMAT.format(port, account, zone, device_class)

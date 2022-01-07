@@ -24,26 +24,42 @@ from .const import (
     SIA_UNIQUE_ID_FORMAT_BINARY,
 )
 from .sia_entity_base import SIABaseEntity
-from .utils import SIABinarySensorEntityDescription, get_name
+from .utils import SIABinarySensorEntityDescription
 
-CC_POWER: dict[str, bool] = {
-    "AT": False,
-    "AR": True,
-}
+entity_description_power = SIABinarySensorEntityDescription(
+    key="power",
+    device_class=BinarySensorDeviceClass.POWER,
+    entity_category="diagnostic",
+    code_consequences={
+        "AT": False,
+        "AR": True,
+    },
+    always_reset_availability=True,
+)
 
-CC_SMOKE: dict[str, bool] = {
-    "GA": True,
-    "GH": False,
-    "FA": True,
-    "FH": False,
-    "KA": True,
-    "KH": False,
-}
+entity_description_smoke = SIABinarySensorEntityDescription(
+    key="smoke",
+    device_class=BinarySensorDeviceClass.SMOKE,
+    code_consequences={
+        "GA": True,
+        "GH": False,
+        "FA": True,
+        "FH": False,
+        "KA": True,
+        "KH": False,
+    },
+    always_reset_availability=True,
+)
 
-CC_MOISTURE: dict[str, bool] = {
-    "WA": True,
-    "WH": False,
-}
+entity_description_moisture = SIABinarySensorEntityDescription(
+    key="moisture",
+    device_class=BinarySensorDeviceClass.MOISTURE,
+    code_consequences={
+        "WA": True,
+        "WH": False,
+    },
+    always_reset_availability=True,
+)
 
 
 def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
@@ -54,78 +70,30 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
     """
     for account_data in entry.data[CONF_ACCOUNTS]:
         yield SIABinarySensor(
-            SIABinarySensorEntityDescription(
-                key=SIA_UNIQUE_ID_FORMAT_BINARY.format(
-                    entry.entry_id,
-                    account_data[CONF_ACCOUNT],
-                    SIA_HUB_ZONE,
-                    BinarySensorDeviceClass.POWER,
-                ),
-                name=get_name(
-                    entry.data[CONF_PORT],
-                    account_data[CONF_ACCOUNT],
-                    SIA_HUB_ZONE,
-                    BinarySensorDeviceClass.POWER,
-                ),
-                device_class=BinarySensorDeviceClass.POWER,
-                entity_category="diagnostic",
-                port=entry.data[CONF_PORT],
-                account=account_data[CONF_ACCOUNT],
-                zone=SIA_HUB_ZONE,
-                ping_interval=account_data[CONF_PING_INTERVAL],
-                code_consequences=CC_POWER,
-                always_reset_availability=True,
-            ),
+            port=entry.data[CONF_PORT],
+            account=account_data[CONF_ACCOUNT],
+            zone=SIA_HUB_ZONE,
+            ping_interval=account_data[CONF_PING_INTERVAL],
+            entry_id=entry.entry_id,
+            entity_description=entity_description_power,
         )
         zones = entry.options[CONF_ACCOUNTS][account_data[CONF_ACCOUNT]][CONF_ZONES]
         for zone in range(1, zones + 1):
             yield SIABinarySensor(
-                SIABinarySensorEntityDescription(
-                    key=SIA_UNIQUE_ID_FORMAT_BINARY.format(
-                        entry.entry_id,
-                        account_data[CONF_ACCOUNT],
-                        zone,
-                        BinarySensorDeviceClass.SMOKE,
-                    ),
-                    name=get_name(
-                        entry.data[CONF_PORT],
-                        account_data[CONF_ACCOUNT],
-                        zone,
-                        BinarySensorDeviceClass.SMOKE,
-                    ),
-                    device_class=BinarySensorDeviceClass.SMOKE,
-                    entity_registry_enabled_default=False,
-                    port=entry.data[CONF_PORT],
-                    account=account_data[CONF_ACCOUNT],
-                    zone=zone,
-                    ping_interval=account_data[CONF_PING_INTERVAL],
-                    code_consequences=CC_SMOKE,
-                    always_reset_availability=True,
-                ),
+                port=entry.data[CONF_PORT],
+                account=account_data[CONF_ACCOUNT],
+                zone=zone,
+                ping_interval=account_data[CONF_PING_INTERVAL],
+                entry_id=entry.entry_id,
+                entity_description=entity_description_smoke,
             )
             yield SIABinarySensor(
-                SIABinarySensorEntityDescription(
-                    key=SIA_UNIQUE_ID_FORMAT_BINARY.format(
-                        entry.entry_id,
-                        account_data[CONF_ACCOUNT],
-                        zone,
-                        BinarySensorDeviceClass.MOISTURE,
-                    ),
-                    name=get_name(
-                        entry.data[CONF_PORT],
-                        account_data[CONF_ACCOUNT],
-                        zone,
-                        BinarySensorDeviceClass.MOISTURE,
-                    ),
-                    device_class=BinarySensorDeviceClass.MOISTURE,
-                    entity_registry_enabled_default=False,
-                    port=entry.data[CONF_PORT],
-                    account=account_data[CONF_ACCOUNT],
-                    zone=zone,
-                    ping_interval=account_data[CONF_PING_INTERVAL],
-                    code_consequences=CC_MOISTURE,
-                    always_reset_availability=True,
-                ),
+                port=entry.data[CONF_PORT],
+                account=account_data[CONF_ACCOUNT],
+                zone=zone,
+                ping_interval=account_data[CONF_PING_INTERVAL],
+                entry_id=entry.entry_id,
+                entity_description=entity_description_moisture,
             )
 
 
@@ -142,6 +110,24 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
     """Class for SIA Binary Sensors."""
 
     entity_description: SIABinarySensorEntityDescription
+
+    def __init__(
+        self,
+        port: int,
+        account: str,
+        zone: int | None,
+        ping_interval: int,
+        entry_id: str,
+        entity_description: SIABinarySensorEntityDescription,
+    ) -> None:
+        """Create SIAAlarmControlPanel object."""
+        super().__init__(port, account, zone, ping_interval, entity_description)
+        self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_BINARY.format(
+            entry_id,
+            account,
+            zone,
+            entity_description.device_class,
+        )
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""

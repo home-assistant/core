@@ -16,6 +16,7 @@ from .utils import (
     SIAAlarmControlPanelEntityDescription,
     SIABinarySensorEntityDescription,
     get_attr_from_sia_event,
+    get_name,
     get_unavailability_interval,
 )
 
@@ -27,14 +28,28 @@ class SIABaseEntity(RestoreEntity):
 
     def __init__(
         self,
+        port: int,
+        account: str,
+        zone: int | None,
+        ping_interval: int,
         entity_description: SIAAlarmControlPanelEntityDescription
         | SIABinarySensorEntityDescription,
     ) -> None:
         """Create SIABaseEntity object."""
+        self.port = port
+        self.account = account
+        self.zone = zone
+        self.ping_interval = ping_interval
         self.entity_description = entity_description
         self._cancel_availability_cb: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
+        self._attr_name = get_name(
+            self.port,
+            self.account,
+            self.zone,
+            self.entity_description.device_class,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -48,9 +63,7 @@ class SIABaseEntity(RestoreEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIA_EVENT.format(
-                    self.entity_description.port, self.entity_description.account
-                ),
+                SIA_EVENT.format(self.port, self.account),
                 self.async_handle_event,
             )
         )
@@ -72,12 +85,9 @@ class SIABaseEntity(RestoreEntity):
 
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
-        """Listen to dispatcher events for this port and account and update state and attributes.
-
-        If the port and account combo receives any message it means it is online and can therefore be set to available.
-        """
+        """Listen to dispatcher events for this port and account and update state and attributes."""
         LOGGER.debug("Received event: %s", sia_event)
-        if int(sia_event.ri) not in (self.entity_description.zone, SIA_HUB_ZONE):
+        if int(sia_event.ri) not in (self.zone, SIA_HUB_ZONE):
             return
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
         state_changed = self.update_state(sia_event)
@@ -101,7 +111,7 @@ class SIABaseEntity(RestoreEntity):
         """Create a availability cb and return the callback."""
         self._cancel_availability_cb = async_call_later(
             self.hass,
-            get_unavailability_interval(self.entity_description.ping_interval),
+            get_unavailability_interval(self.ping_interval),
             self.async_set_unavailable,
         )
 
@@ -112,18 +122,15 @@ class SIABaseEntity(RestoreEntity):
         self.async_write_ha_state()
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self.entity_description.key
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info."""
+        assert self.name
+        assert self.unique_id
         return DeviceInfo(
             name=self.name,
             identifiers={(DOMAIN, self.unique_id)},
             via_device=(
                 DOMAIN,
-                f"{self.entity_description.port}_{self.entity_description.account}",
+                f"{self.port}_{self.account}",
             ),
         )

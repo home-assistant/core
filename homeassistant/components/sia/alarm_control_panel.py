@@ -27,9 +27,8 @@ from .const import (
     SIA_UNIQUE_ID_FORMAT_ALARM,
 )
 from .sia_entity_base import SIABaseEntity
-from .utils import SIAAlarmControlPanelEntityDescription, get_name
+from .utils import SIAAlarmControlPanelEntityDescription
 
-DEVICE_CLASS_ALARM = "alarm"
 PREVIOUS_STATE = "previous_state"
 
 CODE_CONSEQUENCES: dict[str, StateType] = {
@@ -59,6 +58,13 @@ CODE_CONSEQUENCES: dict[str, StateType] = {
     "NO": PREVIOUS_STATE,
 }
 
+entity_description = SIAAlarmControlPanelEntityDescription(
+    key="alarm_control_panel",
+    device_class="alarm",
+    code_consequences=CODE_CONSEQUENCES,
+    always_reset_availability=True,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -68,24 +74,12 @@ async def async_setup_entry(
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(
         SIAAlarmControlPanel(
-            SIAAlarmControlPanelEntityDescription(
-                key=SIA_UNIQUE_ID_FORMAT_ALARM.format(
-                    entry.entry_id, account_data[CONF_ACCOUNT], zone
-                ),
-                device_class=DEVICE_CLASS_ALARM,
-                name=get_name(
-                    port=entry.data[CONF_PORT],
-                    account=account_data[CONF_ACCOUNT],
-                    zone=zone,
-                    device_class=DEVICE_CLASS_ALARM,
-                ),
-                port=entry.data[CONF_PORT],
-                account=account_data[CONF_ACCOUNT],
-                zone=zone,
-                ping_interval=account_data[CONF_PING_INTERVAL],
-                code_consequences=CODE_CONSEQUENCES,
-                always_reset_availability=True,
-            ),
+            port=entry.data[CONF_PORT],
+            account=account_data[CONF_ACCOUNT],
+            zone=zone,
+            ping_interval=account_data[CONF_PING_INTERVAL],
+            entry_id=entry.entry_id,
+            entity_description=entity_description,
         )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(
@@ -102,11 +96,19 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
+        port: int,
+        account: str,
+        zone: int | None,
+        ping_interval: int,
+        entry_id: str,
         entity_description: SIAAlarmControlPanelEntityDescription,
     ) -> None:
         """Create SIAAlarmControlPanel object."""
-        super().__init__(entity_description)
+        super().__init__(port, account, zone, ping_interval, entity_description)
 
+        self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_ALARM.format(
+            entry_id, account, zone
+        )
         self._attr_state: StateType = None
         self._old_state: StateType = None
         self._attr_supported_features = 0
