@@ -13,6 +13,9 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_MINOR_VERSION,
     CONF_MODEL,
+    CONF_MODEL_DESCRIPTION,
+    CONF_MODEL_INFO,
+    CONF_MODEL_NUM,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -32,6 +35,8 @@ from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
     MODEL,
+    MODEL_DESCRIPTION,
+    MODEL_NUM,
     MODULE,
     _patch_discovery,
     _patch_wifibulb,
@@ -91,6 +96,85 @@ async def test_discovery(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
+    }
+    mock_setup.assert_called_once()
+    mock_setup_entry.assert_called_once()
+
+    # ignore configured devices
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(), _patch_wifibulb():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "no_devices_found"
+
+
+async def test_discovery_legacy(hass: HomeAssistant):
+    """Test setting up discovery with a legacy device."""
+    with _patch_discovery(device=FLUX_DISCOVERY_PARTIAL), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert not result["errors"]
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "pick_device"
+        assert not result2["errors"]
+
+        # test we can try again
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert not result["errors"]
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "pick_device"
+        assert not result2["errors"]
+
+    with _patch_discovery(), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: MAC_ADDRESS},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == DEFAULT_ENTRY_TITLE
+    assert result3["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+        CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -171,6 +255,9 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
             CONF_HOST: IP_ADDRESS,
             CONF_NAME: DEFAULT_ENTRY_TITLE,
             CONF_MODEL: MODEL,
+            CONF_MODEL_NUM: MODEL_NUM,
+            CONF_MODEL_INFO: MODEL,
+            CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
             CONF_REMOTE_ACCESS_ENABLED: True,
             CONF_REMOTE_ACCESS_HOST: "the.cloud",
             CONF_REMOTE_ACCESS_PORT: 8816,
@@ -245,6 +332,9 @@ async def test_manual_working_discovery(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -283,7 +373,12 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
+    assert result["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
+        CONF_NAME: IP_ADDRESS,
+    }
 
 
 async def test_discovered_by_discovery_and_dhcp(hass):
@@ -352,6 +447,9 @@ async def test_discovered_by_discovery(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -387,6 +485,9 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -419,6 +520,8 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
     assert mock_async_setup.called
@@ -448,6 +551,8 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
     assert mock_async_setup.called
