@@ -18,6 +18,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CURRENCY_EUR, DOMAIN, VOLUME_CM3, VOLUME_LMIN
 from .coordinator import ToonDataUpdateCoordinator
@@ -34,7 +35,7 @@ from .models import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Toon sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
