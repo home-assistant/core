@@ -26,6 +26,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_ACCOUNT,
+    CONF_CANCEL_TOKEN_REFRESH_CALLBACK,
     CONF_CONTROLLER_UNIQUE_ID,
     CONF_DIRECTOR,
     CONF_DIRECTOR_ALL_ITEMS,
@@ -88,6 +89,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data = hass.data[DOMAIN][entry.entry_id]
     _LOGGER.debug("Disconnecting C4Websocket for config entry unload")
     await entry_data[CONF_WEBSOCKET].sio_disconnect()
+    _LOGGER.debug("Cancelling scheduled token refresh for config entry unload")
+    entry_data[CONF_CANCEL_TOKEN_REFRESH_CALLBACK]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -161,7 +164,7 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
         director_token_dict["validSeconds"],
     )
     obj = RefreshTokensObject(hass, entry)
-    async_call_later(
+    entry_data[CONF_CANCEL_TOKEN_REFRESH_CALLBACK] = async_call_later(
         hass=hass,
         delay=director_token_dict["validSeconds"],
         action=obj.refresh_tokens,
