@@ -1,9 +1,10 @@
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 import json
-import logging
+import struct
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -11,10 +12,8 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
 from .util import remap_value
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -102,6 +101,17 @@ class ElectricityTypeData:
         """Load JSON string and return a ElectricityTypeData object."""
         return cls(**json.loads(data.lower()))
 
+    @classmethod
+    def from_raw(cls, data: str) -> ElectricityTypeData:
+        """Decode base64 string and return a ElectricityTypeData object."""
+        raw = base64.b64decode(data)
+        voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
+        electriccurrent = struct.unpack(">L", b"\x00" + raw[2:5])[0] / 1000.0
+        power = struct.unpack(">L", b"\x00" + raw[5:8])[0] / 1000.0
+        return cls(
+            electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
+        )
+
 
 class TuyaEntity(Entity):
     """Tuya base device."""
@@ -151,5 +161,5 @@ class TuyaEntity(Entity):
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
-        _LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
+        LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         self.device_manager.send_commands(self.device.id, commands)

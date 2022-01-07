@@ -1,4 +1,6 @@
 """Sensor for Steam account status."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from time import mktime
@@ -8,9 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,14 +49,19 @@ APP_LIST_KEY = "steam_online.app_list"
 BASE_INTERVAL = timedelta(minutes=1)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Steam platform."""
 
-    steam.api.key.set(config.get(CONF_API_KEY))
+    steam.api.key.set(config[CONF_API_KEY])
     # Initialize steammods app list before creating sensors
     # to benefit from internal caching of the list.
     hass.data[APP_LIST_KEY] = steam.apps.app_list()
-    entities = [SteamSensor(account, steam) for account in config.get(CONF_ACCOUNTS)]
+    entities = [SteamSensor(account, steam) for account in config[CONF_ACCOUNTS]]
     if not entities:
         return
     add_entities(entities, True)

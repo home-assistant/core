@@ -1,14 +1,34 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
+import logging
+
 from RPi import GPIO  # pylint: disable=import-error
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rpi_gpio"
-PLATFORMS = ["binary_sensor", "cover", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.SWITCH,
+]
+
+_LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Raspberry PI GPIO component."""
+    _LOGGER.warning(
+        "The Raspberry Pi GPIO integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.6; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""

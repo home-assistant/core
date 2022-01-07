@@ -1,13 +1,10 @@
 """Support for Somfy Covers."""
-
 from pymfy.api.devices.blind import Blind
 from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_SHUTTER,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -16,9 +13,13 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import COORDINATOR, DOMAIN
@@ -33,7 +34,11 @@ SUPPORTED_CATEGORIES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Somfy cover platform."""
     domain_data = hass.data[DOMAIN]
     coordinator = domain_data[COORDINATOR]
@@ -123,9 +128,9 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     def device_class(self):
         """Return the device class."""
         if self.categories & BLIND_DEVICE_CATEGORIES:
-            return DEVICE_CLASS_BLIND
+            return CoverDeviceClass.BLIND
         if self.categories & SHUTTER_DEVICE_CATEGORIES:
-            return DEVICE_CLASS_SHUTTER
+            return CoverDeviceClass.SHUTTER
         return None
 
     @property

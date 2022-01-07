@@ -255,7 +255,7 @@ class HomeAssistantHTTP:
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
 
-    def register_view(self, view: HomeAssistantView) -> None:
+    def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
 
         The view argument must be a class that inherits from HomeAssistantView.

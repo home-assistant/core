@@ -1,4 +1,6 @@
 """Support for Qwikswitch devices."""
+from __future__ import annotations
+
 import logging
 
 from pyqwikswitch.async_ import QSUsb
@@ -14,11 +16,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +133,7 @@ class QSToggleEntity(QSEntity):
         self.hass.data[DOMAIN].devices.set_value(self.qsid, 0)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Qwiskswitch component setup."""
 
     # Add cmd's to in /&listen packets will fire events
@@ -163,7 +166,12 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = qsusb
 
-    comps = {"switch": [], "light": [], "sensor": [], "binary_sensor": []}
+    comps: dict[str, list] = {
+        "switch": [],
+        "light": [],
+        "sensor": [],
+        "binary_sensor": [],
+    }
 
     sensor_ids = []
     for sens in sensors:

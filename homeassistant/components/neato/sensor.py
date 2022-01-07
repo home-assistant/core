@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NeatoHub
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ class NeatoSensor(SensorEntity):
         return SensorDeviceClass.BATTERY
 
     @property
-    def entity_category(self) -> str:
+    def entity_category(self) -> EntityCategory:
         """Device entity category."""
         return EntityCategory.DIAGNOSTIC
 

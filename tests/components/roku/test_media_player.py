@@ -85,12 +85,30 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     await setup_integration(hass, aioclient_mock)
 
     entity_registry = er.async_get(hass)
-    main = entity_registry.async_get(MAIN_ENTITY_ID)
+    device_registry = dr.async_get(hass)
 
-    assert hass.states.get(MAIN_ENTITY_ID)
-    assert main
-    assert main.original_device_class is MediaPlayerDeviceClass.RECEIVER
-    assert main.unique_id == UPNP_SERIAL
+    state = hass.states.get(MAIN_ENTITY_ID)
+    entry = entity_registry.async_get(MAIN_ENTITY_ID)
+
+    assert state
+    assert entry
+    assert entry.original_device_class is MediaPlayerDeviceClass.RECEIVER
+    assert entry.unique_id == UPNP_SERIAL
+
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, UPNP_SERIAL)}
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "b0:a7:37:96:4d:fb"),
+        (dr.CONNECTION_NETWORK_MAC, "b0:a7:37:96:4d:fa"),
+    }
+    assert device_entry.manufacturer == "Roku"
+    assert device_entry.model == "Roku 3"
+    assert device_entry.name == "My Roku 3"
+    assert device_entry.entry_type is None
+    assert device_entry.hw_version == "4200X"
+    assert device_entry.sw_version == "7.5.0"
 
 
 async def test_idle_setup(
@@ -117,12 +135,30 @@ async def test_tv_setup(
     )
 
     entity_registry = er.async_get(hass)
-    tv = entity_registry.async_get(TV_ENTITY_ID)
+    device_registry = dr.async_get(hass)
 
-    assert hass.states.get(TV_ENTITY_ID)
-    assert tv
-    assert tv.original_device_class is MediaPlayerDeviceClass.TV
-    assert tv.unique_id == TV_SERIAL
+    state = hass.states.get(TV_ENTITY_ID)
+    entry = entity_registry.async_get(TV_ENTITY_ID)
+
+    assert state
+    assert entry
+    assert entry.original_device_class is MediaPlayerDeviceClass.TV
+    assert entry.unique_id == TV_SERIAL
+
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, TV_SERIAL)}
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "d8:13:99:f8:b0:c6"),
+        (dr.CONNECTION_NETWORK_MAC, "d4:3a:2e:07:fd:cb"),
+    }
+    assert device_entry.manufacturer == TV_MANUFACTURER
+    assert device_entry.model == TV_MODEL
+    assert device_entry.name == '58" Onn Roku TV'
+    assert device_entry.entry_type is None
+    assert device_entry.hw_version == "7820X"
+    assert device_entry.sw_version == TV_SW_VERSION
 
 
 async def test_availability(

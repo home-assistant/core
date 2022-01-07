@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Callable, List, cast
+from typing import Any, Callable, List, Union, cast
 
 import attr
 
@@ -33,14 +33,15 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
-from homeassistant.helpers.ratelimit import KeyedRateLimit
-from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import RenderInfo, Template, result_as_boolean
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+
+from .entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
+from .ratelimit import KeyedRateLimit
+from .sun import get_astral_event_next
+from .template import RenderInfo, Template, result_as_boolean
+from .typing import TemplateVarsType
 
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
@@ -532,7 +533,7 @@ class _TrackStateChangeFiltered:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._action = action
-        self._listeners: dict[str, Callable] = {}
+        self._listeners: dict[str, Callable[[], None]] = {}
         self._last_track_states: TrackStates = track_states
 
     @callback
@@ -720,7 +721,7 @@ def async_track_template(
 
     @callback
     def _template_changed_listener(
-        event: Event, updates: list[TrackTemplateResult]
+        event: Event | None, updates: list[TrackTemplateResult]
     ) -> None:
         """Check if condition is correct and run action."""
         track_result = updates.pop()
@@ -768,7 +769,7 @@ class _TrackTemplateResultInfo:
         self,
         hass: HomeAssistant,
         track_templates: Sequence[TrackTemplate],
-        action: Callable,
+        action: Callable[[Event | None, list[TrackTemplateResult]], None],
         has_super_template: bool = False,
     ) -> None:
         """Handle removal / refresh of tracker init."""
@@ -785,7 +786,7 @@ class _TrackTemplateResultInfo:
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}
         self._track_state_changes: _TrackStateChangeFiltered | None = None
-        self._time_listeners: dict[Template, Callable] = {}
+        self._time_listeners: dict[Template, Callable[[], None]] = {}
 
     def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
         """Activation of template tracking."""
@@ -985,7 +986,7 @@ class _TrackTemplateResultInfo:
         replayed is True if the event is being replayed because the
         rate limit was hit.
         """
-        updates = []
+        updates: list[TrackTemplateResult] = []
         info_changed = False
         now = event.time_fired if not replayed and event else dt_util.utcnow()
 
@@ -1074,7 +1075,7 @@ class _TrackTemplateResultInfo:
 
 TrackTemplateResultListener = Callable[
     [
-        Event,
+        Union[Event, None],
         List[TrackTemplateResult],
     ],
     None,

@@ -22,7 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -72,6 +72,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+MAX_WEBHOOK_RETRIES = 3
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -146,7 +148,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def unregister_webhook(_: None) -> None:
+    _webhook_retries = 0
+
+    async def unregister_webhook(call_or_event: ServiceCall | Event | None) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             return
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
@@ -163,7 +167,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
             )
 
-    async def register_webhook(_: None) -> None:
+        nonlocal _webhook_retries
+        if _webhook_retries < MAX_WEBHOOK_RETRIES:
+            _webhook_retries += 1
+            async_call_later(hass, 30, register_webhook)
+
+    async def register_webhook(call_or_event: ServiceCall | Event | None) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)

@@ -14,8 +14,14 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_TIME_CHANGED,
 )
-from homeassistant.core import Event, callback as async_callback
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    callback as async_callback,
+)
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -123,7 +129,7 @@ def request_done(hass, request_id):
     ).result()
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the configurator component."""
     return True
 
@@ -205,13 +211,14 @@ class Configurator:
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
+        @async_callback
         def deferred_remove(event: Event):
             """Remove the request state."""
             self.hass.states.async_remove(entity_id, context=event.context)
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
-    async def async_handle_service_call(self, call):
+    async def async_handle_service_call(self, call: ServiceCall) -> None:
         """Handle a configure service call."""
         request_id = call.data.get(ATTR_CONFIGURE_ID)
 

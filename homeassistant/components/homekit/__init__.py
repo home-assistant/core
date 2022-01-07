@@ -12,22 +12,21 @@ import voluptuous as vol
 
 from homeassistant.components import device_automation, network, zeroconf
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.network.const import MDNS_TARGET_IP
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -35,13 +34,11 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
@@ -95,7 +92,6 @@ from .const import (
     MANUFACTURER,
     PERSIST_LOCK,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
-    SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
 )
@@ -343,7 +339,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
     return await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
@@ -370,7 +366,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
     """Register events and services for HomeKit."""
     hass.http.register_view(HomeKitPairingQRView)
 
-    async def async_handle_homekit_reset_accessory(service):
+    async def async_handle_homekit_reset_accessory(service: ServiceCall) -> None:
         """Handle reset accessory HomeKit service call."""
         for homekit in _async_all_homekit_instances(hass):
             if homekit.status != STATUS_RUNNING:
@@ -390,7 +386,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
     )
 
-    async def async_handle_homekit_unpair(service):
+    async def async_handle_homekit_unpair(service: ServiceCall) -> None:
         """Handle unpair HomeKit service call."""
         referenced = async_extract_referenced_entity_ids(hass, service)
         dev_reg = device_registry.async_get(hass)
@@ -422,27 +418,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         schema=UNPAIR_SERVICE_SCHEMA,
     )
 
-    async def async_handle_homekit_service_start(service):
-        """Handle start HomeKit service call."""
-        tasks = []
-        for homekit in _async_all_homekit_instances(hass):
-            if homekit.status == STATUS_RUNNING:
-                _LOGGER.debug("HomeKit is already running")
-                continue
-            if homekit.status != STATUS_READY:
-                _LOGGER.warning(
-                    "HomeKit is not ready. Either it is already starting up or has "
-                    "been stopped"
-                )
-                continue
-            tasks.append(homekit.async_start())
-        await asyncio.gather(*tasks)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_HOMEKIT_START, async_handle_homekit_service_start
-    )
-
-    async def _handle_homekit_reload(service):
+    async def _handle_homekit_reload(service: ServiceCall) -> None:
         """Handle start HomeKit service call."""
         config = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -669,11 +645,11 @@ class HomeKit:
         ent_reg = entity_registry.async_get(self.hass)
         device_lookup = ent_reg.async_get_device_class_lookup(
             {
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING),
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION),
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_OCCUPANCY),
-                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY),
-                (SENSOR_DOMAIN, DEVICE_CLASS_HUMIDITY),
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.BATTERY_CHARGING),
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION),
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY),
+                (SENSOR_DOMAIN, SensorDeviceClass.BATTERY),
+                (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY),
             }
         )
 
@@ -823,7 +799,9 @@ class HomeKit:
                     valid_device_ids.append(device_id)
             for device_id, device_triggers in (
                 await device_automation.async_get_device_automations(
-                    self.hass, "trigger", valid_device_ids
+                    self.hass,
+                    device_automation.DeviceAutomationType.TRIGGER,
+                    valid_device_ids,
                 )
             ).items():
                 self.add_bridge_triggers_accessory(
@@ -860,14 +838,14 @@ class HomeKit:
             or ent_reg_ent.device_id is None
             or ent_reg_ent.device_id not in device_lookup
             or (ent_reg_ent.device_class or ent_reg_ent.original_device_class)
-            in (DEVICE_CLASS_BATTERY_CHARGING, DEVICE_CLASS_BATTERY)
+            in (BinarySensorDeviceClass.BATTERY_CHARGING, SensorDeviceClass.BATTERY)
         ):
             return
 
         if ATTR_BATTERY_CHARGING not in state.attributes:
             battery_charging_binary_sensor_entity_id = device_lookup[
                 ent_reg_ent.device_id
-            ].get((BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING))
+            ].get((BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.BATTERY_CHARGING))
             if battery_charging_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -876,7 +854,7 @@ class HomeKit:
 
         if ATTR_BATTERY_LEVEL not in state.attributes:
             battery_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY)
+                (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
             )
             if battery_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
@@ -885,7 +863,7 @@ class HomeKit:
 
         if state.entity_id.startswith(f"{CAMERA_DOMAIN}."):
             motion_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION)
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
             )
             if motion_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
@@ -893,7 +871,7 @@ class HomeKit:
                     motion_binary_sensor_entity_id,
                 )
             doorbell_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_OCCUPANCY)
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
             )
             if doorbell_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
@@ -904,7 +882,7 @@ class HomeKit:
         if state.entity_id.startswith(f"{HUMIDIFIER_DOMAIN}."):
             current_humidity_sensor_entity_id = device_lookup[
                 ent_reg_ent.device_id
-            ].get((SENSOR_DOMAIN, DEVICE_CLASS_HUMIDITY))
+            ].get((SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY))
             if current_humidity_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_HUMIDITY_SENSOR,
@@ -934,6 +912,8 @@ class HomeKit:
             config[ATTR_MODEL] = device_entry.model
         if device_entry.sw_version:
             config[ATTR_SW_VERSION] = device_entry.sw_version
+        if device_entry.hw_version:
+            config[ATTR_HW_VERSION] = device_entry.hw_version
         if device_entry.config_entries:
             first_entry = list(device_entry.config_entries)[0]
             if entry := self.hass.config_entries.async_get_entry(first_entry):

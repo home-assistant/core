@@ -34,8 +34,7 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]) -> None:
         _LOGGER.error("Recording failed to capture anything")
         return
 
-    if not os.path.exists(os.path.dirname(file_out)):
-        os.makedirs(os.path.dirname(file_out), exist_ok=True)
+    os.makedirs(os.path.dirname(file_out), exist_ok=True)
 
     pts_adjuster: dict[str, int | None] = {"video": None, "audio": None}
     output: OutputContainer | None = None

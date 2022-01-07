@@ -1,5 +1,8 @@
 """Support for Blinkt! lights on Raspberry Pi."""
+from __future__ import annotations
+
 import importlib
+import logging
 
 import voluptuous as vol
 
@@ -12,7 +15,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 SUPPORT_BLINKT = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
@@ -23,9 +29,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
 )
 
+_LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Blinkt Light platform."""
+    _LOGGER.warning(
+        "The Blinkt! integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     blinkt = importlib.import_module("blinkt")
 
     # ensure that the lights are off when exiting

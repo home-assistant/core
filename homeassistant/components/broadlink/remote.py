@@ -17,14 +17,12 @@ import voluptuous as vol
 
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_DELAY_SECS,
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
-    PLATFORM_SCHEMA,
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
@@ -32,16 +30,18 @@ from homeassistant.components.remote import (
     SUPPORT_LEARN_COMMAND,
     RemoteEntity,
 )
-from homeassistant.const import CONF_HOST, STATE_OFF
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_COMMAND, STATE_OFF
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
-from .helpers import data_packet, import_device
+from .helpers import data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,24 +85,12 @@ SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
     {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the device and discontinue platform.
-
-    This is for backward compatibility.
-    Do not use this method.
-    """
-    import_device(hass, config[CONF_HOST])
-    _LOGGER.warning(
-        "The remote platform is deprecated, please remove it from your configuration"
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Broadlink remote."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     remote = BroadlinkRemote(

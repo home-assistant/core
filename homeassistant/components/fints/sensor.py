@@ -12,7 +12,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +54,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors.
 
     Login to the bank and get a list of existing accounts. Create a
@@ -72,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = FinTsClient(credentials, fints_name)
     balance_accounts, holdings_accounts = client.detect_accounts()
-    accounts = []
+    accounts: list[SensorEntity] = []
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:

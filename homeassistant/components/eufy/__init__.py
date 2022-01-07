@@ -11,8 +11,10 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "eufy"
 
@@ -51,7 +53,7 @@ EUFY_DISPATCH = {
 }
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Eufy devices."""
 
     if CONF_USERNAME in config[DOMAIN] and CONF_PASSWORD in config[DOMAIN]:

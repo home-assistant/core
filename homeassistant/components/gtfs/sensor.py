@@ -492,8 +492,7 @@ def setup_platform(
     offset: datetime.timedelta = config[CONF_OFFSET]
     include_tomorrow = config[CONF_TOMORROW]
 
-    if not os.path.exists(gtfs_dir):
-        os.makedirs(gtfs_dir)
+    os.makedirs(gtfs_dir, exist_ok=True)
 
     if not os.path.exists(os.path.join(gtfs_dir, data)):
         _LOGGER.error("The given GTFS data file/folder was not found")
@@ -614,7 +613,9 @@ class GTFSDepartureSensor(SensorEntity):
             if not self._departure:
                 self._state = None
             else:
-                self._state = self._departure["departure_time"]
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
 
             # Fetch trip and route details once, unless updated
             if not self._departure:

@@ -1,4 +1,6 @@
 """Support for getting data from websites with scraping."""
+from __future__ import annotations
+
 import logging
 
 from bs4 import BeautifulSoup
@@ -27,8 +29,11 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +66,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Web scrape sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -81,6 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
 
+    auth: httpx.DigestAuth | tuple[str, str] | None
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = httpx.DigestAuth(username, password)
