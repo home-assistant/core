@@ -460,7 +460,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = {}
         entity_schema = vol.In
+        entities_schema_required = vol.Required
         if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
+            entities_schema_required = vol.Optional
             include_exclude_mode = MODE_INCLUDE
             if not entities:
                 include_exclude_mode = MODE_EXCLUDE
@@ -475,7 +477,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             entity_id for entity_id in entities if entity_id in all_supported_entities
         ]
         data_schema[
-            vol.Optional(CONF_ENTITIES, default=valid_entities)
+            entities_schema_required(CONF_ENTITIES, default=valid_entities)
         ] = entity_schema(all_supported_entities)
 
         return self.async_show_form(
