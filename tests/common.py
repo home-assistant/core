@@ -1062,6 +1062,12 @@ def mock_storage(data=None):
         """Mock version of write data."""
         _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
         # To ensure that the data can be serialized
+        try:
+            raise_contains_mocks(data_to_write)
+        except ValueError as err:
+            raise ValueError(
+                f"Data to be stored contains mocks: {data_to_write}"
+            ) from err
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
     async def mock_remove(store):
@@ -1245,3 +1251,17 @@ def assert_lists_same(a, b):
     assert collections.Counter([hashdict(i) for i in a]) == collections.Counter(
         [hashdict(i) for i in b]
     )
+
+
+def raise_contains_mocks(val):
+    """Raise for mocks."""
+    if isinstance(val, Mock):
+        raise ValueError
+
+    if isinstance(val, dict):
+        for dict_value in val.values():
+            raise_contains_mocks(dict_value)
+
+    if isinstance(val, list):
+        for dict_value in val:
+            raise_contains_mocks(dict_value)
