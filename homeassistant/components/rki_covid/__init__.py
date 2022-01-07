@@ -18,18 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the component into HomeAssistant."""
-    _LOGGER.debug("setup component.")
-    parser = RkiCovidParser(aiohttp_client.async_get_clientsession(hass))
-
-    # Make sure coordinator is initialized.
-    await get_coordinator(hass, parser)
-
-    # Return boolean to indicate that initialization was successful.
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up component from a config entry."""
     _LOGGER.debug(f"Setup item from config entry: {entry.data}.")
