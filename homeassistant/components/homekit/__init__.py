@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -338,7 +339,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
     return await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
@@ -417,7 +418,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         schema=UNPAIR_SERVICE_SCHEMA,
     )
 
-    async def _handle_homekit_reload(service):
+    async def _handle_homekit_reload(service: ServiceCall) -> None:
         """Handle start HomeKit service call."""
         config = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -911,6 +912,8 @@ class HomeKit:
             config[ATTR_MODEL] = device_entry.model
         if device_entry.sw_version:
             config[ATTR_SW_VERSION] = device_entry.sw_version
+        if device_entry.hw_version:
+            config[ATTR_HW_VERSION] = device_entry.hw_version
         if device_entry.config_entries:
             first_entry = list(device_entry.config_entries)[0]
             if entry := self.hass.config_entries.async_get_entry(first_entry):

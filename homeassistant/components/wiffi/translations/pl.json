@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "addr_in_use": "Port serwera jest ju\u017c w u\u017cyciu",
+            "already_configured": "Port serwera jest ju\u017c skonfigurowany.",
             "start_server_failed": "Uruchomienie serwera nie powiod\u0142o si\u0119"
         },
         "step": {

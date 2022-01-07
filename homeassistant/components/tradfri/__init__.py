@@ -11,12 +11,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import Event, async_track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -25,7 +25,6 @@ from .const import (
     ATTR_TRADFRI_MANUFACTURER,
     CONF_ALLOW_TRADFRI_GROUPS,
     CONF_GATEWAY_ID,
-    CONF_HOST,
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,

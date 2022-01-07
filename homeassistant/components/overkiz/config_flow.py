@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_HUB, DEFAULT_HUB, DOMAIN
 
@@ -35,9 +36,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
+        session = async_get_clientsession(self.hass)
 
         async with OverkizClient(
-            username=username, password=password, server=server
+            username=username,
+            password=password,
+            server=server,
+            session=session,
         ) as client:
             await client.login()
 

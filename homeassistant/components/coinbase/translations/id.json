@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
+            "invalid_auth_key": "Kredensial API ditolak oleh Coinbase karena Kunci API yang tidak valid.",
+            "invalid_auth_secret": "Kredensial API ditolak oleh Coinbase karena Rahasia API yang tidak valid.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {

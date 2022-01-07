@@ -1,11 +1,14 @@
 """Nuki.io lock platform."""
 from abc import ABC, abstractmethod
 
-from pynuki import MODE_OPENER_CONTINUOUS
+from pynuki.constants import MODE_OPENER_CONTINUOUS
 import voluptuous as vol
 
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NukiEntity
 from .const import (
@@ -21,7 +24,9 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Nuki lock platform."""
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
     coordinator = data[DATA_COORDINATOR]

@@ -41,7 +41,7 @@ class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
-    platforms: dict[Platform, Device | Scenario]
+    platforms: defaultdict[Platform, list[Device | Scenario]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -74,9 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
-    except Exception as exception:  # pylint: disable=broad-except
-        _LOGGER.exception(exception)
-        return False
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -98,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
-    platforms: dict[Platform, Device | Scenario] = defaultdict(list)
+    platforms: defaultdict[Platform, list[Device | Scenario]] = defaultdict(list)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
         coordinator=coordinator,
@@ -121,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     for gateway in setup.gateways:
         _LOGGER.debug("Added gateway (%s)", gateway)

@@ -16,7 +16,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_change,
+    async_track_time_interval,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -29,6 +32,7 @@ from .const import (
 )
 from .coordinator import FluxLedUpdateCoordinator
 from .discovery import (
+    async_build_cached_discovery,
     async_clear_discovery_cache,
     async_discover_device,
     async_discover_devices,
@@ -82,11 +86,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
-    directed_discovery = None
+    discovery_cached = True
     if discovery := async_get_discovery(hass, host):
-        directed_discovery = False
+        discovery_cached = False
+    else:
+        discovery = async_build_cached_discovery(entry)
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host, discovery=discovery)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
+    device.discovery = discovery
 
     @callback
     def _async_state_changed(*_: Any) -> None:
@@ -101,28 +108,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     # UDP probe after successful connect only
-    if not discovery and (discovery := await async_discover_device(hass, host)):
-        directed_discovery = True
+    if discovery_cached:
+        if directed_discovery := await async_discover_device(hass, host):
+            device.discovery = discovery = directed_discovery
+            discovery_cached = False
 
-    if discovery:
-        if entry.unique_id:
-            assert discovery[ATTR_ID] is not None
-            mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
-            if mac != entry.unique_id:
-                # The device is offline and another flux_led device is now using the ip address
-                raise ConfigEntryNotReady(
-                    f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
-                )
-        if directed_discovery:
-            # Only update the entry once we have verified the unique id
-            # is either missing or we have verified it matches
-            async_update_entry_from_discovery(hass, entry, discovery)
-        device.discovery = discovery
+    if entry.unique_id and discovery.get(ATTR_ID):
+        mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
+        if mac != entry.unique_id:
+            # The device is offline and another flux_led device is now using the ip address
+            raise ConfigEntryNotReady(
+                f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+            )
+
+    if not discovery_cached:
+        # Only update the entry once we have verified the unique id
+        # is either missing or we have verified it matches
+        async_update_entry_from_discovery(hass, entry, discovery, device.model_num)
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     hass.config_entries.async_setup_platforms(entry, platforms)
+
+    async def _async_sync_time(*args: Any) -> None:
+        """Set the time every morning at 02:40:30."""
+        await device.async_set_time()
+
+    await _async_sync_time()  # set at startup
+    entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 40, 30))  # type: ignore[arg-type]
 
     return True
 

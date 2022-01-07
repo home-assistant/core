@@ -11,6 +11,8 @@ ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
 ATTR_BITRATE = "bitrate"
 ATTR_CHANNEL_ID = "channel_id"
+ATTR_MESSAGE = "message"
+ATTR_DURATION = "duration"
 
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"
@@ -28,7 +30,6 @@ DEFAULT_BRAND = "Ubiquiti"
 DEFAULT_SCAN_INTERVAL = 5
 DEFAULT_VERIFY_SSL = False
 
-DEVICE_TYPE_CAMERA = "camera"
 DEVICES_THAT_ADOPT = {
     ModelType.CAMERA,
     ModelType.LIGHT,
@@ -41,4 +42,16 @@ DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 MIN_REQUIRED_PROTECT_V = Version("1.20.0")
 OUTDATED_LOG_MESSAGE = "You are running v%s of UniFi Protect. Minimum required version is v%s. Please upgrade UniFi Protect and then retry"
 
-PLATFORMS = [Platform.CAMERA]
+TYPE_EMPTY_VALUE = ""
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]

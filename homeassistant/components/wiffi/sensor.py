@@ -1,13 +1,14 @@
 """Sensor platform support for wiffi devices."""
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
@@ -35,7 +36,11 @@ UOM_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up platform for a new integration.
 
     Called by the HA framework after async_forward_entry_setup has been called
