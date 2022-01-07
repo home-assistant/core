@@ -86,3 +86,9 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
     def icon(self):
         """Return the icon for the switch."""
         return ICON_MAP.get(self._setting, "mdi:flash")
+    
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
+        return f"{name}_{self._setting}"
+
