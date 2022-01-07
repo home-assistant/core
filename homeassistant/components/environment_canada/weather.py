@@ -87,6 +87,7 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}{'-hourly' if hourly else '-daily'}"
         )
+        self._attr_entity_registry_enabled_default = not hourly
         self._hourly = hourly
 
     @property
