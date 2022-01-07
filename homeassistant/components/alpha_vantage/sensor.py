@@ -141,7 +141,7 @@ class AlphaVantageSensor(SensorEntity):
                 ATTR_HIGH: values["2. high"],
                 ATTR_LOW: values["3. low"],
             }
-            if (values is not None) and (isinstance(values,dict))
+            if (values is not None) and (isinstance(values, dict))
             else None
         )
         _LOGGER.debug("Received new values for symbol %s", self._symbol)
