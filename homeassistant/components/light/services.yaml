@@ -297,6 +297,15 @@ turn_on:
       description: Light effect.
       selector:
         text:
+    distribution:
+      name: Distribution value
+      description:
+        Number indicating light distribution, where 0 is fully up and 255 is fully down.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255
 
 turn_off:
   name: Turn off
@@ -586,3 +595,12 @@ toggle:
       description: Light effect.
       selector:
         text:
+    distribution:
+      name: Distribution value
+      description:
+        Number indicating light distribution, where 0 is fully up and 255 is fully down.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255

@@ -162,6 +162,9 @@ ATTR_BRIGHTNESS_PCT = "brightness_pct"
 ATTR_BRIGHTNESS_STEP = "brightness_step"
 ATTR_BRIGHTNESS_STEP_PCT = "brightness_step_pct"
 
+# Distribution of the light, 0..255
+ATTR_DISTRIBUTION = "distribution"
+
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
 
@@ -190,6 +193,7 @@ VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
 VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
 VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
+VALID_DISTRIBUTION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
@@ -228,6 +232,7 @@ LIGHT_TURN_ON_SCHEMA = {
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
+    vol.Exclusive(ATTR_DISTRIBUTION, ATTR_DISTRIBUTION): VALID_DISTRIBUTION,
 }
 
 LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH}
@@ -692,6 +697,7 @@ class LightEntity(ToggleEntity):
 
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
+    _attr_distribution: int | None = None
     _attr_color_mode: str | None = None
     _attr_color_temp: int | None = None
     _attr_effect_list: list[str] | None = None
@@ -710,6 +716,11 @@ class LightEntity(ToggleEntity):
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return self._attr_brightness
+
+    @property
+    def distribution(self) -> int | None:
+        """Return the distribution of this light between 0..255."""
+        return self._attr_distribution
 
     @property
     def color_mode(self) -> str | None:
