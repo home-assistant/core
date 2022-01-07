@@ -3,7 +3,7 @@
   "name": "Control4",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/control4",
-  "requirements": ["pyControl4==1.0.0b5"],
+  "requirements": ["pyControl4==1.0.0b6"],
   "ssdp": [
     {
       "st": "c4:director"

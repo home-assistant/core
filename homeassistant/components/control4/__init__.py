@@ -34,6 +34,7 @@ from .const import (
     CONF_WEBSOCKET,
     DOMAIN,
 )
+from .director_utils import director_get_entry_variables
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +144,13 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
         and isinstance(entry_data[CONF_WEBSOCKET], C4Websocket)
     ):
         _LOGGER.debug("First time setup, creating new C4Websocket object")
-        websocket = C4Websocket(config[CONF_HOST], no_verify_ssl_session)
+        connection_tracker = C4WebsocketConnectionTracker(hass, entry)
+        websocket = C4Websocket(
+            config[CONF_HOST],
+            no_verify_ssl_session,
+            connection_tracker.connect_callback,
+            connection_tracker.disconnect_callback,
+        )
         entry_data[CONF_WEBSOCKET] = websocket
 
         # Silence C4Websocket related loggers, that would otherwise spam INFO logs with debugging messages
@@ -164,6 +171,53 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
         delay=director_token_dict["validSeconds"],
         action=obj.refresh_tokens,
     )
+
+
+class C4WebsocketConnectionTracker:
+    """Object that provides callables to manually refresh entity states if the Control4 Websocket is disconnected/reconnected."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the state of the connection tracker object."""
+        self.hass = hass
+        self.entry = entry
+
+        self._was_disconnected = False
+
+    async def connect_callback(self) -> None:
+        """Manually refresh entity states when the Websocket is reconnected after a connection drop."""
+        if self._was_disconnected:
+            _LOGGER.info("Websocket connection to Control4 reestablished")
+
+            # Refresh state of entities so they are not unavailable anymore
+            item_callbacks = self.hass.data[DOMAIN][self.entry.entry_id][
+                CONF_WEBSOCKET
+            ].item_callbacks
+            for item_id, callback in item_callbacks.items():
+                item_attributes = await director_get_entry_variables(
+                    self.hass, self.entry, item_id
+                )
+                message = {
+                    "evtName": "OnDataToUI",
+                    "iddevice": item_id,
+                    "data": item_attributes,
+                }
+                await callback(item_id, message)
+
+            self._was_disconnected = False
+
+    async def disconnect_callback(self) -> None:
+        """Detect a Websocket connection loss."""
+        _LOGGER.warning(
+            "Websocket connection to Control4 lost, attempting reconnection"
+        )
+        self._was_disconnected = True
+
+        # Set all entities to unavailable
+        item_callbacks = self.hass.data[DOMAIN][self.entry.entry_id][
+            CONF_WEBSOCKET
+        ].item_callbacks
+        for item_id, callback in item_callbacks.items():
+            await callback(item_id, False)
 
 
 class RefreshTokensObject:
@@ -210,6 +264,8 @@ class Control4Entity(Entity):
         self._device_id = device_id
         self._device_area = device_area
         self._extra_state_attributes = device_attributes
+        # Disable polling
+        self._attr_should_poll = False
 
     async def async_added_to_hass(self):
         """Add entity to hass. Register Websockets callbacks to receive entity state updates from Control4."""
@@ -247,7 +303,11 @@ class Control4Entity(Entity):
         """Update state attributes in hass after receiving a Websocket update for our item id/parent device id."""
         _LOGGER.debug(message)
 
-        if message["evtName"] == "OnDataToUI":
+        # Message will be False when a Websocket disconnect is detected
+        if message is False:
+            self._attr_available = False
+        elif message["evtName"] == "OnDataToUI":
+            self._attr_available = True
             data = message["data"]
             if isinstance(data, dict):
                 for key, value in data.items():
@@ -275,8 +335,3 @@ class Control4Entity(Entity):
     def extra_state_attributes(self) -> dict:
         """Return Extra state attributes."""
         return self._extra_state_attributes
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling (could have a config for this)."""
-        return False
