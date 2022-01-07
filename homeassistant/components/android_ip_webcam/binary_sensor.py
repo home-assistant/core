@@ -42,6 +42,7 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorEntity):
         self._mapped_name = KEY_MAP.get(self._sensor, self._sensor)
         self._attr_name = f"{name} {self._mapped_name}"
         self._attr_is_on = None
+        self._name = name
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -51,4 +52,4 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
-        return f"{name}_{self._sensor}"    
+        return f"{self._name}_{self._sensor}"    
