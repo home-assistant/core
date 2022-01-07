@@ -447,14 +447,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_advanced()
 
         entity_filter = self.hk_options.get(CONF_FILTER, {})
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+
         all_supported_entities = _async_get_matching_entities(
             self.hass,
             domains=self.hk_options[CONF_DOMAINS],
         )
+        # In accessory mode, CONF_DOMAINS will be empty
+        for entity in entities:
+            if entity not in all_supported_entities and self.hass.states.get(entity):
+                all_supported_entities.add(entity)
 
         data_schema = {}
         entity_schema = vol.In
-        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
             include_exclude_mode = MODE_INCLUDE
             if not entities:
