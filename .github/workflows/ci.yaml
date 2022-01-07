@@ -734,8 +734,15 @@ jobs:
       - name: Run pytest (partially)
         if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
         timeout-minutes: 10
+        shell: bash
         run: |
           . venv/bin/activate
+
+          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
+            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
+            exit 1
+          fi
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
