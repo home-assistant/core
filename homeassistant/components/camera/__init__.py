@@ -290,14 +290,17 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
 def async_register_rtsp_to_web_rtc_provider(
     hass: HomeAssistant,
     domain: str,
-    provider: Callable[[str, str], Awaitable[str | None]],
+    provider: Callable[[str, str, str], Awaitable[str | None]],
 ) -> Callable[[], None]:
     """Register an RTSP to WebRTC provider.
 
-    Integrations may register a Callable that accepts a `stream_source` and
-    SDP `offer` as an input, and the output is the SDP `answer`. An implementation
-    may return None if the source or offer is not eligible or throw HomeAssistantError
-    on failure. The first provider to satisfy the offer will be used.
+    The Callable accepts these inputs:
+      stream_source: The RTSP url
+      offer_sdp: The WebRTC SDP offer
+      stream_id: A unique id for the stream, used to update an existing source
+    The output is the SDP answer, or None if the source or offer is not eligible.
+    The Callable may throw HomeAssistantError on failure. The first provider to
+    satisfy the offer will be used.
     """
     if DOMAIN not in hass.data:
         raise ValueError("Unexpected state, camera not loaded")
@@ -327,11 +330,11 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
 
 def _async_get_rtsp_to_web_rtc_providers(
     hass: HomeAssistant,
-) -> Iterable[Callable[[str, str], Awaitable[str | None]]]:
+) -> Iterable[Callable[[str, str, str], Awaitable[str | None]]]:
     """Return registered RTSP to WebRTC providers."""
-    providers: dict[str, Callable[[str, str], Awaitable[str | None]]] = hass.data.get(
-        DATA_RTSP_TO_WEB_RTC, {}
-    )
+    providers: dict[
+        str, Callable[[str, str, str], Awaitable[str | None]]
+    ] = hass.data.get(DATA_RTSP_TO_WEB_RTC, {})
     return providers.values()
 
 
@@ -548,7 +551,7 @@ class Camera(Entity):
         if not stream_source:
             return None
         for provider in _async_get_rtsp_to_web_rtc_providers(self.hass):
-            answer_sdp = await provider(stream_source, offer_sdp)
+            answer_sdp = await provider(stream_source, offer_sdp, self.entity_id)
             if answer_sdp:
                 return answer_sdp
         raise HomeAssistantError("WebRTC offer was not accepted by any providers")
