@@ -453,11 +453,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hass,
             domains=self.hk_options[CONF_DOMAINS],
         )
+        supported_entities_not_in_domains = {
+            entity
+            for entity in entities
+            if entity not in all_supported_entities and self.hass.states.get(entity)
+        }
         # In accessory mode, CONF_DOMAINS will be empty
-        for entity in entities:
-            if entity not in all_supported_entities and self.hass.states.get(entity):
-                all_supported_entities.add(entity)
-
+        all_supported_entities |= supported_entities_not_in_domains
         data_schema = {}
         entity_schema = vol.In
         entities_schema_required = vol.Required
