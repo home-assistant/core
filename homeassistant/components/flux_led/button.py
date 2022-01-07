@@ -5,7 +5,11 @@ from flux_led.aio import AIOWifiLedBulb
 from flux_led.protocol import RemoteConfig
 
 from homeassistant import config_entries
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -19,7 +23,7 @@ _RESTART_KEY = "restart"
 _UNPAIR_REMOTES_KEY = "unpair_remotes"
 
 RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
-    key=_RESTART_KEY, name="Restart", icon="mdi:restart"
+    key=_RESTART_KEY, name="Restart", device_class=ButtonDeviceClass.RESTART
 )
 UNPAIR_REMOTES_DESCRIPTION = ButtonEntityDescription(
     key=_UNPAIR_REMOTES_KEY, name="Unpair Remotes", icon="mdi:remote-off"
