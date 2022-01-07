@@ -297,8 +297,8 @@ homeassistant/components/flume/* @ChrisMandich @bdraco
 tests/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
 tests/components/flunearyou/* @bachya
-homeassistant/components/flux_led/* @icemanch
-tests/components/flux_led/* @icemanch
+homeassistant/components/flux_led/* @icemanch @bdraco
+tests/components/flux_led/* @icemanch @bdraco
 homeassistant/components/forecast_solar/* @klaasnicolaas @frenck
 tests/components/forecast_solar/* @klaasnicolaas @frenck
 homeassistant/components/forked_daapd/* @uvjustin
