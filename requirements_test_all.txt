@@ -869,7 +869,7 @@ pybalboa==0.13
 pyblackbird==0.5
 
 # homeassistant.components.neato
-pybotvac==0.0.22
+pybotvac==0.0.23
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.2
@@ -887,7 +887,7 @@ pycomfoconnect==0.4
 pycoolmasternet-async==0.1.2
 
 # homeassistant.components.daikin
-pydaikin==2.6.0
+pydaikin==2.7.0
 
 # homeassistant.components.deconz
 pydeconz==85
@@ -1237,7 +1237,7 @@ pyuptimerobot==21.11.0
 pyvera==0.3.13
 
 # homeassistant.components.vesync
-pyvesync==1.4.1
+pyvesync==1.4.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
@@ -1510,7 +1510,7 @@ xknx==0.18.15
 xmltodict==0.12.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.4
+yalesmartalarmclient==0.3.7
 
 # homeassistant.components.august
 yalexs==1.1.16

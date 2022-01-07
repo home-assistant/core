@@ -25,8 +25,8 @@ CONTROL4_CATEGORY = "lights"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Control4 lights from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
 

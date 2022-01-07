@@ -1,6 +1,7 @@
 """The Netatmo integration."""
 from __future__ import annotations
 
+from datetime import datetime
 from http import HTTPStatus
 import logging
 import secrets
@@ -150,7 +151,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _webhook_retries = 0
 
-    async def unregister_webhook(call_or_event: ServiceCall | Event | None) -> None:
+    async def unregister_webhook(
+        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+    ) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             return
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
@@ -172,7 +175,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _webhook_retries += 1
             async_call_later(hass, 30, register_webhook)
 
-    async def register_webhook(call_or_event: ServiceCall | Event | None) -> None:
+    async def register_webhook(
+        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+    ) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)

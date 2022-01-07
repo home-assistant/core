@@ -74,7 +74,7 @@ def catch_vlc_errors(
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self: VlcDevice, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)
