@@ -1,8 +1,6 @@
 """The Lektrico Charging Station integration."""
 from __future__ import annotations
 
-import logging
-
 from lektricowifi import lektricowifi
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,8 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await charger.charger_info()
     except lektricowifi.ChargerConnectionError as exception:
-        logging.getLogger(__name__).debug("Unable to connect: %s", exception)
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady("Unable to connect") from exception
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = charger
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -40,8 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # Cleanup
         del hass.data[DOMAIN][entry.entry_id]
         if not hass.data[DOMAIN]:
