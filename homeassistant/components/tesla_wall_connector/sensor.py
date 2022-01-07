@@ -121,10 +121,18 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="energy_kWh",
-        name=prefix_entity_name("Energy"),
+        name=prefix_entity_name("Lifetime Energy"),
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_LIFETIME].energy_wh,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+    WallConnectorSensorDescription(
+        key="session_energy_kWh",
+        name=prefix_entity_name("Session Energy"),
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].session_energy_wh,
+        state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_ENERGY,
     ),
 ]
