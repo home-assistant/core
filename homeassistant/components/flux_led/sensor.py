@@ -1,15 +1,12 @@
 """Support for Magic Home sensors."""
 from __future__ import annotations
 
-from datetime import date, datetime
-
 from homeassistant import config_entries
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import FluxLedUpdateCoordinator
@@ -44,6 +41,6 @@ class FluxPairedRemotes(FluxEntity, SensorEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def native_value(self) -> StateType | date | datetime:
+    def native_value(self) -> int | None:
         """Return the number of paired remotes."""
         return self._device.paired_remotes
