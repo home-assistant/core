@@ -162,7 +162,7 @@ class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         """Call on debounce to set the value."""
 
     def _pixels_and_segments_fit_in_music_mode(self) -> bool:
-        """Check if the base pixel and segment settings will fix for music mode.
+        """Check if the base pixel and segment settings will fit for music mode.
 
         If they fit, they do not need to be configured.
         """
