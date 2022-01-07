@@ -25,10 +25,6 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Please reenter your Control4 account details and the IP address of your local controller."
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Control4 integration needs to re-authenticate your account"
       }
     }
   }

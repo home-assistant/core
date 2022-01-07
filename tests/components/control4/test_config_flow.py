@@ -36,14 +36,25 @@ def _get_mock_c4_director(getAllItemInfo={}):
     return c4_director_mock
 
 
+def _get_mock_existing_config_entry():
+    entry = config_entries.ConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="control4_model_00AA00AA00AA",
+        data={},
+        source="user",
+    )
+    return entry
+
+
 async def test_form(hass):
     """Test we get the form."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
+    assert result["step_id"] == "user"
 
     c4_account = _get_mock_c4_account()
     c4_director = _get_mock_c4_director()
@@ -76,6 +87,57 @@ async def test_form(hass):
         "controller_unique_id": "control4_model_00AA00AA00AA",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_reauth(hass):
+    """Test we get the form for reauth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "user_reauth"
+
+    c4_account = _get_mock_c4_account()
+    c4_director = _get_mock_c4_director()
+    existing_entry = _get_mock_existing_config_entry()
+
+    with patch(
+        "homeassistant.components.control4.config_flow.C4Account",
+        return_value=c4_account,
+    ), patch(
+        "homeassistant.components.control4.config_flow.C4Director",
+        return_value=c4_director,
+    ), patch(
+        "homeassistant.components.control4.config_flow.ConfigFlow.async_set_unique_id",
+        return_value=existing_entry,
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.control4.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+    assert existing_entry.title == "control4_model_00AA00AA00AA"
+    assert existing_entry.data == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        "controller_unique_id": "control4_model_00AA00AA00AA",
+    }
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_form_invalid_auth(hass):

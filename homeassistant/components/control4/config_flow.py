@@ -104,8 +104,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        errors = {}
         if user_input is not None:
-            errors, controller_unique_id = self._validate_input(user_input)
+            errors, controller_unique_id = await self._validate_input(user_input)
             if not errors:
                 mac = (controller_unique_id.split("_", 3))[2]
                 formatted_mac = format_mac(mac)
@@ -128,8 +129,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user_reauth(self, user_input=None):
         """Handle a reauthentication request."""
+        errors = {}
         if user_input is not None:
-            errors, controller_unique_id = self._validate_input(user_input)
+            errors, controller_unique_id = await self._validate_input(user_input)
             if not errors:
                 mac = (controller_unique_id.split("_", 3))[2]
                 formatted_mac = format_mac(mac)
@@ -151,15 +153,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(self, user_input=None):
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
         return await self.async_step_user_reauth()
 
 
