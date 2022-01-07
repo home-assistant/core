@@ -716,6 +716,7 @@ jobs:
       - name: Run pytest (fully)
         if: needs.changes.outputs.test_full_suite == 'true'
         timeout-minutes: 45
+        shell: bash
         run: |
           . venv/bin/activate
 
