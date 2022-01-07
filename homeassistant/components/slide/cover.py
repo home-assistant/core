@@ -3,15 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPENING,
-    CoverDeviceClass,
-    CoverEntity,
-)
-from homeassistant.const import ATTR_ID
+from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.const import ATTR_ID, STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

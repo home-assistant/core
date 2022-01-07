@@ -9,11 +9,8 @@ from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClien
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    ConfigEntryAuthFailed,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 

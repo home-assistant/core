@@ -68,6 +68,7 @@ DEFAULT_OPTIONS = {
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.NOTIFY,
@@ -223,6 +224,11 @@ def setup_account(
 
     def execute_service(call: ServiceCall) -> None:
         """Execute a service for a vehicle."""
+        _LOGGER.warning(
+            "BMW Connected Drive services are deprecated. Please migrate to the dedicated button entities. "
+            "See https://www.home-assistant.io/integrations/bmw_connected_drive/#buttons for details"
+        )
+
         vin: str | None = call.data.get(ATTR_VIN)
         device_id: str | None = call.data.get(CONF_DEVICE_ID)
 

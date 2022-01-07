@@ -17,6 +17,7 @@ import uuid
 
 import attr
 import certifi
+import jinja2
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -51,7 +52,7 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import ConfigType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, ServiceDataType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -286,7 +287,7 @@ class MqttCommandTemplate:
     def async_render(
         self,
         value: PublishPayloadType = None,
-        variables: template.TemplateVarsType = None,
+        variables: TemplateVarsType = None,
     ) -> PublishPayloadType:
         """Render or convert the command template with given value or variables."""
 
@@ -328,7 +329,7 @@ class MqttValueTemplate:
         *,
         hass: HomeAssistant | None = None,
         entity: Entity | None = None,
-        config_attributes: template.TemplateVarsType = None,
+        config_attributes: TemplateVarsType = None,
     ) -> None:
         """Instantiate a value template."""
         self._value_template = value_template
@@ -347,7 +348,7 @@ class MqttValueTemplate:
         self,
         payload: ReceivePayloadType,
         default: ReceivePayloadType | object = _SENTINEL,
-        variables: template.TemplateVarsType = None,
+        variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
         if self._value_template is None:
@@ -665,7 +666,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     msg_topic_template, hass
                 ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish: rendering topic template of %s "
                     "failed because %s",
@@ -688,7 +689,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 payload = MqttCommandTemplate(
                     template.Template(payload_template), hass=hass
                 ).async_render()
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",

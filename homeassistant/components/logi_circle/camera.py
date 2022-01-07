@@ -4,13 +4,14 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.components.camera import ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera
+from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
+    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
 )

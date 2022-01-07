@@ -222,11 +222,12 @@ def battery_info_fixture():
     }
 
 
-@pytest.fixture(name="battery_event")
-def battery_event_fixture(soco):
-    """Create battery_event fixture."""
+@pytest.fixture(name="device_properties_event")
+def device_properties_event_fixture(soco):
+    """Create device_properties_event fixture."""
     variables = {
         "zone_name": "Zone A",
+        "mic_enabled": "1",
         "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
     }
     return SonosMockEvent(soco, soco.deviceProperties, variables)

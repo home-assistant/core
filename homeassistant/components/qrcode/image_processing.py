@@ -6,12 +6,8 @@ import io
 from PIL import Image
 from pyzbar import pyzbar
 
-from homeassistant.components.image_processing import (
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
-    ImageProcessingEntity,
-)
+from homeassistant.components.image_processing import ImageProcessingEntity
+from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

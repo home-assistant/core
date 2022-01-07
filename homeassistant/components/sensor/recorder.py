@@ -26,7 +26,6 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -56,16 +55,12 @@ import homeassistant.util.volume as volume_util
 from . import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
+    SensorDeviceClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,9 +68,9 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
     STATE_CLASS_MEASUREMENT: {
         # Deprecated, support will be removed in Home Assistant 2021.11
-        DEVICE_CLASS_ENERGY: {"sum"},
-        DEVICE_CLASS_GAS: {"sum"},
-        DEVICE_CLASS_MONETARY: {"sum"},
+        SensorDeviceClass.ENERGY: {"sum"},
+        SensorDeviceClass.GAS: {"sum"},
+        SensorDeviceClass.MONETARY: {"sum"},
     },
     STATE_CLASS_TOTAL: {},
     STATE_CLASS_TOTAL_INCREASING: {},
@@ -87,29 +82,29 @@ DEFAULT_STATISTICS = {
 }
 
 # Normalized units which will be stored in the statistics table
-DEVICE_CLASS_UNITS = {
-    DEVICE_CLASS_ENERGY: ENERGY_KILO_WATT_HOUR,
-    DEVICE_CLASS_POWER: POWER_WATT,
-    DEVICE_CLASS_PRESSURE: PRESSURE_PA,
-    DEVICE_CLASS_TEMPERATURE: TEMP_CELSIUS,
-    DEVICE_CLASS_GAS: VOLUME_CUBIC_METERS,
+DEVICE_CLASS_UNITS: dict[str, str] = {
+    SensorDeviceClass.ENERGY: ENERGY_KILO_WATT_HOUR,
+    SensorDeviceClass.POWER: POWER_WATT,
+    SensorDeviceClass.PRESSURE: PRESSURE_PA,
+    SensorDeviceClass.TEMPERATURE: TEMP_CELSIUS,
+    SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,
 }
 
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert energy to kWh
-    DEVICE_CLASS_ENERGY: {
+    SensorDeviceClass.ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
         ENERGY_MEGA_WATT_HOUR: lambda x: x * 1000,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
     },
     # Convert power W
-    DEVICE_CLASS_POWER: {
+    SensorDeviceClass.POWER: {
         POWER_WATT: lambda x: x,
         POWER_KILO_WATT: lambda x: x * 1000,
     },
     # Convert pressure to Pa
     # Note: pressure_util.convert is bypassed to avoid redundant error checking
-    DEVICE_CLASS_PRESSURE: {
+    SensorDeviceClass.PRESSURE: {
         PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
         PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
         PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
@@ -120,13 +115,13 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     },
     # Convert temperature to °C
     # Note: temperature_util.convert is bypassed to avoid redundant error checking
-    DEVICE_CLASS_TEMPERATURE: {
+    SensorDeviceClass.TEMPERATURE: {
         TEMP_CELSIUS: lambda x: x,
         TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
         TEMP_KELVIN: temperature_util.kelvin_to_celsius,
     },
     # Convert volume to cubic meter
-    DEVICE_CLASS_GAS: {
+    SensorDeviceClass.GAS: {
         VOLUME_CUBIC_METERS: lambda x: x,
         VOLUME_CUBIC_FEET: volume_util.cubic_feet_to_cubic_meter,
     },

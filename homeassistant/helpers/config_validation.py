@@ -251,15 +251,20 @@ def ensure_list(value: None) -> list[Any]:
 
 
 @overload
-def ensure_list(value: T | list[T]) -> list[T]:
+def ensure_list(value: list[T]) -> list[T]:
     ...
 
 
-def ensure_list(value: T | list[T] | None) -> list[T] | list[Any]:
+@overload
+def ensure_list(value: list[T] | T) -> list[T]:
+    ...
+
+
+def ensure_list(value: T | None) -> list[T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return value if isinstance(value, list) else [value]
+    return cast("list[T]", value) if isinstance(value, list) else [value]
 
 
 def entity_id(value: Any) -> str:
