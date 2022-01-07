@@ -736,6 +736,12 @@ jobs:
         timeout-minutes: 10
         run: |
           . venv/bin/activate
+
+          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
+            echo "::warning:: missing file tests/components/${{ matrix.group }}/__init__.py"
+            exit 1
+          fi
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
