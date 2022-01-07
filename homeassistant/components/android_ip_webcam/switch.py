@@ -51,6 +51,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
         self._mapped_name = KEY_MAP.get(self._setting, self._setting)
         self._attr_name = f"{name} {self._mapped_name}"
         self._attr_is_on = False
+        self._name = name
 
     async def async_update(self):
         """Get the updated status of the switch."""
@@ -90,5 +91,5 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
-        return f"{name}_{self._setting}"
+        return f"{self._name}_{self._setting}"
 
