@@ -679,6 +679,11 @@ async def test_homekit_unpair(hass, device_reg, mock_async_zeroconf):
 
         state = homekit.driver.state
         state.add_paired_client("client1", "any", b"1")
+        state.add_paired_client("client2", "any", b"0")
+        state.add_paired_client("client3", "any", b"1")
+        state.add_paired_client("client4", "any", b"0")
+        state.add_paired_client("client5", "any", b"0")
+
         formatted_mac = device_registry.format_mac(state.mac)
         hk_bridge_dev = device_reg.async_get_device(
             {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
