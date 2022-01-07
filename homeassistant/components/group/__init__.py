@@ -21,19 +21,13 @@ from homeassistant.const import (
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
-    EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     Platform,
 )
-from homeassistant.core import (
-    CoreState,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-    split_entity_id,
-)
+from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
+from homeassistant.helpers import start
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -407,21 +401,22 @@ class GroupEntity(Entity):
         """Register listeners."""
 
         async def _update_at_start(_):
-            await self.async_update()
+            self.async_update_group_state()
             self.async_write_ha_state()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _update_at_start)
+        start.async_at_start(self.hass, _update_at_start)
 
-    async def async_defer_or_update_ha_state(self) -> None:
+    @callback
+    def async_defer_or_update_ha_state(self) -> None:
         """Only update once at start."""
-        if self.hass.state != CoreState.running:
+        if not self.hass.is_running:
             return
 
-        await self.async_update()
+        self.async_update_group_state()
         self.async_write_ha_state()
 
     @abstractmethod
-    async def async_update(self) -> None:
+    def async_update_group_state(self) -> None:
         """Abstract method to update the entity."""
 
 
@@ -636,22 +631,15 @@ class Group(Entity):
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
 
-    async def async_update(self):
+    @callback
+    def async_update_group_state(self):
         """Query all members and determine current group state."""
         self._state = None
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
-        if self.hass.state != CoreState.running:
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self._async_start
-            )
-            return
-
-        if self.tracking:
-            self._reset_tracked_state()
-        self._async_start_tracking()
+        start.async_at_start(self.hass, self._async_start)
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""

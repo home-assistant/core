@@ -47,7 +47,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -129,20 +129,17 @@ class LightGroup(GroupEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
-        async def async_state_changed_listener(event: Event) -> None:
+        @callback
+        def async_state_changed_listener(event: Event) -> None:
             """Handle child updates."""
             self.async_set_context(event.context)
-            await self.async_defer_or_update_ha_state()
+            self.async_defer_or_update_ha_state()
 
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entity_ids, async_state_changed_listener
             )
         )
-
-        if self.hass.state == CoreState.running:
-            await self.async_update()
-            return
 
         await super().async_added_to_hass()
 
@@ -183,7 +180,8 @@ class LightGroup(GroupEntity, LightEntity):
             context=self._context,
         )
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
