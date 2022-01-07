@@ -25,6 +25,7 @@ ATTRIBUTION = "Data provided by unpublished Intellifire API"
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
+    """Define setup entry call."""
 
     id = entry.entry_id
     coordinator = hass.data[DOMAIN][id]
@@ -37,7 +38,7 @@ async def async_setup_entry(
 
 
 class IntellifireSensor(CoordinatorEntity, SensorEntity):
-    """Define a generic class for Sensors"""
+    """Define a generic class for Sensors."""
 
     def __init__(
         self,
@@ -45,7 +46,7 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         entry_id,
         description: SensorEntityDescription,
     ) -> None:
-        """Init the sensor"""
+        """Init the sensor."""
         super().__init__(coordinator)
         self.coordinator = coordinator
 
@@ -59,7 +60,7 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Return the state"""
+        """Return the state."""
         sensor_type = self.entity_description.key
         data = self.coordinator.api.data
         if sensor_type == FLAME_HEIGHT:
@@ -74,40 +75,3 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
             return data.thermostat_setpoint_c
         if sensor_type == TEMP:
             return data.temperature_c
-
-
-#
-# def __init__(
-#        self,
-#        coordinator: AirNowDataUpdateCoordinator,
-#        description: SensorEntityDescription,
-#    ) -> None:
-#        """Initialize."""
-#        super().__init__(coordinator)
-#        self.entity_description = description
-#        self._state = None
-#        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-#        self._attr_name = f"AirNow {description.name}"
-#        self._attr_unique_id = (
-#            f"{coordinator.latitude}-{coordinator.longitude}-{description.key.lower()}"
-#        )
-#
-#    @property
-#    def native_value(self):
-#        """Return the state."""
-#        self._state = self.coordinator.data.get(self.entity_description.key)
-#
-#        return self._state
-#
-#    @property
-#    def extra_state_attributes(self):
-#        """Return the state attributes."""
-#        if self.entity_description.key == ATTR_API_AQI:
-#            self._attrs[SENSOR_AQI_ATTR_DESCR] = self.coordinator.data[
-#                ATTR_API_AQI_DESCRIPTION
-#            ]
-#            self._attrs[SENSOR_AQI_ATTR_LEVEL] = self.coordinator.data[
-#                ATTR_API_AQI_LEVEL
-#            ]
-#
-#        return self._attrs

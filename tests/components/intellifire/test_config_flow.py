@@ -1,5 +1,5 @@
 """Test the Intellifire config flow."""
-from unittest.mock import patch, PropertyMock, Mock
+from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.intellifire.config_flow import validate_input
@@ -17,13 +17,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-            "homeassistant.components.intellifire.config_flow.validate_input",
-            return_value={
-                "title": "Living Room Fireplace",
-                "type": "Fireplace",
-                "serial_number": "abcd1234",
-                "host": "1.1.1.1",
-            },
+        "homeassistant.components.intellifire.config_flow.validate_input",
+        return_value={
+            "title": "Living Room Fireplace",
+            "type": "Fireplace",
+            "serial_number": "abcd1234",
+            "host": "1.1.1.1",
+        },
     ), patch(
         "homeassistant.components.intellifire.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -54,8 +54,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-            "intellifire4py.IntellifireAsync.poll",
-            side_effect=ConnectionError,
+        "intellifire4py.IntellifireAsync.poll",
+        side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -76,8 +76,8 @@ async def test_form_good(hass: HomeAssistant) -> None:
     )
 
     with patch(
-            "intellifire4py.IntellifireAsync.poll",
-            side_effect=ConnectionError,
+        "intellifire4py.IntellifireAsync.poll",
+        side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -92,14 +92,14 @@ async def test_form_good(hass: HomeAssistant) -> None:
 
 
 async def test_unknwon_error(hass: HomeAssistant) -> None:
-    """Test."""
+    """Test for an Unknown Error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-            "homeassistant.components.intellifire.config_flow.validate_input",
-            side_effect=Exception,
+        "homeassistant.components.intellifire.config_flow.validate_input",
+        side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -111,36 +111,38 @@ async def test_unknwon_error(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
 
-async def test_validate_input(hass: HomeAssistant) -> None:
-    """Test."""
 
+async def test_validate_input(hass: HomeAssistant) -> None:
+    """Test for the ideal case."""
     # Define a mock object
     data_mock = Mock()
-    data_mock.serial = '12345'
+    data_mock.serial = "12345"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-            "homeassistant.components.intellifire.config_flow.validate_input",
-            return_value={
-                "title": "Living Room Fireplace",
-                "type": "Fireplace",
-                "serial_number": "abcd1234",
-                "host": "1.1.1.1",
-            },
-    ), patch("intellifire4py.IntellifireAsync.poll", return_value=3
-    ), patch( "intellifire4py.intellifire_async.IntellifireAsync", return_value="1111"
+        "homeassistant.components.intellifire.config_flow.validate_input",
+        return_value={
+            "title": "Living Room Fireplace",
+            "type": "Fireplace",
+            "serial_number": "abcd1234",
+            "host": "1.1.1.1",
+        },
+    ), patch("intellifire4py.IntellifireAsync.poll", return_value=3), patch(
+        "intellifire4py.intellifire_async.IntellifireAsync", return_value="1111"
     ), patch(
         "intellifire4py.IntellifireAsync", return_value=True
     ), patch(
-        "intellifire4py.model.IntellifirePollData",
-        new=data_mock) as mobj:
-        assert mobj.serial == '12345'
+        "intellifire4py.model.IntellifirePollData", new=data_mock
+    ) as mobj:
+        assert mobj.serial == "12345"
 
         # mock_data.return_value.serial = "1"
 
-        result = await validate_input(hass, {"host": "127.0.0.1", "name":"Living Room"})
+        result = await validate_input(
+            hass, {"host": "127.0.0.1", "name": "Living Room"}
+        )
 
         assert result["title"] == "Living Room Fireplace"
         assert result["type"] == "Fireplace"

@@ -28,19 +28,20 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
+
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
     api = IntellifireAsync(data["host"])
     try:
         await api.poll()
-    except Exception as e:
+    except Exception:
         raise CannotConnect
 
     name = data["name"]
 
     # Return info that you want to store in the config entry.
     return {"title": f"{name} Fireplace", "type": "Fireplace"}
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Intellifire."""
@@ -73,7 +74,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders="HI",
         )
 
 
