@@ -115,13 +115,8 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
-        _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(exception) from exception
     except BadCredentials as exception:
-        _LOGGER.error(
-            "Error authenticating with Control4 account API, incorrect username or password: %s",
-            exception,
-        )
         raise ConfigEntryAuthFailed(exception) from exception
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
