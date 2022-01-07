@@ -92,10 +92,6 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = name
         self._attr_unique_id = f"{entry_id}_next_launch"
 
-    def get_next_launch(self) -> Launch | None:
-        """Return next launch."""
-        return next((launch for launch in self.coordinator.data), None)
-
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
