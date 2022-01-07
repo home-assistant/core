@@ -158,9 +158,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                 if unit is not None:
-                    self._unit_of_measurement = self._unit_template.format(
-                        "" if unit is None else unit
-                    )
+                    self._unit_of_measurement = self._unit_template.format(unit)
                     update_state = True
 
             if (
