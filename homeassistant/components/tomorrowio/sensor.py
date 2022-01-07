@@ -170,6 +170,8 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_PRECIPITATION_TYPE,
         name="Precipitation Type",
         value_map=PrecipitationType,
+        device_class="tomorrowio__precipitation_type",
+        icon="mdi:weather-snowy-rainy",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_OZONE,
@@ -232,6 +234,8 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_EPA_HEALTH_CONCERN,
         name="US EPA Health Concern",
         value_map=HealthConcernType,
+        device_class="tomorrowio__health_concern",
+        icon="mdi:hospital",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_AQI,
@@ -247,25 +251,34 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_CHINA_HEALTH_CONCERN,
         name="China MEP Health Concern",
         value_map=HealthConcernType,
+        device_class="tomorrowio__health_concern",
+        icon="mdi:hospital",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_TREE,
         name="Tree Pollen Index",
         value_map=PollenIndex,
+        device_class="tomorrowio__pollen_index",
+        icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_WEED,
         name="Weed Pollen Index",
         value_map=PollenIndex,
+        device_class="tomorrowio__pollen_index",
+        icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_GRASS,
         name="Grass Pollen Index",
         value_map=PollenIndex,
+        device_class="tomorrowio__pollen_index",
+        icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         TMRW_ATTR_FIRE_INDEX,
         name="Fire Index",
+        icon="mdi:fire",
     ),
 )
 
