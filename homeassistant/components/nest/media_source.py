@@ -150,7 +150,9 @@ class NestEventMediaStore(EventMediaStore):
 
     def get_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename to use for a new event."""
-        raise ValueError("No longer used")
+        if event.event_image_type != EventImageType.IMAGE:
+            raise ValueError("No longer used for video clips")
+        return self.get_image_media_key(device_id, event)
 
     def _map_device_id(self, device_id: str) -> str:
         return (
