@@ -47,3 +47,8 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorEntity):
         """Retrieve latest state."""
         state, _ = self._ipcam.export_sensor(self._sensor)
         self._attr_is_on = state == 1.0
+        
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
+        return f"{name}_{self._sensor}"    
