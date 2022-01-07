@@ -73,3 +73,8 @@ class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
         if self._sensor == "battery_level" and self._attr_native_value is not None:
             return icon_for_battery_level(int(self._attr_native_value))
         return ICON_MAP.get(self._sensor, "mdi:eye")
+    
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
+        return f"{name}_{self._sensor}"
