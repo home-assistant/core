@@ -317,17 +317,8 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         )
 
     @callback
-    def _handle_scale_change_on_value_updated(self, event_data: dict) -> None:
+    def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
-        value_data = event_data["args"]
-        # If this event is for a different value, we can return early
-        if (
-            value_data["commandClass"] != self.info.primary_value.command_class
-            or value_data["property"] != self.info.primary_value.property_
-            or value_data.get("endpoint") != self.info.primary_value.endpoint
-            or value_data.get("propertyKey") != self.info.primary_value.property_key
-        ):
-            return
         # If the scale hasn't changed, we can return early
         if self._scale == (
             new_scale := self.info.primary_value.metadata.cc_specific.get(
@@ -342,12 +333,6 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             .resolve_data(self.info.primary_value)
             .unit_of_measurement
         )
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added."""
-        await super().async_added_to_hass()
-        self.info.node.on("value updated", self._handle_scale_change_on_value_updated)
 
     @property
     def native_value(self) -> float:
