@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.base_device import DeviceType
-from flux_led.protocol import PowerRestoreState
+from flux_led.protocol import PowerRestoreState, RemoteConfig
 
 from homeassistant import config_entries
 from homeassistant.components.select import SelectEntity
@@ -30,6 +30,7 @@ async def async_setup_entry(
         | FluxOperatingModesSelect
         | FluxWiringsSelect
         | FluxICTypeSelect
+        | FluxRemoteConfigSelect
     ] = []
     name = entry.data[CONF_NAME]
     unique_id = entry.unique_id
@@ -49,6 +50,12 @@ async def async_setup_entry(
     if device.ic_types:
         entities.append(
             FluxICTypeSelect(coordinator, unique_id, f"{name} IC Type", "ic_type")
+        )
+    if device.remote_config:
+        entities.append(
+            FluxRemoteConfigSelect(
+                coordinator, unique_id, f"{name} Remote Config", "remote_config"
+            )
         )
 
     if entities:
@@ -165,3 +172,33 @@ class FluxOperatingModesSelect(FluxConfigSelect):
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.coordinator.entry.entry_id)
         )
+
+
+class FluxRemoteConfigSelect(FluxConfigSelect):
+    """Representation of Flux remote config type."""
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+        key: str,
+    ) -> None:
+        """Initialize the remote config type select."""
+        super().__init__(coordinator, unique_id, name, key)
+        assert self._device.remote_config is not None
+        self._name_to_state = {
+            _human_readable_option(option.name): option for option in RemoteConfig
+        }
+        self._attr_options = list(self._name_to_state)
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current remote config."""
+        assert self._device.remote_config is not None
+        return _human_readable_option(self._device.remote_config.name)
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the remote config setting."""
+        remote_config: RemoteConfig = self._name_to_state[option]
+        await self._device.async_config_remotes(remote_config)
