@@ -50,7 +50,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import get_random_string
 from homeassistant.util.json import load_json
 
-from . import api
+from . import api, auth
 from .const import (
     CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
@@ -58,12 +58,8 @@ from .const import (
     DATA_NEST_CONFIG,
     DATA_SDM,
     DOMAIN,
-    INSTALLED_AUTH_DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
     OOB_REDIRECT_URI,
     SDM_SCOPES,
-    WEB_AUTH_DOMAIN,
 )
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
@@ -129,7 +125,7 @@ def register_flow_implementation_from_config(
     """Register auth implementations for SDM API from configuration yaml."""
     NestFlowHandler.async_register_implementation(
         hass,
-        InstalledAppAuth(
+        auth.InstalledAppAuth(
             hass,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
@@ -138,56 +134,13 @@ def register_flow_implementation_from_config(
     )
     NestFlowHandler.async_register_implementation(
         hass,
-        WebAuth(
+        auth.WebAuth(
             hass,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
             config[DOMAIN][CONF_PROJECT_ID],
         ),
     )
-
-
-class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """OAuth implementation using OAuth for web applications."""
-
-    name = "OAuth for Web"
-
-    def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
-    ) -> None:
-        """Initialize WebAuth."""
-        super().__init__(
-            hass,
-            WEB_AUTH_DOMAIN,
-            client_id,
-            client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        )
-
-
-class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """OAuth implementation using OAuth for installed applications."""
-
-    name = "OAuth for Apps"
-
-    def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
-    ) -> None:
-        """Initialize InstalledAppAuth."""
-        super().__init__(
-            hass,
-            INSTALLED_AUTH_DOMAIN,
-            client_id,
-            client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        )
-
-    @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        return OOB_REDIRECT_URI
 
 
 class NestAuthError(HomeAssistantError):
