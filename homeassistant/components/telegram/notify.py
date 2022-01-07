@@ -12,9 +12,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.components.telegram_bot import (
+    ATTR_DISABLE_NOTIF,
     ATTR_MESSAGE_TAG,
     ATTR_PARSER,
-    ATTR_DISABLE_NOTIF,
 )
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.helpers.reload import setup_reload_service
