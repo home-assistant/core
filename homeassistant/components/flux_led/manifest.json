@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
   "requirements": ["flux_led==0.27.40"],
   "quality_scale": "platinum",
-  "codeowners": ["@icemanch"],
+  "codeowners": ["@icemanch", "@bdraco"],
   "iot_class": "local_push",
   "dhcp": [
   {
