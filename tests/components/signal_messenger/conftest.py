@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 from pysignalclirestapi import SignalCliRestApi
 import pytest
+from requests_mock.mocker import Mocker
 
 from homeassistant.components.signal_messenger.notify import SignalNotificationService
 
@@ -25,12 +26,12 @@ URL_ATTACHMENT = "http://127.0.0.1:8080/image.jpg"
 
 
 @pytest.fixture
-def signal_requests_mock_factory(requests_mock):
+def signal_requests_mock_factory(requests_mock: Mocker) -> Mocker:
     """Create signal service mock from factory."""
 
     def _signal_requests_mock_factory(
-        success_send_result=True, content_length_header=None
-    ):
+        success_send_result: bool = True, content_length_header: bool = None
+    ) -> Mocker:
         requests_mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
