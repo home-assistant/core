@@ -677,9 +677,9 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             TIME_DAYS: timedelta(days=1),
         }
 
-        native_unit = self.entity_description.native_unit_of_measurement
+        wanted_unit = self.entity_description.native_unit_of_measurement
 
-        return round((value / conversion_map[native_unit]), 2)
+        return round((value / conversion_map[wanted_unit]), 2)
 
     @callback
     def _extract_attributes(self, data):
