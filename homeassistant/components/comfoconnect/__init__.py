@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -83,7 +82,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     # Load platforms
-    discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
+    discovery.load_platform(hass, "fan", DOMAIN, {}, config)
 
     return True
 
