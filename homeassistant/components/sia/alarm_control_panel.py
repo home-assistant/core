@@ -58,7 +58,7 @@ CODE_CONSEQUENCES: dict[str, StateType] = {
     "NO": PREVIOUS_STATE,
 }
 
-entity_description = SIAAlarmControlPanelEntityDescription(
+entity_description_alarm = SIAAlarmControlPanelEntityDescription(
     key="alarm_control_panel",
     device_class="alarm",
     code_consequences=CODE_CONSEQUENCES,
@@ -79,7 +79,7 @@ async def async_setup_entry(
             zone=zone,
             ping_interval=account_data[CONF_PING_INTERVAL],
             entry_id=entry.entry_id,
-            entity_description=entity_description,
+            entity_description=entity_description_alarm,
         )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(

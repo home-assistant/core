@@ -41,6 +41,7 @@ class SIABaseEntity(RestoreEntity):
         self.zone = zone
         self.ping_interval = ping_interval
         self.entity_description = entity_description
+
         self._cancel_availability_cb: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False

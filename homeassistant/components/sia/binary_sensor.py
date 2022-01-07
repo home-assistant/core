@@ -120,8 +120,9 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
         entry_id: str,
         entity_description: SIABinarySensorEntityDescription,
     ) -> None:
-        """Create SIAAlarmControlPanel object."""
+        """Create SIABinarySensor object."""
         super().__init__(port, account, zone, ping_interval, entity_description)
+
         self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_BINARY.format(
             entry_id,
             account,
