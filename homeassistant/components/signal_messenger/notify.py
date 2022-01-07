@@ -1,7 +1,13 @@
 """Signal Messenger for notify component."""
+from contextlib import suppress
 import logging
+import mimetypes
+import re
+import shutil
+import tempfile
 
 from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
+import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -16,8 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SENDER_NR = "number"
 CONF_RECP_NR = "recipients"
 CONF_SIGNAL_CLI_REST_API = "url"
-ATTR_FILENAME = "attachment"
 ATTR_FILENAMES = "attachments"
+ATTR_URLS = "urls"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -49,6 +55,26 @@ class SignalNotificationService(BaseNotificationService):
         self._recp_nrs = recp_nrs
         self._signal_cli_rest_api = signal_cli_rest_api
 
+    @staticmethod
+    def _infer_extension(url: str, resp: requests.Response):
+        """Infer the extension from the content type header."""
+        content_type = resp.headers["content-type"]
+        extension = None
+        if content_type:
+            extension = mimetypes.guess_extension(content_type)
+            if extension is None:
+                with suppress(IndexError):
+                    extension = content_type.split("/")[1]
+        if extension is None:
+            try:
+                extension = url.split(".")[-1]
+            except IndexError:
+                _LOGGER.warning(
+                    "Unable to infer extension from url. Using .jpg as the default extension"
+                )
+                extension = "jpg"
+        return extension
+
     def send_message(self, message="", **kwargs):
         """Send a message to a one or more recipients.
 
@@ -60,20 +86,41 @@ class SignalNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA)
 
         filenames = None
+        tmp_dir = None
         if data is not None:
-            if ATTR_FILENAMES in data:
-                filenames = data[ATTR_FILENAMES]
-            if ATTR_FILENAME in data:
-                _LOGGER.warning(
-                    "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108"
-                )
-                if filenames is None:
-                    filenames = [data[ATTR_FILENAME]]
+            if ATTR_URLS in data:
+                # download urls to temp file
+                filenames = []
+                tmp_dir = tempfile.mkdtemp()
+                if isinstance(ATTR_URLS, list):
+                    urls = data[ATTR_URLS]
                 else:
-                    filenames.append(data[ATTR_FILENAME])
+                    urls = [data[ATTR_URLS]]
+                for i, url in enumerate(urls):
+                    resp = requests.get(url)
+                    if resp.status_code != 200:
+                        raise ValueError(
+                            f"Could not download attachment from url {url}"
+                        )
+                    extension = self._infer_extension(url, resp)
+                    with open(f"{tmp_dir}/{i}.{extension}", "wb") as fd:
+                        fd.write(resp.content)
+                    filenames.append(f"{tmp_dir}/{i}.{extension}")
+            elif ATTR_FILENAMES in data:
+                if isinstance(ATTR_FILENAMES, list):
+                    filenames = data[ATTR_FILENAMES]
+                else:
+                    filenames = [data[ATTR_FILENAMES]]
 
         try:
-            self._signal_cli_rest_api.send_message(message, self._recp_nrs, filenames)
+            self._signal_cli_rest_api.send_message(
+                message,
+                self._recp_nrs,
+                filenames=filenames,
+            )
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
             raise ex
+        finally:
+            if tmp_dir:
+                shutil.rmtree(tmp_dir)
