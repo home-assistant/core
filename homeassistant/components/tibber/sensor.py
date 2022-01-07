@@ -539,7 +539,10 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
         for home in self._tibber_connection.get_homes():
             if not home.hourly_consumption_data:
                 continue
-            for sensor_type in ["consumption", "totalCost"]:
+            for sensor_type in (
+                "consumption",
+                "totalCost",
+            ):
                 statistic_id = f"{TIBBER_DOMAIN}:energy_{sensor_type.lower()}_{home.home_id.replace('-', '')}"
 
                 last_stats = await self.hass.async_add_executor_job(
