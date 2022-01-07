@@ -56,7 +56,10 @@ from .const import (
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
-from .discovery_data_template import NumericSensorDataTemplateData
+from .discovery_data_template import (
+    NumericSensorDataTemplate,
+    NumericSensorDataTemplateData,
+)
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_id
 
@@ -295,6 +298,30 @@ class ZWaveStringSensor(ZwaveSensorBase):
 
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
+
+    @callback
+    def _handle_metadata_updated(self, event_data: dict) -> None:
+        """Handle metadata updated event."""
+        value_data = event_data["args"]
+        if (
+            value_data["commandClass"] != self.info.primary_value.command_class
+            or value_data["property"] != self.info.primary_value.property_
+            or value_data.get("endpoint") != self.info.primary_value.endpoint
+            or value_data.get("propertyKey") != self.info.primary_value.property_key
+        ):
+            return
+
+        self._attr_native_unit_of_measurement = (
+            NumericSensorDataTemplate()
+            .resolve_data(self.info.primary_value)
+            .unit_of_measurement
+        )
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        await super().async_added_to_hass()
+        self.info.node.on("metadata updated", self._handle_metadata_updated)
 
     @property
     def native_value(self) -> float:

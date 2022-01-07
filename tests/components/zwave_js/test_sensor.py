@@ -358,3 +358,38 @@ async def test_special_meters(hass, aeon_smart_switch_6_state, client, integrati
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
+
+
+async def test_unit_change(hass, zp3111, client, integration):
+    """Test unit change via metadata updated event is handled by numeric sensors."""
+    entity_id = "sensor.4_in_1_sensor_air_temperature"
+    assert hass.states.get(entity_id)
+    state = hass.states.get(entity_id)
+    assert state.state == "21.98"
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Air temperature",
+                    "ccSpecific": {"sensorType": 1, "scale": 1},
+                    "unit": "°F",
+                },
+                "propertyName": "Air temperature",
+                "nodeId": zp3111.node_id,
+            },
+        },
+    )
+    zp3111.receive_event(event)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "-5.57"
