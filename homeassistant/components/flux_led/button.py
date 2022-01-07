@@ -15,11 +15,14 @@ from .const import DOMAIN
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxBaseEntity
 
+_RESTART_KEY = "restart"
+_UNPAIR_REMOTES_KEY = "unpair_remotes"
+
 RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
-    key="restart", name="Restart", icon="mdi:restart"
+    key=_RESTART_KEY, name="Restart", icon="mdi:restart"
 )
 UNPAIR_REMOTES_DESCRIPTION = ButtonEntityDescription(
-    key="unpair_remotes", name="Unpair Remotes", icon="mdi:remote-off"
+    key=_UNPAIR_REMOTES_KEY, name="Unpair Remotes", icon="mdi:remote-off"
 )
 
 
@@ -62,7 +65,7 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Send out a command."""
-        if self.entity_description.key == "restart":
+        if self.entity_description.key == _RESTART_KEY:
             await self._device.async_reboot()
         else:
             await self._device.async_unpair_remotes()
