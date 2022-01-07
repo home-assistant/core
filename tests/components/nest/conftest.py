@@ -1,5 +1,9 @@
 """Common libraries for test setup."""
 
+import shutil
+from unittest.mock import patch
+import uuid
+
 import aiohttp
 from google_nest_sdm.auth import AbstractAuth
 import pytest
@@ -63,3 +67,12 @@ async def auth(aiohttp_client):
     app.router.add_post("/", auth.response_handler)
     auth.client = await aiohttp_client(app)
     return auth
+
+
+@pytest.fixture(autouse=True)
+def cleanup_media_storage(hass):
+    """Test cleanup, remove any media storage persisted during the test."""
+    tmp_path = str(uuid.uuid4())
+    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
+        yield
+        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
