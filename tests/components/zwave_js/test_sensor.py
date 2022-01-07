@@ -402,13 +402,14 @@ async def test_unit_change(hass, zp3111, client, integration):
                 "commandClass": 49,
                 "endpoint": 0,
                 "property": "Air temperature",
-                "newValue": 71.56,
+                "newValue": 212,
                 "prevValue": 21.98,
                 "propertyName": "Air temperature",
             },
         },
     )
+    zp3111.receive_event(event)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "21.98"
+    assert state.state == "100.0"
