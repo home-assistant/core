@@ -92,7 +92,7 @@ class SignalNotificationService(BaseNotificationService):
                 # download urls to temp file
                 filenames = []
                 tmp_dir = tempfile.mkdtemp()
-                if isinstance(ATTR_URLS, list):
+                if isinstance(data[ATTR_URLS], list):
                     urls = data[ATTR_URLS]
                 else:
                     urls = [data[ATTR_URLS]]
@@ -107,7 +107,7 @@ class SignalNotificationService(BaseNotificationService):
                         fd.write(resp.content)
                     filenames.append(f"{tmp_dir}/{i}.{extension}")
             elif ATTR_FILENAMES in data:
-                if isinstance(ATTR_FILENAMES, list):
+                if isinstance(data[ATTR_FILENAMES], list):
                     filenames = data[ATTR_FILENAMES]
                 else:
                     filenames = [data[ATTR_FILENAMES]]
