@@ -332,3 +332,8 @@ class AndroidIPCamEntity(Entity):
         state_attr[ATTR_AUD_CONNS] = self._ipcam.status_data.get("audio_connections")
 
         return state_attr
+    
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
+        return "ip_webcam"
