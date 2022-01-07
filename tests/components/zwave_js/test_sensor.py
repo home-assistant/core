@@ -363,7 +363,6 @@ async def test_special_meters(hass, aeon_smart_switch_6_state, client, integrati
 async def test_unit_change(hass, zp3111, client, integration):
     """Test unit change via metadata updated event is handled by numeric sensors."""
     entity_id = "sensor.4_in_1_sensor_air_temperature"
-    assert hass.states.get(entity_id)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "21.98"
