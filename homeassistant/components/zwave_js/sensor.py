@@ -9,7 +9,6 @@ import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, ConfigurationValueType, NodeStatus
 from zwave_js_server.const.command_class.meter import (
-    CC_SPECIFIC_SCALE,
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
 )
@@ -300,34 +299,9 @@ class ZWaveStringSensor(ZwaveSensorBase):
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
 
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
-        entity_description: SensorEntityDescription,
-        unit_of_measurement: str | None = None,
-    ) -> None:
-        """Initialize a ZWaveNumericSensor entity."""
-        super().__init__(
-            config_entry, client, info, entity_description, unit_of_measurement
-        )
-        self._scale = self.info.primary_value.metadata.cc_specific.get(
-            CC_SPECIFIC_SCALE
-        )
-
     @callback
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
-        # If the scale hasn't changed, we can return early
-        if self._scale == (
-            new_scale := self.info.primary_value.metadata.cc_specific.get(
-                CC_SPECIFIC_SCALE
-            )
-        ):
-            return
-
-        self._scale = new_scale
         self._attr_native_unit_of_measurement = (
             NumericSensorDataTemplate()
             .resolve_data(self.info.primary_value)
