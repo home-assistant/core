@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -82,6 +82,7 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = "mdi:rocket-launch"
+    _next_launch: Launch | None = None
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, entry_id: str, name: str
@@ -98,20 +99,34 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        if next_launch := self.get_next_launch():
-            self._attr_available = True
-            return next_launch.name
-        self._attr_available = False
-        return None
+        if self._next_launch is None:
+            return None
+        return self._next_launch.name
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self._next_launch is not None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the attributes of the sensor."""
-        if not (next_launch := self.get_next_launch()):
+        if self._next_launch is None:
             return None
         return {
-            ATTR_LAUNCH_TIME: next_launch.net,
-            ATTR_AGENCY: next_launch.launch_service_provider.name,
-            ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
-            ATTR_STREAM: next_launch.webcast_live,
+            ATTR_LAUNCH_TIME: self._next_launch.net,
+            ATTR_AGENCY: self._next_launch.launch_service_provider.name,
+            ATTR_AGENCY_COUNTRY_CODE: self._next_launch.pad.location.country_code,
+            ATTR_STREAM: self._next_launch.webcast_live,
         }
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._next_launch = next((launch for launch in self.coordinator.data), None)
+        super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
