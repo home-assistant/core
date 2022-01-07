@@ -365,6 +365,7 @@ async def test_unit_change(hass, zp3111, client, integration):
     entity_id = "sensor.4_in_1_sensor_air_temperature"
     assert hass.states.get(entity_id)
     state = hass.states.get(entity_id)
+    assert state
     assert state.state == "21.98"
     event = Event(
         "metadata updated",
