@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import voluptuous as vol
-from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
+from yalesmartalarmclient.client import YaleSmartAlarmClient
+from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME

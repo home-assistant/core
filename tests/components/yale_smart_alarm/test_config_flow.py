@@ -4,7 +4,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from yalesmartalarmclient.client import AuthenticationError
+from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant import config_entries
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
