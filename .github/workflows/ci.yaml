@@ -718,6 +718,12 @@ jobs:
         timeout-minutes: 45
         run: |
           . venv/bin/activate
+
+          if [[ ! -f "tests/components/amberelectric/__init__.py" ]]; then
+            echo "::error:: missing file tests/components/amberelectric/__init__.py"
+            exit 1
+          fi
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
