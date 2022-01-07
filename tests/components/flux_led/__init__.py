@@ -81,6 +81,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_set_effect = AsyncMock()
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_set_brightness = AsyncMock()
+    bulb.async_set_device_config = AsyncMock()
     bulb.pixels_per_segment = 300
     bulb.segments = 2
     bulb.music_pixels_per_segment = 150
@@ -142,6 +143,16 @@ def _mocked_switch() -> AIOWifiLedBulb:
         channel3=PowerRestoreState.LAST_STATE,
         channel4=PowerRestoreState.LAST_STATE,
     )
+    switch.pixels_per_segment = None
+    switch.segments = None
+    switch.music_pixels_per_segment = None
+    switch.music_segments = None
+    switch.operating_mode = None
+    switch.operating_modes = None
+    switch.wirings = None
+    switch.wiring = None
+    switch.ic_types = None
+    switch.ic_type = None
     switch.requires_turn_on = True
     switch.async_set_time = AsyncMock()
     switch.async_reboot = AsyncMock()

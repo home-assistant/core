@@ -48,6 +48,7 @@ PLATFORMS_BY_TYPE: Final = {
         Platform.BUTTON,
         Platform.LIGHT,
         Platform.NUMBER,
+        Platform.SELECT,
         Platform.SWITCH,
     ],
     DeviceType.Switch: [Platform.BUTTON, Platform.SELECT, Platform.SWITCH],
