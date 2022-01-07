@@ -391,6 +391,10 @@ async def test_unit_change(hass, zp3111, client, integration):
         },
     )
     zp3111.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "21.98"
     event = Event(
         "value updated",
         {
