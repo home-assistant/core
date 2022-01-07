@@ -77,7 +77,7 @@ async def async_setup_component(
     )
 
     try:
-        return await task  # type: ignore
+        return await task
     finally:
         if domain in hass.data.get(DATA_SETUP_DONE, {}):
             hass.data[DATA_SETUP_DONE].pop(domain).set()
