@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
     "Core200S": "fan",
+    "Core300S": "fan",
     "Core400S": "fan",
 }
 
@@ -30,6 +31,7 @@ FAN_MODE_SLEEP = "sleep"
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core200S": [FAN_MODE_SLEEP],
+    "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
 SPEED_RANGE = (1, 3)  # off is not included
