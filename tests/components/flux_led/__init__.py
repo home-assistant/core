@@ -24,11 +24,12 @@ MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
 IP_ADDRESS = "127.0.0.1"
 MODEL_NUM_HEX = "0x35"
+MODEL_NUM = 0x35
 MODEL = "AZ120444"
 MODEL_DESCRIPTION = "Bulb RGBCW"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
-FLUX_MAC_ADDRESS = "aabbccddeeff"
-SHORT_MAC_ADDRESS = "ddeeff"
+FLUX_MAC_ADDRESS = "AABBCCDDEEFF"
+SHORT_MAC_ADDRESS = "DDEEFF"
 
 DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
 
@@ -52,7 +53,7 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
     ipaddr=IP_ADDRESS,
     model=MODEL,
     id=FLUX_MAC_ADDRESS,
-    model_num=0x25,
+    model_num=MODEL_NUM,
     version_num=0x04,
     firmware_date=datetime.date(2021, 5, 5),
     model_info=MODEL,
@@ -73,12 +74,24 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.requires_turn_on = True
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.effect_list = ["some_effect"]
+    bulb.async_set_time = AsyncMock()
     bulb.async_set_music_mode = AsyncMock()
     bulb.async_set_custom_pattern = AsyncMock()
     bulb.async_set_preset_pattern = AsyncMock()
     bulb.async_set_effect = AsyncMock()
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_set_brightness = AsyncMock()
+    bulb.async_set_device_config = AsyncMock()
+    bulb.pixels_per_segment = 300
+    bulb.segments = 2
+    bulb.music_pixels_per_segment = 150
+    bulb.music_segments = 4
+    bulb.operating_mode = "RGB&W"
+    bulb.operating_modes = ["RGB&W", "RGB/W"]
+    bulb.wirings = ["RGBW", "GRBW", "BGRW"]
+    bulb.wiring = "BGRW"
+    bulb.ic_types = ["WS2812B", "UCS1618"]
+    bulb.ic_type = "WS2812B"
     bulb.async_stop = AsyncMock()
     bulb.async_update = AsyncMock()
     bulb.async_turn_off = AsyncMock()
@@ -101,8 +114,8 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.color_temp = 2700
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
-    bulb.model_num = 0x35
-    bulb.model_data = MODEL_MAP[0x35]
+    bulb.model_num = MODEL_NUM
+    bulb.model_data = MODEL_MAP[MODEL_NUM]
     bulb.effect = None
     bulb.speed = 50
     bulb.model = "Bulb RGBCW (0x35)"
@@ -130,7 +143,18 @@ def _mocked_switch() -> AIOWifiLedBulb:
         channel3=PowerRestoreState.LAST_STATE,
         channel4=PowerRestoreState.LAST_STATE,
     )
+    switch.pixels_per_segment = None
+    switch.segments = None
+    switch.music_pixels_per_segment = None
+    switch.music_segments = None
+    switch.operating_mode = None
+    switch.operating_modes = None
+    switch.wirings = None
+    switch.wiring = None
+    switch.ic_types = None
+    switch.ic_type = None
     switch.requires_turn_on = True
+    switch.async_set_time = AsyncMock()
     switch.async_reboot = AsyncMock()
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_set_power_restore = AsyncMock()

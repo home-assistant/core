@@ -6,7 +6,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "snips"
 CONF_INTENTS = "intents"
@@ -86,7 +88,7 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
 
     async def async_set_feedback(site_ids, state):
@@ -159,7 +161,7 @@ async def async_setup(hass, config):
 
     await mqtt.async_subscribe(hass, INTENT_TOPIC, message_received)
 
-    async def snips_say(call):
+    async def snips_say(call: ServiceCall) -> None:
         """Send a Snips notification message."""
         notification = {
             "siteId": call.data.get(ATTR_SITE_ID, "default"),
@@ -171,7 +173,7 @@ async def async_setup(hass, config):
         )
         return
 
-    async def snips_say_action(call):
+    async def snips_say_action(call: ServiceCall) -> None:
         """Send a Snips action message."""
         notification = {
             "siteId": call.data.get(ATTR_SITE_ID, "default"),
@@ -188,11 +190,11 @@ async def async_setup(hass, config):
         )
         return
 
-    async def feedback_on(call):
+    async def feedback_on(call: ServiceCall) -> None:
         """Turn feedback sounds on."""
         await async_set_feedback(call.data.get(ATTR_SITE_ID), True)
 
-    async def feedback_off(call):
+    async def feedback_off(call: ServiceCall) -> None:
         """Turn feedback sounds off."""
         await async_set_feedback(call.data.get(ATTR_SITE_ID), False)
 

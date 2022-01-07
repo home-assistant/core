@@ -72,6 +72,9 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
 
+    # apparent power (VA)
+    APPARENT_POWER = "apparent_power"
+
     # Air Quality Index
     AQI = "aqi"
 
@@ -137,6 +140,9 @@ class SensorDeviceClass(StrEnum):
 
     # pressure (hPa/mbar)
     PRESSURE = "pressure"
+
+    # reactive power (var)
+    REACTIVE_POWER = "reactive_power"
 
     # signal strength (dB/dBm)
     SIGNAL_STRENGTH = "signal_strength"

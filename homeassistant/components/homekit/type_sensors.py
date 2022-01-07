@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     STATE_HOME,
     STATE_ON,
@@ -66,7 +65,7 @@ class SI(NamedTuple):
 
 
 BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
-    DEVICE_CLASS_CO: SI(
+    BinarySensorDeviceClass.CO: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
     ),
     DEVICE_CLASS_CO2: SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
@@ -117,7 +116,7 @@ class TemperatureSensor(HomeAccessory):
     def async_update_state(self, new_state):
         """Update temperature after state changed."""
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
-        if temperature := convert_to_float(new_state.state):
+        if (temperature := convert_to_float(new_state.state)) is not None:
             temperature = temperature_to_homekit(temperature, unit)
             self.char_temp.set_value(temperature)
             _LOGGER.debug(
@@ -144,7 +143,7 @@ class HumiditySensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if humidity := convert_to_float(new_state.state):
+        if (humidity := convert_to_float(new_state.state)) is not None:
             self.char_humidity.set_value(humidity)
             _LOGGER.debug("%s: Percent set to %d%%", self.entity_id, humidity)
 
@@ -171,7 +170,7 @@ class AirQualitySensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if density := convert_to_float(new_state.state):
+        if (density := convert_to_float(new_state.state)) is not None:
             if self.char_density.value != density:
                 self.char_density.set_value(density)
                 _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
@@ -206,7 +205,7 @@ class CarbonMonoxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if value := convert_to_float(new_state.state):
+        if (value := convert_to_float(new_state.state)) is not None:
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
@@ -241,7 +240,7 @@ class CarbonDioxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if value := convert_to_float(new_state.state):
+        if (value := convert_to_float(new_state.state)) is not None:
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
@@ -269,7 +268,7 @@ class LightSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if luminance := convert_to_float(new_state.state):
+        if (luminance := convert_to_float(new_state.state)) is not None:
             self.char_light.set_value(luminance)
             _LOGGER.debug("%s: Set to %d", self.entity_id, luminance)
 

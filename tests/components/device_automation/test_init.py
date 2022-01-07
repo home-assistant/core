@@ -143,6 +143,13 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
         {
             "platform": "device",
             "domain": "light",
+            "type": "toggled",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": "light",
             "type": "turned_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
@@ -395,14 +402,14 @@ async def test_async_get_device_automations_single_device_trigger(
         hass, device_automation.DeviceAutomationType.TRIGGER, [device_entry.id]
     )
     assert device_entry.id in result
-    assert len(result[device_entry.id]) == 2
+    assert len(result[device_entry.id]) == 3
 
     # Test deprecated str automation_type works, to be removed in 2022.4
     result = await device_automation.async_get_device_automations(
         hass, "trigger", [device_entry.id]
     )
     assert device_entry.id in result
-    assert len(result[device_entry.id]) == 2
+    assert len(result[device_entry.id]) == 3  # toggled, turned_on, turned_off
 
 
 async def test_async_get_device_automations_all_devices_trigger(
@@ -421,7 +428,7 @@ async def test_async_get_device_automations_all_devices_trigger(
         hass, device_automation.DeviceAutomationType.TRIGGER
     )
     assert device_entry.id in result
-    assert len(result[device_entry.id]) == 2
+    assert len(result[device_entry.id]) == 3  # toggled, turned_on, turned_off
 
 
 async def test_async_get_device_automations_all_devices_condition(
@@ -520,7 +527,7 @@ async def test_websocket_get_trigger_capabilities(
     triggers = msg["result"]
 
     id = 2
-    assert len(triggers) == 2
+    assert len(triggers) == 3  # toggled, turned_on, turned_off
     for trigger in triggers:
         await client.send_json(
             {

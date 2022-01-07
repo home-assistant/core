@@ -3939,12 +3939,20 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     )
 
 
-async def test_button(hass):
+@pytest.mark.parametrize(
+    "domain",
+    ["button", "input_button"],
+)
+async def test_button(hass, domain):
     """Test button discovery."""
-    device = ("button.ring_doorbell", STATE_UNKNOWN, {"friendly_name": "Ring Doorbell"})
+    device = (
+        f"{domain}.ring_doorbell",
+        STATE_UNKNOWN,
+        {"friendly_name": "Ring Doorbell"},
+    )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "button#ring_doorbell"
+    assert appliance["endpointId"] == f"{domain}#ring_doorbell"
     assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
     assert appliance["friendlyName"] == "Ring Doorbell"
 
@@ -3955,5 +3963,5 @@ async def test_button(hass):
     assert scene_capability["supportsDeactivation"] is False
 
     await assert_scene_controller_works(
-        "button#ring_doorbell", "button.press", False, hass
+        f"{domain}#ring_doorbell", f"{domain}.press", False, hass
     )

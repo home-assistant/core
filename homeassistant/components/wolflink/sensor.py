@@ -1,4 +1,6 @@
 """The Wolf SmartSet sensors."""
+from __future__ import annotations
+
 from wolf_smartset.models import (
     HoursParameter,
     ListItemParameter,
@@ -10,20 +12,27 @@ from wolf_smartset.models import (
 )
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS, TIME_HOURS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DEVICE_ID, DOMAIN, PARAMETERS, STATES
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up all entries for Wolf Platform."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     parameters = hass.data[DOMAIN][config_entry.entry_id][PARAMETERS]
     device_id = hass.data[DOMAIN][config_entry.entry_id][DEVICE_ID]
 
-    entities = []
+    entities: list[WolfLinkSensor] = []
     for parameter in parameters:
         if isinstance(parameter, Temperature):
             entities.append(WolfLinkTemperature(coordinator, parameter, device_id))

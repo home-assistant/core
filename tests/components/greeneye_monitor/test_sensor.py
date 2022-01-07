@@ -64,9 +64,9 @@ async def test_disable_sensor_after_monitor_connected(
     )
     monitor = connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
 
-    assert len(monitor.listeners) == 1
+    assert len(monitor.voltage_sensor.listeners) == 1
     await disable_entity(hass, "sensor.voltage_1")
-    assert len(monitor.listeners) == 0
+    assert len(monitor.voltage_sensor.listeners) == 0
 
 
 async def test_updates_state_when_sensor_pushes(
@@ -80,8 +80,8 @@ async def test_updates_state_when_sensor_pushes(
     monitor = connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_sensor_state(hass, "sensor.voltage_1", "120.0")
 
-    monitor.voltage = 119.8
-    monitor.notify_all_listeners()
+    monitor.voltage_sensor.voltage = 119.8
+    monitor.voltage_sensor.notify_all_listeners()
     assert_sensor_state(hass, "sensor.voltage_1", "119.8")
 
 

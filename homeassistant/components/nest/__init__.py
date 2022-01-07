@@ -1,15 +1,17 @@
 """Support for Nest devices."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
 from aiohttp import web
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import (
+    ApiException,
     AuthException,
     ConfigurationException,
-    GoogleNestException,
+    SubscriberException,
 )
 import voluptuous as vol
 
@@ -140,17 +142,16 @@ class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_NEST_CONFIG] = config.get(DOMAIN)
 
     if DOMAIN not in config:
         return True
 
-    if CONF_PROJECT_ID not in config[DOMAIN]:
+    config_mode = config_flow.get_config_mode(hass)
+    if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
 
-    # For setup of ConfigEntry below
-    hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
-    config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
         InstalledAppAuth(
@@ -178,12 +179,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_reload_cb: Callable[[], Awaitable[None]]
+    ) -> None:
         """Initialize EventCallback."""
         self._hass = hass
+        self._config_reload_cb = config_reload_cb
 
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
+        if event_message.relation_update:
+            _LOGGER.info("Devices or homes have changed; Need reload to take effect")
+            return
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
@@ -221,7 +228,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Use disk backed event media store
     subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
 
-    callback = SignalUpdateCallback(hass)
+    async def async_config_reload() -> None:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    callback = SignalUpdateCallback(hass, async_config_reload)
     subscriber.set_update_callback(callback.async_handle_event)
     try:
         await subscriber.start_async()
@@ -232,7 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
         return False
-    except GoogleNestException as err:
+    except SubscriberException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Subscriber error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -241,7 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -283,7 +293,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
     try:
         await subscriber.delete_subscription()
-    except GoogleNestException as err:
+    except (AuthException, SubscriberException) as err:
         _LOGGER.warning(
             "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
             subscriber.subscriber_id,
@@ -324,7 +334,7 @@ class NestEventMediaView(HomeAssistantView):
             )
         try:
             event_media = await nest_device.event_media_manager.get_media(event_id)
-        except GoogleNestException as err:
+        except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
         if not event_media:
             return self._json_error(

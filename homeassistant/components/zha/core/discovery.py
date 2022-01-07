@@ -17,6 +17,7 @@ from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .. import (  # noqa: F401 pylint: disable=unused-import,
     alarm_control_panel,
     binary_sensor,
+    button,
     climate,
     cover,
     device_tracker,
@@ -24,6 +25,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     light,
     lock,
     number,
+    select,
     sensor,
     siren,
     switch,
@@ -66,6 +68,7 @@ class ProbeEndpoint:
         self.discover_by_device_type(channel_pool)
         self.discover_multi_entities(channel_pool)
         self.discover_by_cluster_id(channel_pool)
+        zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
     def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:

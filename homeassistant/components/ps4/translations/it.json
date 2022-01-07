@@ -10,8 +10,8 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "credential_timeout": "Servizio credenziali scaduto. Premi Invia per riavviare.",
-            "login_failed": "Impossibile eseguire l'associazione a PlayStation 4. Verificare che il Codice PIN sia corretto.",
-            "no_ipaddress": "Inserire l'Indirizzo IP della PlayStation 4 che desideri configurare."
+            "login_failed": "Impossibile eseguire l'associazione a PlayStation 4. Verificare che il codice PIN sia corretto.",
+            "no_ipaddress": "Inserisci l'indirizzo IP della PlayStation 4 che desideri configurare."
         },
         "step": {
             "creds": {
@@ -25,7 +25,7 @@
                     "name": "Nome",
                     "region": "Area geografica"
                 },
-                "description": "Inserisci le informazioni per la tua PlayStation 4. Per il Codice PIN, vai a \"Impostazioni\" sulla PlayStation 4. Quindi vai a 'Impostazioni di connessione Mobile App' e seleziona 'Aggiungi dispositivo'. Immettere il Codice PIN visualizzato. Fai riferimento alla [documentazione](https://www.home-assistant.io/components/ps4/) per ulteriori informazioni.",
+                "description": "Inserisci le informazioni per la tua PlayStation 4. Per il codice PIN, vai a \"Impostazioni\" sulla PlayStation 4. Quindi vai a 'Impostazioni di connessione Mobile App' e seleziona 'Aggiungi dispositivo'. Immettere il codice PIN visualizzato. Fai riferimento alla [documentazione](https://www.home-assistant.io/components/ps4/) per ulteriori informazioni.",
                 "title": "PlayStation 4"
             },
             "mode": {

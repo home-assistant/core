@@ -135,7 +135,7 @@ class NestEventMediaStore(EventMediaStore):
                 )
         return self._data
 
-    async def async_save(self, data: dict) -> None:  # type: ignore[override]
+    async def async_save(self, data: dict) -> None:
         """Save data."""
         self._data = data
 

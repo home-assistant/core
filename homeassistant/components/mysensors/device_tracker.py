@@ -10,8 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-from . import DevId
-from .const import ATTR_GATEWAY_ID, DiscoveryInfo, GatewayId
+from .const import ATTR_GATEWAY_ID, DevId, DiscoveryInfo, GatewayId
 from .helpers import on_unload
 
 

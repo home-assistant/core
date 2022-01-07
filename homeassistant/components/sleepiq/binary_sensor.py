@@ -1,14 +1,24 @@
 """Support for SleepIQ sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import SleepIQSensor
 from .const import DOMAIN, IS_IN_BED, SENSOR_TYPES, SIDES
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SleepIQ sensors."""
     if discovery_info is None:
         return

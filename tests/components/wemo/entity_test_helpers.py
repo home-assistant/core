@@ -134,3 +134,35 @@ async def test_avaliable_after_update(
     pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
     await hass.async_block_till_done()
     assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
+
+
+class EntityTestHelpers:
+    """Common state update helpers."""
+
+    async def test_async_update_locked_multiple_updates(
+        self, hass, pywemo_device, wemo_entity
+    ):
+        """Test that two hass async_update state updates do not proceed at the same time."""
+        await test_async_update_locked_multiple_updates(
+            hass, pywemo_device, wemo_entity
+        )
+
+    async def test_async_update_locked_multiple_callbacks(
+        self, hass, pywemo_device, wemo_entity
+    ):
+        """Test that two device callback state updates do not proceed at the same time."""
+        await test_async_update_locked_multiple_callbacks(
+            hass, pywemo_device, wemo_entity
+        )
+
+    async def test_async_update_locked_callback_and_update(
+        self, hass, pywemo_device, wemo_entity
+    ):
+        """Test that a callback and a state update request can't both happen at the same time.
+
+        When a state update is received via a callback from the device at the same time
+        as hass is calling `async_update`, verify that only one of the updates proceeds.
+        """
+        await test_async_update_locked_callback_and_update(
+            hass, pywemo_device, wemo_entity
+        )

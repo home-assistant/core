@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCATION,
     DEGREE,
@@ -23,6 +24,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UV_INDEX,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_STATION, DOMAIN
@@ -205,7 +208,11 @@ def validate_station(station):
     return station
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
     async_add_entities(ECSensor(coordinator, desc) for desc in SENSOR_TYPES)

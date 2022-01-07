@@ -15,8 +15,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TRIGGER_TIME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 CONF_ZONES = "zones"
 
@@ -82,7 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rain Bird component."""
 
     hass.data[DATA_RAINBIRD] = []

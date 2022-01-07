@@ -6,10 +6,8 @@ as media in the media source.
 
 import datetime
 from http import HTTPStatus
-import shutil
 from typing import Generator
 from unittest.mock import patch
-import uuid
 
 import aiohttp
 from google_nest_sdm.device import Device
@@ -72,15 +70,6 @@ GENERATE_IMAGE_URL_RESPONSE = {
 }
 IMAGE_BYTES_FROM_EVENT = b"test url image bytes"
 IMAGE_AUTHORIZATION_HEADERS = {"Authorization": "Basic g.0.eventToken"}
-
-
-@pytest.fixture(autouse=True)
-def cleanup_media_storage(hass):
-    """Test cleanup, remove any media storage persisted during the test."""
-    tmp_path = str(uuid.uuid4())
-    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
-        yield
-        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
 
 
 async def async_setup_devices(hass, auth, device_type, traits={}, events=[]):
