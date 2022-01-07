@@ -18,6 +18,11 @@ def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
     return {_flux_color_mode_to_hass(mode, color_modes) for mode in color_modes}
 
 
+def format_as_flux_mac(mac: str | None) -> str | None:
+    """Convert a device registry formatted mac to flux mac."""
+    return None if mac is None else mac.replace(":", "").upper()
+
+
 def _flux_color_mode_to_hass(
     flux_color_mode: str | None, flux_color_modes: set[str]
 ) -> str:
