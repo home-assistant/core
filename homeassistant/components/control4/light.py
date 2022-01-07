@@ -14,6 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Control4Entity, get_items_of_category
 from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
