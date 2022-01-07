@@ -168,6 +168,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+AQHI_SENSOR = SensorEntityDescription(
+    key="aqhi",
+    name="AQHI",
+    device_class=SensorDeviceClass.AQI,
+    native_unit_of_measurement="AQI",
+    state_class=SensorStateClass.MEASUREMENT,
+)
+
 ALERT_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="advisories",
@@ -218,6 +226,9 @@ async def async_setup_entry(
     async_add_entities(ECSensor(coordinator, desc) for desc in SENSOR_TYPES)
     async_add_entities(ECAlertSensor(coordinator, desc) for desc in ALERT_TYPES)
 
+    aqhi_coordinator = hass.data[DOMAIN][config_entry.entry_id]["aqhi_coordinator"]
+    async_add_entities([ECSensor(aqhi_coordinator, AQHI_SENSOR)])
+
 
 class ECBaseSensor(CoordinatorEntity, SensorEntity):
     """Environment Canada sensor base."""
@@ -249,6 +260,8 @@ class ECSensor(ECBaseSensor):
         sensor_type = self.entity_description.key
         if sensor_type == "timestamp":
             return self._ec_data.metadata.get("timestamp")
+        if sensor_type == "aqhi":
+            return self._ec_data.current
 
         value = self._ec_data.conditions.get(sensor_type, {}).get("value")
         if sensor_type == "tendency":
