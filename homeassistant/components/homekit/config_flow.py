@@ -453,22 +453,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hass,
             domains=self.hk_options[CONF_DOMAINS],
         )
-        supported_entities_not_in_domains = {
-            entity
-            for entity in entities
-            if entity not in all_supported_entities and self.hass.states.get(entity)
-        }
-        # In accessory mode, CONF_DOMAINS will be empty
-        all_supported_entities |= supported_entities_not_in_domains
         data_schema = {}
-        entity_schema = vol.In
-        entities_schema_required = vol.Required
         # Strip out entities that no longer exist to prevent error in the UI
         valid_entities = [
             entity_id for entity_id in entities if entity_id in all_supported_entities
         ]
-        # In accessory mode we can only have one
-        default_value = valid_entities[0] if valid_entities else None
 
         if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
             entities_schema_required = vol.Optional
@@ -481,6 +470,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
             default_value = valid_entities
+        else:
+            # In accessory mode we can only have one
+            default_value = valid_entities[0] if valid_entities else None
+            entity_schema = vol.In
+            entities_schema_required = vol.Required
 
         data_schema[
             entities_schema_required(CONF_ENTITIES, default=default_value)
