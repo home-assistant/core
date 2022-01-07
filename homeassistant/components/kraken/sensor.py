@@ -121,6 +121,7 @@ class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
         self._available = True
 
         self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.kraken.com/",
             entry_type=device_registry.DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{source_asset}_{self._target_asset}")},
             manufacturer="Kraken.com",
