@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from itertools import islice
 import logging
 from time import time
@@ -105,7 +105,7 @@ class NetatmoDataHandler:
             )
         )
 
-    async def async_update(self, event_time: timedelta) -> None:
+    async def async_update(self, event_time: datetime) -> None:
         """
         Update device.
 
