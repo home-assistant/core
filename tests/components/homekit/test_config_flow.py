@@ -1105,7 +1105,7 @@ async def test_options_flow_include_mode_basic_accessory(
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "include_exclude"
-    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
+    assert _get_schema_default(result2["data_schema"].schema, "entities") is None
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
@@ -1143,9 +1143,10 @@ async def test_options_flow_include_mode_basic_accessory(
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "include_exclude"
-    assert _get_schema_default(result2["data_schema"].schema, "entities") == [
-        "media_player.tv"
-    ]
+    assert (
+        _get_schema_default(result2["data_schema"].schema, "entities")
+        == "media_player.tv"
+    )
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
