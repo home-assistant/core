@@ -31,6 +31,9 @@ PyFlick==0.0.2
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
+# homeassistant.components.arduino
+PyMata==2.20
+
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.4.0
@@ -903,6 +906,9 @@ influxdb-client==1.24.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
+
+# homeassistant.components.intellifire
+intellifire4py==0.4.3
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
