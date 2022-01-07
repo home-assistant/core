@@ -32,6 +32,18 @@ SENSOR_DESCRIPTIONS: Final[tuple[SensorEntityDescription, ...]] = (
         native_unit_of_measurement=LENGTH_KILOMETERS,
     ),
     SensorEntityDescription(
+        key="_last_service_distance",
+        name="Last Service",
+        icon="mdi:car-wrench",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+    ),
+    SensorEntityDescription(
+        key="_next_service_distance",
+        name="Next Service",
+        icon="mdi:car-wrench",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+    ),
+    SensorEntityDescription(
         key="car_battery_percentage",
         name="Car Battery Level",
         icon="mdi:car-battery",

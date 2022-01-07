@@ -132,6 +132,13 @@ SENSOR_DESCRIPTIONS: Final[tuple[HyundaiKiaBinarySensorEntityDescription, ...]] 
         off_icon="mdi:car-back",
     ),
     HyundaiKiaBinarySensorEntityDescription(
+        key="hood_is_open",
+        name="Hood",
+        device_class=BinarySensorDeviceClass.DOOR,
+        on_icon="mdi:car",
+        off_icon="mdi:car",
+    ),
+    HyundaiKiaBinarySensorEntityDescription(
         key="ev_battery_is_charging",
         name="EV Battery Charge",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
