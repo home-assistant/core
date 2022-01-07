@@ -286,3 +286,4 @@ class ECAlertSensor(ECBaseSensor):
             extra_state_attrs[f"alert_time_{index}"] = alert.get("date")
 
         return extra_state_attrs
+    
