@@ -14,7 +14,7 @@ with sr.Microphone() as source:
 """ Recorgnizing the Audio """
 try:
     print("Recognizing the text")
-    text = recognizer.recognize_google(recorded_audio, language="en-US")
+    text = recognizer.recognize_google(recorded_audio, language="en-IN")
     print(f"Decoded Text : {text}")
 
 except Exception as ex:

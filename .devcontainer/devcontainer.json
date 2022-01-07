@@ -6,7 +6,7 @@
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
   "appPort": 8123,
-  "runArgs": ["--volume","/run/pulse:/run/pulse","--network","host","-e", "GIT_EDITOR=code --wait"],
+  "runArgs": ["--volume","/run/pulse:/run/pulse","--device","/dev/snd","--network","host","-e", "GIT_EDITOR=code --wait"],
   "extensions": [
     "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",

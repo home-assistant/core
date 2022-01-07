@@ -32,6 +32,10 @@ RUN \
         python3-all-dev \
         pulseaudio-utils \
         mpg321 \
+        build-essential \
+        swig \
+        libpulse-dev \
+        python-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

@@ -28,3 +28,7 @@ SpeechRecognition
 playsound
 gTTS
 pyttsx3
+geopy
+pandas
+xlrd
+pocketsphinx
