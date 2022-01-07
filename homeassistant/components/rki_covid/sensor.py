@@ -146,6 +146,7 @@ class RKICovidNumbersSensor(CoordinatorEntity):
         self.district = district
         self.info_type = info_type
         self.updated = datetime.now()
+        _attr_attribution = f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
 
     @property
     def available(self) -> bool:
@@ -194,10 +195,3 @@ class RKICovidNumbersSensor(CoordinatorEntity):
             return "nb"
         else:
             return "cases"
-
-    @property
-    def extra_state_attributes(self):
-        """Return device attributes."""
-        return {
-            ATTR_ATTRIBUTION: f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
-        }
