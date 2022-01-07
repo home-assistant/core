@@ -738,7 +738,7 @@ jobs:
           . venv/bin/activate
 
           if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
-            echo "::warning:: missing file tests/components/${{ matrix.group }}/__init__.py"
+            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
             exit 1
           fi
 
