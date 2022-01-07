@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -16,6 +17,18 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Please enter your Control4 account details and the IP address of your local controller."
+      },
+      "user_reauth": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Please reenter your Control4 account details and the IP address of your local controller."
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Control4 integration needs to re-authenticate your account"
       }
     }
   }

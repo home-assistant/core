@@ -19,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_call_later
@@ -122,7 +122,7 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
             "Error authenticating with Control4 account API, incorrect username or password: %s",
             exception,
         )
-        return False
+        raise ConfigEntryAuthFailed(exception) from exception
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
     director_token_dict = await account.getDirectorBearerToken(controller_unique_id)

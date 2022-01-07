@@ -79,49 +79,88 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def _validate_input(self, user_input):
+        errors = {}
+        hub = Control4Validator(
+            user_input[CONF_HOST],
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+            self.hass,
+        )
+        try:
+            if not await hub.authenticate():
+                raise InvalidAuth
+            if not await hub.connect_to_director():
+                raise CannotConnect
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        return errors, hub.controller_unique_id
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        errors = {}
         if user_input is not None:
-
-            hub = Control4Validator(
-                user_input[CONF_HOST],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                self.hass,
-            )
-            try:
-                if not await hub.authenticate():
-                    raise InvalidAuth
-                if not await hub.connect_to_director():
-                    raise CannotConnect
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
+            errors, controller_unique_id = self._validate_input(user_input)
             if not errors:
-                controller_unique_id = hub.controller_unique_id
                 mac = (controller_unique_id.split("_", 3))[2]
                 formatted_mac = format_mac(mac)
+                data = {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_CONTROLLER_UNIQUE_ID: controller_unique_id,
+                }
                 await self.async_set_unique_id(formatted_mac)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=controller_unique_id,
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_CONTROLLER_UNIQUE_ID: controller_unique_id,
-                    },
+                    data=data,
                 )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_user_reauth(self, user_input=None):
+        """Handle a reauthentication request."""
+        if user_input is not None:
+            errors, controller_unique_id = self._validate_input(user_input)
+            if not errors:
+                mac = (controller_unique_id.split("_", 3))[2]
+                formatted_mac = format_mac(mac)
+                data = {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_CONTROLLER_UNIQUE_ID: controller_unique_id,
+                }
+                _LOGGER.debug("Reauthentication occuring")
+                existing_entry = await self.async_set_unique_id(formatted_mac)
+                self.hass.config_entries.async_update_entry(existing_entry, data=data)
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="user_reauth", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_user_reauth()
 
 
 class CannotConnect(exceptions.HomeAssistantError):
