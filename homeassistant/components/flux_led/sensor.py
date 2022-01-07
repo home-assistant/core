@@ -40,6 +40,7 @@ class FluxPairedRemotes(FluxEntity, SensorEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> int:
         """Return the number of paired remotes."""
+        assert self._device.paired_remotes is not None
         return self._device.paired_remotes
