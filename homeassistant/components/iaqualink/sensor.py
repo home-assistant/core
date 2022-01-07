@@ -5,6 +5,7 @@ from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEnt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
@@ -13,7 +14,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered sensors."""
     devs = []
