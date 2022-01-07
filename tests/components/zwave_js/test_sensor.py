@@ -409,4 +409,6 @@ async def test_unit_change(hass, zp3111, client, integration):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "21.98"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "21.98"
