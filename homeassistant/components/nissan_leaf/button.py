@@ -23,12 +23,12 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    devices: list[LeafEntity] = []
+    entities: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding button for vin=%s", vin)
-        devices.append(LeafChargingButton(datastore))
+        entities.append(LeafChargingButton(datastore))
 
-    add_entities(devices, True)
+    add_entities(entities, True)
 
 
 class LeafChargingButton(LeafEntity, ButtonEntity):
