@@ -53,6 +53,7 @@ class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
         self._attr_name = f"{name} {self._mapped_name}"
         self._attr_native_value = None
         self._attr_native_unit_of_measurement = None
+        self._name = name
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -77,4 +78,4 @@ class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
-        return f"{name}_{self._sensor}"
+        return f"{self._name}_{self._sensor}"
