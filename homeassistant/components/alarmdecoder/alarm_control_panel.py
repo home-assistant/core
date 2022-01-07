@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_ALT_NIGHT_MODE,
@@ -41,8 +42,8 @@ ATTR_KEYPRESS = "keypress"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up for AlarmDecoder alarm panels."""
     options = entry.options
     arm_options = options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)

@@ -1,4 +1,6 @@
 """Support for Digital Loggers DIN III Relays."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -13,7 +15,10 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return DIN III Relay switch."""
 
     host = config[CONF_HOST]
@@ -60,16 +70,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not power_switch.verify():
         _LOGGER.error("Could not connect to DIN III Relay")
-        return False
+        return
 
-    outlets = []
+    entities: list[DINRelay] = []
     parent_device = DINRelayDevice(power_switch)
 
-    outlets.extend(
+    entities.extend(
         DINRelay(controller_name, parent_device, outlet) for outlet in power_switch[0:]
     )
 
-    add_entities(outlets)
+    add_entities(entities)
 
 
 class DINRelay(SwitchEntity):
