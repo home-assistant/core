@@ -141,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                     CONF_CONTROLLER_UNIQUE_ID: controller_unique_id,
                 }
-                _LOGGER.debug("Reauthentication occuring")
+                _LOGGER.debug("Reauthentication occurring")
                 existing_entry = await self.async_set_unique_id(formatted_mac)
                 self.hass.config_entries.async_update_entry(existing_entry, data=data)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
