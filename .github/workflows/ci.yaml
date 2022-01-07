@@ -734,6 +734,7 @@ jobs:
       - name: Run pytest (partially)
         if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
         timeout-minutes: 10
+        shell: bash
         run: |
           . venv/bin/activate
 
