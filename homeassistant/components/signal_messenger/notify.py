@@ -93,12 +93,8 @@ class SignalNotificationService(BaseNotificationService):
         if ATTR_FILENAMES in data:
             if isinstance(data[ATTR_FILENAMES], list):
                 return data[ATTR_FILENAMES]
-            else:
-                raise ValueError(
-                    "'{property}' property must be a list".format(
-                        property=ATTR_FILENAMES
-                    )
-                )
+
+            raise ValueError(f"'{ATTR_FILENAMES}' property must be a list")
 
         return None
 
