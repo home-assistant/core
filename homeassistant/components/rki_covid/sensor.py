@@ -127,8 +127,8 @@ async def async_setup_entry(
 class RKICovidNumbersSensor(CoordinatorEntity):
     """Representation of a sensor."""
 
-    _name = None
-    _unique_id = None
+    name = None
+    unique_id = None
 
     def __init__(
         self,
@@ -143,34 +143,34 @@ class RKICovidNumbersSensor(CoordinatorEntity):
         data = coordinator.data[district]
 
         if data.county:
-            self._name = f"{data.county} {info_type}"
+            self.name = f"{data.county} {info_type}"
         else:
-            self._name = f"{data.name} {info_type}"
-        self._unique_id = f"{district}-{info_type}"
-        self._district = district
-        self._info_type = info_type
-        self._updated = datetime.now()
+            self.name = f"{data.name} {info_type}"
+        self.unique_id = f"{district}-{info_type}"
+        self.district = district
+        self.info_type = info_type
+        self.updated = datetime.now()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
             self.coordinator.last_update_success
-            and self._district in self.coordinator.data
+            and self.district in self.coordinator.data
         )
 
     @property
     def state(self) -> Optional[str]:
         """Return current state."""
         try:
-            return getattr(self.coordinator.data[self._district], self._info_type)
+            return getattr(self.coordinator.data[self.district], self.info_type)
         except AttributeError:
             return None
 
     @property
     def icon(self):
         """Return the icon."""
-        return SENSORS[self._info_type]
+        return SENSORS[self.info_type]
 
     @property
     def state_class(self):
@@ -181,19 +181,19 @@ class RKICovidNumbersSensor(CoordinatorEntity):
     def unit_of_measurement(self):
         """Return unit of measurement."""
         if (
-            self._info_type == "count"
-            or self._info_type == "deaths"
-            or self._info_type == "recovered"
+            self.info_type == "count"
+            or self.info_type == "deaths"
+            or self.info_type == "recovered"
         ):
             return "people"
         elif (
-            self._info_type == "weekIncidence"
-            or self._info_type == "hospitalizationIncidenceBaby"
-            or self._info_type == "hospitalizationIncidenceChildren"
-            or self._info_type == "hospitalizationIncidenceTeen"
-            or self._info_type == "hospitalizationIncidenceGrown"
-            or self._info_type == "hospitalizationIncidenceSenior"
-            or self._info_type == "hospitalizationIncidenceOld"
+            self.info_type == "weekIncidence"
+            or self.info_type == "hospitalizationIncidenceBaby"
+            or self.info_type == "hospitalizationIncidenceChildren"
+            or self.info_type == "hospitalizationIncidenceTeen"
+            or self.info_type == "hospitalizationIncidenceGrown"
+            or self.info_type == "hospitalizationIncidenceSenior"
+            or self.info_type == "hospitalizationIncidenceOld"
         ):
             return "nb"
         else:
@@ -203,5 +203,5 @@ class RKICovidNumbersSensor(CoordinatorEntity):
     def extra_state_attributes(self):
         """Return device attributes."""
         return {
-            ATTR_ATTRIBUTION: f"last updated {self._updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
+            ATTR_ATTRIBUTION: f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
         }
