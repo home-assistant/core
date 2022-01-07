@@ -37,14 +37,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except Exception as e:
         raise CannotConnect
 
-    # Extract info to store
-    serial_number = api.data.serial
     name = data["name"]
-    host = data["host"]
 
     # Return info that you want to store in the config entry.
     return {"title": f"{name} Fireplace", "type": "Fireplace"}
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Intellifire."""
