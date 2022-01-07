@@ -6,9 +6,11 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from pysignalclirestapi.api import SignalCliRestApiError
+from pysignalclirestapi.api import SignalCliRestApi, SignalCliRestApiError
 import pytest
+from requests_mock.mocker import Mocker
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.components.signal_messenger.conftest import (
@@ -23,7 +25,7 @@ from tests.components.signal_messenger.conftest import (
 BASE_COMPONENT = "notify"
 
 
-async def test_signal_messenger_init(hass):
+async def test_signal_messenger_init(hass: HomeAssistant) -> None:
     """Test that service loads successfully."""
     config = {
         BASE_COMPONENT: {
@@ -43,8 +45,10 @@ async def test_signal_messenger_init(hass):
 
 
 def test_send_message(
-    signal_notification_service, signal_requests_mock_factory, caplog
-):
+    signal_notification_service: SignalCliRestApi,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test send message."""
     signal_requests_mock = signal_requests_mock_factory()
     with caplog.at_level(
@@ -57,28 +61,11 @@ def test_send_message(
     assert_sending_requests(signal_requests_mock)
 
 
-def test_send_message_should_show_deprecation_warning(
-    signal_notification_service, signal_requests_mock_factory, caplog
-):
-    """Test send message should show deprecation warning."""
-    signal_requests_mock = signal_requests_mock_factory()
-    with caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.signal_messenger.notify"
-    ):
-        send_message_with_attachment(signal_notification_service, True)
-
-    assert (
-        "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108"
-        in caplog.text
-    )
-    assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
-    assert_sending_requests(signal_requests_mock, 1)
-
-
 def test_send_message_with_bad_data_throws_error(
-    signal_notification_service, signal_requests_mock_factory, caplog
-):
+    signal_notification_service: SignalCliRestApi,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test sending a message with bad data throws an error."""
     signal_requests_mock = signal_requests_mock_factory(False)
     with caplog.at_level(
@@ -94,8 +81,10 @@ def test_send_message_with_bad_data_throws_error(
 
 
 def test_send_message_with_attachment(
-    signal_notification_service, signal_requests_mock_factory, caplog
-):
+    signal_notification_service: SignalCliRestApi,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test send message with attachment."""
     signal_requests_mock = signal_requests_mock_factory()
     with caplog.at_level(
@@ -109,7 +98,9 @@ def test_send_message_with_attachment(
     assert_sending_requests(signal_requests_mock, 1)
 
 
-def send_message_with_attachment(signal_notification_service, deprecated=False):
+def send_message_with_attachment(
+    signal_notification_service: SignalCliRestApi, deprecated: bool = False
+) -> None:
     """Send message with attachment."""
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".png", prefix=os.path.basename(__file__)
@@ -120,8 +111,10 @@ def send_message_with_attachment(signal_notification_service, deprecated=False):
 
 
 def test_send_message_with_attachment_as_url(
-    signal_notification_service, signal_requests_mock_factory, caplog
-):
+    signal_notification_service: SignalCliRestApi,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test send message with attachment as URL."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT)))
     with caplog.at_level(
@@ -136,7 +129,9 @@ def test_send_message_with_attachment_as_url(
     assert_sending_requests(signal_requests_mock, 1)
 
 
-def test_get_attachments(signal_notification_service, signal_requests_mock_factory):
+def test_get_attachments(
+    signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
+) -> None:
     """Test getting attachments as URL."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT)))
     data = {"urls": [URL_ATTACHMENT]}
@@ -148,8 +143,8 @@ def test_get_attachments(signal_notification_service, signal_requests_mock_facto
 
 
 def test_get_attachments_with_large_attachment(
-    signal_notification_service, signal_requests_mock_factory
-):
+    signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
+) -> None:
     """Test getting attachments as URL with large attachment (per Content-Length header) throws error."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT) + 1))
     with pytest.raises(ValueError) as exc:
@@ -162,8 +157,8 @@ def test_get_attachments_with_large_attachment(
 
 
 def test_get_attachments_with_large_attachment_no_header(
-    signal_notification_service, signal_requests_mock_factory
-):
+    signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
+) -> None:
     """Test getting attachments as URL with large attachment (per content length) throws error."""
     signal_requests_mock = signal_requests_mock_factory()
     with pytest.raises(ValueError) as exc:
@@ -175,7 +170,9 @@ def test_get_attachments_with_large_attachment_no_header(
     assert "Attachment too large (Stream)" in str(exc.value)
 
 
-def test_get_filenames_with_none_data(signal_notification_service):
+def test_get_filenames_with_none_data(
+    signal_notification_service: SignalCliRestApi,
+) -> None:
     """Test getting filenames with None data returns None."""
     data = None
     result = signal_notification_service.get_filenames(data)
@@ -183,7 +180,9 @@ def test_get_filenames_with_none_data(signal_notification_service):
     assert result is None
 
 
-def test_get_filenames_with_attachments_data(signal_notification_service):
+def test_get_filenames_with_attachments_data(
+    signal_notification_service: SignalCliRestApi,
+) -> None:
     """Test getting filenames with 'attachments' in data."""
     data = {"attachments": ["test"]}
     result = signal_notification_service.get_filenames(data)
@@ -191,7 +190,9 @@ def test_get_filenames_with_attachments_data(signal_notification_service):
     assert result == ["test"]
 
 
-def test_get_filenames_with_multiple_attachments_data(signal_notification_service):
+def test_get_filenames_with_multiple_attachments_data(
+    signal_notification_service: SignalCliRestApi,
+) -> None:
     """Test getting filenames with multiple 'attachments' in data."""
     data = {"attachments": ["test", "test2"]}
     result = signal_notification_service.get_filenames(data)
@@ -199,25 +200,31 @@ def test_get_filenames_with_multiple_attachments_data(signal_notification_servic
     assert result == ["test", "test2"]
 
 
-def test_get_filenames_with_attachment_data(signal_notification_service):
-    """Test getting filenames with 'attachment' in data."""
-    data = {"attachment": "test"}
-    result = signal_notification_service.get_filenames(data)
+def test_get_filenames_with_non_list_throws_error(
+    signal_notification_service: SignalCliRestApi,
+) -> None:
+    """Test getting filenames with non list data."""
+    with pytest.raises(ValueError) as exc:
+        data = {"attachments": "test"}
+        signal_notification_service.get_filenames(data)
 
-    assert result == ["test"]
-
-
-def test_get_filenames_with_attachment_and_attachments_data(
-    signal_notification_service,
-):
-    """Test getting filenames with both 'attachment' and 'attachments' in data."""
-    data = {"attachment": "test", "attachments": ["test2"]}
-    result = signal_notification_service.get_filenames(data)
-
-    assert result == ["test2", "test"]
+    assert "'attachments' property must be a list" in str(exc.value)
 
 
-def assert_sending_requests(signal_requests_mock_factory, attachments_num=0):
+def test_get_attachments_with_non_list_throws_error(
+    signal_notification_service: SignalCliRestApi,
+) -> None:
+    """Test getting attachments with non list data."""
+    with pytest.raises(ValueError) as exc:
+        data = {"urls": "test"}
+        signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
+
+    assert "'urls' property must be a list" in str(exc.value)
+
+
+def assert_sending_requests(
+    signal_requests_mock_factory: Mocker, attachments_num: int = 0
+) -> None:
     """Assert message was send with correct parameters."""
     send_request = signal_requests_mock_factory.request_history[-1]
     assert send_request.path == SIGNAL_SEND_PATH_SUFIX
