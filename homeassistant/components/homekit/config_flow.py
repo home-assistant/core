@@ -458,8 +458,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         valid_entities = [
             entity_id for entity_id in entities if entity_id in all_supported_entities
         ]
-
-        if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
+        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+            # In accessory mode we can only have one
+            default_value = valid_entities[0] if valid_entities else None
+            entity_schema = vol.In
+            entities_schema_required = vol.Required
+        else:
+            # Bridge mode
             entities_schema_required = vol.Optional
             include_exclude_mode = MODE_INCLUDE
             if not entities:
@@ -470,11 +475,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
             default_value = valid_entities
-        else:
-            # In accessory mode we can only have one
-            default_value = valid_entities[0] if valid_entities else None
-            entity_schema = vol.In
-            entities_schema_required = vol.Required
 
         data_schema[
             entities_schema_required(CONF_ENTITIES, default=default_value)
