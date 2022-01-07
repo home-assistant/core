@@ -14,18 +14,28 @@ from flux_led.const import (
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
 )
 from flux_led.models_db import MODEL_MAP
-from flux_led.protocol import LEDENETRawState, PowerRestoreState, PowerRestoreStates
+from flux_led.protocol import (
+    LEDENETRawState,
+    PowerRestoreState,
+    PowerRestoreStates,
+    RemoteConfig,
+)
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.components import dhcp
+from homeassistant.components.flux_led.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
 IP_ADDRESS = "127.0.0.1"
 MODEL_NUM_HEX = "0x35"
 MODEL_NUM = 0x35
-MODEL = "AZ120444"
+MODEL = "AK001-ZJ2149"
 MODEL_DESCRIPTION = "Bulb RGBCW"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 FLUX_MAC_ADDRESS = "AABBCCDDEEFF"
@@ -64,6 +74,16 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
 )
 
 
+def _mock_config_entry_for_bulb(hass: HomeAssistant) -> ConfigEntry:
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
 def _mocked_bulb() -> AIOWifiLedBulb:
     bulb = MagicMock(auto_spec=AIOWifiLedBulb)
 
@@ -74,6 +94,8 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.requires_turn_on = True
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.effect_list = ["some_effect"]
+    bulb.remote_config = RemoteConfig.OPEN
+    bulb.async_unpair_remotes = AsyncMock()
     bulb.async_set_time = AsyncMock()
     bulb.async_set_music_mode = AsyncMock()
     bulb.async_set_custom_pattern = AsyncMock()
@@ -82,6 +104,8 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_set_brightness = AsyncMock()
     bulb.async_set_device_config = AsyncMock()
+    bulb.async_config_remotes = AsyncMock()
+    bulb.paired_remotes = 2
     bulb.pixels_per_segment = 300
     bulb.segments = 2
     bulb.music_pixels_per_segment = 150
