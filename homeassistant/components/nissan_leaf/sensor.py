@@ -32,21 +32,21 @@ ICON_RANGE = "mdi:speedometer"
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_devices: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Sensors setup."""
     if discovery_info is None:
         return
 
-    devices: list[LeafEntity] = []
+    entities: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding sensors for vin=%s", vin)
-        devices.append(LeafBatterySensor(datastore))
-        devices.append(LeafRangeSensor(datastore, True))
-        devices.append(LeafRangeSensor(datastore, False))
+        entities.append(LeafBatterySensor(datastore))
+        entities.append(LeafRangeSensor(datastore, True))
+        entities.append(LeafRangeSensor(datastore, False))
 
-    add_devices(devices, True)
+    add_entities(entities, True)
 
 
 class LeafBatterySensor(LeafEntity, SensorEntity):
