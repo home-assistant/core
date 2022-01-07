@@ -18,7 +18,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Flux selects."""
+    """Set up the Magic Home sensors."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     device = coordinator.device
     if device.paired_remotes is not None:
@@ -35,7 +35,7 @@ async def async_setup_entry(
 
 
 class FluxPairedRemotes(FluxEntity, SensorEntity):
-    """Representation of a Flux power restore state option."""
+    """Representation of a Magic Home paired remotes sensor."""
 
     _attr_icon = "mdi:remote"
     _attr_entity_category = EntityCategory.CONFIG
