@@ -20,8 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Magic Home sensors."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    device = coordinator.device
-    if device.paired_remotes is not None:
+    if coordinator.device.paired_remotes is not None:
         async_add_entities(
             [
                 FluxPairedRemotes(
