@@ -147,6 +147,7 @@ FLOWS = [
     "icloud",
     "ifttt",
     "insteon",
+    "intellifire",
     "ios",
     "iotawatt",
     "ipma",
