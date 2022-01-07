@@ -159,10 +159,14 @@ async def async_load_platform(
 
     setup_success = True
 
-    if platform not in hass.config.components:
-        setup_success = await setup.async_setup_component(hass, platform, hass_config)
+    # Ensure that the underlying platform domain is setup
+    platform_domain = platform.value if isinstance(platform, Platform) else platform
+    if platform_domain not in hass.config.components:
+        setup_success = await setup.async_setup_component(
+            hass, platform_domain, hass_config
+        )
 
-    # No need to send signal if we could not set up component
+    # No need to send signal if we could not set up platform domain
     if not setup_success:
         return
 
