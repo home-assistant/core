@@ -13,8 +13,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
 from ...exceptions import ConfigEntryNotReady
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # If we can't actually hti the fireplace then lets warn the user
         await api_object.poll()
-    except:
+    except Exception:
         raise ConfigEntryNotReady
 
     # Define the update coordinator
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass=hass,
         api=api_object,
         name=entry.data["name"],
-        serial=api_object.data.serial
+        serial=api_object.data.serial,
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -59,10 +59,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage the polling of the stuff"""
+    """Class to manage the polling of the fireplace API."""
 
     def __init__(self, hass, api: IntellifireAsync, name: str, serial: str):
-        """Initialize the Coordinator"""
+        """Initialize the Coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -78,20 +78,23 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         _LOGGER.debug("Calling update loop on Intellifire")
         async with timeout(100):
-            await self._api.poll(logging_level=logging.DEBUG)
+            try:
+                await self._api.poll(logging_level=logging.DEBUG)
+            except Exception:
+                raise UpdateFailed
         return self._api.data
 
     @property
     def intellifire_name(self):
-        """Return the nanme entered by the users as-is"""
+        """Return the nanme entered by the users as-is."""
         return self._intellifire_name
 
     @property
     def safe_intellifire_name(self):
-        """Return the name entered by user in all lowercase and without any spaces"""
+        """Return the name entered by user in all lowercase and without any spaces."""
         return self._intellifire_name.lower().replace(" ", "_")
 
     @property
     def api(self):
-        """ "Return the API pointer"""
+        """Return the API pointer."""
         return self._api

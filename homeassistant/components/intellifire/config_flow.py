@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from intellifire4py import IntellifireAsync, IntellifirePollData
+from intellifire4py import IntellifireAsync
 import voluptuous as vol
 
 from homeassistant import config_entries

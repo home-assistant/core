@@ -39,12 +39,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Living Room Fireplace"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "Fuego",
-        "serial": "abcd1234"
-
-    }
+    assert result2["data"] == {"host": "1.1.1.1", "name": "Fuego", "serial": "abcd1234"}
 
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -128,11 +123,12 @@ async def test_validate_input(hass: HomeAssistant) -> None:
         return_value={
             "title": "Living Room Fireplace",
             "type": "Fireplace",
-            "serial": "abcd1234"
+            "serial": "abcd1234",
         },
-    ), patch("intellifire4py.IntellifireAsync.poll", return_value=3
-    ), patch("intellifire4py.IntellifireAsync.data", return_value="something"
-    ), patch("intellifire4py.IntellifireAsync.data.serial", return_value="1234"
+    ), patch("intellifire4py.IntellifireAsync.poll", return_value=3), patch(
+        "intellifire4py.IntellifireAsync.data", return_value="something"
+    ), patch(
+        "intellifire4py.IntellifireAsync.data.serial", return_value="1234"
     ), patch(
         "intellifire4py.intellifire_async.IntellifireAsync", return_value="1111"
     ), patch(
