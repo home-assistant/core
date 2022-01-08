@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
             "not_steamist_device": "Not a steamist device"
         },
         "error": {
