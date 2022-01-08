@@ -139,6 +139,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             )
             if self._last_run_success:
                 self._attr_is_on = True
+                self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
@@ -150,6 +151,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             )
             if self._last_run_success:
                 self._attr_is_on = False
+                self.async_write_ha_state()
 
     @property
     def assumed_state(self) -> bool:
