@@ -203,10 +203,6 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
             self._async_update_extra_attrs_from_protect()
         )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        return await super().async_will_remove_from_hass()
-
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     """A UniFi Protect NVR Disk Binary Sensor."""
