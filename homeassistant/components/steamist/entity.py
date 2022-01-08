@@ -5,10 +5,7 @@ from aiosteamist import SteamistStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import SteamistDataUpdateCoordinator
 
@@ -20,7 +17,7 @@ class SteamistEntity(CoordinatorEntity, Entity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: SteamistDataUpdateCoordinator,
         entry: ConfigEntry,
         description: EntityDescription,
     ) -> None:
