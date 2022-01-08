@@ -27,20 +27,13 @@ from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import update_coordinator
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_entries_for_config_entry,
-    async_get,
-    format_mac,
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    update_coordinator,
 )
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    RegistryEntry,
-    async_entries_for_device,
-)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -85,7 +78,7 @@ def device_filter_out_from_trackers(
     return bool(reason)
 
 
-def _cleanup_entity_filter(device: RegistryEntry) -> bool:
+def _cleanup_entity_filter(device: er.RegistryEntry) -> bool:
     """Filter only relevant entities."""
     return device.domain == DEVICE_TRACKER_DOMAIN or (
         device.domain == DEVICE_SWITCH_DOMAIN and "_internet_access" in device.entity_id
@@ -247,7 +240,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Return device Mac address."""
         if not self._unique_id:
             raise ClassSetupMissing()
-        return self._unique_id
+        return dr.format_mac(self._unique_id)
 
     @property
     def devices(self) -> dict[str, FritzDevice]:
@@ -336,7 +329,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                     ssid=interf.get("ssid", ""),
                     type=interf["type"],
                 )
-                if format_mac(int_mac) == format_mac(self.mac):
+                if dr.format_mac(int_mac) == self.mac:
                     self.mesh_role = MeshRoles(node["mesh_role"])
 
         # second get all client devices
@@ -386,64 +379,20 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
     async def async_trigger_reboot(self) -> None:
         """Trigger device reboot."""
-        await self.hass.async_add_executor_job(
-            self.connection.call_action, "DeviceConfig1", "Reboot"
-        )
+        await self.hass.async_add_executor_job(self.connection.reboot)
 
     async def async_trigger_reconnect(self) -> None:
         """Trigger device reconnect."""
-        await self.hass.async_add_executor_job(
-            self.connection.call_action, "WANIPConn1", "ForceTermination"
+        await self.hass.async_add_executor_job(self.connection.reconnect)
+
+    async def async_trigger_cleanup(self, config_entry: ConfigEntry) -> None:
+        """Trigger device trackers cleanup."""
+        device_hosts_list = await self.hass.async_add_executor_job(
+            self.fritz_hosts.get_hosts_info
         )
+        entity_reg: er.EntityRegistry = er.async_get(self.hass)
 
-    async def service_fritzbox(
-        self, service_call: ServiceCall, config_entry: ConfigEntry
-    ) -> None:
-        """Define FRITZ!Box services."""
-        _LOGGER.debug("FRITZ!Box service: %s", service_call.service)
-
-        if not self.connection:
-            raise HomeAssistantError("Unable to establish a connection")
-
-        try:
-            if service_call.service == SERVICE_REBOOT:
-                _LOGGER.warning(
-                    'Service "fritz.reboot" is deprecated, please use the corresponding button entity instead'
-                )
-                await self.hass.async_add_executor_job(
-                    self.connection.call_action, "DeviceConfig1", "Reboot"
-                )
-                return
-
-            if service_call.service == SERVICE_RECONNECT:
-                _LOGGER.warning(
-                    'Service "fritz.reconnect" is deprecated, please use the corresponding button entity instead'
-                )
-                await self.hass.async_add_executor_job(
-                    self.connection.call_action,
-                    "WANIPConn1",
-                    "ForceTermination",
-                )
-                return
-
-            device_hosts_list: list[dict] = []
-            if service_call.service == SERVICE_CLEANUP:
-                device_hosts_list = await self.hass.async_add_executor_job(
-                    self.fritz_hosts.get_hosts_info
-                )
-
-        except (FritzServiceError, FritzActionError) as ex:
-            raise HomeAssistantError("Service or parameter unknown") from ex
-        except FritzConnectionException as ex:
-            raise HomeAssistantError("Service not supported") from ex
-
-        entity_reg: EntityRegistry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
-
-        ha_entity_reg_list: list[
-            RegistryEntry
-        ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
+        ha_entity_reg_list: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
         )
         entities_removed: bool = False
@@ -480,20 +429,55 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
     @callback
     def _async_remove_empty_devices(
-        self, entity_reg: EntityRegistry, config_entry: ConfigEntry
+        self, entity_reg: er.EntityRegistry, config_entry: ConfigEntry
     ) -> None:
         """Remove devices with no entities."""
 
-        device_reg = async_get(self.hass)
-        device_list = async_entries_for_config_entry(device_reg, config_entry.entry_id)
+        device_reg = dr.async_get(self.hass)
+        device_list = dr.async_entries_for_config_entry(
+            device_reg, config_entry.entry_id
+        )
         for device_entry in device_list:
-            if not async_entries_for_device(
+            if not er.async_entries_for_device(
                 entity_reg,
                 device_entry.id,
                 include_disabled_entities=True,
             ):
                 _LOGGER.info("Removing device: %s", device_entry.name)
                 device_reg.async_remove_device(device_entry.id)
+
+    async def service_fritzbox(
+        self, service_call: ServiceCall, config_entry: ConfigEntry
+    ) -> None:
+        """Define FRITZ!Box services."""
+        _LOGGER.debug("FRITZ!Box service: %s", service_call.service)
+
+        if not self.connection:
+            raise HomeAssistantError("Unable to establish a connection")
+
+        try:
+            if service_call.service == SERVICE_REBOOT:
+                _LOGGER.warning(
+                    'Service "fritz.reboot" is deprecated, please use the corresponding button entity instead'
+                )
+                await self.async_trigger_reboot()
+                return
+
+            if service_call.service == SERVICE_RECONNECT:
+                _LOGGER.warning(
+                    'Service "fritz.reconnect" is deprecated, please use the corresponding button entity instead'
+                )
+                await self.async_trigger_reconnect()
+                return
+
+            if service_call.service == SERVICE_CLEANUP:
+                await self.async_trigger_cleanup(config_entry)
+                return
+
+        except (FritzServiceError, FritzActionError) as ex:
+            raise HomeAssistantError("Service or parameter unknown") from ex
+        except FritzConnectionException as ex:
+            raise HomeAssistantError("Service not supported") from ex
 
 
 @dataclass
@@ -668,7 +652,7 @@ class FritzBoxBaseEntity:
         """Return the device information."""
         return DeviceInfo(
             configuration_url=f"http://{self._avm_device.host}",
-            connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self._avm_device.unique_id)},
             manufacturer="AVM",
             model=self._avm_device.model,
