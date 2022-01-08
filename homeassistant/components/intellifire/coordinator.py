@@ -11,7 +11,9 @@ from intellifire4py import IntellifireAsync
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the polling of the fireplace API."""

@@ -1,20 +1,18 @@
 """The Intellifire integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import logging.handlers
 
-from async_timeout import timeout
 from intellifire4py import IntellifireAsync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from .coordinator import IntellifireDataUpdateCoordinator
 
 from ...exceptions import ConfigEntryNotReady
 from .const import DOMAIN
+from .coordinator import IntellifireDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -56,4 +54,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
