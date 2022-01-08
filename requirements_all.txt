@@ -353,7 +353,7 @@ async-upnp-client==0.23.3
 asyncpysupla==0.0.5
 
 # homeassistant.components.aten_pe
-atenpdu==0.3.0
+atenpdu==0.3.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
