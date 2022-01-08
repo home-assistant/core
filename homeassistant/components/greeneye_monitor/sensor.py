@@ -21,7 +21,7 @@ from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_COUNTED_QUANTITY,
     CONF_COUNTED_QUANTITY_PER_PULSE,
     CONF_MONITOR_SERIAL_NUMBER,
