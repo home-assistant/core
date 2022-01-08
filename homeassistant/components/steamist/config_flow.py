@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -121,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
-            mac = user_input[CONF_MAC]
+            mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
             device = self._discovered_devices[mac]
             return self._async_create_entry_from_device(device)
@@ -146,7 +146,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_MAC): vol.In(devices_name)}),
+            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
     async def async_step_user(
