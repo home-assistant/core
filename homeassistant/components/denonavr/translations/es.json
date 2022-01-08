@@ -18,7 +18,7 @@
             },
             "select": {
                 "data": {
-                    "select_host": "IP del Receptor"
+                    "select_host": "Direcci\u00f3n IP del receptor"
                 },
                 "description": "Ejecuta la configuraci\u00f3n de nuevo si deseas conectar receptores adicionales",
                 "title": "Selecciona el receptor con el que quieres conectar."

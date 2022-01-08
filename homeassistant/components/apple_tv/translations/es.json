@@ -33,6 +33,13 @@
                 "description": "El emparejamiento es necesario para el protocolo `{protocol}`. Introduce el c\u00f3digo PIN que aparece en la pantalla. Los ceros iniciales deben ser omitidos, es decir, introduce 123 si el c\u00f3digo mostrado es 0123.",
                 "title": "Emparejamiento"
             },
+            "password": {
+                "title": "Se requiere una contrase\u00f1a"
+            },
+            "protocol_disabled": {
+                "description": "El emparejamiento es necesario para `{protocol}` pero est\u00e1 desactivado en el dispositivo. Revise las posibles restricciones de acceso (por ejemplo, permitir que se conecten todos los dispositivos de la red local) en el dispositivo.\n\nPuede continuar sin emparejar este protocolo, pero algunas funciones estar\u00e1n limitadas.",
+                "title": "No es posible el emparejamiento"
+            },
             "reconfigure": {
                 "description": "Este Apple TV est\u00e1 experimentando algunos problemas de conexi\u00f3n y debe ser reconfigurado.",
                 "title": "Reconfiguraci\u00f3n del dispositivo"
