@@ -65,15 +65,14 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input.get(CONF_HOST)
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            if self._host_in_configuration_exists(host, port):
-                self._errors[CONF_HOST] = "already_configured"
-            else:
-                if await self._test_connection(host, port, user_input):
-                    if port == DEFAULT_PORT:
-                        title = host
-                    else:
-                        title = f"{host}:{port}"
-                    return self.async_create_entry(title=title, data=user_input)
+            await self.async_set_unique_id(f"{host}:{port}")
+            self._abort_if_unique_id_configured()
+            if await self._test_connection(host, port, user_input):
+                if port == DEFAULT_PORT:
+                    title = host
+                else:
+                    title = f"{host}:{port}"
+                return self.async_create_entry(title=title, data=user_input)
         else:
             user_input = {}
 
