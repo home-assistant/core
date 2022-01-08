@@ -146,7 +146,9 @@ class RKICovidNumbersSensor(CoordinatorEntity):
         self.district = district
         self.info_type = info_type
         self.updated = datetime.now()
-        _attr_attribution = f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
+        self._attr_attribution = f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
+        self._attr_unit_of_measurement = self._measurement_unit()
+        self._attr_state = self._native_state()
 
     @property
     def available(self) -> bool:
@@ -156,8 +158,7 @@ class RKICovidNumbersSensor(CoordinatorEntity):
             and self.district in self.coordinator.data
         )
 
-    @property
-    def state(self) -> Optional[str]:
+    def _native_state(self) -> Optional[str]:
         """Return current state."""
         try:
             return getattr(self.coordinator.data[self.district], self.info_type)
@@ -174,23 +175,18 @@ class RKICovidNumbersSensor(CoordinatorEntity):
         """Opt-in for long-term statistics."""
         return STATE_CLASS_MEASUREMENT
 
-    @property
-    def unit_of_measurement(self):
+    def _measurement_unit(self) -> str:
         """Return unit of measurement."""
-        if (
-            self.info_type == "count"
-            or self.info_type == "deaths"
-            or self.info_type == "recovered"
-        ):
+        if self.info_type in ("count", "deaths", "recovered"):
             return "people"
-        elif (
-            self.info_type == "weekIncidence"
-            or self.info_type == "hospitalizationIncidenceBaby"
-            or self.info_type == "hospitalizationIncidenceChildren"
-            or self.info_type == "hospitalizationIncidenceTeen"
-            or self.info_type == "hospitalizationIncidenceGrown"
-            or self.info_type == "hospitalizationIncidenceSenior"
-            or self.info_type == "hospitalizationIncidenceOld"
+        elif self.info_type in (
+            "weekIncidence",
+            "hospitalizationIncidenceBaby",
+            "hospitalizationIncidenceChildren",
+            "hospitalizationIncidenceTeen",
+            "hospitalizationIncidenceGrown",
+            "hospitalizationIncidenceSenior",
+            "hospitalizationIncidenceOld",
         ):
             return "nb"
         else:
