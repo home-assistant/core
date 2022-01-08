@@ -159,7 +159,6 @@ async def async_load_platform(
 
     setup_success = True
 
-    # Ensure that the underlying platform domain is setup
     if component not in hass.config.components:
         setup_success = await setup.async_setup_component(hass, component, hass_config)
 
