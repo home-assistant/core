@@ -1,4 +1,4 @@
-"""Constants for the greeneye_monitor component."""
+"""Shared constants for the greeneye_monitor integration."""
 
 CONF_CHANNELS = "channels"
 CONF_COUNTED_QUANTITY = "counted_quantity"
