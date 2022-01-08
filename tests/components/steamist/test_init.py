@@ -11,22 +11,16 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import _patch_status_active
+from . import MOCK_ASYNC_GET_STATUS_ACTIVE, _async_setup_entry_with_status
 
 from tests.common import MockConfigEntry
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:
     """Test that a config entry can be reloaded."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "127.0.0.1"},
+    _, config_entry = await _async_setup_entry_with_status(
+        hass, MOCK_ASYNC_GET_STATUS_ACTIVE
     )
-    config_entry.add_to_hass(hass)
-    with _patch_status_active():
-        await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
-        await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.NOT_LOADED
