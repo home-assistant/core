@@ -24,7 +24,7 @@ class SteamistEntity(CoordinatorEntity, Entity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_name = f"{coordinator.device_name} {description.name}"
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
     @property
