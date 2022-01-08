@@ -134,7 +134,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices = {
             dr.format_mac(device.mac): device
             for device in await async_discover_devices(self.hass, DISCOVER_SCAN_TIMEOUT)
-            if async_is_steamist_device(device)
         }
         devices_name = {
             mac: f"{device.name} ({device.ipaddress})"
