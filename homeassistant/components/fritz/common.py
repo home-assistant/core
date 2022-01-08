@@ -184,6 +184,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("Unable to establish a connection with %s", self.host)
             return
 
+        self.fritz_hosts = FritzHosts(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if not self._unique_id:
@@ -199,7 +200,6 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Update FritzboxTools data."""
         try:
-            self.fritz_hosts = FritzHosts(fc=self.connection)
             await self.async_scan_devices()
         except (FritzSecurityError, FritzConnectionException) as ex:
             raise update_coordinator.UpdateFailed from ex
