@@ -1,23 +1,27 @@
 """Support for Big Ass Fans SenseME occupancy sensor."""
-import logging
+from __future__ import annotations
 
 from aiosenseme import SensemeDevice
 
+from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SensemeEntity
 from .const import DOMAIN
+from .entity import SensemeEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up SenseME occupancy sensors."""
-    device = hass.data[DOMAIN][entry.entry_id][CONF_DEVICE]
+    device = hass.data[DOMAIN][entry.entry_id]
     if device.has_sensor:
         async_add_entities([HASensemeOccupancySensor(device)])
 
@@ -28,18 +32,10 @@ class HASensemeOccupancySensor(SensemeEntity, BinarySensorEntity):
     def __init__(self, device: SensemeDevice) -> None:
         """Initialize the entity."""
         super().__init__(device, f"{device.name} Occupancy")
+        self._attr_unique_id = f"{self._device.uuid}-SENSOR"
+        self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this sensor."""
-        return f"{self._device.uuid}-SENSOR"
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if sensor is occupied."""
-        return self._device.motion_detected
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return DEVICE_CLASS_OCCUPANCY
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update attrs from device."""
+        self._attr_is_on = bool(self._device.motion_detected)
