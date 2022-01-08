@@ -379,11 +379,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
     async def async_trigger_reboot(self) -> None:
         """Trigger device reboot."""
-        await self.connection.reboot()
+        await self.hass.async_add_executor_job(self.connection.reboot)
 
     async def async_trigger_reconnect(self) -> None:
         """Trigger device reconnect."""
-        await self.connection.reconnect()
+        await self.hass.async_add_executor_job(self.connection.reconnect)
 
     async def async_trigger_cleanup(self, config_entry: ConfigEntry) -> None:
         """Trigger device trackers cleanup."""
