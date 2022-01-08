@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "\u00bfQuieres agregar {device} a Home Assistant?"
+            }
+        }
+    }
+}
