@@ -11,7 +11,7 @@ from intellifire4py import IntellifireAsync
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from .coordinator import IntellifireDataUpdateCoordinator
 
 from ...exceptions import ConfigEntryNotReady
 from .const import DOMAIN
@@ -57,44 +57,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return unload_ok
 
-
-class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage the polling of the fireplace API."""
-
-    def __init__(self, hass, api: IntellifireAsync, name: str, serial: str):
-        """Initialize the Coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=15),
-            update_method=self._async_update_data,
-        )
-        self._api = api
-        self.serial = serial
-        self._intellifire_name = name
-        self._LOGGER = _LOGGER
-
-    async def _async_update_data(self):
-        _LOGGER.debug("Calling update loop on Intellifire")
-        async with timeout(100):
-            try:
-                await self._api.poll(logging_level=logging.DEBUG)
-            except Exception:
-                raise UpdateFailed
-        return self._api.data
-
-    @property
-    def intellifire_name(self):
-        """Return the nanme entered by the users as-is."""
-        return self._intellifire_name
-
-    @property
-    def safe_intellifire_name(self):
-        """Return the name entered by user in all lowercase and without any spaces."""
-        return self._intellifire_name.lower().replace(" ", "_")
-
-    @property
-    def api(self):
-        """Return the API pointer."""
-        return self._api
