@@ -25,6 +25,7 @@ CONF_SIGNAL_CLI_REST_API = "url"
 CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
+ATTR_VERIFY_URLS = "verifyUrls"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -109,12 +110,17 @@ class SignalNotificationService(BaseNotificationService):
         if not isinstance(data[ATTR_URLS], list):
             raise ValueError(f"'{ATTR_URLS}' property must be a list")
 
+        verify = True
+
+        if ATTR_VERIFY_URLS in data and isinstance(data[ATTR_VERIFY_URLS], bool):
+            verify = data[ATTR_VERIFY_URLS]
+
         attachments_as_bytes: list[bytearray] = []
 
         urls = data[ATTR_URLS]
         for url in urls:
             try:
-                resp = requests.get(url, verify=False, timeout=10, stream=True)
+                resp = requests.get(url, verify=verify, timeout=10, stream=True)
                 resp.raise_for_status()
 
                 if (

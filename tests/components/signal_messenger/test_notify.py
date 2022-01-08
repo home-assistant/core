@@ -222,6 +222,58 @@ def test_get_attachments_with_non_list_throws_error(
     assert "'urls' property must be a list" in str(exc.value)
 
 
+def test_get_attachments_with_verify_unset(
+    signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
+) -> None:
+    """Test getting attachments as URL with verifyUrls unset results in verify=true."""
+    signal_requests_mock = signal_requests_mock_factory()
+    data = {"urls": [URL_ATTACHMENT]}
+    signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
+
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 1
+    assert signal_requests_mock.last_request.verify is True
+
+
+def test_get_attachments_with_verify_set_true(
+    signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
+) -> None:
+    """Test getting attachments as URL with verifyUrls set to true results in verify=true."""
+    signal_requests_mock = signal_requests_mock_factory()
+    data = {"verifyUrls": True, "urls": [URL_ATTACHMENT]}
+    signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
+
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 1
+    assert signal_requests_mock.last_request.verify is True
+
+
+def test_get_attachments_with_verify_set_false(
+    signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
+) -> None:
+    """Test getting attachments as URL with verifyUrls set to false results in verify=false."""
+    signal_requests_mock = signal_requests_mock_factory()
+    data = {"verifyUrls": False, "urls": [URL_ATTACHMENT]}
+    signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
+
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 1
+    assert signal_requests_mock.last_request.verify is False
+
+
+def test_get_attachments_with_verify_set_garbage(
+    signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
+) -> None:
+    """Test getting attachments as URL with verifyUrls set to garbage results in verify=true."""
+    signal_requests_mock = signal_requests_mock_factory()
+    data = {"verifyUrls": "test", "urls": [URL_ATTACHMENT]}
+    signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
+
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 1
+    assert signal_requests_mock.last_request.verify is True
+
+
 def assert_sending_requests(
     signal_requests_mock_factory: Mocker, attachments_num: int = 0
 ) -> None:
