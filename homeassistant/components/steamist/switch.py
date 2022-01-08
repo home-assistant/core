@@ -13,7 +13,7 @@ from .coordinator import SteamistDataUpdateCoordinator
 from .entity import SteamistEntity
 
 ACTIVE_SWITCH = SwitchEntityDescription(
-    key="active", icon="mdi:pot-steam", name="Active"
+    key="active", icon="mdi:pot-steam", name="Steam Active"
 )
 
 

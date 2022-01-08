@@ -13,13 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    DEFAULT_NAME,
-    DISCOVER_SCAN_TIMEOUT,
-    DISCOVERY,
-    DOMAIN,
-    STARTUP_SCAN_TIMEOUT,
-)
+from .const import DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN, STARTUP_SCAN_TIMEOUT
 from .coordinator import SteamistDataUpdateCoordinator
 from .discovery import (
     async_discover_device,
@@ -55,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         Steamist(host, async_get_clientsession(hass)),
         host,
-        entry.data.get(CONF_NAME, DEFAULT_NAME),
+        entry.data.get(CONF_NAME),  # Only found from discovery
     )
     await coordinator.async_config_entry_first_refresh()
     if not async_get_discovery(hass, host):
