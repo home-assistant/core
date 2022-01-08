@@ -1,7 +1,10 @@
 """Support for Steamist sensors."""
 from __future__ import annotations
 
-from typing import cast
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from aiosteamist import SteamistStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,17 +29,34 @@ UNIT_MAPPINGS = {
     "F": TEMP_FAHRENHEIT,
 }
 
-STEAMIST_SENSORS = (
-    SensorEntityDescription(
+
+@dataclass
+class SteamistSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[SteamistStatus], int | None]
+
+
+@dataclass
+class SteamistSensorEntityDescription(
+    SensorEntityDescription, SteamistSensorEntityDescriptionMixin
+):
+    """Describes a Steamist sensor entity."""
+
+
+SENSORS: tuple[SteamistSensorEntityDescription, ...] = (
+    SteamistSensorEntityDescription(
         key=_KEY_MINUTES_REMAIN,
         name="Steam Minutes Remain",
         native_unit_of_measurement=TIME_MINUTES,
+        value_fn=lambda status: status.minutes_remain,
     ),
-    SensorEntityDescription(
+    SteamistSensorEntityDescription(
         key=_KEY_TEMP,
         name="Steam Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.temp,
     ),
 )
 
@@ -53,7 +73,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             SteamistSensorEntity(coordinator, config_entry, description)
-            for description in STEAMIST_SENSORS
+            for description in SENSORS
         ]
     )
 
@@ -61,11 +81,13 @@ async def async_setup_entry(
 class SteamistSensorEntity(SteamistEntity, SensorEntity):
     """Representation of an Steamist steam switch."""
 
+    entity_description: SteamistSensorEntityDescription
+
     def __init__(
         self,
         coordinator: SteamistDataUpdateCoordinator,
         entry: ConfigEntry,
-        description: SensorEntityDescription,
+        description: SteamistSensorEntityDescription,
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(coordinator, entry, description)
@@ -75,6 +97,6 @@ class SteamistSensorEntity(SteamistEntity, SensorEntity):
             ]
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the native value of the sensor."""
-        return cast(int, getattr(self._status, self.entity_description.key))
+        return self.entity_description.value_fn(self._status)
