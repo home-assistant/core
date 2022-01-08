@@ -247,11 +247,29 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
+    async def async_lock_async(self, device_id):
+        """Lock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_lock_async,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
     async def async_unlock(self, device_id):
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_unlock_return_activities,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
+    async def async_unlock_async(self, device_id):
+        """Unlock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_unlock_async,
             self._august_gateway.access_token,
             device_id,
         )

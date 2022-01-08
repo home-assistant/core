@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/august",
   "requirements": ["yalexs==1.1.16"],
   "codeowners": ["@bdraco"],
+  "config_flow": true,
   "dhcp": [
     {
       "hostname": "connect",
@@ -22,6 +23,5 @@
       "macaddress": "E076D0*"
     }
   ],
-  "config_flow": true,
   "iot_class": "cloud_push"
 }
