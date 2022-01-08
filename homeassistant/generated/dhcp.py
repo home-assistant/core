@@ -336,6 +336,11 @@ DHCP = [
         "macaddress": "000420*"
     },
     {
+        "domain": "steamist",
+        "macaddress": "001E0C*",
+        "hostname": "my*"
+    },
+    {
         "domain": "tado",
         "hostname": "tado*"
     },

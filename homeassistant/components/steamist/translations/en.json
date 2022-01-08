@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "not_steamist_device": "Not a steamist device"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name} ({ipaddress})",
         "step": {
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} ({ipaddress})?"
+            },
             "user": {
                 "data": {
                     "host": "Host"
