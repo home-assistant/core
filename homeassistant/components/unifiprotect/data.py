@@ -1,7 +1,7 @@
 """Base class for protect data."""
 from __future__ import annotations
 
-import collections
+from collections import deque
 from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
@@ -43,7 +43,7 @@ class ProtectData:
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
         self.last_update_success = False
-        self.access_tokens: dict[str, collections.deque] = {}
+        self.access_tokens: dict[str, deque] = {}
         self.api = protect
 
     @property
@@ -177,3 +177,10 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s", device_id)
         for update_callback in self._subscriptions[device_id]:
             update_callback()
+
+    @callback
+    def async_get_or_create_access_tokens(self, entity_id: str) -> deque:
+        """Wrap access_tokens to automatically create underlying data structure if missing."""
+        if entity_id not in self.access_tokens:
+            self.access_tokens[entity_id] = deque([], 2)
+        return self.access_tokens[entity_id]
