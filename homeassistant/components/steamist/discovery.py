@@ -23,7 +23,8 @@ MODEL_450_HOSTNAME_PREFIX = "MY450-"
 MODEL_550_HOSTNAME_PREFIX = "MY550-"
 
 
-def is_steamist_device(device: Device30303) -> bool:
+@callback
+def async_is_steamist_device(device: Device30303) -> bool:
     """Check if a 30303 discovery is a steamist device."""
     hostname = device.hostname
     return bool(
@@ -83,7 +84,9 @@ async def async_discover_devices(
 
     if not address:
         return [
-            device for device in scanner.found_devices if is_steamist_device(device)
+            device
+            for device in scanner.found_devices
+            if async_is_steamist_device(device)
         ]
 
     return [device for device in scanner.found_devices if device.ipaddress == address]

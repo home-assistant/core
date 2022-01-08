@@ -21,8 +21,8 @@ from .const import CONNECTION_EXCEPTIONS, DISCOVER_SCAN_TIMEOUT, DOMAIN
 from .discovery import (
     async_discover_device,
     async_discover_devices,
+    async_is_steamist_device,
     async_update_entry_from_discovery,
-    is_steamist_device,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             self._discovered_device = discovery
         assert self._discovered_device is not None
-        if not is_steamist_device(device):
+        if not async_is_steamist_device(device):
             return self.async_abort(reason="not_steamist_device")
         return await self.async_step_discovery_confirm()
 
@@ -134,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices = {
             dr.format_mac(device.mac): device
             for device in await async_discover_devices(self.hass, DISCOVER_SCAN_TIMEOUT)
-            if is_steamist_device(device)
+            if async_is_steamist_device(device)
         }
         devices_name = {
             mac: f"{device.name} ({device.ipaddress})"
