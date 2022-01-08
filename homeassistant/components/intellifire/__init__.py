@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from ...exceptions import ConfigEntryNotReady
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -26,6 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Define the API Object
     api_object = IntellifireAsync(entry.data["host"])
+
+    try:
+        # If we can't actually hti the fireplace then lets warn the user
+        api_object.poll()
+    except:
+        raise ConfigEntryNotReady
+
     # Define the update coordinator
     coordinator = IntellifireDataUpdateCoordinator(
         hass=hass, api=api_object, name=entry.data["name"]
@@ -62,6 +70,8 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self._intellifire_name = name
         self._LOGGER = _LOGGER
+
+        _LOGGER.warn("API_DATA", self.api.data)
 
     async def _async_update_data(self):
         _LOGGER.debug("Calling update loop on Intellifire")

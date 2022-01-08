@@ -39,8 +39,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     name = data["name"]
 
+    # Extract Serial Number to use for Unique ID
+
+    serial_number = api.data.serial_number
+
     # Return info that you want to store in the config entry.
-    return {"title": f"{name} Fireplace", "type": "Fireplace"}
+    return {"title": f"{name} Fireplace", "type": "Fireplace", "serial": serial_number}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -62,6 +66,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
+            # Store serial into 'user_input' which is going to be stored with the config entry
+            user_input["serial"] = info["serial"]
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
