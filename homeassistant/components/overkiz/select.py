@@ -30,6 +30,27 @@ class OverkizSelectDescription(SelectEntityDescription, OverkizSelectDescription
     """Class to describe an Overkiz select entity."""
 
 
+def _select_option_open_closed_pedestrian(
+    option: str, execute_command: Callable[..., Awaitable[None]]
+) -> Awaitable[None]:
+    """Change the selected option for Open/Closed/Pedestrian."""
+    return execute_command(
+        {
+            OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
+            OverkizCommandParam.OPEN: OverkizCommand.OPEN,
+            OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
+        }[OverkizCommandParam(option)],
+        None,
+    )
+
+
+def _select_option_memorized_simple_volume(
+    option: str, execute_command: Callable[..., Awaitable[None]]
+) -> Awaitable[None]:
+    """Change the selected option for Memorized Simple Volume."""
+    return execute_command(OverkizCommand.SET_MEMORIZED_SIMPLE_VOLUME, option)
+
+
 SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     OverkizSelectDescription(
         key=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
@@ -40,14 +61,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
             OverkizCommandParam.PEDESTRIAN,
             OverkizCommandParam.CLOSED,
         ],
-        select_option=lambda option, execute_command: execute_command(
-            {
-                OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
-                OverkizCommandParam.OPEN: OverkizCommand.OPEN,
-                OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
-            }[OverkizCommandParam(option)],
-            None,
-        ),
+        select_option=_select_option_open_closed_pedestrian,
         device_class=OverkizDeviceClass.OPEN_CLOSED_PEDESTRIAN,
     ),
     OverkizSelectDescription(
@@ -55,9 +69,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         name="Memorized Simple Volume",
         icon="mdi:volume-high",
         options=[OverkizCommandParam.STANDARD, OverkizCommandParam.HIGHEST],
-        select_option=lambda option, execute_command: execute_command(
-            OverkizCommand.SET_MEMORIZED_SIMPLE_VOLUME, option
-        ),
+        select_option=_select_option_memorized_simple_volume,
         entity_category=EntityCategory.CONFIG,
         device_class=OverkizDeviceClass.MEMORIZED_SIMPLE_VOLUME,
     ),
