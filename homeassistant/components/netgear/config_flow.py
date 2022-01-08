@@ -23,6 +23,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MODELS_PORT80,
+    PORT80,
 )
 from .errors import CannotLoginException
 from .router import get_api
@@ -146,7 +147,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
                 model
             ):
-                updated_data[CONF_PORT] = 80
+                updated_data[CONF_PORT] = PORT80
 
         self.placeholders.update(updated_data)
         self.discovered = True
