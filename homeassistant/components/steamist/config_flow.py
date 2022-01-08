@@ -22,21 +22,10 @@ from .discovery import (
     async_discover_device,
     async_discover_devices,
     async_update_entry_from_discovery,
+    is_steamist_device,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-MODEL_450_HOSTNAME_PREFIX = "MY450-"
-MODEL_550_HOSTNAME_PREFIX = "MY550-"
-
-
-def _is_steamist_device(device: Device30303) -> bool:
-    """Check if a 30303 discovery is a steamist device."""
-    hostname = device.hostname
-    return bool(
-        hostname.startswith(MODEL_450_HOSTNAME_PREFIX)
-        or hostname.startswith(MODEL_550_HOSTNAME_PREFIX)
-    )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -96,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             self._discovered_device = discovery
         assert self._discovered_device is not None
-        if not _is_steamist_device(device):
+        if not is_steamist_device(device):
             return self.async_abort(reason="not_steamist_device")
         return await self.async_step_discovery_confirm()
 
@@ -145,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices = {
             dr.format_mac(device.mac): device
             for device in await async_discover_devices(self.hass, DISCOVER_SCAN_TIMEOUT)
-            if _is_steamist_device(device)
+            if is_steamist_device(device)
         }
         devices_name = {
             mac: f"{device.name} ({device.ipaddress})"

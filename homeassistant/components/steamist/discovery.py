@@ -19,6 +19,19 @@ from .const import CONF_MODEL, DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+MODEL_450_HOSTNAME_PREFIX = "MY450-"
+MODEL_550_HOSTNAME_PREFIX = "MY550-"
+
+
+def is_steamist_device(device: Device30303) -> bool:
+    """Check if a 30303 discovery is a steamist device."""
+    hostname = device.hostname
+    return bool(
+        hostname.startswith(MODEL_450_HOSTNAME_PREFIX)
+        or hostname.startswith(MODEL_550_HOSTNAME_PREFIX)
+    )
+
+
 @callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant,
@@ -69,7 +82,9 @@ async def async_discover_devices(
             continue
 
     if not address:
-        return scanner.found_devices
+        return [
+            device for device in scanner.found_devices if is_steamist_device(device)
+        ]
 
     return [device for device in scanner.found_devices if device.ipaddress == address]
 
