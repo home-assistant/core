@@ -6,9 +6,9 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import mysensors
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -57,7 +57,7 @@ async def async_setup_entry(
         """Discover and add a MySensors switch."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.SWITCH,
             discovery_info,
             device_class_map,
             async_add_entities=async_add_entities,
@@ -67,7 +67,7 @@ async def async_setup_entry(
         """Set IR code as device state attribute."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         ir_code = service.data.get(ATTR_IR_CODE)
-        devices = mysensors.get_mysensors_devices(hass, DOMAIN)
+        devices = mysensors.get_mysensors_devices(hass, Platform.SWITCH)
 
         if entity_ids:
             _devices = [
@@ -99,7 +99,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.SWITCH),
             async_discover,
         ),
     )
