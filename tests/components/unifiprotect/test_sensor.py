@@ -18,7 +18,7 @@ from homeassistant.components.unifiprotect.sensor import (
     NVR_SENSORS,
     SENSE_SENSORS,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, Platform
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -230,6 +230,42 @@ async def test_sensor_setup_nvr(
         assert state
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+
+async def test_sensor_nvr_memory_unavaiable(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, now: datetime
+):
+    """Test memory sensor for NVR if no data available."""
+
+    mock_entry.api.bootstrap.reset_objects()
+    nvr: NVR = mock_entry.api.bootstrap.nvr
+    nvr.system_info.memory.available = None
+    nvr.system_info.memory.total = None
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # 2 from all, 4 from sense, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 12, 9)
+
+    entity_registry = er.async_get(hass)
+
+    description = NVR_DISABLED_SENSORS[2]
+    unique_id, entity_id = ids_from_device_description(
+        Platform.SENSOR, nvr, description
+    )
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.disabled is not description.entity_registry_enabled_default
+    assert entity.unique_id == unique_id
+
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
 async def test_sensor_setup_camera(
