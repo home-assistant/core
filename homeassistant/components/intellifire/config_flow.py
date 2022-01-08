@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from intellifire4py import IntellifireAsync
+from intellifire4py import IntellifireAsync, IntellifirePollData
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,9 +38,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise CannotConnect
 
     name = data["name"]
-
-    # Extract Serial Number to use for Unique ID
-
     serial_number = api.data.serial
 
     # Return info that you want to store in the config entry.

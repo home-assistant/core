@@ -126,10 +126,12 @@ async def test_validate_input(hass: HomeAssistant) -> None:
         return_value={
             "title": "Living Room Fireplace",
             "type": "Fireplace",
-            "serial_number": "abcd1234",
-            "host": "1.1.1.1",
+            "serial": "abcd1234"
         },
-    ), patch("intellifire4py.IntellifireAsync.poll", return_value=3), patch(
+    ), patch("intellifire4py.IntellifireAsync.poll", return_value=3
+    ), patch("intellifire4py.IntellifireAsync.data", return_value="something"
+    ), patch("intellifire4py.IntellifireAsync.data.serial", return_value="1234"
+    ), patch(
         "intellifire4py.intellifire_async.IntellifireAsync", return_value="1111"
     ), patch(
         "intellifire4py.IntellifireAsync", return_value=True
