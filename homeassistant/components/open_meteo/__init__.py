@@ -1,7 +1,15 @@
 """Support for Open-Meteo."""
 from __future__ import annotations
 
-from open_meteo import DailyParameters, Forecast, OpenMeteo, OpenMeteoError
+from open_meteo import (
+    DailyParameters,
+    Forecast,
+    OpenMeteo,
+    OpenMeteoError,
+    PrecipitationUnit,
+    TemperatureUnit,
+    WindSpeedUnit,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE, Platform
@@ -37,6 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     DailyParameters.WIND_DIRECTION_10M_DOMINANT,
                     DailyParameters.WIND_SPEED_10M_MAX,
                 ],
+                precipitation_unit=PrecipitationUnit.MILLIMETERS,
+                temperature_unit=TemperatureUnit.CELSIUS,
+                timezone="UTC",
+                wind_speed_unit=WindSpeedUnit.KILOMETERS_PER_HOUR,
             )
         except OpenMeteoError as err:
             raise UpdateFailed("Open-Meteo API communication error") from err
