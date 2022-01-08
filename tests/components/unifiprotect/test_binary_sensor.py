@@ -2,22 +2,29 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from copy import copy
 from datetime import datetime, timedelta
+from unittest.mock import Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Light
-from pyunifiprotect.data.devices import Sensor
+from pyunifiprotect.data import Camera, Event, EventType, Light, Sensor
 
 from homeassistant.components.unifiprotect.binary_sensor import (
     CAMERA_SENSORS,
     LIGHT_SENSORS,
+    MOTION_SENSORS,
     SENSE_SENSORS,
 )
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import (
+    ATTR_EVENT_SCORE,
+    ATTR_EVENT_THUMB,
+    DEFAULT_ATTRIBUTION,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LAST_TRIP_TIME,
     STATE_OFF,
+    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -51,6 +58,7 @@ async def camera_fixture(
     camera_obj.feature_flags.has_chime = True
     camera_obj.last_ring = now - timedelta(hours=1)
     camera_obj.is_dark = False
+    camera_obj.is_motion_detected = False
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
@@ -61,7 +69,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
 
     yield camera_obj
 
@@ -117,6 +125,7 @@ async def camera_none_fixture(
     camera_obj.name = "Test Camera"
     camera_obj.feature_flags.has_chime = False
     camera_obj.is_dark = False
+    camera_obj.is_motion_detected = False
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
@@ -127,7 +136,7 @@ async def camera_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 1, 1)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
 
     yield camera_obj
 
@@ -219,6 +228,7 @@ async def test_binary_sensor_setup_camera_all(
 
     assert state.attributes[ATTR_LAST_TRIP_TIME] == now - timedelta(hours=1)
 
+    # Is Dark
     description = CAMERA_SENSORS[1]
     unique_id, entity_id = ids_from_device_description(
         Platform.BINARY_SENSOR, camera, description
@@ -232,6 +242,23 @@ async def test_binary_sensor_setup_camera_all(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+    # Motion
+    description = MOTION_SENSORS[0]
+    unique_id, entity_id = ids_from_device_description(
+        Platform.BINARY_SENSOR, camera, description
+    )
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.unique_id == unique_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert state.attributes[ATTR_EVENT_SCORE] == 0
+    assert state.attributes[ATTR_EVENT_THUMB] is None
 
 
 async def test_binary_sensor_setup_camera_none(
@@ -281,3 +308,48 @@ async def test_binary_sensor_setup_sensor(
 
         if index != 1:
             assert state.attributes[ATTR_LAST_TRIP_TIME] == expected_trip_time
+
+
+async def test_binary_sensor_update_motion(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, camera: Camera, now: datetime
+):
+    """Test binary_sensor motion entity."""
+
+    _, entity_id = ids_from_device_description(
+        Platform.BINARY_SENSOR, camera, MOTION_SENSORS[0]
+    )
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.MOTION,
+        start=now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=camera.id,
+    )
+
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_camera = camera.copy()
+    new_camera.is_motion_detected = True
+    new_camera.last_motion_event_id = event.id
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = new_camera
+
+    new_bootstrap.cameras = {new_camera.id: new_camera}
+    new_bootstrap.events = {event.id: event}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert state.attributes[ATTR_EVENT_SCORE] == 100
+    assert state.attributes[ATTR_EVENT_THUMB].startswith(
+        f"/api/ufp/thumbnail/test_event_id?entity_id={entity_id}&token="
+    )
