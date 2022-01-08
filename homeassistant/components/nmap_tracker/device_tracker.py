@@ -1,7 +1,6 @@
 """Support for scanning a network with nmap."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -23,6 +22,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import NmapDevice, NmapDeviceScanner, short_hostname, signal_device_update
@@ -88,7 +88,7 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Nmap Tracker component."""
     nmap_tracker = hass.data[DOMAIN][entry.entry_id]

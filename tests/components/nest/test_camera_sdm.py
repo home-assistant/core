@@ -52,6 +52,7 @@ DEVICE_TRAITS = {
 DATETIME_FORMAT = "YY-MM-DDTHH:MM:SS"
 DOMAIN = "nest"
 MOTION_EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
+EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 
 # Tests can assert that image bytes came from an event or was decoded
 # from the live stream.
@@ -69,7 +70,9 @@ IMAGE_AUTHORIZATION_HEADERS = {"Authorization": "Basic g.0.eventToken"}
 
 
 def make_motion_event(
-    event_id: str = MOTION_EVENT_ID, timestamp: datetime.datetime = None
+    event_id: str = MOTION_EVENT_ID,
+    event_session_id: str = EVENT_SESSION_ID,
+    timestamp: datetime.datetime = None,
 ) -> EventMessage:
     """Create an EventMessage for a motion event."""
     if not timestamp:
@@ -82,7 +85,7 @@ def make_motion_event(
                 "name": DEVICE_ID,
                 "events": {
                     "sdm.devices.events.CameraMotion.Motion": {
-                        "eventSessionId": "CjY5Y3VKaTZwR3o4Y19YbTVfMF...",
+                        "eventSessionId": event_session_id,
                         "eventId": event_id,
                     },
                 },
@@ -625,48 +628,6 @@ async def test_event_image_expired(hass, auth):
     assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
-async def test_event_image_becomes_expired(hass, auth):
-    """Test fallback for an event event image that has been cleaned up on expiration."""
-    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    event_timestamp = utcnow()
-    await subscriber.async_receive_event(make_motion_event(timestamp=event_timestamp))
-    await hass.async_block_till_done()
-
-    auth.responses = [
-        # Fake response from API that returns url image
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        # Fake response for the image content fetch
-        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
-        # Image is refetched after being cleared by expiration alarm
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        aiohttp.web.Response(body=b"updated image bytes"),
-    ]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-
-    # Event image is still valid before expiration
-    next_update = event_timestamp + datetime.timedelta(seconds=25)
-    await fire_alarm(hass, next_update)
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-
-    # Fire an alarm well after expiration, removing image from cache
-    # Note: This test does not override the "now" logic within the underlying
-    # python library that tracks active events. Instead, it exercises the
-    # alarm behavior only. That is, the library may still think the event is
-    # active even though Home Assistant does not due to patching time.
-    next_update = event_timestamp + datetime.timedelta(seconds=180)
-    await fire_alarm(hass, next_update)
-
-    image = await async_get_image(hass)
-    assert image.content == b"updated image bytes"
-
-
 async def test_multiple_event_images(hass, auth):
     """Test fallback for an event event image that has been cleaned up on expiration."""
     subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
@@ -674,7 +635,9 @@ async def test_multiple_event_images(hass, auth):
     assert hass.states.get("camera.my_camera")
 
     event_timestamp = utcnow()
-    await subscriber.async_receive_event(make_motion_event(timestamp=event_timestamp))
+    await subscriber.async_receive_event(
+        make_motion_event(event_session_id="event-session-1", timestamp=event_timestamp)
+    )
     await hass.async_block_till_done()
 
     auth.responses = [
@@ -692,7 +655,11 @@ async def test_multiple_event_images(hass, auth):
 
     next_event_timestamp = event_timestamp + datetime.timedelta(seconds=25)
     await subscriber.async_receive_event(
-        make_motion_event(event_id="updated-event-id", timestamp=next_event_timestamp)
+        make_motion_event(
+            event_id="updated-event-id",
+            event_session_id="event-session-2",
+            timestamp=next_event_timestamp,
+        )
     )
     await hass.async_block_till_done()
 

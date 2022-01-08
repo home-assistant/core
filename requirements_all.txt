@@ -675,7 +675,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.40
+flux_led==0.27.41
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1407,7 +1407,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.22
+pybotvac==0.0.23
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.13
@@ -1446,7 +1446,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.6.0
+pydaikin==2.7.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2021,7 +2021,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==1.4.1
+pyvesync==1.4.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
@@ -2497,7 +2497,7 @@ xmltodict==0.12.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.4
+yalesmartalarmclient==0.3.7
 
 # homeassistant.components.august
 yalexs==1.1.16
@@ -2512,7 +2512,7 @@ yeelightsunflower==0.0.10
 youless-api==0.16
 
 # homeassistant.components.media_extractor
-youtube_dl==2021.06.06
+youtube_dl==2021.12.17
 
 # homeassistant.components.zengge
 zengge==0.2
