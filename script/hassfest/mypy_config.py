@@ -179,7 +179,6 @@ STRICT_SETTINGS: Final[list[str]] = [
 # To enable granular typing, add additional settings if core files are given.
 STRICT_SETTINGS_CORE: Final[list[str]] = [
     "disallow_any_generics",
-    "no_implicit_reexport",
 ]
 
 
