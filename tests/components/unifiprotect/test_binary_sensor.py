@@ -2,9 +2,7 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
-from copy import copy
 from datetime import datetime, timedelta
-from unittest.mock import Mock
 
 import pytest
 from pyunifiprotect.data import Camera, Light
@@ -13,7 +11,6 @@ from pyunifiprotect.data.devices import Sensor
 from homeassistant.components.unifiprotect.binary_sensor import (
     CAMERA_SENSORS,
     LIGHT_SENSORS,
-    RING_INTERVAL,
     SENSE_SENSORS,
 )
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -21,18 +18,15 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LAST_TRIP_TIME,
     STATE_OFF,
-    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .conftest import (
     MockEntityFixture,
     assert_entity_counts,
     ids_from_device_description,
-    time_changed,
 )
 
 
@@ -209,22 +203,35 @@ async def test_binary_sensor_setup_camera_all(
 
     entity_registry = er.async_get(hass)
 
-    for index, description in enumerate(CAMERA_SENSORS):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.BINARY_SENSOR, camera, description
-        )
+    description = CAMERA_SENSORS[0]
+    unique_id, entity_id = ids_from_device_description(
+        Platform.BINARY_SENSOR, camera, description
+    )
 
-        entity = entity_registry.async_get(entity_id)
-        assert entity
-        assert entity.unique_id == unique_id
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.unique_id == unique_id
 
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.state == STATE_OFF
-        assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-        if index == 0:
-            assert state.attributes[ATTR_LAST_TRIP_TIME] == now - timedelta(hours=1)
+    assert state.attributes[ATTR_LAST_TRIP_TIME] == now - timedelta(hours=1)
+
+    description = CAMERA_SENSORS[1]
+    unique_id, entity_id = ids_from_device_description(
+        Platform.BINARY_SENSOR, camera, description
+    )
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.unique_id == unique_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
 async def test_binary_sensor_setup_camera_none(
@@ -274,52 +281,3 @@ async def test_binary_sensor_setup_sensor(
 
         if index != 1:
             assert state.attributes[ATTR_LAST_TRIP_TIME] == expected_trip_time
-
-
-async def test_binary_sensor_update_doorbell(
-    hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    camera: Camera,
-):
-    """Test select entity update (change doorbell message)."""
-
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, camera, CAMERA_SENSORS[0]
-    )
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-    new_bootstrap = copy(mock_entry.api.bootstrap)
-    new_camera = camera.copy()
-    new_camera.last_ring = utcnow()
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
-    new_bootstrap.cameras = {new_camera.id: new_camera}
-    mock_entry.api.bootstrap = new_bootstrap
-    mock_entry.api.ws_subscription(mock_msg)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
-
-    # fire event a second time for code coverage (cancel existing)
-    mock_entry.api.ws_subscription(mock_msg)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
-
-    # since time is not really changing, switch the last ring back to allow turn off
-    new_camera.last_ring = utcnow() - RING_INTERVAL
-    await time_changed(hass, RING_INTERVAL.total_seconds())
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
