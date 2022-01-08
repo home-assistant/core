@@ -135,11 +135,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             dr.format_mac(device.mac): device
             for device in await async_discover_devices(self.hass, DISCOVER_SCAN_TIMEOUT)
         }
-        _LOGGER.debug("Discovered devices: %s", self._discovered_devices)
         devices_name = {
             mac: f"{device.name} ({device.ipaddress})"
             for mac, device in self._discovered_devices.items()
-            if mac not in current_unique_ids and device.ipaddress in current_hosts
+            if mac not in current_unique_ids and device.ipaddress not in current_hosts
         }
         # Check if there is at least one device
         if not devices_name:
