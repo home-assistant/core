@@ -26,11 +26,9 @@ MODEL_550_HOSTNAME_PREFIX = "MY550-"
 @callback
 def async_is_steamist_device(device: Device30303) -> bool:
     """Check if a 30303 discovery is a steamist device."""
-    hostname = device.hostname
-    return bool(
-        hostname.startswith(MODEL_450_HOSTNAME_PREFIX)
-        or hostname.startswith(MODEL_550_HOSTNAME_PREFIX)
-    )
+    return device.hostname.startswith(
+        MODEL_450_HOSTNAME_PREFIX
+    ) or device.hostname.startswith(MODEL_550_HOSTNAME_PREFIX)
 
 
 @callback
