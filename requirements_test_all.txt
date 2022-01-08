@@ -182,6 +182,9 @@ aiorecollect==1.0.8
 # homeassistant.components.ridwell
 aioridwell==2021.12.2
 
+# homeassistant.components.senseme
+aiosenseme==0.5.5
+
 # homeassistant.components.shelly
 aioshelly==1.0.7
 
