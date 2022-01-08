@@ -380,6 +380,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                 for user in plex_server.option_monitored_users
                 if plex_server.option_monitored_users[user]["enabled"]
             }
+            default_accounts.intersection_update(plex_server.accounts)
             for user in plex_server.accounts:
                 if user not in known_accounts:
                     available_accounts[user] += " [New]"

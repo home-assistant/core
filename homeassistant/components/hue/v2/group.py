@@ -7,7 +7,6 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
-from aiohue.v2.models.feature import AlertEffectType
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -103,7 +102,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # Entities for Hue groups are disabled by default
         # unless they were enabled in old version (legacy option)
-        self._attr_entity_registry_enabled_default = bridge.config_entry.data.get(
+        self._attr_entity_registry_enabled_default = bridge.config_entry.options.get(
             CONF_ALLOW_HUE_GROUPS, False
         )
 
@@ -193,7 +192,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     color_xy=xy_color if light.supports_color else None,
                     color_temp=color_temp if light.supports_color_temperature else None,
                     transition_time=transition,
-                    alert=AlertEffectType.BREATHE if flash is not None else None,
                     allowed_errors=ALLOWED_ERRORS,
                 )
                 for light in self.controller.get_lights(self.resource.id)
@@ -300,7 +298,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             supported_color_modes.add(COLOR_MODE_ONOFF)
         self._attr_supported_color_modes = supported_color_modes
         # pick a winner for the current colormode
-        if lights_in_colortemp_mode == lights_with_color_temp_support:
+        if (
+            lights_with_color_temp_support > 0
+            and lights_in_colortemp_mode == lights_with_color_temp_support
+        ):
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
         elif lights_with_color_support > 0:
             self._attr_color_mode = COLOR_MODE_XY
