@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
 
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OverkizStateType
 from .entity import OverkizDescriptiveEntity
 
 
@@ -25,7 +24,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensor entities."""
 
-    value_fn: Callable[[str], bool]
+    value_fn: Callable[[OverkizStateType], bool]
 
 
 @dataclass
@@ -41,28 +40,28 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_RAIN,
         name="Rain",
         icon="mdi:weather-rainy",
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # SmokeSensor/SmokeSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_SMOKE,
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # WaterSensor/WaterDetectionSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_WATER_DETECTION,
         name="Water",
         icon="mdi:water",
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # AirSensor/AirFlowSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_GAS_DETECTION,
         name="Gas",
         device_class=BinarySensorDeviceClass.GAS,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # OccupancySensor/OccupancySensor
     # OccupancySensor/MotionSensor
@@ -70,35 +69,35 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_OCCUPANCY,
         name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.PERSON_INSIDE),
+        value_fn=lambda state: state == OverkizCommandParam.PERSON_INSIDE,
     ),
     # ContactSensor/WindowWithTiltSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_VIBRATION,
         name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # ContactSensor/ContactSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_CONTACT,
         name="Contact",
         device_class=BinarySensorDeviceClass.DOOR,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.OPEN),
+        value_fn=lambda state: state == OverkizCommandParam.OPEN,
     ),
     # Siren/SirenStatus
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_ASSEMBLY,
         name="Assembly",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.OPEN),
+        value_fn=lambda state: state == OverkizCommandParam.OPEN,
     ),
     # Unknown
     OverkizBinarySensorDescription(
         key=OverkizState.IO_VIBRATION_DETECTED,
         name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
 ]
 
