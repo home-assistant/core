@@ -949,6 +949,10 @@ omit =
     homeassistant/components/sense/sensor.py
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
+    homeassistant/components/senseme/__init__.py
+    homeassistant/components/senseme/discovery.py
+    homeassistant/components/senseme/entity.py
+    homeassistant/components/senseme/fan.py
     homeassistant/components/sensibo/__init__.py
     homeassistant/components/sensibo/climate.py
     homeassistant/components/serial/sensor.py

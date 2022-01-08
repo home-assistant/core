@@ -123,6 +123,7 @@ homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
 homeassistant.components.sensor.*
+homeassistant.components.senseme.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*

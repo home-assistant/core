@@ -269,6 +269,7 @@ FLOWS = [
     "samsungtv",
     "screenlogic",
     "sense",
+    "senseme",
     "sensibo",
     "sentry",
     "sharkiq",
