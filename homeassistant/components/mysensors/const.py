@@ -163,7 +163,7 @@ FLAT_PLATFORM_TYPES: dict[tuple[str, SensorType], set[ValueType]] = {
     for s_type_name, v_type_name in platform_types.items()
 }
 
-TYPE_TO_PLATFORMS: dict[SensorType, list[str]] = defaultdict(list)
+TYPE_TO_PLATFORMS: dict[SensorType, list[Platform]] = defaultdict(list)
 
 for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
