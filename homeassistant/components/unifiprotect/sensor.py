@@ -9,8 +9,8 @@ from typing import Any
 from pyunifiprotect.data import NVR, Camera, Event
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_OCCUPANCY
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -20,13 +20,6 @@ from homeassistant.const import (
     DATA_BYTES,
     DATA_RATE_BYTES_PER_SECOND,
     DATA_RATE_MEGABITS_PER_SECOND,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
@@ -51,6 +44,7 @@ from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 DETECTED_OBJECT_NONE = "none"
+DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -96,7 +90,7 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_UPTIME,
         name="Uptime",
         icon="mdi:clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         ufp_value="up_since",
@@ -105,7 +99,7 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_BLE,
         name="Bluetooth Signal Strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,7 +120,7 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_WIFI,
         name="WiFi Signal Strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -139,7 +133,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key=_KEY_OLDEST,
         name="Oldest Recording",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="stats.video.recording_start",
     ),
@@ -163,7 +157,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key=_KEY_VOLTAGE,
         name="Voltage",
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -201,7 +195,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_BATTERY,
         name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="battery_status.percentage",
@@ -210,7 +204,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_LIGHT,
         name="Light Level",
         native_unit_of_measurement=LIGHT_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.light.value",
     ),
@@ -218,7 +212,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_HUMIDITY,
         name="Humidity Level",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.humidity.value",
     ),
@@ -226,7 +220,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_TEMP,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
     ),
@@ -237,7 +231,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_UPTIME,
         name="Uptime",
         icon="mdi:clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="up_since",
     ),
@@ -337,7 +331,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key=_KEY_CPU_TEMP,
         name="CPU Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -359,7 +353,7 @@ MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key=_KEY_OBJECT,
         name="Detected Object",
-        device_class=DEVICE_CLASS_OCCUPANCY,
+        device_class=DEVICE_CLASS_DETECTION,
     ),
 )
 
