@@ -11,7 +11,7 @@ from . import (
 
 
 async def test_steam_active(hass: HomeAssistant) -> None:
-    """Test that the binary sensors are setup with the expected values when steam is active."""
+    """Test that the sensors are setup with the expected values when steam is active."""
     await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_ACTIVE)
     assert hass.states.get("sensor.steam_temperature").state == "39"
     assert hass.states.get("sensor.steam_minutes_remain").state == "14"
