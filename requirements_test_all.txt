@@ -418,7 +418,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.41
+flux_led==0.27.42
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -695,7 +695,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.22.0
+numpy==1.21.4
 
 # homeassistant.components.google
 oauth2client==4.0.0

@@ -675,7 +675,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.41
+flux_led==0.27.42
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1119,7 +1119,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.22.0
+numpy==1.21.4
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1624,7 +1624,7 @@ pylast==4.2.1
 pylaunches==1.2.0
 
 # homeassistant.components.lg_netcast
-pylgnetcast==0.3.5
+pylgnetcast==0.3.7
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
