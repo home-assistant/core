@@ -52,21 +52,6 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
-DEVICE_CLASS_TUYA_BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
-DEVICE_CLASS_TUYA_BASIC_NIGHTVISION = "tuya__basic_nightvision"
-DEVICE_CLASS_TUYA_DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
-DEVICE_CLASS_TUYA_IPC_WORK_MODE = "tuya__ipc_work_mode"
-DEVICE_CLASS_TUYA_LED_TYPE = "tuya__led_type"
-DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
-DEVICE_CLASS_TUYA_MOTION_SENSITIVITY = "tuya__motion_sensitivity"
-DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
-DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
-DEVICE_CLASS_TUYA_STATUS = "tuya__status"
-DEVICE_CLASS_TUYA_FINGERBOT_MODE = "tuya__fingerbot_mode"
-DEVICE_CLASS_TUYA_VACUUM_CISTERN = "tuya__vacuum_cistern"
-DEVICE_CLASS_TUYA_VACUUM_COLLECTION = "tuya__vacuum_collection"
-DEVICE_CLASS_TUYA_VACUUM_MODE = "tuya__vacuum_mode"
-
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
@@ -97,6 +82,25 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
+
+
+class TuyaDeviceClass(StrEnum):
+    """Tuya specific device classes, used for translations."""
+
+    BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
+    BASIC_NIGHTVISION = "tuya__basic_nightvision"
+    DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
+    FINGERBOT_MODE = "tuya__fingerbot_mode"
+    IPC_WORK_MODE = "tuya__ipc_work_mode"
+    LED_TYPE = "tuya__led_type"
+    LIGHT_MODE = "tuya__light_mode"
+    MOTION_SENSITIVITY = "tuya__motion_sensitivity"
+    RECORD_MODE = "tuya__record_mode"
+    RELAY_STATUS = "tuya__relay_status"
+    STATUS = "tuya__status"
+    VACUUM_CISTERN = "tuya__vacuum_cistern"
+    VACUUM_COLLECTION = "tuya__vacuum_collection"
+    VACUUM_MODE = "tuya__vacuum_mode"
 
 
 class WorkMode(StrEnum):
