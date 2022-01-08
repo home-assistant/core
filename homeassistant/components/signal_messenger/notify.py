@@ -25,7 +25,7 @@ CONF_SIGNAL_CLI_REST_API = "url"
 CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
-ATTR_VERIFY_URLS = "verifyUrls"
+ATTR_VERIFY_SSL = "verifySsl"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -112,8 +112,8 @@ class SignalNotificationService(BaseNotificationService):
 
         verify = True
 
-        if ATTR_VERIFY_URLS in data and isinstance(data[ATTR_VERIFY_URLS], bool):
-            verify = data[ATTR_VERIFY_URLS]
+        if ATTR_VERIFY_SSL in data and isinstance(data[ATTR_VERIFY_SSL], bool):
+            verify = data[ATTR_VERIFY_SSL]
 
         attachments_as_bytes: list[bytearray] = []
 

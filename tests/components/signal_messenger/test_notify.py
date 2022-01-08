@@ -225,7 +225,7 @@ def test_get_attachments_with_non_list_throws_error(
 def test_get_attachments_with_verify_unset(
     signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
 ) -> None:
-    """Test getting attachments as URL with verifyUrls unset results in verify=true."""
+    """Test getting attachments as URL with verifySsl unset results in verify=true."""
     signal_requests_mock = signal_requests_mock_factory()
     data = {"urls": [URL_ATTACHMENT]}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
@@ -238,9 +238,9 @@ def test_get_attachments_with_verify_unset(
 def test_get_attachments_with_verify_set_true(
     signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
 ) -> None:
-    """Test getting attachments as URL with verifyUrls set to true results in verify=true."""
+    """Test getting attachments as URL with verifySsl set to true results in verify=true."""
     signal_requests_mock = signal_requests_mock_factory()
-    data = {"verifyUrls": True, "urls": [URL_ATTACHMENT]}
+    data = {"verifySsl": True, "urls": [URL_ATTACHMENT]}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
 
     assert signal_requests_mock.called
@@ -251,9 +251,9 @@ def test_get_attachments_with_verify_set_true(
 def test_get_attachments_with_verify_set_false(
     signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
 ) -> None:
-    """Test getting attachments as URL with verifyUrls set to false results in verify=false."""
+    """Test getting attachments as URL with verifySsl set to false results in verify=false."""
     signal_requests_mock = signal_requests_mock_factory()
-    data = {"verifyUrls": False, "urls": [URL_ATTACHMENT]}
+    data = {"verifySsl": False, "urls": [URL_ATTACHMENT]}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
 
     assert signal_requests_mock.called
@@ -264,9 +264,9 @@ def test_get_attachments_with_verify_set_false(
 def test_get_attachments_with_verify_set_garbage(
     signal_notification_service: SignalCliRestApi, signal_requests_mock_factory: Mocker
 ) -> None:
-    """Test getting attachments as URL with verifyUrls set to garbage results in verify=true."""
+    """Test getting attachments as URL with verifySsl set to garbage results in verify=true."""
     signal_requests_mock = signal_requests_mock_factory()
-    data = {"verifyUrls": "test", "urls": [URL_ATTACHMENT]}
+    data = {"verifySsl": "test", "urls": [URL_ATTACHMENT]}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
 
     assert signal_requests_mock.called
