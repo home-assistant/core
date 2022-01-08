@@ -1107,7 +1107,7 @@ class ConfigEntries:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
 
     async def async_forward_entry_setup(
-        self, entry: ConfigEntry, platform: Platform | str
+        self, entry: ConfigEntry, domain: Platform | str
     ) -> bool:
         """Forward the setup of an entry to a different component.
 
@@ -1119,7 +1119,6 @@ class ConfigEntries:
         setup of a component, because it can cause a deadlock.
         """
         # Setup Component if not set up yet
-        domain = platform.value if isinstance(platform, Platform) else platform
         if domain not in self.hass.config.components:
             result = await async_setup_component(self.hass, domain, self._hass_config)
 
@@ -1145,11 +1144,10 @@ class ConfigEntries:
         )
 
     async def async_forward_entry_unload(
-        self, entry: ConfigEntry, platform: Platform | str
+        self, entry: ConfigEntry, domain: Platform | str
     ) -> bool:
         """Forward the unloading of an entry to a different component."""
         # It was never loaded.
-        domain = platform.value if isinstance(platform, Platform) else platform
         if domain not in self.hass.config.components:
             return True
 
