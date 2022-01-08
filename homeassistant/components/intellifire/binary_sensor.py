@@ -39,7 +39,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
         key=THERMOSTAT,
         name="Thermostat On",
         icon="mdi:home-thermometer-outline",
-        device_class=None,
     ),
 )
 
