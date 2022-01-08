@@ -366,6 +366,7 @@ async def test_unit_change(hass, zp3111, client, integration):
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "21.98"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     event = Event(
         "metadata updated",
         {
