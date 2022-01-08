@@ -3,7 +3,12 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TIME_SECONDS
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    TIME_SECONDS,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -287,3 +292,35 @@ async def test_suffix(hass):
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes
     assert round(float(state.state)) == 10
+
+
+async def test_units(hass):
+    """Test integration sensor units using a power source."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, 100, {"unit_of_measurement": None})
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, 200, {"unit_of_measurement": None})
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, 300, {"unit_of_measurement": POWER_WATT})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+
+    # Testing the sensor ignored the source sensor's units until
+    # they became valid
+    assert state.attributes.get("unit_of_measurement") == ENERGY_WATT_HOUR
