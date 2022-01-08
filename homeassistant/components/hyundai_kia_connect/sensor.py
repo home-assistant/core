@@ -102,7 +102,7 @@ class HyundaiKiaConnectSensor(SensorEntity, HyundaiKiaConnectEntity):
         HyundaiKiaConnectEntity.__init__(self, coordinator, vehicle)
         self._description = description
         self._key = self._description.key
-        self._attr_unique_id = f"{DOMAIN}_{vehicle.name}_{self._key}"
+        self._attr_unique_id = f"{DOMAIN}_{vehicle.id}_{self._key}"
         self._attr_icon = self._description.icon
         self._attr_name = f"{vehicle.name} {self._description.name}"
         self._attr_state_class = self._description.state_class
