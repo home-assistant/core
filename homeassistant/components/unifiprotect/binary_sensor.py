@@ -3,31 +3,30 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 import logging
-from typing import Any, Final
+from typing import Any
 
-from pyunifiprotect.data import NVR, Camera, Light, Sensor
+from pyunifiprotect.data import NVR, Camera, Event, Light, Sensor
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LAST_TRIP_TIME, ATTR_MODEL
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
-from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
 from .data import ProtectData
-from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
+from .entity import (
+    EventThumbnailMixin,
+    ProtectDeviceEntity,
+    ProtectNVREntity,
+    async_all_device_entities,
+)
 from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
@@ -48,18 +47,15 @@ _KEY_DARK = "dark"
 _KEY_BATTERY_LOW = "battery_low"
 _KEY_DISK_HEALTH = "disk_health"
 
-DEVICE_CLASS_RING: Final = "unifiprotect__ring"
-RING_INTERVAL = timedelta(seconds=3)
-
 
 CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key=_KEY_DOORBELL,
-        name="Doorbell Chime",
-        device_class=DEVICE_CLASS_RING,
+        name="Doorbell",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
         icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.has_chime",
-        ufp_value="last_ring",
+        ufp_value="is_ringing",
     ),
     ProtectBinaryEntityDescription(
         key=_KEY_DARK,
@@ -79,7 +75,7 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key=_KEY_MOTION,
         name="Motion Detected",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_pir_motion_detected",
     ),
 )
@@ -88,29 +84,39 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key=_KEY_DOOR,
         name="Door",
-        device_class=DEVICE_CLASS_DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
         ufp_value="is_opened",
     ),
     ProtectBinaryEntityDescription(
         key=_KEY_BATTERY_LOW,
         name="Battery low",
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="battery_status.is_low",
     ),
     ProtectBinaryEntityDescription(
         key=_KEY_MOTION,
         name="Motion Detected",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
     ),
 )
+
+MOTION_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
+    ProtectBinaryEntityDescription(
+        key=_KEY_MOTION,
+        name="Motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        ufp_value="is_motion_detected",
+    ),
+)
+
 
 DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key=_KEY_DISK_HEALTH,
         name="Disk {index} Health",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -130,9 +136,27 @@ async def async_setup_entry(
         light_descs=LIGHT_SENSORS,
         sense_descs=SENSE_SENSORS,
     )
+    entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
+
+
+@callback
+def _async_motion_entities(
+    data: ProtectData,
+) -> list[ProtectDeviceEntity]:
+    entities: list[ProtectDeviceEntity] = []
+    for device in data.api.bootstrap.cameras.values():
+        for description in MOTION_SENSORS:
+            entities.append(ProtectEventBinarySensor(data, device, description))
+            _LOGGER.debug(
+                "Adding binary sensor entity %s for %s",
+                description.name,
+                device.name,
+            )
+
+    return entities
 
 
 @callback
@@ -169,7 +193,6 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
             self.device: Camera | Light | Sensor = device
         self.entity_description: ProtectBinaryEntityDescription = description
         super().__init__(data)
-        self._doorbell_callback: CALLBACK_TYPE | None = None
 
     @callback
     def _async_update_extra_attrs_from_protect(self) -> dict[str, Any]:
@@ -179,9 +202,11 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
         if key == _KEY_DARK:
             return attrs
 
-        if key == _KEY_DOORBELL:
-            assert isinstance(self.device, Camera)
-            attrs[ATTR_LAST_TRIP_TIME] = self.device.last_ring
+        if isinstance(self.device, Camera):
+            if key == _KEY_DOORBELL:
+                attrs[ATTR_LAST_TRIP_TIME] = self.device.last_ring
+            elif key == _KEY_MOTION:
+                attrs[ATTR_LAST_TRIP_TIME] = self.device.last_motion
         elif isinstance(self.device, Sensor):
             if key in (_KEY_MOTION, _KEY_DOOR):
                 if key == _KEY_MOTION:
@@ -202,45 +227,14 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
 
         assert self.entity_description.ufp_value is not None
 
-        self._attr_extra_state_attributes = (
-            self._async_update_extra_attrs_from_protect()
+        self._attr_is_on = get_nested_attr(
+            self.device, self.entity_description.ufp_value
         )
-
-        if self.entity_description.key == _KEY_DOORBELL:
-            last_ring = get_nested_attr(self.device, self.entity_description.ufp_value)
-            now = utcnow()
-
-            is_ringing = (
-                False if last_ring is None else (now - last_ring) < RING_INTERVAL
-            )
-            _LOGGER.warning("%s, %s, %s", last_ring, now, is_ringing)
-            if is_ringing:
-                self._async_cancel_doorbell_callback()
-                self._doorbell_callback = async_call_later(
-                    self.hass, RING_INTERVAL, self._async_reset_doorbell
-                )
-            self._attr_is_on = is_ringing
-        else:
-            self._attr_is_on = get_nested_attr(
-                self.device, self.entity_description.ufp_value
-            )
-
-    @callback
-    def _async_cancel_doorbell_callback(self) -> None:
-        if self._doorbell_callback is not None:
-            _LOGGER.debug("Canceling doorbell ring callback")
-            self._doorbell_callback()
-            self._doorbell_callback = None
-
-    async def _async_reset_doorbell(self, now: datetime) -> None:
-        _LOGGER.debug("Doorbell ring ended")
-        self._doorbell_callback = None
-        self._async_updated_event()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        self._async_cancel_doorbell_callback()
-        return await super().async_will_remove_from_hass()
+        attrs = self.extra_state_attributes or {}
+        self._attr_extra_state_attributes = {
+            **attrs,
+            **self._async_update_extra_attrs_from_protect(),
+        }
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
@@ -272,3 +266,27 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
             disk = disks[self._index]
             self._attr_is_on = not disk.healthy
             self._attr_extra_state_attributes = {ATTR_MODEL: disk.model}
+
+
+class ProtectEventBinarySensor(EventThumbnailMixin, ProtectDeviceBinarySensor):
+    """A UniFi Protect Device Binary Sensor with access tokens."""
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: Camera,
+        description: ProtectBinaryEntityDescription,
+    ) -> None:
+        """Init a binary sensor that uses access tokens."""
+        self.device: Camera = device
+        super().__init__(data, description=description)
+
+    @callback
+    def _async_get_event(self) -> Event | None:
+        """Get event from Protect device."""
+
+        event: Event | None = None
+        if self.device.is_motion_detected and self.device.last_motion_event is not None:
+            event = self.device.last_motion_event
+
+        return event

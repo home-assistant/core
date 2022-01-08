@@ -353,7 +353,7 @@ async-upnp-client==0.23.3
 asyncpysupla==0.0.5
 
 # homeassistant.components.aten_pe
-atenpdu==0.3.0
+atenpdu==0.3.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -1353,7 +1353,7 @@ pyRFXtrx==0.27.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.21.6
+pyTibber==0.21.7
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1624,7 +1624,7 @@ pylacrosse==0.4
 pylast==4.2.1
 
 # homeassistant.components.launch_library
-pylaunches==1.2.0
+pylaunches==1.2.1
 
 # homeassistant.components.lg_netcast
 pylgnetcast==0.3.7
@@ -1737,7 +1737,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.0.0
+pyoverkiz==1.0.3
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1849,7 +1849,7 @@ pysmartthings==0.7.6
 pysmarty==0.8
 
 # homeassistant.components.edl21
-pysml==0.0.5
+pysml==0.0.6
 
 # homeassistant.components.snmp
 pysnmp==4.4.12
@@ -2009,7 +2009,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==1.4.8
+pyunifiprotect==1.5.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0
