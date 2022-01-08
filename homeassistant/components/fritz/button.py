@@ -58,6 +58,13 @@ BUTTONS: Final = [
         entity_category=ENTITY_CATEGORY_CONFIG,
         press_action=lambda avm_device: avm_device.async_trigger_reconnect(),
     ),
+    FritzButtonDescription(
+        key="cleanup",
+        name="Cleanup",
+        icon="mdi:broom",
+        entity_category=ENTITY_CATEGORY_CONFIG,
+        press_action=lambda avm_device: avm_device.async_trigger_cleanup(),
+    ),
 ]
 
 

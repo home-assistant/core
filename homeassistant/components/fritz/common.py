@@ -385,12 +385,19 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Trigger device reconnect."""
         await self.hass.async_add_executor_job(self.connection.reconnect)
 
-    async def async_trigger_cleanup(self, config_entry: ConfigEntry) -> None:
+    async def async_trigger_cleanup(
+        self, config_entry: ConfigEntry | None = None
+    ) -> None:
         """Trigger device trackers cleanup."""
         device_hosts_list = await self.hass.async_add_executor_job(
             self.fritz_hosts.get_hosts_info
         )
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
+
+        if config_entry is None:
+            if self.config_entry is None:
+                return
+            config_entry = self.config_entry
 
         ha_entity_reg_list: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
