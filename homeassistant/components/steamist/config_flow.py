@@ -30,6 +30,15 @@ MODEL_450_HOSTNAME_PREFIX = "MY450-"
 MODEL_550_HOSTNAME_PREFIX = "MY550-"
 
 
+def _is_steamist_device(device: Device30303) -> bool:
+    """Check if a 30303 discovery is a steamist device."""
+    hostname = device.hostname
+    return bool(
+        hostname.startswith(MODEL_450_HOSTNAME_PREFIX)
+        or hostname.startswith(MODEL_550_HOSTNAME_PREFIX)
+    )
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Steamist."""
 
@@ -87,10 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             self._discovered_device = discovery
         assert self._discovered_device is not None
-        hostname = self._discovered_device.hostname
-        if not hostname.startswith(
-            MODEL_450_HOSTNAME_PREFIX
-        ) and not hostname.startswith(MODEL_550_HOSTNAME_PREFIX):
+        if not _is_steamist_device(device):
             return self.async_abort(reason="not_steamist_device")
         return await self.async_step_discovery_confirm()
 
@@ -136,14 +142,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)
         }
-        discovered_devices = await async_discover_devices(
-            self.hass, DISCOVER_SCAN_TIMEOUT
-        )
-        self._discovered_devices = {}
-        for device in discovered_devices:
-            mac_address = device.mac
-            assert mac_address is not None
-            self._discovered_devices[dr.format_mac(mac_address)] = device
+        self._discovered_devices = {
+            dr.format_mac(device.mac): device
+            for device in await async_discover_devices(self.hass, DISCOVER_SCAN_TIMEOUT)
+            if _is_steamist_device(device)
+        }
         devices_name = {
             mac: f"{device.name} ({device.ipaddress})"
             for mac, device in self._discovered_devices.items()
