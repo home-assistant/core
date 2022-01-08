@@ -112,34 +112,7 @@ async def test_form_invalid_user_input(hass: HomeAssistant) -> None:
     assert get_serial_number.called is False
 
 
-async def test_form_incomplete_user_input_on_init(hass: HomeAssistant) -> None:
-    """Tests the successful handling of the case if the user input is incomplete."""
-
-    with patch(
-        "homeassistant.components.remootio.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.remootio.config_flow.get_serial_number",
-        return_value=TDV_SERIAL_NUMBER,
-    ) as get_serial_number:
-        init_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_HOST: TDV_VALID_HOST,
-                CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
-            },
-        )
-
-    _LOGGER.debug(f"init_result [{init_result}")
-    assert init_result
-    assert init_result["type"] == RESULT_TYPE_FORM
-    assert init_result["errors"] == {"base": "user_input_incomplete"}
-
-    assert get_serial_number.called is False
-
-
-async def test_form_incomplete_user_input_on_configure(hass: HomeAssistant) -> None:
+async def test_form_incomplete_user_input(hass: HomeAssistant) -> None:
     """Tests the successful handling of the case if the user input is invalid."""
 
     with patch(

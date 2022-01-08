@@ -87,7 +87,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
 
     return {
-        CONF_TITLE: f"{DEVICE_NAME} (IP: {data[CONF_HOST]}, S/N: {device_serial_number})",
+        CONF_TITLE: f"{DEVICE_NAME} (Host: {data[CONF_HOST]}, S/N: {device_serial_number})",
         CONF_SERIAL_NUMBER: device_serial_number,
     }
 
