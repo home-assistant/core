@@ -55,6 +55,9 @@ SENSORS = {
     "newCases": "mdi:shield-bug",
     "newDeaths": "mdi:shield-cross",
     "newRecovered": "mdi:shield-sync",
+}
+
+DISTRICT_SENSORS = {
     "hospitalizationCasesBaby": "mdi:baby-face-outline",
     "hospitalizationIncidenceBaby": "mdi:baby-face",
     "hospitalizationCasesChildren": "mdi:account-child-outline",
@@ -98,6 +101,14 @@ async def async_setup_platform(
     ]
     async_add_entities(sensors, update_before_add=True)
 
+    for district in districts:
+        if district.startswith("BL"):
+            district_sensors = [
+                RKICovidNumbersSensor(coordinator, district, info_type)
+                for info_type in DISTRICT_SENSORS
+            ]
+            async_add_entities(district_sensors, update_before_add=True)
+
 
 async def async_setup_entry(
     hass: core.HomeAssistant,
@@ -118,6 +129,14 @@ async def async_setup_entry(
         RKICovidNumbersSensor(coordinator, district, info_type) for info_type in SENSORS
     ]
     async_add_entities(sensors, update_before_add=True)
+
+    # add additional sensors for districts
+    if district.startswith("BL"):
+        district_sensors = [
+            RKICovidNumbersSensor(coordinator, district, info_type)
+            for info_type in DISTRICT_SENSORS
+        ]
+        async_add_entities(district_sensors, update_before_add=True)
 
 
 class RKICovidNumbersSensor(CoordinatorEntity):
@@ -168,7 +187,7 @@ class RKICovidNumbersSensor(CoordinatorEntity):
     @property
     def icon(self):
         """Return the icon."""
-        return SENSORS[self.info_type]
+        return {**SENSORS, **DISTRICT_SENSORS}[self.info_type]
 
     @property
     def state_class(self):
