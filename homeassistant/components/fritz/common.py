@@ -471,9 +471,6 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 return
 
             if service_call.service == SERVICE_CLEANUP:
-                _LOGGER.warning(
-                    'Service "fritz.cleanup" is deprecated, please use the corresponding button entity instead'
-                )
                 await self.async_trigger_cleanup(config_entry)
                 return
 
