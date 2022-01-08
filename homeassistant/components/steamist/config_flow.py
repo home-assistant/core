@@ -10,15 +10,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONNECTION_EXCEPTIONS, DOMAIN
-from .discovery import async_discover_device, async_update_entry_from_discovery
+from .const import CONNECTION_EXCEPTIONS, DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_update_entry_from_discovery,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +121,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_HOST: device.ipaddress, CONF_NAME: device.name},
         )
 
+    async def async_step_pick_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the step to pick discovered device."""
+        if user_input is not None:
+            mac = user_input[CONF_MAC]
+            await self.async_set_unique_id(mac, raise_on_progress=False)
+            device = self._discovered_devices[mac]
+            return self._async_create_entry_from_device(device)
+
+        current_unique_ids = self._async_current_ids()
+        current_hosts = {
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries(include_ignore=False)
+        }
+        discovered_devices = await async_discover_devices(
+            self.hass, DISCOVER_SCAN_TIMEOUT
+        )
+        self._discovered_devices = {}
+        for device in discovered_devices:
+            mac_address = device.mac
+            assert mac_address is not None
+            self._discovered_devices[dr.format_mac(mac_address)] = device
+        devices_name = {
+            mac: f"{device.name} ({device.ipaddress})"
+            for mac, device in self._discovered_devices.items()
+            if mac not in current_unique_ids and device.ipaddress in current_hosts
+        }
+        # Check if there is at least one device
+        if not devices_name:
+            return self.async_abort(reason="no_devices_found")
+        return self.async_show_form(
+            step_id="pick_device",
+            data_schema=vol.Schema({vol.Required(CONF_MAC): vol.In(devices_name)}),
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -124,25 +164,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            if not (host := user_input[CONF_HOST]):
+                return await self.async_step_pick_device()
+            websession = async_get_clientsession(self.hass)
             try:
-                await Steamist(
-                    user_input[CONF_HOST],
-                    async_get_clientsession(self.hass),
-                ).async_get_status()
+                await Steamist(host, websession).async_get_status()
             except CONNECTION_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if discovery := await async_discover_device(
-                    self.hass, user_input[CONF_HOST]
-                ):
+                if discovery := await async_discover_device(self.hass, host):
                     return self._async_create_entry_from_device(discovery)
-                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
-                )
+                self._async_abort_entries_match({CONF_HOST: host})
+                return self.async_create_entry(title=host, data=user_input)
 
         return self.async_show_form(
             step_id="user",
