@@ -30,7 +30,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
-    async_entries_for_config_entry,
+    async_entries_for_config_entry as async_entries_for_config_device_entry,
     async_get as async_get_device_registry,
     format_mac,
 )
@@ -39,6 +39,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
     RegistryEntry,
+    async_entries_for_config_entry as async_entries_for_config_entity_entry,
     async_entries_for_device,
     async_get as async_get_entity_registry,
 )
@@ -400,7 +401,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         )
         entity_reg: EntityRegistry = async_get_entity_registry(self.hass)
 
-        ha_entity_reg_list: list[RegistryEntry] = async_entries_for_device(
+        ha_entity_reg_list: list[RegistryEntry] = async_entries_for_config_entity_entry(
             entity_reg, config_entry.entry_id
         )
         entities_removed: bool = False
@@ -442,7 +443,9 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Remove devices with no entities."""
 
         device_reg = async_get_device_registry(self.hass)
-        device_list = async_entries_for_config_entry(device_reg, config_entry.entry_id)
+        device_list = async_entries_for_config_device_entry(
+            device_reg, config_entry.entry_id
+        )
         for device_entry in device_list:
             if not async_entries_for_device(
                 entity_reg,
