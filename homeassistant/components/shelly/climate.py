@@ -219,7 +219,7 @@ class BlockSleepingClimate(
             return CURRENT_HVAC_OFF
 
         return (
-            CURRENT_HVAC_IDLE if self.device_block.status == "0" else CURRENT_HVAC_HEAT
+            CURRENT_HVAC_HEAT if bool(self.device_block.status) else CURRENT_HVAC_IDLE
         )
 
     @property

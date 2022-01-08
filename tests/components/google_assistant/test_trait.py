@@ -3030,8 +3030,8 @@ async def test_sensorstate(hass):
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
-        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_CO: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_CO2: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
         sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
