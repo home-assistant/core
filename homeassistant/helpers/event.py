@@ -312,7 +312,7 @@ def _async_remove_indexed_listeners(
     data_key: str,
     listener_key: str,
     storage_keys: Iterable[str],
-    job: HassJob,
+    job: HassJob[Any],
 ) -> None:
     """Remove a listener."""
     callbacks = hass.data[data_key]
@@ -394,7 +394,7 @@ def async_track_entity_registry_updated_event(
 
 @callback
 def _async_dispatch_domain_event(
-    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob]]
+    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob[Any]]]
 ) -> None:
     domain = split_entity_id(event.data["entity_id"])[0]
 
@@ -1224,7 +1224,8 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[[datetime], Awaitable[None] | None],
+    action: HassJob[Awaitable[None] | None]
+    | Callable[[datetime], Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
@@ -1245,7 +1246,8 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[[datetime], Awaitable[None] | None],
+    action: HassJob[Awaitable[None] | None]
+    | Callable[[datetime], Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
@@ -1257,7 +1259,7 @@ def async_track_point_in_utc_time(
     cancel_callback: asyncio.TimerHandle | None = None
 
     @callback
-    def run_action(job: HassJob) -> None:
+    def run_action(job: HassJob[Awaitable[None] | None]) -> None:
         """Call the action."""
         nonlocal cancel_callback
 
@@ -1297,7 +1299,8 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
-    action: HassJob | Callable[[datetime], Awaitable[None] | None],
+    action: HassJob[Awaitable[None] | None]
+    | Callable[[datetime], Awaitable[None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     if not isinstance(delay, timedelta):
@@ -1354,7 +1357,7 @@ class SunListener:
     """Helper class to help listen to sun events."""
 
     hass: HomeAssistant = attr.ib()
-    job: HassJob = attr.ib()
+    job: HassJob[Awaitable[None] | None] = attr.ib()
     event: str = attr.ib()
     offset: timedelta | None = attr.ib()
     _unsub_sun: CALLBACK_TYPE | None = attr.ib(default=None)
