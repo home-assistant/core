@@ -1,11 +1,18 @@
 """Shared Entity definition for UniFi Protect Integration."""
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import Sequence
+from datetime import datetime, timedelta
+import hashlib
 import logging
+from random import SystemRandom
+from typing import Any, Final
+from urllib.parse import urlencode
 
 from pyunifiprotect.data import (
     Camera,
+    Event,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -19,11 +26,21 @@ from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .const import (
+    ATTR_EVENT_SCORE,
+    ATTR_EVENT_THUMB,
+    DEFAULT_ATTRIBUTION,
+    DEFAULT_BRAND,
+    DOMAIN,
+)
 from .data import ProtectData
 from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
+from .views import ThumbnailProxyView
 
+EVENT_UPDATE_TOKENS = "unifiprotect_update_tokens"
+TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=1)
+_RND: Final = SystemRandom()
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -203,3 +220,99 @@ class ProtectNVREntity(ProtectDeviceEntity):
             self.device = self.data.api.bootstrap.nvr
 
         self._attr_available = self.data.last_update_success
+
+
+class AccessTokenMixin(Entity):
+    """Adds access_token attribute and provides access tokens for use for anonymous views."""
+
+    @property
+    def access_tokens(self) -> deque[str]:
+        """Get valid access_tokens for current entity."""
+        assert isinstance(self, ProtectDeviceEntity)
+        return self.data.async_get_or_create_access_tokens(self.entity_id)
+
+    @callback
+    def _async_update_and_write_token(self, now: datetime) -> None:
+        _LOGGER.debug("Updating access tokens for %s", self.entity_id)
+        self.async_update_token()
+        self.async_write_ha_state()
+
+    @callback
+    def async_update_token(self) -> None:
+        """Update the used token."""
+        self.access_tokens.append(
+            hashlib.sha256(_RND.getrandbits(256).to_bytes(32, "little")).hexdigest()
+        )
+
+    @callback
+    def async_cleanup_tokens(self) -> None:
+        """Clean up any remaining tokens on removal."""
+        assert isinstance(self, ProtectDeviceEntity)
+        if self.entity_id in self.data.access_tokens:
+            del self.data.access_tokens[self.entity_id]
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass.
+
+        Injects callbacks to update access tokens automatically
+        """
+        await super().async_added_to_hass()
+
+        self.async_update_token()
+        self.async_on_remove(
+            self.hass.helpers.event.async_track_time_interval(
+                self._async_update_and_write_token, TOKEN_CHANGE_INTERVAL
+            )
+        )
+        self.async_on_remove(self.async_cleanup_tokens)
+
+
+class EventThumbnailMixin(AccessTokenMixin):
+    """Adds motion event attributes to sensor."""
+
+    def __init__(self, *args: Any, **kwarg: Any) -> None:
+        """Init an sensor that has event thumbnails."""
+        super().__init__(*args, **kwarg)
+        self._event: Event | None = None
+
+    @callback
+    def _async_get_event(self) -> Event | None:
+        """Get event from Protect device.
+
+        To be overridden by child classes.
+        """
+        raise NotImplementedError()
+
+    @callback
+    def _async_thumbnail_extra_attrs(self) -> dict[str, Any]:
+        # Camera motion sensors with object detection
+        attrs: dict[str, Any] = {
+            ATTR_EVENT_SCORE: 0,
+            ATTR_EVENT_THUMB: None,
+        }
+
+        if self._event is None:
+            return attrs
+
+        attrs[ATTR_EVENT_SCORE] = self._event.score
+        if len(self.access_tokens) > 0:
+            params = urlencode(
+                {"entity_id": self.entity_id, "token": self.access_tokens[-1]}
+            )
+            attrs[ATTR_EVENT_THUMB] = (
+                ThumbnailProxyView.url.format(event_id=self._event.id) + f"?{params}"
+            )
+
+        return attrs
+
+    @callback
+    def _async_update_device_from_protect(self) -> None:
+        assert isinstance(self, ProtectDeviceEntity)
+        super()._async_update_device_from_protect()  # type: ignore
+        self._event = self._async_get_event()
+
+        attrs = self.extra_state_attributes or {}
+        self._attr_extra_state_attributes = {
+            **attrs,
+            **self._async_thumbnail_extra_attrs(),
+        }

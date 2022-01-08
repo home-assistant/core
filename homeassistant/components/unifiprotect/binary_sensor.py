@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data import NVR, Camera, Light, Sensor
+from pyunifiprotect.data import NVR, Camera, Event, Light, Sensor
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
@@ -25,7 +25,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .data import ProtectData
-from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
+from .entity import (
+    EventThumbnailMixin,
+    ProtectDeviceEntity,
+    ProtectNVREntity,
+    async_all_device_entities,
+)
 from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
@@ -101,6 +106,16 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
+MOTION_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
+    ProtectBinaryEntityDescription(
+        key=_KEY_MOTION,
+        name="Motion",
+        device_class=DEVICE_CLASS_MOTION,
+        ufp_value="is_motion_detected",
+    ),
+)
+
+
 DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key=_KEY_DISK_HEALTH,
@@ -125,9 +140,27 @@ async def async_setup_entry(
         light_descs=LIGHT_SENSORS,
         sense_descs=SENSE_SENSORS,
     )
+    entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
+
+
+@callback
+def _async_motion_entities(
+    data: ProtectData,
+) -> list[ProtectDeviceEntity]:
+    entities: list[ProtectDeviceEntity] = []
+    for device in data.api.bootstrap.cameras.values():
+        for description in MOTION_SENSORS:
+            entities.append(ProtectEventBinarySensor(data, device, description))
+            _LOGGER.debug(
+                "Adding binary sensor entity %s for %s",
+                description.name,
+                device.name,
+            )
+
+    return entities
 
 
 @callback
@@ -173,9 +206,11 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
         if key == _KEY_DARK:
             return attrs
 
-        if key == _KEY_DOORBELL:
-            assert isinstance(self.device, Camera)
-            attrs[ATTR_LAST_TRIP_TIME] = self.device.last_ring
+        if isinstance(self.device, Camera):
+            if key == _KEY_DOORBELL:
+                attrs[ATTR_LAST_TRIP_TIME] = self.device.last_ring
+            elif key == _KEY_MOTION:
+                attrs[ATTR_LAST_TRIP_TIME] = self.device.last_motion
         elif isinstance(self.device, Sensor):
             if key in (_KEY_MOTION, _KEY_DOOR):
                 if key == _KEY_MOTION:
@@ -199,9 +234,11 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
         self._attr_is_on = get_nested_attr(
             self.device, self.entity_description.ufp_value
         )
-        self._attr_extra_state_attributes = (
-            self._async_update_extra_attrs_from_protect()
-        )
+        attrs = self.extra_state_attributes or {}
+        self._attr_extra_state_attributes = {
+            **attrs,
+            **self._async_update_extra_attrs_from_protect(),
+        }
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
@@ -233,3 +270,27 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
             disk = disks[self._index]
             self._attr_is_on = not disk.healthy
             self._attr_extra_state_attributes = {ATTR_MODEL: disk.model}
+
+
+class ProtectEventBinarySensor(EventThumbnailMixin, ProtectDeviceBinarySensor):
+    """A UniFi Protect Device Binary Sensor with access tokens."""
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: Camera,
+        description: ProtectBinaryEntityDescription,
+    ) -> None:
+        """Init a binary sensor that uses access tokens."""
+        self.device: Camera = device
+        super().__init__(data, description=description)
+
+    @callback
+    def _async_get_event(self) -> Event | None:
+        """Get event from Protect device."""
+
+        event: Event | None = None
+        if self.device.is_motion_detected and self.device.last_motion_event is not None:
+            event = self.device.last_motion_event
+
+        return event

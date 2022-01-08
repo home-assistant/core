@@ -6,6 +6,9 @@
   "requirements": [
     "pyunifiprotect==1.5.3"
   ],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": [
     "@briis",
     "@AngellusMortis",

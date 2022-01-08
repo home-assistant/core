@@ -6,9 +6,10 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from pyunifiprotect.data import NVR
+from pyunifiprotect.data import NVR, Camera, Event
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
+from homeassistant.components.binary_sensor import DEVICE_CLASS_OCCUPANCY
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -39,11 +40,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .data import ProtectData
-from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
+from .entity import (
+    EventThumbnailMixin,
+    ProtectDeviceEntity,
+    ProtectNVREntity,
+    async_all_device_entities,
+)
 from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
+DETECTED_OBJECT_NONE = "none"
 
 
 @dataclass
@@ -81,6 +88,8 @@ _KEY_RES_HD = "resolution_HD"
 _KEY_RES_4K = "resolution_4K"
 _KEY_RES_FREE = "resolution_free"
 _KEY_CAPACITY = "record_capacity"
+
+_KEY_OBJECT = "detected_object"
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
@@ -346,6 +355,14 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key=_KEY_OBJECT,
+        name="Detected Object",
+        device_class=DEVICE_CLASS_OCCUPANCY,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -361,9 +378,30 @@ async def async_setup_entry(
         camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
         sense_descs=SENSE_SENSORS,
     )
+    entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
+
+
+@callback
+def _async_motion_entities(
+    data: ProtectData,
+) -> list[ProtectDeviceEntity]:
+    entities: list[ProtectDeviceEntity] = []
+    for device in data.api.bootstrap.cameras.values():
+        if not device.feature_flags.has_smart_detect:
+            continue
+
+        for description in MOTION_SENSORS:
+            entities.append(ProtectEventSensor(data, device, description))
+            _LOGGER.debug(
+                "Adding sensor entity %s for %s",
+                description.name,
+                device.name,
+            )
+
+    return entities
 
 
 @callback
@@ -415,7 +453,8 @@ class ProtectDeviceSensor(SensorValueMixin, ProtectDeviceEntity, SensorEntity):
     def _async_update_device_from_protect(self) -> None:
         super()._async_update_device_from_protect()
 
-        assert self.entity_description.ufp_value is not None
+        if self.entity_description.ufp_value is None:
+            return
 
         value = get_nested_attr(self.device, self.entity_description.ufp_value)
         self._attr_native_value = self._clean_sensor_value(value)
@@ -451,3 +490,40 @@ class ProtectNVRSensor(SensorValueMixin, ProtectNVREntity, SensorEntity):
             value = get_nested_attr(self.device, self.entity_description.ufp_value)
 
         self._attr_native_value = self._clean_sensor_value(value)
+
+
+class ProtectEventSensor(EventThumbnailMixin, ProtectDeviceSensor):
+    """A UniFi Protect Device Sensor with access tokens."""
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: Camera,
+        description: ProtectSensorEntityDescription,
+    ) -> None:
+        """Init an sensor that uses access tokens."""
+        self.device: Camera = device
+        super().__init__(data, device, description)
+
+    @callback
+    def _async_get_event(self) -> Event | None:
+        """Get event from Protect device."""
+
+        event: Event | None = None
+        if (
+            self.device.is_smart_detected
+            and self.device.last_smart_detect_event is not None
+            and len(self.device.last_smart_detect_event.smart_detect_types) > 0
+        ):
+            event = self.device.last_smart_detect_event
+
+        return event
+
+    @callback
+    def _async_update_device_from_protect(self) -> None:
+        super()._async_update_device_from_protect()
+
+        if self._event is None:
+            self._attr_native_value = DETECTED_OBJECT_NONE
+        else:
+            self._attr_native_value = self._event.smart_detect_types[0].value
