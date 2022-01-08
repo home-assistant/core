@@ -26,11 +26,6 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for aten_pe."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._errors: dict[str, str] = {}
 
     def _host_in_configuration_exists(self, host, port) -> bool:
         """Return True if host exists in configuration."""
@@ -55,13 +50,12 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await dev.deviceMAC()
             return True
         except AtenPEError:
-            self._errors[CONF_HOST] = "cannot_connect"
             _LOGGER.error("Could not connect to device at %s:%s", host, port)
         return False
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
-        self._errors = {}
+        errors = {}
         if user_input is not None:
             host = user_input.get(CONF_HOST)
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
@@ -73,6 +67,8 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     title = f"{host}:{port}"
                 return self.async_create_entry(title=title, data=user_input)
+            else:
+                errors[CONF_HOST] = "cannot_connect"
         else:
             user_input = {}
 
@@ -103,7 +99,7 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
-            errors=self._errors,
+            errors=errors,
         )
 
     async def async_step_import(self, user_input=None):
