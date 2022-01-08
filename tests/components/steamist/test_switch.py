@@ -38,7 +38,7 @@ async def test_steam_active(hass: HomeAssistant) -> None:
 
 
 async def test_steam_inactive(hass: HomeAssistant) -> None:
-    """Test that the binary sensors are setup with the expected values when steam is not active."""
+    """Test that the switches are setup with the expected values when steam is not active."""
     client, _ = await _async_setup_entry_with_status(
         hass, MOCK_ASYNC_GET_STATUS_INACTIVE
     )
