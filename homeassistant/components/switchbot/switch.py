@@ -119,6 +119,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
         super().__init__(coordinator, idx, mac, name)
         self._attr_unique_id = idx
         self._device = device
+        self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
