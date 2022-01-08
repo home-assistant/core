@@ -10,7 +10,7 @@
   "dhcp": [
     {
       "macaddress": "001E0C*",
-      "hostname": "my*"
+      "hostname": "my[45]50*"
     }
   ]
 }

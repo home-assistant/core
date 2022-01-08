@@ -338,7 +338,7 @@ DHCP = [
     {
         "domain": "steamist",
         "macaddress": "001E0C*",
-        "hostname": "my*"
+        "hostname": "my[45]50*"
     },
     {
         "domain": "tado",
