@@ -29,11 +29,11 @@ from homeassistant.helpers.typing import StateType
 from . import HomeAssistantTuyaData
 from .base import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import (
-    DEVICE_CLASS_TUYA_STATUS,
     DEVICE_CLASS_UNITS,
     DOMAIN,
     TUYA_DISCOVERY_NEW,
     DPCode,
+    TuyaDeviceClass,
     UnitOfMeasurement,
 )
 
@@ -100,7 +100,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status",
-            device_class=DEVICE_CLASS_TUYA_STATUS,
+            device_class=TuyaDeviceClass.STATUS,
         ),
     ),
     # CO2 Detector
