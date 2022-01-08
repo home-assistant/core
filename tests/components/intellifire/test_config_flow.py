@@ -21,7 +21,7 @@ async def test_form(hass: HomeAssistant) -> None:
         return_value={
             "title": "Living Room Fireplace",
             "type": "Fireplace",
-            "serial_number": "abcd1234",
+            "serial": "abcd1234",
             "host": "1.1.1.1",
         },
     ), patch(
@@ -42,6 +42,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "host": "1.1.1.1",
         "name": "Fuego",
+        "serial": "abcd1234"
+
     }
 
     assert len(mock_setup_entry.mock_calls) == 2
