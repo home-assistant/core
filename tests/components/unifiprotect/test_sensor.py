@@ -2,18 +2,26 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
-from datetime import datetime
+from copy import copy
+from datetime import datetime, timedelta
+from unittest.mock import Mock
 
 import pytest
+from pyunifiprotect.data import NVR, Camera, Event, Sensor
 from pyunifiprotect.data.base import WifiConnectionState, WiredConnectionState
-from pyunifiprotect.data.devices import Camera, Sensor
-from pyunifiprotect.data.nvr import NVR
+from pyunifiprotect.data.types import EventType, SmartDetectObjectType
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import (
+    ATTR_EVENT_SCORE,
+    ATTR_EVENT_THUMB,
+    DEFAULT_ATTRIBUTION,
+)
 from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
+    DETECTED_OBJECT_NONE,
+    MOTION_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
     SENSE_SENSORS,
@@ -86,6 +94,8 @@ async def camera_fixture(
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
+    camera_obj.feature_flags.has_smart_detect = True
+    camera_obj.is_smart_detected = False
     camera_obj.wired_connection_state = WiredConnectionState(phy_rate=1000)
     camera_obj.wifi_connection_state = WifiConnectionState(
         signal_quality=100, signal_strength=-50
@@ -108,7 +118,7 @@ async def camera_fixture(
     await hass.async_block_till_done()
 
     # 3 from all, 6 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 21, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     yield camera_obj
 
@@ -347,3 +357,64 @@ async def test_sensor_setup_camera(
     assert state
     assert state.state == "-50"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+    # Detected Object
+    unique_id, entity_id = ids_from_device_description(
+        Platform.SENSOR, camera, MOTION_SENSORS[0]
+    )
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.unique_id == unique_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == DETECTED_OBJECT_NONE
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert state.attributes[ATTR_EVENT_SCORE] == 0
+    assert state.attributes[ATTR_EVENT_THUMB] is None
+
+
+async def test_sensor_update_motion(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, camera: Camera, now: datetime
+):
+    """Test sensor motion entity."""
+
+    _, entity_id = ids_from_device_description(
+        Platform.SENSOR, camera, MOTION_SENSORS[0]
+    )
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.SMART_DETECT,
+        start=now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[SmartDetectObjectType.PERSON],
+        smart_detect_event_ids=[],
+        camera_id=camera.id,
+    )
+
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_camera = camera.copy()
+    new_camera.is_smart_detected = True
+    new_camera.last_smart_detect_event_id = event.id
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = new_camera
+
+    new_bootstrap.cameras = {new_camera.id: new_camera}
+    new_bootstrap.events = {event.id: event}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == SmartDetectObjectType.PERSON.value
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert state.attributes[ATTR_EVENT_SCORE] == 100
+    assert state.attributes[ATTR_EVENT_THUMB].startswith(
+        f"/api/ufp/thumbnail/test_event_id?entity_id={entity_id}&token="
+    )
