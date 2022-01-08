@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "import_turn_on": {
+                "description": "Por favor, encienda el dispositivo y haga clic en enviar para continuar la migraci\u00f3n"
+            },
+            "manual": {
+                "title": "Conexi\u00f3n manual del dispositivo DLNA DMR"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

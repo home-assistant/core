@@ -14,7 +14,6 @@ from homeassistant.components.version.const import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -55,7 +54,6 @@ async def mock_get_version_update(
 
 async def setup_version_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Version integration."""
-    await async_setup_component(hass, "persistent_notification", {})
     mock_entry = MockConfigEntry(**MOCK_VERSION_CONFIG_ENTRY_DATA)
     mock_entry.add_to_hass(hass)
 

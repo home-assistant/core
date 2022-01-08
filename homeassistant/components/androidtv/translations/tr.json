@@ -43,12 +43,12 @@
             "init": {
                 "data": {
                     "apps": "Uygulamalar listesini yap\u0131land\u0131r",
-                    "exclude_unnamed_apps": "Bilinmeyen ada sahip uygulamay\u0131 hari\u00e7 tut",
-                    "get_sources": "\u00c7al\u0131\u015fan uygulamalar\u0131n kaynak listesi olarak al\u0131n\u0131p al\u0131nmayaca\u011f\u0131",
-                    "screencap": "Alb\u00fcm resminin ekranda g\u00f6sterilenden \u00e7ekilmesi gerekip gerekmedi\u011fini belirler",
+                    "exclude_unnamed_apps": "Kaynak listesinden bilinmeyen ada sahip uygulamalar\u0131 hari\u00e7 tutun",
+                    "get_sources": "\u00c7al\u0131\u015fan uygulamalar\u0131 kaynak listesi olarak al\u0131n",
+                    "screencap": "Alb\u00fcm resmi i\u00e7in ekran g\u00f6r\u00fcnt\u00fcs\u00fcn\u00fc kullan\u0131n",
                     "state_detection_rules": "Durum alg\u0131lama kurallar\u0131n\u0131 yap\u0131land\u0131r\u0131n",
-                    "turn_off_command": "Varsay\u0131lan turn_off komutunu ge\u00e7ersiz k\u0131lmak i\u00e7in ADB kabuk komutu",
-                    "turn_on_command": "Varsay\u0131lan turn_on komutunu ge\u00e7ersiz k\u0131lmak i\u00e7in ADB kabuk komutu"
+                    "turn_off_command": "ADB kabu\u011fu kapatma komutu (varsay\u0131lan olarak bo\u015f b\u0131rak\u0131n)",
+                    "turn_on_command": "ADB kabu\u011fu a\u00e7ma komutu (varsay\u0131lan olarak bo\u015f b\u0131rak\u0131n)"
                 },
                 "title": "Android TV Se\u00e7enekleri"
             },

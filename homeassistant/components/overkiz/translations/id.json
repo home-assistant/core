@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "server_in_maintenance": "Server sedang dalam masa pemeliharaan",
+            "too_many_requests": "Terlalu banyak permintaan, coba lagi nanti.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "hub": "Hub",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Platform Overkiz digunakan oleh berbagai vendor seperti Somfy (Connexoon/TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect), dan Atlantic (Cozytouch). Masukkan kredensial aplikasi Anda dan pilih hub Anda."
+            }
+        }
+    }
+}

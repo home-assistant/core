@@ -1,4 +1,6 @@
 """Use Bayesian Inference to trigger a binary sensor."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import logging
 
@@ -16,10 +18,11 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
     async_track_state_change_event,
@@ -27,6 +30,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import result_as_boolean
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -107,7 +111,12 @@ def update_probability(prior, prob_given_true, prob_given_false):
     return numerator / denominator
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Bayesian Binary sensor."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 

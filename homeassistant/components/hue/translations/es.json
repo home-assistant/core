@@ -59,7 +59,8 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Permitir grupos de Hue",
-                    "allow_unreachable": "Permitir que las bombillas inalcanzables informen su estado correctamente"
+                    "allow_unreachable": "Permitir que las bombillas inalcanzables informen su estado correctamente",
+                    "ignore_availability": "Ignorar el estado de conectividad de los dispositivos dados"
                 }
             }
         }

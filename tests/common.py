@@ -286,7 +286,12 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
 
-    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries = config_entries.ConfigEntries(
+        hass,
+        {
+            "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
+        },
+    )
     hass.config_entries._entries = {}
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
 

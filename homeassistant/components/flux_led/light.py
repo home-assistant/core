@@ -202,7 +202,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         custom_effect_transition: str,
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator, unique_id, name)
+        super().__init__(coordinator, unique_id, name, None)
         self._attr_min_mireds = (
             color_temperature_kelvin_to_mired(self._device.max_temp) + 1
         )  # for rounding

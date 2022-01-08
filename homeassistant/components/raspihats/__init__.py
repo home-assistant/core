@@ -4,6 +4,8 @@ import threading
 import time
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ I2C_HAT_NAMES = [
 I2C_HATS_MANAGER = "I2CH_MNG"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the raspihats component."""
     hass.data[I2C_HATS_MANAGER] = I2CHatsManager()
 

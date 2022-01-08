@@ -72,7 +72,7 @@ CENTICELSIUS = "C-100"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
     hass.data[DATA_ZHA] = {}
 

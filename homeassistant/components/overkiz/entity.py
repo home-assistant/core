@@ -1,13 +1,9 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -60,10 +56,12 @@ class OverkizEntity(CoordinatorEntity):
         )
 
         model = (
-            self.executor.select_state(
-                OverkizState.CORE_MODEL,
-                OverkizState.CORE_PRODUCT_MODEL_NAME,
-                OverkizState.IO_MODEL,
+            str(
+                self.executor.select_state(
+                    OverkizState.CORE_MODEL,
+                    OverkizState.CORE_PRODUCT_MODEL_NAME,
+                    OverkizState.IO_MODEL,
+                ),
             )
             or self.device.widget
         )
@@ -71,25 +69,16 @@ class OverkizEntity(CoordinatorEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.executor.base_device_url)},
             name=self.device.label,
-            manufacturer=manufacturer,
+            manufacturer=str(manufacturer),
             model=model,
-            sw_version=self.executor.select_attribute(
-                OverkizAttribute.CORE_FIRMWARE_REVISION
+            sw_version=str(
+                self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION)
             ),
             hw_version=self.device.controllable_name,
             suggested_area=self.coordinator.areas[self.device.place_oid],
-            via_device=self.executor.get_gateway_id(),
+            via_device=(DOMAIN, self.executor.get_gateway_id()),
             configuration_url=self.coordinator.client.server.configuration_url,
         )
-
-
-@dataclass
-class OverkizSensorDescription(SensorEntityDescription):
-    """Class to describe an Overkiz sensor."""
-
-    native_value: Callable[
-        [str | int | float], str | int | float
-    ] | None = lambda val: val
 
 
 class OverkizDescriptiveEntity(OverkizEntity):

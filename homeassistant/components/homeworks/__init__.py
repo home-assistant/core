@@ -11,10 +11,11 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Start Homeworks controller."""
 
     def hw_callback(msg_type, values):
@@ -73,7 +74,7 @@ def setup(hass, base_config):
         signal = f"homeworks_entity_{addr}"
         dispatcher_send(hass, signal, msg_type, values)
 
-    config = base_config.get(DOMAIN)
+    config = base_config[DOMAIN]
     controller = Homeworks(config[CONF_HOST], config[CONF_PORT], hw_callback)
     hass.data[HOMEWORKS_CONTROLLER] = controller
 

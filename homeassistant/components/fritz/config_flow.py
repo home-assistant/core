@@ -51,7 +51,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password: str
         self._port: int | None = None
         self._username: str
-        self.fritz_tools: FritzBoxTools
+        self.avm_device: FritzBoxTools
 
     async def fritz_tools_init(self) -> str | None:
         """Initialize FRITZ!Box Tools class."""
@@ -59,7 +59,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._host or not self._port:
             return None
 
-        self.fritz_tools = FritzBoxTools(
+        self.avm_device = FritzBoxTools(
             hass=self.hass,
             host=self._host,
             port=self._port,
@@ -68,7 +68,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await self.fritz_tools.async_setup()
+            await self.avm_device.async_setup()
         except FritzSecurityError:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
@@ -100,10 +100,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data={
-                CONF_HOST: self.fritz_tools.host,
-                CONF_PASSWORD: self.fritz_tools.password,
-                CONF_PORT: self.fritz_tools.port,
-                CONF_USERNAME: self.fritz_tools.username,
+                CONF_HOST: self.avm_device.host,
+                CONF_PASSWORD: self.avm_device.password,
+                CONF_PORT: self.avm_device.port,
+                CONF_USERNAME: self.avm_device.username,
             },
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
@@ -204,7 +204,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         if not (error := await self.fritz_tools_init()):
-            self._name = self.fritz_tools.model
+            self._name = self.avm_device.model
 
             if await self.async_check_configured_entry():
                 error = "already_configured"

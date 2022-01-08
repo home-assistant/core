@@ -12,36 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
-from . import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_MOVING,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESENCE,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_RUNNING,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_TAMPER,
-    DEVICE_CLASS_UPDATE,
-    DEVICE_CLASS_VIBRATION,
-    DEVICE_CLASS_WINDOW,
-    DOMAIN,
-)
+from . import DOMAIN, BinarySensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -51,6 +22,8 @@ CONF_BAT_LOW = "bat_low"
 CONF_NOT_BAT_LOW = "not_bat_low"
 CONF_CHARGING = "charging"
 CONF_NOT_CHARGING = "not_charging"
+CONF_CO = "co"
+CONF_NO_CO = "no_co"
 CONF_COLD = "cold"
 CONF_NOT_COLD = "not_cold"
 CONF_CONNECTED = "connected"
@@ -99,6 +72,7 @@ CONF_NOT_OPENED = "not_opened"
 
 TURNED_ON = [
     CONF_BAT_LOW,
+    CONF_CO,
     CONF_COLD,
     CONF_CONNECTED,
     CONF_GAS,
@@ -139,6 +113,7 @@ TURNED_OFF = [
     CONF_NOT_PRESENT,
     CONF_NOT_TAMPERED,
     CONF_NOT_UNSAFE,
+    CONF_NO_CO,
     CONF_NO_GAS,
     CONF_NO_LIGHT,
     CONF_NO_MOTION,
@@ -152,46 +127,122 @@ TURNED_OFF = [
 
 
 ENTITY_TRIGGERS = {
-    DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_BAT_LOW}, {CONF_TYPE: CONF_NOT_BAT_LOW}],
-    DEVICE_CLASS_BATTERY_CHARGING: [
+    BinarySensorDeviceClass.BATTERY: [
+        {CONF_TYPE: CONF_BAT_LOW},
+        {CONF_TYPE: CONF_NOT_BAT_LOW},
+    ],
+    BinarySensorDeviceClass.BATTERY_CHARGING: [
         {CONF_TYPE: CONF_CHARGING},
         {CONF_TYPE: CONF_NOT_CHARGING},
     ],
-    DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_COLD}, {CONF_TYPE: CONF_NOT_COLD}],
-    DEVICE_CLASS_CONNECTIVITY: [
+    BinarySensorDeviceClass.CO: [
+        {CONF_TYPE: CONF_CO},
+        {CONF_TYPE: CONF_NO_CO},
+    ],
+    BinarySensorDeviceClass.COLD: [
+        {CONF_TYPE: CONF_COLD},
+        {CONF_TYPE: CONF_NOT_COLD},
+    ],
+    BinarySensorDeviceClass.CONNECTIVITY: [
         {CONF_TYPE: CONF_CONNECTED},
         {CONF_TYPE: CONF_NOT_CONNECTED},
     ],
-    DEVICE_CLASS_DOOR: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_GARAGE_DOOR: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_GAS}, {CONF_TYPE: CONF_NO_GAS}],
-    DEVICE_CLASS_HEAT: [{CONF_TYPE: CONF_HOT}, {CONF_TYPE: CONF_NOT_HOT}],
-    DEVICE_CLASS_LIGHT: [{CONF_TYPE: CONF_LIGHT}, {CONF_TYPE: CONF_NO_LIGHT}],
-    DEVICE_CLASS_LOCK: [{CONF_TYPE: CONF_LOCKED}, {CONF_TYPE: CONF_NOT_LOCKED}],
-    DEVICE_CLASS_MOISTURE: [{CONF_TYPE: CONF_MOIST}, {CONF_TYPE: CONF_NOT_MOIST}],
-    DEVICE_CLASS_MOTION: [{CONF_TYPE: CONF_MOTION}, {CONF_TYPE: CONF_NO_MOTION}],
-    DEVICE_CLASS_MOVING: [{CONF_TYPE: CONF_MOVING}, {CONF_TYPE: CONF_NOT_MOVING}],
-    DEVICE_CLASS_OCCUPANCY: [
+    BinarySensorDeviceClass.DOOR: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.GARAGE_DOOR: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.GAS: [
+        {CONF_TYPE: CONF_GAS},
+        {CONF_TYPE: CONF_NO_GAS},
+    ],
+    BinarySensorDeviceClass.HEAT: [
+        {CONF_TYPE: CONF_HOT},
+        {CONF_TYPE: CONF_NOT_HOT},
+    ],
+    BinarySensorDeviceClass.LIGHT: [
+        {CONF_TYPE: CONF_LIGHT},
+        {CONF_TYPE: CONF_NO_LIGHT},
+    ],
+    BinarySensorDeviceClass.LOCK: [
+        {CONF_TYPE: CONF_LOCKED},
+        {CONF_TYPE: CONF_NOT_LOCKED},
+    ],
+    BinarySensorDeviceClass.MOISTURE: [
+        {CONF_TYPE: CONF_MOIST},
+        {CONF_TYPE: CONF_NOT_MOIST},
+    ],
+    BinarySensorDeviceClass.MOTION: [
+        {CONF_TYPE: CONF_MOTION},
+        {CONF_TYPE: CONF_NO_MOTION},
+    ],
+    BinarySensorDeviceClass.MOVING: [
+        {CONF_TYPE: CONF_MOVING},
+        {CONF_TYPE: CONF_NOT_MOVING},
+    ],
+    BinarySensorDeviceClass.OCCUPANCY: [
         {CONF_TYPE: CONF_OCCUPIED},
         {CONF_TYPE: CONF_NOT_OCCUPIED},
     ],
-    DEVICE_CLASS_OPENING: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_PLUG: [{CONF_TYPE: CONF_PLUGGED_IN}, {CONF_TYPE: CONF_NOT_PLUGGED_IN}],
-    DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_POWERED}, {CONF_TYPE: CONF_NOT_POWERED}],
-    DEVICE_CLASS_PRESENCE: [{CONF_TYPE: CONF_PRESENT}, {CONF_TYPE: CONF_NOT_PRESENT}],
-    DEVICE_CLASS_PROBLEM: [{CONF_TYPE: CONF_PROBLEM}, {CONF_TYPE: CONF_NO_PROBLEM}],
-    DEVICE_CLASS_RUNNING: [{CONF_TYPE: CONF_RUNNING}, {CONF_TYPE: CONF_NOT_RUNNING}],
-    DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_UNSAFE}, {CONF_TYPE: CONF_NOT_UNSAFE}],
-    DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_SMOKE}, {CONF_TYPE: CONF_NO_SMOKE}],
-    DEVICE_CLASS_SOUND: [{CONF_TYPE: CONF_SOUND}, {CONF_TYPE: CONF_NO_SOUND}],
-    DEVICE_CLASS_UPDATE: [{CONF_TYPE: CONF_UPDATE}, {CONF_TYPE: CONF_NO_UPDATE}],
-    DEVICE_CLASS_TAMPER: [{CONF_TYPE: CONF_TAMPERED}, {CONF_TYPE: CONF_NOT_TAMPERED}],
-    DEVICE_CLASS_VIBRATION: [
+    BinarySensorDeviceClass.OPENING: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.PLUG: [
+        {CONF_TYPE: CONF_PLUGGED_IN},
+        {CONF_TYPE: CONF_NOT_PLUGGED_IN},
+    ],
+    BinarySensorDeviceClass.POWER: [
+        {CONF_TYPE: CONF_POWERED},
+        {CONF_TYPE: CONF_NOT_POWERED},
+    ],
+    BinarySensorDeviceClass.PRESENCE: [
+        {CONF_TYPE: CONF_PRESENT},
+        {CONF_TYPE: CONF_NOT_PRESENT},
+    ],
+    BinarySensorDeviceClass.PROBLEM: [
+        {CONF_TYPE: CONF_PROBLEM},
+        {CONF_TYPE: CONF_NO_PROBLEM},
+    ],
+    BinarySensorDeviceClass.RUNNING: [
+        {CONF_TYPE: CONF_RUNNING},
+        {CONF_TYPE: CONF_NOT_RUNNING},
+    ],
+    BinarySensorDeviceClass.SAFETY: [
+        {CONF_TYPE: CONF_UNSAFE},
+        {CONF_TYPE: CONF_NOT_UNSAFE},
+    ],
+    BinarySensorDeviceClass.SMOKE: [
+        {CONF_TYPE: CONF_SMOKE},
+        {CONF_TYPE: CONF_NO_SMOKE},
+    ],
+    BinarySensorDeviceClass.SOUND: [
+        {CONF_TYPE: CONF_SOUND},
+        {CONF_TYPE: CONF_NO_SOUND},
+    ],
+    BinarySensorDeviceClass.UPDATE: [
+        {CONF_TYPE: CONF_UPDATE},
+        {CONF_TYPE: CONF_NO_UPDATE},
+    ],
+    BinarySensorDeviceClass.TAMPER: [
+        {CONF_TYPE: CONF_TAMPERED},
+        {CONF_TYPE: CONF_NOT_TAMPERED},
+    ],
+    BinarySensorDeviceClass.VIBRATION: [
         {CONF_TYPE: CONF_VIBRATION},
         {CONF_TYPE: CONF_NO_VIBRATION},
     ],
-    DEVICE_CLASS_WINDOW: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_TURNED_ON}, {CONF_TYPE: CONF_TURNED_OFF}],
+    BinarySensorDeviceClass.WINDOW: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    DEVICE_CLASS_NONE: [
+        {CONF_TYPE: CONF_TURNED_ON},
+        {CONF_TYPE: CONF_TURNED_OFF},
+    ],
 }
 
 

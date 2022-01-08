@@ -28,6 +28,7 @@ from .schema import ConnectionSchema
 
 CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60
+CONF_DEFAULT_LOCAL_IP: Final = "0.0.0.0"
 
 DEFAULT_ENTRY_DATA: Final = {
     ConnectionSchema.CONF_KNX_STATE_UPDATER: ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
@@ -328,6 +329,12 @@ class KNXOptionsFlowHandler(OptionsFlow):
         entry_data = {
             **DEFAULT_ENTRY_DATA,
             **self.general_settings,
+            ConnectionSchema.CONF_KNX_LOCAL_IP: self.general_settings.get(
+                ConnectionSchema.CONF_KNX_LOCAL_IP
+            )
+            if self.general_settings.get(ConnectionSchema.CONF_KNX_LOCAL_IP)
+            != CONF_DEFAULT_LOCAL_IP
+            else None,
             CONF_HOST: self.current_config.get(CONF_HOST, ""),
         }
 
@@ -337,7 +344,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                 **user_input,
             }
 
-        entry_title = entry_data[CONF_KNX_CONNECTION_TYPE].capitalize()
+        entry_title = str(entry_data[CONF_KNX_CONNECTION_TYPE]).capitalize()
         if entry_data[CONF_KNX_CONNECTION_TYPE] == CONF_KNX_TUNNELING:
             entry_title = f"{CONF_KNX_TUNNELING.capitalize()} @ {entry_data[CONF_HOST]}"
 
@@ -388,12 +395,16 @@ class KNXOptionsFlowHandler(OptionsFlow):
         }
 
         if self.show_advanced_options:
+            local_ip = (
+                self.current_config.get(ConnectionSchema.CONF_KNX_LOCAL_IP)
+                if self.current_config.get(ConnectionSchema.CONF_KNX_LOCAL_IP)
+                is not None
+                else CONF_DEFAULT_LOCAL_IP
+            )
             data_schema[
-                vol.Optional(
+                vol.Required(
                     ConnectionSchema.CONF_KNX_LOCAL_IP,
-                    default=self.current_config.get(
-                        ConnectionSchema.CONF_KNX_LOCAL_IP,
-                    ),
+                    default=local_ip,
                 )
             ] = str
             data_schema[

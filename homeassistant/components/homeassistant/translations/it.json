@@ -4,7 +4,7 @@
             "arch": "Architettura della CPU",
             "dev": "Sviluppo",
             "docker": "Docker",
-            "hassio": "Supervisor",
+            "hassio": "Supervisore",
             "installation_type": "Tipo di installazione",
             "os_name": "Famiglia del sistema operativo",
             "os_version": "Versione del sistema operativo",

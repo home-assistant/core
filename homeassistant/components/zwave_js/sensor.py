@@ -56,7 +56,10 @@ from .const import (
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
-from .discovery_data_template import NumericSensorDataTemplateData
+from .discovery_data_template import (
+    NumericSensorDataTemplate,
+    NumericSensorDataTemplateData,
+)
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_id
 
@@ -296,6 +299,15 @@ class ZWaveStringSensor(ZwaveSensorBase):
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
 
+    @callback
+    def on_value_update(self) -> None:
+        """Handle scale changes for this value on value updated event."""
+        self._attr_native_unit_of_measurement = (
+            NumericSensorDataTemplate()
+            .resolve_data(self.info.primary_value)
+            .unit_of_measurement
+        )
+
     @property
     def native_value(self) -> float:
         """Return state of the sensor."""
@@ -500,6 +512,13 @@ class ZWaveNodeStatusSensor(SensorEntity):
                 self.hass,
                 f"{DOMAIN}_{self.unique_id}_poll_value",
                 self.async_poll_value,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_remove_entity",
+                self.async_remove,
             )
         )
         self.async_write_ha_state()

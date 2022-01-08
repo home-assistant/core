@@ -27,6 +27,7 @@
                     "network_key": "Clave de red",
                     "usb_path": "Ruta del dispositivo USB"
                 },
+                "description": "El complemento generar\u00e1 claves de seguridad si esos campos se dejan vac\u00edos.",
                 "title": "Introduzca la configuraci\u00f3n del complemento Z-Wave JS"
             },
             "hassio_confirm": {
@@ -95,6 +96,7 @@
                     "network_key": "Clave de red",
                     "usb_path": "Ruta del dispositivo USB"
                 },
+                "description": "El complemento generar\u00e1 claves de seguridad si esos campos se dejan vac\u00edos.",
                 "title": "Introduzca la configuraci\u00f3n del complemento Z-Wave JS"
             },
             "install_addon": {

@@ -2,7 +2,9 @@
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "circuit"
 CONF_WEBHOOK = "webhook"
@@ -21,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Unify Circuit component."""
     webhooks = config[DOMAIN][CONF_WEBHOOK]
 

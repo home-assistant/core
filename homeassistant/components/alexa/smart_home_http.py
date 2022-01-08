@@ -4,7 +4,9 @@ import logging
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, ENTITY_CATEGORIES
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .auth import Auth
 from .config import AbstractConfig
@@ -85,7 +87,7 @@ class AlexaConfig(AbstractConfig):
         return await self._auth.async_do_auth(code)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     """Activate Smart Home functionality of Alexa component.
 
     This is optional, triggered by having a `smart_home:` sub-section in the

@@ -21,7 +21,7 @@
             "sas": {
                 "data": {
                     "event_hub_namespace": "\u4e8b\u4ef6\u4e2d\u6a1e Namespace",
-                    "event_hub_sas_key": "\u4e8b\u4ef6\u4e2d\u6a1e SAS \u5bc6\u9470",
+                    "event_hub_sas_key": "\u4e8b\u4ef6\u4e2d\u6a1e SAS \u91d1\u9470",
                     "event_hub_sas_policy": "\u4e8b\u4ef6\u4e2d\u6a1e SAS \u96b1\u79c1\u653f\u7b56"
                 },
                 "description": "\u8acb\u8f38\u5165 SAS \uff08\u5171\u7528\u5b58\u53d6\u7c3d\u7ae0\uff09\u6191\u8b49\uff1a{event_hub_instance_name}",

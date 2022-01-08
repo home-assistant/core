@@ -5,7 +5,10 @@ import logging
 from requests import RequestException
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import DEVICES, SomaEntity
@@ -16,7 +19,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Soma sensor platform."""
 
     devices = hass.data[DOMAIN][DEVICES]

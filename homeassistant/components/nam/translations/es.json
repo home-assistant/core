@@ -8,7 +8,7 @@
             "cannot_connect": "No se pudo conectar",
             "unknown": "Error inesperado"
         },
-        "flow_title": "{name}",
+        "flow_title": "{host}",
         "step": {
             "confirm_discovery": {
                 "description": "\u00bfQuieres configurar Nettigo Air Monitor en {host} ?"

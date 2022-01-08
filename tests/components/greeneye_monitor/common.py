@@ -185,6 +185,13 @@ def mock_temperature_sensor() -> MagicMock:
     return temperature_sensor
 
 
+def mock_voltage_sensor() -> MagicMock:
+    """Create a mock GreenEye Monitor voltage sensor."""
+    voltage_sensor = mock_with_listeners()
+    voltage_sensor.voltage = 120.0
+    return voltage_sensor
+
+
 def mock_channel() -> MagicMock:
     """Create a mock GreenEye Monitor CT channel."""
     channel = mock_with_listeners()
@@ -198,7 +205,7 @@ def mock_monitor(serial_number: int) -> MagicMock:
     """Create a mock GreenEye Monitor."""
     monitor = mock_with_listeners()
     monitor.serial_number = serial_number
-    monitor.voltage = 120.0
+    monitor.voltage_sensor = mock_voltage_sensor()
     monitor.pulse_counters = [mock_pulse_counter() for i in range(0, 4)]
     monitor.temperature_sensors = [mock_temperature_sensor() for i in range(0, 8)]
     monitor.channels = [mock_channel() for i in range(0, 32)]
