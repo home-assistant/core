@@ -22,30 +22,29 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
+from .const import (
+    CONF_CHANNELS,
+    CONF_COUNTED_QUANTITY,
+    CONF_COUNTED_QUANTITY_PER_PULSE,
+    CONF_MONITOR_SERIAL_NUMBER,
+    CONF_MONITORS,
+    CONF_NET_METERING,
+    CONF_NUMBER,
+    CONF_PULSE_COUNTERS,
+    CONF_SERIAL_NUMBER,
+    CONF_TEMPERATURE_SENSORS,
+    CONF_TIME_UNIT,
+    CONF_VOLTAGE_SENSORS,
+    DATA_GREENEYE_MONITOR,
+    DOMAIN,
+    SENSOR_TYPE_CURRENT,
+    SENSOR_TYPE_PULSE_COUNTER,
+    SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPE_VOLTAGE,
+    TEMPERATURE_UNIT_CELSIUS,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CHANNELS = "channels"
-CONF_COUNTED_QUANTITY = "counted_quantity"
-CONF_COUNTED_QUANTITY_PER_PULSE = "counted_quantity_per_pulse"
-CONF_MONITOR_SERIAL_NUMBER = "monitor"
-CONF_MONITORS = "monitors"
-CONF_NET_METERING = "net_metering"
-CONF_NUMBER = "number"
-CONF_PULSE_COUNTERS = "pulse_counters"
-CONF_SERIAL_NUMBER = "serial_number"
-CONF_TEMPERATURE_SENSORS = "temperature_sensors"
-CONF_TIME_UNIT = "time_unit"
-CONF_VOLTAGE_SENSORS = "voltage"
-
-DATA_GREENEYE_MONITOR = "greeneye_monitor"
-DOMAIN = "greeneye_monitor"
-
-SENSOR_TYPE_CURRENT = "current_sensor"
-SENSOR_TYPE_PULSE_COUNTER = "pulse_counter"
-SENSOR_TYPE_TEMPERATURE = "temperature_sensor"
-SENSOR_TYPE_VOLTAGE = "voltage_sensor"
-
-TEMPERATURE_UNIT_CELSIUS = "C"
 
 TEMPERATURE_SENSOR_SCHEMA = vol.Schema(
     {vol.Required(CONF_NUMBER): vol.Range(1, 8), vol.Required(CONF_NAME): cv.string}
