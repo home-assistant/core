@@ -489,7 +489,8 @@ tests/components/kraken/* @eifinger
 homeassistant/components/kulersky/* @emlove
 tests/components/kulersky/* @emlove
 homeassistant/components/lametric/* @robbiet480
-homeassistant/components/launch_library/* @ludeeus
+homeassistant/components/launch_library/* @ludeeus @DurgNomis-drol
+tests/components/launch_library/* @ludeeus @DurgNomis-drol
 homeassistant/components/lcn/* @alengwenus
 tests/components/lcn/* @alengwenus
 homeassistant/components/lg_netcast/* @Drafteed
