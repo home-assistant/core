@@ -19,7 +19,7 @@ from tests.common import async_fire_time_changed
 
 
 async def test_steam_active(hass: HomeAssistant) -> None:
-    """Test that the binary sensors are setup with the expected values when steam is active."""
+    """Test that the switches are setup with the expected values when steam is active."""
     client, _ = await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_ACTIVE)
     assert len(hass.states.async_all("switch")) == 1
     assert hass.states.get("switch.steam_active").state == STATE_ON
