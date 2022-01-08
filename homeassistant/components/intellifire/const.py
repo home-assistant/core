@@ -20,7 +20,7 @@ FLAME_HEIGHT = "flame_height"
 PILOT = "pilot_light_on"
 TIMER_TIME = "timer_remaining"
 TEMP = "temperature"
-THERMOSTAT_TARGET = "Target Temp"
+THERMOSTAT_TARGET = "target_temp"
 
 
 INTELLIFIRE_SENSORS: tuple[SensorEntityDescription, ...] = (

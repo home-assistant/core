@@ -22,7 +22,7 @@ PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Intellifire from a config entry."""
 
-    _LOGGER.info("Setting up config entry: %s", entry.unique_id)
+    _LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Define the API Object
     api_object = IntellifireAsync(entry.data["host"])
@@ -48,7 +48,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage teh polling of the stuff"""
+    """Class to manage the polling of the stuff"""
 
     def __init__(self, hass, api: IntellifireAsync, name: str):
         """Initialize the Coordinator"""
