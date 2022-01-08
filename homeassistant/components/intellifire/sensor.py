@@ -54,9 +54,7 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         self._state = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_name = f"{coordinator.intellifire_name} Fireplace {description.name}"
-        self._attr_unique_id = (
-            f"Intellifire_{coordinator.safe_intellifire_name}_{description.key}"
-        )
+        self._attr_unique_id = f"Intellifire_{coordinator.serial}"
 
     @property
     def native_value(self):

@@ -30,13 +30,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         # If we can't actually hti the fireplace then lets warn the user
-        api_object.poll()
+        await api_object.poll()
     except:
         raise ConfigEntryNotReady
 
     # Define the update coordinator
     coordinator = IntellifireDataUpdateCoordinator(
-        hass=hass, api=api_object, name=entry.data["name"]
+        hass=hass,
+        api=api_object,
+        name=entry.data["name"],
+        serial=api_object.data.serial
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -58,7 +61,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the polling of the stuff"""
 
-    def __init__(self, hass, api: IntellifireAsync, name: str):
+    def __init__(self, hass, api: IntellifireAsync, name: str, serial: str):
         """Initialize the Coordinator"""
         super().__init__(
             hass,
@@ -68,10 +71,9 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
             update_method=self._async_update_data,
         )
         self._api = api
+        self.serial = serial
         self._intellifire_name = name
         self._LOGGER = _LOGGER
-
-        _LOGGER.warn("API_DATA", self.api.data)
 
     async def _async_update_data(self):
         _LOGGER.debug("Calling update loop on Intellifire")

@@ -41,7 +41,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     # Extract Serial Number to use for Unique ID
 
-    serial_number = api.data.serial_number
+    serial_number = api.data.serial
 
     # Return info that you want to store in the config entry.
     return {"title": f"{name} Fireplace", "type": "Fireplace", "serial": serial_number}
@@ -61,7 +61,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
-
         errors = {}
 
         try:
