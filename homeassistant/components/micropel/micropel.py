@@ -5,15 +5,15 @@ from pymicropel.communicator.mpc_300 import Mpc300
 from pymicropel.communicator.mpc_400 import Mpc400
 from pymicropel.helper.crypto import Crypto
 
-from homeassistant.const import (
+from core.homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.exceptions import HomeAssistantError
+from core.homeassistant.core import Event
+from core.homeassistant.exceptions import HomeAssistantError
 
-from ...core import Event
 from .const import (
     COMMUNICATOR_TYPE_MPC300,
     COMMUNICATOR_TYPE_MPC400,
