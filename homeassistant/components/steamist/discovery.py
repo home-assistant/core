@@ -82,6 +82,7 @@ async def async_discover_devices(
             _LOGGER.debug("Scanning %s failed with error: %s", targets[idx], discovered)
             continue
 
+    _LOGGER.debug("Found devices: %s", scanner.found_devices)
     if not address:
         return [
             device
