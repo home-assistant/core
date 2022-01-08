@@ -7,7 +7,11 @@ from typing import Any
 from pylaunches.objects.launch import Launch
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -72,25 +76,55 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            NextLaunchSensor(coordinator, entry.entry_id, name),
+            NextLaunchSensor(
+                coordinator,
+                entry.entry_id,
+                SensorEntityDescription(
+                    key="next_launch",
+                    icon="mdi:rocket-launch",
+                    name=name,
+                ),
+            ),
         ]
     )
 
 
-class NextLaunchSensor(CoordinatorEntity, SensorEntity):
-    """Representation of the next launch sensor."""
+class LaunchLibraryEntity(CoordinatorEntity, SensorEntity):
+    """Base entity class for launch library sensors."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_icon = "mdi:rocket-launch"
     _next_launch: Launch | None = None
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, entry_id: str, name: str
+        self,
+        coordinator: DataUpdateCoordinator,
+        entry_id: str,
+        description: SensorEntityDescription,
     ) -> None:
-        """Initialize a Launch Library entity."""
+        """Initialize a Launch Library base entity."""
         super().__init__(coordinator)
-        self._attr_name = name
-        self._attr_unique_id = f"{entry_id}_next_launch"
+        self._attr_name = description.name
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self._next_launch is not None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._next_launch = next((launch for launch in self.coordinator.data), None)
+        super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
+
+class NextLaunchSensor(LaunchLibraryEntity):
+    """Representation of the next launch sensor."""
 
     @property
     def native_value(self) -> str | None:
@@ -98,11 +132,6 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
         if self._next_launch is None:
             return None
         return self._next_launch.name
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and self._next_launch is not None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -115,14 +144,3 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
             ATTR_AGENCY_COUNTRY_CODE: self._next_launch.pad.location.country_code,
             ATTR_STREAM: self._next_launch.webcast_live,
         }
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._next_launch = next((launch for launch in self.coordinator.data), None)
-        super()._handle_coordinator_update()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
