@@ -127,15 +127,15 @@ def async_listen_platform(
 @bind_hass
 def load_platform(
     hass: core.HomeAssistant,
-    platform: Platform | str,
-    integration: str,
+    component: Platform | str,
+    platform: str,
     discovered: DiscoveryInfoType,
     hass_config: ConfigType,
 ) -> None:
-    """Load a platform and integration dynamically."""
+    """Load a component and platform dynamically."""
     hass.add_job(
         async_load_platform(  # type: ignore
-            hass, platform, integration, discovered, hass_config
+            hass, component, platform, discovered, hass_config
         )
     )
 
@@ -143,12 +143,12 @@ def load_platform(
 @bind_hass
 async def async_load_platform(
     hass: core.HomeAssistant,
-    platform: Platform | str,
-    integration: str,
+    component: Platform | str,
+    platform: str,
     discovered: DiscoveryInfoType,
     hass_config: ConfigType,
 ) -> None:
-    """Load a platform and integration dynamically.
+    """Load a component and platform dynamically.
 
     Use `async_listen_platform` to register a callback for these events.
 
@@ -160,21 +160,18 @@ async def async_load_platform(
     setup_success = True
 
     # Ensure that the underlying platform domain is setup
-    platform_domain = platform.value if isinstance(platform, Platform) else platform
-    if platform_domain not in hass.config.components:
-        setup_success = await setup.async_setup_component(
-            hass, platform_domain, hass_config
-        )
+    if component not in hass.config.components:
+        setup_success = await setup.async_setup_component(hass, component, hass_config)
 
-    # No need to send signal if we could not set up platform domain
+    # No need to send signal if we could not set up component
     if not setup_success:
         return
 
-    service = EVENT_LOAD_PLATFORM.format(platform)
+    service = EVENT_LOAD_PLATFORM.format(component)
 
     data: DiscoveryDict = {
         "service": service,
-        "platform": integration,
+        "platform": platform,
         "discovered": discovered,
     }
 
