@@ -199,10 +199,12 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
         self._attr_is_on = get_nested_attr(
             self.device, self.entity_description.ufp_value
         )
+        self._attr_extra_state_attributes = (
+            self._async_update_extra_attrs_from_protect()
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        self._async_cancel_doorbell_callback()
         return await super().async_will_remove_from_hass()
 
 
