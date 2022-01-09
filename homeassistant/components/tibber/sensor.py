@@ -595,14 +595,17 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
                         )
                     )
 
+                unit = (
+                    ENERGY_KILO_WATT_HOUR
+                    if sensor_type == "consumption"
+                    else home.currency
+                )
                 metadata = StatisticMetaData(
                     has_mean=False,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
                     source=TIBBER_DOMAIN,
                     statistic_id=statistic_id,
-                    unit_of_measurement=ENERGY_KILO_WATT_HOUR
-                    if sensor_type == "consumption"
-                    else home.currency,
+                    unit_of_measurement=unit,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)
