@@ -561,67 +561,78 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
         for home in self._tibber_connection.get_homes():
             if not home.hourly_consumption_data:
                 continue
-
-            statistic_id = (
-                f"{TIBBER_DOMAIN}:energy_consumption_{home.home_id.replace('-', '')}"
-            )
-
-            last_stats = await self.hass.async_add_executor_job(
-                get_last_statistics, self.hass, 1, statistic_id, True
-            )
-
-            if not last_stats:
-                # First time we insert 5 years of data (if available)
-                hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
-
-                _sum = 0
-                last_stats_time = None
-            else:
-                # hourly_consumption_data contains the last 30 days of consumption data.
-                # We update the statistics with the last 30 days of data to handle corrections in the data.
-                hourly_consumption_data = home.hourly_consumption_data
-
-                start = dt_util.parse_datetime(
-                    hourly_consumption_data[0]["from"]
-                ) - timedelta(hours=1)
-                stat = await self.hass.async_add_executor_job(
-                    statistics_during_period,
-                    self.hass,
-                    start,
-                    None,
-                    [statistic_id],
-                    "hour",
-                    True,
+            for sensor_type in (
+                "consumption",
+                "totalCost",
+            ):
+                statistic_id = (
+                    f"{TIBBER_DOMAIN}:energy_"
+                    f"{sensor_type.lower()}_"
+                    f"{home.home_id.replace('-', '')}"
                 )
-                _sum = stat[statistic_id][0]["sum"]
-                last_stats_time = stat[statistic_id][0]["start"]
 
-            statistics = []
+                last_stats = await self.hass.async_add_executor_job(
+                    get_last_statistics, self.hass, 1, statistic_id, True
+                )
 
-            for data in hourly_consumption_data:
-                if data.get("consumption") is None:
-                    continue
+                if not last_stats:
+                    # First time we insert 5 years of data (if available)
+                    hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
 
-                start = dt_util.parse_datetime(data["from"])
-                if last_stats_time is not None and start <= last_stats_time:
-                    continue
+                    _sum = 0
+                    last_stats_time = None
+                else:
+                    # hourly_consumption_data contains the last 30 days
+                    # of consumption data.
+                    # We update the statistics with the last 30 days
+                    # of data to handle corrections in the data.
+                    hourly_consumption_data = home.hourly_consumption_data
 
-                _sum += data["consumption"]
-
-                statistics.append(
-                    StatisticData(
-                        start=start,
-                        state=data["consumption"],
-                        sum=_sum,
+                    start = dt_util.parse_datetime(
+                        hourly_consumption_data[0]["from"]
+                    ) - timedelta(hours=1)
+                    stat = await self.hass.async_add_executor_job(
+                        statistics_during_period,
+                        self.hass,
+                        start,
+                        None,
+                        [statistic_id],
+                        "hour",
+                        True,
                     )
-                )
+                    _sum = stat[statistic_id][0]["sum"]
+                    last_stats_time = stat[statistic_id][0]["start"]
 
-            metadata = StatisticMetaData(
-                has_mean=False,
-                has_sum=True,
-                name=f"{home.name} consumption",
-                source=TIBBER_DOMAIN,
-                statistic_id=statistic_id,
-                unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            )
-            async_add_external_statistics(self.hass, metadata, statistics)
+                statistics = []
+
+                for data in hourly_consumption_data:
+                    if data.get(sensor_type) is None:
+                        continue
+
+                    start = dt_util.parse_datetime(data["from"])
+                    if last_stats_time is not None and start <= last_stats_time:
+                        continue
+
+                    _sum += data[sensor_type]
+
+                    statistics.append(
+                        StatisticData(
+                            start=start,
+                            state=data[sensor_type],
+                            sum=_sum,
+                        )
+                    )
+
+                if sensor_type == "consumption":
+                    unit = ENERGY_KILO_WATT_HOUR
+                else:
+                    unit = home.currency
+                metadata = StatisticMetaData(
+                    has_mean=False,
+                    has_sum=True,
+                    name=f"{home.name} {sensor_type}",
+                    source=TIBBER_DOMAIN,
+                    statistic_id=statistic_id,
+                    unit_of_measurement=unit,
+                )
+                async_add_external_statistics(self.hass, metadata, statistics)

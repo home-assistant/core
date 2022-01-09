@@ -33,7 +33,9 @@ async def test_async_setup_entry(hass):
 
     def _get_homes():
         tibber_home = AsyncMock()
+        tibber_home.name = "Name"
         tibber_home.home_id = "home_id"
+        tibber_home.currency = "NOK"
         tibber_home.get_historic_data.return_value = _CONSUMPTION_DATA_1
         return [tibber_home]
 
@@ -46,6 +48,7 @@ async def test_async_setup_entry(hass):
     await coordinator._async_update_data()
     await async_wait_recording_done_without_instance(hass)
 
+    # Validate consumption
     statistic_id = "tibber:energy_consumption_home_id"
 
     stats = await hass.async_add_executor_job(
@@ -70,4 +73,31 @@ async def test_async_setup_entry(hass):
         assert stat["last_reset"] is None
 
         _sum += _CONSUMPTION_DATA_1[k]["consumption"]
+        assert stat["sum"] == _sum
+
+    # Validate cost
+    statistic_id = "tibber:energy_totalcost_home_id"
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.parse_datetime(_CONSUMPTION_DATA_1[0]["from"]),
+        None,
+        [statistic_id],
+        "hour",
+        True,
+    )
+
+    assert len(stats) == 1
+    assert len(stats[statistic_id]) == 3
+    _sum = 0
+    for k, stat in enumerate(stats[statistic_id]):
+        assert stat["start"] == dt_util.parse_datetime(_CONSUMPTION_DATA_1[k]["from"])
+        assert stat["state"] == _CONSUMPTION_DATA_1[k]["totalCost"]
+        assert stat["mean"] is None
+        assert stat["min"] is None
+        assert stat["max"] is None
+        assert stat["last_reset"] is None
+
+        _sum += _CONSUMPTION_DATA_1[k]["totalCost"]
         assert stat["sum"] == _sum
