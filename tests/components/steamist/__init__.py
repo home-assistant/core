@@ -34,6 +34,24 @@ DEVICE_30303 = Device30303(
     mac=DEVICE_MAC_ADDRESS,
     hostname=DEVICE_HOSTNAME,
 )
+DEVICE_30303_NOT_STEAMIST = Device30303(
+    ipaddress=DEVICE_IP_ADDRESS,
+    name=DEVICE_NAME,
+    mac=DEVICE_MAC_ADDRESS,
+    hostname="not_steamist",
+)
+DISCOVERY_30303 = {
+    "ipaddress": DEVICE_IP_ADDRESS,
+    "name": DEVICE_NAME,
+    "mac": DEVICE_MAC_ADDRESS,
+    "hostname": DEVICE_HOSTNAME,
+}
+DISCOVERY_30303_NOT_STEAMIST = {
+    "ipaddress": DEVICE_IP_ADDRESS,
+    "name": DEVICE_NAME,
+    "mac": DEVICE_MAC_ADDRESS,
+    "hostname": "not_steamist",
+}
 
 
 async def _async_setup_entry_with_status(

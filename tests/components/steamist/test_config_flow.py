@@ -16,10 +16,11 @@ from homeassistant.data_entry_flow import (
 )
 
 from . import (
+    DEVICE_30303_NOT_STEAMIST,
     DEVICE_HOSTNAME,
     DEVICE_IP_ADDRESS,
     DEVICE_MAC_ADDRESS,
-    DEVICE_NAME,
+    DISCOVERY_30303,
     FORMATTED_MAC_ADDRESS,
     MOCK_ASYNC_GET_STATUS_INACTIVE,
     _patch_discovery,
@@ -30,12 +31,6 @@ from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.steamist"
 
-DISCOVERY_30303 = {
-    "ipaddress": DEVICE_IP_ADDRESS,
-    "name": DEVICE_NAME,
-    "mac": DEVICE_MAC_ADDRESS,
-    "hostname": DEVICE_HOSTNAME,
-}
 
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
@@ -52,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
+    with _patch_discovery(no_device=True), patch(
         "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
     ), patch(
         "homeassistant.components.steamist.async_setup_entry",
@@ -69,6 +64,37 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "127.0.0.1"
     assert result2["data"] == {
+        "host": "127.0.0.1",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_discovery(hass: HomeAssistant) -> None:
+    """Test we can also discovery the device during manual setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with _patch_discovery(), patch(
+        "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
+    ), patch(
+        "homeassistant.components.steamist.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "127.0.0.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "Master Bath"
+    assert result2["data"] == {
+        "name": "Master Bath",
         "host": "127.0.0.1",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -244,6 +270,70 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
     assert result2["data"] == {"host": "127.0.0.1", "name": "Master Bath"}
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
+
+
+async def test_discovered_by_dhcp(hass: HomeAssistant) -> None:
+    """Test we can setup when discovered from dhcp."""
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"] == {"host": "127.0.0.1", "name": "Master Bath"}
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+
+
+async def test_discovered_by_dhcp_discovery_fails(hass: HomeAssistant) -> None:
+    """Test we can setup when discovered from dhcp but then we cannot get the device name."""
+
+    with _patch_discovery(no_device=True), _patch_status(
+        MOCK_ASYNC_GET_STATUS_INACTIVE
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_discovered_by_dhcp_discovery_finds_non_steamist_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can setup when discovered from dhcp but its not a steamist device."""
+
+    with _patch_discovery(device=DEVICE_30303_NOT_STEAMIST), _patch_status(
+        MOCK_ASYNC_GET_STATUS_INACTIVE
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_steamist_device"
 
 
 @pytest.mark.parametrize(

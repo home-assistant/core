@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             self._discovered_device = discovery
         assert self._discovered_device is not None
-        if not async_is_steamist_device(device):
+        if not async_is_steamist_device(self._discovered_device):
             return self.async_abort(reason="not_steamist_device")
         return await self.async_step_discovery_confirm()
 
