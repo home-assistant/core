@@ -14,7 +14,7 @@ import weakref
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
-from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry
@@ -1100,13 +1100,15 @@ class ConfigEntries:
 
     @callback
     def async_setup_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[str]
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
 
-    async def async_forward_entry_setup(self, entry: ConfigEntry, domain: str) -> bool:
+    async def async_forward_entry_setup(
+        self, entry: ConfigEntry, domain: Platform | str
+    ) -> bool:
         """Forward the setup of an entry to a different component.
 
         By default an entry is setup with the component it belongs to. If that
@@ -1129,7 +1131,7 @@ class ConfigEntries:
         return True
 
     async def async_unload_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[str]
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> bool:
         """Forward the unloading of an entry to platforms."""
         return all(
@@ -1141,7 +1143,9 @@ class ConfigEntries:
             )
         )
 
-    async def async_forward_entry_unload(self, entry: ConfigEntry, domain: str) -> bool:
+    async def async_forward_entry_unload(
+        self, entry: ConfigEntry, domain: Platform | str
+    ) -> bool:
         """Forward the unloading of an entry to a different component."""
         # It was never loaded.
         if domain not in self.hass.config.components:
