@@ -39,7 +39,7 @@ async def async_setup_ha_cast(
     else:
         refresh_token = await hass.auth.async_create_refresh_token(user)
 
-    async def handle_show_view(call: core.ServiceCall):
+    async def handle_show_view(call: core.ServiceCall) -> None:
         """Handle a Show View service call."""
         hass_url = get_url(hass, require_ssl=True, prefer_external=True)
 

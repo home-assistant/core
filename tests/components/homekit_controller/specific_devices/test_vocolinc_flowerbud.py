@@ -19,14 +19,20 @@ async def test_vocolinc_flowerbud_setup(hass):
 
     # Check that the switch entity is handled correctly
 
-    entry = entity_registry.async_get("number.vocolinc_flowerbud_0d324b")
+    entry = entity_registry.async_get("number.vocolinc_flowerbud_0d324b_spray_quantity")
     assert entry.unique_id == "homekit-AM01121849000327-aid:1-sid:30-cid:38"
 
     helper = Helper(
-        hass, "number.vocolinc_flowerbud_0d324b", pairing, accessories[0], config_entry
+        hass,
+        "number.vocolinc_flowerbud_0d324b_spray_quantity",
+        pairing,
+        accessories[0],
+        config_entry,
     )
     state = await helper.poll_and_get_state()
-    assert state.attributes["friendly_name"] == "VOCOlinc-Flowerbud-0d324b"
+    assert (
+        state.attributes["friendly_name"] == "VOCOlinc-Flowerbud-0d324b Spray Quantity"
+    )
 
     device = device_registry.async_get(entry.device_id)
     assert device.manufacturer == "VOCOlinc"

@@ -28,6 +28,7 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_ONE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -47,6 +48,7 @@ from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,6 +75,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_SONOS = (
     SUPPORT_BROWSE_MEDIA
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_GROUPING
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PAUSE
     | SUPPORT_PLAY
@@ -132,6 +135,7 @@ async def async_setup_entry(
     @callback
     def async_create_entities(speaker: SonosSpeaker) -> None:
         """Handle device discovery and create entities."""
+        _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
         async_add_entities([SonosMediaPlayerEntity(speaker)])
 
     @service.verify_domain_control(hass, SONOS_DOMAIN)
@@ -665,3 +669,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
         return response
+
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        speakers = []
+        for entity_id in group_members:
+            if speaker := self.hass.data[DATA_SONOS].entity_id_mappings.get(entity_id):
+                speakers.append(speaker)
+            else:
+                raise HomeAssistantError(f"Not a known Sonos entity_id: {entity_id}")
+
+        self.speaker.join(speakers)
+
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        self.speaker.unjoin()

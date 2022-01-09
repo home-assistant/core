@@ -346,7 +346,9 @@ async def test_reset_fails(hass, aioclient_mock):
     assert result is False
 
 
-async def test_connection_state_signalling(hass, aioclient_mock, mock_unifi_websocket):
+async def test_connection_state_signalling(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
     """Verify connection statesignalling and connection state are working."""
     client = {
         "hostname": "client",

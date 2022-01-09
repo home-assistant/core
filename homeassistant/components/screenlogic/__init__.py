@@ -222,6 +222,7 @@ class ScreenlogicEntity(CoordinatorEntity):
             manufacturer="Pentair",
             model=equipment_model,
             name=self.gateway_name,
+            sw_version=self.gateway.version,
         )
 
     async def _async_refresh(self):

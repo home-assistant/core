@@ -14,8 +14,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ SET_RUN_STATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ZoneMinder component."""
 
     hass.data[DOMAIN] = {}
@@ -74,7 +76,7 @@ def setup(hass, config):
 
         success = zm_client.login() and success
 
-    def set_active_state(call):
+    def set_active_state(call: ServiceCall) -> None:
         """Set the ZoneMinder run state to the given state name."""
         zm_id = call.data[ATTR_ID]
         state_name = call.data[ATTR_NAME]

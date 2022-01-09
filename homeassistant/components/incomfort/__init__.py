@@ -8,12 +8,13 @@ from incomfortclient import Gateway as InComfortGateway
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, hass_config):
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Create an Intergas InComfort/Intouch system."""
     incomfort_data = hass.data[DOMAIN] = {}
 

@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from aiorecollect.client import PickupType
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -13,14 +17,24 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
-ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
-ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
-DEFAULT_NAME = "Waste Pickup"
+SENSOR_TYPE_CURRENT_PICKUP = "current_pickup"
+SENSOR_TYPE_NEXT_PICKUP = "next_pickup"
+
+SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CURRENT_PICKUP,
+        name="Current Pickup",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_NEXT_PICKUP,
+        name="Next Pickup",
+    ),
+)
 
 
 @callback
@@ -41,7 +55,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ReCollectWasteSensor(coordinator, entry)])
+
+    async_add_entities(
+        [
+            ReCollectWasteSensor(coordinator, entry, description)
+            for description in SENSOR_DESCRIPTIONS
+        ]
+    )
 
 
 class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
@@ -49,16 +69,19 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.DATE
 
-    def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        entry: ConfigEntry,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
-        self._attr_name = DEFAULT_NAME
-        self._attr_unique_id = (
-            f"{entry.data[CONF_PLACE_ID]}{entry.data[CONF_SERVICE_ID]}"
-        )
+        self._attr_unique_id = f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}_{description.key}"
         self._entry = entry
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -74,24 +97,25 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        try:
-            pickup_event = self.coordinator.data[0]
-            next_pickup_event = self.coordinator.data[1]
-        except IndexError:
-            self._attr_native_value = None
-            self._attr_extra_state_attributes = {}
-            return
+        if self.entity_description.key == SENSOR_TYPE_CURRENT_PICKUP:
+            try:
+                event = self.coordinator.data[0]
+            except IndexError:
+                LOGGER.error("No current pickup found")
+                return
+        else:
+            try:
+                event = self.coordinator.data[1]
+            except IndexError:
+                LOGGER.info("No next pickup found")
+                return
 
         self._attr_extra_state_attributes.update(
             {
                 ATTR_PICKUP_TYPES: async_get_pickup_type_names(
-                    self._entry, pickup_event.pickup_types
+                    self._entry, event.pickup_types
                 ),
-                ATTR_AREA_NAME: pickup_event.area_name,
-                ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
-                    self._entry, next_pickup_event.pickup_types
-                ),
-                ATTR_NEXT_PICKUP_DATE: next_pickup_event.date.isoformat(),
+                ATTR_AREA_NAME: event.area_name,
             }
         )
-        self._attr_native_value = pickup_event.date
+        self._attr_native_value = event.date

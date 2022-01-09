@@ -32,6 +32,7 @@ from .const import (
     CONF_SECRET,
     CONF_USER_ID,
     DOMAIN,
+    SCHEMA_APP_DATA,
 )
 from .helpers import supports_encryption
 
@@ -45,7 +46,7 @@ class RegistrationsView(HomeAssistantView):
     @RequestDataValidator(
         vol.Schema(
             {
-                vol.Optional(ATTR_APP_DATA, default={}): dict,
+                vol.Optional(ATTR_APP_DATA, default={}): SCHEMA_APP_DATA,
                 vol.Required(ATTR_APP_ID): cv.string,
                 vol.Required(ATTR_APP_NAME): cv.string,
                 vol.Required(ATTR_APP_VERSION): cv.string,

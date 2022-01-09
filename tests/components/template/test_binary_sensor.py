@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState
 from homeassistant.helpers import entity_registry
@@ -499,8 +500,10 @@ async def test_event(hass, start_ha):
 )
 async def test_template_delay_on_off(hass, start_ha):
     """Test binary sensor template delay on."""
-    assert hass.states.get("binary_sensor.test_on").state == OFF
-    assert hass.states.get("binary_sensor.test_off").state == OFF
+    # Ensure the initial state is not on
+    assert hass.states.get("binary_sensor.test_on").state != ON
+    assert hass.states.get("binary_sensor.test_off").state != ON
+
     hass.states.async_set("input_number.delay", 5)
     hass.states.async_set("sensor.test_state", ON)
     await hass.async_block_till_done()
@@ -722,10 +725,10 @@ async def test_no_update_template_match_all(hass, caplog):
     hass.states.async_set("binary_sensor.test_sensor", "true")
     assert len(hass.states.async_all()) == 5
 
-    assert hass.states.get("binary_sensor.all_state").state == OFF
-    assert hass.states.get("binary_sensor.all_icon").state == OFF
-    assert hass.states.get("binary_sensor.all_entity_picture").state == OFF
-    assert hass.states.get("binary_sensor.all_attribute").state == OFF
+    assert hass.states.get("binary_sensor.all_state").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.all_icon").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.all_entity_picture").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.all_attribute").state == STATE_UNKNOWN
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -906,11 +909,11 @@ async def test_trigger_entity(hass, start_ha):
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.hello_name")
     assert state is not None
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("binary_sensor.bare_minimum")
     assert state is not None
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     context = Context()
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)
@@ -973,7 +976,7 @@ async def test_trigger_entity(hass, start_ha):
 async def test_template_with_trigger_templated_delay_on(hass, start_ha):
     """Test binary sensor template with template delay on."""
     state = hass.states.get("binary_sensor.test")
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     context = Context()
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)

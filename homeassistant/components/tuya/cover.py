@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -22,12 +21,11 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -38,6 +36,9 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state_inverse: bool = False
     current_position: DPCode | tuple[DPCode, ...] | None = None
     set_position: DPCode | None = None
+    open_instruction_value: str = "open"
+    close_instruction_value: str = "close"
+    stop_instruction_value: str = "stop"
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -66,6 +67,16 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.MACH_OPERATE,
+            name="Curtain",
+            current_position=DPCode.POSITION,
+            set_position=DPCode.POSITION,
+            device_class=CoverDeviceClass.CURTAIN,
+            open_instruction_value="FZ",
+            close_instruction_value="ZZ",
+            stop_instruction_value="STOP",
         ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
@@ -134,7 +145,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
@@ -147,10 +158,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaCoverEntity(
                                 device, hass_data.device_manager, description
@@ -193,11 +201,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
         elif device.function[description.key].type == "Enum":
             data_type = EnumTypeData.from_json(device.function[description.key].values)
-            if "open" in data_type.range:
+            if description.open_instruction_value in data_type.range:
                 self._attr_supported_features |= SUPPORT_OPEN
-            if "close" in data_type.range:
+            if description.close_instruction_value in data_type.range:
                 self._attr_supported_features |= SUPPORT_CLOSE
-            if "stop" in data_type.range:
+            if description.stop_instruction_value in data_type.range:
                 self._attr_supported_features |= SUPPORT_STOP
 
         # Determine type to use for setting the position
@@ -309,7 +317,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Open the cover."""
         value: bool | str = True
         if self.device.function[self.entity_description.key].type == "Enum":
-            value = "open"
+            value = self.entity_description.open_instruction_value
 
         commands: list[dict[str, str | int]] = [
             {"code": self.entity_description.key, "value": value}
@@ -336,7 +344,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Close cover."""
         value: bool | str = False
         if self.device.function[self.entity_description.key].type == "Enum":
-            value = "close"
+            value = self.entity_description.close_instruction_value
 
         commands: list[dict[str, str | int]] = [
             {"code": self.entity_description.key, "value": value}
@@ -381,7 +389,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._send_command([{"code": self.entity_description.key, "value": "stop"}])
+        self._send_command(
+            [
+                {
+                    "code": self.entity_description.key,
+                    "value": self.entity_description.stop_instruction_value,
+                }
+            ]
+        )
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""

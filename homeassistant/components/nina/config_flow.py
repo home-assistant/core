@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -45,53 +46,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        has_error: bool = False
+        if not self._all_region_codes_sorted:
+            nina: Nina = Nina(async_get_clientsession(self.hass))
 
-        if len(self._all_region_codes_sorted) == 0:
             try:
-                nina: Nina = Nina()
-
                 self._all_region_codes_sorted = self.swap_key_value(
                     await nina.getAllRegionalCodes()
                 )
-
-                self.split_regions()
-
-            except ApiError as err:
-                _LOGGER.warning("NINA setup error: %s", err)
+            except ApiError:
                 errors["base"] = "cannot_connect"
-                has_error = True
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception: %s", err)
-                errors["base"] = "unknown"
                 return self.async_abort(reason="unknown")
 
-        if user_input is not None and not has_error:
-            config: dict[str, Any] = user_input
+            self.split_regions()
 
-            config[CONF_REGIONS] = []
+        if user_input is not None and not errors:
+            user_input[CONF_REGIONS] = []
 
             for group in CONST_REGIONS:
                 if group_input := user_input.get(group):
-                    config[CONF_REGIONS] += group_input
+                    user_input[CONF_REGIONS] += group_input
 
-            if len(config[CONF_REGIONS]) > 0:
+            if user_input[CONF_REGIONS]:
                 tmp: dict[str, Any] = {}
 
-                for reg in config[CONF_REGIONS]:
+                for reg in user_input[CONF_REGIONS]:
                     tmp[self._all_region_codes_sorted[reg]] = reg.split("_", 1)[0]
 
                 compact: dict[str, Any] = {}
 
                 for key, val in tmp.items():
                     if val in compact:
+                        # Abenberg, St + Abenberger Wald
                         compact[val] = f"{compact[val]} + {key}"
                         break
                     compact[val] = key
 
-                config[CONF_REGIONS] = compact
+                user_input[CONF_REGIONS] = compact
 
-                return self.async_create_entry(title="NINA", data=config)
+                return self.async_create_entry(title="NINA", data=user_input)
 
             errors["base"] = "no_selection"
 
@@ -122,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 all_region_codes_swaped[value] = key
             else:
                 for i in range(len(dict_to_sort)):
-                    tmp_value: str = value + "_" + str(i)
+                    tmp_value: str = f"{value}_{i}"
                     if tmp_value not in all_region_codes_swaped:
                         all_region_codes_swaped[tmp_value] = key
                         break

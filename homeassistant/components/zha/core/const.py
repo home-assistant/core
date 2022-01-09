@@ -7,6 +7,7 @@ import logging
 import bellows.zigbee.application
 import voluptuous as vol
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+import zigpy.types as t
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
@@ -102,6 +103,7 @@ CLUSTER_TYPE_OUT = "out"
 PLATFORMS = (
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
@@ -109,6 +111,7 @@ PLATFORMS = (
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -208,8 +211,9 @@ MFG_CLUSTER_ID_START = 0xFC00
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
-PRESET_SCHEDULE = "schedule"
-PRESET_COMPLEX = "complex"
+PRESET_SCHEDULE = "Schedule"
+PRESET_COMPLEX = "Complex"
+PRESET_TEMP_MANUAL = "Temporary manual"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
@@ -386,3 +390,10 @@ EFFECT_BREATHE = 0x01
 EFFECT_OKAY = 0x02
 
 EFFECT_DEFAULT_VARIANT = 0x00
+
+
+class Strobe(t.enum8):
+    """Strobe enum."""
+
+    No_Strobe = 0x00
+    Strobe = 0x01

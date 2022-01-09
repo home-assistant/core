@@ -7,6 +7,7 @@ import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_DEVICE_ID,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -42,7 +44,7 @@ ATTR_APP_TYPE = "app_type"
 ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 CHANGE_SETTING_SCHEMA = vol.Schema(
     {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
@@ -75,7 +77,7 @@ class AbodeSystem:
         self.logout_listener = None
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
@@ -110,7 +112,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
     hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
@@ -129,22 +131,22 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-def setup_hass_services(hass):
+def setup_hass_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
-    def change_setting(call):
+    def change_setting(call: ServiceCall) -> None:
         """Change an Abode system setting."""
-        setting = call.data.get(ATTR_SETTING)
-        value = call.data.get(ATTR_VALUE)
+        setting = call.data[ATTR_SETTING]
+        value = call.data[ATTR_VALUE]
 
         try:
             hass.data[DOMAIN].abode.set_setting(setting, value)
         except AbodeException as ex:
             LOGGER.warning(ex)
 
-    def capture_image(call):
+    def capture_image(call: ServiceCall) -> None:
         """Capture a new image."""
-        entity_ids = call.data.get(ATTR_ENTITY_ID)
+        entity_ids = call.data[ATTR_ENTITY_ID]
 
         target_entities = [
             entity_id
@@ -156,9 +158,9 @@ def setup_hass_services(hass):
             signal = f"abode_camera_capture_{entity_id}"
             dispatcher_send(hass, signal)
 
-    def trigger_automation(call):
+    def trigger_automation(call: ServiceCall) -> None:
         """Trigger an Abode automation."""
-        entity_ids = call.data.get(ATTR_ENTITY_ID)
+        entity_ids = call.data[ATTR_ENTITY_ID]
 
         target_entities = [
             entity_id
@@ -183,7 +185,7 @@ def setup_hass_services(hass):
     )
 
 
-async def setup_hass_events(hass):
+async def setup_hass_events(hass: HomeAssistant) -> None:
     """Home Assistant start and stop callbacks."""
 
     def logout(event):
@@ -202,7 +204,7 @@ async def setup_hass_events(hass):
     )
 
 
-def setup_abode_events(hass):
+def setup_abode_events(hass: HomeAssistant) -> None:
     """Event callbacks."""
 
     def event_callback(event, event_json):
