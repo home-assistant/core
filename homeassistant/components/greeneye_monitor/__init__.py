@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
-    CONF_SENSOR_TYPE,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_STOP,
@@ -26,7 +25,6 @@ from .const import (
     CONF_CHANNELS,
     CONF_COUNTED_QUANTITY,
     CONF_COUNTED_QUANTITY_PER_PULSE,
-    CONF_MONITOR_SERIAL_NUMBER,
     CONF_MONITORS,
     CONF_NET_METERING,
     CONF_NUMBER,
@@ -37,10 +35,6 @@ from .const import (
     CONF_VOLTAGE_SENSORS,
     DATA_GREENEYE_MONITOR,
     DOMAIN,
-    SENSOR_TYPE_CURRENT,
-    SENSOR_TYPE_PULSE_COUNTER,
-    SENSOR_TYPE_TEMPERATURE,
-    SENSOR_TYPE_VOLTAGE,
     TEMPERATURE_UNIT_CELSIUS,
 )
 
@@ -134,57 +128,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_monitors)
 
-    all_sensors = []
-    for monitor_config in server_config[CONF_MONITORS]:
-        monitor_serial_number = {
-            CONF_MONITOR_SERIAL_NUMBER: monitor_config[CONF_SERIAL_NUMBER]
-        }
+    num_sensors = 0
+    for monitor_config in config[DOMAIN][CONF_MONITORS]:
+        num_sensors += len(monitor_config[CONF_CHANNELS])
+        num_sensors += len(monitor_config[CONF_PULSE_COUNTERS])
+        num_sensors += len(monitor_config[CONF_TEMPERATURE_SENSORS][CONF_SENSORS])
+        num_sensors += len(monitor_config[CONF_VOLTAGE_SENSORS])
 
-        channel_configs = monitor_config[CONF_CHANNELS]
-        for channel_config in channel_configs:
-            all_sensors.append(
-                {
-                    CONF_SENSOR_TYPE: SENSOR_TYPE_CURRENT,
-                    **monitor_serial_number,
-                    **channel_config,
-                }
-            )
-
-        voltage_configs = monitor_config[CONF_VOLTAGE_SENSORS]
-        for voltage_config in voltage_configs:
-            all_sensors.append(
-                {
-                    CONF_SENSOR_TYPE: SENSOR_TYPE_VOLTAGE,
-                    **monitor_serial_number,
-                    **voltage_config,
-                }
-            )
-
-        if sensor_configs := monitor_config[CONF_TEMPERATURE_SENSORS]:
-            temperature_unit = {
-                CONF_TEMPERATURE_UNIT: sensor_configs[CONF_TEMPERATURE_UNIT]
-            }
-            for sensor_config in sensor_configs[CONF_SENSORS]:
-                all_sensors.append(
-                    {
-                        CONF_SENSOR_TYPE: SENSOR_TYPE_TEMPERATURE,
-                        **monitor_serial_number,
-                        **temperature_unit,
-                        **sensor_config,
-                    }
-                )
-
-        counter_configs = monitor_config[CONF_PULSE_COUNTERS]
-        for counter_config in counter_configs:
-            all_sensors.append(
-                {
-                    CONF_SENSOR_TYPE: SENSOR_TYPE_PULSE_COUNTER,
-                    **monitor_serial_number,
-                    **counter_config,
-                }
-            )
-
-    if not all_sensors:
+    if num_sensors == 0:
         _LOGGER.error(
             "Configuration must specify at least one "
             "channel, voltage, pulse counter or temperature sensor"
@@ -192,7 +143,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.async_create_task(
-        async_load_platform(hass, "sensor", DOMAIN, {CONF_SENSORS: all_sensors}, config)
+        async_load_platform(hass, "sensor", DOMAIN, config[DOMAIN], config)
     )
 
     return True
