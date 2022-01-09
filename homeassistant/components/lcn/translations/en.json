@@ -1,4 +1,31 @@
 {
+    "config": {
+        "abort": {
+            "existing_configuration_updated": "Configuration updated with imported data.",
+            "import_connection_error": "Error importing connection parameters."
+        },
+        "error": {
+            "already_configured": "PCHK connection using the same name is already configured.",
+            "authentication_error": "Authentication failed. Wrong username or password.",
+            "connection_refused": "Unable to connect to PCHK. Check IP and port.",
+            "license_error": "Maximum number of connections was reached. An additional licence key is required."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "dim_mode": "Dimming mode",
+                    "host": "Name",
+                    "ip_address": "IP Address",
+                    "password": "Password",
+                    "port": "Port",
+                    "sk_num_tries": "Segment coupler scan attempts",
+                    "username": "Username"
+                },
+                "description": "Set up new connection to LCN host.",
+                "title": "Setup LCN host"
+            }
+        }
+    },
     "device_automation": {
         "trigger_type": {
             "codelock": "code lock code received",
@@ -6,6 +33,27 @@
             "send_keys": "send keys received",
             "transmitter": "transmitter code received",
             "transponder": "transponder code received"
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "PCHK connection using the same name is already configured.",
+            "authentication_error": "Authentication failed. Wrong username or password.",
+            "connection_refused": "Unable to connect to PCHK. Check IP and port."
+        },
+        "step": {
+            "host_options": {
+                "data": {
+                    "dim_mode": "Dimming mode",
+                    "ip_address": "IP Address",
+                    "password": "Password",
+                    "port": "Port",
+                    "sk_num_tries": "Segment coupler scan attempts",
+                    "username": "Username"
+                },
+                "description": "Configure LCN host",
+                "title": "LCN host options"
+            }
         }
     }
 }

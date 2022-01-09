@@ -153,37 +153,54 @@ SENSORS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SENSOR})
 
 SWITCHES_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SWITCH})
 
-CONNECTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
-        vol.Optional(CONF_DIM_MODE, default="steps50"): vol.All(
-            vol.Upper, vol.In(DIM_MODES)
-        ),
-        vol.Optional(CONF_NAME): cv.string,
-    }
+CONNECTION_SCHEMA = vol.All(
+    cv.deprecated(CONF_HOST),
+    cv.deprecated(CONF_PORT),
+    cv.deprecated(CONF_USERNAME),
+    cv.deprecated(CONF_PASSWORD),
+    cv.deprecated(CONF_SK_NUM_TRIES),
+    cv.deprecated(CONF_DIM_MODE),
+    vol.Schema(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PORT): cv.port,
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
+            vol.Optional(CONF_DIM_MODE, default="steps50"): vol.All(
+                vol.Upper, vol.In(DIM_MODES)
+            ),
+            vol.Optional(CONF_NAME): cv.string,
+        }
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONNECTIONS): vol.All(
-                    cv.ensure_list, has_unique_host_names, [CONNECTION_SCHEMA]
-                ),
-                vol.Optional(CONF_BINARY_SENSORS): vol.All(
-                    cv.ensure_list, [BINARY_SENSORS_SCHEMA]
-                ),
-                vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATES_SCHEMA]),
-                vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
-                vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
-                vol.Optional(CONF_SCENES): vol.All(cv.ensure_list, [SCENES_SCHEMA]),
-                vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSORS_SCHEMA]),
-                vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCHES_SCHEMA]),
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_CONNECTIONS),
+            vol.Schema(
+                {
+                    vol.Optional(CONF_CONNECTIONS): vol.All(
+                        cv.ensure_list, has_unique_host_names, [CONNECTION_SCHEMA]
+                    ),
+                    vol.Optional(CONF_BINARY_SENSORS): vol.All(
+                        cv.ensure_list, [BINARY_SENSORS_SCHEMA]
+                    ),
+                    vol.Optional(CONF_CLIMATES): vol.All(
+                        cv.ensure_list, [CLIMATES_SCHEMA]
+                    ),
+                    vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
+                    vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
+                    vol.Optional(CONF_SCENES): vol.All(cv.ensure_list, [SCENES_SCHEMA]),
+                    vol.Optional(CONF_SENSORS): vol.All(
+                        cv.ensure_list, [SENSORS_SCHEMA]
+                    ),
+                    vol.Optional(CONF_SWITCHES): vol.All(
+                        cv.ensure_list, [SWITCHES_SCHEMA]
+                    ),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,

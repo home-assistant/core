@@ -191,6 +191,7 @@ FLOWS = {
         "launch_library",
         "laundrify",
         "lg_soundbar",
+        "lcn",
         "life360",
         "lifx",
         "litejet",

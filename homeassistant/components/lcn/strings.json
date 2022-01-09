@@ -7,5 +7,53 @@
       "codelock": "code lock code received",
       "send_keys": "send keys received"
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup LCN host",
+        "description": "Set up new connection to LCN host.",
+        "data": {
+          "host": "[%key:common::config_flow::data::name%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "sk_num_tries": "Segment coupler scan attempts",
+          "dim_mode": "Dimming mode"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "PCHK connection using the same name is already configured.",
+      "authentication_error": "Authentication failed. Wrong username or password.",
+      "license_error": "Maximum number of connections was reached. An additional licence key is required.",
+      "connection_refused": "Unable to connect to PCHK. Check IP and port."
+    },
+    "abort": {
+      "existing_configuration_updated": "Configuration updated with imported data.",
+      "import_connection_error": "Error importing connection parameters."
+    }
+  },
+  "options": {
+    "step": {
+      "host_options": {
+        "title": "LCN host options",
+        "description": "Configure LCN host",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "sk_num_tries": "Segment coupler scan attempts",
+          "dim_mode": "Dimming mode"
+        }
+      }
+    },
+    "error": {
+      "authentication_error": "Authentication failed. Wrong username or password.",
+      "connection_refused": "Unable to connect to PCHK. Check IP and port.",
+      "already_configured": "PCHK connection using the same name is already configured."
+    }
   }
 }

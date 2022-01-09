@@ -183,7 +183,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
     }
     """
     data = {}
-    for connection in lcn_config[CONF_CONNECTIONS]:
+    for connection in lcn_config.get(CONF_CONNECTIONS, []):
         host = {
             CONF_HOST: connection[CONF_NAME],
             CONF_IP_ADDRESS: connection[CONF_HOST],
@@ -209,6 +209,17 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
 
             if host_name is None:
                 host_name = DEFAULT_NAME
+
+            if host_name not in data:
+                data.update(
+                    {
+                        host_name: {
+                            CONF_HOST: host_name,
+                            CONF_DEVICES: [],
+                            CONF_ENTITIES: [],
+                        }
+                    }
+                )
 
             # check if we have a new device config
             for device_config in data[host_name][CONF_DEVICES]:
@@ -243,7 +254,6 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
                     CONF_DOMAIN_DATA: domain_data.copy(),
                 }
                 data[host_name][CONF_ENTITIES].append(entity_config)
-
     return list(data.values())
 
 

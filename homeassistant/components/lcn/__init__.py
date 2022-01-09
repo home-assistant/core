@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import deepcopy
 from functools import partial
 import logging
 
@@ -78,16 +79,18 @@ async def async_setup_entry(
         return False
 
     settings = {
-        "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
-        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
+        "SK_NUM_TRIES": config_entry.options[CONF_SK_NUM_TRIES],
+        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[
+            config_entry.options[CONF_DIM_MODE]
+        ],
     }
 
     # connect to PCHK
     lcn_connection = pypck.connection.PchkConnectionManager(
-        config_entry.data[CONF_IP_ADDRESS],
-        config_entry.data[CONF_PORT],
-        config_entry.data[CONF_USERNAME],
-        config_entry.data[CONF_PASSWORD],
+        config_entry.options[CONF_IP_ADDRESS],
+        config_entry.options[CONF_PORT],
+        config_entry.options[CONF_USERNAME],
+        config_entry.options[CONF_PASSWORD],
         settings=settings,
         connection_id=config_entry.entry_id,
     )
@@ -104,7 +107,7 @@ async def async_setup_entry(
             config_entry.title,
         )
         return False
-    except TimeoutError:
+    except (TimeoutError, ConnectionRefusedError):
         _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
         return False
 
@@ -136,6 +139,8 @@ async def async_setup_entry(
                 DOMAIN, service_name, service(hass).async_call_service, service.schema
             )
 
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+
     return True
 
 
@@ -158,6 +163,42 @@ async def async_unload_entry(
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    version = entry.version
+
+    _LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Connection parameters moved from entry.data to entry.options:
+    if version == 1:
+        data = deepcopy(dict(entry.data))
+        options = {
+            key: data.pop(key)
+            for key in (
+                CONF_IP_ADDRESS,
+                CONF_PORT,
+                CONF_USERNAME,
+                CONF_PASSWORD,
+                CONF_SK_NUM_TRIES,
+                CONF_DIM_MODE,
+            )
+        }
+        version = entry.version = 2
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+        _LOGGER.debug("Migration to version %s successful", version)
+
+    return True
+
+
+async def update_listener(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 def async_host_input_received(
