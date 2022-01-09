@@ -88,7 +88,7 @@ async def async_setup_entry(
         command_off_id = None
     else:
         command_off_id = _get_id_from_name(command_off_name, hub.week_profiles)
-        if command_off_id in (None, ""):
+        if not command_off_id:
             _LOGGER.warning(
                 "Can not turn off (or on) any zone, because week profile '%s' was not found",
                 command_off_name,
@@ -133,14 +133,14 @@ def _set_on_commands(command_on_by_id, command_on_dict, hub):
         if zone_name not in command_on_dict:
             continue
         command_on_name = command_on_dict[zone_name]
-        if command_on_name in (None, ""):
+        if not command_on_name:
             _LOGGER.warning(
                 "Can not turn on (or off) zone '%s', because ON week profile was not specified",
                 zone_name,
             )
             continue
         command_on_id = _get_id_from_name(command_on_name, hub.week_profiles)
-        if command_on_id in (None, ""):
+        if not command_on_id:
             _LOGGER.warning(
                 "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
                 zone_name,
