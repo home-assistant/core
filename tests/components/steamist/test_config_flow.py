@@ -2,10 +2,12 @@
 import asyncio
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.steamist.const import DOMAIN
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -23,6 +25,8 @@ from . import (
     _patch_discovery,
     _patch_status,
 )
+
+from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.steamist"
 
@@ -240,3 +244,29 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
     assert result2["data"] == {"host": "127.0.0.1", "name": "Master Bath"}
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, DISCOVERY_30303),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
+    hass, source, data
+):
+    """Test we can setup when discovered from dhcp or discovery."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: DEVICE_IP_ADDRESS})
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == FORMATTED_MAC_ADDRESS
