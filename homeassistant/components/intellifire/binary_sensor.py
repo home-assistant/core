@@ -95,7 +95,6 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         self.coordinator = coordinator
         self._entry_id = entry_id
-        self._attrs: dict[str, Any] = {}
 
         # Set the Display name the User will see
         self._attr_name = f"{coordinator.intellifire_name} Fireplace {description.name}"
