@@ -1,4 +1,5 @@
 """Test init of LCN integration."""
+import json
 from unittest.mock import patch
 
 from pypck.connection import (
@@ -6,13 +7,23 @@ from pypck.connection import (
     PchkConnectionManager,
     PchkLicenseError,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockPchkConnectionManager, setup_component
+from .conftest import (
+    CONNECTION_DATA,
+    DATA,
+    OPTIONS,
+    MockPchkConnectionManager,
+    setup_component,
+)
+
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_async_setup_entry(hass, entry, lcn_connection):
@@ -71,42 +82,29 @@ async def test_async_setup_entry_update(hass, entry):
     assert dummy_device in device_registry.devices.values()
 
     # setup new entry with same data via import step (should cleanup dummy device)
+    fixture_filename = "lcn/config_entry_pchk.json"
+    config_data = json.loads(load_fixture(fixture_filename))
     with patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager):
         await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=entry.data
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config_data
         )
 
     assert dummy_device not in device_registry.devices.values()
     assert dummy_entity not in entity_registry.entities.values()
 
 
-async def test_async_setup_entry_raises_authentication_error(hass, entry):
+@pytest.mark.parametrize(
+    "error",
+    [
+        PchkAuthenticationError,
+        PchkLicenseError,
+        TimeoutError,
+        ConnectionRefusedError,
+    ],
+)
+async def test_async_setup_entry_raises_error(hass, entry, error):
     """Test that an authentication error is handled properly."""
-    with patch.object(
-        PchkConnectionManager, "async_connect", side_effect=PchkAuthenticationError
-    ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state == ConfigEntryState.SETUP_ERROR
-
-
-async def test_async_setup_entry_raises_license_error(hass, entry):
-    """Test that an authentication error is handled properly."""
-    with patch.object(
-        PchkConnectionManager, "async_connect", side_effect=PchkLicenseError
-    ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state == ConfigEntryState.SETUP_ERROR
-
-
-async def test_async_setup_entry_raises_timeout_error(hass, entry):
-    """Test that an authentication error is handled properly."""
-    with patch.object(PchkConnectionManager, "async_connect", side_effect=TimeoutError):
+    with patch.object(PchkConnectionManager, "async_connect", side_effect=error):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -122,3 +120,24 @@ async def test_async_setup_from_configuration_yaml(hass):
         await setup_component(hass)
 
         assert async_setup_entry.await_count == 2
+
+
+async def test_migrate_entry(hass):
+    """Test successful migration of entry data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=CONNECTION_DATA[CONF_HOST],
+        unique_id="test",
+        data=CONNECTION_DATA,
+    )
+
+    assert entry.unique_id == "test"
+    assert entry.version == 1
+    assert entry.data == CONNECTION_DATA
+
+    await entry.async_migrate(hass)
+
+    assert entry.unique_id == "test"
+    assert entry.version == 2
+    assert entry.data == {CONF_HOST: "pchk"} | DATA
+    assert entry.options == OPTIONS

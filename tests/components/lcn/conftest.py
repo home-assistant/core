@@ -8,13 +8,37 @@ import pypck.module
 from pypck.module import GroupConnection, ModuleConnection
 import pytest
 
-from homeassistant.components.lcn.const import DOMAIN
+from homeassistant.components.lcn.const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
 from homeassistant.components.lcn.helpers import generate_unique_id
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_ENTITIES,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_mock_service, load_fixture
+
+DATA = {
+    CONF_DEVICES: [],
+    CONF_ENTITIES: [],
+}
+
+OPTIONS = {
+    CONF_IP_ADDRESS: "127.0.0.1",
+    CONF_PORT: 4114,
+    CONF_USERNAME: "lcn",
+    CONF_PASSWORD: "lcn",
+    CONF_SK_NUM_TRIES: 0,
+    CONF_DIM_MODE: "STEPS200",
+}
+
+CONNECTION_DATA = {CONF_HOST: "pchk"} | OPTIONS | DATA
 
 
 class MockModuleConnection(ModuleConnection):
@@ -62,16 +86,29 @@ class MockPchkConnectionManager(PchkConnectionManager):
 def create_config_entry(name):
     """Set up config entries with configuration data."""
     fixture_filename = f"lcn/config_entry_{name}.json"
-    entry_data = json.loads(load_fixture(fixture_filename))
-    options = {}
+    config_data = json.loads(load_fixture(fixture_filename))
+    host_name = config_data[CONF_HOST]
+    data = {key: config_data[key] for key in (CONF_DEVICES, CONF_ENTITIES)}
+    options = {
+        key: config_data[key]
+        for key in (
+            CONF_IP_ADDRESS,
+            CONF_PORT,
+            CONF_USERNAME,
+            CONF_PASSWORD,
+            CONF_SK_NUM_TRIES,
+            CONF_DIM_MODE,
+        )
+    }
 
-    title = entry_data[CONF_HOST]
+    title = host_name
     unique_id = fixture_filename
     entry = MockConfigEntry(
         domain=DOMAIN,
+        version=2,
         title=title,
         unique_id=unique_id,
-        data=entry_data,
+        data=data,
         options=options,
     )
     return entry
