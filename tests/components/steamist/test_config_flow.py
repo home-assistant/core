@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.steamist.const import CONF_MODEL, DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.components.steamist.const import DOMAIN
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -16,11 +16,11 @@ from homeassistant.data_entry_flow import (
 )
 
 from . import (
+    DEFAULT_ENTRY_DATA,
     DEVICE_30303_NOT_STEAMIST,
     DEVICE_HOSTNAME,
     DEVICE_IP_ADDRESS,
     DEVICE_MAC_ADDRESS,
-    DEVICE_MODEL,
     DEVICE_NAME,
     DISCOVERY_30303,
     FORMATTED_MAC_ADDRESS,
@@ -30,13 +30,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-DEFAULT_ENTRY_DATA = {
-    CONF_HOST: DEVICE_IP_ADDRESS,
-    CONF_NAME: DEVICE_NAME,
-    CONF_MODEL: DEVICE_MODEL,
-}
-
 
 MODULE = "homeassistant.components.steamist"
 

@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from discovery30303 import AIODiscovery30303
+import pytest
 
 from homeassistant.components import steamist
 from homeassistant.components.steamist.const import DOMAIN
@@ -12,8 +13,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import (
+    DEFAULT_ENTRY_DATA,
     DEVICE_30303,
     DEVICE_IP_ADDRESS,
     DEVICE_NAME,
@@ -23,7 +26,17 @@ from . import (
     _patch_status,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture
+def mock_single_broadcast_address():
+    """Mock network's async_async_get_ipv4_broadcast_addresses."""
+    with patch(
+        "homeassistant.components.network.async_get_ipv4_broadcast_addresses",
+        return_value={"10.255.255.255"},
+    ):
+        yield
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:
@@ -87,3 +100,26 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     assert config_entry.unique_id == FORMATTED_MAC_ADDRESS
     assert config_entry.data[CONF_NAME] == DEVICE_NAME
     assert config_entry.title == DEVICE_NAME
+
+
+@pytest.mark.usefixtures("mock_single_broadcast_address")
+async def test_discovery_happens_at_interval(hass: HomeAssistant) -> None:
+    """Test that discovery happens at interval."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=DEFAULT_ENTRY_DATA, unique_id=FORMATTED_MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    mock_aio_discovery = MagicMock(auto_spec=AIODiscovery30303)
+    mock_aio_discovery.async_scan = AsyncMock()
+    with patch(
+        "homeassistant.components.steamist.discovery.AIODiscovery30303",
+        return_value=mock_aio_discovery,
+    ), _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE):
+        await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+        assert len(mock_aio_discovery.async_scan.mock_calls) == 2
+
+        async_fire_time_changed(hass, utcnow() + steamist.DISCOVERY_INTERVAL)
+        await hass.async_block_till_done()
+        assert len(mock_aio_discovery.async_scan.mock_calls) == 3

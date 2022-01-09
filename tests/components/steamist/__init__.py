@@ -8,9 +8,9 @@ from aiosteamist import Steamist, SteamistStatus
 from discovery30303 import AIODiscovery30303, Device30303
 
 from homeassistant.components import steamist
-from homeassistant.components.steamist.const import DOMAIN
+from homeassistant.components.steamist.const import CONF_MODEL, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -52,6 +52,11 @@ DISCOVERY_30303_NOT_STEAMIST = {
     "name": DEVICE_NAME,
     "mac": DEVICE_MAC_ADDRESS,
     "hostname": "not_steamist",
+}
+DEFAULT_ENTRY_DATA = {
+    CONF_HOST: DEVICE_IP_ADDRESS,
+    CONF_NAME: DEVICE_NAME,
+    CONF_MODEL: DEVICE_MODEL,
 }
 
 
