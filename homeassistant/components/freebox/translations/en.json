@@ -16,7 +16,9 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port"
+                    "port": "Port",
+                    "enable_device_trackers": "LAN device tracker",
+                    "enable_home_devices": "IOHomeControl/RTS (ex: Velux) and DomusRf (Alarm)"
                 },
                 "title": "Freebox"
             }
