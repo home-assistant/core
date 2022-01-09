@@ -25,6 +25,7 @@ class SensemeEntity(Entity):
             sw_version=self._device.fw_version,
             suggested_area=self._device.room_name,
         )
+        self._async_update_attrs()
 
     @property
     def extra_state_attributes(self) -> dict:

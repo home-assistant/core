@@ -951,6 +951,7 @@ omit =
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
     homeassistant/components/senseme/__init__.py
+    homeassistant/components/senseme/binary_sensor.py
     homeassistant/components/senseme/discovery.py
     homeassistant/components/senseme/entity.py
     homeassistant/components/senseme/fan.py
