@@ -1,0 +1,17 @@
+{
+  "domain": "vartastorage",
+  "name": "VARTA Storage",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vartastorage",
+  "requirements": [
+    "vartastorage==0.2.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Vip0r"
+  ],
+  "iot_class": "local_polling"
+}
