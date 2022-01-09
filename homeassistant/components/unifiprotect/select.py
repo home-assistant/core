@@ -94,7 +94,7 @@ class ProtectSelectEntityDescription(ProtectSetableKeysMixin, SelectEntityDescri
         [ProtectApiClient], list[dict[str, Any]]
     ] | None = None
     ufp_enum_type: type[Enum] | None = None
-    ufp_set_function: str | None = None
+    ufp_set_method: str | None = None
 
 
 def _get_viewer_options(api: ProtectApiClient) -> list[dict[str, Any]]:
@@ -188,7 +188,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=DEVICE_RECORDING_MODES,
         ufp_enum_type=RecordingMode,
         ufp_value="recording_settings.mode",
-        ufp_set_function="set_recording_mode",
+        ufp_set_method="set_recording_mode",
     ),
     ProtectSelectEntityDescription(
         key="infrared",
@@ -199,7 +199,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=INFRARED_MODES,
         ufp_enum_type=IRLEDMode,
         ufp_value="isp_settings.ir_led_mode",
-        ufp_set_function="set_ir_led_model",
+        ufp_set_method="set_ir_led_model",
     ),
     ProtectSelectEntityDescription(
         key="doorbell_text",
@@ -208,9 +208,9 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=DEVICE_CLASS_LCD_MESSAGE,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_value_callable=_get_doorbell_current,
+        ufp_value_fn=_get_doorbell_current,
         ufp_options_callable=_get_doorbell_options,
-        ufp_set_function_callable=_set_doorbell_message,
+        ufp_set_method_fn=_set_doorbell_message,
     ),
 )
 
@@ -221,8 +221,8 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         icon="mdi:spotlight",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
-        ufp_value_callable=_get_light_motion_current,
-        ufp_set_function_callable=_set_light_mode,
+        ufp_value_fn=_get_light_motion_current,
+        ufp_set_method_fn=_set_light_mode,
     ),
     ProtectSelectEntityDescription(
         key="paired_camera",
@@ -231,7 +231,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
         ufp_options_callable=_get_paired_camera_options,
-        ufp_set_function_callable=_set_paired_camera,
+        ufp_set_method_fn=_set_paired_camera,
     ),
 )
 
@@ -242,8 +242,8 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         icon="mdi:view-dashboard",
         entity_category=None,
         ufp_options_callable=_get_viewer_options,
-        ufp_value_callable=_get_viewer_current,
-        ufp_set_function_callable=_set_liveview,
+        ufp_value_fn=_get_viewer_current,
+        ufp_set_method_fn=_set_liveview,
     ),
 )
 
@@ -333,8 +333,8 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
 
         # Light Motion is a bit different
         if self.entity_description.key == _KEY_LIGHT_MOTION:
-            assert self.entity_description.ufp_set_function_callable is not None
-            await self.entity_description.ufp_set_function_callable(self.device, option)
+            assert self.entity_description.ufp_set_method_fn is not None
+            await self.entity_description.ufp_set_method_fn(self.device, option)
             return
 
         unifi_value = self._hass_to_unifi_options[option]

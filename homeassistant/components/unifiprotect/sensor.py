@@ -63,7 +63,7 @@ class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescr
 
 def _get_uptime(obj: ProtectAdoptableDeviceModel | NVR) -> datetime | None:
     if obj.up_since is None:
-        return None  # pragma: no cover
+        return None
 
     # up_since can vary slightly over time
     # truncate to ensure no extra state_change events fire
@@ -74,7 +74,7 @@ def _get_nvr_recording_capacity(obj: Any) -> int:
     assert isinstance(obj, NVR)
 
     if obj.storage_stats.capacity is None:
-        return 0  # pragma: no cover
+        return 0
 
     return int(obj.storage_stats.capacity.total_seconds())
 
@@ -96,7 +96,7 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        ufp_value_callable=_get_uptime,
+        ufp_value_fn=_get_uptime,
     ),
     ProtectSensorEntityDescription(
         key="ble_signal",
@@ -236,7 +236,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value_callable=_get_uptime,
+        ufp_value_fn=_get_uptime,
     ),
     ProtectSensorEntityDescription(
         key="storage_utilization",
@@ -315,7 +315,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:record-rec",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value_callable=_get_nvr_recording_capacity,
+        ufp_value_fn=_get_nvr_recording_capacity,
     ),
 )
 
@@ -348,7 +348,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value_callable=_get_nvr_memory,
+        ufp_value_fn=_get_nvr_memory,
         precision=2,
     ),
 )

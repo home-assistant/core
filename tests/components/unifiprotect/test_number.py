@@ -135,7 +135,6 @@ async def test_number_setup_camera_all(
         assert entity
         assert entity.unique_id == unique_id
 
-        print(entity_id)
         state = hass.states.get(entity_id)
         assert state
         assert state.state == "0"

@@ -51,7 +51,7 @@ ALL_DEVICES_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         ufp_value="is_ssh_enabled",
-        ufp_set_function="set_ssh",
+        ufp_set_method="set_ssh",
     ),
 )
 
@@ -63,7 +63,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_led_status",
         ufp_value="led_settings.is_enabled",
-        ufp_set_function="set_status_light",
+        ufp_set_method="set_status_light",
     ),
     ProtectSwitchEntityDescription(
         key="hdr_mode",
@@ -72,7 +72,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_value="hdr_mode",
-        ufp_set_function="set_hdr",
+        ufp_set_method="set_hdr",
     ),
     ProtectSwitchEntityDescription(
         key="high_fps",
@@ -80,8 +80,8 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:video-high-definition",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value_callable=_get_is_highfps,
-        ufp_set_function_callable=_set_highfps,
+        ufp_value_fn=_get_is_highfps,
+        ufp_set_method_fn=_set_highfps,
     ),
     ProtectSwitchEntityDescription(
         key=_KEY_PRIVACY_MODE,
@@ -98,7 +98,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_speaker",
         ufp_value="speaker_settings.are_system_sounds_enabled",
-        ufp_set_function="set_system_sounds",
+        ufp_set_method="set_system_sounds",
     ),
     ProtectSwitchEntityDescription(
         key="osd_name",
@@ -106,7 +106,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:fullscreen",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_name_enabled",
-        ufp_set_function="set_osd_name",
+        ufp_set_method="set_osd_name",
     ),
     ProtectSwitchEntityDescription(
         key="osd_date",
@@ -114,7 +114,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:fullscreen",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_date_enabled",
-        ufp_set_function="set_osd_date",
+        ufp_set_method="set_osd_date",
     ),
     ProtectSwitchEntityDescription(
         key="osd_logo",
@@ -122,7 +122,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:fullscreen",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_logo_enabled",
-        ufp_set_function="set_osd_logo",
+        ufp_set_method="set_osd_logo",
     ),
     ProtectSwitchEntityDescription(
         key="osd_bitrate",
@@ -130,7 +130,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:fullscreen",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_debug_enabled",
-        ufp_set_function="set_osd_bitrate",
+        ufp_set_method="set_osd_bitrate",
     ),
     ProtectSwitchEntityDescription(
         key="smart_person",
@@ -139,7 +139,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_value="is_person_detection_on",
-        ufp_set_function="set_person_detection",
+        ufp_set_method="set_person_detection",
     ),
     ProtectSwitchEntityDescription(
         key="smart_vehicle",
@@ -148,7 +148,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_value="is_vehicle_detection_on",
-        ufp_set_function="set_vehicle_detection",
+        ufp_set_method="set_vehicle_detection",
     ),
 )
 
@@ -160,7 +160,7 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:led-on",
         entity_category=EntityCategory.CONFIG,
         ufp_value="light_device_settings.is_indicator_enabled",
-        ufp_set_function="set_status_light",
+        ufp_set_method="set_status_light",
     ),
 )
 

@@ -56,7 +56,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_required_field="feature_flags.has_wdr",
         ufp_value="isp_settings.wdr",
-        ufp_set_function="set_wdr_level",
+        ufp_set_method="set_wdr_level",
     ),
     ProtectNumberEntityDescription(
         key="mic_level",
@@ -68,7 +68,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_required_field="feature_flags.has_mic",
         ufp_value="mic_volume",
-        ufp_set_function="set_mic_volume",
+        ufp_set_method="set_mic_volume",
     ),
     ProtectNumberEntityDescription(
         key="zoom_position",
@@ -80,7 +80,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_required_field="feature_flags.can_optical_zoom",
         ufp_value="isp_settings.zoom_position",
-        ufp_set_function="set_camera_zoom",
+        ufp_set_method="set_camera_zoom",
     ),
     ProtectNumberEntityDescription(
         key="duration",
@@ -92,7 +92,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=100,
         ufp_required_field="feature_flags.has_chime",
         ufp_value="chime_duration",
-        ufp_set_function="set_chime_duration",
+        ufp_set_method="set_chime_duration",
     ),
 )
 
@@ -107,7 +107,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_required_field=None,
         ufp_value="light_device_settings.pir_sensitivity",
-        ufp_set_function="set_sensitivity",
+        ufp_set_method="set_sensitivity",
     ),
     ProtectNumberEntityDescription(
         key="duration",
@@ -118,8 +118,8 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_max=900,
         ufp_step=15,
         ufp_required_field=None,
-        ufp_value_callable=_get_pir_duration,
-        ufp_set_function_callable=_set_pir_duration,
+        ufp_value_fn=_get_pir_duration,
+        ufp_set_method_fn=_set_pir_duration,
     ),
 )
 

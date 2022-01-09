@@ -222,7 +222,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         self._attr_available = self.data.last_update_success
 
 
-class AccessTokenMixin(Entity):
+class AccessTokenMixin(ProtectDeviceEntity):
     """Adds access_token attribute and provides access tokens for use for anonymous views."""
 
     @property
@@ -267,7 +267,7 @@ class AccessTokenMixin(Entity):
         self.async_on_remove(self.async_cleanup_tokens)
 
 
-class EventThumbnailMixin(AccessTokenMixin, ProtectDeviceEntity):
+class EventThumbnailMixin(AccessTokenMixin):
     """Adds motion event attributes to sensor."""
 
     def __init__(self, *args: Any, **kwarg: Any) -> None:
