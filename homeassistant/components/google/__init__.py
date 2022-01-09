@@ -284,7 +284,7 @@ def setup_services(
 
         discovery.load_platform(
             hass,
-            "calendar",
+            Platform.CALENDAR,
             DOMAIN,
             hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
             hass_config,

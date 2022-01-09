@@ -256,7 +256,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "sensor",
+                    Platform.SENSOR,
                     DOMAIN,
                     {CONF_NAME: name, CONF_HOST: host, CONF_SENSORS: sensors},
                     config,
@@ -267,7 +267,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "switch",
+                    Platform.SWITCH,
                     DOMAIN,
                     {CONF_NAME: name, CONF_HOST: host, CONF_SWITCHES: switches},
                     config,
@@ -278,7 +278,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "binary_sensor",
+                    Platform.BINARY_SENSOR,
                     DOMAIN,
                     {CONF_HOST: host, CONF_NAME: name},
                     config,
