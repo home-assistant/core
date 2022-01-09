@@ -202,7 +202,7 @@ async def test_number_light_sensitivity(hass: HomeAssistant, light: Light):
     """Test sensitivity number entity for lights."""
 
     description = LIGHT_NUMBERS[0]
-    assert description.ufp_set_function is not None
+    assert description.ufp_set_method is not None
 
     light.__fields__["set_sensitivity"] = Mock()
     light.set_sensitivity = AsyncMock()
@@ -239,11 +239,11 @@ async def test_number_camera_simple(
 ):
     """Tests all simple numbers for cameras."""
 
-    assert description.ufp_set_function is not None
+    assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_function] = Mock()
-    setattr(camera, description.ufp_set_function, AsyncMock())
-    set_method = getattr(camera, description.ufp_set_function)
+    camera.__fields__[description.ufp_set_method] = Mock()
+    setattr(camera, description.ufp_set_method, AsyncMock())
+    set_method = getattr(camera, description.ufp_set_method)
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, camera, description)
 
