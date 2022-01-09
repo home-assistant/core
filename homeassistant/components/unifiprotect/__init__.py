@@ -3,13 +3,21 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import functools
 import logging
 
 from aiohttp import CookieJar
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.unifiprotect.services import (
+    add_doorbell_text,
+    profile_ws,
+    remove_doorbell_text,
+    set_default_doorbell_text,
+    take_sample,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -28,9 +36,17 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEVICES_FOR_SUBSCRIBE,
     DOMAIN,
+    DOORBELL_TEXT_SCHEMA,
+    GENERATE_DATA_SCHEMA,
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
     PLATFORMS,
+    PROFILE_WS_SCHEMA,
+    SERVICE_ADD_DOORBELL_TEXT,
+    SERVICE_GENERATE_DATA,
+    SERVICE_PROFILE_WS,
+    SERVICE_REMOVE_DOORBELL_TEXT,
+    SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
 from .data import ProtectData
 from .views import ThumbnailProxyView
@@ -83,6 +99,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    services = [
+        (
+            SERVICE_ADD_DOORBELL_TEXT,
+            functools.partial(add_doorbell_text, hass),
+            DOORBELL_TEXT_SCHEMA,
+        ),
+        (
+            SERVICE_REMOVE_DOORBELL_TEXT,
+            functools.partial(remove_doorbell_text, hass),
+            DOORBELL_TEXT_SCHEMA,
+        ),
+        (
+            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+            functools.partial(set_default_doorbell_text, hass),
+            DOORBELL_TEXT_SCHEMA,
+        ),
+        (SERVICE_PROFILE_WS, functools.partial(profile_ws, hass), PROFILE_WS_SCHEMA),
+        (
+            SERVICE_GENERATE_DATA,
+            functools.partial(take_sample, hass),
+            GENERATE_DATA_SCHEMA,
+        ),
+    ]
+    for name, method, schema in services:
+        if hass.services.has_service(DOMAIN, name):
+            continue
+        hass.services.async_register(DOMAIN, name, method, schema=schema)
+
     hass.http.register_view(ThumbnailProxyView(hass))
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
@@ -104,4 +148,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data: ProtectData = hass.data[DOMAIN][entry.entry_id]
         await data.async_stop()
         hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        all_services = [
+            SERVICE_ADD_DOORBELL_TEXT,
+            SERVICE_REMOVE_DOORBELL_TEXT,
+            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+            SERVICE_PROFILE_WS,
+            SERVICE_GENERATE_DATA,
+        ]
+        # If this is the last loaded instance of RainMachine, deregister any services
+        # defined during integration setup:
+        for name in all_services:
+            hass.services.async_remove(DOMAIN, name)
+
+    return bool(unload_ok)
