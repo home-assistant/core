@@ -1,4 +1,6 @@
 """Support for The Things Network's Data storage integration."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -15,8 +17,11 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_TTN, TTN_ACCESS_KEY, TTN_APP_ID, TTN_DATA_STORAGE_URL
 
@@ -35,11 +40,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up The Things Network Data storage sensors."""
-    ttn = hass.data.get(DATA_TTN)
-    device_id = config.get(CONF_DEVICE_ID)
-    values = config.get(CONF_VALUES)
+    ttn = hass.data[DATA_TTN]
+    device_id = config[CONF_DEVICE_ID]
+    values = config[CONF_VALUES]
     app_id = ttn.get(TTN_APP_ID)
     access_key = ttn.get(TTN_ACCESS_KEY)
 

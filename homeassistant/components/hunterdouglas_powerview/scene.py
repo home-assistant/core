@@ -1,13 +1,18 @@
 """Support for Powerview scenes from a Powerview hub."""
+from __future__ import annotations
+
 from typing import Any
 
 from aiopvapi.resources.scene import Scene as PvScene
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     COORDINATOR,
@@ -27,7 +32,12 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import platform from yaml."""
 
     hass.async_create_task(
@@ -39,7 +49,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up powerview scene entries."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]

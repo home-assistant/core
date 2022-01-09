@@ -16,8 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import KEY_ACTIONS, SENDKEYS
+from .const import DOMAIN, KEY_ACTIONS, SENDKEYS
 
 TRIGGER_TYPES = {"transmitter", "transponder", "fingerprint", "send_keys"}
 

@@ -8,6 +8,7 @@ from functools import partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -217,7 +218,10 @@ def async_prepare_call_from_config(
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
-                target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
+                registry = entity_registry.async_get(hass)
+                target[CONF_ENTITY_ID] = entity_registry.async_resolve_entity_ids(
+                    registry, cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
+                )
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
@@ -319,7 +323,7 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
-def _has_match(ids: str | list | None) -> bool:
+def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
     """Check if ids can match anything."""
     return ids not in (None, ENTITY_MATCH_NONE)
 
@@ -706,7 +710,7 @@ async def _handle_entity_call(
             func,
             entity.entity_id,
         )
-        await result  # type: ignore
+        await result
 
 
 @bind_hass
@@ -715,7 +719,7 @@ def async_register_admin_service(
     hass: HomeAssistant,
     domain: str,
     service: str,
-    service_func: Callable[[ServiceCall], Awaitable | None],
+    service_func: Callable[[ServiceCall], Awaitable[None] | None],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""

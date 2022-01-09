@@ -1,5 +1,4 @@
 """Support to control a Salda Smarty XP/XV ventilation unit."""
-
 from datetime import timedelta
 import ipaddress
 import logging
@@ -8,10 +7,12 @@ from pysmarty import Smarty
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "smarty"
 DATA_SMARTY = "smarty"
@@ -35,7 +36,7 @@ RPM = "rpm"
 SIGNAL_UPDATE_SMARTY = "smarty_update"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the smarty environment."""
 
     conf = config[DOMAIN]

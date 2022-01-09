@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Por favor, vuelva a introducir la contrase\u00f1a de: {username}",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                },
+                "title": "Configure su integraci\u00f3n con Brunt"
+            }
+        }
+    }
+}

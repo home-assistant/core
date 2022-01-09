@@ -5,9 +5,11 @@ import pyversasense as pyv
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     KEY_CONSUMER,
@@ -30,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the versasense component."""
     session = aiohttp_client.async_get_clientsession(hass)
     consumer = pyv.Consumer(config[DOMAIN]["host"], session)

@@ -1,12 +1,14 @@
 """Provide functionality to interact with the vlc telnet interface."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -49,7 +51,9 @@ SUPPORT_VLC = (
     | SUPPORT_VOLUME_SET
 )
 
-Func = TypeVar("Func", bound=Callable[..., Any])
+_T = TypeVar("_T", bound="VlcDevice")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 
 async def async_setup_entry(
@@ -64,11 +68,13 @@ async def async_setup_entry(
     async_add_entities([VlcDevice(entry, vlc, name, available)], True)
 
 
-def catch_vlc_errors(func: Func) -> Func:
+def catch_vlc_errors(
+    func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self: VlcDevice, *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)
@@ -80,7 +86,7 @@ def catch_vlc_errors(func: Func) -> Func:
                 LOGGER.error("Connection error: %s", err)
                 self._available = False
 
-    return cast(Func, wrapper)
+    return wrapper
 
 
 class VlcDevice(MediaPlayerEntity):

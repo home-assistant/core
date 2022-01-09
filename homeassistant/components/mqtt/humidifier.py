@@ -1,4 +1,6 @@
 """Support for MQTT humidifiers."""
+from __future__ import annotations
+
 import functools
 import logging
 
@@ -14,6 +16,7 @@ from homeassistant.components.humidifier import (
     HumidifierDeviceClass,
     HumidifierEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -23,12 +26,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -139,14 +150,21 @@ DISCOVERY_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT humidifier through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, async_add_entities, config)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT humidifier dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -240,15 +258,14 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
-                tpl, self.hass
+                tpl, entity=self
             ).async_render
 
         for key, tpl in self._value_templates.items():
-            if tpl is None:
-                self._value_templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._value_templates[key] = tpl.async_render_with_possible_json_value
+            self._value_templates[key] = MqttValueTemplate(
+                tpl,
+                entity=self,
+            ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -273,6 +290,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "topic": self._topic[CONF_STATE_TOPIC],
                 "msg_callback": state_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
 
         @callback
@@ -318,6 +336,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "topic": self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC],
                 "msg_callback": target_humidity_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._target_humidity = None
 
@@ -350,6 +369,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "topic": self._topic[CONF_MODE_STATE_TOPIC],
                 "msg_callback": mode_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._mode = None
 
@@ -397,6 +417,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             self._state = True
@@ -414,6 +435,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             self._state = False
@@ -431,6 +453,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_target_humidity:
@@ -454,6 +477,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic_mode:

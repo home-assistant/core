@@ -13,7 +13,9 @@ from homeassistant.const import (
     CONF_PROFILE_NAME,
     CONF_SERVICE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
 from .const import (
@@ -81,7 +83,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up AWS component."""
     hass.data[DATA_HASS_CONFIG] = config
 

@@ -6,8 +6,6 @@
                 "title": "{name}",
                 "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com",
                 "data": {
-                    "name": "[%key:common::config_flow::data::name%]",
-                    "scan_interval": "Scan Interval (seconds)",
                     "username": "[%key:common::config_flow::data::email%]",
                     "password": "[%key:common::config_flow::data::password%]",
                     "client_id": "[%key:common::config_flow::data::api_key%]",

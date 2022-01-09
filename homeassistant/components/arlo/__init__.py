@@ -1,5 +1,7 @@
 """Support for Netgear Arlo IP cameras."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
 
 from pyarlo import PyArlo
@@ -7,9 +9,11 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an Arlo component."""
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
@@ -73,7 +77,7 @@ def setup(hass, config):
         )
         return False
 
-    def hub_refresh(event_time):
+    def hub_refresh(_: ServiceCall | datetime) -> None:
         """Call ArloHub to refresh information."""
         _LOGGER.debug("Updating Arlo Hub component")
         hass.data[DATA_ARLO].update(update_cameras=True, update_base_station=True)

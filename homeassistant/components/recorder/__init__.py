@@ -32,7 +32,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -284,7 +284,7 @@ async def _process_recorder_platform(hass, domain, platform):
 def _async_register_services(hass, instance):
     """Register recorder services."""
 
-    async def async_handle_purge_service(service):
+    async def async_handle_purge_service(service: ServiceCall) -> None:
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(**service.data)
 
@@ -292,7 +292,7 @@ def _async_register_services(hass, instance):
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
     )
 
-    async def async_handle_purge_entities_service(service):
+    async def async_handle_purge_entities_service(service: ServiceCall) -> None:
         """Handle calls to the purge entities service."""
         entity_ids = await async_extract_entity_ids(hass, service)
         domains = service.data.get(ATTR_DOMAINS, [])
@@ -307,7 +307,7 @@ def _async_register_services(hass, instance):
         schema=SERVICE_PURGE_ENTITIES_SCHEMA,
     )
 
-    async def async_handle_enable_service(service):
+    async def async_handle_enable_service(service: ServiceCall) -> None:
         instance.set_enable(True)
 
     hass.services.async_register(
@@ -317,7 +317,7 @@ def _async_register_services(hass, instance):
         schema=SERVICE_ENABLE_SCHEMA,
     )
 
-    async def async_handle_disable_service(service):
+    async def async_handle_disable_service(service: ServiceCall) -> None:
         instance.set_enable(False)
 
     hass.services.async_register(

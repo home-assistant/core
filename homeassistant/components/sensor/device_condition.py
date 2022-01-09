@@ -7,7 +7,8 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_ABOVE, CONF_BELOW, CONF_ENTITY_ID, CONF_TYPE
-from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
 from homeassistant.helpers.entity_registry import (

@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
@@ -133,7 +133,7 @@ def setup_service_functions(hass: HomeAssistant, broker):
     """Set up the service functions."""
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_zone_mode(call) -> None:
+    async def set_zone_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
 

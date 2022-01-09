@@ -309,9 +309,9 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
         HOURLY_GAS_METER_READING,
-        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
 
@@ -334,10 +334,10 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
                 {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
-        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
             [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
-        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
             [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
     }
@@ -510,8 +510,8 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
-        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL,
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
     )
     from dsmr_parser.objects import CosemObject
 
@@ -528,10 +528,10 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     }
 
     telegram = {
-        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
             [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
-        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
             [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
     }

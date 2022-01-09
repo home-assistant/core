@@ -1,5 +1,4 @@
 """Plugwise Sensor component for Home Assistant."""
-
 import logging
 
 from homeassistant.components.sensor import (
@@ -7,6 +6,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -16,7 +16,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     COOL_ICON,
@@ -224,7 +225,11 @@ CUSTOM_ICONS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smile sensors from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]

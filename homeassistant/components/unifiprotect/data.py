@@ -1,14 +1,16 @@
 """Base class for protect data."""
 from __future__ import annotations
 
-import collections
+from collections import deque
+from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
 from typing import Any
 
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import Bootstrap, WSSubscriptionMessage
-from pyunifiprotect.data.base import ProtectDeviceModel
+from pyunifiprotect.data import Bootstrap, ModelType, WSSubscriptionMessage
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
+from pyunifiprotect.data.nvr import Liveview
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -41,13 +43,25 @@ class ProtectData:
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
         self.last_update_success = False
-        self.access_tokens: dict[str, collections.deque] = {}
+        self.access_tokens: dict[str, deque] = {}
         self.api = protect
 
     @property
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
         return self._entry.options.get(CONF_DISABLE_RTSP, False)
+
+    def get_by_types(
+        self, device_types: Iterable[ModelType]
+    ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+        """Get all devices matching types."""
+
+        for device_type in device_types:
+            attr = f"{device_type.value}s"
+            devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
+                self.api.bootstrap, attr
+            )
+            yield from devices.values()
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
@@ -94,6 +108,22 @@ class ProtectData:
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
         if message.new_obj.model in DEVICES_WITH_ENTITIES:
             self.async_signal_device_id_update(message.new_obj.id)
+            # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
+            if "doorbell_settings" in message.changed_data:
+                _LOGGER.debug(
+                    "Doorbell messages updated. Updating devices with LCD screens"
+                )
+                self.api.bootstrap.nvr.update_all_messages()
+                for camera in self.api.bootstrap.cameras.values():
+                    if camera.feature_flags.has_lcd_screen:
+                        self.async_signal_device_id_update(camera.id)
+        # alert user viewport needs restart so voice clients can get new options
+        elif len(self.api.bootstrap.viewers) > 0 and isinstance(
+            message.new_obj, Liveview
+        ):
+            _LOGGER.warning(
+                "Liveviews updated. Restart Home Assistant to update Viewport select options"
+            )
 
     @callback
     def _async_process_updates(self, updates: Bootstrap | None) -> None:
@@ -144,5 +174,13 @@ class ProtectData:
         if not self._subscriptions.get(device_id):
             return
 
+        _LOGGER.debug("Updating device: %s", device_id)
         for update_callback in self._subscriptions[device_id]:
             update_callback()
+
+    @callback
+    def async_get_or_create_access_tokens(self, entity_id: str) -> deque:
+        """Wrap access_tokens to automatically create underlying data structure if missing."""
+        if entity_id not in self.access_tokens:
+            self.access_tokens[entity_id] = deque([], 2)
+        return self.access_tokens[entity_id]

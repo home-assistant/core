@@ -1,4 +1,6 @@
 """This platform enables the possibility to control a MQTT alarm."""
+from __future__ import annotations
+
 import functools
 import logging
 import re
@@ -14,6 +16,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CODE,
     CONF_NAME,
@@ -31,12 +34,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -107,14 +118,21 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT alarm control panel through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, async_add_entities, config)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT alarm control panel dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -147,11 +165,12 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._value_template = MqttValueTemplate(
+            self._config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
+        ).async_render_with_possible_json_value
         self._command_template = MqttCommandTemplate(
-            self._config[CONF_COMMAND_TEMPLATE], self.hass
+            self._config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
     async def _subscribe_topics(self):
@@ -161,12 +180,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Run when new MQTT message has been received."""
-            payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
-                    msg.payload, self._state
-                )
+            payload = self._value_template(msg.payload)
             if payload not in (
                 STATE_ALARM_DISARMED,
                 STATE_ALARM_ARMED_HOME,
@@ -192,6 +206,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                     "topic": self._config[CONF_STATE_TOPIC],
                     "msg_callback": message_received,
                     "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
         )
@@ -315,6 +330,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     def _validate_code(self, code, state):

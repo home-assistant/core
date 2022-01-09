@@ -16,7 +16,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 TEST_EMAIL = "test@testdomain.com"
 TEST_EMAIL2 = "test@testdomain.nl"
@@ -120,7 +120,7 @@ async def test_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     """Test config flow allows Config Flow unique entries."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test2@testdomain.com",
+        unique_id=TEST_GATEWAY_ID2,
         data={"username": "test2@testdomain.com", "password": TEST_PASSWORD},
     ).add_to_hass(hass)
 
@@ -166,16 +166,10 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that DHCP doesn't setup already configured gateways."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_EMAIL,
+        unique_id=TEST_GATEWAY_ID,
         data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
     )
     config_entry.add_to_hass(hass)
-
-    device_registry = mock_device_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1234-5678-9123")},
-    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

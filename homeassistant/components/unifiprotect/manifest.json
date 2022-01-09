@@ -4,7 +4,10 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
   "requirements": [
-    "pyunifiprotect==1.4.4"
+    "pyunifiprotect==1.5.3"
+  ],
+  "dependencies": [
+    "http"
   ],
   "codeowners": [
     "@briis",

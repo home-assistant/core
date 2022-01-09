@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
-from google_nest_sdm.exceptions import GoogleNestException
+from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
     ThermostatHeatCoolTrait,
@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     FAN_OFF,
     FAN_ON,
@@ -90,7 +91,7 @@ async def async_setup_sdm_entry(
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
         device_manager = await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         raise PlatformNotReady from err
 
     entities = []
@@ -234,6 +235,8 @@ class ThermostatEntity(ClimateEntity):
     def hvac_action(self) -> str | None:
         """Return the current HVAC action (heating, cooling)."""
         trait = self._device.traits[ThermostatHvacTrait.NAME]
+        if trait.status == "OFF" and self.hvac_mode != HVAC_MODE_OFF:
+            return CURRENT_HVAC_IDLE
         if trait.status in THERMOSTAT_HVAC_STATUS_MAP:
             return THERMOSTAT_HVAC_STATUS_MAP[trait.status]
         return None
