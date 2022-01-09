@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+
+from intellifire4py import IntellifirePollData
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -28,7 +29,7 @@ PILOT = "pilot_light_on"
 class IntellifireSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Any], int | str | float | None]
+    value_fn: Callable[[IntellifirePollData], bool | None]
 
 
 @dataclass
