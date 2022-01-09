@@ -81,7 +81,7 @@ async def async_setup_entry(
     # Find OFF command (week profile) to use for all zones:
     command_off_name = config_entry.options.get(CONF_COMMAND_OFF)
     command_on_by_id: dict[str, str] = {}  # By default, nothing can be turned on
-    if command_off_name in [None or ""]:
+    if not command_off_name:
         _LOGGER.debug(
             "Not possible to turn off (or on) any zone, because OFF week profile was not specified"
         )
