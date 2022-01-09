@@ -13,6 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -161,9 +162,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
-    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
-    load_platform(hass, "sensor", DOMAIN, {}, config)
-    load_platform(hass, "switch", DOMAIN, {}, config)
+    load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+    load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
     return True
 
 
