@@ -162,6 +162,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,
+                    options={
+                        CONF_ROOMS: user_input.get(CONF_ROOMS, []),
+                        CONF_COMMANDS: user_input.get(CONF_COMMANDS, []),
+                    },
                 )
 
         return self.async_show_form(
@@ -186,6 +190,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+        """Import a config entry."""
+        return await self.async_step_user(user_input=user_input)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

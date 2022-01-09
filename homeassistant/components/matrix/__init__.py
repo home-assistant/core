@@ -7,7 +7,8 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Any
+from types import MappingProxyType
+from typing import Any, Final
 import uuid
 
 from matrix_client.client import MatrixClient
@@ -28,7 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
 from .const import (
@@ -50,36 +50,7 @@ EVENT_MATRIX_COMMAND = "matrix_command"
 
 ATTR_IMAGES = "images"  # optional images
 
-COMMAND_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_WORD, "trigger"): cv.string,
-            vol.Exclusive(CONF_EXPRESSION, "trigger"): cv.is_regex,
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        }
-    ),
-    cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
-)
-
-CONFIG_SCHEMA: vol.Schema = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOMESERVER): cv.url,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_ROOMS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
@@ -92,10 +63,11 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 )
 
 
-def setup_bot(hass: HomeAssistant, config: ConfigType) -> bool:
+def setup_bot(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Matrix bot component."""
 
     try:
+        config: MappingProxyType[str, Any] = config_entry.data
         bot = MatrixBot(
             hass,
             os.path.join(hass.config.path(), SESSION_FILE),
@@ -103,6 +75,8 @@ def setup_bot(hass: HomeAssistant, config: ConfigType) -> bool:
             config[CONF_VERIFY_SSL],
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
+            config_entry.options.get(CONF_ROOMS, []),
+            config_entry.options.get(CONF_COMMANDS, []),
         )
         hass.data[DOMAIN] = bot
 
@@ -124,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up the Matrix bot from config entry."""
 
     status: Final[bool] = await hass.async_add_executor_job(
-        setup_bot, hass, config_entry.data
+        setup_bot, hass, config_entry
     )
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
@@ -156,14 +130,6 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
         bot.set_listening_commands,
         config_entry.options.get(CONF_COMMANDS, []),
     )
-
-
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Matrix bot component from YAML."""
-    if (new_config := config.get(DOMAIN)) is None:
-        return True
-
-    return setup_bot(hass, new_config)
 
 
 class MatrixAuthentication:
