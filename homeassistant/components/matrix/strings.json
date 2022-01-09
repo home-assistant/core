@@ -19,5 +19,37 @@
         }
       }
     }
+  },
+  "options": {
+    "error": {
+      "duplicate_name": "Name already in use"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "rooms": "Rooms (Split multiple rooms with commas \",\")",
+          "commands": "Commands",
+          "list_command": "--Commands--",
+          "add_command": "Add command..."
+        }
+      },
+      "add_command": {
+        "data": {
+          "word": "Word",
+          "expression": "Expression",
+          "name": "[%key:common::config_flow::data::name%]",
+          "rooms": "Rooms (Split multiple rooms with commas \",\")"
+        }
+      },
+      "modify_command": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "word": "Word",
+          "expression": "Expression",
+          "rooms": "Rooms (Split multiple rooms with commas \",\")",
+          "delete_command": "Delete command"
+        }
+      }
+    }
   }
 }

@@ -127,6 +127,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         setup_bot, hass, config_entry.data
     )
 
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+
     return status
 
 
@@ -139,6 +141,21 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     del hass.data[DOMAIN]
 
     return True
+
+
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    bot: MatrixBot = hass.data[DOMAIN]
+    # Update listening rooms
+    await hass.async_add_executor_job(
+        bot.set_listening_rooms,
+        config_entry.options.get(CONF_ROOMS, []),
+    )
+    # Update listening commands
+    await hass.async_add_executor_job(
+        bot.set_listening_commands,
+        config_entry.options.get(CONF_COMMANDS, []),
+    )
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
