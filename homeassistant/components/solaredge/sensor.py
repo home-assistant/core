@@ -24,7 +24,7 @@ from .coordinator import (
 from .models import SolarEdgeSensorEntityDescription
 
 
-def setup_entry(
+async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -38,7 +38,7 @@ def setup_entry(
     )
     for service in sensor_factory.all_services:
         service.async_setup()
-        service.coordinator.async_refresh()
+        await service.coordinator.async_refresh()
 
     entities = []
     for sensor_type in SENSOR_TYPES:
