@@ -26,7 +26,7 @@ from homeassistant.components.unifiprotect.sensor import (
     NVR_SENSORS,
     SENSE_SENSORS,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -274,7 +274,7 @@ async def test_sensor_nvr_memory_unavaiable(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -286,7 +286,7 @@ async def test_sensor_setup_camera(
     entity_registry = er.async_get(hass)
 
     expected_values = (
-        now.replace(second=0, microsecond=0).isoformat(),
+        now.replace(microsecond=0).isoformat(),
         "100",
         "100.0",
         "20.0",

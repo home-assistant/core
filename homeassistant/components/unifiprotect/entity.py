@@ -125,7 +125,7 @@ class ProtectDeviceEntity(Entity):
             self.device: ProtectAdoptableDeviceModel = device
 
         if description and not hasattr(self, "entity_description"):
-            self.entity_description = description
+            self.entity_description = description  # pragma: no cover
         elif hasattr(self, "entity_description"):
             description = self.entity_description
 
@@ -267,7 +267,7 @@ class AccessTokenMixin(Entity):
         self.async_on_remove(self.async_cleanup_tokens)
 
 
-class EventThumbnailMixin(AccessTokenMixin):
+class EventThumbnailMixin(AccessTokenMixin, ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
     def __init__(self, *args: Any, **kwarg: Any) -> None:
@@ -307,8 +307,7 @@ class EventThumbnailMixin(AccessTokenMixin):
 
     @callback
     def _async_update_device_from_protect(self) -> None:
-        assert isinstance(self, ProtectDeviceEntity)
-        super()._async_update_device_from_protect()  # type: ignore
+        super()._async_update_device_from_protect()
         self._event = self._async_get_event()
 
         attrs = self.extra_state_attributes or {}

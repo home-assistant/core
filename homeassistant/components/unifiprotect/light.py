@@ -56,6 +56,8 @@ def hass_to_unifi_brightness(value: int) -> int:
 class ProtectLight(ProtectDeviceEntity, LightEntity):
     """A Ubiquiti UniFi Protect Light Entity."""
 
+    device: Light
+
     _attr_icon = "mdi:spotlight-beam"
     _attr_supported_features = SUPPORT_BRIGHTNESS
 
@@ -65,7 +67,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         device: Light,
     ) -> None:
         """Initialize an UniFi light."""
-        self.device: Light = device
+        self.device = device
         super().__init__(data)
 
     @callback

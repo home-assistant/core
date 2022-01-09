@@ -55,6 +55,9 @@ async def async_setup_entry(
 class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     """A Ubiquiti UniFi Protect Speaker."""
 
+    device: Camera
+    entity_description: MediaPlayerEntityDescription
+
     def __init__(
         self,
         data: ProtectData,
@@ -62,7 +65,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     ) -> None:
         """Initialize an UniFi speaker."""
 
-        self.device: Camera = camera
+        self.device = camera
         self.entity_description = MediaPlayerEntityDescription(
             key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
         )

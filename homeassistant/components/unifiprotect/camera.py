@@ -88,6 +88,8 @@ async def async_setup_entry(
 class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
 
+    device: UFPCamera
+
     def __init__(
         self,
         data: ProtectData,
@@ -98,7 +100,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         disable_stream: bool,
     ) -> None:
         """Initialize an UniFi camera."""
-        self.device: UFPCamera = camera
+        self.device = camera
         self.channel = channel
         self._secure = secure
         self._disable_stream = disable_stream
