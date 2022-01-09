@@ -20,6 +20,7 @@ from homeassistant.components.alarm_control_panel.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -110,7 +111,9 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
                 TimeoutError,
                 UnknownError,
             ) as error:
-                LOGGER.warning("Could not verify disarmed: %s", error)
+                raise HomeAssistantError(
+                    f"Could not verify disarmed for {self._attr_name}: {error}"
+                ) from error
 
         if alarm_state:
             self._attr_state = STATE_MAP.get(YALE_STATE_DISARM)
@@ -130,7 +133,9 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
                 TimeoutError,
                 UnknownError,
             ) as error:
-                LOGGER.warning("Could not verify armed home: %s", error)
+                raise HomeAssistantError(
+                    f"Could not verify armed home for {self._attr_name}: {error}"
+                ) from error
 
         if alarm_state:
             self._attr_state = STATE_MAP.get(YALE_STATE_ARM_PARTIAL)
@@ -150,7 +155,9 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
                 TimeoutError,
                 UnknownError,
             ) as error:
-                LOGGER.warning("Could not verify armed away: %s", error)
+                raise HomeAssistantError(
+                    f"Could not verify armed away for {self._attr_name}: {error}"
+                ) from error
 
         if alarm_state:
             self._attr_state = STATE_MAP.get(YALE_STATE_ARM_FULL)
