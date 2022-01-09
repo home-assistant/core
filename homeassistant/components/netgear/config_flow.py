@@ -22,8 +22,8 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    MODELS_V2,
-    ORBI_PORT,
+    MODELS_PORT_80,
+    PORT_80,
 )
 from .errors import CannotLoginException
 from .router import get_api
@@ -141,13 +141,13 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=updated_data)
 
         updated_data[CONF_PORT] = DEFAULT_PORT
-        for model in MODELS_V2:
+        for model in MODELS_PORT_80:
             if discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
                 model
             ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
                 model
             ):
-                updated_data[CONF_PORT] = ORBI_PORT
+                updated_data[CONF_PORT] = PORT_80
 
         self.placeholders.update(updated_data)
         self.discovered = True
