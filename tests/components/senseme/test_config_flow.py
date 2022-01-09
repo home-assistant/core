@@ -88,6 +88,7 @@ async def test_form_user_manual_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result3["title"] == "Haiku Fan"
     assert result3["data"] == {
         "info": MOCK_DEVICE.get_device_info,
@@ -131,6 +132,7 @@ async def test_form_user_no_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result3["title"] == "Haiku Fan"
     assert result3["data"] == {
         "info": MOCK_DEVICE.get_device_info,

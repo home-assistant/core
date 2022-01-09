@@ -41,10 +41,9 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
             if entry.unique_id != uuid:
                 continue
-            if entry.data[CONF_INFO]["address"] != host:
-                self.hass.config_entries.async_update_entry(
-                    entry, data={CONF_INFO: {**entry.data[CONF_INFO], "address": host}}
-                )
+            self.hass.config_entries.async_update_entry(
+                entry, data={CONF_INFO: {**entry.data[CONF_INFO], "address": host}}
+            )
             return self.async_abort(reason="already_configured")
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
