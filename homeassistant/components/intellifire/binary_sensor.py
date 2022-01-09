@@ -1,6 +1,8 @@
 """Support for Intellifire Binary Sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -22,23 +24,45 @@ LIGHT = "light_on"
 PILOT = "pilot_light_on"
 
 
-INTELLIFIRE_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+@dataclass
+class IntellifireSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Any], int | str | float | None]
+
+
+@dataclass
+class IntellifireBinarySensorEntityDescription(
+    BinarySensorEntityDescription, IntellifireSensorEntityDescriptionMixin
+):
+    """Describes a binary sensor entity."""
+
+
+INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...] = (
+    IntellifireBinarySensorEntityDescription(
         key=POWER,  # This is the sensor name
         name="Power",  # This is the human readable name
         icon="mdi:power",
         device_class=BinarySensorDeviceClass.POWER,
+        value_fn=lambda data: data.is_on,
     ),
-    BinarySensorEntityDescription(
-        key=TIMER, name="Timer On", icon="mdi:camera-timer", device_class=None
+    IntellifireBinarySensorEntityDescription(
+        key=TIMER,
+        name="Timer On",
+        icon="mdi:camera-timer",
+        value_fn=lambda data: data.timer_on,
     ),
-    BinarySensorEntityDescription(
-        key=PILOT, name="Pilot Light On", icon="mdi:fire-alert", device_class=None
+    IntellifireBinarySensorEntityDescription(
+        key=PILOT,
+        name="Pilot Light On",
+        icon="mdi:fire-alert",
+        value_fn=lambda data: data.pilot_on,
     ),
-    BinarySensorEntityDescription(
+    IntellifireBinarySensorEntityDescription(
         key=THERMOSTAT,
         name="Thermostat On",
         icon="mdi:home-thermometer-outline",
+        value_fn=lambda data: data.thermostat_on,
     ),
 )
 
@@ -63,11 +87,12 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self,
         coordinator: IntellifireDataUpdateCoordinator,
         entry_id,
-        description: BinarySensorEntityDescription,
+        description: IntellifireBinarySensorEntityDescription,
     ):
         """Class initializer."""
-        super().__init__(coordinator)
-        self.entity_description = description
+        super().__init__(coordinator=coordinator)
+        self.entity_description: IntellifireBinarySensorEntityDescription = description
+
         self.coordinator = coordinator
         self._entry_id = entry_id
         self._attrs: dict[str, Any] = {}
@@ -79,14 +104,5 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Use this to get the correct value."""
-        sensor_type = self.entity_description.key
-        if sensor_type == POWER:
-            return self.coordinator.api.data.is_on
-        if sensor_type == TIMER:
-            return self.coordinator.api.data.timer_on
-        if sensor_type == HOT:
-            return self.coordinator.api.data.is_hot
-        if sensor_type == THERMOSTAT:
-            return self.coordinator.api.data.thermostat_on
-        if sensor_type == PILOT:
-            return self.coordinator.api.data.pilot_on
+
+        return bool(self.entity_description.value_fn(self.coordinator.api.data))
