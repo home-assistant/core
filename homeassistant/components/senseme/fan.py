@@ -82,7 +82,6 @@ class HASensemeFan(SensemeEntity, FanEntity):
         return {
             "auto_comfort": self._device.fan_autocomfort.capitalize(),
             "smartmode": self._device.fan_smartmode.capitalize(),
-            **super().extra_state_attributes,
         }
 
     async def async_set_percentage(self, percentage: int) -> None:
