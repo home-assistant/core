@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
@@ -246,7 +247,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             mjpeg_camera.update({CONF_USERNAME: username, CONF_PASSWORD: password})
 
         hass.async_create_task(
-            discovery.async_load_platform(hass, "camera", "mjpeg", mjpeg_camera, config)
+            discovery.async_load_platform(
+                hass, Platform.CAMERA, "mjpeg", mjpeg_camera, config
+            )
         )
 
         if sensors:
