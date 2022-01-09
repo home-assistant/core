@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 
-from bscpylgtv import PyLGTVPairException, WebOsClient
+from aiowebostv import WebOsClient, WebOsTvPairError
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -160,7 +160,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         for app in self._client.apps.values():
             if app["id"] == LIVE_TV_APP_ID:
                 found_live_tv = True
-            if app["id"] == self._client.current_appId:
+            if app["id"] == self._client.current_app_id:
                 self._current_source = app["title"]
                 self._source_list[app["title"]] = app
             elif (
@@ -174,7 +174,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         for source in self._client.inputs.values():
             if source["appId"] == LIVE_TV_APP_ID:
                 found_live_tv = True
-            if source["appId"] == self._client.current_appId:
+            if source["appId"] == self._client.current_app_id:
                 self._current_source = source["label"]
                 self._source_list[source["label"]] = source
             elif (
@@ -188,7 +188,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         # not appear in the app or input lists in some cases
         if not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
-            if LIVE_TV_APP_ID == self._client.current_appId:
+            if LIVE_TV_APP_ID == self._client.current_app_id:
                 self._current_source = app["title"]
                 self._source_list["Live TV"] = app
             elif (
@@ -207,7 +207,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         if self._client.is_connected():
             return
 
-        with suppress(WEBOSTV_EXCEPTIONS, PyLGTVPairException):
+        with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
             await self._client.connect()
 
     @property
@@ -259,7 +259,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self._client.current_appId == LIVE_TV_APP_ID:
+        if self._client.current_app_id == LIVE_TV_APP_ID:
             return MEDIA_TYPE_CHANNEL
 
         return None
@@ -267,7 +267,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if (self._client.current_appId == LIVE_TV_APP_ID) and (
+        if (self._client.current_app_id == LIVE_TV_APP_ID) and (
             self._client.current_channel is not None
         ):
             return self._client.current_channel.get("channelName")
@@ -276,10 +276,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._client.current_appId in self._client.apps:
-            icon = self._client.apps[self._client.current_appId]["largeIcon"]
+        if self._client.current_app_id in self._client.apps:
+            icon = self._client.apps[self._client.current_app_id]["largeIcon"]
             if not icon.startswith("http"):
-                icon = self._client.apps[self._client.current_appId]["icon"]
+                icon = self._client.apps[self._client.current_app_id]["icon"]
             return icon
         return None
 

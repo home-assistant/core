@@ -1,7 +1,7 @@
 """Support for LG WebOS TV notification service."""
 import logging
 
-from bscpylgtv import PyLGTVPairException
+from aiowebostv import WebOsTvPairError
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_ICON, CONF_NAME
@@ -18,7 +18,9 @@ async def async_get_service(hass, _config, discovery_info=None):
         return None
 
     name = discovery_info.get(CONF_NAME)
-    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][discovery_info[ATTR_CONFIG_ENTRY_ID]]
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        discovery_info[ATTR_CONFIG_ENTRY_ID]
+    ].client
 
     return LgWebOSNotificationService(client, name)
 
@@ -40,7 +42,7 @@ class LgWebOSNotificationService(BaseNotificationService):
             data = kwargs.get(ATTR_DATA)
             icon_path = data.get(CONF_ICON, "") if data else None
             await self._client.send_message(message, icon_path=icon_path)
-        except PyLGTVPairException:
+        except WebOsTvPairError:
             _LOGGER.error("Pairing with TV failed")
         except FileNotFoundError:
             _LOGGER.error("Icon %s not found", icon_path)

@@ -6,7 +6,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
-from bscpylgtv import PyLGTVPairException, WebOsClient
+from aiowebostv import WebOsClient, WebOsTvPairError
 import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify
@@ -191,12 +191,12 @@ async def async_update_options(hass, config_entry):
 
 async def async_control_connect(host: str, key: str | None) -> WebOsClient:
     """LG Connection."""
-    client = await WebOsClient.create(host, client_key=key)
+    client = WebOsClient(host, key)
     try:
         await client.connect()
-    except PyLGTVPairException as err:
+    except WebOsTvPairError as err:
         _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
-        raise PyLGTVPairException(err) from err
+        raise WebOsTvPairError(err) from err
 
     return client
 
@@ -265,8 +265,8 @@ class WebOsClientWrapper:
 
     async def connect(self) -> None:
         """Attempt a connection, but fail gracefully if tv is off for example."""
-        self.client = await WebOsClient.create(self.host, client_key=self.client_key)
-        with suppress(*WEBOSTV_EXCEPTIONS, PyLGTVPairException):
+        self.client = WebOsClient(self.host, self.client_key)
+        with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
             await self.client.connect()
 
     async def shutdown(self) -> None:
