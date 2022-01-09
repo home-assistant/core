@@ -45,7 +45,7 @@ RtmAPI==0.7.2
 WSDiscovery==2.0.0
 
 # homeassistant.components.waze_travel_time
-WazeRouteCalculator==0.13
+WazeRouteCalculator==0.14
 
 # homeassistant.components.abode
 abodepy==1.2.0
