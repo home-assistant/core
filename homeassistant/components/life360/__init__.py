@@ -2,10 +2,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker import (
-    CONF_SCAN_INTERVAL,
-    DOMAIN as DEVICE_TRACKER,
-)
+from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
 from homeassistant.components.device_tracker.const import (
     SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL,
 )
@@ -16,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PREFIX,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -153,7 +151,7 @@ def setup(hass, config):
     """Set up integration."""
     conf = config.get(DOMAIN, LIFE360_SCHEMA({}))
     hass.data[DOMAIN] = {"config": conf, "apis": {}}
-    discovery.load_platform(hass, DEVICE_TRACKER, DOMAIN, None, config)
+    discovery.load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, None, config)
 
     if CONF_ACCOUNTS not in conf:
         return True

@@ -149,6 +149,14 @@ class NetgearRouter:
             if self.model.startswith(model):
                 self.method_version = 2
 
+        if self.method_version == 2:
+            if not self._api.get_attached_devices_2():
+                _LOGGER.error(
+                    "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
+                    self.model,
+                )
+                self.method_version = 1
+
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
         await self.hass.async_add_executor_job(self._setup)
