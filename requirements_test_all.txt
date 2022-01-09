@@ -366,6 +366,9 @@ devolo-plc-api==0.6.3
 # homeassistant.components.directv
 directv==0.4.0
 
+# homeassistant.components.steamist
+discovery30303==0.2.1
+
 # homeassistant.components.doorbird
 doorbirdpy==2.1.0
 
