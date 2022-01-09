@@ -130,7 +130,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(
         async_load_platform(
             hass,
-            "binary_sensor",
+            Platform.BINARY_SENSOR,
             DOMAIN,
             {CONF_ZONES: zones, CONF_OUTPUTS: outputs},
             config,
@@ -140,7 +140,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(
         async_load_platform(
             hass,
-            "switch",
+            Platform.SWITCH,
             DOMAIN,
             {
                 CONF_SWITCHABLE_OUTPUTS: switchable_outputs,
