@@ -501,6 +501,7 @@ class ZHAGateway:
                 config_entry_id=self.config_entry.entry_id,
                 connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
+                disabled_by=None,
                 name=zha_device.name,
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
