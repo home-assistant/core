@@ -12,15 +12,10 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
-    DOMAIN as COVER_DOMAIN,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_COVERS,
@@ -34,6 +29,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
