@@ -558,7 +558,8 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
                 else:
                     # hourly_consumption_data contains the last 30 days
                     # of consumption data.
-                    # We update the statistics with the last 30 days of data to handle corrections in the data.
+                    # We update the statistics with the last 30 days
+                    # of data to handle corrections in the data.
                     hourly_consumption_data = home.hourly_consumption_data
 
                     start = dt_util.parse_datetime(
