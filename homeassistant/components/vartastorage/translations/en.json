@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured. Currently only a single configuration is supported."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect. Please check your config",
+            "invalid_auth": "Invalid authentication. Please check your config.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

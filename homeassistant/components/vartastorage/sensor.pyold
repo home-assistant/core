@@ -1,0 +1,83 @@
+"""Platform for solarlog sensors."""
+from datetime import timedelta
+import logging
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.entity import DeviceInfo, StateType
+from homeassistant import config_entries, core
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
+import voluptuous as vol
+import random
+
+from vartastorage.vartastorage import VartaStorage
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=5)
+
+
+# async def async_setup_entry(hass, entry, async_add_entities):
+#    """Add vartastorage entry."""
+# coordinator = hass.data[DOMAIN][entry.entry_id]
+# _LOGGER.warning("nowwithinsensorsetup")
+# add_entities([ExampleSensor()])
+# async_add_entities(
+#    _LOGGER.warning("addingentries now")
+# VartaStorageSensor(coordinator, description) for description in SENSOR_TYPES
+# )
+
+
+async def async_setup_entry(
+    hass: core.HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities,
+):
+    """Setup sensors from a config entry created in the integrations UI."""
+    # config = hass.data[DOMAIN][config_entry.entry_id]
+    # Update our config to include new repos and remove those that have been removed.
+    # if config_entry.options:
+    #    config.update(config_entry.options)
+    # session = async_get_clientsession(hass)
+    # github = GitHubAPI(session, "requester", oauth_token=config[CONF_ACCESS_TOKEN])
+    # sensors = [GitHubRepoSensor(github, repo) for repo in config[CONF_REPOS]]
+    # async_add_entities(sensors, update_before_add=True)
+
+    async_add_entities([VartaStorage_SoC()])
+
+
+class VartaStorage_SoC(SensorEntity):
+    """Representation of a Sensor."""
+
+    def __init__(self):
+        """Initialize the sensor."""
+        self._state = None
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return "State of Charge"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement."""
+        return TEMP_CELSIUS
+
+    def update(self) -> None:
+        """Fetch new state data for the sensor.
+
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        self._state = random.randint(3, 900)

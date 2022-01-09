@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Das Gerät ist bereits konfiguriert. Aktuell ist lediglich eine Konfiguration unterstützt."
+        },
+        "error": {
+            "cannot_connect": "Es konnte keine Verbindung hergestellt werden. Bitte prüfe die Konfiguration.",
+            "invalid_auth": "Die Authentifizierung war nicht erfolgreich. Bitte prüfe die Konfiguration.",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}
