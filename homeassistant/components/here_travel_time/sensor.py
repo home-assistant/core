@@ -248,9 +248,8 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
                     time := self.coordinator.data.get(ATTR_DURATION_IN_TRAFFIC)
                 ) is not None:
                     return str(round(time))
-            else:
-                if (time := self.coordinator.data.get(ATTR_DURATION)) is not None:
-                    return str(round(time))
+            if (time := self.coordinator.data.get(ATTR_DURATION)) is not None:
+                return str(round(time))
         return None
 
     @property
