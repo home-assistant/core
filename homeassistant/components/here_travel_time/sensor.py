@@ -235,9 +235,10 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         coordinator: HereTravelTimeDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        self._name = name
-        self._traffic_mode = traffic_mode
         super().__init__(coordinator)
+        self._traffic_mode = traffic_mode
+        self._attr_native_unit_of_measurement = TIME_MINUTES
+        self._attr_name = name
 
     @property
     def native_value(self) -> str | None:
@@ -251,11 +252,6 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
             if (time := self.coordinator.data.get(ATTR_DURATION)) is not None:
                 return str(round(time))
         return None
-
-    @property
-    def name(self) -> str:
-        """Get the name of the sensor."""
-        return self._name
 
     @property
     def extra_state_attributes(
@@ -277,11 +273,6 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self.coordinator.data.get(ATTR_ATTRIBUTION)
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return TIME_MINUTES
 
     @property
     def icon(self) -> str:
