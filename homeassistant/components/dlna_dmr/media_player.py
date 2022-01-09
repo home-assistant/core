@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
@@ -73,7 +73,7 @@ _P = ParamSpec("_P")
 
 def catch_request_errors(
     func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Awaitable[_R | None]]:  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R | None]]:  # type: ignore[misc]
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
