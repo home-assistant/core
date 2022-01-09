@@ -8,6 +8,8 @@ from homeassistant.const import (
 
 ATTRIBUTION = "Data provided by BMW Connected Drive"
 
+ATTR_DIRECTION = "direction"
+
 CONF_ALLOWED_REGIONS = ["china", "north_america", "rest_of_world"]
 CONF_READ_ONLY = "read_only"
 CONF_USE_LOCATION = "use_location"
