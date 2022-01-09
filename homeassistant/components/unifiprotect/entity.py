@@ -228,7 +228,6 @@ class AccessTokenMixin(ProtectDeviceEntity):
     @property
     def access_tokens(self) -> deque[str]:
         """Get valid access_tokens for current entity."""
-        assert isinstance(self, ProtectDeviceEntity)
         return self.data.async_get_or_create_access_tokens(self.entity_id)
 
     @callback
@@ -247,7 +246,6 @@ class AccessTokenMixin(ProtectDeviceEntity):
     @callback
     def async_cleanup_tokens(self) -> None:
         """Clean up any remaining tokens on removal."""
-        assert isinstance(self, ProtectDeviceEntity)
         if self.entity_id in self.data.access_tokens:
             del self.data.access_tokens[self.entity_id]
 
