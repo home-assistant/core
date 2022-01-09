@@ -13,7 +13,7 @@ DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
 
 # models using port 80 instead of 5000
-MODELS_PORT80 = [
+MODELS_PORT_80 = [
     "Orbi",
     "RBK",
     "RBR",
@@ -31,7 +31,7 @@ MODELS_PORT80 = [
     "SXR",
     "SXS",
 ]
-PORT80 = 80
+PORT_80 = 80
 # update method V2 models
 MODELS_V2 = [
     "Orbi",
