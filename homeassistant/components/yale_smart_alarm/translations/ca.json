@@ -25,5 +25,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "El codi no cont\u00e9 el nombre de d\u00edgits adequat"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Codi predeterminat per als panys, en cas que no se'n configuri cap",
+                    "lock_code_digits": "Nombre de d\u00edgits del codi PIN dels panys"
+                }
+            }
+        }
     }
 }

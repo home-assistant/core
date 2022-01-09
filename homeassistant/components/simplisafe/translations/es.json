@@ -32,6 +32,7 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "C\u00f3digo de Autorizaci\u00f3n",
                     "code": "C\u00f3digo (utilizado en el interfaz de usuario de Home Assistant)",
                     "password": "Contrase\u00f1a",
                     "username": "Correo electr\u00f3nico"
