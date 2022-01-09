@@ -192,7 +192,7 @@ class EnaSolarSensor(SensorEntity):
         """Initialize the EnaSolar sensor."""
         self.sensor = pyenasolar_sensor
         if inverter_name:
-            self._attr_name = f"enasolar_{inverter_name}_{self.sensor.name}"
+            self._attr_name = f"{inverter_name}_{self.sensor.name}"
         else:
             self._attr_name = f"enasolar_{self.sensor.name}"
         self.serial_no = serial_no
