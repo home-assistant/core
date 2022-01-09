@@ -12,7 +12,13 @@
             "user": {
                 "data": {
                     "_a_to_d": "Ciudad/condado (A-D)",
-                    "_e_to_h": "Ciudad/condado (E-H)"
+                    "_e_to_h": "Ciudad/condado (E-H)",
+                    "_i_to_l": "Ciudad/condado (I-L)",
+                    "_m_to_q": "Ciudad/condado (M-Q)",
+                    "_r_to_u": "Ciudad/condado (R-U)",
+                    "_v_to_z": "Ciudad/condado (V-Z)",
+                    "corona_filter": "Eliminar las advertencias de Corona",
+                    "slots": "Advertencias m\u00e1ximas por ciudad/condado"
                 },
                 "title": "Seleccionar ciudad/pa\u00eds"
             }

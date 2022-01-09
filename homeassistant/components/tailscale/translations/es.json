@@ -5,6 +5,17 @@
         },
         "error": {
             "cannot_connect": "Error al conectar"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Los tokens de la API de Tailscale son v\u00e1lidos durante 90 d\u00edas. Puedes crear una nueva clave de API de Tailscale en https://login.tailscale.com/admin/settings/authkeys."
+            },
+            "user": {
+                "data": {
+                    "tailnet": "Tailnet"
+                },
+                "description": "Para autenticarse con Tailscale, deber\u00e1 crear una clave API en https://login.tailscale.com/admin/settings/authkeys. \n\nTailnet es el nombre de su red Tailscale. Puede encontrarlo en la esquina superior izquierda en el Panel de administraci\u00f3n de Tailscale (al lado del logotipo de Tailscale)."
+            }
         }
     }
 }

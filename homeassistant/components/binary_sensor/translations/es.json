@@ -19,6 +19,7 @@
             "is_no_problem": "{entity_name} no detecta el problema",
             "is_no_smoke": "{entity_name} no detecta humo",
             "is_no_sound": "{entity_name} no detecta sonido",
+            "is_no_update": "{entity_name} est\u00e1 actualizado",
             "is_no_vibration": "{entity_name} no detecta vibraci\u00f3n",
             "is_not_bat_low": "La bater\u00eda de {entity_name} es normal",
             "is_not_cold": "{entity_name} no est\u00e1 fr\u00edo",
@@ -48,6 +49,7 @@
             "is_sound": "{entity_name} est\u00e1 detectando sonido",
             "is_tampered": "{entity_name} est\u00e1 detectando manipulaci\u00f3n",
             "is_unsafe": "{entity_name} no es seguro",
+            "is_update": "{entity_name} tiene una actualizaci\u00f3n disponible",
             "is_vibration": "{entity_name} est\u00e1 detectando vibraciones"
         },
         "trigger_type": {
@@ -71,6 +73,7 @@
             "no_problem": "{entity_name} dej\u00f3 de detectar el problema",
             "no_smoke": "{entity_name} dej\u00f3 de detectar humo",
             "no_sound": "{entity_name} dej\u00f3 de detectar sonido",
+            "no_update": "{entity_name} se actualiz\u00f3",
             "no_vibration": "{entity_name} dej\u00f3 de detectar vibraci\u00f3n",
             "not_bat_low": "{entity_name} bater\u00eda normal",
             "not_cold": "{entity_name} no se enfri\u00f3",
@@ -100,11 +103,18 @@
             "turned_off": "{entity_name} desactivado",
             "turned_on": "{entity_name} activado",
             "unsafe": "{entity_name} se volvi\u00f3 inseguro",
+            "update": "{entity_name} tiene una actualizaci\u00f3n disponible",
             "vibration": "{entity_name} empez\u00f3 a detectar vibraciones"
         }
     },
     "device_class": {
         "co": "monoxido_de_carbono",
+        "cold": "fr\u00edo",
+        "gas": "gas",
+        "heat": "calor",
+        "moisture": "humedad",
+        "motion": "movimiento",
+        "occupancy": "ocupaci\u00f3n",
         "power": "energ\u00eda",
         "problem": "Problema",
         "smoke": "humo",

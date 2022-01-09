@@ -1,0 +1,22 @@
+{
+    "config": {
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "\u00bfQuieres configurar {name} - {model} ({host})?"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Introduzca una direcci\u00f3n IP."
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "description": "Seleccione un dispositivo o elija \"Direcci\u00f3n IP\" para introducir manualmente una direcci\u00f3n IP."
+            }
+        }
+    }
+}
