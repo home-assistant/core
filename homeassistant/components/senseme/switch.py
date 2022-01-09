@@ -1,9 +1,12 @@
 """Support for Big Ass Fans SenseME switch."""
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, cast
 
 from aiosenseme import SensemeFan
+from aiosenseme.device import SensemeDevice
 
 from homeassistant import config_entries
 from homeassistant.components.switch import (
@@ -17,33 +20,71 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .entity import SensemeEntity
 
+
+@dataclass
+class SenseMESwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[SensemeFan], bool]
+    set_fn: Callable[[SensemeFan, bool], None]
+
+
+@dataclass
+class SenseMESwitchEntityDescriptionDescription(
+    SwitchEntityDescription, SenseMESwitchEntityDescriptionMixin
+):
+    """Describes SenseME switch entity."""
+
+
+def _set_sleep_mode(device: SensemeDevice, value: bool) -> None:
+    device.sleep_mode = value
+
+
+def _set_motion_fan_auto(device: SensemeDevice, value: bool) -> None:
+    device.motion_fan_auto = value
+
+
+def _set_motion_light_auto(device: SensemeDevice, value: bool) -> None:
+    device.motion_light_auto = value
+
+
 FAN_SWITCHS = [
     # Turning on sleep mode will disable Whoosh
-    SwitchEntityDescription(
+    SenseMESwitchEntityDescriptionDescription(
         key="sleep_mode",
         name="Sleep Mode",
+        value_fn=lambda device: cast(bool, device.sleep_mode),
+        set_fn=_set_sleep_mode,
     ),
-    SwitchEntityDescription(
+    SenseMESwitchEntityDescriptionDescription(
         key="motion_fan_auto",
         name="Motion",
+        value_fn=lambda device: cast(bool, device.motion_fan_auto),
+        set_fn=_set_motion_fan_auto,
     ),
 ]
 
 FAN_LIGHT_SWITCHES = [
-    SwitchEntityDescription(
+    SenseMESwitchEntityDescriptionDescription(
         key="motion_light_auto",
         name="Light Motion",
+        value_fn=lambda device: cast(bool, device.motion_light_auto),
+        set_fn=_set_motion_light_auto,
     ),
 ]
 
 LIGHT_SWITCHES = [
-    SwitchEntityDescription(
+    SenseMESwitchEntityDescriptionDescription(
         key="sleep_mode",
         name="Sleep Mode",
+        value_fn=lambda device: cast(bool, device.sleep_mode),
+        set_fn=_set_sleep_mode,
     ),
-    SwitchEntityDescription(
+    SenseMESwitchEntityDescriptionDescription(
         key="motion_light_auto",
         name="Motion",
+        value_fn=lambda device: cast(bool, device.motion_light_auto),
+        set_fn=_set_motion_light_auto,
     ),
 ]
 
@@ -55,7 +96,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up SenseME fans."""
     device = hass.data[DOMAIN][entry.entry_id]
-    descriptions: list[SwitchEntityDescription] = []
+    descriptions: list[SenseMESwitchEntityDescriptionDescription] = []
 
     if device.is_fan:
         descriptions.extend(FAN_SWITCHS)
@@ -72,8 +113,10 @@ async def async_setup_entry(
 class HASensemeSwitch(SensemeEntity, SwitchEntity):
     """SenseME switch component."""
 
+    entity_description: SenseMESwitchEntityDescriptionDescription
+
     def __init__(
-        self, device: SensemeFan, description: SwitchEntityDescription
+        self, device: SensemeFan, description: SenseMESwitchEntityDescriptionDescription
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -84,12 +127,12 @@ class HASensemeSwitch(SensemeEntity, SwitchEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        self._attr_is_on = getattr(self._device, self.entity_description.key)
+        self._attr_is_on = self.entity_description.value_fn(self._device)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        setattr(self._device, self.entity_description.key, True)
+        self.entity_description.set_fn(self._device, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        setattr(self._device, self.entity_description.key, False)
+        self.entity_description.set_fn(self._device, False)
