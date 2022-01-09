@@ -65,7 +65,9 @@ async def dsmr_connection_send_validate_fixture(hass):
             }
         if args[1] == "Q3D":
             protocol.telegram = {
-                P1_MESSAGE_TIMESTAMP: CosemObject([{"value": "12345678", "unit": ""}]),
+                Q3D_EQUIPMENT_IDENTIFIER: CosemObject(
+                    [{"value": "12345678", "unit": ""}]
+                ),
             }
 
         return (transport, protocol)
