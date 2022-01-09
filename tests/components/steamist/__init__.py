@@ -23,13 +23,16 @@ MOCK_ASYNC_GET_STATUS_INACTIVE = SteamistStatus(
 MOCK_ASYNC_GET_STATUS_ACTIVE = SteamistStatus(
     temp=102, temp_units="F", minutes_remain=14, active=True
 )
+DEVICE_IP_ADDRESS = "127.0.0.1"
+DEVICE_NAME = "Master Bath"
 DEVICE_MAC_ADDRESS = "AA:BB:CC:DD:EE:FF"
+DEVICE_HOSTNAME = "MY450-EEFF"
 FORMATTED_MAC_ADDRESS = dr.format_mac(DEVICE_MAC_ADDRESS)
 DEVICE_30303 = Device30303(
-    ipaddress="127.0.0.1",
-    name="Master Bath",
-    mac="AA:BB:CC:DD:EE:FF",
-    hostname="MY450-EEFF",
+    ipaddress=DEVICE_IP_ADDRESS,
+    name=DEVICE_NAME,
+    mac=DEVICE_MAC_ADDRESS,
+    hostname=DEVICE_HOSTNAME,
 )
 
 

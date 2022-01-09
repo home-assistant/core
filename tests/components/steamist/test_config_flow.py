@@ -3,12 +3,21 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.steamist.const import DOMAIN
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from . import (
+    DEVICE_HOSTNAME,
+    DEVICE_IP_ADDRESS,
+    DEVICE_MAC_ADDRESS,
+    DEVICE_NAME,
     FORMATTED_MAC_ADDRESS,
     MOCK_ASYNC_GET_STATUS_INACTIVE,
     _patch_discovery,
@@ -16,6 +25,19 @@ from . import (
 )
 
 MODULE = "homeassistant.components.steamist"
+
+DISCOVERY_30303 = {
+    "ipaddress": DEVICE_IP_ADDRESS,
+    "name": DEVICE_NAME,
+    "mac": DEVICE_MAC_ADDRESS,
+    "hostname": DEVICE_HOSTNAME,
+}
+
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    hostname=DEVICE_HOSTNAME,
+    ip=DEVICE_IP_ADDRESS,
+    macaddress=DEVICE_MAC_ADDRESS,
+)
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -152,3 +174,69 @@ async def test_discovery(hass: HomeAssistant):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
+
+
+async def test_discovered_by_discovery_and_dhcp(hass):
+    """Test we get the form with discovery and abort for dhcp source when we get both."""
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=DISCOVERY_30303,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_in_progress"
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                hostname="any",
+                ip=DEVICE_IP_ADDRESS,
+                macaddress="00:00:00:00:00:00",
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["reason"] == "already_in_progress"
+
+
+async def test_discovered_by_discovery(hass):
+    """Test we can setup when discovered from discovery."""
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=DISCOVERY_30303,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {"host": "127.0.0.1", "name": "Master Bath"}
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
