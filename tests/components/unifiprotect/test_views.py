@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock
+from urllib.parse import urlencode
 
 import pytest
 from pyunifiprotect.data import Camera, Event, EventType
@@ -25,7 +26,7 @@ async def thumb_url_fixture(
     mock_camera: Camera,
     now: datetime,
 ):
-    """Fixture for a single camera for testing the binary_sensor platform."""
+    """Fixture for a valid thumbnail URL for anonymous access."""
 
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
@@ -79,6 +80,13 @@ async def thumb_url_fixture(
     Camera.__config__.validate_assignment = True
 
 
+@pytest.fixture(name="thumb_url_no_params")
+async def thumb_url_no_params_fixture(thumb_url: str):
+    """Fixture for a valid thumbnail URL for authed access."""
+
+    return thumb_url[: thumb_url.index("?")]
+
+
 async def test_thumbnail_view_good(
     thumb_url: str,
     hass_client_no_auth,
@@ -91,6 +99,50 @@ async def test_thumbnail_view_good(
     client = await hass_client_no_auth()
 
     response = await client.get(thumb_url)
+    assert response.status == 200
+
+    mock_entry.api.get_event_thumbnail.assert_called_once_with(
+        "test_event_id", width=None, height=None
+    )
+
+
+async def test_thumbnail_view_good_nvr_id(
+    thumb_url_no_params: str,
+    hass_client,
+    mock_entry: MockEntityFixture,
+):
+    """Test good result from thumbnail view."""
+
+    mock_entry.api.get_event_thumbnail = AsyncMock()
+
+    client = await hass_client()
+
+    params = {"nvr_id": mock_entry.api.bootstrap.nvr.id}
+    url = f"{thumb_url_no_params}?{urlencode(params)}"
+
+    response = await client.get(url)
+    assert response.status == 200
+
+    mock_entry.api.get_event_thumbnail.assert_called_once_with(
+        "test_event_id", width=None, height=None
+    )
+
+
+async def test_thumbnail_view_good_camera_id(
+    thumb_url_no_params: str,
+    hass_client,
+    mock_entry: MockEntityFixture,
+):
+    """Test good result from thumbnail view."""
+
+    mock_entry.api.get_event_thumbnail = AsyncMock()
+
+    client = await hass_client()
+
+    params = {"camera_id": list(mock_entry.api.bootstrap.cameras.values())[0].id}
+    url = f"{thumb_url_no_params}?{urlencode(params)}"
+
+    response = await client.get(url)
     assert response.status == 200
 
     mock_entry.api.get_event_thumbnail.assert_called_once_with(

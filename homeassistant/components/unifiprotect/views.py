@@ -1,7 +1,7 @@
 """UniFi Protect Integration views."""
 from __future__ import annotations
 
-import collections
+from collections.abc import Iterable
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -36,20 +36,31 @@ class ThumbnailProxyView(HomeAssistantView):
         self.hass = hass
         self.data = hass.data[DOMAIN]
 
-    def _get_access_tokens(
-        self, entity_id: str
-    ) -> tuple[collections.deque, ProtectApiClient] | None:
+    def _get_access_tokens_and_instance(
+        self, entity_id: str | None, nvr_id: str | None, camera_id: str | None
+    ) -> tuple[Iterable, ProtectApiClient | None]:
+
+        access_tokens: Iterable[str] = []
+        api: ProtectApiClient | None = None
 
         entries: list[ProtectData] = list(self.data.values())
         for entry in entries:
-            if entity_id in entry.access_tokens:
-                return entry.access_tokens[entity_id], entry.api
-        return None
+            if entity_id is not None and entity_id in entry.access_tokens:
+                access_tokens = entry.access_tokens[entity_id]
+                api = entry.api
+            elif nvr_id is not None and nvr_id == entry.api.bootstrap.nvr.id:
+                api = entry.api
+            elif camera_id is not None and camera_id in entry.api.bootstrap.cameras:
+                api = entry.api
+
+        return access_tokens, api
 
     async def get(self, request: web.Request, event_id: str) -> web.Response:
         """Start a get request."""
 
         entity_id: str | None = request.query.get("entity_id")
+        nvr_id: str | None = request.query.get("nvr_id")
+        camera_id: str | None = request.query.get("camera_id")
         width: int | str | None = request.query.get("w")
         height: int | str | None = request.query.get("h")
         token: str | None = request.query.get("token")
@@ -65,17 +76,16 @@ class ThumbnailProxyView(HomeAssistantView):
             except ValueError:
                 return _404("Invalid height param")
 
-        access_tokens: list[str] = []
-        if entity_id is not None:
-            items = self._get_access_tokens(entity_id)
-            if items is None:
-                return _404(f"Could not find entity with entity_id {entity_id}")
+        access_tokens, instance = self._get_access_tokens_and_instance(
+            entity_id, nvr_id, camera_id
+        )
 
-            access_tokens = list(items[0])
-            instance = items[1]
+        if instance is None:
+            return _404("Could not find UniFi Protect instance")
 
         authenticated = request[KEY_AUTHENTICATED] or token in access_tokens
         if not authenticated:
+            _LOGGER.debug("Thumbnail view not authenticated")
             raise web.HTTPUnauthorized()
 
         try:

@@ -120,6 +120,7 @@ def request_handler_factory(
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
+        _LOGGER.warning("VIEW DEBUG: Request handler: %s", authenticated)
         if view.requires_auth and not authenticated:
             raise HTTPUnauthorized()
 

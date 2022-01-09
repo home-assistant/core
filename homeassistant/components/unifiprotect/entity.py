@@ -25,6 +25,7 @@ from pyunifiprotect.data.nvr import NVR
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     ATTR_EVENT_SCORE,
@@ -260,8 +261,8 @@ class AccessTokenMixin(Entity):
 
         self.async_update_token()
         self.async_on_remove(
-            self.hass.helpers.event.async_track_time_interval(
-                self._async_update_and_write_token, TOKEN_CHANGE_INTERVAL
+            async_track_time_interval(
+                self.hass, self._async_update_and_write_token, TOKEN_CHANGE_INTERVAL
             )
         )
         self.async_on_remove(self.async_cleanup_tokens)
