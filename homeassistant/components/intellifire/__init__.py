@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import IntellifireDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[str] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
