@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _404(message: Any) -> web.Response:
-    _LOGGER.error("Error on load thumbnail: %s", message)
+    _LOGGER.warning("Error on load thumbnail: %s", message)
     return web.Response(status=HTTPStatus.NOT_FOUND)
 
 
@@ -81,7 +81,9 @@ class ThumbnailProxyView(HomeAssistantView):
         )
 
         if instance is None:
-            return _404("Could not find UniFi Protect instance")
+            return _404(
+                "Could not find UniFi Protect instance. The `entity_id`, `nvr_id` or `camera_id` query parameter is required"
+            )
 
         authenticated = request[KEY_AUTHENTICATED] or token in access_tokens
         if not authenticated:
