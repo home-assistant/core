@@ -1,11 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "invalid_unique_id": "Imposible determinar una identificaci\u00f3n \u00fanica v\u00e1lida para el dispositivo"
+        },
+        "error": {
+            "adbkey_not_file": "No se ha encontrado el archivo de claves ADB",
+            "key_and_server": "S\u00f3lo proporciona la clave ADB o el servidor ADB"
         },
         "step": {
             "user": {
                 "data": {
+                    "adb_server_ip": "Direcci\u00f3n IP del servidor ADB (dejar vac\u00edo para no utilizarlo)",
+                    "adb_server_port": "Puerto del servidor ADB",
                     "adbkey": "Ruta de acceso a su archivo de clave ADB (d\u00e9jelo vac\u00edo para que se genere autom\u00e1ticamente)",
                     "device_class": "Tipo de dispositivo",
                     "host": "Host",

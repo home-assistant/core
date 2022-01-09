@@ -26,7 +26,8 @@
                 "data": {
                     "code": "Token de acceso"
                 },
-                "description": "Para vincular tu cuenta de Google, [autoriza tu cuenta]({url}).\n\nDespu\u00e9s de la autorizaci\u00f3n, copie y pegue el c\u00f3digo Auth Token proporcionado a continuaci\u00f3n."
+                "description": "Para vincular tu cuenta de Google, [autoriza tu cuenta]({url}).\n\nDespu\u00e9s de la autorizaci\u00f3n, copie y pegue el c\u00f3digo Auth Token proporcionado a continuaci\u00f3n.",
+                "title": "Vincular cuenta de Google"
             },
             "init": {
                 "data": {

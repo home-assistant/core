@@ -8,6 +8,9 @@
             "no_devices": "No se han encontrado dispositivos en la cuenta"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "Por favor, vuelva a introducir la contrase\u00f1a de {username}."
+            },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
