@@ -47,13 +47,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            try:
-                serial = user_input.get(CONF_SERIAL)
-                ip_address = user_input.get(CONF_IP_ADDRESS)
-                await self.async_set_unique_id(serial)
-                self._abort_if_unique_id_configured()
+            serial = user_input.get(CONF_SERIAL)
+            ip_address = user_input.get(CONF_IP_ADDRESS)
+            await self.async_set_unique_id(serial)
+            self._abort_if_unique_id_configured()
+            try:                
                 name = await self._test_connection(serial, ip_address)
-                return self.async_create_entry(title=name, data=user_input)
             except InvalidSerial:
                 errors["base"] = "invalid_serial"
             except InvalidIP:
@@ -62,6 +61,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "device_not_found"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(title=name, data=user_input)
+
 
         default_suggestion = self._prefill_identifier()
         return self.async_show_form(
