@@ -133,7 +133,7 @@ async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
 
     assert result["type"] == "create_entry"
     assert result["title"] == port.device
-    assert result["data"] == {**entry_data, **SERIAL_DATA}
+    assert result["data"] == entry_data
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
