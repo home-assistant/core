@@ -1,14 +1,18 @@
 """The Matrix bot component."""
 from __future__ import annotations
 
+from copy import deepcopy
 from functools import partial
 import logging
 import mimetypes
 import os
+import re
 from typing import Any
+import uuid
 
 from matrix_client.client import MatrixClient
 from matrix_client.errors import MatrixHttpLibError, MatrixRequestError
+from matrix_client.room import Room
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -268,6 +272,7 @@ class MatrixBot(MatrixAuthentication):
 
         # Rooms
         self._listening_rooms: list[str] = listening_rooms
+        self._listener_ids: dict[str, uuid.UUID] = {}
 
         # We have to fetch the aliases for every room to make sure we don't
         # join it twice by accident. However, fetching aliases is costly,
@@ -282,20 +287,7 @@ class MatrixBot(MatrixAuthentication):
         # room, i.e., a dict-of-list
         self._expression_commands: dict = {}
 
-        for command in commands:
-            if not command.get(CONF_ROOMS):
-                command[CONF_ROOMS] = listening_rooms
-
-            if command.get(CONF_WORD):
-                for room_id in command[CONF_ROOMS]:
-                    if room_id not in self._word_commands:
-                        self._word_commands[room_id] = {}
-                    self._word_commands[room_id][command[CONF_WORD]] = command
-            else:
-                for room_id in command[CONF_ROOMS]:
-                    if room_id not in self._expression_commands:
-                        self._expression_commands[room_id] = []
-                    self._expression_commands[room_id].append(command)
+        self.set_listening_commands(commands)
 
         # Log in. This raises a MatrixRequestError if login is unsuccessful
         self._client: MatrixClient = self.login()
@@ -318,6 +310,53 @@ class MatrixBot(MatrixAuthentication):
             self._join_rooms()
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
+
+    def set_listening_rooms(self, listening_rooms: list[str]) -> None:
+        """Set listening rooms and update the listeners."""
+        # Remove all existing listeners
+        self._leave_rooms()
+        # Set new listening rooms
+        self._listening_rooms = listening_rooms
+        # Join rooms in the list
+        self._join_rooms()
+
+        _LOGGER.debug(
+            f"Listening room list has been updated. Total listening rooms: {len(listening_rooms)}. Current listening rooms: {', '.join((room_id for room_id in listening_rooms))}"
+        )
+
+    def set_listening_commands(self, commands: list[dict[str, Any]]) -> None:
+        """Set listening commands."""
+        self._word_commands = {}
+        self._expression_commands = {}
+
+        for _command in commands:
+            # Perform a deep copy so saved options will not be changed.
+            command: dict[str, Any] = deepcopy(_command)
+
+            if not command.get(CONF_ROOMS):
+                command[CONF_ROOMS] = self._listening_rooms
+
+            if command.get(CONF_WORD):
+                for room_id in command[CONF_ROOMS]:
+                    if room_id not in self._word_commands:
+                        self._word_commands[room_id] = {}
+                    self._word_commands[room_id][command[CONF_WORD]] = command
+            elif command.get(CONF_EXPRESSION):
+                command[CONF_EXPRESSION] = re.compile(command[CONF_EXPRESSION])
+
+                for room_id in command[CONF_ROOMS]:
+                    if room_id not in self._expression_commands:
+                        self._expression_commands[room_id] = []
+                    self._expression_commands[room_id].append(command)
+            else:
+                # Both CONF_WORD and CONF_EXPRESSION are missing. Shouldn't happen.
+                _LOGGER.error(
+                    f"Could not set up listener for command {command.get(CONF_NAME)}"
+                )
+
+        _LOGGER.debug(
+            f"Listening command list has been updated. Total listening commands: {len(commands)}. Currently listening commands: {', '.join((str(command.get(CONF_WORD) or command.get(CONF_EXPRESSION)) for command in [*commands]))}"
+        )
 
     def _handle_room_message(self, room_id, room, event):
         """Handle a message sent to a Matrix room."""
@@ -388,12 +427,25 @@ class MatrixBot(MatrixAuthentication):
         for room_id in self._listening_rooms:
             try:
                 room = self._join_or_get_room(room_id)
-                room.add_listener(
+                listener_id: uuid.UUID = room.add_listener(
                     partial(self._handle_room_message, room_id), "m.room.message"
                 )
+                self._listener_ids[room_id] = listener_id
 
             except MatrixRequestError as ex:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
+
+    def _leave_rooms(self):
+        """Remove all command listeners but don't really leave the room."""
+        while len(self._listening_rooms) > 0:
+            room_id: str = self._listening_rooms.pop()
+            room: Room | None = self._client.rooms.get(room_id)
+
+            if not room:
+                continue
+
+            room.remove_listener(self._listener_ids[room_id])
+            del self._listener_ids[room_id]
 
     def _send_image(self, img, target_rooms):
         _LOGGER.debug("Uploading file from path, %s", img)
