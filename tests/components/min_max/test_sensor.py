@@ -25,7 +25,9 @@ MEAN = round(sum(VALUES) / COUNT, 2)
 MEAN_1_DIGIT = round(sum(VALUES) / COUNT, 1)
 MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
 MEDIAN = round(statistics.median(VALUES), 2)
-RANGE = max(VALUES) - min(VALUES)
+RANGE = round(max(VALUES) - min(VALUES), 2)
+RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
+RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 
 
 async def test_min_sensor(hass):
@@ -150,11 +152,11 @@ async def test_mean_1_digit_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("median") == MEDIAN
-    assert state.attributes.get("range") == RANGE
+    assert state.attributes.get("range") == RANGE_1_DIGIT
 
 
 async def test_mean_4_digit_sensor(hass):
-    """Test the mean with 1-digit precision sensor."""
+    """Test the mean with 4-digit precision sensor."""
     config = {
         "sensor": {
             "platform": "min_max",
@@ -182,7 +184,7 @@ async def test_mean_4_digit_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("median") == MEDIAN
-    assert state.attributes.get("range") == RANGE
+    assert state.attributes.get("range") == RANGE_4_DIGITS
 
 
 async def test_median_sensor(hass):
