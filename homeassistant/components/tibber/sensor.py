@@ -556,7 +556,8 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
                     _sum = 0
                     last_stats_time = None
                 else:
-                    # hourly_consumption_data contains the last 30 days of consumption data.
+                    # hourly_consumption_data contains the last 30 days
+                    # of consumption data.
                     # We update the statistics with the last 30 days of data to handle corrections in the data.
                     hourly_consumption_data = home.hourly_consumption_data
 
