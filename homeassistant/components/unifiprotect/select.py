@@ -1,11 +1,12 @@
 """This component provides select entities for UniFi Protect."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
-from typing import Any, Callable, Final
+from typing import Any, Final
 
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
