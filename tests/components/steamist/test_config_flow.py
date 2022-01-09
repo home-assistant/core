@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.steamist.const import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_HOST
+from homeassistant.components.steamist.const import CONF_MODEL, DOMAIN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -20,6 +20,8 @@ from . import (
     DEVICE_HOSTNAME,
     DEVICE_IP_ADDRESS,
     DEVICE_MAC_ADDRESS,
+    DEVICE_MODEL,
+    DEVICE_NAME,
     DISCOVERY_30303,
     FORMATTED_MAC_ADDRESS,
     MOCK_ASYNC_GET_STATUS_INACTIVE,
@@ -28,6 +30,13 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+DEFAULT_ENTRY_DATA = {
+    CONF_HOST: DEVICE_IP_ADDRESS,
+    CONF_NAME: DEVICE_NAME,
+    CONF_MODEL: DEVICE_MODEL,
+}
+
 
 MODULE = "homeassistant.components.steamist"
 
@@ -92,11 +101,8 @@ async def test_form_with_discovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Master Bath"
-    assert result2["data"] == {
-        "name": "Master Bath",
-        "host": "127.0.0.1",
-    }
+    assert result2["title"] == DEVICE_NAME
+    assert result2["data"] == DEFAULT_ENTRY_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -185,8 +191,8 @@ async def test_discovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "Master Bath"
-    assert result3["data"] == {"host": "127.0.0.1", "name": "Master Bath"}
+    assert result3["title"] == DEVICE_NAME
+    assert result3["data"] == DEFAULT_ENTRY_DATA
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -267,7 +273,7 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"] == {"host": "127.0.0.1", "name": "Master Bath"}
+    assert result2["data"] == DEFAULT_ENTRY_DATA
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -295,7 +301,7 @@ async def test_discovered_by_dhcp(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"] == {"host": "127.0.0.1", "name": "Master Bath"}
+    assert result2["data"] == DEFAULT_ENTRY_DATA
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -346,7 +352,7 @@ async def test_discovered_by_dhcp_discovery_finds_non_steamist_device(
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     hass, source, data
 ):
-    """Test we can setup when discovered from dhcp or discovery."""
+    """Test we can setup when discovered from dhcp or discovery and add a missing unique id."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: DEVICE_IP_ADDRESS})
     config_entry.add_to_hass(hass)
 
@@ -366,3 +372,35 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     assert config_entry.unique_id == FORMATTED_MAC_ADDRESS
     assert mock_setup.called
     assert mock_setup_entry.called
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, DISCOVERY_30303),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery_existing_unique_id_does_not_reload(
+    hass, source, data
+):
+    """Test we can setup when discovered from dhcp or discovery and it does not reload."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=DEFAULT_ENTRY_DATA, unique_id=FORMATTED_MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_setup.called
+    assert not mock_setup_entry.called

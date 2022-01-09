@@ -17,7 +17,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONNECTION_EXCEPTIONS, DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .const import CONF_MODEL, CONNECTION_EXCEPTIONS, DISCOVER_SCAN_TIMEOUT, DOMAIN
 from .discovery import (
     async_discover_device,
     async_discover_devices,
@@ -111,9 +111,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_create_entry_from_device(self, device: Device30303) -> FlowResult:
         """Create a config entry from a device."""
         self._async_abort_entries_match({CONF_HOST: device.ipaddress})
+        data = {CONF_HOST: device.ipaddress, CONF_NAME: device.name}
+        if device.hostname:
+            data[CONF_MODEL] = device.hostname.split("-", maxsplit=1)[0]
         return self.async_create_entry(
             title=device.name,
-            data={CONF_HOST: device.ipaddress, CONF_NAME: device.name},
+            data=data,
         )
 
     async def async_step_pick_device(
