@@ -595,11 +595,10 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
                         )
                     )
 
-                unit = (
-                    ENERGY_KILO_WATT_HOUR
-                    if sensor_type == "consumption"
-                    else home.currency
-                )
+                if sensor_type == "consumption":
+                    unit = ENERGY_KILO_WATT_HOUR
+                else:
+                    unit = home.currency
                 metadata = StatisticMetaData(
                     has_mean=False,
                     has_sum=True,
