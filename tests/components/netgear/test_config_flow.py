@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.netgear.const import CONF_CONSIDER_HOME, DOMAIN, ORBI_PORT
+from homeassistant.components.netgear.const import CONF_CONSIDER_HOME, DOMAIN, PORT_80
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -211,12 +211,16 @@ async def test_ssdp_already_configured(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: SSDP_URL_SLL,
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-            ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
-            ssdp.ATTR_UPNP_SERIAL: SERIAL,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URL_SLL,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -227,12 +231,16 @@ async def test_ssdp(hass, service):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: SSDP_URL,
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-            ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
-            ssdp.ATTR_UPNP_SERIAL: SERIAL,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URL,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -244,7 +252,7 @@ async def test_ssdp(hass, service):
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
     assert result["data"].get(CONF_HOST) == HOST
-    assert result["data"].get(CONF_PORT) == ORBI_PORT
+    assert result["data"].get(CONF_PORT) == PORT_80
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD

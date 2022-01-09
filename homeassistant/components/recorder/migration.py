@@ -12,6 +12,7 @@ from sqlalchemy.exc import (
     SQLAlchemyError,
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
+from sqlalchemy.sql.expression import true
 
 from .models import (
     SCHEMA_VERSION,
@@ -24,7 +25,7 @@ from .models import (
     StatisticsShortTerm,
     process_timestamp,
 )
-from .statistics import get_metadata_with_session, get_start_time
+from .statistics import delete_duplicates, get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -219,7 +220,7 @@ def _add_columns(connection, table_name, columns_def):
                 )
             )
         except (InternalError, OperationalError) as err:
-            raise_if_exception_missing_str(err, ["duplicate"])
+            raise_if_exception_missing_str(err, ["already exists", "duplicate"])
             _LOGGER.warning(
                 "Column %s already exists on %s, continuing",
                 column_def.split(" ")[1],
@@ -558,21 +559,25 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                     session.add(StatisticsRuns(start=fake_start_time))
                     fake_start_time += timedelta(minutes=5)
 
-        # Copy last hourly statistic to the newly created 5-minute statistics table
-        sum_statistics = get_metadata_with_session(
-            instance.hass, session, statistic_type="sum"
-        )
-        for metadata_id, _ in sum_statistics.values():
+        # When querying the database, be careful to only explicitly query for columns
+        # which were present in schema version 21. If querying the table, SQLAlchemy
+        # will refer to future columns.
+        for sum_statistic in session.query(StatisticsMeta.id).filter_by(has_sum=true()):
             last_statistic = (
-                session.query(Statistics)
-                .filter_by(metadata_id=metadata_id)
+                session.query(
+                    Statistics.start,
+                    Statistics.last_reset,
+                    Statistics.state,
+                    Statistics.sum,
+                )
+                .filter_by(metadata_id=sum_statistic.id)
                 .order_by(Statistics.start.desc())
                 .first()
             )
             if last_statistic:
                 session.add(
                     StatisticsShortTerm(
-                        metadata_id=last_statistic.metadata_id,
+                        metadata_id=sum_statistic.id,
                         start=last_statistic.start,
                         last_reset=last_statistic.last_reset,
                         state=last_statistic.state,
@@ -582,6 +587,22 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
     elif new_version == 23:
         # Add name column to StatisticsMeta
         _add_columns(session, "statistics_meta", ["name VARCHAR(255)"])
+    elif new_version == 24:
+        # Delete duplicated statistics
+        delete_duplicates(instance, session)
+        # Recreate statistics indices to block duplicated statistics
+        _drop_index(connection, "statistics", "ix_statistics_statistic_id_start")
+        _create_index(connection, "statistics", "ix_statistics_statistic_id_start")
+        _drop_index(
+            connection,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+        )
+        _create_index(
+            connection,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+        )
 
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")

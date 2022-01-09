@@ -5,7 +5,7 @@ from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manufacturer="Nightscout Foundation",
         name=status.name,
         sw_version=status.version,
-        entry_type="service",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

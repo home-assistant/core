@@ -14,6 +14,10 @@
             "0": "Madal tundlikkus",
             "1": "K\u00f5rge tundlikkus"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Vajutus",
+            "switch": "L\u00fcliti"
+        },
         "tuya__ipc_work_mode": {
             "0": "Madala energiatarbega re\u017eiim",
             "1": "Pidev t\u00f6\u00f6re\u017eiim"

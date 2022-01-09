@@ -5,9 +5,9 @@ from fjaraskupan import Device, State
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, TIME_MINUTES
+from homeassistant.const import TIME_MINUTES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -22,7 +22,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensors dynamically through discovery."""
+    """Set up number entities dynamically through discovery."""
 
     def _constructor(device_state: DeviceState) -> list[Entity]:
         return [
@@ -40,8 +40,7 @@ class PeriodicVentingTime(CoordinatorEntity[State], NumberEntity):
     _attr_max_value: float = 59
     _attr_min_value: float = 0
     _attr_step: float = 1
-    _attr_entity_registry_enabled_default = True
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_unit_of_measurement = TIME_MINUTES
 
     def __init__(
@@ -50,7 +49,7 @@ class PeriodicVentingTime(CoordinatorEntity[State], NumberEntity):
         device: Device,
         device_info: DeviceInfo,
     ) -> None:
-        """Init sensor."""
+        """Init number entities."""
         super().__init__(coordinator)
         self._device = device
         self._attr_unique_id = f"{device.address}-periodic-venting"

@@ -1032,12 +1032,13 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     recorder.do_adhoc_statistics(start=period2)
     wait_recording_done(hass)
     state = states["sensor.test1"][6].state
+    previous_state = float(states["sensor.test1"][5].state)
     last_updated = states["sensor.test1"][6].last_updated.isoformat()
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
-        f"strictly increasing. Triggered by state {state} with last_updated set to "
-        f"{last_updated}. Please create a bug report at https://github.com/home-assistant"
-        "/core/issues?q=is%3Aopen+is%3Aissue"
+        f"strictly increasing. Triggered by state {state} ({previous_state}) with "
+        f"last_updated set to {last_updated}. Please create a bug report at "
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [

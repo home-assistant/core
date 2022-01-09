@@ -1,4 +1,6 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
+from __future__ import annotations
+
 import logging
 from random import randrange
 from typing import NamedTuple
@@ -34,10 +36,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +103,12 @@ MAP_STATE_ICONS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the IntesisHome climate devices."""
     ih_user = config[CONF_USERNAME]
     ih_pass = config[CONF_PASSWORD]
@@ -120,8 +130,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("Error connecting to the %s server", device_type)
         raise PlatformNotReady from ex
 
-    ih_devices = controller.get_devices()
-    if ih_devices:
+    if ih_devices := controller.get_devices():
         async_add_entities(
             [
                 IntesisAC(ih_device_id, device, controller)
@@ -194,8 +203,7 @@ class IntesisAC(ClimateEntity):
             self._support |= SUPPORT_PRESET_MODE
 
         # Setup HVAC modes
-        modes = controller.get_mode_list(ih_device_id)
-        if modes:
+        if modes := controller.get_mode_list(ih_device_id):
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
             self._hvac_mode_list.extend(mode_list)
         self._hvac_mode_list.append(HVAC_MODE_OFF)

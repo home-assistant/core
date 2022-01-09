@@ -4,7 +4,9 @@ from __future__ import annotations
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.camera import Camera
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, AccessoryEntity
 
@@ -18,11 +20,6 @@ class HomeKitCamera(AccessoryEntity, Camera):
         """Define the homekit characteristics the entity is tracking."""
         return []
 
-    @property
-    def state(self):
-        """Return the current state of the camera."""
-        return "idle"
-
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -34,7 +31,11 @@ class HomeKitCamera(AccessoryEntity, Camera):
         )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit sensors."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]

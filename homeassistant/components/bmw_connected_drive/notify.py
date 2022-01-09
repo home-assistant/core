@@ -9,8 +9,6 @@ from bimmer_connected.vehicle import ConnectedDriveVehicle
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_LATITUDE, ATTR_LOCATION, ATTR_LONGITUDE, ATTR_NAME
@@ -63,7 +61,6 @@ class BMWNotificationService(BaseNotificationService):
             _LOGGER.debug("Sending message to %s", vehicle.name)
 
             # Extract params from data dict
-            title: str = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             data = kwargs.get(ATTR_DATA)
 
             # Check if message is a POI
@@ -84,6 +81,4 @@ class BMWNotificationService(BaseNotificationService):
 
                 vehicle.remote_services.trigger_send_poi(location_dict)
             else:
-                vehicle.remote_services.trigger_send_message(
-                    {ATTR_TEXT: message, ATTR_SUBJECT: title}
-                )
+                raise ValueError(f"'data.{ATTR_LOCATION}' is required.")

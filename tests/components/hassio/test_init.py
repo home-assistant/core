@@ -59,7 +59,7 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -165,8 +165,8 @@ async def test_setup_api_panel(hass, aioclient_mock):
 
     assert panels.get("hassio").to_response() == {
         "component_name": "custom",
-        "icon": "hass:home-assistant",
-        "title": "Supervisor",
+        "icon": None,
+        "title": None,
         "url_path": "hassio",
         "require_admin": True,
         "config": {

@@ -2,8 +2,8 @@
 import logging
 from typing import Any
 
-from bimmer_connected.state import LockState
 from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle_status import LockState
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -78,8 +78,10 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
 
     def update(self) -> None:
         """Update state of the lock."""
-        _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
-        vehicle_state = self._vehicle.state
+        _LOGGER.debug(
+            "Updating lock data for '%s' of %s", self._attribute, self._vehicle.name
+        )
+        vehicle_state = self._vehicle.status
         if not self.door_lock_state_available:
             self._attr_is_locked = None
         else:

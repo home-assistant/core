@@ -14,6 +14,10 @@
             "0": "\u4f4e\u654f\u611f\u5ea6",
             "1": "\u9ad8\u654f\u611f\u5ea6"
         },
+        "tuya__fingerbot_mode": {
+            "click": "\u63a8",
+            "switch": "\u958b\u95dc"
+        },
         "tuya__ipc_work_mode": {
             "0": "\u4f4e\u529f\u8017\u6a21\u5f0f",
             "1": "\u6301\u7e8c\u5de5\u4f5c\u6a21\u5f0f"

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u91cd\u9a8c\u8bc1\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u8eab\u4efd\u8ba4\u8bc1\u65e0\u6548"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u5bc6\u94a5"
+                },
+                "description": "Tailscale API \u5bc6\u94a5\u6709\u6548\u671f\u4e3a 90 \u5929\u3002\u60a8\u53ef\u4ee5\u5728\u4e0b\u65b9\u7f51\u9875\u5730\u5740\u4e2d\u91cd\u65b0\u5efa\u7acb\u4e00\u4e2a API \u5bc6\u94a5\uff1a\nhttps://login.tailscale.com/admin/settings/authkeys."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u94a5",
+                    "tailnet": "Tailnet"
+                },
+                "description": "Home Assistant \u4e0e Tailsacle \u8fde\u63a5\u9700\u8981\u8fdb\u884c\u8eab\u4efd\u9a8c\u8bc1\uff0c\u60a8\u9700\u8981\u5728\u4e0b\u65b9\u7f51\u9875\u5730\u5740\u4e2d\u521b\u5efa\u4e00\u4e2a API \u5bc6\u94a5\uff1a\nhttps://login.tailscale.com/admin/settings/authkeys\n\nTailnet \u662f\u60a8\u7684 Tailscale \u7f51\u7edc\u7684\u540d\u79f0\u3002\u60a8\u53ef\u4ee5\u5728 Tailscale Admin Panel (\u4e8e Tailscale \u5546\u6807\u7684\u65c1\u8fb9)\u9875\u9762\u4e2d\u5de6\u4e0a\u89d2\u627e\u5230\u5b83"
+            }
+        }
+    }
+}

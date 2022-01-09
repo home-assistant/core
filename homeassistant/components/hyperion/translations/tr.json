@@ -12,19 +12,22 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim belirteci"
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131"
         },
         "step": {
             "auth": {
                 "data": {
                     "create_token": "Otomatik olarak yeni belirte\u00e7 olu\u015fturma",
                     "token": "Veya \u00f6nceden varolan belirte\u00e7 leri sa\u011flay\u0131n"
-                }
+                },
+                "description": "Hyperion Ambilight sunucunuz i\u00e7in yetkilendirmeyi yap\u0131land\u0131r\u0131n"
             },
             "confirm": {
+                "description": "Bu Hyperion Ambilight'\u0131 Home Assistant'a eklemek istiyor musunuz? \n\n **Ana bilgisayar:** {host}\n **:** {port}\n **Kimlik**: {id}",
                 "title": "Hyperion Ambilight hizmetinin eklenmesini onaylay\u0131n"
             },
             "create_token": {
+                "description": "Yeni bir kimlik do\u011frulama belirteci istemek i\u00e7in a\u015fa\u011f\u0131dan **G\u00f6nder**'i se\u00e7in. \u0130ste\u011fi onaylamak i\u00e7in Hyperion kullan\u0131c\u0131 aray\u00fcz\u00fcne y\u00f6nlendirileceksiniz. L\u00fctfen g\u00f6sterilen kimli\u011fin \" {auth_id} \" oldu\u011funu do\u011frulay\u0131n",
                 "title": "Otomatik olarak yeni kimlik do\u011frulama belirteci olu\u015fturun"
             },
             "create_token_external": {
@@ -32,7 +35,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port"
                 }
             }
@@ -42,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Hyperion efektleri g\u00f6sterilecek",
                     "priority": "Renkler ve efektler i\u00e7in kullan\u0131lacak hyperion \u00f6nceli\u011fi"
                 }
             }

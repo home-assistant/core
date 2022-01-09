@@ -47,9 +47,13 @@ from .const import (
     KEY_PREVIOUS_TRACK,
     KEY_REWIND,
     KEY_SELECT,
-    MAX_NAME_LENGTH,
     SERV_INPUT_SOURCE,
     SERV_TELEVISION,
+)
+from .util import cleanup_name_for_homekit
+
+MAXIMUM_SOURCES = (
+    90  # Maximum services per accessory is 100. The base acccessory uses 9
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +96,16 @@ class RemoteInputSelectAccessory(HomeAccessory):
         self.sources = []
         self.support_select_source = False
         if features & required_feature:
-            self.sources = state.attributes.get(source_list_key, [])
+            sources = state.attributes.get(source_list_key, [])
+            if len(sources) > MAXIMUM_SOURCES:
+                _LOGGER.warning(
+                    "%s: Reached maximum number of sources (%s)",
+                    self.entity_id,
+                    MAXIMUM_SOURCES,
+                )
+            self.sources = [
+                cleanup_name_for_homekit(source) for source in sources[:MAXIMUM_SOURCES]
+            ]
             if self.sources:
                 self.support_select_source = True
 
@@ -121,10 +134,8 @@ class RemoteInputSelectAccessory(HomeAccessory):
                 SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
             )
             serv_tv.add_linked_service(serv_input)
-            serv_input.configure_char(
-                CHAR_CONFIGURED_NAME, value=source[:MAX_NAME_LENGTH]
-            )
-            serv_input.configure_char(CHAR_NAME, value=source[:MAX_NAME_LENGTH])
+            serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
+            serv_input.configure_char(CHAR_NAME, value=source)
             serv_input.configure_char(CHAR_IDENTIFIER, value=index)
             serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
             input_type = 3 if "hdmi" in source.lower() else 0
@@ -150,7 +161,8 @@ class RemoteInputSelectAccessory(HomeAccessory):
         # Set active input
         if not self.support_select_source or not self.sources:
             return
-        source_name = new_state.attributes.get(self.source_key)
+        source = new_state.attributes.get(self.source_key)
+        source_name = cleanup_name_for_homekit(source)
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
         if source_name in self.sources:
             index = self.sources.index(source_name)
@@ -158,19 +170,27 @@ class RemoteInputSelectAccessory(HomeAccessory):
             return
 
         possible_sources = new_state.attributes.get(self.source_list_key, [])
-        if source_name in possible_sources:
-            _LOGGER.debug(
-                "%s: Sources out of sync. Rebuilding Accessory",
-                self.entity_id,
-            )
-            # Sources are out of sync, recreate the accessory
-            self.async_reset()
-            return
+        if source in possible_sources:
+            index = possible_sources.index(source)
+            if index >= MAXIMUM_SOURCES:
+                _LOGGER.debug(
+                    "%s: Source %s and above are not supported",
+                    self.entity_id,
+                    MAXIMUM_SOURCES,
+                )
+            else:
+                _LOGGER.debug(
+                    "%s: Sources out of sync. Rebuilding Accessory",
+                    self.entity_id,
+                )
+                # Sources are out of sync, recreate the accessory
+                self.async_reset()
+                return
 
         _LOGGER.debug(
             "%s: Source %s does not exist the source list: %s",
             self.entity_id,
-            source_name,
+            source,
             possible_sources,
         )
         self.char_input_source.set_value(0)

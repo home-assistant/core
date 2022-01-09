@@ -64,8 +64,7 @@ class AbstractConfig(ABC):
 
     async def async_disable_proactive_mode(self):
         """Disable proactive mode."""
-        unsub_func = await self._unsub_proactive_report
-        if unsub_func:
+        if unsub_func := await self._unsub_proactive_report:
             unsub_func()
         self._unsub_proactive_report = None
 

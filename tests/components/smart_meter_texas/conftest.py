@@ -2,7 +2,6 @@
 import asyncio
 from http import HTTPStatus
 import json
-from pathlib import Path
 
 import pytest
 from smart_meter_texas.const import (
@@ -29,7 +28,7 @@ TEST_ENTITY_ID = "sensor.electric_meter_123456789"
 
 def load_smt_fixture(name):
     """Return a dict of the json fixture."""
-    json_fixture = load_fixture(Path() / DOMAIN / f"{name}.json")
+    json_fixture = load_fixture(f"{name}.json", DOMAIN)
     return json.loads(json_fixture)
 
 

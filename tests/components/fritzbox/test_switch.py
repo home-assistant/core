@@ -4,16 +4,11 @@ from unittest.mock import Mock
 
 from requests.exceptions import HTTPError
 
-from homeassistant.components.fritzbox.const import (
-    ATTR_STATE_DEVICE_LOCKED,
-    ATTR_STATE_LOCKED,
-    DOMAIN as FB_DOMAIN,
-)
+from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorStateClass,
 )
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
@@ -51,18 +46,14 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
-    assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
-    assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert ATTR_STATE_CLASS not in state.attributes
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_temperature")
     assert state
     assert state.state == "1.23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Temperature"
-    assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
-    assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(f"{ENTITY_ID}_humidity")
     assert state is None
@@ -72,14 +63,14 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.state == "5.678"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Power Consumption"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_total_energy")
     assert state
     assert state.state == "1.234"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Total Energy"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
 
 
 async def test_turn_on(hass: HomeAssistant, fritz: Mock):

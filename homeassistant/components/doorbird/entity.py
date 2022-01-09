@@ -28,6 +28,7 @@ class DoorBirdEntity(Entity):
         firmware = self._doorstation_info[DOORBIRD_INFO_KEY_FIRMWARE]
         firmware_build = self._doorstation_info[DOORBIRD_INFO_KEY_BUILD_NUMBER]
         return DeviceInfo(
+            configuration_url="https://webadmin.doorbird.com/",
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac_addr)},
             manufacturer=MANUFACTURER,
             model=self._doorstation_info[DOORBIRD_INFO_KEY_DEVICE_TYPE],

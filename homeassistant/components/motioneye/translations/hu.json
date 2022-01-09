@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Stream URL-sablon",
                     "webhook_set": "\u00c1ll\u00edtsa be a motionEye webhookokat az esem\u00e9nyek jelent\u00e9s\u00e9nek Home Assistant sz\u00e1m\u00e1ra",
                     "webhook_set_overwrite": "Fel\u00fcl\u00edrja a fel nem ismert webhookokat"
                 }

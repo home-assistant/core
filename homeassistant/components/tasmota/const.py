@@ -1,4 +1,6 @@
 """Constants used by multiple Tasmota modules."""
+from homeassistant.const import Platform
+
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 
 DATA_REMOVE_DISCOVER_COMPONENT = "tasmota_discover_{}"
@@ -9,12 +11,12 @@ DEFAULT_PREFIX = "tasmota/discovery"
 DOMAIN = "tasmota"
 
 PLATFORMS = [
-    "binary_sensor",
-    "cover",
-    "fan",
-    "light",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 TASMOTA_EVENT = "tasmota_event"

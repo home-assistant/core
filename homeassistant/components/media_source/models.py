@@ -93,9 +93,7 @@ class MediaSourceItem:
     @classmethod
     def from_uri(cls, hass: HomeAssistant, uri: str) -> MediaSourceItem:
         """Create an item from a uri."""
-        match = URI_SCHEME_REGEX.match(uri)
-
-        if not match:
+        if not (match := URI_SCHEME_REGEX.match(uri)):
             raise ValueError("Invalid media source URI")
 
         domain = match.group("domain")

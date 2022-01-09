@@ -1,9 +1,10 @@
 {
     "device_automation": {
         "action_type": {
-            "arm_away": "D\u0131\u015farda",
-            "arm_home": "Evde",
-            "arm_night": "Gece",
+            "arm_away": "{entity_name} Uzakta Alarm",
+            "arm_home": "{entity_name} Evde Alarm",
+            "arm_night": "{entity_name} Gece Alarm",
+            "arm_vacation": "{entity_name} Alarm - Tatil Modu",
             "disarm": "Devre d\u0131\u015f\u0131 {entity_name}",
             "trigger": "Tetikle {entity_name}"
         },
@@ -11,6 +12,7 @@
             "is_armed_away": "{entity_name} D\u0131\u015farda Modu Aktif",
             "is_armed_home": "{entity_name} Evde Modu Aktif",
             "is_armed_night": "{entity_name} Gece Modu Aktif",
+            "is_armed_vacation": "{entity_name} Alarm a\u00e7\u0131k - Tatil Modu",
             "is_disarmed": "{entity_name} Devre D\u0131\u015f\u0131",
             "is_triggered": "{entity_name} tetiklendi"
         },
@@ -18,6 +20,7 @@
             "armed_away": "{entity_name} D\u0131\u015farda Modu Aktif",
             "armed_home": "{entity_name} Evde Modu Aktif",
             "armed_night": "{entity_name} Gece Modu Aktif",
+            "armed_vacation": "{entity_name} Alarm Tatil Modunda",
             "disarmed": "{entity_name} Devre D\u0131\u015f\u0131",
             "triggered": "{entity_name} tetiklendi"
         }
@@ -29,6 +32,7 @@
             "armed_custom_bypass": "\u00d6zel Mod Aktif",
             "armed_home": "Evde Aktif",
             "armed_night": "Gece Aktif",
+            "armed_vacation": "Alarm - Tatil Modu",
             "arming": "Alarm etkinle\u015fiyor",
             "disarmed": "Devre D\u0131\u015f\u0131",
             "disarming": "Alarm devre d\u0131\u015f\u0131",

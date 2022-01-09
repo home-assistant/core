@@ -7,14 +7,14 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "pairing_failed": "Associazione fallita; verificare che il controller Bosch Smart Home sia in modalit\u00e0 di associazione (LED lampeggiante) e che la password sia corretta.",
+            "pairing_failed": "Associazione non riuscita; verifica che il controller Bosch Smart Home sia in modalit\u00e0 di associazione (LED lampeggiante) e che la password sia corretta.",
             "session_error": "Errore di sessione: l'API restituisce il risultato Non-OK.",
             "unknown": "Errore imprevisto"
         },
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Premere il pulsante sul lato anteriore del controller Bosch Smart Home finch\u00e9 il LED non inizia a lampeggiare.\nPronto per continuare a configurare {model} @ {host} con Home Assistant?"
+                "description": "Premi il pulsante sul lato anteriore del controller Bosch Smart Home finch\u00e9 il LED non inizia a lampeggiare.\nSei pronto per continuare a configurare {model} @ {host} con Home Assistant?"
             },
             "credentials": {
                 "data": {
@@ -23,7 +23,7 @@
             },
             "reauth_confirm": {
                 "description": "L'integrazione bosch_shc deve autenticare nuovamente il tuo account",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {

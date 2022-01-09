@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -223,7 +224,7 @@ def setup(hass, config):
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
 
-    def handle_write_data_by_name(call):
+    def handle_write_data_by_name(call: ServiceCall) -> None:
         """Write a value to the connected ADS device."""
         ads_var = call.data.get(CONF_ADS_VAR)
         ads_type = call.data.get(CONF_ADS_TYPE)
@@ -411,7 +412,7 @@ class AdsEntity(Entity):
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)

@@ -1,5 +1,4 @@
 """The tests for the group fan platform."""
-from os import path
 from unittest.mock import patch
 
 import pytest
@@ -38,7 +37,7 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, get_fixture_path
 
 FAN_GROUP = "fan.fan_group"
 
@@ -379,11 +378,7 @@ async def test_reload(hass, setup_comp):
     await hass.async_block_till_done()
     assert hass.states.get(FAN_GROUP).state == STATE_OFF
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "group/fan_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("fan_configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "group",
@@ -395,10 +390,6 @@ async def test_reload(hass, setup_comp):
 
     assert hass.states.get(FAN_GROUP) is None
     assert hass.states.get("fan.upstairs_fans") is not None
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])

@@ -102,7 +102,7 @@ class ExampleLoginFlow(LoginFlow):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the step of the form."""
-        errors = {}
+        errors = None
 
         if user_input is not None:
             try:
@@ -110,7 +110,7 @@ class ExampleLoginFlow(LoginFlow):
                     user_input["username"], user_input["password"]
                 )
             except InvalidAuthError:
-                errors["base"] = "invalid_auth"
+                errors = {"base": "invalid_auth"}
 
             if not errors:
                 user_input.pop("password")

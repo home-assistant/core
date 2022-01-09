@@ -22,18 +22,25 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     entity_registry = mock_registry(hass)
 
     entity_entry1 = entity_registry.async_get_or_create(
-        "switch",
+        "light",
         "test",
-        "switch_config_id",
-        suggested_object_id="config_switch",
+        "light_config_id",
+        suggested_object_id="config_light",
         entity_category="config",
     )
     entity_entry2 = entity_registry.async_get_or_create(
-        "switch",
+        "light",
         "test",
-        "switch_diagnostic_id",
-        suggested_object_id="diagnostic_switch",
+        "light_diagnostic_id",
+        suggested_object_id="diagnostic_light",
         entity_category="diagnostic",
+    )
+    entity_entry3 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_system_id",
+        suggested_object_id="system_light",
+        entity_category="system",
     )
 
     entity_conf = {"should_expose": False}
@@ -50,18 +57,21 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     assert not conf.should_expose("light.kitchen")
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
+    assert not conf.should_expose(entity_entry3.entity_id)
 
     entity_conf["should_expose"] = True
     assert conf.should_expose("light.kitchen")
     # config and diagnostic entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
+    assert not conf.should_expose(entity_entry3.entity_id)
 
     entity_conf["should_expose"] = None
     assert conf.should_expose("light.kitchen")
     # config and diagnostic entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
+    assert not conf.should_expose(entity_entry3.entity_id)
 
     assert "alexa" not in hass.config.components
     await cloud_prefs.async_update(

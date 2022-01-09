@@ -40,13 +40,13 @@
             "btn_down": "{subtype} Taste nach unten",
             "btn_up": "{subtype} Taste nach oben",
             "double": "{subtype} zweifach bet\u00e4tigt",
-            "double_push": "{subtype} Doppelter Push",
+            "double_push": "{subtype} Doppel-Druck",
             "long": "{subtype} lange angeklickt",
             "long_push": "{subtype} langer Druck",
             "long_single": "{subtype} gehalten und dann einfach bet\u00e4tigt",
             "single": "{subtype} einfach bet\u00e4tigt",
             "single_long": "{subtype} einfach bet\u00e4tigt und dann gehalten",
-            "single_push": "{subtype} einzelner Push",
+            "single_push": "{subtype} einfacher Druck",
             "triple": "{subtype} dreifach bet\u00e4tigt"
         }
     }

@@ -1,6 +1,6 @@
 """Test code shared between test files."""
 
-from pyatv import conf, interface
+from pyatv import conf, const, interface
 from pyatv.const import Protocol
 
 
@@ -47,3 +47,37 @@ def create_conf(name, address, *services):
     for service in services:
         atv.add_service(service)
     return atv
+
+
+def mrp_service(enabled=True, unique_id="mrpid"):
+    """Create example MRP service."""
+    return conf.ManualService(
+        unique_id,
+        Protocol.MRP,
+        5555,
+        {},
+        pairing_requirement=const.PairingRequirement.Mandatory,
+        enabled=enabled,
+    )
+
+
+def airplay_service():
+    """Create example AirPlay service."""
+    return conf.ManualService(
+        "airplayid",
+        Protocol.AirPlay,
+        7777,
+        {},
+        pairing_requirement=const.PairingRequirement.Mandatory,
+    )
+
+
+def raop_service():
+    """Create example RAOP service."""
+    return conf.ManualService(
+        "AABBCCDDEEFF",
+        Protocol.RAOP,
+        7000,
+        {},
+        pairing_requirement=const.PairingRequirement.Mandatory,
+    )

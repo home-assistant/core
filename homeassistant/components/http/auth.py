@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+from ipaddress import ip_address
 import logging
 import secrets
 from typing import Final
@@ -12,10 +13,13 @@ from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
 
+from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
+from homeassistant.util.network import is_local
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
+from .request_context import current_request
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +51,42 @@ def async_sign_path(
 
 
 @callback
+def async_user_not_allowed_do_auth(
+    hass: HomeAssistant, user: User, request: Request | None = None
+) -> str | None:
+    """Validate that user is not allowed to do auth things."""
+    if not user.is_active:
+        return "User is not active"
+
+    if not user.local_only:
+        return None
+
+    # User is marked as local only, check if they are allowed to do auth
+    if request is None:
+        request = current_request.get()
+
+    if not request:
+        return "No request available to validate local access"
+
+    if "cloud" in hass.config.components:
+        # pylint: disable=import-outside-toplevel
+        from hass_nabucasa import remote
+
+        if remote.is_cloud_request.get():
+            return "User is local only"
+
+    try:
+        remote = ip_address(request.remote)
+    except ValueError:
+        return "Invalid remote IP"
+
+    if is_local(remote):
+        return None
+
+    return "User cannot authenticate remotely"
+
+
+@callback
 def setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
 
@@ -70,6 +110,9 @@ def setup_auth(hass: HomeAssistant, app: Application) -> None:
         refresh_token = await hass.auth.async_validate_access_token(auth_val)
 
         if refresh_token is None:
+            return False
+
+        if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
             return False
 
         request[KEY_HASS_USER] = refresh_token.user

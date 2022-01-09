@@ -3,15 +3,13 @@
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.number import NumberMode
 from homeassistant.components.number.const import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
     DOMAIN,
-    MODE_AUTO,
-    MODE_BOX,
-    MODE_SLIDER,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
@@ -42,25 +40,25 @@ def test_default_setup_params(hass):
     assert state.attributes.get(ATTR_MIN) == 0.0
     assert state.attributes.get(ATTR_MAX) == 100.0
     assert state.attributes.get(ATTR_STEP) == 1.0
-    assert state.attributes.get(ATTR_MODE) == MODE_SLIDER
+    assert state.attributes.get(ATTR_MODE) == NumberMode.SLIDER
 
     state = hass.states.get(ENTITY_PWM)
     assert state.attributes.get(ATTR_MIN) == 0.0
     assert state.attributes.get(ATTR_MAX) == 1.0
     assert state.attributes.get(ATTR_STEP) == 0.01
-    assert state.attributes.get(ATTR_MODE) == MODE_BOX
+    assert state.attributes.get(ATTR_MODE) == NumberMode.BOX
 
     state = hass.states.get(ENTITY_LARGE_RANGE)
     assert state.attributes.get(ATTR_MIN) == 1.0
     assert state.attributes.get(ATTR_MAX) == 1000.0
     assert state.attributes.get(ATTR_STEP) == 1.0
-    assert state.attributes.get(ATTR_MODE) == MODE_AUTO
+    assert state.attributes.get(ATTR_MODE) == NumberMode.AUTO
 
     state = hass.states.get(ENTITY_SMALL_RANGE)
     assert state.attributes.get(ATTR_MIN) == 1.0
     assert state.attributes.get(ATTR_MAX) == 255.0
     assert state.attributes.get(ATTR_STEP) == 1.0
-    assert state.attributes.get(ATTR_MODE) == MODE_AUTO
+    assert state.attributes.get(ATTR_MODE) == NumberMode.AUTO
 
 
 async def test_set_value_bad_attr(hass):

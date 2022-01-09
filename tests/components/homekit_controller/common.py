@@ -9,6 +9,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController
 
+from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
@@ -118,17 +119,19 @@ async def device_config_changed(hass, accessories):
         accessories_obj.add_accessory(accessory)
     pairing.accessories = accessories_obj
 
-    discovery_info = {
-        "name": "TestDevice",
-        "host": "127.0.0.1",
-        "port": 8080,
-        "properties": {
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="127.0.0.1",
+        hostname="mock_hostname",
+        name="TestDevice",
+        port=8080,
+        properties={
             "md": "TestDevice",
             "id": "00:00:00:00:00:00",
             "c#": "2",
             "sf": "0",
         },
-    }
+        type="mock_type",
+    )
 
     # Config Flow will abort and notify us if the discovery event is of
     # interest - in this case c# has incremented

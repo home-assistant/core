@@ -7,6 +7,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_LIGHTS, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ADS_VAR,
@@ -18,7 +21,12 @@ from . import (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the light platform for ADS."""
     entities = []
 

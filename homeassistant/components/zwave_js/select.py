@@ -11,6 +11,7 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntit
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
@@ -52,6 +53,8 @@ async def async_setup_entry(
 class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
     """Representation of a Z-Wave select entity."""
 
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
     ) -> None:
@@ -85,6 +88,8 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
 
 class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
     """Representation of a Z-Wave default tone select entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo

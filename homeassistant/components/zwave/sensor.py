@@ -1,13 +1,19 @@
 """Support for Z-Wave sensors."""
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, DOMAIN, SensorEntity
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveDeviceEntity, const
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Sensor from Config Entry."""
 
     @callback
@@ -83,7 +89,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
     def device_class(self):
         """Return the class of this device."""
         if self._units in ["C", "F"]:
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         return None
 
     @property
@@ -115,4 +121,4 @@ class ZWaveBatterySensor(ZWaveSensor):
     @property
     def device_class(self):
         """Return the class of this device."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY

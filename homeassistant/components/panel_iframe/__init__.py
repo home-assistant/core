@@ -2,7 +2,9 @@
 import voluptuous as vol
 
 from homeassistant.const import CONF_ICON, CONF_URL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "panel_iframe"
 
@@ -35,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iFrame frontend panels."""
     for url_path, info in config[DOMAIN].items():
         hass.components.frontend.async_register_built_in_panel(

@@ -5,7 +5,7 @@ import pysmarthab
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "smarthab"
 DATA_HUB = "hub"
-PLATFORMS = ["light", "cover"]
+PLATFORMS = [Platform.LIGHT, Platform.COVER]
 
 _LOGGER = logging.getLogger(__name__)
 

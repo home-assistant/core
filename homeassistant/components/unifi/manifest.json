@@ -1,6 +1,6 @@
 {
   "domain": "unifi",
-  "name": "Ubiquiti UniFi",
+  "name": "UniFi Network",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifi",
   "requirements": [

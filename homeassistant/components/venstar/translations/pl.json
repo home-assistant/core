@@ -4,7 +4,20 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "pin": "Kod PIN",
+                    "ssl": "Certyfikat SSL",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Po\u0142\u0105cz z termostatem Venstar"
+            }
         }
     }
 }

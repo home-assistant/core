@@ -96,6 +96,7 @@ class HarmonyData(HarmonySubscriberMixin):
             sw_version=self._client.hub_config.info.get(
                 "hubSwVersion", self._client.fw_version
             ),
+            configuration_url="https://www.logitech.com/en-us/my-account",
         )
 
     async def connect(self) -> bool:

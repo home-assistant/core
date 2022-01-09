@@ -8,7 +8,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -34,7 +36,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteo-France sensor platform."""
     coordinator_forecast = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
@@ -96,7 +98,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
@@ -141,11 +143,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
             (cadran for cadran in self.coordinator.data.forecast if cadran["rain"] > 1),
             None,
         )
-        return (
-            dt_util.utc_from_timestamp(next_rain["dt"]).isoformat()
-            if next_rain
-            else None
-        )
+        return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
     def extra_state_attributes(self):

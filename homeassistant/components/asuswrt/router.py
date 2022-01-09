@@ -24,6 +24,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -45,6 +47,7 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
+    SENSORS_TEMPERATURES,
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
@@ -58,6 +61,7 @@ SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
 SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
 SENSORS_TYPE_RATES = "sensors_rates"
+SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +116,15 @@ class AsusWrtSensorDataHandler:
 
         return _get_dict(SENSORS_LOAD_AVG, avg)
 
+    async def _get_temperatures(self):
+        """Fetch temperatures information from the router."""
+        try:
+            temperatures = await self._api.async_get_temperature()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return temperatures
+
     def update_device_count(self, conn_devices: int):
         """Update connected devices attribute."""
         if self._connected_devices == conn_devices:
@@ -129,6 +142,8 @@ class AsusWrtSensorDataHandler:
             method = self._get_load_avg
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
+        elif sensor_type == SENSORS_TYPE_TEMPERATURES:
+            method = self._get_temperatures
         else:
             raise RuntimeError(f"Invalid sensor type: {sensor_type}")
 
@@ -249,17 +264,32 @@ class AsusWrtRouter:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        track_entries = (
-            self.hass.helpers.entity_registry.async_entries_for_config_entry(
-                entity_registry, self._entry.entry_id
-            )
+        entity_reg = er.async_get(self.hass)
+        track_entries = er.async_entries_for_config_entry(
+            entity_reg, self._entry.entry_id
         )
         for entry in track_entries:
-            if entry.domain == TRACKER_DOMAIN:
-                self._devices[entry.unique_id] = AsusWrtDevInfo(
-                    entry.unique_id, entry.original_name
+
+            if entry.domain != TRACKER_DOMAIN:
+                continue
+            device_mac = format_mac(entry.unique_id)
+
+            # migrate entity unique ID if wrong formatted
+            if device_mac != entry.unique_id:
+                existing_entity_id = entity_reg.async_get_entity_id(
+                    DOMAIN, TRACKER_DOMAIN, device_mac
                 )
+                if existing_entity_id:
+                    # entity with uniqueid properly formatted already
+                    # exists in the registry, we delete this duplicate
+                    entity_reg.async_remove(entry.entity_id)
+                    continue
+
+                entity_reg.async_update_entity(
+                    entry.entity_id, new_unique_id=device_mac
+                )
+
+            self._devices[device_mac] = AsusWrtDevInfo(device_mac, entry.original_name)
 
         # Update devices
         await self.update_devices()
@@ -280,7 +310,7 @@ class AsusWrtRouter:
         new_device = False
         _LOGGER.debug("Checking devices for ASUS router %s", self._host)
         try:
-            wrt_devices = await self._api.async_get_connected_devices()
+            api_devices = await self._api.async_get_connected_devices()
         except OSError as exc:
             if not self._connect_error:
                 self._connect_error = True
@@ -295,18 +325,18 @@ class AsusWrtRouter:
             self._connect_error = False
             _LOGGER.info("Reconnected to ASUS router %s", self._host)
 
+        self._connected_devices = len(api_devices)
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
         track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
+        wrt_devices = {format_mac(mac): dev for mac, dev in api_devices.items()}
         for device_mac, device in self._devices.items():
-            dev_info = wrt_devices.get(device_mac)
+            dev_info = wrt_devices.pop(device_mac, None)
             device.update(dev_info, consider_home)
 
         for device_mac, dev_info in wrt_devices.items():
-            if device_mac in self._devices:
-                continue
             if not track_unknown and not dev_info.name:
                 continue
             new_device = True
@@ -317,8 +347,6 @@ class AsusWrtRouter:
         async_dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
-
-        self._connected_devices = len(wrt_devices)
         await self._update_unpolled_sensors()
 
     async def init_sensors_coordinator(self) -> None:
@@ -335,8 +363,13 @@ class AsusWrtRouter:
             SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
             SENSORS_TYPE_RATES: SENSORS_RATES,
         }
+        sensors_types[
+            SENSORS_TYPE_TEMPERATURES
+        ] = await self._get_available_temperature_sensors()
 
         for sensor_type, sensor_names in sensors_types.items():
+            if not sensor_names:
+                continue
             coordinator = await self._sensors_data_handler.get_coordinator(
                 sensor_type, sensor_type != SENSORS_TYPE_COUNT
             )
@@ -354,6 +387,23 @@ class AsusWrtRouter:
             coordinator = self._sensors_coordinator[SENSORS_TYPE_COUNT][KEY_COORDINATOR]
             if self._sensors_data_handler.update_device_count(self._connected_devices):
                 await coordinator.async_refresh()
+
+    async def _get_available_temperature_sensors(self):
+        """Check which temperature information is available on the router."""
+        try:
+            availability = await self._api.async_find_temperature_commands()
+            available_sensors = [
+                SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]
+            ]
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.debug(
+                "Failed checking temperature sensor availability for ASUS router %s. Exception: %s",
+                self._host,
+                exc,
+            )
+            return []
+
+        return available_sensors
 
     async def close(self) -> None:
         """Close the connection."""
@@ -431,7 +481,7 @@ async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
     info = {}
     try:
         info = await api.async_get_nvram(info_type)
-    except (OSError, UnicodeDecodeError) as exc:
+    except OSError as exc:
         _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
 
     return info

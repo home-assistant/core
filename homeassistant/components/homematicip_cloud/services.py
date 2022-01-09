@@ -114,7 +114,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         return
 
     @verify_domain_control(hass, HMIPC_DOMAIN)
-    async def async_call_hmipc_service(service: ServiceCall):
+    async def async_call_hmipc_service(service: ServiceCall) -> None:
         """Call correct HomematicIP Cloud service."""
         service_name = service.service
 
@@ -210,8 +210,7 @@ async def _async_activate_eco_mode_with_duration(
     duration = service.data[ATTR_DURATION]
 
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
-        home = _get_home(hass, hapid)
-        if home:
+        if home := _get_home(hass, hapid):
             await home.activate_absence_with_duration(duration)
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -225,8 +224,7 @@ async def _async_activate_eco_mode_with_period(
     endtime = service.data[ATTR_ENDTIME]
 
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
-        home = _get_home(hass, hapid)
-        if home:
+        if home := _get_home(hass, hapid):
             await home.activate_absence_with_period(endtime)
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -239,8 +237,7 @@ async def _async_activate_vacation(hass: HomeAssistant, service: ServiceCall) ->
     temperature = service.data[ATTR_TEMPERATURE]
 
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
-        home = _get_home(hass, hapid)
-        if home:
+        if home := _get_home(hass, hapid):
             await home.activate_vacation(endtime, temperature)
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -250,8 +247,7 @@ async def _async_activate_vacation(hass: HomeAssistant, service: ServiceCall) ->
 async def _async_deactivate_eco_mode(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to deactivate eco mode."""
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
-        home = _get_home(hass, hapid)
-        if home:
+        if home := _get_home(hass, hapid):
             await home.deactivate_absence()
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -261,8 +257,7 @@ async def _async_deactivate_eco_mode(hass: HomeAssistant, service: ServiceCall) 
 async def _async_deactivate_vacation(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to deactivate vacation."""
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
-        home = _get_home(hass, hapid)
-        if home:
+        if home := _get_home(hass, hapid):
             await home.deactivate_vacation()
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():

@@ -7,6 +7,9 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du {name} - {model} ( {host} ) einrichten?"
+            },
             "user": {
                 "data": {
                     "host": "Host (oder IP-Adresse) deines twinkly-Ger\u00e4ts"

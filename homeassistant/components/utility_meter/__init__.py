@@ -17,6 +17,7 @@ from .const import (
     ATTR_TARIFF,
     CONF_CRON_PATTERN,
     CONF_METER,
+    CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
     CONF_METER_TYPE,
@@ -84,6 +85,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
                 cv.time_period, cv.positive_timedelta, max_28_days
             ),
+            vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_TARIFFS, default=[]): vol.All(
                 cv.ensure_list, [cv.string]

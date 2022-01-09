@@ -250,7 +250,7 @@ class MailboxMediaView(MailboxView):
         mailbox = self.get_mailbox(platform)
 
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 try:
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:

@@ -238,22 +238,22 @@ class DeviceTrackerPlatform:
                 scanner = None
                 setup = None
                 if hasattr(self.platform, "async_get_scanner"):
-                    scanner = await self.platform.async_get_scanner(  # type: ignore[attr-defined]
+                    scanner = await self.platform.async_get_scanner(
                         hass, {DOMAIN: self.config}
                     )
                 elif hasattr(self.platform, "get_scanner"):
                     scanner = await hass.async_add_executor_job(
-                        self.platform.get_scanner,  # type: ignore[attr-defined]
+                        self.platform.get_scanner,
                         hass,
                         {DOMAIN: self.config},
                     )
                 elif hasattr(self.platform, "async_setup_scanner"):
-                    setup = await self.platform.async_setup_scanner(  # type: ignore[attr-defined]
+                    setup = await self.platform.async_setup_scanner(
                         hass, self.config, tracker.async_see, discovery_info
                     )
                 elif hasattr(self.platform, "setup_scanner"):
                     setup = await hass.async_add_executor_job(
-                        self.platform.setup_scanner,  # type: ignore[attr-defined]
+                        self.platform.setup_scanner,
                         hass,
                         self.config,
                         tracker.see,
@@ -788,8 +788,7 @@ class Device(RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Add an entity."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if not state:
+        if not (state := await self.async_get_last_state()):
             return
         self._state = state.state
         self.last_update_home = state.state == STATE_HOME

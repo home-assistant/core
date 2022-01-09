@@ -2,17 +2,9 @@
 import logging
 from pprint import pformat
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DEVICE_CLASS_GARAGE,
-    CoverEntity,
-)
-from homeassistant.components.supla import (
-    DOMAIN,
-    SUPLA_COORDINATORS,
-    SUPLA_SERVERS,
-    SuplaChannel,
-)
+from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,4 +111,4 @@ class SuplaGateDoor(SuplaChannel, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
+        return CoverDeviceClass.GARAGE

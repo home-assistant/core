@@ -3,14 +3,19 @@ from __future__ import annotations
 
 import math
 
-from aioesphomeapi import NumberInfo, NumberState
+from aioesphomeapi import NumberInfo, NumberMode as EsphomeNumberMode, NumberState
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from . import (
+    EsphomeEntity,
+    EsphomeEnumMapper,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -28,6 +33,15 @@ async def async_setup_entry(
         entity_type=EsphomeNumber,
         state_type=NumberState,
     )
+
+
+NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapper(
+    {
+        EsphomeNumberMode.AUTO: NumberMode.AUTO,
+        EsphomeNumberMode.BOX: NumberMode.BOX,
+        EsphomeNumberMode.SLIDER: NumberMode.SLIDER,
+    }
+)
 
 
 # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
@@ -51,6 +65,18 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     def step(self) -> float:
         """Return the increment/decrement step."""
         return super()._static_info.step
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        return super()._static_info.unit_of_measurement
+
+    @property
+    def mode(self) -> NumberMode:
+        """Return the mode of the entity."""
+        if self._static_info.mode:
+            return NUMBER_MODES.from_esphome(self._static_info.mode)
+        return NumberMode.AUTO
 
     @esphome_state_property
     def value(self) -> float | None:

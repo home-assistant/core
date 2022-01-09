@@ -22,8 +22,8 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    MODELS_V2,
-    ORBI_PORT,
+    MODELS_PORT_80,
+    PORT_80,
 )
 from .errors import CannotLoginException
 from .router import get_api
@@ -123,11 +123,11 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_ssdp(self, discovery_info: dict) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Initialize flow from ssdp."""
         updated_data = {}
 
-        device_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+        device_url = urlparse(discovery_info.ssdp_location)
         if device_url.hostname:
             updated_data[CONF_HOST] = device_url.hostname
         if device_url.scheme == "https":
@@ -137,15 +137,17 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
 
         updated_data[CONF_PORT] = DEFAULT_PORT
-        for model in MODELS_V2:
-            if discovery_info.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
+        for model in MODELS_PORT_80:
+            if discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
                 model
-            ) or discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(model):
-                updated_data[CONF_PORT] = ORBI_PORT
+            ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
+                model
+            ):
+                updated_data[CONF_PORT] = PORT_80
 
         self.placeholders.update(updated_data)
         self.discovered = True

@@ -162,7 +162,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await super().async_added_to_hass()
         self.coordinator.entities.append(self)
         # Sensors should also register callbacks to HA when their state changes
-        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
         self.coordinator.musiccast.register_group_update_callback(
             self.update_all_mc_entities
         )
@@ -173,7 +172,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await super().async_will_remove_from_hass()
         self.coordinator.entities.remove(self)
         # The opposite of async_added_to_hass. Remove any registered call backs here.
-        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
         self.coordinator.musiccast.remove_group_update_callback(
             self.update_all_mc_entities
         )
@@ -342,9 +340,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             parts = media_id.split(":")
 
             if parts[0] == "list":
-                index = parts[3]
-
-                if index == "-1":
+                if (index := parts[3]) == "-1":
                     index = "0"
 
                 await self.coordinator.musiccast.play_list_media(index, self._zone_id)

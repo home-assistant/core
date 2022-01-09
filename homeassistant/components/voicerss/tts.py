@@ -196,7 +196,7 @@ class VoiceRSSProvider(Provider):
         form_data["hl"] = language
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 request = await websession.post(VOICERSS_API_URL, data=form_data)
 
                 if request.status != HTTPStatus.OK:

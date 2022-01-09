@@ -41,7 +41,7 @@ class FlockNotificationService(BaseNotificationService):
         _LOGGER.debug("Attempting to call Flock at %s", self._url)
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await self._session.post(self._url, json=payload)
                 result = await response.json()
 

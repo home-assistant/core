@@ -13,7 +13,8 @@
             "user": {
                 "data": {
                     "api_key": "Klucz API"
-                }
+                },
+                "title": "Efergy"
             }
         }
     }

@@ -86,9 +86,7 @@ class HomeAssistantView:
         routes: list[AbstractRoute] = []
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
-            handler = getattr(self, method, None)
-
-            if not handler:
+            if not (handler := getattr(self, method, None)):
                 continue
 
             handler = request_handler_factory(self, handler)
@@ -96,11 +94,15 @@ class HomeAssistantView:
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
 
-        if not self.cors_allowed:
-            return
+        # Use `get` because CORS middleware is not be loaded in emulated_hue
+        if self.cors_allowed:
+            allow_cors = app.get("allow_all_cors")
+        else:
+            allow_cors = app.get("allow_configured_cors")
 
-        for route in routes:
-            app["allow_cors"](route)
+        if allow_cors:
+            for route in routes:
+                allow_cors(route)
 
 
 def request_handler_factory(

@@ -1,4 +1,6 @@
 """Support for ADS covers."""
+from __future__ import annotations
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     SUPPORT_CLOSE,
@@ -8,6 +10,9 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import CONF_COVERS, CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ADS_VAR,
@@ -23,7 +28,12 @@ from . import (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the cover platform for ADS."""
     entities = []
 

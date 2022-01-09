@@ -1,6 +1,7 @@
 """The lookin integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -9,9 +10,9 @@ from aiolookin import (
     LookInHttpProtocol,
     LookinUDPSubscriptions,
     MeteoSensor,
-    SensorID,
     start_lookin_udp,
 )
+from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except aiohttp.ClientError as ex:
+    except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
     meteo_coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
@@ -52,22 +53,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await meteo_coordinator.async_config_entry_first_refresh()
 
     @callback
-    def _async_meteo_push_update(msg: dict[str, str]) -> None:
+    def _async_meteo_push_update(event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
-        if int(msg["event_id"]):
-            return
-        LOGGER.debug("Processing push message for meteo sensor: %s", msg)
+        LOGGER.debug("Processing push message for meteo sensor: %s", event)
         meteo: MeteoSensor = meteo_coordinator.data
-        meteo.update_from_value(msg["value"])
+        meteo.update_from_value(event.value)
         meteo_coordinator.async_set_updated_data(meteo)
 
     lookin_udp_subs = LookinUDPSubscriptions()
     entry.async_on_unload(
-        lookin_udp_subs.subscribe_sensor(
-            lookin_device.id, SensorID.Meteo, None, _async_meteo_push_update
+        lookin_udp_subs.subscribe_event(
+            lookin_device.id, UDPCommandType.meteo, None, _async_meteo_push_update
         )
     )
-    entry.async_on_unload(await start_lookin_udp(lookin_udp_subs))
+    entry.async_on_unload(await start_lookin_udp(lookin_udp_subs, lookin_device.id))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LookinData(
         lookin_udp_subs=lookin_udp_subs,

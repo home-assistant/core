@@ -7,23 +7,15 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import (
-    DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     ELECTRIC_POTENTIAL_VOLT,
@@ -39,6 +31,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -50,14 +43,14 @@ from .helpers import on_unload
 SENSORS: dict[str, SensorEntityDescription] = {
     "V_TEMP": SensorEntityDescription(
         key="V_TEMP",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_HUM": SensorEntityDescription(
         key="V_HUM",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_DIMMER": SensorEntityDescription(
         key="V_DIMMER",
@@ -115,14 +108,14 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_WATT": SensorEntityDescription(
         key="V_WATT",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_KWH": SensorEntityDescription(
         key="V_KWH",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "V_LIGHT_LEVEL": SensorEntityDescription(
         key="V_LIGHT_LEVEL",
@@ -150,8 +143,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_LEVEL_S_LIGHT_LEVEL": SensorEntityDescription(
         key="V_LEVEL_S_LIGHT_LEVEL",
         native_unit_of_measurement=LIGHT_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_LEVEL_S_MOISTURE": SensorEntityDescription(
         key="V_LEVEL_S_MOISTURE",
@@ -161,14 +154,14 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_VOLTAGE": SensorEntityDescription(
         key="V_VOLTAGE",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_CURRENT": SensorEntityDescription(
         key="V_CURRENT",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_PH": SensorEntityDescription(
         key="V_PH",
@@ -204,7 +197,7 @@ async def async_setup_entry(
         """Discover and add a MySensors sensor."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.SENSOR,
             discovery_info,
             MySensorsSensor,
             async_add_entities=async_add_entities,
@@ -215,7 +208,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.SENSOR),
             async_discover,
         ),
     )

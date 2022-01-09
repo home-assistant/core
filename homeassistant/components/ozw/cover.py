@@ -3,14 +3,16 @@ from openzwavemqtt.const import CommandClass
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_GARAGE,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
@@ -21,7 +23,11 @@ PRESS_BUTTON = True
 RELEASE_BUTTON = False
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Cover from Config Entry."""
 
     @callback
@@ -94,8 +100,8 @@ class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
+        """Return the class of this device, from CoverDeviceClass."""
+        return CoverDeviceClass.GARAGE
 
     @property
     def is_opening(self):

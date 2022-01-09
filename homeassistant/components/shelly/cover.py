@@ -7,11 +7,11 @@ from aioshelly.block_device import Block
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHUTTER,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,7 +41,7 @@ async def async_setup_entry(
 class ShellyCover(ShellyBlockEntity, CoverEntity):
     """Switch that controls a cover block on Shelly devices."""
 
-    _attr_device_class = DEVICE_CLASS_SHUTTER
+    _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""

@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "E-mail",
-                    "password": "Jelsz\u00f3"
+                    "password": "Jelsz\u00f3",
+                    "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s"
                 },
                 "title": "Csatlakoztassa a Sense Energy Monitort"
             }

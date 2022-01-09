@@ -54,33 +54,41 @@ async def test_invalid_username_password(hass, aiohttp_client):
     step = await resp.json()
 
     # Incorrect username
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={
-            "client_id": CLIENT_ID,
-            "username": "wrong-user",
-            "password": "test-pass",
-        },
-    )
+    with patch(
+        "homeassistant.components.auth.login_flow.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "wrong-user",
+                "password": "test-pass",
+            },
+        )
 
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
+    assert len(mock_process_wrong_login.mock_calls) == 1
 
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
 
     # Incorrect password
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={
-            "client_id": CLIENT_ID,
-            "username": "test-user",
-            "password": "wrong-pass",
-        },
-    )
+    with patch(
+        "homeassistant.components.auth.login_flow.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "wrong-pass",
+            },
+        )
 
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
+    assert len(mock_process_wrong_login.mock_calls) == 1
 
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
@@ -105,15 +113,61 @@ async def test_login_exist_user(hass, aiohttp_client):
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
-    )
+    with patch(
+        "homeassistant.components.auth.login_flow.process_success_login"
+    ) as mock_process_success_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
 
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
     assert step["type"] == "create_entry"
     assert len(step["result"]) > 1
+    assert len(mock_process_success_login.mock_calls) == 1
+
+
+async def test_login_local_only_user(hass, aiohttp_client):
+    """Test logging in with local only user."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
+        {"username": "test-user"}
+    )
+    user = await hass.auth.async_get_or_create_user(cred)
+    await hass.auth.async_update_user(user, local_only=True)
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    with patch(
+        "homeassistant.components.auth.login_flow.async_user_not_allowed_do_auth",
+        return_value="User is local only",
+    ) as mock_not_allowed_do_auth:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+
+    assert len(mock_not_allowed_do_auth.mock_calls) == 1
+    assert resp.status == HTTPStatus.FORBIDDEN
+    assert await resp.json() == {"message": "Login blocked: User is local only"}
 
 
 async def test_login_exist_user_ip_changes(hass, aiohttp_client):

@@ -156,3 +156,69 @@ async def test_websocket_supervisor_api_error(
 
     msg = await websocket_client.receive_json()
     assert msg["error"]["message"] == "example error"
+
+
+async def test_websocket_non_admin_user(
+    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock, hass_admin_user
+):
+    """Test Supervisor websocket api error."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test_addon/info",
+        json={"result": "ok", "data": {}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/session",
+        json={"result": "ok", "data": {}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/addons/test_addon/info",
+            ATTR_METHOD: "get",
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["result"] == {}
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 2,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/ingress/session",
+            ATTR_METHOD: "get",
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["result"] == {}
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 3,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/ingress/validate_session",
+            ATTR_METHOD: "get",
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["result"] == {}
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 4,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/supervisor/info",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["message"] == "Unauthorized"

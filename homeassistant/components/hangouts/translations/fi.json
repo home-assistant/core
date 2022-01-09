@@ -3,6 +3,11 @@
         "abort": {
             "unknown": "Tapahtui tuntematon virhe."
         },
+        "error": {
+            "invalid_2fa": "Virheellinen kaksitekij\u00e4todennus, yrit\u00e4 uudelleen.",
+            "invalid_2fa_method": "Virheellinen 2FA-menetelm\u00e4 (tarkista puhelimessa).",
+            "invalid_login": "Virheellinen kirjautuminen, yrit\u00e4 uudelleen."
+        },
         "step": {
             "2fa": {
                 "data": {

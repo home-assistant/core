@@ -1,5 +1,4 @@
 """Component for the Slide API."""
-
 from datetime import timedelta
 import logging
 
@@ -15,9 +14,11 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API,
@@ -50,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Slide platform."""
 
     async def update_slides(now=None):

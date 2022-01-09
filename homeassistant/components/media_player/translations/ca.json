@@ -18,8 +18,8 @@
     "state": {
         "_": {
             "idle": "Inactiu",
-            "off": "off",
-            "on": "on",
+            "off": "OFF",
+            "on": "ON",
             "paused": "Pausat/ada",
             "playing": "Reproduint",
             "standby": "En espera"

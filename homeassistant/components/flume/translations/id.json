@@ -13,7 +13,9 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"
-                }
+                },
+                "description": "Kata sandi untuk {username} tidak lagi berlaku.",
+                "title": "Autentikasi ulang Akun Flume Anda"
             },
             "user": {
                 "data": {

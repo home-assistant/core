@@ -54,6 +54,7 @@ good-names = [
     "k",
     "Run",
     "T",
+    "ip",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
@@ -113,6 +114,7 @@ score = false
 ignored-classes = [
     "_CountingAttr",  # for attrs
 ]
+mixin-class-rgx = ".*[Mm]ix[Ii]n"
 
 [tool.pylint.FORMAT]
 expected-line-ending-format = "LF"

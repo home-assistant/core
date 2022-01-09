@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.camera import ATTR_FILENAME
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -18,9 +19,12 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
 from .const import (
@@ -48,7 +52,7 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 
-PLATFORMS = ["camera", "sensor"]
+PLATFORMS = [Platform.CAMERA, Platform.SENSOR]
 
 SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
 
@@ -99,7 +103,7 @@ LOGI_CIRCLE_SERVICE_RECORD = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured Logi Circle component."""
     if DOMAIN not in config:
         return True
@@ -125,7 +129,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Logi Circle from a config entry."""
     logi_circle = LogiCircle(
         client_id=entry.data[CONF_CLIENT_ID],
@@ -147,7 +151,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     try:
-        with async_timeout.timeout(_TIMEOUT):
+        async with async_timeout.timeout(_TIMEOUT):
             # Ensure the cameras property returns the same Camera objects for
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()
@@ -183,7 +187,7 @@ async def async_setup_entry(hass, entry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def service_handler(service):
+    async def service_handler(service: ServiceCall) -> None:
         """Dispatch service calls to target entities."""
         params = dict(service.data)
 
@@ -226,7 +230,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

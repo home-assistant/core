@@ -4,11 +4,16 @@
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
+        "error": {
+            "option_error": "Z-Wave do\u011frulamas\u0131 ba\u015far\u0131s\u0131z oldu. USB stickin yolu do\u011fru mu?"
+        },
         "step": {
             "user": {
                 "data": {
-                    "network_key": "A\u011f Anajtar\u0131 (otomatik \u00fcretilmesi i\u00e7in bo\u015f b\u0131rak\u0131n\u0131z)"
-                }
+                    "network_key": "A\u011f Anajtar\u0131 (otomatik \u00fcretilmesi i\u00e7in bo\u015f b\u0131rak\u0131n\u0131z)",
+                    "usb_path": "USB Cihaz Yolu"
+                },
+                "description": "Bu entegrasyon art\u0131k korunmuyor. Yeni kurulumlar i\u00e7in bunun yerine Z-Wave JS kullan\u0131n. \n\n Yap\u0131land\u0131rma de\u011fi\u015fkenleri hakk\u0131nda bilgi i\u00e7in https://www.home-assistant.io/docs/z-wave/installation/ adresine bak\u0131n."
             }
         }
     },

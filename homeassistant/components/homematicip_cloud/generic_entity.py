@@ -238,16 +238,14 @@ class HomematicipGenericEntity(Entity):
 
         if isinstance(self._device, AsyncDevice):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
-                attr_value = getattr(self._device, attr, None)
-                if attr_value:
+                if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = False
 
         if isinstance(self._device, AsyncGroup):
             for attr, attr_key in GROUP_ATTRIBUTES.items():
-                attr_value = getattr(self._device, attr, None)
-                if attr_value:
+                if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = True

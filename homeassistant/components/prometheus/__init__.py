@@ -1,4 +1,5 @@
 """Support for Prometheus metrics export."""
+from contextlib import suppress
 import logging
 import string
 
@@ -35,9 +36,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +85,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
     hass.http.register_view(PrometheusView(prometheus_client))
 
@@ -210,7 +213,12 @@ class PrometheusMetrics:
             full_metric_name = self._sanitize_metric_name(
                 f"{self.metrics_prefix}{metric}"
             )
-            self._metrics[metric] = factory(full_metric_name, documentation, labels)
+            self._metrics[metric] = factory(
+                full_metric_name,
+                documentation,
+                labels,
+                registry=self.prometheus_cli.REGISTRY,
+            )
             return self._metrics[metric]
 
     @staticmethod
@@ -275,6 +283,26 @@ class PrometheusMetrics:
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
+
+    def _handle_input_number(self, state):
+        if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            metric = self._metric(
+                f"input_number_state_{unit}",
+                self.prometheus_cli.Gauge,
+                f"State of the input number measured in {unit}",
+            )
+        else:
+            metric = self._metric(
+                "input_number_state",
+                self.prometheus_cli.Gauge,
+                "State of the input number",
+            )
+
+        with suppress(ValueError):
+            value = self.state_as_number(state)
+            if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
+                value = fahrenheit_to_celsius(value)
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_device_tracker(self, state):
         metric = self._metric(
@@ -409,9 +437,11 @@ class PrometheusMetrics:
                 break
 
         if metric is not None:
-            _metric = self._metric(
-                metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
-            )
+            documentation = "State of the sensor"
+            if unit:
+                documentation = f"Sensor data measured in {unit}"
+
+            _metric = self._metric(metric, self.prometheus_cli.Gauge, documentation)
 
             try:
                 value = self.state_as_number(state)
@@ -449,8 +479,12 @@ class PrometheusMetrics:
     def _sensor_fallback_metric(state, unit):
         """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
-            _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
-            return None
+            try:
+                state_helper.state_as_number(state)
+            except ValueError:
+                _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
+                return None
+            return "sensor_state"
         return f"sensor_unit_{unit}"
 
     @staticmethod
@@ -493,6 +527,15 @@ class PrometheusMetrics:
 
         metric.labels(**self._labels(state)).inc()
 
+    def _handle_counter(self, state):
+        metric = self._metric(
+            "counter_value",
+            self.prometheus_cli.Gauge,
+            "Value of counter entities",
+        )
+
+        metric.labels(**self._labels(state)).set(self.state_as_number(state))
+
 
 class PrometheusView(HomeAssistantView):
     """Handle Prometheus requests."""
@@ -509,6 +552,6 @@ class PrometheusView(HomeAssistantView):
         _LOGGER.debug("Received Prometheus metrics request")
 
         return web.Response(
-            body=self.prometheus_cli.generate_latest(),
+            body=self.prometheus_cli.generate_latest(self.prometheus_cli.REGISTRY),
             content_type=CONTENT_TYPE_TEXT_PLAIN,
         )

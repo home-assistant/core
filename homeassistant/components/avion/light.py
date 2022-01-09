@@ -68,6 +68,7 @@ class AvionLight(LightEntity):
     _attr_supported_features = SUPPORT_AVION_LED
     _attr_should_poll = False
     _attr_assumed_state = True
+    _attr_is_on = True
 
     def __init__(self, device):
         """Initialize the light."""

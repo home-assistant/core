@@ -14,5 +14,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "Kode negara negara untuk menampilkan gambar kamera.",
+                    "delta": "Interval waktu pembaruan gambar kamera dalam detik",
+                    "timeframe": "Waktu mendatang dalam menit untuk mendapatkan prakiraan curah hujan"
+                }
+            }
+        }
     }
 }

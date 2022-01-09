@@ -13,7 +13,8 @@
             "cloud_login_error": "Nie mo\u017cna zalogowa\u0107 si\u0119 do chmury Xiaomi Miio, sprawd\u017a po\u015bwiadczenia.",
             "cloud_no_devices": "Na tym koncie Xiaomi Miio nie znaleziono \u017cadnych urz\u0105dze\u0144.",
             "no_device_selected": "Nie wybrano \u017cadnego urz\u0105dzenia, wybierz jedno urz\u0105dzenie",
-            "unknown_device": "Model urz\u0105dzenia nie jest znany, nie mo\u017cna skonfigurowa\u0107 urz\u0105dzenia przy u\u017cyciu interfejsu u\u017cytkownika."
+            "unknown_device": "Model urz\u0105dzenia nie jest znany, nie mo\u017cna skonfigurowa\u0107 urz\u0105dzenia przy u\u017cyciu interfejsu u\u017cytkownika.",
+            "wrong_token": "B\u0142\u0105d sumy kontrolnej, niew\u0142a\u015bciwy token"
         },
         "flow_title": "{name}",
         "step": {
