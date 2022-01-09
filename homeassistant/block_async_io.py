@@ -1,5 +1,6 @@
 """Block I/O being done in asyncio."""
 from http.client import HTTPConnection
+import time
 
 from .util.async_ import protect_loop
 
@@ -8,6 +9,9 @@ def enable() -> None:
     """Enable the detection of I/O in the event loop."""
     # Prevent urllib3 and requests doing I/O in event loop
     HTTPConnection.putrequest = protect_loop(HTTPConnection.putrequest)  # type: ignore
+
+    # Prevent sleeping in event loop
+    time.sleep = protect_loop(time.sleep)
 
     # Currently disabled. pytz doing I/O when getting timezone.
     # Prevent files being opened inside the event loop
