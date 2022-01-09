@@ -43,7 +43,7 @@ def _schema_with_defaults(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OctoPrint."""
 
-    VERSION = 2
+    VERSION = 1
 
     api_key_task = None
 
