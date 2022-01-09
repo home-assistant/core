@@ -260,7 +260,11 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: DEVICE_IP_ADDRESS})
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
+    with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
@@ -270,3 +274,5 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == FORMATTED_MAC_ADDRESS
+    assert mock_setup.called
+    assert mock_setup_entry.called
