@@ -4,7 +4,6 @@ from __future__ import annotations
 from homeassistant.components import ads
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.helpers.typing import StateType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
