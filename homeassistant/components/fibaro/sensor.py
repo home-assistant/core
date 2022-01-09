@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from contextlib import suppress
 
-from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -17,33 +22,32 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
 
-SENSOR_TYPES = {
-    "com.fibaro.temperatureSensor": [
-        "Temperature",
-        None,
-        None,
-        SensorDeviceClass.TEMPERATURE,
-    ],
-    "com.fibaro.smokeSensor": [
-        "Smoke",
-        CONCENTRATION_PARTS_PER_MILLION,
-        "mdi:fire",
-        None,
-    ],
-    "CO2": [
-        "CO2",
-        CONCENTRATION_PARTS_PER_MILLION,
-        None,
-        None,
-        SensorDeviceClass.CO2,
-    ],
-    "com.fibaro.humiditySensor": [
-        "Humidity",
-        PERCENTAGE,
-        None,
-        SensorDeviceClass.HUMIDITY,
-    ],
-    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, SensorDeviceClass.ILLUMINANCE],
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "com.fibaro.temperatureSensor": SensorEntityDescription(
+        key="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    "com.fibaro.smokeSensor": SensorEntityDescription(
+        key="Smoke",
+        icon="mdi:fire",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    ),
+    "CO2": SensorEntityDescription(
+        key="CO2",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+    ),
+    "com.fibaro.humiditySensor": SensorEntityDescription(
+        key="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    "com.fibaro.lightSensor": SensorEntityDescription(
+        key="Light",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+    ),
+    "unknown": SensorEntityDescription(key="Unknown"),
 }
 
 
@@ -72,43 +76,30 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         super().__init__(fibaro_device)
         self.entity_id = f"{DOMAIN}.{self.ha_id}"
         if fibaro_device.type in SENSOR_TYPES:
-            self._unit = SENSOR_TYPES[fibaro_device.type][1]
-            self._icon = SENSOR_TYPES[fibaro_device.type][2]
-            self._device_class = SENSOR_TYPES[fibaro_device.type][3]
+            self.entity_description = SENSOR_TYPES[fibaro_device.type]
+            self._attr_native_unit_of_measurement = (
+                self.entity_description.native_unit_of_measurement
+            )
         else:
-            self._unit = None
-            self._icon = None
-            self._device_class = None
+            self.entity_description = SENSOR_TYPES["unknown"]
+            self._attr_native_unit_of_measurement = None
         with suppress(KeyError, ValueError):
-            if not self._unit:
+            if not self._attr_native_unit_of_measurement:
                 if self.fibaro_device.properties.unit == "lux":
-                    self._unit = LIGHT_LUX
+                    self._attr_native_unit_of_measurement = LIGHT_LUX
                 elif self.fibaro_device.properties.unit == "C":
-                    self._unit = TEMP_CELSIUS
+                    self._attr_native_unit_of_measurement = TEMP_CELSIUS
                 elif self.fibaro_device.properties.unit == "F":
-                    self._unit = TEMP_FAHRENHEIT
+                    self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
                 else:
-                    self._unit = self.fibaro_device.properties.unit
+                    self._attr_native_unit_of_measurement = (
+                        self.fibaro_device.properties.unit
+                    )
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self.current_value
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
 
     def update(self):
         """Update the state."""
