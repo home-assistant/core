@@ -20,7 +20,7 @@ def setup_platform(
     """Set up an ADS sensor device."""
     entities = []
 
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     ads_hub = hass.data.get(ads.DATA_ADS)
