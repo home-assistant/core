@@ -280,7 +280,7 @@ async def async_setup_entry(
     api = AvmApi(avm_device)
 
     dsl: bool = False
-    dslinterface = await api.wan_dsl_interface_config()
+    dslinterface = await api.get_wan_dsl_interface_config()
     if dslinterface:
         dsl = dslinterface["NewEnable"]
 

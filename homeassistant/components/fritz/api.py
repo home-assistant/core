@@ -30,7 +30,7 @@ class AvmApi:
     def _service_call_action(
         self,
         service_name: str,
-        service_suffix: str | None,
+        service_suffix: str,
         action_name: str,
         **kwargs: Any,
     ) -> dict | None:
@@ -53,7 +53,6 @@ class AvmApi:
                 "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
-            return None
         except (
             FritzActionError,
             FritzActionFailedError,
@@ -66,13 +65,12 @@ class AvmApi:
                 action_name,
                 exc_info=True,
             )
-            return None
         except FritzConnectionException:
             _LOGGER.error(
                 "Connection Error: Please check the device is properly configured for remote login",
                 exc_info=True,
             )
-            return None
+        return None
 
     async def _async_service_call_action(
         self, service_name: str, service_suffix: str, action_name: str, **kwargs: Any
@@ -89,7 +87,7 @@ class AvmApi:
             )
         )
 
-    async def wan_dsl_interface_config(self) -> dict[str, Any] | None:
+    async def get_wan_dsl_interface_config(self) -> dict[str, Any] | None:
         """Call WANDSLInterfaceConfig service."""
 
         return await self._async_service_call_action(
