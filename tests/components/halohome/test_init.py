@@ -6,13 +6,13 @@ from unittest.mock import patch
 from halohome import LocationConnection
 import pytest
 
-from homeassistant.components.halohome.const import DOMAIN
+from homeassistant.components.halohome.const import CONF_LOCATIONS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 from tests.common import MockConfigEntry
-from tests.components.halohome.test_config_flow import CONFIG_ENTRY
+from tests.components.halohome.test_config_flow import CONFIG_ENTRY, LOCATIONS
 
 
 class _MockConnection(LocationConnection):
@@ -23,14 +23,19 @@ class _MockConnection(LocationConnection):
         return True
 
 
+async def _list_devices(email: str, password: str):
+    return LOCATIONS
+
+
 @patch("halohome.LocationConnection", _MockConnection)
-async def setup_halo(hass: HomeAssistant) -> MockConfigEntry:
+@patch("halohome.list_devices", new=_list_devices)
+async def setup_halo(hass: HomeAssistant, data=CONFIG_ENTRY) -> MockConfigEntry:
     """Set up the HALO Home integration."""
 
     hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG_ENTRY,
+        data=data,
     )
 
     config_entry.add_to_hass(hass)
@@ -53,6 +58,14 @@ async def test_setup_entry(hass: HomeAssistant):
             "Unable to convert all demo entities to JSON. "
             "Wrong data in state machine!"
         )
+
+
+async def test_device_refresh(hass: HomeAssistant):
+    """Test setting up the HALO Home integration with refreshed devices."""
+    entry = await setup_halo(hass, data={**CONFIG_ENTRY, CONF_LOCATIONS: {}})
+
+    assert entry.data == CONFIG_ENTRY
+    assert len(hass.data[DOMAIN][entry.entry_id].devices) == 1
 
 
 async def test_unload_entry(hass: HomeAssistant):
