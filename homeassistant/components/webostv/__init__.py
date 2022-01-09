@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -177,10 +178,14 @@ async def async_setup_tv_finalize(hass, config, conf, client):
 
     await async_connect(client)
     hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("media_player", DOMAIN, conf, config)
+        hass.helpers.discovery.async_load_platform(
+            Platform.MEDIA_PLAYER, DOMAIN, conf, config
+        )
     )
     hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("notify", DOMAIN, conf, config)
+        hass.helpers.discovery.async_load_platform(
+            Platform.NOTIFY, DOMAIN, conf, config
+        )
     )
 
 
