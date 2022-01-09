@@ -231,7 +231,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     def __init__(
         self,
         name: str,
-        traffic_mode: str,
+        traffic_mode: bool,
         coordinator: HereTravelTimeDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
