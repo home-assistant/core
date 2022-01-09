@@ -156,8 +156,7 @@ def build_hass_attribution(source_attribution: dict) -> str | None:
             if (title := supplier.get("title")) is not None:
                 supplier_titles.append(title)
         joined_supplier_titles = ",".join(supplier_titles)
-        attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."
-        return attribution
+        return f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."
     return None
 
 
