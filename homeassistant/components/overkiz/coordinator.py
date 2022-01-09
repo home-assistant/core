@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import Any, cast
+from typing import Any, Dict
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -22,9 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, UPDATE_INTERVAL, OverkizStateType
 
-DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[DataType], Any]] = {
+DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[Any], OverkizStateType]] = {
     DataType.INTEGER: int,
     DataType.DATE: int,
     DataType.STRING: str,
@@ -37,7 +37,7 @@ DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[DataType], Any]] = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
+class OverkizDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
     def __init__(
@@ -132,9 +132,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
             elif event.name == EventName.DEVICE_STATE_CHANGED:
                 for state in event.device_states:
                     device = self.devices[event.device_url]
-                    if state.name not in device.states:
-                        device.states[state.name] = state
-                    device.states[state.name].value = self._get_state(state)
+
+                    if (device_state := device.states[state.name]) is None:
+                        device_state = state
+                        device.states[state.name] = device_state
+
+                    device_state.value = self._get_state(state)
 
             elif event.name == EventName.EXECUTION_REGISTERED:
                 if event.exec_id not in self.executions:
@@ -163,17 +166,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_state(
         state: State,
-    ) -> dict[Any, Any] | list[Any] | float | int | bool | str | None:
+    ) -> OverkizStateType:
         """Cast string value to the right type."""
         data_type = DataType(state.type)
 
         if data_type == DataType.NONE:
-            return cast(None, state.value)
+            return state.value
 
         cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
         value = cast_to_python(state.value)
-
-        assert isinstance(value, (str, float, int, bool))
 
         return value
 

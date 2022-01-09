@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
-            "cannot_connect": "Fallo en la conexi\u00f3n, por favor int\u00e9ntelo de nuevo, desconectar la alimentaci\u00f3n y los cables de ethernet y reconectarlos puede ayudar.",
+            "cannot_connect": "No se pudo conectar, int\u00e9ntelo de nuevo, desconectar los cables de alimentaci\u00f3n y Ethernet y volver a conectarlos puede ayudar",
             "not_denonavr_manufacturer": "No es un Receptor AVR Denon AVR en Red, el fabricante detectado no concuerda",
             "not_denonavr_missing": "No es un Receptor AVR Denon AVR en Red, la informaci\u00f3n detectada no est\u00e1 completa"
         },
@@ -18,7 +18,7 @@
             },
             "select": {
                 "data": {
-                    "select_host": "IP del Receptor"
+                    "select_host": "Direcci\u00f3n IP del receptor"
                 },
                 "description": "Ejecuta la configuraci\u00f3n de nuevo si deseas conectar receptores adicionales",
                 "title": "Selecciona el receptor con el que quieres conectar."

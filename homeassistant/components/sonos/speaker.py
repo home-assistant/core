@@ -46,6 +46,7 @@ from .const import (
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_CREATE_MIC_SENSOR,
     SONOS_CREATE_SWITCHES,
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
@@ -194,6 +195,7 @@ class SonosSpeaker:
 
         # Misc features
         self.buttons_enabled: bool | None = None
+        self.mic_enabled: bool | None = None
         self.status_light: bool | None = None
 
         # Grouping
@@ -435,21 +437,15 @@ class SonosSpeaker:
 
     async def async_update_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
+        if "mic_enabled" in event.variables:
+            mic_exists = self.mic_enabled is not None
+            self.mic_enabled = bool(int(event.variables["mic_enabled"]))
+            if not mic_exists:
+                async_dispatcher_send(self.hass, SONOS_CREATE_MIC_SENSOR, self)
+
         if more_info := event.variables.get("more_info"):
-            battery_dict = dict(x.split(":") for x in more_info.split(","))
-            for unused in UNUSED_DEVICE_KEYS:
-                battery_dict.pop(unused, None)
-            if not battery_dict:
-                return
-            if "BattChg" not in battery_dict:
-                _LOGGER.debug(
-                    "Unknown device properties update for %s (%s), please report an issue: '%s'",
-                    self.zone_name,
-                    self.model_name,
-                    more_info,
-                )
-                return
-            await self.async_update_battery_info(battery_dict)
+            await self.async_update_battery_info(more_info)
+
         self.async_write_entity_states()
 
     @callback
@@ -559,8 +555,22 @@ class SonosSpeaker:
     #
     # Battery management
     #
-    async def async_update_battery_info(self, battery_dict: dict[str, Any]) -> None:
-        """Update battery info using the decoded SonosEvent."""
+    async def async_update_battery_info(self, more_info: str) -> None:
+        """Update battery info using a SonosEvent payload value."""
+        battery_dict = dict(x.split(":") for x in more_info.split(","))
+        for unused in UNUSED_DEVICE_KEYS:
+            battery_dict.pop(unused, None)
+        if not battery_dict:
+            return
+        if "BattChg" not in battery_dict:
+            _LOGGER.debug(
+                "Unknown device properties update for %s (%s), please report an issue: '%s'",
+                self.zone_name,
+                self.model_name,
+                more_info,
+            )
+            return
+
         self._last_battery_event = dt_util.utcnow()
 
         is_charging = EVENT_CHARGING[battery_dict["BattChg"]]

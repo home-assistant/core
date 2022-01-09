@@ -38,13 +38,15 @@ async def async_setup_entry(
     name = entry.data[CONF_NAME]
 
     if coordinator.device.device_type == DeviceType.Switch:
-        entities.append(FluxSwitch(coordinator, unique_id, name))
+        entities.append(FluxSwitch(coordinator, unique_id, name, None))
 
     if entry.data.get(CONF_REMOTE_ACCESS_HOST):
         entities.append(FluxRemoteAccessSwitch(coordinator.device, entry))
 
     if coordinator.device.microphone:
-        entities.append(FluxMusicSwitch(coordinator, unique_id, name))
+        entities.append(
+            FluxMusicSwitch(coordinator, unique_id, f"{name} Music", "music")
+        )
 
     if entities:
         async_add_entities(entities)
@@ -62,7 +64,6 @@ class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
 class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     """Representation of a Flux remote access switch."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
@@ -111,18 +112,6 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
 
 class FluxMusicSwitch(FluxEntity, SwitchEntity):
     """Representation of a Flux music switch."""
-
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux music switch."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Music"
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_music"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the microphone on."""

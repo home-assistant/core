@@ -31,6 +31,16 @@ SERVER_URL = "http://127.0.0.1:8083"
 CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 
+@pytest.fixture(autouse=True)
+async def webrtc_server() -> None:
+    """Patch client library to force usage of RTSPtoWebRTC server."""
+    with patch(
+        "rtsp_to_webrtc.client.WebClient.heartbeat",
+        side_effect=rtsp_to_webrtc.exceptions.ResponseError(),
+    ):
+        yield
+
+
 @pytest.fixture
 async def mock_camera(hass) -> AsyncGenerator[None, None]:
     """Initialize a demo camera platform."""

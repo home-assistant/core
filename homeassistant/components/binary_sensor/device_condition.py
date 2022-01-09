@@ -14,37 +14,7 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_MOVING,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESENCE,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_RUNNING,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_TAMPER,
-    DEVICE_CLASS_UPDATE,
-    DEVICE_CLASS_VIBRATION,
-    DEVICE_CLASS_WINDOW,
-    DOMAIN,
-)
+from . import DOMAIN, BinarySensorDeviceClass
 
 # mypy: disallow-any-generics
 
@@ -160,71 +130,122 @@ IS_OFF = [
 ]
 
 ENTITY_CONDITIONS = {
-    DEVICE_CLASS_BATTERY: [
+    BinarySensorDeviceClass.BATTERY: [
         {CONF_TYPE: CONF_IS_BAT_LOW},
         {CONF_TYPE: CONF_IS_NOT_BAT_LOW},
     ],
-    DEVICE_CLASS_BATTERY_CHARGING: [
+    BinarySensorDeviceClass.BATTERY_CHARGING: [
         {CONF_TYPE: CONF_IS_CHARGING},
         {CONF_TYPE: CONF_IS_NOT_CHARGING},
     ],
-    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_IS_CO}, {CONF_TYPE: CONF_IS_NO_CO}],
-    DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_IS_COLD}, {CONF_TYPE: CONF_IS_NOT_COLD}],
-    DEVICE_CLASS_CONNECTIVITY: [
+    BinarySensorDeviceClass.CO: [
+        {CONF_TYPE: CONF_IS_CO},
+        {CONF_TYPE: CONF_IS_NO_CO},
+    ],
+    BinarySensorDeviceClass.COLD: [
+        {CONF_TYPE: CONF_IS_COLD},
+        {CONF_TYPE: CONF_IS_NOT_COLD},
+    ],
+    BinarySensorDeviceClass.CONNECTIVITY: [
         {CONF_TYPE: CONF_IS_CONNECTED},
         {CONF_TYPE: CONF_IS_NOT_CONNECTED},
     ],
-    DEVICE_CLASS_DOOR: [{CONF_TYPE: CONF_IS_OPEN}, {CONF_TYPE: CONF_IS_NOT_OPEN}],
-    DEVICE_CLASS_GARAGE_DOOR: [
+    BinarySensorDeviceClass.DOOR: [
         {CONF_TYPE: CONF_IS_OPEN},
         {CONF_TYPE: CONF_IS_NOT_OPEN},
     ],
-    DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_IS_GAS}, {CONF_TYPE: CONF_IS_NO_GAS}],
-    DEVICE_CLASS_HEAT: [{CONF_TYPE: CONF_IS_HOT}, {CONF_TYPE: CONF_IS_NOT_HOT}],
-    DEVICE_CLASS_LIGHT: [{CONF_TYPE: CONF_IS_LIGHT}, {CONF_TYPE: CONF_IS_NO_LIGHT}],
-    DEVICE_CLASS_LOCK: [{CONF_TYPE: CONF_IS_LOCKED}, {CONF_TYPE: CONF_IS_NOT_LOCKED}],
-    DEVICE_CLASS_MOISTURE: [{CONF_TYPE: CONF_IS_MOIST}, {CONF_TYPE: CONF_IS_NOT_MOIST}],
-    DEVICE_CLASS_MOTION: [{CONF_TYPE: CONF_IS_MOTION}, {CONF_TYPE: CONF_IS_NO_MOTION}],
-    DEVICE_CLASS_MOVING: [{CONF_TYPE: CONF_IS_MOVING}, {CONF_TYPE: CONF_IS_NOT_MOVING}],
-    DEVICE_CLASS_OCCUPANCY: [
+    BinarySensorDeviceClass.GARAGE_DOOR: [
+        {CONF_TYPE: CONF_IS_OPEN},
+        {CONF_TYPE: CONF_IS_NOT_OPEN},
+    ],
+    BinarySensorDeviceClass.GAS: [
+        {CONF_TYPE: CONF_IS_GAS},
+        {CONF_TYPE: CONF_IS_NO_GAS},
+    ],
+    BinarySensorDeviceClass.HEAT: [
+        {CONF_TYPE: CONF_IS_HOT},
+        {CONF_TYPE: CONF_IS_NOT_HOT},
+    ],
+    BinarySensorDeviceClass.LIGHT: [
+        {CONF_TYPE: CONF_IS_LIGHT},
+        {CONF_TYPE: CONF_IS_NO_LIGHT},
+    ],
+    BinarySensorDeviceClass.LOCK: [
+        {CONF_TYPE: CONF_IS_LOCKED},
+        {CONF_TYPE: CONF_IS_NOT_LOCKED},
+    ],
+    BinarySensorDeviceClass.MOISTURE: [
+        {CONF_TYPE: CONF_IS_MOIST},
+        {CONF_TYPE: CONF_IS_NOT_MOIST},
+    ],
+    BinarySensorDeviceClass.MOTION: [
+        {CONF_TYPE: CONF_IS_MOTION},
+        {CONF_TYPE: CONF_IS_NO_MOTION},
+    ],
+    BinarySensorDeviceClass.MOVING: [
+        {CONF_TYPE: CONF_IS_MOVING},
+        {CONF_TYPE: CONF_IS_NOT_MOVING},
+    ],
+    BinarySensorDeviceClass.OCCUPANCY: [
         {CONF_TYPE: CONF_IS_OCCUPIED},
         {CONF_TYPE: CONF_IS_NOT_OCCUPIED},
     ],
-    DEVICE_CLASS_OPENING: [{CONF_TYPE: CONF_IS_OPEN}, {CONF_TYPE: CONF_IS_NOT_OPEN}],
-    DEVICE_CLASS_PLUG: [
+    BinarySensorDeviceClass.OPENING: [
+        {CONF_TYPE: CONF_IS_OPEN},
+        {CONF_TYPE: CONF_IS_NOT_OPEN},
+    ],
+    BinarySensorDeviceClass.PLUG: [
         {CONF_TYPE: CONF_IS_PLUGGED_IN},
         {CONF_TYPE: CONF_IS_NOT_PLUGGED_IN},
     ],
-    DEVICE_CLASS_POWER: [
+    BinarySensorDeviceClass.POWER: [
         {CONF_TYPE: CONF_IS_POWERED},
         {CONF_TYPE: CONF_IS_NOT_POWERED},
     ],
-    DEVICE_CLASS_PRESENCE: [
+    BinarySensorDeviceClass.PRESENCE: [
         {CONF_TYPE: CONF_IS_PRESENT},
         {CONF_TYPE: CONF_IS_NOT_PRESENT},
     ],
-    DEVICE_CLASS_PROBLEM: [
+    BinarySensorDeviceClass.PROBLEM: [
         {CONF_TYPE: CONF_IS_PROBLEM},
         {CONF_TYPE: CONF_IS_NO_PROBLEM},
     ],
-    DEVICE_CLASS_RUNNING: [
+    BinarySensorDeviceClass.RUNNING: [
         {CONF_TYPE: CONF_IS_RUNNING},
         {CONF_TYPE: CONF_IS_NOT_RUNNING},
     ],
-    DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_IS_UNSAFE}, {CONF_TYPE: CONF_IS_NOT_UNSAFE}],
-    DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_IS_SMOKE}, {CONF_TYPE: CONF_IS_NO_SMOKE}],
-    DEVICE_CLASS_SOUND: [{CONF_TYPE: CONF_IS_SOUND}, {CONF_TYPE: CONF_IS_NO_SOUND}],
-    DEVICE_CLASS_TAMPER: [
+    BinarySensorDeviceClass.SAFETY: [
+        {CONF_TYPE: CONF_IS_UNSAFE},
+        {CONF_TYPE: CONF_IS_NOT_UNSAFE},
+    ],
+    BinarySensorDeviceClass.SMOKE: [
+        {CONF_TYPE: CONF_IS_SMOKE},
+        {CONF_TYPE: CONF_IS_NO_SMOKE},
+    ],
+    BinarySensorDeviceClass.SOUND: [
+        {CONF_TYPE: CONF_IS_SOUND},
+        {CONF_TYPE: CONF_IS_NO_SOUND},
+    ],
+    BinarySensorDeviceClass.TAMPER: [
         {CONF_TYPE: CONF_IS_TAMPERED},
         {CONF_TYPE: CONF_IS_NOT_TAMPERED},
     ],
-    DEVICE_CLASS_UPDATE: [{CONF_TYPE: CONF_IS_UPDATE}, {CONF_TYPE: CONF_IS_NO_UPDATE}],
-    DEVICE_CLASS_VIBRATION: [
+    BinarySensorDeviceClass.UPDATE: [
+        {CONF_TYPE: CONF_IS_UPDATE},
+        {CONF_TYPE: CONF_IS_NO_UPDATE},
+    ],
+    BinarySensorDeviceClass.VIBRATION: [
         {CONF_TYPE: CONF_IS_VIBRATION},
         {CONF_TYPE: CONF_IS_NO_VIBRATION},
     ],
-    DEVICE_CLASS_WINDOW: [{CONF_TYPE: CONF_IS_OPEN}, {CONF_TYPE: CONF_IS_NOT_OPEN}],
-    DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_ON}, {CONF_TYPE: CONF_IS_OFF}],
+    BinarySensorDeviceClass.WINDOW: [
+        {CONF_TYPE: CONF_IS_OPEN},
+        {CONF_TYPE: CONF_IS_NOT_OPEN},
+    ],
+    DEVICE_CLASS_NONE: [
+        {CONF_TYPE: CONF_IS_ON},
+        {CONF_TYPE: CONF_IS_OFF},
+    ],
 }
 
 CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(

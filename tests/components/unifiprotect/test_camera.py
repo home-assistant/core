@@ -70,7 +70,7 @@ async def camera_fixture(
 
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
-    yield (camera_obj, "camera.test_camera_high")
+    return (camera_obj, "camera.test_camera_high")
 
 
 def validate_default_camera_entity(
@@ -436,6 +436,7 @@ async def test_camera_ws_update(
     new_camera.is_recording = True
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
@@ -463,6 +464,7 @@ async def test_camera_ws_update_offline(
     new_camera.state = StateType.DISCONNECTED
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
@@ -477,6 +479,7 @@ async def test_camera_ws_update_offline(
     new_camera.state = StateType.CONNECTED
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}

@@ -40,8 +40,9 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
+    TemplateError,
 )
-from homeassistant.helpers import condition, extract_domain_configs, template
+from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -457,7 +458,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if self._variables:
                 try:
                     variables = self._variables.async_render(self.hass, variables)
-                except template.TemplateError as err:
+                except TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
                     return
@@ -589,7 +590,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     variables,
                     limited=True,
                 )
-            except template.TemplateError as err:
+            except TemplateError as err:
                 self._logger.error("Error rendering trigger variables: %s", err)
                 return None
 

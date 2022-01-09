@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import SONOS_CREATE_BATTERY
+from .const import SONOS_CREATE_BATTERY, SONOS_CREATE_MIC_SENSOR
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
 
@@ -30,13 +30,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sonos from a config entry."""
 
-    async def _async_create_entity(speaker: SonosSpeaker) -> None:
+    async def _async_create_battery_entity(speaker: SonosSpeaker) -> None:
         _LOGGER.debug("Creating battery binary_sensor on %s", speaker.zone_name)
         entity = SonosPowerEntity(speaker)
         async_add_entities([entity])
 
+    async def _async_create_mic_entity(speaker: SonosSpeaker) -> None:
+        _LOGGER.debug("Creating microphone binary_sensor on %s", speaker.zone_name)
+        async_add_entities([SonosMicrophoneSensorEntity(speaker)])
+
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, SONOS_CREATE_BATTERY, _async_create_entity)
+        async_dispatcher_connect(
+            hass, SONOS_CREATE_BATTERY, _async_create_battery_entity
+        )
+    )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SONOS_CREATE_MIC_SENSOR, _async_create_mic_entity
+        )
     )
 
 
@@ -72,3 +84,24 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available and (self.speaker.charging is not None)
+
+
+class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
+    """Representation of a Sonos microphone sensor entity."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:microphone"
+
+    def __init__(self, speaker: SonosSpeaker) -> None:
+        """Initialize the microphone binary sensor entity."""
+        super().__init__(speaker)
+        self._attr_unique_id = f"{self.soco.uid}-microphone"
+        self._attr_name = f"{self.speaker.zone_name} Microphone"
+
+    async def _async_poll(self) -> None:
+        """Stub for abstract class implementation. Not a pollable attribute."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the binary sensor."""
+        return self.speaker.mic_enabled

@@ -1,4 +1,6 @@
 """Support for controlling the PiFace Digital I/O module on a RPi."""
+import logging
+
 import pifacedigitalio as PFIO
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
@@ -9,9 +11,18 @@ DOMAIN = "rpi_pfio"
 
 DATA_PFIO_LISTENER = "pfio_listener"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Raspberry PI PFIO component."""
+    _LOGGER.warning(
+        "The PiFace Digital I/O (PFIO) integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     pifacedigital = PFIO.PiFaceDigital()
     hass.data[DATA_PFIO_LISTENER] = PFIO.InputEventListener(chip=pifacedigital)
 

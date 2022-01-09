@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TITLE,
     MEDIA_TYPE_GAME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
@@ -58,7 +60,7 @@ class PS4Data:
         self.protocol = None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PS4 Component."""
     hass.data[PS4_DATA] = PS4Data()
 
@@ -69,13 +71,13 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PS4 from a config entry."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a PS4 config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

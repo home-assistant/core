@@ -8,7 +8,7 @@ from pyunifiprotect.data import Camera
 from pyunifiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
 )
@@ -64,7 +64,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
 
         self.device: Camera = camera
         self.entity_description = MediaPlayerEntityDescription(
-            key="speaker", device_class=DEVICE_CLASS_SPEAKER
+            key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
         )
         super().__init__(data)
 

@@ -4,8 +4,11 @@ from __future__ import annotations
 from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -36,7 +39,11 @@ SYNCTHRU_STATE_HUMAN = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up from config entry."""
 
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -48,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     supp_output_tray = printer.output_tray_status()
 
     name = config_entry.data[CONF_NAME]
-    entities = [SyncThruMainSensor(coordinator, name)]
+    entities: list[SyncThruSensor] = [SyncThruMainSensor(coordinator, name)]
 
     for key in supp_toner:
         entities.append(SyncThruTonerSensor(coordinator, name, key))
@@ -56,8 +63,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(SyncThruDrumSensor(coordinator, name, key))
     for key in supp_tray:
         entities.append(SyncThruInputTraySensor(coordinator, name, key))
-    for key in supp_output_tray:
-        entities.append(SyncThruOutputTraySensor(coordinator, name, key))
+    for int_key in supp_output_tray:
+        entities.append(SyncThruOutputTraySensor(coordinator, name, int_key))
 
     async_add_entities(entities)
 
