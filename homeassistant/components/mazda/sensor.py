@@ -23,22 +23,28 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 
 @dataclass
-class MazdaSensorEntityDescription(SensorEntityDescription):
-    """Describes a Mazda sensor entity."""
+class MazdaSensorRequiredKeysMixin:
+    """Mixin for required keys."""
 
     # Suffix to be appended to the vehicle name to obtain the sensor name
-    name_suffix: str | None = None
+    name_suffix: str
+
+    # Function to determine the value for this sensor, given the coordinator data and the configured unit system
+    value: Callable[[dict, UnitSystem], StateType]
+
+
+@dataclass
+class MazdaSensorEntityDescription(
+    SensorEntityDescription, MazdaSensorRequiredKeysMixin
+):
+    """Describes a Mazda sensor entity."""
 
     # Function to determine whether the vehicle supports this sensor, given the coordinator data
     is_supported: Callable[[dict], bool] = lambda data: True
 
     # Function to determine the unit of measurement for this sensor, given the configured unit system
-    unit: Callable[[UnitSystem], str | None] = lambda unit_system: None
-
-    # Function to determine the value for this sensor, given the coordinator data and the configured unit system
-    value: Callable[
-        [dict, UnitSystem], StateType | None
-    ] = lambda data, unit_system: None
+    # Falls back to description.native_unit_of_measurement if it is not provided
+    unit: Callable[[UnitSystem], str | None] | None = None
 
 
 def _get_distance_unit(unit_system):
@@ -105,7 +111,7 @@ SENSOR_ENTITIES = [
         key="fuel_remaining_percentage",
         name_suffix="Fuel Remaining Percentage",
         icon="mdi:gas-station",
-        unit=lambda unit_system: PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         is_supported=lambda data: data["status"]["fuelRemainingPercent"] is not None,
         value=lambda data, unit_system: data["status"]["fuelRemainingPercent"],
     ),
@@ -129,7 +135,7 @@ SENSOR_ENTITIES = [
         key="front_left_tire_pressure",
         name_suffix="Front Left Tire Pressure",
         icon="mdi:car-tire-alert",
-        unit=lambda unit_system: PRESSURE_PSI,
+        native_unit_of_measurement=PRESSURE_PSI,
         is_supported=_front_left_tire_pressure_supported,
         value=_front_left_tire_pressure_value,
     ),
@@ -137,7 +143,7 @@ SENSOR_ENTITIES = [
         key="front_right_tire_pressure",
         name_suffix="Front Right Tire Pressure",
         icon="mdi:car-tire-alert",
-        unit=lambda unit_system: PRESSURE_PSI,
+        native_unit_of_measurement=PRESSURE_PSI,
         is_supported=_front_right_tire_pressure_supported,
         value=_front_right_tire_pressure_value,
     ),
@@ -145,7 +151,7 @@ SENSOR_ENTITIES = [
         key="rear_left_tire_pressure",
         name_suffix="Rear Left Tire Pressure",
         icon="mdi:car-tire-alert",
-        unit=lambda unit_system: PRESSURE_PSI,
+        native_unit_of_measurement=PRESSURE_PSI,
         is_supported=_rear_left_tire_pressure_supported,
         value=_rear_left_tire_pressure_value,
     ),
@@ -153,7 +159,7 @@ SENSOR_ENTITIES = [
         key="rear_right_tire_pressure",
         name_suffix="Rear Right Tire Pressure",
         icon="mdi:car-tire-alert",
-        unit=lambda unit_system: PRESSURE_PSI,
+        native_unit_of_measurement=PRESSURE_PSI,
         is_supported=_rear_right_tire_pressure_supported,
         value=_rear_right_tire_pressure_value,
     ),
@@ -197,7 +203,9 @@ class MazdaSensorEntity(MazdaEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement for the sensor, according to the configured unit system."""
-        return self.entity_description.unit(self.hass.config.units)
+        if unit_fn := self.entity_description.unit:
+            return unit_fn(self.hass.config.units)
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self):
