@@ -8,6 +8,7 @@ from dsmr_parser.obis_references import (
     EQUIPMENT_IDENTIFIER_GAS,
     LUXEMBOURG_EQUIPMENT_IDENTIFIER,
     P1_MESSAGE_TIMESTAMP,
+    Q3D_EQUIPMENT_IDENTIFIER,
 )
 from dsmr_parser.objects import CosemObject
 import pytest
