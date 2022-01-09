@@ -113,10 +113,6 @@ regex==2021.8.28
 # can remove after httpx/httpcore updates its anyio version pin
 anyio>=3.3.1
 
-# websockets 10.0 is broken with AWS
-# https://github.com/aaugustin/websockets/issues/1065
-websockets==9.1
-
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
 """
