@@ -53,6 +53,7 @@ if TYPE_CHECKING:
 # pylint: disable-next=fixme
 # TODO 3.9: Replace EntityRegistryUserDict with generic UserDict at runtime
 if TYPE_CHECKING:
+    # pylint: disable-next=unsubscriptable-object
     EntityRegistryUserDict = UserDict[str, "RegistryEntry"]
 else:
     EntityRegistryUserDict = UserDict
