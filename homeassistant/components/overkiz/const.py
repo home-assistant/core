@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Final
+from typing import Any, Dict, Final, List, Union
 
 from pyoverkiz.enums import UIClass
 from pyoverkiz.enums.ui import UIWidget
@@ -18,10 +18,12 @@ UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SCENE,
     Platform.SENSOR,
 ]
 
@@ -35,3 +37,5 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
     UIClass.DOOR_LOCK: Platform.LOCK,
     UIClass.LIGHT: Platform.LIGHT,
 }
+
+OverkizStateType = Union[str, int, float, bool, Dict[Any, Any], List[Any], None]

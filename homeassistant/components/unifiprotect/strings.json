@@ -2,8 +2,20 @@
   "config": {
     "step": {
       "user": {
+        "title": "UniFi Protect Setup",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "UniFi Protect Reauth",
+        "data": {
+          "host": "IP/Host of UniFi Protect Server",
+          "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }

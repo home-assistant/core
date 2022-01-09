@@ -26,7 +26,10 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
@@ -60,7 +63,11 @@ ICON_CONDITION_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
     async_add_entities([ECWeather(coordinator, False), ECWeather(coordinator, True)])
@@ -80,6 +87,7 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}{'-hourly' if hourly else '-daily'}"
         )
+        self._attr_entity_registry_enabled_default = not hourly
         self._hourly = hourly
 
     @property

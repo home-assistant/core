@@ -77,7 +77,9 @@ def async_condition_from_config(
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
         state = hass.states.get(config[ATTR_ENTITY_ID])
-        return state and state.attributes.get(attribute) == config[attribute]
+        return (
+            state is not None and state.attributes.get(attribute) == config[attribute]
+        )
 
     return test_is_state
 

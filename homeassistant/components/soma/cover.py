@@ -1,17 +1,23 @@
 """Support for Soma Covers."""
-
 import logging
 
 from requests import RequestException
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import API, DEVICES, DOMAIN, SomaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Soma cover platform."""
 
     devices = hass.data[DOMAIN][DEVICES]

@@ -1,4 +1,6 @@
 """Support for Piglow LED's."""
+from __future__ import annotations
+
 import logging
 import subprocess
 
@@ -14,7 +16,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,11 +33,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Piglow Light platform."""
+    _LOGGER.warning(
+        "The Piglow integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != "54":
         _LOGGER.error("A Piglow device was not found")
-        return False
+        return
 
     name = config.get(CONF_NAME)
 

@@ -2,7 +2,9 @@
 import voluptuous as vol
 
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_HORIZONTAL_FLIP,
@@ -63,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the rpi_camera integration."""
     config_domain = config[DOMAIN]
     hass.data[DOMAIN] = {

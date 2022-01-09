@@ -274,7 +274,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         return class_or_icon.get(STATE_CLASS)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if self._tasmota_entity.quantity in status_sensor.SENSORS:
             return EntityCategory.DIAGNOSTIC

@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -37,7 +38,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
@@ -338,7 +339,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
     return await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
@@ -365,7 +366,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
     """Register events and services for HomeKit."""
     hass.http.register_view(HomeKitPairingQRView)
 
-    async def async_handle_homekit_reset_accessory(service):
+    async def async_handle_homekit_reset_accessory(service: ServiceCall) -> None:
         """Handle reset accessory HomeKit service call."""
         for homekit in _async_all_homekit_instances(hass):
             if homekit.status != STATUS_RUNNING:
@@ -385,7 +386,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
     )
 
-    async def async_handle_homekit_unpair(service):
+    async def async_handle_homekit_unpair(service: ServiceCall) -> None:
         """Handle unpair HomeKit service call."""
         referenced = async_extract_referenced_entity_ids(hass, service)
         dev_reg = device_registry.async_get(hass)
@@ -417,7 +418,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         schema=UNPAIR_SERVICE_SCHEMA,
     )
 
-    async def _handle_homekit_reload(service):
+    async def _handle_homekit_reload(service: ServiceCall) -> None:
         """Handle start HomeKit service call."""
         config = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -707,7 +708,12 @@ class HomeKit:
         """Remove all pairings for an accessory so it can be repaired."""
         state = self.driver.state
         for client_uuid in list(state.paired_clients):
-            state.remove_paired_client(client_uuid)
+            # We need to check again since removing a single client
+            # can result in removing all the clients that the client
+            # granted access to if it was an admin, otherwise
+            # remove_paired_client can generate a KeyError
+            if client_uuid in state.paired_clients:
+                state.remove_paired_client(client_uuid)
         self.driver.async_persist()
         self.driver.async_update_advertisement()
         self._async_show_setup_message()
@@ -911,6 +917,8 @@ class HomeKit:
             config[ATTR_MODEL] = device_entry.model
         if device_entry.sw_version:
             config[ATTR_SW_VERSION] = device_entry.sw_version
+        if device_entry.hw_version:
+            config[ATTR_HW_VERSION] = device_entry.hw_version
         if device_entry.config_entries:
             first_entry = list(device_entry.config_entries)[0]
             if entry := self.hass.config_entries.async_get_entry(first_entry):
