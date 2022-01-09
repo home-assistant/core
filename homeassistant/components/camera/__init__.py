@@ -14,7 +14,7 @@ import inspect
 import logging
 import os
 from random import SystemRandom
-from typing import Final, cast, final
+from typing import Final, Optional, cast, final
 
 from aiohttp import web
 import async_timeout
@@ -287,20 +287,23 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     return cast(Camera, camera)
 
 
+# An RtspToWebRtcProvider accepts these inputs:
+#     stream_source: The RTSP url
+#     offer_sdp: The WebRTC SDP offer
+#     stream_id: A unique id for the stream, used to update an existing source
+# The output is the SDP answer, or None if the source or offer is not eligible.
+# The Callable may throw HomeAssistantError on failure.
+RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[Optional[str]]]
+
+
 def async_register_rtsp_to_web_rtc_provider(
     hass: HomeAssistant,
     domain: str,
-    provider: Callable[[str, str, str], Awaitable[str | None]],
+    provider: RtspToWebRtcProviderType,
 ) -> Callable[[], None]:
     """Register an RTSP to WebRTC provider.
 
-    The Callable accepts these inputs:
-      stream_source: The RTSP url
-      offer_sdp: The WebRTC SDP offer
-      stream_id: A unique id for the stream, used to update an existing source
-    The output is the SDP answer, or None if the source or offer is not eligible.
-    The Callable may throw HomeAssistantError on failure. The first provider to
-    satisfy the offer will be used.
+    The first provider to satisfy the offer will be used.
     """
     if DOMAIN not in hass.data:
         raise ValueError("Unexpected state, camera not loaded")
@@ -330,11 +333,11 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
 
 def _async_get_rtsp_to_web_rtc_providers(
     hass: HomeAssistant,
-) -> Iterable[Callable[[str, str, str], Awaitable[str | None]]]:
+) -> Iterable[RtspToWebRtcProviderType]:
     """Return registered RTSP to WebRTC providers."""
-    providers: dict[
-        str, Callable[[str, str, str], Awaitable[str | None]]
-    ] = hass.data.get(DATA_RTSP_TO_WEB_RTC, {})
+    providers: dict[str, RtspToWebRtcProviderType] = hass.data.get(
+        DATA_RTSP_TO_WEB_RTC, {}
+    )
     return providers.values()
 
 
