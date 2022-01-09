@@ -1,5 +1,17 @@
 {
     "config": {
+        "abort": {
+            "could_not_connect": "No se pudo conectar al dispositivo DLNA",
+            "discovery_error": "No se ha podido descubrir un dispositivo DLNA coincidente",
+            "incomplete_config": "A la configuraci\u00f3n le falta una variable necesaria",
+            "non_unique_id": "Se han encontrado varios dispositivos con el mismo ID \u00fanico",
+            "not_dmr": "El dispositivo no es un procesador de medios digitales compatible"
+        },
+        "error": {
+            "could_not_connect": "No se pudo conectar al dispositivo DLNA",
+            "not_dmr": "El dispositivo no es un procesador de medios digitales compatible"
+        },
+        "flow_title": "{name}",
         "step": {
             "import_turn_on": {
                 "description": "Por favor, encienda el dispositivo y haga clic en enviar para continuar la migraci\u00f3n"
@@ -10,8 +22,15 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Elija un dispositivo para configurar o d\u00e9jelo en blanco para introducir una URL",
+                "title": "Dispositivos DLNA DMR descubiertos"
             }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "URL no v\u00e1lida"
         }
     }
 }
