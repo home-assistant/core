@@ -27,14 +27,6 @@ class SensemeEntity(Entity):
         )
         self._async_update_attrs()
 
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Get the current device state attributes."""
-        return {
-            "room_name": self._device.room_name,
-            "room_type": self._device.room_type,
-        }
-
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
