@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
@@ -232,7 +233,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             }
             hass.async_create_task(
                 discovery.async_load_platform(
-                    hass, NOTIFY_DOMAIN, DOMAIN, discovery_info, config
+                    hass, Platform.NOTIFY, DOMAIN, discovery_info, config
                 )
             )
 
@@ -241,7 +242,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         discovery_info = {CONF_HOST: lte_conf[CONF_HOST], SENSOR_DOMAIN: sensor_conf}
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, SENSOR_DOMAIN, DOMAIN, discovery_info, config
+                hass, Platform.SENSOR, DOMAIN, discovery_info, config
             )
         )
 
@@ -253,7 +254,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         }
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, BINARY_SENSOR_DOMAIN, DOMAIN, discovery_info, config
+                hass, Platform.BINARY_SENSOR, DOMAIN, discovery_info, config
             )
         )
 
