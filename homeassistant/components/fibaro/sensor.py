@@ -63,7 +63,8 @@ def setup_platform(
     """Set up the Fibaro controller devices."""
     if discovery_info is None:
         return
-    entities = []
+
+    entities: list[SensorEntity] = []
     for device in hass.data[FIBARO_DEVICES]["sensor"]:
         entities.append(FibaroSensor(device))
     for device in hass.data[FIBARO_DEVICES]["switch"]:
