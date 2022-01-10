@@ -1,4 +1,7 @@
 """Support for Traccar device tracking."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 
@@ -31,6 +34,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import DOMAIN, TRACKER_UPDATE
@@ -159,7 +163,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Validate the configuration and return a Traccar scanner."""
 
     session = async_get_clientsession(hass, config[CONF_VERIFY_SSL])
