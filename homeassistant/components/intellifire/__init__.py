@@ -1,7 +1,6 @@
 """The Intellifire integration."""
 from __future__ import annotations
 
-import logging
 import logging.handlers
 
 from intellifire4py import IntellifireAsync

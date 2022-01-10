@@ -16,14 +16,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required("host"): str,
-        vol.Required(
-            "name", msg="Location", description={"suggested_value": "Living Room"}
-        ): str,
-    }
-)
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -37,11 +30,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except Exception:
         raise CannotConnect
 
-    name = data["name"]
     serial_number = api.data.serial
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{name} Fireplace", "type": "Fireplace", "serial": serial_number}
+    return {"title": "Fireplace", "type": "Fireplace", "serial": serial_number}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

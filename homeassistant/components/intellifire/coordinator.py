@@ -10,9 +10,7 @@ from intellifire4py import IntellifireAsync
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):

@@ -32,14 +32,13 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "name": "Fuego",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Living Room Fireplace"
-    assert result2["data"] == {"host": "1.1.1.1", "name": "Fuego", "serial": "abcd1234"}
+    assert result2["data"] == {"host": "1.1.1.1", "serial": "abcd1234"}
 
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -58,7 +57,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "name": "Fuego",
             },
         )
 
@@ -80,7 +78,6 @@ async def test_form_good(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "name": "Fuego",
             },
         )
 
@@ -102,7 +99,6 @@ async def test_unknwon_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "name": "Fuego",
             },
         )
     assert result2["type"] == RESULT_TYPE_FORM
@@ -140,9 +136,7 @@ async def test_validate_input(hass: HomeAssistant) -> None:
 
         # mock_data.return_value.serial = "1"
 
-        result = await validate_input(
-            hass, {"host": "127.0.0.1", "name": "Living Room"}
-        )
+        result = await validate_input(hass, {"host": "127.0.0.1"})
 
-        assert result["title"] == "Living Room Fireplace"
+        assert result["title"] == "Fireplace"
         assert result["type"] == "Fireplace"
