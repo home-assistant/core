@@ -1,5 +1,7 @@
 """Support for APRS device tracking."""
+from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 import threading
 
@@ -21,7 +23,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 DOMAIN = "aprs"
@@ -80,15 +84,20 @@ def gps_accuracy(gps, posambiguity: int) -> int:
     return accuracy
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+def setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: Callable[..., None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the APRS tracker."""
-    callsigns = config.get(CONF_CALLSIGNS)
+    callsigns = config[CONF_CALLSIGNS]
     server_filter = make_filter(callsigns)
 
-    callsign = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    host = config.get(CONF_HOST)
-    timeout = config.get(CONF_TIMEOUT)
+    callsign = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    host = config[CONF_HOST]
+    timeout = config[CONF_TIMEOUT]
     aprs_listener = AprsListenerThread(callsign, password, host, server_filter, see)
 
     def aprs_disconnect(event):
@@ -107,7 +116,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
         return
 
     _LOGGER.debug(aprs_listener.start_message)
-    return True
 
 
 class AprsListenerThread(threading.Thread):
