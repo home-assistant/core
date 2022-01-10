@@ -1,4 +1,4 @@
-"""Block I/O being done in asyncio."""
+"""Block blocking calls being done in asyncio."""
 from http.client import HTTPConnection
 import time
 
@@ -6,7 +6,7 @@ from .util.async_ import protect_loop
 
 
 def enable() -> None:
-    """Enable the detection of I/O in the event loop."""
+    """Enable the detection of blocking calls in the event loop."""
     # Prevent urllib3 and requests doing I/O in event loop
     HTTPConnection.putrequest = protect_loop(HTTPConnection.putrequest)  # type: ignore
 

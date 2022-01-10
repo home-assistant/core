@@ -116,7 +116,7 @@ def check_loop() -> None:
     # Did not source from integration? Hard error.
     if found_frame is None:
         raise RuntimeError(
-            "Detected I/O inside the event loop. This is causing stability issues. Please report issue"
+            "Detected blocking call inside the event loop. This is causing stability issues. Please report issue"
         )
 
     start = index + len(path)
@@ -130,7 +130,7 @@ def check_loop() -> None:
         extra = ""
 
     _LOGGER.warning(
-        "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing I/O at %s, line %s: %s",
+        "Detected blocking call inside the event loop. This is causing stability issues. Please report issue%s for %s doing blocking calls at %s, line %s: %s",
         extra,
         integration,
         found_frame.filename[index:],
@@ -138,7 +138,7 @@ def check_loop() -> None:
         found_frame.line.strip(),
     )
     raise RuntimeError(
-        f"I/O must be done in the executor; Use `await hass.async_add_executor_job()` "
+        f"Blocking calls must be done in the executor; Use `await hass.async_add_executor_job()` "
         f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
     )
 
