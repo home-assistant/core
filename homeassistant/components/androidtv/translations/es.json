@@ -6,7 +6,10 @@
         },
         "error": {
             "adbkey_not_file": "No se ha encontrado el archivo de claves ADB",
-            "key_and_server": "S\u00f3lo proporciona la clave ADB o el servidor ADB"
+            "cannot_connect": "No se pudo conectar",
+            "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
+            "key_and_server": "S\u00f3lo proporciona la clave ADB o el servidor ADB",
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {

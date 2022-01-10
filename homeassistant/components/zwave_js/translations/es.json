@@ -27,6 +27,10 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Clave de red",
+                    "s0_legacy_key": "Clave S0 (heredada)",
+                    "s2_access_control_key": "Clave de control de acceso S2",
+                    "s2_authenticated_key": "Clave autenticada de S2",
+                    "s2_unauthenticated_key": "Clave no autenticada de S2",
                     "usb_path": "Ruta del dispositivo USB"
                 },
                 "description": "El complemento generar\u00e1 claves de seguridad si esos campos se dejan vac\u00edos.",
@@ -59,6 +63,15 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Borrar c\u00f3digo de usuario en {entity_name}",
+            "ping": "Ping del dispositivo",
+            "refresh_value": "Actualizar los valores de {entity_name}",
+            "reset_meter": "Restablecer contadores en {subtype}",
+            "set_config_parameter": "Establecer el valor del par\u00e1metro de configuraci\u00f3n {subtype}",
+            "set_lock_usercode": "Establecer un c\u00f3digo de usuario en {entity_name}",
+            "set_value": "Establecer valor de un valor Z-Wave"
+        },
         "condition_type": {
             "config_parameter": "Valor del par\u00e1metro de configuraci\u00f3n {subtype}",
             "node_status": "Estado del nodo",
@@ -101,6 +114,10 @@
                     "emulate_hardware": "Emular el hardware",
                     "log_level": "Nivel de registro",
                     "network_key": "Clave de red",
+                    "s0_legacy_key": "Tecla S0 (heredada)",
+                    "s2_access_control_key": "Clave de control de acceso S2",
+                    "s2_authenticated_key": "Clave autenticada de S2",
+                    "s2_unauthenticated_key": "Clave no autenticada de S2",
                     "usb_path": "Ruta del dispositivo USB"
                 },
                 "description": "El complemento generar\u00e1 claves de seguridad si esos campos se dejan vac\u00edos.",

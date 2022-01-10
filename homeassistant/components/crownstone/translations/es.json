@@ -71,6 +71,9 @@
                 "title": "Ruta manual del dispositivo USB Crownstone"
             },
             "usb_manual_config_option": {
+                "data": {
+                    "usb_manual_path": "Ruta del dispositivo USB"
+                },
                 "description": "Introduzca manualmente la ruta de un dispositivo USB Crownstone.",
                 "title": "Ruta manual del dispositivo USB Crownstone"
             },
