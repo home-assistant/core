@@ -194,9 +194,9 @@ async def async_control_connect(host: str, key: str | None) -> WebOsClient:
     client = WebOsClient(host, key)
     try:
         await client.connect()
-    except WebOsTvPairError as err:
+    except WebOsTvPairError:
         _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
-        raise WebOsTvPairError(err) from err
+        raise
 
     return client
 
