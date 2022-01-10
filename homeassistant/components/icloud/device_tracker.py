@@ -1,6 +1,7 @@
 """Support for tracking for iCloud devices."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
@@ -10,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .account import IcloudAccount, IcloudDevice
 from .const import (
@@ -20,7 +22,12 @@ from .const import (
 )
 
 
-async def async_setup_scanner(hass: HomeAssistant, config, see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: Callable[..., Awaitable[None]],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Old way of setting up the iCloud tracker."""
 
 
