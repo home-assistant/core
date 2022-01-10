@@ -66,7 +66,7 @@ def setup_platform(
         _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
-            hdmi_device = hass.data[device]
+            hdmi_device = hass.data[DOMAIN][device]
             entities.append(CecPlayerEntity(hdmi_device, hdmi_device.logical_address))
         add_entities(entities, True)
 
