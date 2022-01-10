@@ -16,7 +16,7 @@ from .const import _LOGGER, DOMAIN
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):
     """Class to manage the polling of the fireplace API."""
 
-    def __init__(self, hass, api: IntellifireAsync, serial: str):
+    def __init__(self, hass: HomeAssistant, api: IntellifireAsync, serial: str) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
