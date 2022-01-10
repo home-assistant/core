@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROFILE_NAME,
     CONF_SERVICE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
@@ -149,7 +150,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
         hass.async_create_task(
-            discovery.async_load_platform(hass, "notify", DOMAIN, notify_config, config)
+            discovery.async_load_platform(
+                hass, Platform.NOTIFY, DOMAIN, notify_config, config
+            )
         )
 
     return validation

@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -224,10 +225,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         loaded = True
 
         await hass.helpers.discovery.async_load_platform(
-            "binary_sensor", DOMAIN, {}, config
+            Platform.BINARY_SENSOR, DOMAIN, {}, config
         )
-        await hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
-        await hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
+        await hass.helpers.discovery.async_load_platform(
+            Platform.STT, DOMAIN, {}, config
+        )
+        await hass.helpers.discovery.async_load_platform(
+            Platform.TTS, DOMAIN, {}, config
+        )
 
     cloud.iot.register_on_connect(_on_connect)
 
