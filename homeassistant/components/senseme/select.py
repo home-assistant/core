@@ -79,7 +79,11 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the current value."""
-        _LOGGER.warning("CURRENT AUTO COMFORT: %s", self._device.fan_autocomfort)
+        _LOGGER.warning(
+            "%s = CURRENT AUTO COMFORT: %s",
+            self._device.name,
+            self._device.fan_autocomfort,
+        )
         return self.entity_description.value_fn(self._device)
 
     async def async_select_option(self, option: str) -> None:
