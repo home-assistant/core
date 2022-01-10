@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -247,10 +248,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await broker.save_auth_tokens()
     await broker.async_update()  # get initial state
 
-    hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    )
     if broker.tcs.hotwater:
         hass.async_create_task(
-            async_load_platform(hass, "water_heater", DOMAIN, {}, config)
+            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
     hass.helpers.event.async_track_time_interval(

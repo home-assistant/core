@@ -28,6 +28,7 @@ from homeassistant.helpers import entity, entity_registry, update_coordinator
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt
 
 from .const import (
@@ -221,7 +222,7 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         return attrs
 
     @property
-    def native_value(self) -> entity.StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if func := self.entity_description.value:
             return func(self._sensor_data.getValue())
@@ -258,7 +259,7 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
         super()._handle_coordinator_update()
 
     @property
-    def native_value(self) -> entity.StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self._accumulated_value is None:
             return None

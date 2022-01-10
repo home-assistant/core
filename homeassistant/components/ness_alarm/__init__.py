@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -111,10 +112,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     hass.async_create_task(
-        async_load_platform(hass, "binary_sensor", DOMAIN, {CONF_ZONES: zones}, config)
+        async_load_platform(
+            hass, Platform.BINARY_SENSOR, DOMAIN, {CONF_ZONES: zones}, config
+        )
     )
     hass.async_create_task(
-        async_load_platform(hass, "alarm_control_panel", DOMAIN, {}, config)
+        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config)
     )
 
     def on_zone_change(zone_id: int, state: bool):

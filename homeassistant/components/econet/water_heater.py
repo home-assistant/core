@@ -5,13 +5,11 @@ from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.water_heater import WaterHeaterOperationMode
 
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
-    STATE_OFF,
     STATE_PERFORMANCE,
     SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
@@ -19,6 +17,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

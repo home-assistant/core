@@ -35,7 +35,7 @@ NO_IP_ERRORS = {
     "911": "A fatal error on NO-IP's side such as a database outage",
 }
 
-UPDATE_URL = "https://dynupdate.noip.com/nic/update"
+UPDATE_URL = "https://dynupdate.no-ip.com/nic/update"
 HA_USER_AGENT = f"{SERVER_SOFTWARE} {EMAIL}"
 
 CONFIG_SCHEMA = vol.Schema(

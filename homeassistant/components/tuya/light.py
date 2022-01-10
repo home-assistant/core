@@ -31,6 +31,28 @@ from .util import remap_value
 
 
 @dataclass
+class ColorTypeData:
+    """Color Type Data."""
+
+    h_type: IntegerTypeData
+    s_type: IntegerTypeData
+    v_type: IntegerTypeData
+
+
+DEFAULT_COLOR_TYPE_DATA = ColorTypeData(
+    h_type=IntegerTypeData(min=1, scale=0, max=360, step=1),
+    s_type=IntegerTypeData(min=1, scale=0, max=255, step=1),
+    v_type=IntegerTypeData(min=1, scale=0, max=255, step=1),
+)
+
+DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
+    h_type=IntegerTypeData(min=1, scale=0, max=360, step=1),
+    s_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
+    v_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
+)
+
+
+@dataclass
 class TuyaLightEntityDescription(LightEntityDescription):
     """Describe an Tuya light entity."""
 
@@ -40,6 +62,7 @@ class TuyaLightEntityDescription(LightEntityDescription):
     color_data: DPCode | tuple[DPCode, ...] | None = None
     color_mode: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
+    default_color_type: ColorTypeData = DEFAULT_COLOR_TYPE_DATA
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
@@ -63,6 +86,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
             color_data=DPCode.COLOUR_DATA,
+            default_color_type=DEFAULT_COLOR_TYPE_DATA_V2,
         ),
     ),
     # Light
@@ -243,28 +267,6 @@ LIGHTS["pc"] = LIGHTS["kg"]
 
 
 @dataclass
-class ColorTypeData:
-    """Color Type Data."""
-
-    h_type: IntegerTypeData
-    s_type: IntegerTypeData
-    v_type: IntegerTypeData
-
-
-DEFAULT_COLOR_TYPE_DATA = ColorTypeData(
-    h_type=IntegerTypeData(min=1, scale=0, max=360, step=1),
-    s_type=IntegerTypeData(min=1, scale=0, max=255, step=1),
-    v_type=IntegerTypeData(min=1, scale=0, max=255, step=1),
-)
-
-DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
-    h_type=IntegerTypeData(min=1, scale=0, max=360, step=1),
-    s_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
-    v_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
-)
-
-
-@dataclass
 class ColorData:
     """Color Data."""
 
@@ -301,10 +303,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := LIGHTS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaLightEntity(
                                 device, hass_data.device_manager, description
@@ -443,7 +442,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 )
             else:
                 # If no type is found, use a default one
-                self._color_data_type = DEFAULT_COLOR_TYPE_DATA
+                self._color_data_type = self.entity_description.default_color_type
                 if self._color_data_dpcode == DPCode.COLOUR_DATA_V2 or (
                     self._brightness_type and self._brightness_type.max > 255
                 ):

@@ -8,14 +8,14 @@ async-upnp-client==0.23.3
 async_timeout==4.0.0
 atomicwrites==1.4.0
 attrs==21.2.0
-awesomeversion==21.11.0
+awesomeversion==22.1.0
 backports.zoneinfo;python_version<"3.9"
 bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
 emoji==1.5.0
-hass-nabucasa==0.50.0
+hass-nabucasa==0.51.0
 home-assistant-frontend==20211229.0
 httpx==0.21.0
 ifaddr==0.1.7
@@ -26,9 +26,10 @@ pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.22.0
 pyyaml==6.0
-requests==2.26.0
+requests==2.27.1
 scapy==2.4.5
 sqlalchemy==1.4.27
+typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.12.2
 yarl==1.6.3
@@ -85,10 +86,6 @@ regex==2021.8.28
 # anyio has a bug that was fixed in 3.3.1
 # can remove after httpx/httpcore updates its anyio version pin
 anyio>=3.3.1
-
-# websockets 10.0 is broken with AWS
-# https://github.com/aaugustin/websockets/issues/1065
-websockets==9.1
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0

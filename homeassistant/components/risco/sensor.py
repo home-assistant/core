@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, EVENTS_COORDINATOR
 from .entity import binary_sensor_unique_id
@@ -98,7 +99,9 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
         if self._event is None:
             return None
 
-        return self._event.time
+        return dt_util.parse_datetime(self._event.time).replace(
+            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        )
 
     @property
     def extra_state_attributes(self):

@@ -142,17 +142,16 @@ class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_NEST_CONFIG] = config.get(DOMAIN)
 
     if DOMAIN not in config:
         return True
 
-    if CONF_PROJECT_ID not in config[DOMAIN]:
+    config_mode = config_flow.get_config_mode(hass)
+    if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
 
-    # For setup of ConfigEntry below
-    hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
-    config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
         InstalledAppAuth(
