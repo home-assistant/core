@@ -439,7 +439,6 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last Clean Duration",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     f"last_clean_{ATTR_LAST_CLEAN_AREA}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=AREA_SQUARE_METERS,
@@ -448,7 +447,6 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last Clean Area",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     f"current_{ATTR_STATUS_CLEAN_TIME}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
