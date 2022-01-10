@@ -66,12 +66,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:television",
     ),
     SensorEntityDescription(
-        key="wanted",
-        name="Wanted",
-        native_unit_of_measurement="Movies",
-        icon="mdi:television",
-    ),
-    SensorEntityDescription(
         key="movies",
         name="Movies",
         native_unit_of_measurement="Movies",
