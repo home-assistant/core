@@ -257,6 +257,14 @@ DEFAULT_COLOR_TYPE_DATA = ColorTypeData(
     v_type=IntegerTypeData(min=1, scale=0, max=255, step=1),
 )
 
+# Used for devices with "colour_data" key and 0-1000 range
+# Strip lights use 0-1000 but this is not documented in Tuya API docs
+DEFAULT_COLOR_TYPE_DATA_1000 = ColorTypeData(
+    h_type=IntegerTypeData(min=1, scale=0, max=360, step=1),
+    s_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
+    v_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
+)
+
 DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
     h_type=IntegerTypeData(min=1, scale=0, max=360, step=1),
     s_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
@@ -445,6 +453,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._brightness_type and self._brightness_type.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
+                #If device category is dd (Strip light) use 0-1000 range for colour_data key
+                if (self.device.category == "dd"):
+                    self._color_data_type = DEFAULT_COLOR_TYPE_DATA_1000
 
     @property
     def is_on(self) -> bool:
