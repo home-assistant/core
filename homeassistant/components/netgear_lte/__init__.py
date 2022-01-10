@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Final
 
 import aiohttp
 import attr
@@ -34,6 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 DISPATCHER_NETGEAR_LTE = "netgear_lte_update"
+
+CONF_NOTIFY: Final = "notify"
+CONF_BINARY_SENSOR: Final = "binary_sensor"
+CONF_SENSOR: Final = "sensor"
 
 DOMAIN = "netgear_lte"
 DATA_KEY = "netgear_lte"
@@ -88,12 +93,12 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
                         vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(Platform.NOTIFY, default={}): vol.All(
+                        vol.Optional(CONF_NOTIFY, default={}): vol.All(
                             cv.ensure_list, [NOTIFY_SCHEMA]
                         ),
-                        vol.Optional(Platform.SENSOR, default={}): SENSOR_SCHEMA,
+                        vol.Optional(CONF_SENSOR, default={}): SENSOR_SCHEMA,
                         vol.Optional(
-                            Platform.BINARY_SENSOR, default={}
+                            CONF_BINARY_SENSOR, default={}
                         ): BINARY_SENSOR_SCHEMA,
                     }
                 )
@@ -222,11 +227,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Load platforms for each modem
     for lte_conf in netgear_lte_config:
         # Notify
-        for notify_conf in lte_conf[Platform.NOTIFY]:
+        for notify_conf in lte_conf[CONF_NOTIFY]:
             discovery_info = {
                 CONF_HOST: lte_conf[CONF_HOST],
                 CONF_NAME: notify_conf.get(CONF_NAME),
-                Platform.NOTIFY: notify_conf,
+                CONF_NOTIFY: notify_conf,
             }
             hass.async_create_task(
                 discovery.async_load_platform(
@@ -235,8 +240,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         # Sensor
-        sensor_conf = lte_conf.get(Platform.SENSOR)
-        discovery_info = {CONF_HOST: lte_conf[CONF_HOST], Platform.SENSOR: sensor_conf}
+        sensor_conf = lte_conf[CONF_SENSOR]
+        discovery_info = {CONF_HOST: lte_conf[CONF_HOST], CONF_SENSOR: sensor_conf}
         hass.async_create_task(
             discovery.async_load_platform(
                 hass, Platform.SENSOR, DOMAIN, discovery_info, config
@@ -244,10 +249,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         # Binary Sensor
-        binary_sensor_conf = lte_conf.get(Platform.BINARY_SENSOR)
+        binary_sensor_conf = lte_conf[CONF_BINARY_SENSOR]
         discovery_info = {
             CONF_HOST: lte_conf[CONF_HOST],
-            Platform.BINARY_SENSOR: binary_sensor_conf,
+            CONF_BINARY_SENSOR: binary_sensor_conf,
         }
         hass.async_create_task(
             discovery.async_load_platform(
