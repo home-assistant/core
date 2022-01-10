@@ -312,14 +312,14 @@ def test_setup_scanner():
             "password": TEST_PASSWORD,
             "host": TEST_HOST,
             "callsigns": ["XX0FOO*", "YY0BAR-1"],
-            "timeout": device_tracker.DEFAULT_TIMEOUT,
         }
 
         see = Mock()
-        device_tracker.setup_scanner(hass, config, see)
+        res = device_tracker.setup_scanner(hass, config, see)
         hass.bus.fire(EVENT_HOMEASSISTANT_START)
         hass.stop()
 
+        assert res
         listener.assert_called_with(
             TEST_CALLSIGN, TEST_PASSWORD, TEST_HOST, "b/XX0FOO* b/YY0BAR-1", see
         )
