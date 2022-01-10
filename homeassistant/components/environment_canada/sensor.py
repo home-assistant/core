@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 import re
 from typing import Any
 
@@ -217,8 +216,6 @@ ALERT_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:alert",
     ),
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def validate_station(station):
