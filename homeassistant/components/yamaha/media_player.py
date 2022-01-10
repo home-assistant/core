@@ -105,7 +105,6 @@ class YamahaConfigInfo:
         self, config: ConfigType, discovery_info: DiscoveryInfoType | None
     ) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
-        _LOGGER.error("%s", config)
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
         self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
