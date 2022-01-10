@@ -7,6 +7,7 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -81,12 +82,16 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
             TimeoutError,
             UnknownError,
         ) as error:
-            LOGGER.warning("Could not verify door unlocked: %s", error)
+            raise HomeAssistantError(
+                f"Could not verify unlocking for {self._attr_name}: {error}"
+            ) from error
 
+        LOGGER.debug("Door unlock: %s", lock_state)
         if lock_state:
             self._attr_is_locked = False
             self.async_write_ha_state()
-        LOGGER.debug("Door unlock: %s", lock_state)
+            return
+        raise HomeAssistantError("Could not unlock, check system ready for unlocking")
 
     async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
@@ -108,12 +113,16 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
             TimeoutError,
             UnknownError,
         ) as error:
-            LOGGER.warning("Could not verify door locked: %s", error)
+            raise HomeAssistantError(
+                f"Could not verify unlocking for {self._attr_name}: {error}"
+            ) from error
 
+        LOGGER.debug("Door unlock: %s", lock_state)
         if lock_state:
             self._attr_is_locked = True
             self.async_write_ha_state()
-        LOGGER.debug("Door unlock: %s", lock_state)
+            return
+        raise HomeAssistantError("Could not unlock, check system ready for unlocking")
 
     @callback
     def _handle_coordinator_update(self) -> None:
