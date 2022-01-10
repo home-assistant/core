@@ -33,7 +33,7 @@ from .const import (
     CONF_TEMPERATURE_SENSORS,
     CONF_TIME_UNIT,
     CONF_VOLTAGE_SENSORS,
-    DATA_GREENEYE_MONITOR,
+    DATA_MONITORS,
     DOMAIN,
     TEMPERATURE_UNIT_CELSIUS,
 )
@@ -117,7 +117,9 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: COMPONENT_SCHEMA}, extra=vol.ALLOW_EXTRA)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GreenEye Monitor component."""
     monitors = greeneye.Monitors()
-    hass.data[DATA_GREENEYE_MONITOR] = monitors
+    hass.data[DOMAIN] = {
+        DATA_MONITORS: monitors,
+    }
 
     server_config = config[DOMAIN]
     await monitors.start_server(server_config[CONF_PORT])

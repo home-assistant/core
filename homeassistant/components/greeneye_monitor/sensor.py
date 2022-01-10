@@ -32,7 +32,8 @@ from .const import (
     CONF_TEMPERATURE_SENSORS,
     CONF_TIME_UNIT,
     CONF_VOLTAGE_SENSORS,
-    DATA_GREENEYE_MONITOR,
+    DATA_MONITORS,
+    DOMAIN,
 )
 
 DATA_PULSES = "pulses"
@@ -130,13 +131,13 @@ class GEMSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Wait for and connect to the sensor."""
-        monitors = self.hass.data[DATA_GREENEYE_MONITOR]
+        monitors = self.hass.data[DOMAIN][DATA_MONITORS]
 
         if not self._try_connect_to_monitor(monitors):
             monitors.add_listener(self._on_new_monitor)
 
     def _on_new_monitor(self, monitor: greeneye.monitor.Monitor) -> None:
-        monitors = self.hass.data[DATA_GREENEYE_MONITOR]
+        monitors = self.hass.data[DOMAIN][DATA_MONITORS]
         if self._try_connect_to_monitor(monitors):
             monitors.remove_listener(self._on_new_monitor)
 
@@ -145,7 +146,7 @@ class GEMSensor(SensorEntity):
         if self._sensor:
             self._sensor.remove_listener(self.async_write_ha_state)
         else:
-            monitors = self.hass.data[DATA_GREENEYE_MONITOR]
+            monitors = self.hass.data[DOMAIN][DATA_MONITORS]
             monitors.remove_listener(self._on_new_monitor)
 
     def _try_connect_to_monitor(self, monitors: greeneye.Monitors) -> bool:
