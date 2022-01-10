@@ -138,8 +138,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
 
     def __init__(self, fibaro_device):
         """Initialize the sensor."""
-        self.current_value = None
-        self.last_changed_time = None
         super().__init__(fibaro_device)
         self.entity_id = f"{DOMAIN}.{self.ha_id}_energy"
         self._name = f"{fibaro_device.friendly_name} Energy"
