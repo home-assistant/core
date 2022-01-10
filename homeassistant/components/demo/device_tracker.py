@@ -1,21 +1,14 @@
 """Demo platform for the Device tracker component."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import random
 
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.core import ServiceCall
 
 from .const import DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA
 
 
-def setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    see: Callable[..., None],
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the demo tracker."""
 
     def offset():

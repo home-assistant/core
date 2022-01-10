@@ -1,7 +1,4 @@
 """Support for Life360 device tracking."""
-from __future__ import annotations
-
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 
@@ -23,10 +20,8 @@ from homeassistant.const import (
     LENGTH_MILES,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.distance import convert
 import homeassistant.util.dt as dt_util
@@ -91,16 +86,12 @@ def _dump_filter(filter_dict, desc, func=lambda x: x):
     )
 
 
-def setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    see: Callable[..., None],
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+def setup_scanner(hass, config, see, discovery_info=None):
     """Set up device scanner."""
     config = hass.data[DOMAIN]["config"]
     apis = hass.data[DOMAIN]["apis"]
     Life360Scanner(hass, config, see, apis)
+    return True
 
 
 def _utc_from_ts(val):
