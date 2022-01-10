@@ -167,6 +167,7 @@ HM_DEVICE_TYPES = {
         "Rain",
         "WiredSensor",
         "PresenceIP",
+        "PresenceIPW",
         "IPWeatherSensor",
         "IPPassageSensor",
         "SmartwareMotion",
