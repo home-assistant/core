@@ -1,8 +1,9 @@
 """Integrate HALO Home into home assistant."""
 import logging
 
+import aiohttp
 import halohome
-from halohome import Connection
+from halohome import Connection, HaloHomeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -21,8 +22,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         locations = await halohome.list_devices(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
-    except Exception as e:
-        _LOGGER.error(f"Caught exception refreshing HALO devices: {e}")
+    except (HaloHomeError, OSError, aiohttp.ClientError) as exception:
+        _LOGGER.error("Caught exception refreshing HALO devices: %s", exception)
         locations = entry.data[CONF_LOCATIONS]
 
     if locations != entry.data[CONF_LOCATIONS]:
