@@ -141,7 +141,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         self._name = f"{fibaro_device.friendly_name} Energy"
 
         self._unit = ENERGY_KILO_WATT_HOUR
-        self._icon = None
         self._device_class = SensorDeviceClass.ENERGY
         self._state_class = SensorStateClass.TOTAL_INCREASING
 
