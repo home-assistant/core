@@ -10,7 +10,8 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_capability

@@ -6,7 +6,7 @@ import logging
 from directv import DIRECTV
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_RECEIVER,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
@@ -96,7 +96,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
 
         self._attr_unique_id = self._device_id
         self._attr_name = name
-        self._attr_device_class = DEVICE_CLASS_RECEIVER
+        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_available = False
 
         self._is_recorded = None

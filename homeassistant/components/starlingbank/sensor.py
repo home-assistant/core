@@ -1,4 +1,6 @@
 """Support for balance data via the Starling Bank API."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -7,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +43,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Sterling Bank sensor platform."""
 
     sensors = []

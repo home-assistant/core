@@ -40,6 +40,7 @@ async def test_rainmachine_pro_8_setup(hass):
     assert device.model == "SPK5 Pro"
     assert device.sw_version == "1.0.4"
     assert device.via_device_id is None
+    assert device.hw_version == "1"
 
     # The device is made up of multiple valves - make sure we have enumerated them all
     entry = entity_registry.async_get("switch.rainmachine_00ce4a_2")

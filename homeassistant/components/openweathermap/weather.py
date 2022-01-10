@@ -47,6 +47,10 @@ async def async_setup_entry(
 class OpenWeatherMapWeather(WeatherEntity):
     """Implementation of an OpenWeatherMap sensor."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_should_poll = False
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(
         self,
         name: str,
@@ -54,39 +58,15 @@ class OpenWeatherMapWeather(WeatherEntity):
         weather_coordinator: WeatherUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        self._name = name
-        self._unique_id = unique_id
-        self._weather_coordinator = weather_coordinator
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
+        self._weather_coordinator = weather_coordinator
 
     @property
     def condition(self) -> str | None:
@@ -97,11 +77,6 @@ class OpenWeatherMapWeather(WeatherEntity):
     def temperature(self) -> float | None:
         """Return the temperature."""
         return self._weather_coordinator.data[ATTR_API_TEMPERATURE]
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def pressure(self) -> float | None:

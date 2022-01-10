@@ -88,7 +88,7 @@ def async_setup_forwarded(
                 remote = False
 
         # Skip requests from Remote UI
-        if remote and remote.is_cloud_request.get():  # type: ignore
+        if remote and remote.is_cloud_request.get():
             return await handler(request)
 
         # Handle X-Forwarded-For

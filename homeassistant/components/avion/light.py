@@ -1,4 +1,6 @@
 """Support for Avion dimmers."""
+from __future__ import annotations
+
 import importlib
 import time
 
@@ -18,7 +20,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
 
@@ -39,7 +44,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an Avion switch."""
     avion = importlib.import_module("avion")
 

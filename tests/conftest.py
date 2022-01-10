@@ -6,7 +6,7 @@ import logging
 import socket
 import ssl
 import threading
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp.test_utils import make_mocked_request
 import freezegun
@@ -26,7 +26,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
-from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
+from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED, HASSIO_USER_NAME
 from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
@@ -406,6 +406,26 @@ def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
 
 
 @pytest.fixture
+def hass_supervisor_user(hass, local_auth):
+    """Return the Home Assistant Supervisor user."""
+    admin_group = hass.loop.run_until_complete(
+        hass.auth.async_get_group(GROUP_ID_ADMIN)
+    )
+    return MockUser(
+        name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
+    ).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_supervisor_access_token(hass, hass_supervisor_user, local_auth):
+    """Return a Home Assistant Supervisor access token."""
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(hass_supervisor_user)
+    )
+    return hass.auth.async_create_access_token(refresh_token)
+
+
+@pytest.fixture
 def legacy_auth(hass):
     """Load legacy API password provider."""
     prv = legacy_api_password.LegacyApiPasswordAuthProvider(
@@ -778,3 +798,30 @@ def hass_recorder(enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+
+@pytest.fixture
+def mock_integration_frame():
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        yield correct_frame

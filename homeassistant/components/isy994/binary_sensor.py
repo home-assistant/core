@@ -13,15 +13,8 @@ from pyisy.constants import (
 from pyisy.nodes import Group, Node
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
     DOMAIN as BINARY_SENSOR,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -52,9 +45,9 @@ from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
 
 DEVICE_PARENT_REQUIRED = [
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass.OPENING,
+    BinarySensorDeviceClass.MOISTURE,
+    BinarySensorDeviceClass.MOTION,
 ]
 
 
@@ -94,11 +87,15 @@ async def async_setup_entry(
                 # detected after an ISY Restart, so we assume it's off.
                 # As soon as the ISY Event Stream connects if it has a
                 # valid state, it will be set.
-                device = ISYInsteonBinarySensorEntity(node, DEVICE_CLASS_COLD, False)
+                device = ISYInsteonBinarySensorEntity(
+                    node, BinarySensorDeviceClass.COLD, False
+                )
                 devices.append(device)
             elif subnode_id == SUBNODE_CLIMATE_HEAT:
                 # Subnode 3 is the "Heat Control" sensor
-                device = ISYInsteonBinarySensorEntity(node, DEVICE_CLASS_HEAT, False)
+                device = ISYInsteonBinarySensorEntity(
+                    node, BinarySensorDeviceClass.HEAT, False
+                )
                 devices.append(device)
             continue
 
@@ -113,7 +110,10 @@ async def async_setup_entry(
                 )
                 continue
 
-        if device_class in (DEVICE_CLASS_OPENING, DEVICE_CLASS_MOISTURE):
+        if device_class in (
+            BinarySensorDeviceClass.OPENING,
+            BinarySensorDeviceClass.MOISTURE,
+        ):
             # These sensors use an optional "negative" subnode 2 to
             # snag all state changes
             if subnode_id == SUBNODE_NEGATIVE:
@@ -126,7 +126,7 @@ async def async_setup_entry(
                 devices.append(device)
             continue
         if (
-            device_class == DEVICE_CLASS_MOTION
+            device_class == BinarySensorDeviceClass.MOTION
             and device_type is not None
             and any(device_type.startswith(t) for t in TYPE_INSTEON_MOTION)
         ):
@@ -138,13 +138,15 @@ async def async_setup_entry(
             initial_state = None if parent_device.state is None else False
             if subnode_id == SUBNODE_DUSK_DAWN:
                 # Subnode 2 is the Dusk/Dawn sensor
-                device = ISYInsteonBinarySensorEntity(node, DEVICE_CLASS_LIGHT)
+                device = ISYInsteonBinarySensorEntity(
+                    node, BinarySensorDeviceClass.LIGHT
+                )
                 devices.append(device)
                 continue
             if subnode_id == SUBNODE_LOW_BATTERY:
                 # Subnode 3 is the low battery node
                 device = ISYInsteonBinarySensorEntity(
-                    node, DEVICE_CLASS_BATTERY, initial_state
+                    node, BinarySensorDeviceClass.BATTERY, initial_state
                 )
                 devices.append(device)
                 continue
@@ -152,7 +154,7 @@ async def async_setup_entry(
                 # Tamper Sub-node for MS II. Sometimes reported as "A" sometimes
                 # reported as "10", which translate from Hex to 10 and 16 resp.
                 device = ISYInsteonBinarySensorEntity(
-                    node, DEVICE_CLASS_PROBLEM, initial_state
+                    node, BinarySensorDeviceClass.PROBLEM, initial_state
                 )
                 devices.append(device)
                 continue
@@ -352,7 +354,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             # Do this first so we don't invert None on moisture sensors
             return None
 
-        if self.device_class == DEVICE_CLASS_MOISTURE:
+        if self.device_class == BinarySensorDeviceClass.MOISTURE:
             return not self._computed_state
 
         return self._computed_state
@@ -454,7 +456,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
     @property
     def device_class(self) -> str:
         """Get the class of this device."""
-        return DEVICE_CLASS_BATTERY
+        return BinarySensorDeviceClass.BATTERY
 
     @property
     def extra_state_attributes(self):

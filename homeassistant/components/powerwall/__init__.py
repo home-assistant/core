@@ -36,7 +36,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 

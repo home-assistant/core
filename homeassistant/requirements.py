@@ -7,11 +7,11 @@ import logging
 import os
 from typing import Any, cast
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
-import homeassistant.util.package as pkg_util
+from .core import HomeAssistant, callback
+from .exceptions import HomeAssistantError
+from .helpers.typing import UNDEFINED, UndefinedType
+from .loader import Integration, IntegrationNotFound, async_get_integration
+from .util import package as pkg_util
 
 # mypy: disallow-any-generics
 

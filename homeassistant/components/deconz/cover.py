@@ -10,8 +10,6 @@ from pydeconz.light import Cover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_SHADE,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
@@ -21,6 +19,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -32,9 +31,9 @@ from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DEVICE_CLASS = {
-    "Level controllable output": DEVICE_CLASS_DAMPER,
-    "Window covering controller": DEVICE_CLASS_SHADE,
-    "Window covering device": DEVICE_CLASS_SHADE,
+    "Level controllable output": CoverDeviceClass.DAMPER,
+    "Window covering controller": CoverDeviceClass.SHADE,
+    "Window covering device": CoverDeviceClass.SHADE,
 }
 
 

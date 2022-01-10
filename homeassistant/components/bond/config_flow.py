@@ -87,7 +87,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
-        _, hub_name = await _validate_input(self.hass, self._discovered)
+        try:
+            _, hub_name = await _validate_input(self.hass, self._discovered)
+        except InputValidationError:
+            return
         self._discovered[CONF_NAME] = hub_name
 
     async def async_step_zeroconf(

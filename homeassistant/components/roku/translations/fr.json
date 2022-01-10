@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "Roku: {name}",
+        "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
                 "data": {

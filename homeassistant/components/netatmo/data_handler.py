@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from itertools import islice
 import logging
 from time import time
@@ -105,7 +105,7 @@ class NetatmoDataHandler:
             )
         )
 
-    async def async_update(self, event_time: timedelta) -> None:
+    async def async_update(self, event_time: datetime) -> None:
         """
         Update device.
 
@@ -194,7 +194,11 @@ class NetatmoDataHandler:
             self._auth, **kwargs
         )
 
-        await self.async_fetch_data(data_class_entry)
+        try:
+            await self.async_fetch_data(data_class_entry)
+        except KeyError:
+            self.data_classes.pop(data_class_entry)
+            raise
 
         self._queue.append(self.data_classes[data_class_entry])
         _LOGGER.debug("Data class %s added", data_class_entry)

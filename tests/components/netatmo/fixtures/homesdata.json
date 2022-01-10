@@ -5,7 +5,10 @@
         "id": "91763b24c43d3e344f424e8b",
         "name": "MYHOME",
         "altitude": 112,
-        "coordinates": [52.516263, 13.377726],
+        "coordinates": [
+          52.516263,
+          13.377726
+        ],
         "country": "DE",
         "timezone": "Europe/Berlin",
         "rooms": [
@@ -13,25 +16,33 @@
             "id": "2746182631",
             "name": "Livingroom",
             "type": "livingroom",
-            "module_ids": ["12:34:56:00:01:ae"]
+            "module_ids": [
+              "12:34:56:00:01:ae"
+            ]
           },
           {
             "id": "3688132631",
             "name": "Hall",
             "type": "custom",
-            "module_ids": ["12:34:56:00:f1:62"]
+            "module_ids": [
+              "12:34:56:00:f1:62"
+            ]
           },
           {
             "id": "2833524037",
             "name": "Entrada",
             "type": "lobby",
-            "module_ids": ["12:34:56:03:a5:54"]
+            "module_ids": [
+              "12:34:56:03:a5:54"
+            ]
           },
           {
             "id": "2940411577",
             "name": "Cocina",
             "type": "kitchen",
-            "module_ids": ["12:34:56:03:a0:ac"]
+            "module_ids": [
+              "12:34:56:03:a0:ac"
+            ]
           }
         ],
         "modules": [
@@ -388,6 +399,85 @@
           }
         ],
         "therm_mode": "schedule"
+      },
+      {
+        "id": "111111111111111111111401",
+        "name": "Home with no modules",
+        "altitude": 9,
+        "coordinates": [
+          1.23456789,
+          50.0987654
+        ],
+        "country": "BE",
+        "timezone": "Europe/Brussels",
+        "rooms": [
+          {
+            "id": "1111111401",
+            "name": "Livingroom",
+            "type": "livingroom"
+          }
+        ],
+        "temperature_control_mode": "heating",
+        "therm_mode": "away",
+        "therm_setpoint_default_duration": 120,
+        "cooling_mode": "schedule",
+        "schedules": [
+          {
+            "away_temp": 14,
+            "hg_temp": 7,
+            "name": "Week",
+            "timetable": [
+              {
+                "zone_id": 1,
+                "m_offset": 0
+              },
+              {
+                "zone_id": 6,
+                "m_offset": 420
+              }
+            ],
+            "zones": [
+              {
+                "type": 0,
+                "name": "Comfort",
+                "rooms_temp": [],
+                "id": 0,
+                "rooms": []
+              },
+              {
+                "type": 1,
+                "name": "Nacht",
+                "rooms_temp": [],
+                "id": 1,
+                "rooms": []
+              },
+              {
+                "type": 5,
+                "name": "Eco",
+                "rooms_temp": [],
+                "id": 4,
+                "rooms": []
+              },
+              {
+                "type": 4,
+                "name": "Tussenin",
+                "rooms_temp": [],
+                "id": 5,
+                "rooms": []
+              },
+              {
+                "type": 4,
+                "name": "Ochtend",
+                "rooms_temp": [],
+                "id": 6,
+                "rooms": []
+              }
+            ],
+            "id": "700000000000000000000401",
+            "selected": true,
+            "type": "therm"
+          }
+        ]
       }
     ],
     "user": {

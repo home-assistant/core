@@ -2,21 +2,14 @@
 
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, STATE_OFF
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CONF_SERVERS, DATA_UPCLOUD, SIGNAL_UPDATE_UPCLOUD, UpCloudServerEntity
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [cv.string])}
-)
+from . import DATA_UPCLOUD, SIGNAL_UPDATE_UPCLOUD, UpCloudServerEntity
 
 
 async def async_setup_entry(

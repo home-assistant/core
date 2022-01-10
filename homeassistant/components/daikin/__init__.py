@@ -25,7 +25,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

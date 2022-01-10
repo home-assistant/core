@@ -8,12 +8,16 @@ import hmac
 from logging import getLogger
 from typing import Any
 
-from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY, GROUP_ID_USER
+from .const import (
+    ACCESS_TOKEN_EXPIRATION,
+    GROUP_ID_ADMIN,
+    GROUP_ID_READ_ONLY,
+    GROUP_ID_USER,
+)
 from .permissions import PermissionLookup, system_policies
 from .permissions.types import PolicyType
 

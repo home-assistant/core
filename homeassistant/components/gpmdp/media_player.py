@@ -28,7 +28,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING: dict[str, Any] = {}
@@ -155,11 +158,16 @@ def setup_gpmdp(hass, config, code, add_entities):
     add_entities([GPMDP(name, url, code)], True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the GPMDP platform."""
     codeconfig = load_json(hass.config.path(GPMDP_CONFIG_FILE))
     if codeconfig:
-        code = codeconfig.get("CODE")
+        code = codeconfig.get("CODE") if isinstance(codeconfig, dict) else None
     elif discovery_info is not None:
         if "gpmdp" in _CONFIGURING:
             return

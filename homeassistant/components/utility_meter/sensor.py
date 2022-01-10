@@ -8,14 +8,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
-    DEVICE_CLASS_ENERGY,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
@@ -78,8 +77,8 @@ ATTR_LAST_PERIOD = "last_period"
 ATTR_TARIFF = "tariff"
 
 DEVICE_CLASS_MAP = {
-    ENERGY_WATT_HOUR: DEVICE_CLASS_ENERGY,
-    ENERGY_KILO_WATT_HOUR: DEVICE_CLASS_ENERGY,
+    ENERGY_WATT_HOUR: SensorDeviceClass.ENERGY,
+    ENERGY_KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
 }
 
 ICON = "mdi:counter"
@@ -370,9 +369,9 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def state_class(self):
         """Return the device class of the sensor."""
         return (
-            STATE_CLASS_TOTAL
+            SensorStateClass.TOTAL
             if self._sensor_net_consumption
-            else STATE_CLASS_TOTAL_INCREASING
+            else SensorStateClass.TOTAL_INCREASING
         )
 
     @property

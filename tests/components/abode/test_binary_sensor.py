@@ -2,8 +2,8 @@
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.abode.const import ATTRIBUTION
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -37,4 +37,4 @@ async def test_attributes(hass):
     assert not state.attributes.get("no_response")
     assert state.attributes.get("device_type") == "Door Contact"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Front Door"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_WINDOW
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.WINDOW

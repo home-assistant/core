@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
 from . import config_flow
@@ -41,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONFIG_ENTRY_LOCK = "point_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "point_config_entry_is_setup"
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -56,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Minut Point component."""
     if DOMAIN not in config:
         return True
@@ -185,7 +187,7 @@ class MinutPointClient:
 
     async def _sync(self):
         """Update local list of devices."""
-        if not await self._client.update() and self._is_available:
+        if not await self._client.update():
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)

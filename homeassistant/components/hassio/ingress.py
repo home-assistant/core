@@ -134,7 +134,7 @@ class HassIOIngress(HomeAssistantView):
             if (
                 hdrs.CONTENT_LENGTH in result.headers
                 and int(result.headers.get(hdrs.CONTENT_LENGTH, 0)) < 4194000
-            ):
+            ) or result.status in (204, 304):
                 # Return Response
                 body = await result.read()
                 return web.Response(
@@ -255,3 +255,5 @@ async def _websocket_forward(ws_from, ws_to):
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)
     except RuntimeError:
         _LOGGER.debug("Ingress Websocket runtime error")
+    except ConnectionResetError:
+        _LOGGER.debug("Ingress Websocket Connection Reset")

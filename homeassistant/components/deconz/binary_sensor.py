@@ -17,21 +17,16 @@ from pydeconz.sensor import (
 )
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_TAMPER,
-    DEVICE_CLASS_VIBRATION,
     DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DARK, ATTR_ON
@@ -56,27 +51,27 @@ ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 ENTITY_DESCRIPTIONS = {
     CarbonMonoxide: BinarySensorEntityDescription(
         key="carbonmonoxide",
-        device_class=DEVICE_CLASS_GAS,
+        device_class=BinarySensorDeviceClass.GAS,
     ),
     Fire: BinarySensorEntityDescription(
         key="fire",
-        device_class=DEVICE_CLASS_SMOKE,
+        device_class=BinarySensorDeviceClass.SMOKE,
     ),
     OpenClose: BinarySensorEntityDescription(
         key="openclose",
-        device_class=DEVICE_CLASS_OPENING,
+        device_class=BinarySensorDeviceClass.OPENING,
     ),
     Presence: BinarySensorEntityDescription(
         key="presence",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
     Vibration: BinarySensorEntityDescription(
         key="vibration",
-        device_class=DEVICE_CLASS_VIBRATION,
+        device_class=BinarySensorDeviceClass.VIBRATION,
     ),
     Water: BinarySensorEntityDescription(
         key="water",
-        device_class=DEVICE_CLASS_MOISTURE,
+        device_class=BinarySensorDeviceClass.MOISTURE,
     ),
 }
 
@@ -186,8 +181,8 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
     TYPE = DOMAIN
     _device: PydeconzSensor
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
-    _attr_device_class = DEVICE_CLASS_TAMPER
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.TAMPER
 
     def __init__(self, device: PydeconzSensor, gateway: DeconzGateway) -> None:
         """Initialize deCONZ binary sensor."""

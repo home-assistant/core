@@ -2,14 +2,7 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
 from tests.components.homekit_controller.common import setup_test_component
 
@@ -41,7 +34,7 @@ async def test_motion_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_MOTION
+    assert state.attributes["device_class"] == BinarySensorDeviceClass.MOTION
 
 
 def create_contact_sensor_service(accessory):
@@ -64,7 +57,7 @@ async def test_contact_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_OPENING
+    assert state.attributes["device_class"] == BinarySensorDeviceClass.OPENING
 
 
 def create_smoke_sensor_service(accessory):
@@ -87,7 +80,7 @@ async def test_smoke_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_SMOKE
+    assert state.attributes["device_class"] == BinarySensorDeviceClass.SMOKE
 
 
 def create_carbon_monoxide_sensor_service(accessory):
@@ -110,7 +103,7 @@ async def test_carbon_monoxide_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_GAS
+    assert state.attributes["device_class"] == BinarySensorDeviceClass.GAS
 
 
 def create_occupancy_sensor_service(accessory):
@@ -133,7 +126,7 @@ async def test_occupancy_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_OCCUPANCY
+    assert state.attributes["device_class"] == BinarySensorDeviceClass.OCCUPANCY
 
 
 def create_leak_sensor_service(accessory):
@@ -156,4 +149,4 @@ async def test_leak_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_MOISTURE
+    assert state.attributes["device_class"] == BinarySensorDeviceClass.MOISTURE

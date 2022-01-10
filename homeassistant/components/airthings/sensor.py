@@ -8,22 +8,21 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -59,7 +58,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         name="Battery",
     ),
     "co2": SensorEntityDescription(
@@ -92,7 +91,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         name="RSSI",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",

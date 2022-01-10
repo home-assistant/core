@@ -4,17 +4,16 @@ from __future__ import annotations
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
@@ -23,20 +22,24 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up ecobee (temperature and humidity) sensors."""
     data = hass.data[DOMAIN]
     entities = [

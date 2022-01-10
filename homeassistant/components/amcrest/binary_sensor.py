@@ -12,9 +12,7 @@ from amcrest import AmcrestError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -72,46 +70,46 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
     AmcrestSensorEntityDescription(
         key=_AUDIO_DETECTED_KEY,
         name=_AUDIO_DETECTED_NAME,
-        device_class=DEVICE_CLASS_SOUND,
+        device_class=BinarySensorDeviceClass.SOUND,
         event_code=_AUDIO_DETECTED_EVENT_CODE,
     ),
     AmcrestSensorEntityDescription(
         key=_AUDIO_DETECTED_POLLED_KEY,
         name=_AUDIO_DETECTED_NAME,
-        device_class=DEVICE_CLASS_SOUND,
+        device_class=BinarySensorDeviceClass.SOUND,
         event_code=_AUDIO_DETECTED_EVENT_CODE,
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
         key=_CROSSLINE_DETECTED_KEY,
         name=_CROSSLINE_DETECTED_NAME,
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
         event_code=_CROSSLINE_DETECTED_EVENT_CODE,
     ),
     AmcrestSensorEntityDescription(
         key=_CROSSLINE_DETECTED_POLLED_KEY,
         name=_CROSSLINE_DETECTED_NAME,
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
         event_code=_CROSSLINE_DETECTED_EVENT_CODE,
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_KEY,
         name=_MOTION_DETECTED_NAME,
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
         event_code=_MOTION_DETECTED_EVENT_CODE,
     ),
     AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_POLLED_KEY,
         name=_MOTION_DETECTED_NAME,
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
         event_code=_MOTION_DETECTED_EVENT_CODE,
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
         key=_ONLINE_KEY,
         name="Online",
-        device_class=DEVICE_CLASS_CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         should_poll=True,
     ),
 )
