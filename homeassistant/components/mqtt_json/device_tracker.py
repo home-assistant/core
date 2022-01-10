@@ -45,7 +45,7 @@ async def async_setup_scanner(
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Set up the MQTT JSON tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
@@ -72,6 +72,8 @@ async def async_setup_scanner(
             hass.async_create_task(async_see(**kwargs))
 
         await mqtt.async_subscribe(hass, topic, async_message_received, qos)
+
+    return True
 
 
 def _parse_see_args(dev_id, data):

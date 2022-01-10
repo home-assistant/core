@@ -236,7 +236,7 @@ class DeviceTrackerPlatform:
         with async_start_setup(hass, [full_name]):
             try:
                 scanner = None
-                setup = None
+                setup: bool | None = None
                 if hasattr(self.platform, "async_get_scanner"):
                     scanner = await self.platform.async_get_scanner(
                         hass, {DOMAIN: self.config}
@@ -267,7 +267,7 @@ class DeviceTrackerPlatform:
                         hass, self.config, scanner, tracker.async_see, self.type
                     )
 
-                if setup is None and scanner is None:
+                if not setup and scanner is None:
                     LOGGER.error(
                         "Error setting up platform %s %s", self.type, self.name
                     )
