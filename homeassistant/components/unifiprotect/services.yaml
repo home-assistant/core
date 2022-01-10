@@ -1,17 +1,17 @@
 take_sample:
   name: Sample Data
-  description: Generates Sample Data from a given UniFi Protect instance. Useful for debugging or reporting issues.
+  description: Generates Sample Data from a given UniFi Protect instance. Useful for debugging or reporting issues. Output data is saved to config/ufp_sample.{time}.zip.
   fields:
     device_id:
       name: UniFi Protect NVR
-      description: Main NVR for the UniFi Protect instance you would like to target.
+      description: Any device from the UniFi Protect instance you want to change.
       required: true
       selector:
         device:
           integration: unifiprotect
     duration:
       name: Websocket Capture Time
-      description: How long to capture Websocket messages for.
+      description: How long to capture Websocket messages for. Defaults to 30 seconds.
       default: 30
       required: true
       selector:
@@ -29,18 +29,18 @@ take_sample:
         boolean:
 profile_ws_messages:
   name: Profile WS Messages
-  description: Profiles UniFi Protect Web Socket messages and prints out summary afterwards. Useful for benchmarking or reporting issues.
+  description: Profiles UniFi Protect Web Socket messages and prints out summary afterwards. Profile output is saved to config/ufp_ws_profile.{time}.json.
   fields:
     device_id:
       name: UniFi Protect NVR
-      description: Main NVR for the UniFi Protect instance you would like to target.
+      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
       required: true
       selector:
         device:
           integration: unifiprotect
     duration:
       name: Profile Time
-      description: How long to profile
+      description: Number of seconds to profile Websocket messages for.
       default: 60
       required: true
       selector:
@@ -51,54 +51,54 @@ profile_ws_messages:
           unit_of_measurement: seconds
 add_doorbell_text:
   name: Add Custom Doorbell Text
-  description: Adds a new custom message for Doorbells. You must restart Home Assistant afterwards for text options updates to appear on doorbells.
+  description: Adds a new custom message for Doorbells.
   fields:
     device_id:
       name: UniFi Protect NVR
-      description: Main NVR for the UniFi Protect instance you would like to target.
+      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
       required: true
       selector:
         device:
           integration: unifiprotect
     message:
       name: Custom Message
-      description: The custom message to add. Max length of 30 characters.
+      description: New custom message to add for Doorbells. Must be less than 30 characters.
       example: Come In
       required: true
       selector:
         text:
 remove_doorbell_text:
   name: Remove Custom Doorbell Text
-  description: Removes an existing message for Doorbells. You must restart Home Assistant afterwards for text options updates to appear on doorbells.
+  description: Removes an existing message for Doorbells.
   fields:
     device_id:
       name: UniFi Protect NVR
-      description: Main NVR for the UniFi Protect instance you would like to target.
+      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
       required: true
       selector:
         device:
           integration: unifiprotect
     message:
       name: Custom Message
-      description: The custom message to remove. Max length of 30 characters.
+      description: Existing custom message to remove for Doorbells.
       example: Go Away!
       required: true
       selector:
         text:
 set_default_doorbell_text:
   name: Set Default Doorbell Text
-  description: Sets the default doorbell message. You must restart Home Assistant afterwards for text options updates to appear on doorbells.
+  description: Sets the default doorbell message. This will be the message that is automatically selected when a message "expires".
   fields:
     device_id:
       name: UniFi Protect NVR
-      description: Main NVR for the UniFi Protect instance you would like to target.
+      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
       required: true
       selector:
         device:
           integration: unifiprotect
     message:
       name: Default Message
-      description: The default message. Max length of 30 characters.
+      description: The default message for your Doorbell. Must be less than 30 characters.
       example: Welcome!
       required: true
       selector:
@@ -106,30 +106,27 @@ set_default_doorbell_text:
 set_doorbell_message:
   name: Set Doorbell message
   description: >
-    Use to dynamically set the message on a Doorbell LCD screen. Should only be used to set dynamic messages
-    (i.e. setting the current outdoor temperature on your Doorbell). Static messages should still using the Select entity and the
-    add_doorbell_text / remove_doorbell_text services.
+    Use to dynamically set the message on a Doorbell LCD screen. This service should only be used to set dynamic messages (i.e. setting the current outdoor temperature on your Doorbell). Static messages should still be set using the Select entity and can be added/removed using the add_doorbell_text/remove_doorbell_text services.
   fields:
     entity_id:
       name: Doorbell Text
-      description: (Required) Doorbell to display message on
+      description: The Doorbell Text select entity for your Doorbell.
       example: "select.front_doorbell_camera_doorbell_text"
       required: true
       selector:
         entity:
           integration: unifiprotect
           domain: select
-          device_class: unifiprotect__lcd_message
     message:
       name: Message to display
-      description: (Required) Message to display on LCD Panel. Max 30 characters
+      description: The message you would like to display on the LCD screen of your Doorbell. Must be less than 30 characters.
       example: "Welcome | 09:23 | 25°C"
       required: true
       selector:
         text:
     duration:
-      name: Duration (minutes)
-      description: "(Optional) Number of minutes to display message, before returning to default. Leave blank to display always"
+      name: Duration
+      description: Number of minutes to display the message for before returning to the default message. Default is no expire.
       example: 5
       selector:
         number:
@@ -137,3 +134,4 @@ set_doorbell_message:
           max: 120
           step: 1
           mode: slider
+          unit_of_measurement: minutes
