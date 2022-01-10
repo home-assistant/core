@@ -10,7 +10,6 @@ from pyunifiprotect.data import Camera, Light
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (
-    _KEY_DURATION,
     CAMERA_NUMBERS,
     LIGHT_NUMBERS,
     ProtectNumberEntityDescription,
@@ -79,7 +78,7 @@ async def camera_fixture(
     camera_obj.isp_settings.wdr = 0
     camera_obj.mic_volume = 0
     camera_obj.isp_settings.zoom_position = 0
-    camera_obj.chime_duration = timedelta(seconds=0)
+    camera_obj.chime_duration = 0
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
@@ -199,17 +198,14 @@ async def test_number_setup_camera_missing_attr(
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
 
 
-@pytest.mark.parametrize("description", LIGHT_NUMBERS)
-async def test_number_light_simple(
-    hass: HomeAssistant, light: Light, description: ProtectNumberEntityDescription
-):
-    """Tests all simple numbers for lights."""
+async def test_number_light_sensitivity(hass: HomeAssistant, light: Light):
+    """Test sensitivity number entity for lights."""
 
-    assert description.ufp_set_function is not None
+    description = LIGHT_NUMBERS[0]
+    assert description.ufp_set_method is not None
 
-    light.__fields__[description.ufp_set_function] = Mock()
-    setattr(light, description.ufp_set_function, AsyncMock())
-    set_method = getattr(light, description.ufp_set_function)
+    light.__fields__["set_sensitivity"] = Mock()
+    light.set_sensitivity = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
 
@@ -217,10 +213,24 @@ async def test_number_light_simple(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
     )
 
-    if description.key == _KEY_DURATION:
-        set_method.assert_called_once_with(timedelta(seconds=15.0))
-    else:
-        set_method.assert_called_once_with(15.0)
+    light.set_sensitivity.assert_called_once_with(15.0)
+
+
+async def test_number_light_duration(hass: HomeAssistant, light: Light):
+    """Test chime duration number entity for lights."""
+
+    description = LIGHT_NUMBERS[1]
+
+    light.__fields__["set_duration"] = Mock()
+    light.set_duration = AsyncMock()
+
+    _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
+
+    await hass.services.async_call(
+        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
+    )
+
+    light.set_duration.assert_called_once_with(timedelta(seconds=15.0))
 
 
 @pytest.mark.parametrize("description", CAMERA_NUMBERS)
@@ -229,11 +239,11 @@ async def test_number_camera_simple(
 ):
     """Tests all simple numbers for cameras."""
 
-    assert description.ufp_set_function is not None
+    assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_function] = Mock()
-    setattr(camera, description.ufp_set_function, AsyncMock())
-    set_method = getattr(camera, description.ufp_set_function)
+    camera.__fields__[description.ufp_set_method] = Mock()
+    setattr(camera, description.ufp_set_method, AsyncMock())
+    set_method = getattr(camera, description.ufp_set_method)
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, camera, description)
 
@@ -241,7 +251,4 @@ async def test_number_camera_simple(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 1.0}, blocking=True
     )
 
-    if description.key == _KEY_DURATION:
-        set_method.assert_called_once_with(timedelta(seconds=1.0))
-    else:
-        set_method.assert_called_once_with(1.0)
+    set_method.assert_called_once_with(1.0)

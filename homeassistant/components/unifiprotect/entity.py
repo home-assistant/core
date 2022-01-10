@@ -109,30 +109,26 @@ def async_all_device_entities(
 class ProtectDeviceEntity(Entity):
     """Base class for UniFi protect entities."""
 
+    device: ProtectAdoptableDeviceModel
+
     _attr_should_poll = False
 
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel | None = None,
+        device: ProtectAdoptableDeviceModel,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__()
         self.data: ProtectData = data
-
-        if device and not hasattr(self, "device"):
-            self.device: ProtectAdoptableDeviceModel = device
-
-        if description and not hasattr(self, "entity_description"):
-            self.entity_description = description
-        elif hasattr(self, "entity_description"):
-            description = self.entity_description
+        self.device = device
 
         if description is None:
             self._attr_unique_id = f"{self.device.id}"
             self._attr_name = f"{self.device.name}"
         else:
+            self.entity_description = description
             self._attr_unique_id = f"{self.device.id}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
@@ -191,6 +187,9 @@ class ProtectDeviceEntity(Entity):
 class ProtectNVREntity(ProtectDeviceEntity):
     """Base class for unifi protect entities."""
 
+    # separate subclass on purpose
+    device: NVR  # type: ignore[assignment]
+
     def __init__(
         self,
         entry: ProtectData,
@@ -198,9 +197,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
-        # ProtectNVREntity is intentionally a separate base class
-        self.device: NVR = device  # type: ignore
-        super().__init__(entry, description=description)
+        super().__init__(entry, device, description)  # type: ignore[arg-type]
 
     @callback
     def _async_set_device_info(self) -> None:
@@ -222,13 +219,12 @@ class ProtectNVREntity(ProtectDeviceEntity):
         self._attr_available = self.data.last_update_success
 
 
-class AccessTokenMixin(Entity):
+class AccessTokenMixin(ProtectDeviceEntity):
     """Adds access_token attribute and provides access tokens for use for anonymous views."""
 
     @property
     def access_tokens(self) -> deque[str]:
         """Get valid access_tokens for current entity."""
-        assert isinstance(self, ProtectDeviceEntity)
         return self.data.async_get_or_create_access_tokens(self.entity_id)
 
     @callback
@@ -247,7 +243,6 @@ class AccessTokenMixin(Entity):
     @callback
     def async_cleanup_tokens(self) -> None:
         """Clean up any remaining tokens on removal."""
-        assert isinstance(self, ProtectDeviceEntity)
         if self.entity_id in self.data.access_tokens:
             del self.data.access_tokens[self.entity_id]
 
@@ -307,8 +302,7 @@ class EventThumbnailMixin(AccessTokenMixin):
 
     @callback
     def _async_update_device_from_protect(self) -> None:
-        assert isinstance(self, ProtectDeviceEntity)
-        super()._async_update_device_from_protect()  # type: ignore
+        super()._async_update_device_from_protect()
         self._event = self._async_get_event()
 
         attrs = self.extra_state_attributes or {}
