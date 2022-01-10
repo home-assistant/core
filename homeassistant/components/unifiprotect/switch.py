@@ -30,11 +30,11 @@ class ProtectSwitchEntityDescription(ProtectSetableKeysMixin, SwitchEntityDescri
 _KEY_PRIVACY_MODE = "privacy_mode"
 
 
-def _get_is_highfps(obj: Any) -> bool:
+def _get_is_highfps(obj: Camera) -> bool:
     return bool(obj.video_mode == VideoMode.HIGH_FPS)
 
 
-async def _set_highfps(obj: Any, value: bool) -> None:
+async def _set_highfps(obj: Camera, value: bool) -> None:
     if value:
         await obj.set_video_mode(VideoMode.HIGH_FPS)
     else:
