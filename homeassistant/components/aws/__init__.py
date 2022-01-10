@@ -7,6 +7,7 @@ import aiobotocore
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CREDENTIALS,
     CONF_NAME,
@@ -103,13 +104,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry.
 
     Validate and save sessions per aws credential.
     """
-    config = hass.data.get(DATA_HASS_CONFIG)
-    conf = hass.data.get(DATA_CONFIG)
+    config = hass.data[DATA_HASS_CONFIG]
+    conf = hass.data[DATA_CONFIG]
 
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
