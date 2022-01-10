@@ -194,8 +194,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         description: ProtectSwitchEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect Switch."""
-        self.entity_description = description
-        super().__init__(data, device)
+        super().__init__(data, device, description)
         self._attr_name = f"{self.device.name} {self.entity_description.name}"
         self._switch_type = self.entity_description.key
 

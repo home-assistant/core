@@ -285,9 +285,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         description: ProtectSelectEntityDescription,
     ) -> None:
         """Initialize the unifi protect select entity."""
-        self.device = device
-        self.entity_description = description
-        super().__init__(data)
+        super().__init__(data, device, description)
         self._attr_name = f"{self.device.name} {self.entity_description.name}"
         self._async_set_options()
 

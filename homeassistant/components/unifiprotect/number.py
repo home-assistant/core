@@ -154,9 +154,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         description: ProtectNumberEntityDescription,
     ) -> None:
         """Initialize the Number Entities."""
-        self.device = device
-        self.entity_description = description
-        super().__init__(data)
+        super().__init__(data, device, description)
         self._attr_max_value = self.entity_description.ufp_max
         self._attr_min_value = self.entity_description.ufp_min
         self._attr_step = self.entity_description.ufp_step

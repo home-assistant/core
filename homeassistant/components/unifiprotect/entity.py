@@ -109,30 +109,26 @@ def async_all_device_entities(
 class ProtectDeviceEntity(Entity):
     """Base class for UniFi protect entities."""
 
+    device: ProtectAdoptableDeviceModel
+
     _attr_should_poll = False
 
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel | None = None,
+        device: ProtectAdoptableDeviceModel,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__()
         self.data: ProtectData = data
-
-        if device and not hasattr(self, "device"):
-            self.device: ProtectAdoptableDeviceModel = device
-
-        if description and not hasattr(self, "entity_description"):
-            self.entity_description = description  # pragma: no cover
-        elif hasattr(self, "entity_description"):
-            description = self.entity_description
+        self.device = device
 
         if description is None:
             self._attr_unique_id = f"{self.device.id}"
             self._attr_name = f"{self.device.name}"
         else:
+            self.entity_description = description
             self._attr_unique_id = f"{self.device.id}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
@@ -191,6 +187,9 @@ class ProtectDeviceEntity(Entity):
 class ProtectNVREntity(ProtectDeviceEntity):
     """Base class for unifi protect entities."""
 
+    # separate subclass on purpose
+    device: NVR  # type: ignore[assignment]
+
     def __init__(
         self,
         entry: ProtectData,
@@ -198,9 +197,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
-        # ProtectNVREntity is intentionally a separate base class
-        self.device: NVR = device  # type: ignore
-        super().__init__(entry, description=description)
+        super().__init__(entry, device, description)  # type: ignore[arg-type]
 
     @callback
     def _async_set_device_info(self) -> None:

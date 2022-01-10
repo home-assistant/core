@@ -427,8 +427,7 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         description: ProtectSensorEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect sensor."""
-        self.entity_description = description
-        super().__init__(data, device)
+        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self) -> None:
@@ -448,8 +447,7 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         description: ProtectSensorEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect sensor."""
-        self.entity_description = description
-        super().__init__(data, device)
+        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self) -> None:
@@ -461,17 +459,6 @@ class ProtectEventSensor(ProtectDeviceSensor, EventThumbnailMixin):
     """A UniFi Protect Device Sensor with access tokens."""
 
     device: Camera
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: Camera,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Init an sensor that uses access tokens."""
-        self.device = device
-        self.entity_description = description
-        super().__init__(data, device, description)
 
     @callback
     def _async_get_event(self) -> Event | None:

@@ -182,19 +182,6 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     device: Camera | Light | Sensor
     entity_description: ProtectBinaryEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        description: ProtectBinaryEntityDescription,
-        device: Camera | Light | Sensor | None = None,
-    ) -> None:
-        """Initialize the Binary Sensor."""
-
-        if device and not hasattr(self, "device"):
-            self.device = device
-        self.entity_description = description
-        super().__init__(data)
-
     @callback
     def _async_update_device_from_protect(self) -> None:
         super()._async_update_device_from_protect()
@@ -228,8 +215,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         description.key = f"{description.key}_{index}"
         description.name = (description.name or "{index}").format(index=index)
         self._index = index
-        self.entity_description = description
-        super().__init__(data, device)
+        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self) -> None:
@@ -248,16 +234,6 @@ class ProtectEventBinarySensor(EventThumbnailMixin, ProtectDeviceBinarySensor):
     """A UniFi Protect Device Binary Sensor with access tokens."""
 
     device: Camera
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: Camera,
-        description: ProtectBinaryEntityDescription,
-    ) -> None:
-        """Init a binary sensor that uses access tokens."""
-        self.device = device
-        super().__init__(data, description=description)
 
     @callback
     def _async_get_event(self) -> Event | None:

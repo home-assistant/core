@@ -61,15 +61,6 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_icon = "mdi:spotlight-beam"
     _attr_supported_features = SUPPORT_BRIGHTNESS
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: Light,
-    ) -> None:
-        """Initialize an UniFi light."""
-        self.device = device
-        super().__init__(data)
-
     @callback
     def _async_update_device_from_protect(self) -> None:
         super()._async_update_device_from_protect()

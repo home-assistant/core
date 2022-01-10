@@ -64,12 +64,13 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         camera: Camera,
     ) -> None:
         """Initialize an UniFi speaker."""
-
-        self.device = camera
-        self.entity_description = MediaPlayerEntityDescription(
-            key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
+        super().__init__(
+            data,
+            camera,
+            MediaPlayerEntityDescription(
+                key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
+            ),
         )
-        super().__init__(data)
 
         self._attr_name = f"{self.device.name} Speaker"
         self._attr_supported_features = (
