@@ -1,4 +1,4 @@
-"""Config flow for Intellifire integration."""
+"""Config flow for IntelliFire integration."""
 from __future__ import annotations
 
 from typing import Any
