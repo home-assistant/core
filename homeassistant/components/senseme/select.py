@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import cast
 
 from aiosenseme import SensemeFan
@@ -15,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import SensemeEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -76,6 +79,7 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the current value."""
+        _LOGGER.warning("CURRENT AUTO COMFORT: %s", self._device.fan_autocomfort)
         return self.entity_description.value_fn(self._device)
 
     async def async_select_option(self, option: str) -> None:
