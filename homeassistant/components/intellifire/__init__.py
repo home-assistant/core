@@ -1,8 +1,6 @@
 """The Intellifire integration."""
 from __future__ import annotations
 
-import logging.handlers
-
 from intellifire4py import IntellifireAsync
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,10 +8,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .coordinator import IntellifireDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
 

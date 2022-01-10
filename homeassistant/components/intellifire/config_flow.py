@@ -1,7 +1,6 @@
 """Config flow for Intellifire integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from intellifire4py import IntellifireAsync
@@ -12,9 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
 
