@@ -10,13 +10,6 @@ from aiohttp import CookieJar
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 
-from homeassistant.components.unifiprotect.services import (
-    add_doorbell_text,
-    profile_ws,
-    remove_doorbell_text,
-    set_default_doorbell_text,
-    take_sample,
-)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -49,6 +42,13 @@ from .const import (
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
 from .data import ProtectData
+from .services import (
+    add_doorbell_text,
+    profile_ws,
+    remove_doorbell_text,
+    set_default_doorbell_text,
+    take_sample,
+)
 from .views import ThumbnailProxyView
 
 _LOGGER = logging.getLogger(__name__)
