@@ -6,11 +6,12 @@ import logging
 import logging.handlers
 
 from async_timeout import timeout
-from intellifire4py import IntellifireAsync
+from intellifire4py import IntellifireAsync, IntellifirePollData
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER, DOMAIN
+from homeassistant.core import HomeAssistant
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):
