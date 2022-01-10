@@ -1,4 +1,4 @@
-"""The Intellifire integration."""
+"""The IntelliFire integration."""
 from __future__ import annotations
 
 from intellifire4py import IntellifireAsync
@@ -15,7 +15,7 @@ PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Intellifire from a config entry."""
+    """Set up IntelliFire from a config entry."""
     _LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Define the API Object
