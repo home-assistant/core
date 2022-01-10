@@ -10,18 +10,13 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "pin": "C\u00f3digo PIN",
+                    "ssl": "Utiliza un certificado SSL",
+                    "username": "Usuario"
                 },
-                "title": "Con\u00e9ctese al dispositivo Wi-Fi de Balboa"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "sync_time": "Mantenga sincronizada la hora de su cliente de Balboa Spa con Home Assistant"
-                }
+                "title": "Conectar con el termostato Venstar"
             }
         }
     }
