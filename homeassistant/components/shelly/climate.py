@@ -143,15 +143,16 @@ class BlockSleepingClimate(
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.wrapper.mac}-{self.block.description}"
-            assert self.block.channel
             self._preset_modes = [
                 PRESET_NONE,
-                *wrapper.device.settings["thermostats"][int(self.block.channel)][
+                *wrapper.device.settings["thermostats"][cast(int, self.block.channel)][
                     "schedule_profile_names"
                 ],
             ]
         elif entry is not None:
             self._unique_id = entry.unique_id
+
+        self._channel = cast(int, self._unique_id.split("_")[1])
 
     @property
     def unique_id(self) -> str:
@@ -234,13 +235,6 @@ class BlockSleepingClimate(
             "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
         }
 
-    @property
-    def channel(self) -> str | None:
-        """Device channel."""
-        if self.block is not None:
-            return self.block.channel
-        return self.last_state_attributes.get("channel")
-
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""
         return bool(
@@ -254,7 +248,7 @@ class BlockSleepingClimate(
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 return await self.wrapper.device.http_request(
-                    "get", f"thermostat/{self.channel}", kwargs
+                    "get", f"thermostat/{self._channel}", kwargs
                 )
         except (asyncio.TimeoutError, OSError) as err:
             _LOGGER.error(
