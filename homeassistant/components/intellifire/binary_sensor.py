@@ -1,4 +1,4 @@
-"""Support for Intellifire Binary Sensors."""
+"""Support for IntelliFire Binary Sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable
