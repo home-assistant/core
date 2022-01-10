@@ -115,10 +115,12 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
                     f"Could not verify disarmed for {self._attr_name}: {error}"
                 ) from error
 
+        LOGGER.debug("Alarm disarmed: %s", alarm_state)
         if alarm_state:
             self._attr_state = STATE_MAP.get(YALE_STATE_DISARM)
             self.async_write_ha_state()
-        LOGGER.debug("Alarm disarmed: %s", alarm_state)
+            return
+        raise HomeAssistantError("Could not disarm, check system ready for disarming.")
 
     async def async_alarm_arm_home(self, code=None) -> None:
         """Send arm home command."""
@@ -137,10 +139,12 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
                     f"Could not verify armed home for {self._attr_name}: {error}"
                 ) from error
 
+        LOGGER.debug("Alarm armed home: %s", alarm_state)
         if alarm_state:
             self._attr_state = STATE_MAP.get(YALE_STATE_ARM_PARTIAL)
             self.async_write_ha_state()
-        LOGGER.debug("Alarm armed home: %s", alarm_state)
+            return
+        raise HomeAssistantError("Could not arm home, check system ready for arming.")
 
     async def async_alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
@@ -159,10 +163,12 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
                     f"Could not verify armed away for {self._attr_name}: {error}"
                 ) from error
 
+        LOGGER.debug("Alarm armed away: %s", alarm_state)
         if alarm_state:
             self._attr_state = STATE_MAP.get(YALE_STATE_ARM_FULL)
             self.async_write_ha_state()
-        LOGGER.debug("Alarm armed away: %s", alarm_state)
+            return
+        raise HomeAssistantError("Could not arm away, check system ready for arming.")
 
     @callback
     def _handle_coordinator_update(self) -> None:
