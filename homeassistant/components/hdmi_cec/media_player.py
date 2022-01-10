@@ -62,9 +62,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Find and return HDMI devices as +switches."""
-    if not discovery_info:
-        return
-    if ATTR_NEW in discovery_info:
+    if discovery_info and ATTR_NEW in discovery_info:
         _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
