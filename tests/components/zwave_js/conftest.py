@@ -276,6 +276,12 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
     )
 
 
+@pytest.fixture(name="climate_adc_t3000_state", scope="session")
+def climate_adc_t3000_state_fixture():
+    """Load the climate ADC-T3000 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_adc_t3000_state.json"))
+
+
 @pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
 def climate_danfoss_lc_13_state_fixture():
     """Load the climate Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
@@ -606,6 +612,14 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
         client,
         copy.deepcopy(climate_radio_thermostat_ct100_plus_different_endpoints_state),
     )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_adc_t3000")
+def climate_adc_t3000_fixture(client, climate_adc_t3000_state):
+    """Mock a climate ADC-T3000 node."""
+    node = Node(client, copy.deepcopy(climate_adc_t3000_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
