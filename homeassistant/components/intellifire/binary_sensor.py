@@ -74,7 +74,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """A semi generic wrapper around Binary Sensor entiteis for Intellifire."""
+    """A semi-generic wrapper around Binary Sensor entities for IntelliFire."""
 
     def __init__(
         self,
