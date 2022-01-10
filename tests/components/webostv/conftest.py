@@ -19,6 +19,7 @@ def client_fixture():
         "homeassistant.components.webostv.WebOsClient", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
+        client.hello_info = {"deviceUUID": "some-fake-uuid"}
         client.software_info = {"device_id": "00:01:02:03:04:05"}
         client.system_info = {"modelName": "TVFAKE"}
         client.client_key = "0123456789"
