@@ -16,14 +16,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
 
-POWER = "on_off"
-TIMER = "timer_on"
-HOT = "is_hot"
-THERMOSTAT = "thermostat_on"
-FAN = "fan_on"
-LIGHT = "light_on"
-PILOT = "pilot_light_on"
-
 
 @dataclass
 class IntellifireSensorEntityDescriptionMixin:
@@ -41,26 +33,26 @@ class IntellifireBinarySensorEntityDescription(
 
 INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...] = (
     IntellifireBinarySensorEntityDescription(
-        key=POWER,  # This is the sensor name
+        key="on_off",  # This is the sensor name
         name="Power",  # This is the human readable name
         icon="mdi:power",
         device_class=BinarySensorDeviceClass.POWER,
         value_fn=lambda data: data.is_on,
     ),
     IntellifireBinarySensorEntityDescription(
-        key=TIMER,
+        key="timer_on",
         name="Timer On",
         icon="mdi:camera-timer",
         value_fn=lambda data: data.timer_on,
     ),
     IntellifireBinarySensorEntityDescription(
-        key=PILOT,
+        key="pilot_light_on",
         name="Pilot Light On",
         icon="mdi:fire-alert",
         value_fn=lambda data: data.pilot_on,
     ),
     IntellifireBinarySensorEntityDescription(
-        key=THERMOSTAT,
+        key="thermostat_on",
         name="Thermostat On",
         icon="mdi:home-thermometer-outline",
         value_fn=lambda data: data.thermostat_on,
