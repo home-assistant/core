@@ -210,6 +210,7 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
         "IPThermostatWall2",
         "ParticulateMatterSensorIP",
         "CO2SensorIP",
+        "TempModuleSTE2",
     ]
 }
 
