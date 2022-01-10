@@ -277,10 +277,10 @@ async def async_setup_entry(
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_device: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-    api = AvmWrapper(avm_device)
+    avm_wrapper = AvmWrapper(avm_device)
 
     dsl: bool = False
-    dslinterface = await api.get_wan_dsl_interface_config()
+    dslinterface = await avm_wrapper.get_wan_dsl_interface_config()
     if dslinterface:
         dsl = dslinterface["NewEnable"]
 
