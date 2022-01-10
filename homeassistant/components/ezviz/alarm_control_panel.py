@@ -57,12 +57,10 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_state = STATE_ALARM_DISARMED
-        self._model = "Ezviz Alarm"
-        self._attr_unique_id = "Ezviz Alarm"
         self._attr_device_info: DeviceInfo = {
             "identifiers": {(DOMAIN, self._attr_name)},
             "name": self._attr_name,
-            "model": self._model,
+            "model": "Ezviz Alarm",
             "manufacturer": MANUFACTURER,
         }
 
@@ -72,12 +70,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        if (
-            state.state == STATE_ALARM_DISARMED
-            or STATE_ALARM_ARMED_AWAY
-            or STATE_ALARM_ARMED_NIGHT
-        ):
-            self._attr_state = state.state
+        self._attr_state = state.state
 
     def alarm_disarm(self, code: Any = None) -> None:
         """Send disarm command."""
