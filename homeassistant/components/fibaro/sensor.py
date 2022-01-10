@@ -143,7 +143,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         self.entity_id = f"{DOMAIN}.{self.ha_id}_energy"
         self._name = f"{fibaro_device.friendly_name} Energy"
 
-        self._unit = ENERGY_KILO_WATT_HOUR
 
     def update(self):
         """Update the state."""
