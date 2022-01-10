@@ -80,6 +80,7 @@ class HASensemeFan(SensemeEntity, FanEntity):
     def extra_state_attributes(self) -> dict:
         """Get the current device state attributes."""
         return {
+            "auto_comfort": self._device.fan_autocomfort.capitalize(),
             "smartmode": self._device.fan_smartmode.capitalize(),
         }
 
