@@ -49,8 +49,6 @@ OUTDATED_LOG_MESSAGE = "You are running v%s of UniFi Protect. Minimum required v
 
 TYPE_EMPTY_VALUE = ""
 
-SERVICE_GENERATE_DATA = "take_sample"
-SERVICE_PROFILE_WS = "profile_ws_messages"
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_DEFAULT_DOORBELL_TEXT = "set_default_doorbell_text"
@@ -59,8 +57,6 @@ ALL_GLOBAL_SERIVCES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
-    SERVICE_PROFILE_WS,
-    SERVICE_GENERATE_DATA,
 ]
 
 PLATFORMS = [

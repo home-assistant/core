@@ -31,25 +31,15 @@ from .const import (
     DEVICES_FOR_SUBSCRIBE,
     DOMAIN,
     DOORBELL_TEXT_SCHEMA,
-    GENERATE_DATA_SCHEMA,
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
     PLATFORMS,
-    PROFILE_WS_SCHEMA,
     SERVICE_ADD_DOORBELL_TEXT,
-    SERVICE_GENERATE_DATA,
-    SERVICE_PROFILE_WS,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
 from .data import ProtectData
-from .services import (
-    add_doorbell_text,
-    profile_ws,
-    remove_doorbell_text,
-    set_default_doorbell_text,
-    take_sample,
-)
+from .services import add_doorbell_text, remove_doorbell_text, set_default_doorbell_text
 from .views import ThumbnailProxyView
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,12 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_SET_DEFAULT_DOORBELL_TEXT,
             functools.partial(set_default_doorbell_text, hass),
             DOORBELL_TEXT_SCHEMA,
-        ),
-        (SERVICE_PROFILE_WS, functools.partial(profile_ws, hass), PROFILE_WS_SCHEMA),
-        (
-            SERVICE_GENERATE_DATA,
-            functools.partial(take_sample, hass),
-            GENERATE_DATA_SCHEMA,
         ),
     ]
     for name, method, schema in services:

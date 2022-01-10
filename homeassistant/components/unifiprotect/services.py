@@ -13,9 +13,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import ATTR_ANONYMIZE, ATTR_DURATION, ATTR_MESSAGE, DOMAIN
+from .const import ATTR_MESSAGE, DOMAIN
 from .data import ProtectData
-from .utils import generate_sample_data, profile_ws_messages
 
 
 def _async_all_ufp_instances(hass: HomeAssistant) -> list[ProtectApiClient]:
@@ -111,28 +110,3 @@ async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> N
     message: str = call.data[ATTR_MESSAGE]
     instances = _async_get_protect_from_call(hass, call)
     await _async_call_nvr(instances, "set_default_doorbell_message", message)
-
-
-async def profile_ws(hass: HomeAssistant, call: ServiceCall) -> None:
-    """Profile the websocket."""
-    duration: int = call.data[ATTR_DURATION]
-    instances = _async_get_protect_from_call(hass, call)
-    await asyncio.gather(
-        *(
-            profile_ws_messages(hass, i, duration, device_entry)
-            for device_entry, i in instances
-        )
-    )
-
-
-async def take_sample(hass: HomeAssistant, call: ServiceCall) -> None:
-    """Generate sample data."""
-    duration: int = call.data[ATTR_DURATION]
-    anonymize: bool = call.data[ATTR_ANONYMIZE]
-    instances = _async_get_protect_from_call(hass, call)
-    await asyncio.gather(
-        *(
-            generate_sample_data(hass, i, duration, anonymize, device_entry)
-            for device_entry, i in instances
-        )
-    )
