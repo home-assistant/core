@@ -67,15 +67,10 @@ def setup_platform(
     entities: list[SensorEntity] = []
     for device in hass.data[FIBARO_DEVICES]["sensor"]:
         entities.append(FibaroSensor(device))
-    for device in hass.data[FIBARO_DEVICES]["switch"]:
-        if "energy" in device.interfaces:
-            entities.append(FibaroEnergySensor(device))
-    for device in hass.data[FIBARO_DEVICES]["cover"]:
-        if "energy" in device.interfaces:
-            entities.append(FibaroEnergySensor(device))
-    for device in hass.data[FIBARO_DEVICES]["light"]:
-        if "energy" in device.interfaces:
-            entities.append(FibaroEnergySensor(device))
+    for device_type in ("cover", "light", "switch"):
+    	for device in hass.data[FIBARO_DEVICES][device_type]:
+        	if "energy" in device.interfaces:
+            	entities.append(FibaroEnergySensor(device))
 
     add_entities(entities, True)
 
