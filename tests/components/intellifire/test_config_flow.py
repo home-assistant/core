@@ -1,4 +1,4 @@
-"""Test the Intellifire config flow."""
+"""Test the IntelliFire config flow."""
 from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
