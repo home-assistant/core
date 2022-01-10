@@ -370,7 +370,6 @@ omit =
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/__init__.py
-    homeassistant/components/fritz/api.py
     homeassistant/components/fritz/binary_sensor.py
     homeassistant/components/fritz/button.py
     homeassistant/components/fritz/common.py
@@ -379,6 +378,7 @@ omit =
     homeassistant/components/fritz/sensor.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
+    homeassistant/components/fritz/wrapper.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
     homeassistant/components/fritzbox_callmonitor/const.py
     homeassistant/components/fritzbox_callmonitor/base.py
