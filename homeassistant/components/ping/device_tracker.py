@@ -87,7 +87,7 @@ async def async_setup_scanner(
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Set up the Host objects and return the update function."""
 
     privileged = hass.data[DOMAIN][PING_PRIVS]
