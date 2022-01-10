@@ -124,7 +124,6 @@ class BlockSleepingClimate(
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = TEMP_CELSIUS
 
-    # pylint: disable=super-init-not-called
     def __init__(
         self,
         wrapper: BlockDeviceWrapper,
@@ -133,6 +132,8 @@ class BlockSleepingClimate(
         entry: entity_registry.RegistryEntry | None = None,
     ) -> None:
         """Initialize climate."""
+
+        super().__init__(wrapper)
 
         self.wrapper = wrapper
         self.block: Block | None = sensor_block
