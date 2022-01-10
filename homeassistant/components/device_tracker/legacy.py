@@ -267,7 +267,7 @@ class DeviceTrackerPlatform:
                         hass, self.config, scanner, tracker.async_see, self.type
                     )
 
-                if not setup:
+                elif not setup:
                     LOGGER.error(
                         "Error setting up platform %s %s", self.type, self.name
                     )
