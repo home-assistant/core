@@ -34,8 +34,8 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
         async with timeout(100):
             try:
                 await self._api.poll(logging_level=logging.DEBUG)
-            except Exception as e:
-                raise UpdateFailed from e
+            except Exception as exception:
+                raise UpdateFailed from exception
         return self._api.data
 
     @property
