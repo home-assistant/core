@@ -71,18 +71,14 @@ def _get_uptime(obj: ProtectAdoptableDeviceModel | NVR) -> datetime | None:
     return obj.up_since.replace(second=0, microsecond=0)
 
 
-def _get_nvr_recording_capacity(obj: Any) -> int:
-    assert isinstance(obj, NVR)
-
+def _get_nvr_recording_capacity(obj: NVR) -> int:
     if obj.storage_stats.capacity is None:
         return 0
 
     return int(obj.storage_stats.capacity.total_seconds())
 
 
-def _get_nvr_memory(obj: Any) -> float | None:
-    assert isinstance(obj, NVR)
-
+def _get_nvr_memory(obj: NVR) -> float | None:
     memory = obj.system_info.memory
     if memory.available is None or memory.total is None:
         return None

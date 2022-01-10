@@ -45,12 +45,10 @@ class ProtectRequiredKeysMixin:
 
 @dataclass
 class ProtectSetableKeysMixin(ProtectRequiredKeysMixin):
-    """Mixin to for settable values."""
+    """Mixin for settable values."""
 
     ufp_set_method: str | None = None
-    ufp_set_method_fn: Callable[
-        [ProtectAdoptableDeviceModel, Any], Coroutine[Any, Any, None]
-    ] | None = None
+    ufp_set_method_fn: Callable[[Any, Any], Coroutine[Any, Any, None]] | None = None
 
     async def ufp_set(self, obj: ProtectAdoptableDeviceModel, value: Any) -> None:
         """Set value for UniFi Protect device."""

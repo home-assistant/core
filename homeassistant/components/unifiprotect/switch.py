@@ -31,12 +31,10 @@ _KEY_PRIVACY_MODE = "privacy_mode"
 
 
 def _get_is_highfps(obj: Any) -> bool:
-    assert isinstance(obj, Camera)
     return bool(obj.video_mode == VideoMode.HIGH_FPS)
 
 
 async def _set_highfps(obj: Any, value: bool) -> None:
-    assert isinstance(obj, Camera)
     if value:
         await obj.set_video_mode(VideoMode.HIGH_FPS)
     else:
