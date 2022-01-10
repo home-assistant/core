@@ -1,4 +1,6 @@
 """Support for Voice mailboxes."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
@@ -10,11 +12,12 @@ from aiohttp.web_exceptions import HTTPNotFound
 import async_timeout
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_prepare_setup_platform
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -30,9 +33,9 @@ CONTENT_TYPE_NONE = "none"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for mailboxes."""
-    mailboxes = []
+    mailboxes: list[Mailbox] = []
     hass.components.frontend.async_register_built_in_panel(
         "mailbox", "mailbox", "mdi:mailbox"
     )
@@ -84,7 +87,7 @@ async def async_setup(hass, config):
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
+        asyncio.create_task(async_setup_platform(p_type, p_config))  # type: ignore[no-untyped-call]
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
 
@@ -182,7 +185,7 @@ class StreamError(Exception):
 class MailboxView(HomeAssistantView):
     """Base mailbox view."""
 
-    def __init__(self, mailboxes):
+    def __init__(self, mailboxes: list[Mailbox]) -> None:
         """Initialize a basic mailbox view."""
         self.mailboxes = mailboxes
 
