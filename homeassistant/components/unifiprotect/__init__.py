@@ -24,6 +24,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
+    ALL_GLOBAL_SERIVCES,
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEFAULT_SCAN_INTERVAL,
@@ -155,16 +156,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        all_services = [
-            SERVICE_ADD_DOORBELL_TEXT,
-            SERVICE_REMOVE_DOORBELL_TEXT,
-            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
-            SERVICE_PROFILE_WS,
-            SERVICE_GENERATE_DATA,
-        ]
-        # If this is the last loaded instance of RainMachine, deregister any services
-        # defined during integration setup:
-        for name in all_services:
+        for name in ALL_GLOBAL_SERIVCES:
             hass.services.async_remove(DOMAIN, name)
 
     return bool(unload_ok)
