@@ -11,7 +11,7 @@ from pytile.tile import Tile
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -68,9 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             session=websession,
         )
         tiles = await client.async_get_tiles()
-    except InvalidAuthError:
-        LOGGER.error("Invalid credentials provided")
-        return False
+    except InvalidAuthError as err:
+        raise ConfigEntryAuthFailed("Invalid credentials") from err
     except TileError as err:
         raise ConfigEntryNotReady("Error during integration setup") from err
 
@@ -78,6 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update the Tile."""
         try:
             await tile.async_update()
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed("Invalid credentials") from err
         except SessionExpiredError:
             LOGGER.info("Tile session expired; creating a new one")
             await client.async_init()

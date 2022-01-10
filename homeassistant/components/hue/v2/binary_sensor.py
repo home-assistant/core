@@ -14,8 +14,7 @@ from aiohue.v2.models.entertainment import (
 from aiohue.v2.models.motion import Motion
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_RUNNING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -80,11 +79,14 @@ class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):
 class HueMotionSensor(HueBinarySensorBase):
     """Representation of a Hue Motion sensor."""
 
-    _attr_device_class = DEVICE_CLASS_MOTION
+    _attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
+        if not self.resource.enabled:
+            # Force None (unknown) if the sensor is set to disabled in Hue
+            return None
         return self.resource.motion.motion
 
     @property
@@ -96,7 +98,7 @@ class HueMotionSensor(HueBinarySensorBase):
 class HueEntertainmentActiveSensor(HueBinarySensorBase):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
 
-    _attr_device_class = DEVICE_CLASS_RUNNING
+    _attr_device_class = BinarySensorDeviceClass.RUNNING
 
     @property
     def is_on(self) -> bool | None:

@@ -5,9 +5,9 @@ from collections.abc import Mapping
 from typing import Any, Union, cast
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE, CONF_LATITUDE, CONF_LONGITUDE
@@ -58,49 +58,49 @@ USER_SENSOR_DESCRIPTIONS = (
         name="Avian Flu Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_DENGUE,
         name="Dengue Fever Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_FLU,
         name="Flu Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_LEPTO,
         name="Leptospirosis Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_NO_SYMPTOMS,
         name="No Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_SYMPTOMS,
         name="Flu-like Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_TOTAL,
         name="Total Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

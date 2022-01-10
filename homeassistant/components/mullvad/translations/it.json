@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Configurare l'integrazione VPN Mullvad?"
+                "description": "Vuoi configurare l'integrazione VPN Mullvad?"
             }
         }
     }

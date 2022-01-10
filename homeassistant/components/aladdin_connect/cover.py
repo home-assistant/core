@@ -8,8 +8,8 @@ from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.const import (
@@ -65,7 +65,7 @@ def setup_platform(
 class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
-    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
 
     def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:

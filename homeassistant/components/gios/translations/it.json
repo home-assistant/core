@@ -14,7 +14,7 @@
                     "name": "Nome",
                     "station_id": "ID della stazione di misura"
                 },
-                "description": "Impostare l'integrazione della qualit\u00e0 dell'aria GIO\u015a (Ispettorato capo polacco di protezione ambientale). Se hai bisogno di aiuto con la configurazione dai un'occhiata qui: https://www.home-assistant.io/integrations/gios",
+                "description": "Imposta l'integrazione della qualit\u00e0 dell'aria GIO\u015a (Ispettorato capo polacco di protezione ambientale). Se hai bisogno di aiuto con la configurazione dai un'occhiata qui: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Ispettorato capo polacco di protezione ambientale)"
             }
         }

@@ -15,8 +15,10 @@ from homeassistant.const import (
 )
 
 CONF_AREA_ID = "area_id"
+CONF_LOCK_CODE_DIGITS = "lock_code_digits"
 DEFAULT_NAME = "Yale Smart Alarm"
 DEFAULT_AREA_ID = "1"
+DEFAULT_LOCK_CODE_DIGITS = 4
 
 MANUFACTURER = "Yale"
 MODEL = "main"

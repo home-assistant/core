@@ -6,27 +6,28 @@ from typing import Optional, cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_CURRENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import InvalidAuth, WallboxCoordinator
-from .const import CONF_MAX_AVAILABLE_POWER_KEY, CONF_MAX_CHARGING_CURRENT_KEY, DOMAIN
+from . import InvalidAuth, WallboxCoordinator, WallboxEntity
+from .const import (
+    CONF_DATA_KEY,
+    CONF_MAX_AVAILABLE_POWER_KEY,
+    CONF_MAX_CHARGING_CURRENT_KEY,
+    CONF_SERIAL_NUMBER_KEY,
+    DOMAIN,
+)
 
 
 @dataclass
 class WallboxNumberEntityDescription(NumberEntityDescription):
     """Describes Wallbox sensor entity."""
 
-    min_value: float = 0
-
 
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CONF_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
-        device_class=DEVICE_CLASS_CURRENT,
         min_value=6,
     ),
 }
@@ -54,7 +55,7 @@ async def async_setup_entry(
     )
 
 
-class WallboxNumber(CoordinatorEntity, NumberEntity):
+class WallboxNumber(WallboxEntity, NumberEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxNumberEntityDescription
@@ -71,7 +72,7 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         self.entity_description = description
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
-        self._attr_min_value = description.min_value
+        self._attr_unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
 
     @property
     def max_value(self) -> float:

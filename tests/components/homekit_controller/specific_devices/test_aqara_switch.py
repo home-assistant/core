@@ -7,6 +7,7 @@ service-label-index despite not being linked to a service-label.
 https://github.com/home-assistant/core/pull/39090
 """
 
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import assert_lists_same, async_get_device_automations
@@ -50,5 +51,7 @@ async def test_aqara_switch_setup(hass):
             }
         )
 
-    triggers = await async_get_device_automations(hass, "trigger", battery.device_id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, battery.device_id
+    )
     assert_lists_same(triggers, expected)

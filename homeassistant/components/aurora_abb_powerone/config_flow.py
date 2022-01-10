@@ -80,18 +80,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._com_ports_list = None
         self._default_com_port = None
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_configured")
-
-        conf = {}
-        conf[CONF_PORT] = config["device"]
-        conf[CONF_ADDRESS] = config["address"]
-        # config["name"] from yaml is ignored.
-
-        return self.async_create_entry(title=DEFAULT_INTEGRATION_TITLE, data=conf)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

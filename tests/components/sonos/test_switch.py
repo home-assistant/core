@@ -3,7 +3,6 @@ from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
@@ -15,8 +14,7 @@ from homeassistant.components.sonos.switch import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.util import dt
 
 from .conftest import SonosMockEvent
@@ -24,18 +22,9 @@ from .conftest import SonosMockEvent
 from tests.common import async_fire_time_changed
 
 
-async def setup_platform(hass, config_entry, config):
-    """Set up the switch platform for testing."""
-    config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_entity_registry(hass, config_entry, config):
+async def test_entity_registry(hass, async_autosetup_sonos):
     """Test sonos device with alarm registered in the device registry."""
-    await setup_platform(hass, config_entry, config)
-
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = ent_reg.async_get(hass)
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "switch.sonos_alarm_14" in entity_registry.entities
@@ -47,11 +36,9 @@ async def test_entity_registry(hass, config_entry, config):
     assert "switch.sonos_zone_a_touch_controls" in entity_registry.entities
 
 
-async def test_switch_attributes(hass, config_entry, config, soco):
+async def test_switch_attributes(hass, async_autosetup_sonos, soco):
     """Test for correct Sonos switch states."""
-    await setup_platform(hass, config_entry, config)
-
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = ent_reg.async_get(hass)
 
     alarm = entity_registry.entities["switch.sonos_alarm_14"]
     alarm_state = hass.states.get(alarm.entity_id)
@@ -125,15 +112,15 @@ async def test_switch_attributes(hass, config_entry, config, soco):
 
 
 async def test_alarm_create_delete(
-    hass, config_entry, config, soco, alarm_clock, alarm_clock_extended, alarm_event
+    hass, async_setup_sonos, soco, alarm_clock, alarm_clock_extended, alarm_event
 ):
     """Test for correct creation and deletion of alarms during runtime."""
-    entity_registry = async_get_entity_registry(hass)
+    entity_registry = ent_reg.async_get(hass)
 
     one_alarm = copy(alarm_clock.ListAlarms.return_value)
     two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
-    await setup_platform(hass, config_entry, config)
+    await async_setup_sonos()
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities

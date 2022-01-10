@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any, TypedDict
 
 from homeassistant import core, setup
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.loader import bind_hass
 
@@ -126,7 +127,7 @@ def async_listen_platform(
 @bind_hass
 def load_platform(
     hass: core.HomeAssistant,
-    component: str,
+    component: Platform | str,
     platform: str,
     discovered: DiscoveryInfoType,
     hass_config: ConfigType,
@@ -142,7 +143,7 @@ def load_platform(
 @bind_hass
 async def async_load_platform(
     hass: core.HomeAssistant,
-    component: str,
+    component: Platform | str,
     platform: str,
     discovered: DiscoveryInfoType,
     hass_config: ConfigType,

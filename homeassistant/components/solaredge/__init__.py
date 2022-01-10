@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR]
 

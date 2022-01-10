@@ -12,7 +12,7 @@
         },
         "error": {
             "follow_link": "L\u00fctfen ba\u011flant\u0131y\u0131 takip edin ve G\u00f6nder'e basmadan \u00f6nce kimlik do\u011frulamas\u0131 yap\u0131n",
-            "no_token": "Eri\u015fim Belirteci"
+            "no_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131"
         },
         "step": {
             "auth": {

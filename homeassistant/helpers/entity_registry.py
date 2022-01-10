@@ -38,13 +38,13 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr, storage
-from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.yaml import load_yaml
 
+from . import device_registry as dr, storage
+from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from .frame import report
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -335,7 +335,7 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self._async_update_entity(
+            return self.async_update_entity(
                 entity_id,
                 area_id=area_id or UNDEFINED,
                 capabilities=capabilities or UNDEFINED,
@@ -460,43 +460,6 @@ class EntityRegistry:
 
     @callback
     def async_update_entity(
-        self,
-        entity_id: str,
-        *,
-        area_id: str | None | UndefinedType = UNDEFINED,
-        config_entry_id: str | None | UndefinedType = UNDEFINED,
-        device_class: str | None | UndefinedType = UNDEFINED,
-        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
-        entity_category: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
-        new_entity_id: str | UndefinedType = UNDEFINED,
-        new_unique_id: str | UndefinedType = UNDEFINED,
-        original_device_class: str | None | UndefinedType = UNDEFINED,
-        original_icon: str | None | UndefinedType = UNDEFINED,
-        original_name: str | None | UndefinedType = UNDEFINED,
-        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
-    ) -> RegistryEntry:
-        """Update properties of an entity."""
-        return self._async_update_entity(
-            entity_id,
-            area_id=area_id,
-            config_entry_id=config_entry_id,
-            device_class=device_class,
-            disabled_by=disabled_by,
-            entity_category=entity_category,
-            icon=icon,
-            name=name,
-            new_entity_id=new_entity_id,
-            new_unique_id=new_unique_id,
-            original_device_class=original_device_class,
-            original_icon=original_icon,
-            original_name=original_name,
-            unit_of_measurement=unit_of_measurement,
-        )
-
-    @callback
-    def _async_update_entity(
         self,
         entity_id: str,
         *,
@@ -693,7 +656,7 @@ class EntityRegistry:
         """Clear area id from registry entries."""
         for entity_id, entry in self.entities.items():
             if area_id == entry.area_id:
-                self._async_update_entity(entity_id, area_id=None)
+                self.async_update_entity(entity_id, area_id=None)
 
 
 @callback

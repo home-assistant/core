@@ -15,8 +15,10 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, CharacteristicEntity
 
@@ -33,20 +35,24 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         key=CharacteristicsTypes.Vendor.HAA_SETUP,
         name="Setup",
         icon="mdi:cog",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
     CharacteristicsTypes.Vendor.HAA_UPDATE: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.Vendor.HAA_UPDATE,
         name="Update",
         device_class=ButtonDeviceClass.UPDATE,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit buttons."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]

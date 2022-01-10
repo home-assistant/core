@@ -1,4 +1,6 @@
 """The Hangouts Bot."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from http import HTTPStatus
@@ -9,7 +11,7 @@ import aiohttp
 import hangups
 from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -326,7 +328,7 @@ class HangoutsBot:
             self.hass, EVENT_HANGOUTS_CONVERSATIONS_CHANGED, conversations
         )
 
-    async def async_handle_send_message(self, service):
+    async def async_handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
         await self._async_send_message(
             service.data[ATTR_MESSAGE],
@@ -334,11 +336,13 @@ class HangoutsBot:
             service.data.get(ATTR_DATA, {}),
         )
 
-    async def async_handle_update_users_and_conversations(self, _=None):
+    async def async_handle_update_users_and_conversations(
+        self, service: ServiceCall | None = None
+    ) -> None:
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
 
-    async def async_handle_reconnect(self, _=None):
+    async def async_handle_reconnect(self, service: ServiceCall | None = None) -> None:
         """Handle the reconnect service."""
         await self.async_disconnect()
         await self.async_connect()
