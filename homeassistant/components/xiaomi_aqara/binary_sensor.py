@@ -2,11 +2,12 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_OPENING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import XiaomiDevice
@@ -26,7 +27,11 @@ DENSITY = "density"
 ATTR_DENSITY = "Density"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
@@ -303,7 +308,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
             "Door Window Sensor",
             xiaomi_hub,
             data_key,
-            DEVICE_CLASS_OPENING,
+            BinarySensorDeviceClass.OPENING,
             config_entry,
         )
 
@@ -353,7 +358,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
             "Water Leak Sensor",
             xiaomi_hub,
             data_key,
-            DEVICE_CLASS_MOISTURE,
+            BinarySensorDeviceClass.MOISTURE,
             config_entry,
         )
 

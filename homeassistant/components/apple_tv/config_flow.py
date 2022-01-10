@@ -1,4 +1,7 @@
 """Config flow for Apple TV integration."""
+from __future__ import annotations
+
+import asyncio
 from collections import deque
 from ipaddress import ip_address
 import logging
@@ -27,6 +30,8 @@ INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
 
 DEFAULT_START_OFF = False
 
+DISCOVERY_AGGREGATION_TIME = 15  # seconds
+
 
 async def device_scan(identifier, loop):
     """Scan for a specific device using identifier as filter."""
@@ -46,12 +51,13 @@ async def device_scan(identifier, loop):
         except ValueError:
             return None
 
-    for hosts in (_host_filter(), None):
-        scan_result = await scan(loop, timeout=3, hosts=hosts)
-        matches = [atv for atv in scan_result if _filter_device(atv)]
+    # If we have an address, only probe that address to avoid
+    # broadcast traffic on the network
+    scan_result = await scan(loop, timeout=3, hosts=_host_filter())
+    matches = [atv for atv in scan_result if _filter_device(atv)]
 
-        if matches:
-            return matches[0], matches[0].all_identifiers
+    if matches:
+        return matches[0], matches[0].all_identifiers
 
     return None, None
 
@@ -93,11 +99,20 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing config entry. If that's the case, the unique_id from that entry is
         re-used, otherwise the newly discovered identifier is used instead.
         """
-        for entry in self._async_current_entries():
-            for identifier in self.atv.all_identifiers:
-                if identifier in entry.data.get(CONF_IDENTIFIERS, [entry.unique_id]):
-                    return entry.unique_id
+        all_identifiers = set(self.atv.all_identifiers)
+        if unique_id := self._entry_unique_id_from_identifers(all_identifiers):
+            return unique_id
         return self.atv.identifier
+
+    @callback
+    def _entry_unique_id_from_identifers(self, all_identifiers: set[str]) -> str | None:
+        """Search existing entries for an identifier and return the unique id."""
+        for entry in self._async_current_entries():
+            if all_identifiers.intersection(
+                entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
+            ):
+                return entry.unique_id
+        return None
 
     async def async_step_reauth(self, user_input=None):
         """Handle initial step when updating invalid credentials."""
@@ -149,22 +164,32 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle device found via zeroconf."""
+        host = discovery_info.host
+        self._async_abort_entries_match({CONF_ADDRESS: host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
         properties = discovery_info.properties
 
         # Extract unique identifier from service
-        self.scan_filter = get_unique_id(service_type, name, properties)
-        if self.scan_filter is None:
+        unique_id = get_unique_id(service_type, name, properties)
+        if unique_id is None:
             return self.async_abort(reason="unknown")
 
+        if existing_unique_id := self._entry_unique_id_from_identifers({unique_id}):
+            await self.async_set_unique_id(existing_unique_id)
+            self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
+
+        self._async_abort_entries_match({CONF_ADDRESS: host})
+        await self._async_aggregate_discoveries(host, unique_id)
         # Scan for the device in order to extract _all_ unique identifiers assigned to
         # it. Not doing it like this will yield multiple config flows for the same
         # device, one per protocol, which is undesired.
+        self.scan_filter = host
         return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
 
-    async def async_found_zeroconf_device(self, user_input=None):
-        """Handle device found after Zeroconf discovery."""
+    async def _async_aggregate_discoveries(self, host: str, unique_id: str) -> None:
+        """Wait for multiple zeroconf services to be discovered an aggregate them."""
+        #
         # Suppose we have a device with three services: A, B and C. Let's assume
         # service A is discovered by Zeroconf, triggering a device scan that also finds
         # service B but *not* C. An identifier is picked from one of the services and
@@ -177,31 +202,59 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # since both flows really represent the same device. They will however end up
         # as two separate flows.
         #
-        # To solve this, all identifiers found during a device scan is stored as
+        # To solve this, all identifiers are stored as
         # "all_identifiers" in the flow context. When a new service is discovered, the
         # code below will check these identifiers for all active flows and abort if a
         # match is found. Before aborting, the original flow is updated with any
         # potentially new identifiers. In the example above, when service C is
         # discovered, the identifier of service C will be inserted into
         # "all_identifiers" of the original flow (making the device complete).
-        for flow in self._async_in_progress():
-            for identifier in self.atv.all_identifiers:
-                if identifier not in flow["context"].get("all_identifiers", []):
-                    continue
+        #
+        # Wait DISCOVERY_AGGREGATION_TIME for multiple services to be
+        # discovered via zeroconf. Once the first service is discovered
+        # this allows other services to be discovered inside the time
+        # window before triggering a scan of the device. This prevents
+        # multiple scans of the device at the same time since each
+        # apple_tv device has multiple services that are discovered by
+        # zeroconf.
+        #
+        self._async_check_and_update_in_progress(host, unique_id)
+        await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
+        # Check again after sleeping in case another flow
+        # has made progress while we yielded to the event loop
+        self._async_check_and_update_in_progress(host, unique_id)
+        # Host must only be set AFTER checking and updating in progress
+        # flows or we will have a race condition where no flows move forward.
+        self.context[CONF_ADDRESS] = host
 
+    @callback
+    def _async_check_and_update_in_progress(self, host: str, unique_id: str) -> None:
+        """Check for in-progress flows and update them with identifiers if needed."""
+        for flow in self._async_in_progress(include_uninitialized=True):
+            context = flow["context"]
+            if (
+                context.get("source") != config_entries.SOURCE_ZEROCONF
+                or context.get(CONF_ADDRESS) != host
+            ):
+                continue
+            if (
+                "all_identifiers" in context
+                and unique_id not in context["all_identifiers"]
+            ):
                 # Add potentially new identifiers from this device to the existing flow
-                identifiers = set(flow["context"]["all_identifiers"])
-                identifiers.update(self.atv.all_identifiers)
-                flow["context"]["all_identifiers"] = list(identifiers)
+                context["all_identifiers"].append(unique_id)
+            raise data_entry_flow.AbortFlow("already_in_progress")
 
-                raise data_entry_flow.AbortFlow("already_in_progress")
-
+    async def async_found_zeroconf_device(self, user_input=None):
+        """Handle device found after Zeroconf discovery."""
         self.context["all_identifiers"] = self.atv.all_identifiers
-
         # Also abort if an integration with this identifier already exists
         await self.async_set_unique_id(self.device_identifier)
-        self._abort_if_unique_id_configured()
-
+        # but be sure to update the address if its changed so the scanner
+        # will probe the new address
+        self._abort_if_unique_id_configured(
+            updates={CONF_ADDRESS: str(self.atv.address)}
+        )
         self.context["identifier"] = self.unique_id
         return await self.async_step_confirm()
 
@@ -245,14 +298,23 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else model_str(dev_info.model)
             ),
         }
-
-        if not allow_exist:
-            for identifier in self.atv.all_identifiers:
-                for entry in self._async_current_entries():
-                    if identifier in entry.data.get(
-                        CONF_IDENTIFIERS, [entry.unique_id]
-                    ):
-                        raise DeviceAlreadyConfigured()
+        all_identifiers = set(self.atv.all_identifiers)
+        discovered_ip_address = str(self.atv.address)
+        for entry in self._async_current_entries():
+            if not all_identifiers.intersection(
+                entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
+            ):
+                continue
+            if entry.data.get(CONF_ADDRESS) != discovered_ip_address:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={**entry.data, CONF_ADDRESS: discovered_ip_address},
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            if not allow_exist:
+                raise DeviceAlreadyConfigured()
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""

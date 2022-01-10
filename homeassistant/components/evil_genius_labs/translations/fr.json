@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
+            "timeout": "D\u00e9lai d'attente pour \u00e9tablir la connexion",
             "unknown": "Erreur inattendue"
         },
         "step": {

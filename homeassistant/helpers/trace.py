@@ -8,8 +8,9 @@ from contextvars import ContextVar
 from functools import wraps
 from typing import Any, cast
 
-from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
+
+from .typing import TemplateVarsType
 
 
 class TraceElement:

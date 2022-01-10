@@ -1,4 +1,6 @@
 """Support for Fibaro sensors."""
+from __future__ import annotations
+
 from contextlib import suppress
 
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
@@ -9,6 +11,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -42,7 +47,12 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Fibaro controller devices."""
     if discovery_info is None:
         return

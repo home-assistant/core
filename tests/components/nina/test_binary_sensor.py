@@ -3,8 +3,6 @@ import json
 from typing import Any, Dict
 from unittest.mock import patch
 
-from pynina import ApiError
-
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.nina.const import (
     ATTR_EXPIRES,
@@ -64,9 +62,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w1.state == STATE_ON
         assert state_w1.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
         assert state_w1.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
-        assert state_w1.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
-        assert state_w1.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
-        assert state_w1.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
+        assert state_w1.attributes.get(ATTR_SENT) == "2021-10-11T04:20:00+00:00"
+        assert state_w1.attributes.get(ATTR_START) == "2021-11-01T04:20:00+00:00"
+        assert state_w1.attributes.get(ATTR_EXPIRES) == "3021-11-22T04:19:00+00:00"
 
         assert entry_w1.unique_id == "083350000000-1"
         assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
@@ -157,9 +155,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
             == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
         )
         assert state_w1.attributes.get(ATTR_ID) == "mow.DE-BW-S-SE018-20211102-18-001"
-        assert state_w1.attributes.get(ATTR_SENT) == "2021-11-02T20:07:16+01:00"
-        assert state_w1.attributes.get(ATTR_START) == ""
-        assert state_w1.attributes.get(ATTR_EXPIRES) == ""
+        assert state_w1.attributes.get(ATTR_SENT) == "2021-11-02T19:07:16+00:00"
+        assert state_w1.attributes.get(ATTR_START) is None
+        assert state_w1.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w1.unique_id == "083350000000-1"
         assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
@@ -170,9 +168,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w2.state == STATE_ON
         assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
         assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
-        assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
-        assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
-        assert state_w2.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
+        assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T04:20:00+00:00"
+        assert state_w2.attributes.get(ATTR_START) == "2021-11-01T04:20:00+00:00"
+        assert state_w2.attributes.get(ATTR_EXPIRES) == "3021-11-22T04:19:00+00:00"
 
         assert entry_w2.unique_id == "083350000000-2"
         assert state_w2.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
@@ -215,21 +213,3 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
 
         assert entry_w5.unique_id == "083350000000-5"
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
-
-
-async def test_sensors_connection_error(hass: HomeAssistant) -> None:
-    """Test the creation and values of the NINA sensors with no connected."""
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        side_effect=ApiError("Could not connect to Api"),
-    ):
-        conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA
-        )
-
-        conf_entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(conf_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert conf_entry.state == ConfigEntryState.SETUP_RETRY

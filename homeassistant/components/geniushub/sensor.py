@@ -4,10 +4,11 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, GeniusDevice, GeniusEntity
@@ -22,7 +23,10 @@ GH_LEVEL_MAPPING = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:
@@ -76,7 +80,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
     @property
     def device_class(self) -> str:
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
     def native_unit_of_measurement(self) -> str:

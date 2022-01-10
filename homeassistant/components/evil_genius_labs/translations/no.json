@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
+            "timeout": "Tidsavbrudd oppretter forbindelse",
             "unknown": "Uventet feil"
         },
         "step": {

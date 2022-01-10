@@ -6,7 +6,7 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_DEVICES, STATE_ON
+from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 
 from . import (
@@ -14,16 +14,9 @@ from . import (
     DOMAIN,
     DeviceTuple,
     RfxtrxCommandEntity,
-    connect_auto_add,
-    get_device_id,
-    get_rfx_object,
+    async_setup_platform_entry,
 )
-from .const import (
-    COMMAND_OFF_LIST,
-    COMMAND_ON_LIST,
-    CONF_DATA_BITS,
-    CONF_SIGNAL_REPETITIONS,
-)
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, CONF_SIGNAL_REPETITIONS
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
@@ -46,59 +39,25 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up config entry."""
-    discovery_info = config_entry.data
-    device_ids: set[DeviceTuple] = set()
 
-    # Add switch from config file
-    entities = []
-    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
-        if (event := get_rfx_object(packet_id)) is None:
-            _LOGGER.error("Invalid device: %s", packet_id)
-            continue
-        if not supported(event):
-            continue
+    def _constructor(
+        event: rfxtrxmod.RFXtrxEvent,
+        auto: bool,
+        device_id: DeviceTuple,
+        entity_info: dict,
+    ):
+        return [
+            RfxtrxSwitch(
+                event.device,
+                device_id,
+                entity_info.get(CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS),
+                event=event if auto else None,
+            )
+        ]
 
-        device_id = get_device_id(
-            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
-        )
-        if device_id in device_ids:
-            continue
-        device_ids.add(device_id)
-
-        entity = RfxtrxSwitch(
-            event.device, device_id, entity_info.get(CONF_SIGNAL_REPETITIONS, 1)
-        )
-        entities.append(entity)
-
-    async_add_entities(entities)
-
-    @callback
-    def switch_update(event, device_id):
-        """Handle sensor updates from the RFXtrx gateway."""
-        if not supported(event):
-            return
-
-        if device_id in device_ids:
-            return
-        device_ids.add(device_id)
-
-        device: rfxtrxmod.RFXtrxDevice = event.device
-
-        _LOGGER.info(
-            "Added switch (Device ID: %s Class: %s Sub: %s, Event: %s)",
-            device.id_string.lower(),
-            device.__class__.__name__,
-            device.subtype,
-            "".join(f"{x:02x}" for x in event.data),
-        )
-
-        entity = RfxtrxSwitch(
-            device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
-        )
-        async_add_entities([entity])
-
-    # Subscribe to main RFXtrx events
-    connect_auto_add(hass, discovery_info, switch_update)
+    await async_setup_platform_entry(
+        hass, config_entry, async_add_entities, supported, _constructor
+    )
 
 
 class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):

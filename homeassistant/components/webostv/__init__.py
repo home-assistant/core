@@ -18,9 +18,12 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_BUTTON,
@@ -82,12 +85,12 @@ SERVICE_TO_METHOD = {
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG WebOS TV platform."""
     hass.data[DOMAIN] = {}
 
-    async def async_service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
+    async def async_service_handler(service: ServiceCall) -> None:
+        method = SERVICE_TO_METHOD[service.service]
         data = service.data.copy()
         data["method"] = method["method"]
         async_dispatcher_send(hass, DOMAIN, data)
@@ -175,10 +178,14 @@ async def async_setup_tv_finalize(hass, config, conf, client):
 
     await async_connect(client)
     hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("media_player", DOMAIN, conf, config)
+        hass.helpers.discovery.async_load_platform(
+            Platform.MEDIA_PLAYER, DOMAIN, conf, config
+        )
     )
     hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("notify", DOMAIN, conf, config)
+        hass.helpers.discovery.async_load_platform(
+            Platform.NOTIFY, DOMAIN, conf, config
+        )
     )
 
 

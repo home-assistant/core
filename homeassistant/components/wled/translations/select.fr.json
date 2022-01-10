@@ -1,0 +1,9 @@
+{
+    "state": {
+        "wled__live_override": {
+            "0": "Inactif",
+            "1": "Actif",
+            "2": "Jusqu'au red\u00e9marrage de l'appareil"
+        }
+    }
+}

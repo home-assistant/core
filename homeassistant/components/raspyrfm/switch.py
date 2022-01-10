@@ -1,4 +1,6 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
+from __future__ import annotations
+
 from raspyrfm_client import RaspyRFMClient
 from raspyrfm_client.device_implementations.controlunit.actions import Action
 from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
@@ -18,7 +20,10 @@ from homeassistant.const import (
     CONF_SWITCHES,
     DEVICE_DEFAULT_NAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_GATEWAY_MANUFACTURER = "gateway_manufacturer"
 CONF_GATEWAY_MODEL = "gateway_model"
@@ -49,7 +54,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the RaspyRFM switch."""
 
     gateway_manufacturer = config.get(

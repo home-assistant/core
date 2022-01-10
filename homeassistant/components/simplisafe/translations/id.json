@@ -32,11 +32,12 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Kode Otorisasi",
                     "code": "Kode (digunakan di antarmuka Home Assistant)",
                     "password": "Kata Sandi",
                     "username": "Email"
                 },
-                "description": "Sejak tahun 2021, SimpliSafe telah berpindah ke mekanisme autentikasi baru melalui aplikasi webnya. Karena keterbatasan teknis, ada langkah manual di akhir proses ini; pastikan Anda membaca [dokumentasi] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) sebelum memulai.\n\nJika siap, klik [di sini]({url}) untuk membuka aplikasi web SimpliSafe dan masukkan kredensial Anda. Setelah proses selesai, kembali ke sini dan klik Kirim.",
+                "description": "SimpliSafe mengautentikasi dengan Home Assistant melalui aplikasi web. Karena keterbatasan teknis, ada langkah manual di akhir proses ini; pastikan Anda membaca [dokumentasi] ({docs_url}) sebelum memulai.\n\n1. Klik [di sini]({url}) untuk membuka aplikasi web SimpliSafe dan masukkan kredensial Anda. \n\n2. Setelah proses masuk selesai, kembali ke sini dan klik masukkan kode otorisasi di bawah ini.",
                 "title": "Isi informasi Anda."
             }
         }

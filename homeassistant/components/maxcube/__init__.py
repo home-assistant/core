@@ -7,9 +7,11 @@ import time
 from maxcube.cube import MaxCube
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Establish connection to MAX! Cube."""
 
     if DATA_KEY not in hass.data:
@@ -74,8 +76,8 @@ def setup(hass, config):
     if connection_failed >= len(gateways):
         return False
 
-    load_platform(hass, "climate", DOMAIN, {}, config)
-    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
 
     return True
 

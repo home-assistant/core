@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-import garages_amsterdam
+from garages_amsterdam import GaragesAmsterdam
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -43,9 +43,9 @@ async def get_coordinator(
         async with async_timeout.timeout(10):
             return {
                 garage.garage_name: garage
-                for garage in await garages_amsterdam.get_garages(
-                    aiohttp_client.async_get_clientsession(hass)
-                )
+                for garage in await GaragesAmsterdam(
+                    session=aiohttp_client.async_get_clientsession(hass)
+                ).all_garages()
             }
 
     coordinator = DataUpdateCoordinator(

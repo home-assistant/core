@@ -40,12 +40,14 @@ async def test_ryse_smart_bridge_setup(hass):
     assert device.name == "Master Bath South"
     assert device.model == "RYSE Shade"
     assert device.sw_version == "3.0.8"
+    assert device.hw_version == "1.0.0"
 
     bridge = device_registry.async_get(device.via_device_id)
     assert bridge.manufacturer == "RYSE Inc."
     assert bridge.name == "RYSE SmartBridge"
     assert bridge.model == "RYSE SmartBridge"
     assert bridge.sw_version == "1.3.0"
+    assert bridge.hw_version == "0101.3521.0436"
 
     # Check that the cover.ryse_smartshade is correctly found and set up
     cover_id = "cover.ryse_smartshade"

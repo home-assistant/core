@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Impossible de d\u00e9couvrir un r\u00e9cepteur r\u00e9seau Denon AVR"
         },
-        "flow_title": "R\u00e9cepteur r\u00e9seau Denon AVR: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Veuillez confirmer l'ajout du r\u00e9cepteur",

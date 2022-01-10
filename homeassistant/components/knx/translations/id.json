@@ -21,6 +21,7 @@
             "routing": {
                 "data": {
                     "individual_address": "Alamat individu untuk koneksi routing",
+                    "local_ip": "IP lokal (kosongkan jika tidak yakin)",
                     "multicast_group": "Grup multicast yang digunakan untuk routing",
                     "multicast_port": "Port multicast yang digunakan untuk routing"
                 },
@@ -46,6 +47,7 @@
                 "data": {
                     "connection_type": "Jenis Koneksi KNX",
                     "individual_address": "Alamat individu default",
+                    "local_ip": "IP lokal (kosongkan jika tidak yakin)",
                     "multicast_group": "Grup multicast yang digunakan untuk routing dan penemuan",
                     "multicast_port": "Port multicast yang digunakan untuk routing dan penemuan",
                     "rate_limit": "Jumlah maksimal telegram keluar per detik",

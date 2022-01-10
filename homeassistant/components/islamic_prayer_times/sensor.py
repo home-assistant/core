@@ -1,14 +1,19 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
-
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Islamic prayer times sensor platform."""
 
     client = hass.data[DOMAIN]
@@ -23,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class IslamicPrayerTimeSensor(SensorEntity):
     """Representation of an Islamic prayer time sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = PRAYER_TIMES_ICON
     _attr_should_poll = False
 

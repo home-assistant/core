@@ -11,11 +11,10 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
-    DOMAIN,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,7 +41,7 @@ async def async_setup_entry(
         """Discover and add a MySensors light."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.LIGHT,
             discovery_info,
             device_class_map,
             async_add_entities=async_add_entities,
@@ -53,7 +52,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.LIGHT),
             async_discover,
         ),
     )

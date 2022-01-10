@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
-from flux_led.const import COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM
+from flux_led.const import COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM, MultiColorEffects
 
 from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
@@ -16,6 +16,11 @@ from .const import FLUX_COLOR_MODE_TO_HASS
 def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
     color_modes = device.color_modes
     return {_flux_color_mode_to_hass(mode, color_modes) for mode in color_modes}
+
+
+def format_as_flux_mac(mac: str | None) -> str | None:
+    """Convert a device registry formatted mac to flux mac."""
+    return None if mac is None else mac.replace(":", "").upper()
 
 
 def _flux_color_mode_to_hass(
@@ -34,3 +39,12 @@ def _flux_color_mode_to_hass(
 def _effect_brightness(brightness: int) -> int:
     """Convert hass brightness to effect brightness."""
     return round(brightness / 255 * 100)
+
+
+def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
+    """Convert an multicolor effect string to MultiColorEffects."""
+    for effect in MultiColorEffects:
+        if effect.name.lower() == effect_str:
+            return effect
+    # unreachable due to schema validation
+    assert False  # pragma: no cover

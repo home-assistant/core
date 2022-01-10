@@ -56,7 +56,7 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_enable_sensor(
@@ -76,7 +76,7 @@ async def test_enable_sensor(
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # enable the entity
     updated_entry = ent_reg.async_update_entity(

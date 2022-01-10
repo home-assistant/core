@@ -20,7 +20,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BondHub
 from .const import (
     ATTR_POWER_STATE,
     BPUP_SUBS,
@@ -30,7 +29,7 @@ from .const import (
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
-from .utils import BondDevice
+from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
