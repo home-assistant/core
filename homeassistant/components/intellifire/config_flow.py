@@ -24,8 +24,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     api = IntellifireAsync(data["host"])
     try:
         await api.poll()
-    except Exception:
-        raise CannotConnect
+    except Exception as exception:
+        raise CannotConnect from exception
 
     serial_number = api.data.serial
 
