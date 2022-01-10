@@ -29,6 +29,9 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
+    DEVICE_CLASS_ALARM,
+    KEY_ALARM,
+    PREVIOUS_STATE,
     SIA_UNIQUE_ID_FORMAT_ALARM,
 )
 from .sia_entity_base import SIABaseEntity, SIAEntityDescription
@@ -44,40 +47,35 @@ class SIAAlarmControlPanelEntityDescription(
     """Describes SIA alarm control panel entity."""
 
 
-PREVIOUS_STATE = "previous_state"
-
-CODE_CONSEQUENCES: dict[str, StateType] = {
-    "PA": STATE_ALARM_TRIGGERED,
-    "JA": STATE_ALARM_TRIGGERED,
-    "TA": STATE_ALARM_TRIGGERED,
-    "BA": STATE_ALARM_TRIGGERED,
-    "CA": STATE_ALARM_ARMED_AWAY,
-    "CB": STATE_ALARM_ARMED_AWAY,
-    "CG": STATE_ALARM_ARMED_AWAY,
-    "CL": STATE_ALARM_ARMED_AWAY,
-    "CP": STATE_ALARM_ARMED_AWAY,
-    "CQ": STATE_ALARM_ARMED_AWAY,
-    "CS": STATE_ALARM_ARMED_AWAY,
-    "CF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    "OA": STATE_ALARM_DISARMED,
-    "OB": STATE_ALARM_DISARMED,
-    "OG": STATE_ALARM_DISARMED,
-    "OP": STATE_ALARM_DISARMED,
-    "OQ": STATE_ALARM_DISARMED,
-    "OR": STATE_ALARM_DISARMED,
-    "OS": STATE_ALARM_DISARMED,
-    "NC": STATE_ALARM_ARMED_NIGHT,
-    "NL": STATE_ALARM_ARMED_NIGHT,
-    "BR": PREVIOUS_STATE,
-    "NP": PREVIOUS_STATE,
-    "NO": PREVIOUS_STATE,
-}
-
-entity_description_alarm = SIAAlarmControlPanelEntityDescription(
-    key="alarm_control_panel",
-    device_class="alarm",
-    code_consequences=CODE_CONSEQUENCES,
-    always_reset_availability=True,
+ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
+    key=KEY_ALARM,
+    device_class=DEVICE_CLASS_ALARM,
+    code_consequences={
+        "PA": STATE_ALARM_TRIGGERED,
+        "JA": STATE_ALARM_TRIGGERED,
+        "TA": STATE_ALARM_TRIGGERED,
+        "BA": STATE_ALARM_TRIGGERED,
+        "CA": STATE_ALARM_ARMED_AWAY,
+        "CB": STATE_ALARM_ARMED_AWAY,
+        "CG": STATE_ALARM_ARMED_AWAY,
+        "CL": STATE_ALARM_ARMED_AWAY,
+        "CP": STATE_ALARM_ARMED_AWAY,
+        "CQ": STATE_ALARM_ARMED_AWAY,
+        "CS": STATE_ALARM_ARMED_AWAY,
+        "CF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
+        "OA": STATE_ALARM_DISARMED,
+        "OB": STATE_ALARM_DISARMED,
+        "OG": STATE_ALARM_DISARMED,
+        "OP": STATE_ALARM_DISARMED,
+        "OQ": STATE_ALARM_DISARMED,
+        "OR": STATE_ALARM_DISARMED,
+        "OS": STATE_ALARM_DISARMED,
+        "NC": STATE_ALARM_ARMED_NIGHT,
+        "NL": STATE_ALARM_ARMED_NIGHT,
+        "BR": PREVIOUS_STATE,
+        "NP": PREVIOUS_STATE,
+        "NO": PREVIOUS_STATE,
+    },
 )
 
 
@@ -93,8 +91,10 @@ async def async_setup_entry(
             account=account_data[CONF_ACCOUNT],
             zone=zone,
             ping_interval=account_data[CONF_PING_INTERVAL],
-            entry_id=entry.entry_id,
-            entity_description=entity_description_alarm,
+            entity_description=ENTITY_DESCRIPTION_ALARM,
+            unique_id=SIA_UNIQUE_ID_FORMAT_ALARM.format(
+                entry.entry_id, account_data[CONF_ACCOUNT], zone
+            ),
         )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(
@@ -116,8 +116,8 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         account: str,
         zone: int | None,
         ping_interval: int,
-        entry_id: str,
         entity_description: SIAAlarmControlPanelEntityDescription,
+        unique_id: str,
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(
@@ -126,11 +126,18 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             zone,
             ping_interval,
             entity_description,
-            SIA_UNIQUE_ID_FORMAT_ALARM.format(entry_id, account, zone),
+            unique_id,
         )
 
         self._attr_state: StateType = None
         self._old_state: StateType = None
+
+    def handle_last_state(self, last_state: State | None) -> None:
+        """Handle the last state."""
+        if last_state is not None:
+            self._attr_state = last_state.state
+        if self.state == STATE_UNAVAILABLE:
+            self._attr_available = False
 
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the alarm control panel."""
@@ -142,10 +149,3 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             new_state = self._old_state
         self._attr_state, self._old_state = new_state, self._attr_state
         return True
-
-    def handle_last_state(self, last_state: State | None) -> None:
-        """Handle the last state."""
-        if last_state is not None:
-            self._attr_state = last_state.state
-        if self.state == STATE_UNAVAILABLE:
-            self._attr_available = False

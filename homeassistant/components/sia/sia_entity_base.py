@@ -32,11 +32,15 @@ def get_name(
 
 
 @dataclass
-class SIAEntityDescription(EntityDescription):
+class SIARequiredKeysMixin:
     """Required keys for SIA entities."""
 
-    code_consequences: dict[str, StateType | bool] = {}
-    always_reset_availability: bool = True
+    code_consequences: dict[str, StateType | bool]
+
+
+@dataclass
+class SIAEntityDescription(EntityDescription, SIARequiredKeysMixin):
+    """Entity Description for SIA entities."""
 
 
 class SIABaseEntity(RestoreEntity):
@@ -119,7 +123,7 @@ class SIABaseEntity(RestoreEntity):
             return
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
         state_changed = self.update_state(sia_event)
-        if state_changed or self.entity_description.always_reset_availability:
+        if state_changed:
             self.async_reset_availability_cb()
         self.async_write_ha_state()
 
