@@ -234,7 +234,7 @@ async def async_call_action_from_config(
     if action_type not in ACTION_TYPES:
         raise HomeAssistantError(f"Unhandled action type {action_type}")
 
-    # Don't include domain or any null/empty values in the service call
+    # Don't include domain, subtype or any null/empty values in the service call
     service_data = {
         k: v
         for k, v in config.items()
