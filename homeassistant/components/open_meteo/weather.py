@@ -86,40 +86,32 @@ class OpenMeteoWeatherEntity(CoordinatorEntity, WeatherEntity):
             return None
 
         forecasts: list[Forecast] = []
+        daily = self.coordinator.data.daily
         for index, time in enumerate(self.coordinator.data.daily.time):
+
             forecast = Forecast(
                 datetime=time.isoformat(),
             )
 
-            if self.coordinator.data.daily.weathercode is not None:
+            if daily.weathercode is not None:
                 forecast["condition"] = WMO_TO_HA_CONDITION_MAP.get(
-                    self.coordinator.data.daily.weathercode[index]
+                    daily.weathercode[index]
                 )
 
-            if self.coordinator.data.daily.precipitation_sum is not None:
-                forecast[
-                    "precipitation"
-                ] = self.coordinator.data.daily.precipitation_sum[index]
+            if daily.precipitation_sum is not None:
+                forecast["precipitation"] = daily.precipitation_sum[index]
 
-            if self.coordinator.data.daily.temperature_2m_max is not None:
-                forecast[
-                    "temperature"
-                ] = self.coordinator.data.daily.temperature_2m_max[index]
+            if daily.temperature_2m_max is not None:
+                forecast["temperature"] = daily.temperature_2m_max[index]
 
-            if self.coordinator.data.daily.temperature_2m_min is not None:
-                forecast["templow"] = self.coordinator.data.daily.temperature_2m_min[
-                    index
-                ]
+            if daily.temperature_2m_min is not None:
+                forecast["templow"] = daily.temperature_2m_min[index]
 
-            if self.coordinator.data.daily.wind_direction_10m_dominant is not None:
-                forecast[
-                    "wind_bearing"
-                ] = self.coordinator.data.daily.wind_direction_10m_dominant[index]
+            if daily.wind_direction_10m_dominant is not None:
+                forecast["wind_bearing"] = daily.wind_direction_10m_dominant[index]
 
-            if self.coordinator.data.daily.wind_speed_10m_max is not None:
-                forecast["wind_speed"] = self.coordinator.data.daily.wind_speed_10m_max[
-                    index
-                ]
+            if daily.wind_speed_10m_max is not None:
+                forecast["wind_speed"] = daily.wind_speed_10m_max[index]
 
             forecasts.append(forecast)
 
