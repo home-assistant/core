@@ -142,7 +142,7 @@ async def async_setup_entry(
             description,
         )
         if entity is not None:
-            all_devices.append(entity)
+            entities.append(entity)
 
     for description in CIRCUIT_SENSORS:
         for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
