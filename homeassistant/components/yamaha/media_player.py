@@ -101,7 +101,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    def __init__(self, config: ConfigType, discovery_info: DiscoveryInfoType) -> None:
+    def __init__(
+        self, config: ConfigType, discovery_info: DiscoveryInfoType | None
+    ) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
