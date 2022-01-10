@@ -1,1 +1,1 @@
-"""Tests for the Intellifire integration."""
+"""Tests for the IntelliFire integration."""
