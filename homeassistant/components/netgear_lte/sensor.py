@@ -1,8 +1,8 @@
 """Support for Netgear LTE sensors."""
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.exceptions import PlatformNotReady
 
-from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
+from . import CONF_MONITORED_CONDITIONS, CONF_SENSOR, DATA_KEY, LTEEntity
 from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
 
 
@@ -16,7 +16,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     if not modem_data or not modem_data.data:
         raise PlatformNotReady
 
-    sensor_conf = discovery_info[DOMAIN]
+    sensor_conf = discovery_info[CONF_SENSOR]
     monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
 
     sensors = []
