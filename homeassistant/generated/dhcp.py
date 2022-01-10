@@ -68,11 +68,6 @@ DHCP = [
         "macaddress": "0090C2*"
     },
     {
-        "domain": "flashforge",
-        "hostname": "shenzhen_*",
-        "macaddress": "68B9D3*"
-    },
-    {
         "domain": "flume",
         "hostname": "flume-gw-*"
     },

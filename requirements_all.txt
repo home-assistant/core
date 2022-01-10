@@ -663,7 +663,7 @@ fastdotcom==0.0.3
 feedparser==6.0.2
 
 # homeassistant.components.flashforge
-ffpp==0.0.10
+ffpp==0.0.11
 
 # homeassistant.components.fibaro
 fiblary3==0.1.7

@@ -21,7 +21,7 @@
             },
             "auto_confirm": {
                 "title": "Discovered Flashforge device.",
-                "description": "Found printer {machine_name} on {ip_addr}. Do you want to this printer to Home Assistant?"
+                "description": "Found printer {machine_name} on {ip_addr}. Do you want to add this printer to Home Assistant?"
             }
         }
     }

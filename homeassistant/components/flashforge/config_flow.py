@@ -7,7 +7,6 @@ from ffpp.Printer import Printer
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -107,29 +106,6 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """User confirmed to add device to Home Assistant."""
         return self._async_create_entry()
-
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
-        """Config step for dhcp discovery."""
-
-        ip = discovery_info.ip
-        port = 8899
-
-        try:
-            await self._get_printer_info(
-                self.hass, {CONF_IP_ADDRESS: ip, CONF_PORT: port}
-            )
-        except CannotConnect:
-            return self.async_abort(reason="no_devices_found")
-        # return await super().async_step_dhcp(discovery_info)
-
-        self._set_confirm_only()
-        return self.async_show_form(
-            step_id="auto_confirm",
-            description_placeholders={
-                "machine_name": self.printer.machine_name,
-                "ip_addr": ip,
-            },
-        )
 
     @callback
     def _async_show_form(

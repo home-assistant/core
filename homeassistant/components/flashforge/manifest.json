@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flashforge",
   "requirements": [
-    "ffpp==0.0.10"
+    "ffpp==0.0.11"
   ],
   "ssdp": [],
   "zeroconf": [],
@@ -13,11 +13,5 @@
   "codeowners": [
     "@joseffallman"
   ],
-  "iot_class": "local_polling",
-  "dhcp" : [
-    {
-      "hostname": "shenzhen_*",
-      "macaddress": "68B9D3*"
-    }
-  ]
+  "iot_class": "local_polling"
 }
