@@ -5,11 +5,13 @@ import json
 import os
 import subprocess
 import tempfile
-from typing import Any
+from typing import Any, Callable
 from unittest.mock import patch
 
-from homeassistant import setup
-from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
+import pytest
+
+from homeassistant.components.command_line import DOMAIN
+from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -23,267 +25,323 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+ENTITY_NAME = {"name": "Test"}
+tmpdir = tempfile.TemporaryDirectory()
+PATH = os.path.join(tmpdir.name, "switch_status")
+ONCMD = json.dumps({"status": "ok"})
+OFFCMD = json.dumps({"status": "nope"})
 
-async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
-    """Set up a test command line switch entity."""
-    assert await setup.async_setup_component(
-        hass,
-        DOMAIN,
+
+@pytest.fixture(scope="session", autouse=True)
+def clean_tmpdir():
+    """Cleanup tmpdir at the end of session."""
+    yield
+    tmpdir.cleanup()
+
+
+@pytest.fixture(autouse=True)
+def clean_tmpfile():
+    """Clear tmpfile after each test."""
+    yield
+    with open(PATH, "w"):
+        pass
+
+
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
-            DOMAIN: [
-                {"platform": "command_line", "switches": config_dict},
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
-
-async def test_state_none(hass: HomeAssistant) -> None:
-    """Test with none state."""
-    with tempfile.TemporaryDirectory() as tempdirname:
-        path = os.path.join(tempdirname, "switch_status")
-        await setup_test_entity(
-            hass,
-            {
-                "test": {
-                    "command_on": f"echo 1 > {path}",
-                    "command_off": f"echo 0 > {path}",
-                }
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_on": f"echo 1 > {PATH}",
+                    "command_off": f"echo 0 > {PATH}",
+                },
             },
-        )
+        },
+    ],
+)
+async def test_state_none(hass: HomeAssistant, start_ha: Callable) -> None:
+    """Test with none state."""
+    await start_ha()
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_OFF
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_ON
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_OFF
 
 
-async def test_state_value(hass: HomeAssistant) -> None:
-    """Test with state value."""
-    with tempfile.TemporaryDirectory() as tempdirname:
-        path = os.path.join(tempdirname, "switch_status")
-        await setup_test_entity(
-            hass,
-            {
-                "test": {
-                    "command_state": f"cat {path}",
-                    "command_on": f"echo 1 > {path}",
-                    "command_off": f"echo 0 > {path}",
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_state": f"cat {PATH}",
+                    "command_on": f"echo 1 > {PATH}",
+                    "command_off": f"echo 0 > {PATH}",
                     "value_template": '{{ value=="1" }}',
                     "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
-                }
+                },
             },
-        )
+        },
+    ],
+)
+async def test_state_value(hass: HomeAssistant, start_ha: Callable) -> None:
+    """Test with state value."""
+    await start_ha()
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_OFF
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_ON
-        assert entity_state.attributes.get("icon") == "mdi:on"
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+    assert entity_state.attributes.get("icon") == "mdi:on"
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
-        assert entity_state.attributes.get("icon") == "mdi:off"
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_OFF
+    assert entity_state.attributes.get("icon") == "mdi:off"
 
 
-async def test_state_json_value(hass: HomeAssistant) -> None:
-    """Test with state JSON value."""
-    with tempfile.TemporaryDirectory() as tempdirname:
-        path = os.path.join(tempdirname, "switch_status")
-        oncmd = json.dumps({"status": "ok"})
-        offcmd = json.dumps({"status": "nope"})
-
-        await setup_test_entity(
-            hass,
-            {
-                "test": {
-                    "command_state": f"cat {path}",
-                    "command_on": f"echo '{oncmd}' > {path}",
-                    "command_off": f"echo '{offcmd}' > {path}",
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_state": f"cat {PATH}",
+                    "command_on": f"echo '{ONCMD}' > {PATH}",
+                    "command_off": f"echo '{OFFCMD}' > {PATH}",
                     "value_template": '{{ value_json.status=="ok" }}',
                     "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
-                }
+                },
             },
-        )
+        },
+    ],
+)
+async def test_state_json_value(hass: HomeAssistant, start_ha: Callable) -> None:
+    """Test with state JSON value."""
+    await start_ha()
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_OFF
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_ON
-        assert entity_state.attributes.get("icon") == "mdi:on"
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+    assert entity_state.attributes.get("icon") == "mdi:on"
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
 
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
-        assert entity_state.attributes.get("icon") == "mdi:off"
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_OFF
+    assert entity_state.attributes.get("icon") == "mdi:off"
 
 
-async def test_state_code(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_state": f"cat {PATH}",
+                    "command_on": f"echo 1 > {PATH}",
+                    "command_off": f"echo 0 > {PATH}",
+                },
+            },
+        },
+    ],
+)
+async def test_state_code(hass: HomeAssistant, start_ha: Callable) -> None:
     """Test with state code."""
-    with tempfile.TemporaryDirectory() as tempdirname:
-        path = os.path.join(tempdirname, "switch_status")
-        await setup_test_entity(
-            hass,
-            {
-                "test": {
-                    "command_state": f"cat {path}",
-                    "command_on": f"echo 1 > {path}",
-                    "command_off": f"echo 0 > {path}",
-                }
+    await start_ha()
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_OFF
+
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test"},
+        blocking=True,
+    )
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+
+
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_on": "echo 'on command'",
+                    "command_off": "echo 'off command'",
+                },
             },
-        )
-
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
-
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
-
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_ON
-
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
-            blocking=True,
-        )
-
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_ON
-
-
+        },
+    ],
+)
 async def test_assumed_state_should_be_true_if_command_state_is_none(
     hass: HomeAssistant,
+    start_ha: Callable,
 ) -> None:
     """Test with state value."""
+    await start_ha()
 
-    await setup_test_entity(
-        hass,
-        {
-            "test": {
-                "command_on": "echo 'on command'",
-                "command_off": "echo 'off command'",
-            }
-        },
-    )
     entity_state = hass.states.get("switch.test")
     assert entity_state
     assert entity_state.attributes["assumed_state"]
 
 
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_on": "echo 'on command'",
+                    "command_off": "echo 'off command'",
+                    "command_state": "cat {}",
+                },
+            },
+        },
+    ],
+)
 async def test_assumed_state_should_absent_if_command_state_present(
     hass: HomeAssistant,
+    start_ha: Callable,
 ) -> None:
     """Test with state value."""
+    await start_ha()
 
-    await setup_test_entity(
-        hass,
-        {
-            "test": {
-                "command_on": "echo 'on command'",
-                "command_off": "echo 'off command'",
-                "command_state": "cat {}",
-            }
-        },
-    )
     entity_state = hass.states.get("switch.test")
     assert entity_state
     assert "assumed_state" not in entity_state.attributes
 
 
-async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
-    """Test that name is set correctly."""
-    await setup_test_entity(
-        hass,
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
-            "test": {
-                "command_on": "echo 'on command'",
-                "command_off": "echo 'off command'",
-                "friendly_name": "Test friendly name!",
-            }
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_on": "echo 'on command'",
+                    "command_off": "echo 'off command'",
+                    "friendly_name": "Test friendly name!",
+                },
+            },
         },
-    )
+    ],
+)
+async def test_name_is_set_correctly(hass: HomeAssistant, start_ha: Callable) -> None:
+    """Test that name is set correctly."""
+    await start_ha()
 
     entity_state = hass.states.get("switch.test")
     assert entity_state.name == "Test friendly name!"
 
 
-async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> None:
-    """Test that switch failures are handled correctly."""
-    await setup_test_entity(
-        hass,
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
-            "test": {
-                "command_on": "exit 0",
-                "command_off": "exit 0'",
-                "command_state": "echo 1",
-            }
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_on": "exit 0",
+                    "command_off": "exit 0'",
+                    "command_state": "echo 1",
+                },
+            },
         },
-    )
+    ],
+)
+async def test_switch_command_state_fail(
+    caplog: Any, hass: HomeAssistant, start_ha: Callable
+) -> None:
+    """Test that switch failures are handled correctly."""
+    await start_ha()
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
@@ -292,7 +350,7 @@ async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> No
     assert entity_state.state == "on"
 
     await hass.services.async_call(
-        DOMAIN,
+        PLATFORM_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.test"},
         blocking=True,
@@ -305,8 +363,24 @@ async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> No
     assert "Command failed" in caplog.text
 
 
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_on": "exit 0",
+                    "command_off": "exit 0'",
+                    "command_state": "echo 1",
+                },
+            },
+        },
+    ],
+)
 async def test_switch_command_state_code_exceptions(
-    caplog: Any, hass: HomeAssistant
+    caplog: Any, hass: HomeAssistant, start_ha: Callable
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -317,16 +391,7 @@ async def test_switch_command_state_code_exceptions(
             subprocess.SubprocessError(),
         ],
     ) as check_output:
-        await setup_test_entity(
-            hass,
-            {
-                "test": {
-                    "command_on": "exit 0",
-                    "command_off": "exit 0'",
-                    "command_state": "echo 1",
-                }
-            },
-        )
+        await start_ha()
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         assert check_output.called
@@ -338,8 +403,25 @@ async def test_switch_command_state_code_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: {
+                    **ENTITY_NAME,
+                    "command_on": "exit 0",
+                    "command_off": "exit 0'",
+                    "command_state": "echo 1",
+                    "value_template": '{{ value=="1" }}',
+                },
+            },
+        },
+    ],
+)
 async def test_switch_command_state_value_exceptions(
-    caplog: Any, hass: HomeAssistant
+    caplog: Any, hass: HomeAssistant, start_ha: Callable
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -350,17 +432,7 @@ async def test_switch_command_state_value_exceptions(
             subprocess.SubprocessError(),
         ],
     ) as check_output:
-        await setup_test_entity(
-            hass,
-            {
-                "test": {
-                    "command_on": "exit 0",
-                    "command_off": "exit 0'",
-                    "command_state": "echo 1",
-                    "value_template": '{{ value=="1" }}',
-                }
-            },
-        )
+        await start_ha()
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         assert check_output.call_count == 1
@@ -372,43 +444,64 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-async def test_no_switches(caplog: Any, hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                PLATFORM_DOMAIN: [],
+            },
+        },
+    ],
+)
+async def test_no_switches(
+    caplog: Any, hass: HomeAssistant, start_ha: Callable
+) -> None:
     """Test with no switches."""
+    await start_ha()
 
-    await setup_test_entity(hass, {})
     assert "No switches" in caplog.text
 
 
-async def test_unique_id(hass):
-    """Test unique_id option and if it only creates one switch per id."""
-    await setup_test_entity(
-        hass,
+@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
-            "unique": {
-                "command_on": "echo on",
-                "command_off": "echo off",
-                "unique_id": "unique",
-            },
-            "not_unique_1": {
-                "command_on": "echo on",
-                "command_off": "echo off",
-                "unique_id": "not-so-unique-anymore",
-            },
-            "not_unique_2": {
-                "command_on": "echo on",
-                "command_off": "echo off",
-                "unique_id": "not-so-unique-anymore",
+            DOMAIN: {
+                PLATFORM_DOMAIN: [
+                    {
+                        "command_on": "echo on",
+                        "command_off": "echo off",
+                        "unique_id": "unique",
+                    },
+                    {
+                        "command_on": "echo on",
+                        "command_off": "echo off",
+                        "unique_id": "not-so-unique-anymore",
+                    },
+                    {
+                        "command_on": "echo on",
+                        "command_off": "echo off",
+                        "unique_id": "not-so-unique-anymore",
+                    },
+                ],
             },
         },
-    )
+    ],
+)
+async def test_unique_id(hass: HomeAssistant, start_ha: Callable) -> None:
+    """Test unique_id option and if it only creates one switch per id."""
+    await start_ha()
 
     assert len(hass.states.async_all()) == 2
 
     ent_reg = entity_registry.async_get(hass)
 
     assert len(ent_reg.entities) == 2
-    assert ent_reg.async_get_entity_id("switch", "command_line", "unique") is not None
+    assert ent_reg.async_get_entity_id(PLATFORM_DOMAIN, DOMAIN, "unique") is not None
     assert (
-        ent_reg.async_get_entity_id("switch", "command_line", "not-so-unique-anymore")
+        ent_reg.async_get_entity_id(PLATFORM_DOMAIN, DOMAIN, "not-so-unique-anymore")
         is not None
     )

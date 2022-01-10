@@ -16,22 +16,23 @@ from homeassistant.const import (
     CONF_COMMAND_STATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
     CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import call_shell_with_timeout, check_output_or_log
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-SWITCH_SCHEMA = vol.Schema(
+SWITCH_LEGACY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_COMMAND_OFF, default="true"): cv.string,
         vol.Optional(CONF_COMMAND_ON, default="true"): cv.string,
@@ -44,8 +45,14 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
+SWITCH_SCHEMA = SWITCH_LEGACY_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
+    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_LEGACY_SCHEMA)}
 )
 
 
@@ -56,34 +63,37 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Find and return switches controlled by shell commands."""
+    if discovery_info is None:
+        entities = [
+            dict(entity, **{CONF_NAME: entity_name})
+            for (entity_name, entity) in config[CONF_SWITCHES].items()
+        ]
+    else:
+        entities = discovery_info["entities"]
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    devices = config.get(CONF_SWITCHES, {})
     switches = []
 
-    for object_id, device_config in devices.items():
-        value_template = device_config.get(CONF_VALUE_TEMPLATE)
-
+    for entity in entities:
+        value_template = entity.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
-        icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        icon_template = entity.get(CONF_ICON_TEMPLATE)
         if icon_template is not None:
             icon_template.hass = hass
 
         switches.append(
             CommandSwitch(
                 hass,
-                object_id,
-                device_config.get(CONF_FRIENDLY_NAME, object_id),
-                device_config[CONF_COMMAND_ON],
-                device_config[CONF_COMMAND_OFF],
-                device_config.get(CONF_COMMAND_STATE),
+                entity.get(CONF_NAME),
+                entity.get(CONF_FRIENDLY_NAME, entity.get(CONF_NAME)),
+                entity[CONF_COMMAND_ON],
+                entity[CONF_COMMAND_OFF],
+                entity.get(CONF_COMMAND_STATE),
                 icon_template,
                 value_template,
-                device_config[CONF_COMMAND_TIMEOUT],
-                device_config.get(CONF_UNIQUE_ID),
+                entity[CONF_COMMAND_TIMEOUT],
+                entity.get(CONF_UNIQUE_ID),
             )
         )
 
@@ -112,7 +122,10 @@ class CommandSwitch(SwitchEntity):
     ):
         """Initialize the switch."""
         self._hass = hass
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        if object_id:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
         self._name = friendly_name
         self._state = False
         self._command_on = command_on

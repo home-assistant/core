@@ -22,11 +22,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import check_output_or_log
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +35,7 @@ DEFAULT_NAME = "Command Sensor"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COMMAND): cv.string,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -48,36 +47,47 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(SENSOR_SCHEMA.schema)
 
-def setup_platform(
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command Sensor."""
+    if discovery_info is None:
+        entities = [config]
+    else:
+        entities = discovery_info["entities"]
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    sensors = []
 
-    name = config.get(CONF_NAME)
-    command = config.get(CONF_COMMAND)
-    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    command_timeout = config.get(CONF_COMMAND_TIMEOUT)
-    unique_id = config.get(CONF_UNIQUE_ID)
-    if value_template is not None:
-        value_template.hass = hass
-    json_attributes = config.get(CONF_JSON_ATTRIBUTES)
-    data = CommandSensorData(hass, command, command_timeout)
+    for entity in entities:
+        command = entity.get(CONF_COMMAND)
+        command_timeout = entity.get(CONF_COMMAND_TIMEOUT)
+        value_template = entity.get(CONF_VALUE_TEMPLATE)
+        if value_template is not None:
+            value_template.hass = hass
 
-    add_entities(
-        [
+        sensors.append(
             CommandSensor(
-                hass, data, name, unit, value_template, json_attributes, unique_id
+                hass,
+                CommandSensorData(hass, command, command_timeout),
+                entity.get(CONF_NAME),
+                entity.get(CONF_UNIT_OF_MEASUREMENT),
+                value_template,
+                entity.get(CONF_JSON_ATTRIBUTES),
+                entity.get(CONF_UNIQUE_ID),
             )
-        ],
-        True,
-    )
+        )
+
+    if not sensors:
+        _LOGGER.error("No sensors added")
+        return
+
+    add_entities(sensors, True)
 
 
 class CommandSensor(SensorEntity):

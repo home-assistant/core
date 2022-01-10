@@ -13,21 +13,21 @@ from homeassistant.const import (
     CONF_COMMAND_STOP,
     CONF_COVERS,
     CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import call_shell_with_timeout, check_output_or_log
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-COVER_SCHEMA = vol.Schema(
+COVER_LEGACY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_COMMAND_CLOSE, default="true"): cv.string,
         vol.Optional(CONF_COMMAND_OPEN, default="true"): cv.string,
@@ -37,6 +37,12 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+)
+
+COVER_SCHEMA = COVER_LEGACY_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -52,28 +58,32 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover controlled by shell commands."""
+    if discovery_info is None:
+        entities = [
+            dict(entity, **{CONF_NAME: entity_name})
+            for (entity_name, entity) in config[CONF_COVERS].items()
+        ]
+    else:
+        entities = discovery_info["entities"]
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    devices = config.get(CONF_COVERS, {})
     covers = []
 
-    for device_name, device_config in devices.items():
-        value_template = device_config.get(CONF_VALUE_TEMPLATE)
+    for entity in entities:
+        value_template = entity.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
         covers.append(
             CommandCover(
                 hass,
-                device_config.get(CONF_FRIENDLY_NAME, device_name),
-                device_config[CONF_COMMAND_OPEN],
-                device_config[CONF_COMMAND_CLOSE],
-                device_config[CONF_COMMAND_STOP],
-                device_config.get(CONF_COMMAND_STATE),
+                entity.get(CONF_FRIENDLY_NAME, entity.get(CONF_NAME)),
+                entity[CONF_COMMAND_OPEN],
+                entity[CONF_COMMAND_CLOSE],
+                entity[CONF_COMMAND_STOP],
+                entity.get(CONF_COMMAND_STATE),
                 value_template,
-                device_config[CONF_COMMAND_TIMEOUT],
-                device_config.get(CONF_UNIQUE_ID),
+                entity[CONF_COMMAND_TIMEOUT],
+                entity.get(CONF_UNIQUE_ID),
             )
         )
 

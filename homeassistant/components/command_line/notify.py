@@ -13,13 +13,15 @@ from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+NOTIFY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COMMAND): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(NOTIFY_SCHEMA.schema)
 
 
 def get_service(hass, config, discovery_info=None):
