@@ -120,9 +120,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect: asyncio.Future[
-        bool
-    ] = asyncio.Future()  # pylint: disable=unsubscriptable-object
+    # pylint: disable=unsubscriptable-object
+    sync_connect: asyncio.Future[bool] = asyncio.Future()
 
     controller = EnvisalinkAlarmPanel(
         host,
