@@ -27,7 +27,6 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             update_method=self._async_update_data,
         )
         self._api = api
-        self.serial = serial
 
     async def _async_update_data(self):
         LOGGER.debug("Calling update loop on IntelliFire")
