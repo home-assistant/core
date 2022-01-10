@@ -10,7 +10,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass: HomeAssistant, platform: str):
+async def setup_platform(hass: HomeAssistant, platform: str) -> MockConfigEntry:
     """Set up the Abode platform."""
     mock_entry = MockConfigEntry(
         domain=ABODE_DOMAIN,

@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_platform
 
 
-async def test_entity_registry(hass: HomeAssistant):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, CAMERA_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -19,7 +19,7 @@ async def test_entity_registry(hass: HomeAssistant):
     assert entry.unique_id == "d0a3a1c316891ceb00c20118aae2a133"
 
 
-async def test_attributes(hass: HomeAssistant):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the camera attributes are correct."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -27,7 +27,7 @@ async def test_attributes(hass: HomeAssistant):
     assert state.state == STATE_IDLE
 
 
-async def test_capture_image(hass: HomeAssistant):
+async def test_capture_image(hass: HomeAssistant) -> None:
     """Test the camera capture image service."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -42,7 +42,7 @@ async def test_capture_image(hass: HomeAssistant):
         mock_capture.assert_called_once()
 
 
-async def test_camera_on(hass: HomeAssistant):
+async def test_camera_on(hass: HomeAssistant) -> None:
     """Test the camera turn on service."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -57,7 +57,7 @@ async def test_camera_on(hass: HomeAssistant):
         mock_capture.assert_called_once_with(False)
 
 
-async def test_camera_off(hass: HomeAssistant):
+async def test_camera_off(hass: HomeAssistant) -> None:
     """Test the camera turn off service."""
     await setup_platform(hass, CAMERA_DOMAIN)
 

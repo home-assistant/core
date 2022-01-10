@@ -143,18 +143,14 @@ def setup_hass_services(hass: HomeAssistant) -> None:
 
     def capture_image(call: ServiceCall) -> None:
         """Capture a new image."""
-        entity_ids = call.data.get(ATTR_ENTITY_ID)
-
-        if entity_ids:
+        if entity_ids := call.data.get(ATTR_ENTITY_ID):
             for entity_id in entity_ids:
                 signal = f"abode_camera_capture_{entity_id}"
                 dispatcher.dispatcher_send(hass, signal)
 
     def trigger_automation(call: ServiceCall) -> None:
         """Trigger an Abode automation."""
-        entity_ids = call.data.get(ATTR_ENTITY_ID)
-
-        if entity_ids:
+        if entity_ids := call.data.get(ATTR_ENTITY_ID):
             for entity_id in entity_ids:
                 signal = f"abode_trigger_automation_{entity_id}"
                 dispatcher.dispatcher_send(hass, signal)

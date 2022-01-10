@@ -24,7 +24,7 @@ DEVICE_ID = "switch.test_switch"
 DEVICE_UID = "0012a4d3614cb7e2b8c9abea31d2fb2a"
 
 
-async def test_entity_registry(hass: HomeAssistant):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SWITCH_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -36,7 +36,7 @@ async def test_entity_registry(hass: HomeAssistant):
     assert entry.unique_id == DEVICE_UID
 
 
-async def test_attributes(hass: HomeAssistant):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the switch attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -44,7 +44,7 @@ async def test_attributes(hass: HomeAssistant):
     assert state.state == STATE_OFF
 
 
-async def test_switch_on(hass: HomeAssistant):
+async def test_switch_on(hass: HomeAssistant) -> None:
     """Test the switch can be turned on."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -57,7 +57,7 @@ async def test_switch_on(hass: HomeAssistant):
         mock_switch_on.assert_called_once()
 
 
-async def test_switch_off(hass: HomeAssistant):
+async def test_switch_off(hass: HomeAssistant) -> None:
     """Test the switch can be turned off."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -70,7 +70,7 @@ async def test_switch_off(hass: HomeAssistant):
         mock_switch_off.assert_called_once()
 
 
-async def test_automation_attributes(hass: HomeAssistant):
+async def test_automation_attributes(hass: HomeAssistant) -> None:
     """Test the automation attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -79,7 +79,7 @@ async def test_automation_attributes(hass: HomeAssistant):
     assert state.state == STATE_ON
 
 
-async def test_turn_automation_off(hass: HomeAssistant):
+async def test_turn_automation_off(hass: HomeAssistant) -> None:
     """Test the automation can be turned off."""
     with patch("abodepy.AbodeAutomation.enable") as mock_trigger:
         await setup_platform(hass, SWITCH_DOMAIN)
@@ -95,7 +95,7 @@ async def test_turn_automation_off(hass: HomeAssistant):
         mock_trigger.assert_called_once_with(False)
 
 
-async def test_turn_automation_on(hass: HomeAssistant):
+async def test_turn_automation_on(hass: HomeAssistant) -> None:
     """Test the automation can be turned on."""
     with patch("abodepy.AbodeAutomation.enable") as mock_trigger:
         await setup_platform(hass, SWITCH_DOMAIN)
@@ -111,7 +111,7 @@ async def test_turn_automation_on(hass: HomeAssistant):
         mock_trigger.assert_called_once_with(True)
 
 
-async def test_trigger_automation(hass: HomeAssistant):
+async def test_trigger_automation(hass: HomeAssistant) -> None:
     """Test the trigger automation service."""
     await setup_platform(hass, SWITCH_DOMAIN)
 

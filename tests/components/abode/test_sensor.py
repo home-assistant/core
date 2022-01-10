@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_platform
 
 
-async def test_entity_registry(hass: HomeAssistant):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SENSOR_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -23,7 +23,7 @@ async def test_entity_registry(hass: HomeAssistant):
     assert entry.unique_id == "13545b21f4bdcd33d9abd461f8443e65-humidity"
 
 
-async def test_attributes(hass: HomeAssistant):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the sensor attributes are correct."""
     await setup_platform(hass, SENSOR_DOMAIN)
 

@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from .common import setup_platform
 
 
-async def test_change_settings(hass: HomeAssistant):
+async def test_change_settings(hass: HomeAssistant) -> None:
     """Test change_setting service."""
     await setup_platform(hass, ALARM_DOMAIN)
 
@@ -34,7 +34,7 @@ async def test_change_settings(hass: HomeAssistant):
         mock_set_setting.assert_called_once()
 
 
-async def test_add_unique_id(hass: HomeAssistant):
+async def test_add_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id is set to Abode username."""
     mock_entry = await setup_platform(hass, ALARM_DOMAIN)
     # Set unique_id to None to match previous config entries
@@ -50,7 +50,7 @@ async def test_add_unique_id(hass: HomeAssistant):
     assert mock_entry.unique_id == mock_entry.data[CONF_USERNAME]
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the Abode entry."""
     mock_entry = await setup_platform(hass, ALARM_DOMAIN)
 
@@ -66,7 +66,7 @@ async def test_unload_entry(hass: HomeAssistant):
         assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_TRIGGER_AUTOMATION)
 
 
-async def test_invalid_credentials(hass: HomeAssistant):
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test Abode credentials changing."""
     with patch(
         "homeassistant.components.abode.Abode",
@@ -82,7 +82,7 @@ async def test_invalid_credentials(hass: HomeAssistant):
         mock_async_step_reauth.assert_called_once()
 
 
-async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant):
+async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when abode is offline."""
     with patch(
         "homeassistant.components.abode.Abode",
