@@ -1,6 +1,7 @@
 """Support to help onboard new users."""
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import views
@@ -47,7 +48,7 @@ def async_is_user_onboarded(hass):
     return async_is_onboarded(hass) or STEP_USER in hass.data[DOMAIN]["done"]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the onboarding component."""
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     if (data := await store.async_load()) is None:

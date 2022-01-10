@@ -29,7 +29,6 @@ class VersionDataUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
-            update_method=self._async_update_version_data,
             update_interval=UPDATE_COORDINATOR_UPDATE_INTERVAL,
         )
         self._api = api
@@ -46,7 +45,7 @@ class VersionDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the version data."""
         return self._version_data or {}
 
-    async def _async_update_version_data(self) -> None:
+    async def _async_update_data(self) -> None:
         """Update version data."""
         try:
             self._version, self._version_data = await self._api.get_version()

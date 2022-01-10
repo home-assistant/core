@@ -24,6 +24,7 @@ from .const import (
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
@@ -73,7 +74,7 @@ class PlexServer:
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-        self._server_id = known_server_id
+        self._server_id = known_server_id or server_config.get(CONF_SERVER_IDENTIFIER)
         self.options = options
         self.server_choice = None
         self._accounts = []
@@ -136,19 +137,20 @@ class PlexServer:
             all_servers = [
                 x for x in self.account.resources() if "server" in x.provides
             ]
-            servers = [x for x in all_servers if x.presence] or all_servers
-            available_servers = [(x.name, x.clientIdentifier) for x in servers]
+            available_servers = [
+                (x.name, x.clientIdentifier, x.sourceTitle) for x in all_servers
+            ]
 
-            if not available_servers:
+            if not all_servers:
                 raise NoServersFound
-            if not self._server_name and len(available_servers) > 1:
+            if not self._server_id and len(all_servers) > 1:
                 raise ServerNotSpecified(available_servers)
 
-            self.server_choice = (
-                self._server_name if self._server_name else available_servers[0][0]
-            )
-            self._plex_server = self.account.resource(self.server_choice).connect(
-                timeout=10
+            self.server_choice = self._server_id or available_servers[0][1]
+            self._plex_server = next(
+                x.connect(timeout=10)
+                for x in all_servers
+                if x.clientIdentifier == self.server_choice
             )
 
         def _connect_with_url():

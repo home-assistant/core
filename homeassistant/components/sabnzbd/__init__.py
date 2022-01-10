@@ -21,8 +21,9 @@ from homeassistant.const import (
     DATA_GIGABYTES,
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -222,10 +223,10 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
     if config.get(CONF_SENSORS):
         hass.data[DATA_SABNZBD] = sab_api_data
         hass.async_create_task(
-            discovery.async_load_platform(hass, "sensor", DOMAIN, {}, config)
+            discovery.async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
         )
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls."""
         if service.service == SERVICE_PAUSE:
             await sab_api_data.async_pause_queue()

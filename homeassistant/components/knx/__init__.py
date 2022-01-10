@@ -82,6 +82,7 @@ CONF_KNX_EVENT_FILTER: Final = "event_filter"
 SERVICE_KNX_SEND: Final = "send"
 SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
 SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_RESPONSE: Final = "response"
 SERVICE_KNX_ATTR_REMOVE: Final = "remove"
 SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
 SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
@@ -142,6 +143,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
     vol.Schema(
@@ -154,6 +156,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
 )
@@ -266,7 +269,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
+                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
 
@@ -551,6 +554,7 @@ class KNXModule:
         attr_address = call.data[KNX_ADDRESS]
         attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
+        attr_response = call.data[SERVICE_KNX_ATTR_RESPONSE]
 
         payload: DPTBinary | DPTArray
         if attr_type is not None:
@@ -566,7 +570,9 @@ class KNXModule:
         for address in attr_address:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
-                payload=GroupValueWrite(payload),
+                payload=GroupValueResponse(payload)
+                if attr_response
+                else GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
 

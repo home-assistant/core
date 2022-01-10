@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import Any
+from typing import Any, Dict
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -19,12 +19,12 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import DataType, Device, Place, State
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, UPDATE_INTERVAL, OverkizStateType
 
-DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[DataType], Any]] = {
+DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[Any], OverkizStateType]] = {
     DataType.INTEGER: int,
     DataType.DATE: int,
     DataType.STRING: str,
@@ -37,7 +37,7 @@ DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[DataType], Any]] = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
+class OverkizDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
     def __init__(
@@ -97,9 +97,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
             return self.devices
-        except Exception as exception:
-            _LOGGER.debug(exception)
-            raise UpdateFailed(exception) from exception
 
         for event in events:
             _LOGGER.debug(event)
@@ -123,7 +120,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
 
             elif event.name == EventName.DEVICE_REMOVED:
                 base_device_url, *_ = event.device_url.split("#")
-                registry = await device_registry.async_get_registry(self.hass)
+                registry = dr.async_get(self.hass)
 
                 if registered_device := registry.async_get_device(
                     {(DOMAIN, base_device_url)}
@@ -135,9 +132,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
             elif event.name == EventName.DEVICE_STATE_CHANGED:
                 for state in event.device_states:
                     device = self.devices[event.device_url]
-                    if state.name not in device.states:
-                        device.states[state.name] = state
-                    device.states[state.name].value = self._get_state(state)
+
+                    if (device_state := device.states[state.name]) is None:
+                        device_state = state
+                        device.states[state.name] = device_state
+
+                    device_state.value = self._get_state(state)
 
             elif event.name == EventName.EXECUTION_REGISTERED:
                 if event.exec_id not in self.executions:
@@ -166,7 +166,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_state(
         state: State,
-    ) -> dict[Any, Any] | list[Any] | float | int | bool | str | None:
+    ) -> OverkizStateType:
         """Cast string value to the right type."""
         data_type = DataType(state.type)
 
@@ -174,9 +174,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
             return state.value
 
         cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
-        return cast_to_python(state.value)
+        value = cast_to_python(state.value)
 
-    def places_to_area(self, place):
+        return value
+
+    def places_to_area(self, place: Place) -> dict[str, str]:
         """Convert places with sub_places to a flat dictionary."""
         areas = {}
         if isinstance(place, Place):

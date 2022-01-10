@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from pyoverkiz.models import Command, Device
 
+from .const import OverkizStateType
 from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class OverkizExecutor:
         """Return True if a command exists in a list of commands."""
         return self.select_command(*commands) is not None
 
-    def select_state(self, *states) -> str | None:
+    def select_state(self, *states: str) -> OverkizStateType:
         """Select first existing active state in a list of states."""
         for state in states:
             if current_state := self.device.states[state]:
@@ -49,7 +50,7 @@ class OverkizExecutor:
         """Return True if a state exists in self."""
         return self.select_state(*states) is not None
 
-    def select_attribute(self, *attributes) -> str | None:
+    def select_attribute(self, *attributes: str) -> OverkizStateType:
         """Select first existing active state in a list of states."""
         for attribute in attributes:
             if current_attribute := self.device.attributes[attribute]:
@@ -57,7 +58,7 @@ class OverkizExecutor:
 
         return None
 
-    async def async_execute_command(self, command_name: str, *args: Any):
+    async def async_execute_command(self, command_name: str, *args: Any) -> None:
         """Execute device command in async context."""
         try:
             exec_id = await self.coordinator.client.execute_command(
@@ -118,11 +119,11 @@ class OverkizExecutor:
 
         return False
 
-    async def async_cancel_execution(self, exec_id: str):
+    async def async_cancel_execution(self, exec_id: str) -> None:
         """Cancel running execution via execution id."""
         await self.coordinator.client.cancel_command(exec_id)
 
-    def get_gateway_id(self):
+    def get_gateway_id(self) -> str:
         """
         Retrieve gateway id from device url.
 

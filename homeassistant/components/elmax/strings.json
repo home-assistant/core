@@ -1,9 +1,7 @@
 {
-  "title": "Elmax Cloud Setup",
   "config": {
     "step": {
       "user": {
-        "title": "Account Login",
         "description": "Please login to the Elmax cloud using your credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -11,7 +9,6 @@
         }
       },
       "panels": {
-        "title": "Panel selection",
         "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured.",
         "data": {
           "panel_name": "Panel Name",
@@ -22,10 +19,10 @@
     },
     "error": {
       "no_panel_online": "No online Elmax control panel was found.",
-      "bad_auth": "Invalid authentication",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "network_error": "A network error occurred",
       "invalid_pin": "The provided pin is invalid",
-      "unknown_error": "An unexpected error occurred"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

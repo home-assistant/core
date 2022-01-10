@@ -62,6 +62,14 @@ light:
   - xpath: './/product_airlink[@product_identifier="_0x4406"]'
     node: "airlink_dimming"
     dimmable: true
+  # Wireless Combi dimmer 4 buttons touch
+  - xpath: './/product_airlink[@product_identifier="_0x4402"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Wireless Combi dimmer 2 buttons touch
+  - xpath: './/product_airlink[@product_identifier="_0x4401"]'
+    node: "airlink_dimming"
+    dimmable: true
   # Wireless Lamp outlet dimmer
   - xpath: './/product_airlink[@product_identifier="_0x4304"]'
     node: "airlink_dimming"
@@ -75,6 +83,9 @@ light:
     node: "airlink_relay"
   # Wireless Combi relay 4 buttons
   - xpath: './/product_airlink[@product_identifier="_0x4404"]'
+    node: "airlink_relay"
+  # Wireless Combi relay 2 buttons
+  - xpath: './/product_airlink[@product_identifier="_0x4403"]'
     node: "airlink_relay"
   # Dataline Lamp outlet
   - xpath: './/product_dataline[@product_identifier="_0x2202"]'

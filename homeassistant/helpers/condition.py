@@ -17,7 +17,7 @@ from homeassistant.components.device_automation import (
     DeviceAutomationType,
     async_get_device_automation_platform,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_GPS_ACCURACY,
@@ -714,7 +714,7 @@ def time(
             )
         elif after_entity.attributes.get(
             ATTR_DEVICE_CLASS
-        ) == DEVICE_CLASS_TIMESTAMP and after_entity.state not in (
+        ) == SensorDeviceClass.TIMESTAMP and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -738,7 +738,7 @@ def time(
             )
         elif before_entity.attributes.get(
             ATTR_DEVICE_CLASS
-        ) == DEVICE_CLASS_TIMESTAMP and before_entity.state not in (
+        ) == SensorDeviceClass.TIMESTAMP and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -880,7 +880,7 @@ async def async_device_from_config(
     return trace_condition_function(
         cast(
             ConditionCheckerType,
-            platform.async_condition_from_config(hass, config),  # type: ignore
+            platform.async_condition_from_config(hass, config),
         )
     )
 
@@ -946,7 +946,7 @@ async def async_validate_condition_config(
         )
         if hasattr(platform, "async_validate_condition_config"):
             return await platform.async_validate_condition_config(hass, config)  # type: ignore
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
+        return cast(ConfigType, platform.CONDITION_SCHEMA(config))
 
     if condition in ("numeric_state", "state"):
         validator = getattr(

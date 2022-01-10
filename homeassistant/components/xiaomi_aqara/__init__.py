@@ -17,12 +17,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -74,10 +75,10 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
 
-    def play_ringtone_service(call):
+    def play_ringtone_service(call: ServiceCall) -> None:
         """Service to play ringtone through Gateway."""
         ring_id = call.data.get(ATTR_RINGTONE_ID)
         gateway = call.data.get(ATTR_GW_MAC)
@@ -89,12 +90,12 @@ def setup(hass, config):
 
         gateway.write_to_hub(gateway.sid, **kwargs)
 
-    def stop_ringtone_service(call):
+    def stop_ringtone_service(call: ServiceCall) -> None:
         """Service to stop playing ringtone on Gateway."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, mid=10000)
 
-    def add_device_service(call):
+    def add_device_service(call: ServiceCall) -> None:
         """Service to add a new sub-device within the next 30 seconds."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, join_permission="yes")
@@ -104,7 +105,7 @@ def setup(hass, config):
             title="Xiaomi Aqara Gateway",
         )
 
-    def remove_device_service(call):
+    def remove_device_service(call: ServiceCall) -> None:
         """Service to remove a sub-device from the gateway."""
         device_id = call.data.get(ATTR_DEVICE_ID)
         gateway = call.data.get(ATTR_GW_MAC)

@@ -20,26 +20,24 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz locks from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[OverkizLock] = [
+    async_add_entities(
         OverkizLock(device.device_url, data.coordinator)
         for device in data.platforms[Platform.LOCK]
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class OverkizLock(OverkizEntity, LockEntity):
     """Representation of an Overkiz Lock."""
 
-    async def async_lock(self, **_: Any) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock method."""
         await self.executor.async_execute_command(OverkizCommand.LOCK)
 
-    async def async_unlock(self, **_: Any) -> None:
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock method."""
         await self.executor.async_execute_command(OverkizCommand.UNLOCK)
 

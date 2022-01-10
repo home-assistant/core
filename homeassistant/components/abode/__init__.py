@@ -23,7 +23,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, dispatcher, entity
+from homeassistant.helpers import config_validation as cv, entity
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import ATTRIBUTION, CONF_POLLING, DEFAULT_CACHEDB, DOMAIN, LOGGER
 
@@ -133,8 +134,8 @@ def setup_hass_services(hass: HomeAssistant) -> None:
 
     def change_setting(call: ServiceCall) -> None:
         """Change an Abode system setting."""
-        setting = call.data.get(ATTR_SETTING)
-        value = call.data.get(ATTR_VALUE)
+        setting = call.data[ATTR_SETTING]
+        value = call.data[ATTR_VALUE]
 
         try:
             hass.data[DOMAIN].abode.set_setting(setting, value)
@@ -143,17 +144,31 @@ def setup_hass_services(hass: HomeAssistant) -> None:
 
     def capture_image(call: ServiceCall) -> None:
         """Capture a new image."""
-        if entity_ids := call.data.get(ATTR_ENTITY_ID):
-            for entity_id in entity_ids:
-                signal = f"abode_camera_capture_{entity_id}"
-                dispatcher.dispatcher_send(hass, signal)
+        entity_ids = call.data[ATTR_ENTITY_ID]
+
+        target_entities = [
+            entity_id
+            for entity_id in hass.data[DOMAIN].entity_ids
+            if entity_id in entity_ids
+        ]
+
+        for entity_id in target_entities:
+            signal = f"abode_camera_capture_{entity_id}"
+            dispatcher_send(hass, signal)
 
     def trigger_automation(call: ServiceCall) -> None:
         """Trigger an Abode automation."""
-        if entity_ids := call.data.get(ATTR_ENTITY_ID):
-            for entity_id in entity_ids:
-                signal = f"abode_trigger_automation_{entity_id}"
-                dispatcher.dispatcher_send(hass, signal)
+        entity_ids = call.data[ATTR_ENTITY_ID]
+
+        target_entities = [
+            entity_id
+            for entity_id in hass.data[DOMAIN].entity_ids
+            if entity_id in entity_ids
+        ]
+
+        for entity_id in target_entities:
+            signal = f"abode_trigger_automation_{entity_id}"
+            dispatcher_send(hass, signal)
 
     hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA

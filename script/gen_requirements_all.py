@@ -113,10 +113,6 @@ regex==2021.8.28
 # can remove after httpx/httpcore updates its anyio version pin
 anyio>=3.3.1
 
-# websockets 10.0 is broken with AWS
-# https://github.com/aaugustin/websockets/issues/1065
-websockets==9.1
-
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
 """
@@ -136,22 +132,12 @@ def has_tests(module: str):
     """Test if a module has tests.
 
     Module format: homeassistant.components.hue
-    Test if exists: tests/components/hue
+    Test if exists: tests/components/hue/__init__.py
     """
-    path = Path(module.replace(".", "/").replace("homeassistant", "tests"))
-    if not path.exists():
-        return False
-
-    if not path.is_dir():
-        return True
-
-    # Dev environments might have stale directories around
-    # from removed tests. Check for that.
-    content = [f.name for f in path.glob("*")]
-
-    # Directories need to contain more than `__pycache__`
-    # to exist in Git and so be seen by CI.
-    return content != ["__pycache__"]
+    path = (
+        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+    )
+    return path.exists()
 
 
 def explore_module(package, explore_children):

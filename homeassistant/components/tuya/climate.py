@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode
 
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
@@ -148,8 +148,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._attr_temperature_unit = TEMP_CELSIUS
             if any(
-                "f" in device.status.get(dpcode, "").lower()
+                "f" in device.status[dpcode].lower()
                 for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
+                if isinstance(device.status.get(dpcode), str)
             ):
                 self._attr_temperature_unit = TEMP_FAHRENHEIT
 
@@ -182,10 +183,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if (
             self._set_temperature_dpcode
-            and self._set_temperature_dpcode in device.status_range
+            and self._set_temperature_dpcode in device.function
         ):
             type_data = IntegerTypeData.from_json(
-                device.status_range[self._set_temperature_dpcode].values
+                device.function[self._set_temperature_dpcode].values
             )
             self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
             self._set_temperature_type = type_data
@@ -232,14 +233,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ]
 
         # Determine dpcode to use for setting the humidity
-        if (
-            DPCode.HUMIDITY_SET in device.status
-            and DPCode.HUMIDITY_SET in device.status_range
-        ):
+        if DPCode.HUMIDITY_SET in device.function:
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
             self._set_humidity_dpcode = DPCode.HUMIDITY_SET
             type_data = IntegerTypeData.from_json(
-                device.status_range[DPCode.HUMIDITY_SET].values
+                device.function[DPCode.HUMIDITY_SET].values
             )
             self._set_humidity_type = type_data
             self._attr_min_humidity = int(type_data.min_scaled)
@@ -297,6 +295,21 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
             if DPCode.SWITCH_VERTICAL in device.function:
                 self._attr_swing_modes.append(SWING_VERTICAL)
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Log unknown modes
+        if DPCode.MODE in self.device.function:
+            data_type = EnumTypeData.from_json(self.device.function[DPCode.MODE].values)
+            for tuya_mode in data_type.range:
+                if tuya_mode not in TUYA_HVAC_TO_HA:
+                    LOGGER.warning(
+                        "Unknown HVAC mode '%s' for device %s; assuming it as off",
+                        tuya_mode,
+                        self.device.name,
+                    )
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
@@ -436,8 +449,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 return self.entity_description.switch_only_hvac_mode
             return HVAC_MODE_OFF
 
-        if self.device.status.get(DPCode.MODE) is not None:
-            return TUYA_HVAC_TO_HA[self.device.status[DPCode.MODE]]
+        if (
+            mode := self.device.status.get(DPCode.MODE)
+        ) is not None and mode in TUYA_HVAC_TO_HA:
+            return TUYA_HVAC_TO_HA[mode]
+
         return HVAC_MODE_OFF
 
     @property
