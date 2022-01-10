@@ -14,21 +14,10 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, SIA_EVENT, SIA_HUB_ZONE, SIA_NAME_FORMAT, SIA_NAME_FORMAT_HUB
+from .const import DOMAIN, SIA_EVENT, SIA_HUB_ZONE
 from .utils import get_attr_from_sia_event, get_unavailability_interval
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_name(
-    port: int, account: str, zone: int | None, device_class: str | None
-) -> str:
-    """Return the name of the zone."""
-    if not device_class:
-        device_class = "none"
-    if zone is None or zone == 0:
-        return SIA_NAME_FORMAT_HUB.format(port, account, device_class)
-    return SIA_NAME_FORMAT.format(port, account, zone, device_class)
 
 
 @dataclass
@@ -56,6 +45,7 @@ class SIABaseEntity(RestoreEntity):
         ping_interval: int,
         entity_description: SIAEntityDescription,
         unique_id: str,
+        name: str,
     ) -> None:
         """Create SIABaseEntity object."""
         self.port = port
@@ -64,24 +54,16 @@ class SIABaseEntity(RestoreEntity):
         self.ping_interval = ping_interval
         self.entity_description = entity_description
         self._attr_unique_id = unique_id
+        self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            name=name,
+            identifiers={(DOMAIN, unique_id)},
+            via_device=(DOMAIN, f"{port}_{account}"),
+        )
 
         self._cancel_availability_cb: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
-        self._attr_name = get_name(
-            self.port,
-            self.account,
-            self.zone,
-            self.entity_description.device_class,
-        )
-        self._attr_device_info = DeviceInfo(
-            name=self.name,
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            via_device=(
-                DOMAIN,
-                f"{self.port}_{self.account}",
-            ),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.

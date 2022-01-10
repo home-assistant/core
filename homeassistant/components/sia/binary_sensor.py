@@ -27,6 +27,8 @@ from .const import (
     KEY_POWER,
     KEY_SMOKE,
     SIA_HUB_ZONE,
+    SIA_NAME_FORMAT,
+    SIA_NAME_FORMAT_HUB,
     SIA_UNIQUE_ID_FORMAT_BINARY,
 )
 from .sia_entity_base import SIABaseEntity, SIAEntityDescription
@@ -96,6 +98,11 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 SIA_HUB_ZONE,
                 ENTITY_DESCRIPTION_POWER.device_class,
             ),
+            name=SIA_NAME_FORMAT_HUB.format(
+                entry.data[CONF_PORT],
+                account_data[CONF_ACCOUNT],
+                ENTITY_DESCRIPTION_POWER.device_class,
+            ),
         )
         zones = entry.options[CONF_ACCOUNTS][account_data[CONF_ACCOUNT]][CONF_ZONES]
         for zone in range(1, zones + 1):
@@ -111,6 +118,12 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                     zone,
                     ENTITY_DESCRIPTION_SMOKE.device_class,
                 ),
+                name=SIA_NAME_FORMAT.format(
+                    entry.data[CONF_PORT],
+                    account_data[CONF_ACCOUNT],
+                    zone,
+                    ENTITY_DESCRIPTION_SMOKE.device_class,
+                ),
             )
             yield SIABinarySensor(
                 port=entry.data[CONF_PORT],
@@ -120,6 +133,12 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 entity_description=ENTITY_DESCRIPTION_MOISTURE,
                 unique_id=SIA_UNIQUE_ID_FORMAT_BINARY.format(
                     entry.entry_id,
+                    account_data[CONF_ACCOUNT],
+                    zone,
+                    ENTITY_DESCRIPTION_MOISTURE.device_class,
+                ),
+                name=SIA_NAME_FORMAT.format(
+                    entry.data[CONF_PORT],
                     account_data[CONF_ACCOUNT],
                     zone,
                     ENTITY_DESCRIPTION_MOISTURE.device_class,

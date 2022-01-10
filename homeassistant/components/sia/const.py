@@ -8,7 +8,6 @@ from homeassistant.const import Platform
 PLATFORMS: Final = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
 DOMAIN: Final = "sia"
-DEVICE_CLASS_ALARM: Final = "alarm"
 
 ATTR_CODE: Final = "last_code"
 ATTR_ZONE: Final = "last_zone"
