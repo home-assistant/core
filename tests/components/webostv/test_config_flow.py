@@ -239,3 +239,45 @@ async def test_ssdp_not_update_uuid(hass, client):
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["step_id"] == "pairing"
     assert entry.unique_id is None
+
+
+async def test_form_abort_uuid_configured(hass, client):
+    """Test abort if uuid is already configured, verify host update."""
+    entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:])
+    assert client
+    assert entry.unique_id == MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:]
+    assert entry.data[CONF_HOST] == "1.2.3.4"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    user_config = {
+        CONF_HOST: "new_host",
+        CONF_NAME: "fake",
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_USER},
+        data=user_config,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "pairing"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "new_host"
