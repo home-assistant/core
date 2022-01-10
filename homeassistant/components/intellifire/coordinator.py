@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, DOMAIN
 from homeassistant.core import HomeAssistant
+from ...helpers.entity import DeviceInfo
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):
@@ -41,3 +42,13 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
     def api(self):
         """Return the API pointer."""
         return self._api
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            manufacturer="Hearth and Home",
+            model="IFT-WFM",
+            name="IntelliFire Fireplace",
+            identifiers={("IntelliFire", f"{self.api.data.serial}]")},
+            sw_version=self.api.data.fw_ver_str
+        )
