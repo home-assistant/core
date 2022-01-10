@@ -43,8 +43,7 @@ def setup_platform(
         return
 
     add_entities(
-        [SupervisorProcessSensor(info, supervisor_server) for info in processes],
-        True,
+        [SupervisorProcessSensor(info, supervisor_server) for info in processes], True
     )
 
 
