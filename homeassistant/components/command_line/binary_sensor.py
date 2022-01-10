@@ -86,10 +86,6 @@ async def async_setup_platform(
             )
         )
 
-    if not binary_sensors:
-        _LOGGER.error("No binary sensors added")
-        return
-
     add_entities(binary_sensors, True)
 
 

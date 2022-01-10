@@ -83,10 +83,6 @@ async def async_setup_platform(
             )
         )
 
-    if not sensors:
-        _LOGGER.error("No sensors added")
-        return
-
     add_entities(sensors, True)
 
 
