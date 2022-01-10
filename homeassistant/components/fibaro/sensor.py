@@ -81,7 +81,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
             self.entity_description = SENSOR_TYPES["unknown"]
 
         with suppress(KeyError, ValueError):
-            if not self.entyty_description.native_unit_of_measurement:
+            if not self.entity_description.native_unit_of_measurement:
                 if self.fibaro_device.properties.unit == "lux":
                     self._attr_native_unit_of_measurement = LIGHT_LUX
                 elif self.fibaro_device.properties.unit == "C":
