@@ -168,7 +168,7 @@ async def async_setup_scanner(
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Validate the configuration and return a Traccar scanner."""
 
     session = async_get_clientsession(hass, config[CONF_VERIFY_SSL])
