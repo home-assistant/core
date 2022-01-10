@@ -61,7 +61,7 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a Intellifire On/Off Sensor."""
+    """Set up a IntelliFire On/Off Sensor."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
