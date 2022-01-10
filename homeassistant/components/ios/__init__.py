@@ -271,7 +271,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = ios_config
 
     # No entry support for notify component yet
-    discovery.load_platform(hass, "notify", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
 
     if conf is not None:
         hass.async_create_task(
