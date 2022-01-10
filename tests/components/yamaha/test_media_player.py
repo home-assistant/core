@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.media_player as mp
 from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 
@@ -72,8 +73,24 @@ async def test_setup_no_host(hass, device, main_zone):
     assert state.state == "off"
 
 
-async def test_setup_discovery(hass, device, main_zone):
+async def test_setup_discovery(hass: HomeAssistant, device, main_zone):
     """Test set up integration via discovery."""
+    with patch("rxv.find", return_value=[device]):
+        assert await async_setup_component(
+            hass,
+            "media_player",
+            {
+                "media_player": {
+                    "platform": DOMAIN,
+                    yamaha.CONF_SOURCE_IGNORE: [],
+                    yamaha.CONF_ZONE_IGNORE: [],
+                    yamaha.CONF_SOURCE_NAMES: {},
+                    yamaha.CONF_ZONE_NAMES: {},
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
     discovery_info = {
         "name": "Yamaha Receiver",
         "model_name": "Yamaha",
