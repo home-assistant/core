@@ -6,9 +6,14 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from pyunifiprotect.data import NVR, Camera, Event
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
-from pyunifiprotect.data.devices import Sensor
+from pyunifiprotect.data import (
+    NVR,
+    Camera,
+    Event,
+    ProtectAdoptableDeviceModel,
+    ProtectDeviceModel,
+    Sensor,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -53,7 +58,7 @@ class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescr
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: ProtectAdoptableDeviceModel | NVR) -> Any:
+    def get_ufp_value(self, obj: ProtectDeviceModel) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
 

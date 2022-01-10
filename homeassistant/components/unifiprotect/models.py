@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data.base import ProtectDeviceModel
+from pyunifiprotect.data import NVR, ProtectAdoptableDeviceModel, ProtectDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
 
@@ -48,9 +48,7 @@ class ProtectSetableKeysMixin(ProtectRequiredKeysMixin):
     """Mixin for settable values."""
 
     ufp_set_method: str | None = None
-    ufp_set_method_fn: Callable[
-        [ProtectDeviceModel, Any], Coroutine[Any, Any, None]
-    ] | None = None
+    ufp_set_method_fn: Callable[[Any, Any], Coroutine[Any, Any, None]] | None = None
 
     async def ufp_set(self, obj: ProtectDeviceModel, value: Any) -> None:
         """Set value for UniFi Protect device."""
