@@ -223,7 +223,9 @@ class CloudRegisterView(HomeAssistantView):
 
         client_metadata = None
 
-        if location_info := await async_detect_location_info(hass):
+        if location_info := await async_detect_location_info(
+            hass.helpers.aiohttp_client.async_get_clientsession()
+        ):
             client_metadata = {
                 "NC_COUNTRY_CODE": location_info.country_code,
                 "NC_REGION_CODE": location_info.region_code,
