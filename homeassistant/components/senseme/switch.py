@@ -30,7 +30,7 @@ class SenseMESwitchEntityDescriptionMixin:
 
 
 @dataclass
-class SenseMESwitchEntityDescriptionDescription(
+class SenseMESwitchEntityDescription(
     SwitchEntityDescription, SenseMESwitchEntityDescriptionMixin
 ):
     """Describes SenseME switch entity."""
@@ -50,13 +50,13 @@ def _set_motion_light_auto(device: SensemeDevice, value: bool) -> None:
 
 FAN_SWITCHS = [
     # Turning on sleep mode will disable Whoosh
-    SenseMESwitchEntityDescriptionDescription(
+    SenseMESwitchEntityDescription(
         key="sleep_mode",
         name="Sleep Mode",
         value_fn=lambda device: cast(bool, device.sleep_mode),
         set_fn=_set_sleep_mode,
     ),
-    SenseMESwitchEntityDescriptionDescription(
+    SenseMESwitchEntityDescription(
         key="motion_fan_auto",
         name="Motion",
         value_fn=lambda device: cast(bool, device.motion_fan_auto),
@@ -65,7 +65,7 @@ FAN_SWITCHS = [
 ]
 
 FAN_LIGHT_SWITCHES = [
-    SenseMESwitchEntityDescriptionDescription(
+    SenseMESwitchEntityDescription(
         key="motion_light_auto",
         name="Light Motion",
         value_fn=lambda device: cast(bool, device.motion_light_auto),
@@ -74,13 +74,13 @@ FAN_LIGHT_SWITCHES = [
 ]
 
 LIGHT_SWITCHES = [
-    SenseMESwitchEntityDescriptionDescription(
+    SenseMESwitchEntityDescription(
         key="sleep_mode",
         name="Sleep Mode",
         value_fn=lambda device: cast(bool, device.sleep_mode),
         set_fn=_set_sleep_mode,
     ),
-    SenseMESwitchEntityDescriptionDescription(
+    SenseMESwitchEntityDescription(
         key="motion_light_auto",
         name="Motion",
         value_fn=lambda device: cast(bool, device.motion_light_auto),
@@ -96,7 +96,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up SenseME fans."""
     device = hass.data[DOMAIN][entry.entry_id]
-    descriptions: list[SenseMESwitchEntityDescriptionDescription] = []
+    descriptions: list[SenseMESwitchEntityDescription] = []
 
     if device.is_fan:
         descriptions.extend(FAN_SWITCHS)
@@ -113,10 +113,10 @@ async def async_setup_entry(
 class HASensemeSwitch(SensemeEntity, SwitchEntity):
     """SenseME switch component."""
 
-    entity_description: SenseMESwitchEntityDescriptionDescription
+    entity_description: SenseMESwitchEntityDescription
 
     def __init__(
-        self, device: SensemeFan, description: SenseMESwitchEntityDescriptionDescription
+        self, device: SensemeFan, description: SenseMESwitchEntityDescription
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
