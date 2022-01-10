@@ -144,8 +144,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         self._name = f"{fibaro_device.friendly_name} Energy"
 
         self._unit = ENERGY_KILO_WATT_HOUR
-        self._device_class = SensorDeviceClass.ENERGY
-        self._state_class = SensorStateClass.TOTAL_INCREASING
 
     def update(self):
         """Update the state."""
