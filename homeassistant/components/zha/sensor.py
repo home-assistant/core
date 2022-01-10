@@ -496,6 +496,18 @@ class Temperature(Sensor):
     _unit = TEMP_CELSIUS
 
 
+@MULTI_MATCH(channel_names=CHANNEL_DEVICE_TEMPERATURE)
+class DeviceTemperature(Sensor):
+    """Device Temperature Sensor."""
+
+    SENSOR_ATTR = "current_temperature"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _divisor = 100
+    _unit = TEMP_CELSIUS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
 @MULTI_MATCH(channel_names="carbon_dioxide_concentration")
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
