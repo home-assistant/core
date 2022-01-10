@@ -119,7 +119,7 @@ async def async_add_user_device_tracker(
             return
 
         await coll.async_update_item(
-            person[collection.CONF_ID],
+            person[CONF_ID],
             {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
         )
         break
@@ -212,7 +212,7 @@ class PersonStorageCollection(collection.StorageCollection):
                 continue
 
             await self.async_update_item(
-                person[collection.CONF_ID],
+                person[CONF_ID],
                 {
                     CONF_DEVICE_TRACKERS: [
                         devt
@@ -268,10 +268,10 @@ async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dic
         if user_id is not None and await hass.auth.async_get_user(user_id) is None:
             _LOGGER.error(
                 "Invalid user_id detected for person %s",
-                person_conf[collection.CONF_ID],
+                person_conf[CONF_ID],
             )
             person_invalid_user.append(
-                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[collection.CONF_ID]}) points at invalid user {user_id}"
+                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points at invalid user {user_id}"
             )
             continue
 

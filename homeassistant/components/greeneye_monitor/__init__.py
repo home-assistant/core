@@ -15,6 +15,7 @@ from homeassistant.const import (
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -143,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.async_create_task(
-        async_load_platform(hass, "sensor", DOMAIN, config[DOMAIN], config)
+        async_load_platform(hass, Platform.SENSOR, DOMAIN, config[DOMAIN], config)
     )
 
     return True

@@ -38,4 +38,4 @@ class HASensemeOccupancySensor(SensemeEntity, BinarySensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        self._attr_is_on = bool(self._device.motion_detected)
+        self._attr_is_on = self._device.motion_detected
