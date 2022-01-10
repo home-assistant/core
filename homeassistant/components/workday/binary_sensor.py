@@ -79,8 +79,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays = config[CONF_ADD_HOLIDAYS]
-    remove_holidays = config[CONF_REMOVE_HOLIDAYS]
+    add_holidays = config.get(CONF_ADD_HOLIDAYS, [])
+    remove_holidays = config.get(CONF_REMOVE_HOLIDAYS, [])
     country = config[CONF_COUNTRY]
     days_offset = config[CONF_OFFSET]
     excludes = config[CONF_EXCLUDES]
