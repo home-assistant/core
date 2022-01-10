@@ -44,7 +44,7 @@ def zigpy_app_controller():
 
 
 @pytest.fixture(name="config_entry")
-async def config_entry_fixture(hass):
+def config_entry_fixture(hass):
     """Fixture representing a config entry."""
     entry = MockConfigEntry(
         version=2,

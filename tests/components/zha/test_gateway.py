@@ -8,9 +8,11 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
+from homeassistant.components.zha.core.const import DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.core.store import TOMBSTONE_LIFETIME
 from homeassistant.const import Platform
+from homeassistant.helpers import device_registry
 
 from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -256,3 +258,39 @@ async def test_cleaning_up_storage(hass, zigpy_dev_basic, zha_dev_basic, hass_st
     await zha_gateway.zha_storage.async_save()
     await hass.async_block_till_done()
     assert not hass_storage["zha.storage"]["data"]["devices"]
+
+
+async def test_enable_device_on_load(
+    config_entry,
+    hass,
+    hass_storage,
+    zha_device_joined_restored,
+    zigpy_dev_basic,
+):
+    """Loading ZHA should enabled disabled devices in registry."""
+
+    registry = await device_registry.async_get_registry(hass)
+
+    dev_entry = registry.async_get_or_create(
+        identifiers={(DOMAIN, str(zigpy_dev_basic.ieee))},
+        connections={(device_registry.CONNECTION_ZIGBEE, str(zigpy_dev_basic.ieee))},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=device_registry.DeviceEntryDisabler.USER,
+        entry_type=device_registry.DeviceEntryType.SERVICE,
+        manufacturer=zigpy_dev_basic.manufacturer,
+        model=zigpy_dev_basic.model,
+        name=f"{zigpy_dev_basic.manufacturer} {zigpy_dev_basic.model}",
+        sw_version="new_version",
+        hw_version="new_version",
+    )
+
+    assert dev_entry
+    assert dev_entry.disabled_by
+
+    await zha_device_joined_restored(zigpy_dev_basic)
+    update_entry = registry.async_get_device(
+        identifiers={(DOMAIN, str(zigpy_dev_basic.ieee))},
+        connections={(device_registry.CONNECTION_ZIGBEE, str(zigpy_dev_basic.ieee))},
+    )
+    assert update_entry
+    assert not update_entry.disabled_by
