@@ -154,16 +154,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit
 
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return self._state_class
-
     def update(self):
         """Update the state."""
         with suppress(KeyError, ValueError):
