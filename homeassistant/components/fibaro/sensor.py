@@ -144,16 +144,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         self._device_class = SensorDeviceClass.ENERGY
         self._state_class = SensorStateClass.TOTAL_INCREASING
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self.current_value
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
-
     def update(self):
         """Update the state."""
         with suppress(KeyError, ValueError):
