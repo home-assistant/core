@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_OFFSET,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
@@ -283,7 +284,7 @@ def setup_services(
 
         discovery.load_platform(
             hass,
-            "calendar",
+            Platform.CALENDAR,
             DOMAIN,
             hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
             hass_config,
@@ -370,7 +371,7 @@ def do_setup(hass, hass_config, config):
     )
 
     for calendar in hass.data[DATA_INDEX].values():
-        discovery.load_platform(hass, "calendar", DOMAIN, calendar, hass_config)
+        discovery.load_platform(hass, Platform.CALENDAR, DOMAIN, calendar, hass_config)
 
     # Look for any new calendars
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
