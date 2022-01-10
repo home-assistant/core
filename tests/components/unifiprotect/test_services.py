@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from time import time
+import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -63,26 +63,7 @@ async def subdevice_fixture(
 async def test_global_service_bad_device(
     hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
 ):
-    """Test button entity."""
-
-    nvr = mock_entry.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock()
-    nvr.add_custom_doorbell_message = AsyncMock()
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: "bad_device_id", ATTR_MESSAGE: "Test Message"},
-            blocking=True,
-        )
-    assert not nvr.add_custom_doorbell_message.called
-
-
-async def test_global_service_no_device(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
-):
-    """Test button entity."""
+    """Test global service, invalid device ID."""
 
     nvr = mock_entry.api.bootstrap.nvr
     nvr.__fields__["add_custom_doorbell_message"] = Mock()
@@ -101,7 +82,7 @@ async def test_global_service_no_device(
 async def test_global_service_exception(
     hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
 ):
-    """Test button entity."""
+    """Test global service, unexpected error."""
 
     nvr = mock_entry.api.bootstrap.nvr
     nvr.__fields__["add_custom_doorbell_message"] = Mock()
@@ -120,7 +101,7 @@ async def test_global_service_exception(
 async def test_add_doorbell_text(
     hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
 ):
-    """Test button entity."""
+    """Test add_doorbell_text service."""
 
     nvr = mock_entry.api.bootstrap.nvr
     nvr.__fields__["add_custom_doorbell_message"] = Mock()
@@ -138,7 +119,7 @@ async def test_add_doorbell_text(
 async def test_remove_doorbell_text(
     hass: HomeAssistant, subdevice: dr.DeviceEntry, mock_entry: MockEntityFixture
 ):
-    """Test button entity."""
+    """Test remove_doorbell_text service."""
 
     nvr = mock_entry.api.bootstrap.nvr
     nvr.__fields__["remove_custom_doorbell_message"] = Mock()
@@ -156,7 +137,7 @@ async def test_remove_doorbell_text(
 async def test_set_default_doorbell_text(
     hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
 ):
-    """Test button entity."""
+    """Test set_default_doorbell_text service."""
 
     nvr = mock_entry.api.bootstrap.nvr
     nvr.__fields__["set_default_doorbell_message"] = Mock()
@@ -171,16 +152,26 @@ async def test_set_default_doorbell_text(
     nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
 
 
+@patch("homeassistant.components.unifiprotect.utils.time")
+@patch("homeassistant.components.unifiprotect.utils.asyncio")
 @patch("homeassistant.components.unifiprotect.utils.json")
 @patch("homeassistant.components.unifiprotect.utils.print_ws_stat_summary")
 async def test_profile_ws(
     mock_print,
     mock_json,
+    mock_asyncio,
+    mock_time,
     hass: HomeAssistant,
     device: dr.DeviceEntry,
     mock_entry: MockEntityFixture,
 ):
-    """Test button entity."""
+    """Test profile_ws service."""
+
+    start = time.monotonic()
+    mock_time.time.return_value = time.time()
+    mock_time.monotonic.side_effect = [start, start, start + 11]
+
+    mock_asyncio.sleep = AsyncMock()
 
     mock_stat = Mock()
     mock_stat.__dict__ = {}
@@ -215,7 +206,7 @@ async def test_profile_ws_error(
     device: dr.DeviceEntry,
     mock_entry: MockEntityFixture,
 ):
-    """Test button entity."""
+    """Test profile_ws service, already running."""
 
     mock_entry.api.bootstrap.capture_ws_stats = True
 
@@ -239,9 +230,9 @@ async def test_generate_data(
     device: dr.DeviceEntry,
     mock_entry: MockEntityFixture,
 ):
-    """Test button entity."""
+    """Test generate_data service."""
 
-    now = time()
+    now = time.time()
     mock_time.time.return_value = now
 
     mock_generate = Mock()
