@@ -6,9 +6,6 @@
   "requirements": [
     "intellifire4py==0.4.3"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@jeeftor"
