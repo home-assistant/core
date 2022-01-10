@@ -91,7 +91,7 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         # Set the Display name the User will see
         self._attr_name = f"Fireplace {description.name}"
-        self._attr_unique_id = f"IntelliFire_{description.key}_{coordinator.serial}"
+        self._attr_unique_id = f"IntelliFire_{description.key}_{coordinator.data.serial}"
 
     @property
     def is_on(self):
