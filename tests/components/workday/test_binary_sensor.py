@@ -12,12 +12,6 @@ from tests.common import assert_setup_component, get_test_home_assistant
 
 FUNCTION_PATH = "homeassistant.components.workday.binary_sensor.get_date"
 
-DEFAULT_CONFIG = {
-    "platform": "workday",
-    "add_holidays": [],
-    "remove_holidays": [],
-}
-
 
 class TestWorkdaySetup:
     """Test class for workday sensor."""
@@ -28,24 +22,32 @@ class TestWorkdaySetup:
 
         # Set valid default config for test
         self.config_province = {
-            "binary_sensor": {**DEFAULT_CONFIG, "country": "DE", "province": "BW"}
+            "binary_sensor": {"platform": "workday", "country": "DE", "province": "BW"}
         }
 
-        self.config_noprovince = {"binary_sensor": {**DEFAULT_CONFIG, "country": "DE"}}
+        self.config_noprovince = {
+            "binary_sensor": {"platform": "workday", "country": "DE"}
+        }
 
         self.config_invalidprovince = {
-            "binary_sensor": {**DEFAULT_CONFIG, "country": "DE", "province": "invalid"}
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "DE",
+                "province": "invalid",
+            }
         }
 
         self.config_state = {
-            "binary_sensor": {**DEFAULT_CONFIG, "country": "US", "province": "CA"}
+            "binary_sensor": {"platform": "workday", "country": "US", "province": "CA"}
         }
 
-        self.config_nostate = {"binary_sensor": {**DEFAULT_CONFIG, "country": "US"}}
+        self.config_nostate = {
+            "binary_sensor": {"platform": "workday", "country": "US"}
+        }
 
         self.config_includeholiday = {
             "binary_sensor": {
-                **DEFAULT_CONFIG,
+                "platform": "workday",
                 "country": "DE",
                 "province": "BW",
                 "workdays": ["holiday"],
@@ -55,7 +57,7 @@ class TestWorkdaySetup:
 
         self.config_example1 = {
             "binary_sensor": {
-                **DEFAULT_CONFIG,
+                "platform": "workday",
                 "country": "US",
                 "workdays": ["mon", "tue", "wed", "thu", "fri"],
                 "excludes": ["sat", "sun"],
@@ -64,7 +66,7 @@ class TestWorkdaySetup:
 
         self.config_example2 = {
             "binary_sensor": {
-                **DEFAULT_CONFIG,
+                "platform": "workday",
                 "country": "DE",
                 "province": "BW",
                 "workdays": ["mon", "wed", "fri"],
@@ -75,7 +77,7 @@ class TestWorkdaySetup:
 
         self.config_remove_holidays = {
             "binary_sensor": {
-                **DEFAULT_CONFIG,
+                "platform": "workday",
                 "country": "US",
                 "workdays": ["mon", "tue", "wed", "thu", "fri"],
                 "excludes": ["sat", "sun", "holiday"],
@@ -85,7 +87,7 @@ class TestWorkdaySetup:
 
         self.config_remove_named_holidays = {
             "binary_sensor": {
-                **DEFAULT_CONFIG,
+                "platform": "workday",
                 "country": "US",
                 "workdays": ["mon", "tue", "wed", "thu", "fri"],
                 "excludes": ["sat", "sun", "holiday"],
@@ -94,15 +96,15 @@ class TestWorkdaySetup:
         }
 
         self.config_tomorrow = {
-            "binary_sensor": {**DEFAULT_CONFIG, "country": "DE", "days_offset": 1}
+            "binary_sensor": {"platform": "workday", "country": "DE", "days_offset": 1}
         }
 
         self.config_day_after_tomorrow = {
-            "binary_sensor": {**DEFAULT_CONFIG, "country": "DE", "days_offset": 2}
+            "binary_sensor": {"platform": "workday", "country": "DE", "days_offset": 2}
         }
 
         self.config_yesterday = {
-            "binary_sensor": {**DEFAULT_CONFIG, "country": "DE", "days_offset": -1}
+            "binary_sensor": {"platform": "workday", "country": "DE", "days_offset": -1}
         }
 
     def teardown_method(self):
