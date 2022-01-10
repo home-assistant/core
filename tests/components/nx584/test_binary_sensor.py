@@ -57,7 +57,7 @@ def test_nx584_sensor_setup_defaults(mock_nx, mock_watcher, hass, fake_zones):
         "exclude_zones": [],
         "zone_types": {},
     }
-    assert nx584.setup_platform(hass, config, add_entities)
+    nx584.setup_platform(hass, config, add_entities)
     mock_nx.assert_has_calls([mock.call(zone, "opening") for zone in fake_zones])
     assert add_entities.called
     assert nx584_client.Client.call_count == 1
@@ -76,7 +76,7 @@ def test_nx584_sensor_setup_full_config(mock_nx, mock_watcher, hass, fake_zones)
         "zone_types": {3: "motion"},
     }
     add_entities = mock.MagicMock()
-    assert nx584.setup_platform(hass, config, add_entities)
+    nx584.setup_platform(hass, config, add_entities)
     mock_nx.assert_has_calls(
         [
             mock.call(fake_zones[0], "opening"),
@@ -135,7 +135,7 @@ def test_nx584_sensor_setup_no_zones(hass):
     """Test the setup with no zones."""
     nx584_client.Client.return_value.list_zones.return_value = []
     add_entities = mock.MagicMock()
-    assert nx584.setup_platform(hass, {}, add_entities)
+    nx584.setup_platform(hass, {}, add_entities)
     assert not add_entities.called
 
 
