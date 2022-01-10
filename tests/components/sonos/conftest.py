@@ -101,6 +101,7 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         mock_soco.night_mode = True
         mock_soco.dialog_level = True
         mock_soco.volume = 19
+        mock_soco.audio_delay = 2
         mock_soco.bass = 1
         mock_soco.treble = -1
         mock_soco.sub_enabled = False

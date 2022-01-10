@@ -185,11 +185,14 @@ class SonosSpeaker:
         # Volume / Sound
         self.volume: int | None = None
         self.muted: bool | None = None
-        self.night_mode: bool | None = None
-        self.dialog_level: bool | None = None
         self.cross_fade: bool | None = None
         self.bass: int | None = None
         self.treble: int | None = None
+
+        # Home theater
+        self.audio_delay: int | None = None
+        self.dialog_level: bool | None = None
+        self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
         self.surround_enabled: bool | None = None
 
@@ -485,7 +488,7 @@ class SonosSpeaker:
             if bool_var in variables:
                 setattr(self, bool_var, variables[bool_var] == "1")
 
-        for int_var in ("bass", "treble"):
+        for int_var in ("audio_delay", "bass", "treble"):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
 
@@ -969,15 +972,13 @@ class SonosSpeaker:
     #
     # Media and playback state handlers
     #
-    @soco_error()
+    @soco_error(raise_on_err=False)
     def update_volume(self) -> None:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
         self.muted = self.soco.mute
         self.night_mode = self.soco.night_mode
         self.dialog_level = self.soco.dialog_level
-        self.bass = self.soco.bass
-        self.treble = self.soco.treble
 
         try:
             self.cross_fade = self.soco.cross_fade
