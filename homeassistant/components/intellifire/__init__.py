@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
