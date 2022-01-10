@@ -1,8 +1,5 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
-from __future__ import annotations
-
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import subprocess
@@ -18,10 +15,8 @@ from homeassistant.components.device_tracker.const import (
     SCAN_INTERVAL,
     SOURCE_TYPE_ROUTER,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
@@ -82,12 +77,7 @@ class HostSubProcess:
         return False
 
 
-async def async_setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the Host objects and return the update function."""
 
     privileged = hass.data[DOMAIN][PING_PRIVS]

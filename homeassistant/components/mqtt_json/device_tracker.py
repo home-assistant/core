@@ -1,7 +1,4 @@
 """Support for GPS tracking MQTT enabled devices."""
-from __future__ import annotations
-
-from collections.abc import Awaitable, Callable
 import json
 import logging
 
@@ -19,9 +16,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_DEVICES,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +36,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
 )
 
 
-async def async_setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the MQTT JSON tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
@@ -72,6 +63,8 @@ async def async_setup_scanner(
             hass.async_create_task(async_see(**kwargs))
 
         await mqtt.async_subscribe(hass, topic, async_message_received, qos)
+
+    return True
 
 
 def _parse_see_args(dev_id, data):
