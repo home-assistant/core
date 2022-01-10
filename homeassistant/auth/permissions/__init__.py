@@ -6,11 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 
+# pylint: disable=useless-import-alias
 from .const import CAT_ENTITIES
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
-from .merge import merge_policies  # noqa: F401
-from .models import PermissionLookup
-from .types import PolicyType
+from .merge import merge_policies as merge_policies  # noqa: F401
+from .models import PermissionLookup as PermissionLookup
+from .types import PolicyType as PolicyType
 from .util import test_all
 
 POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
