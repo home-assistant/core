@@ -169,11 +169,6 @@ class BlockSleepingClimate(
         return self.wrapper.name
 
     @property
-    def should_poll(self) -> bool:
-        """If device should be polled."""
-        return False
-
-    @property
     def target_temperature(self) -> float | None:
         """Set target temperature."""
         if self.block is not None:
@@ -311,10 +306,10 @@ class BlockSleepingClimate(
                 list, self.last_state.attributes.get("preset_modes")
             )
 
-        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
+        await super().async_added_to_hass()
 
     @callback
-    def _update_callback(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Handle device update."""
         if not self.wrapper.device.initialized:
             self.async_write_ha_state()
