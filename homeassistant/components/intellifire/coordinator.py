@@ -8,11 +8,11 @@ import logging.handlers
 from async_timeout import timeout
 from intellifire4py import IntellifireAsync, IntellifirePollData
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, DOMAIN
-from homeassistant.core import HomeAssistant
 from ...helpers.entity import DeviceInfo
+from .const import DOMAIN, LOGGER
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):
@@ -45,10 +45,11 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
 
     @property
     def device_info(self):
+        """Return the device info."""
         return DeviceInfo(
             manufacturer="Hearth and Home",
             model="IFT-WFM",
             name="IntelliFire Fireplace",
             identifiers={("IntelliFire", f"{self.api.data.serial}]")},
-            sw_version=self.api.data.fw_ver_str
+            sw_version=self.api.data.fw_ver_str,
         )

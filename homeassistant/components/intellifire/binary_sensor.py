@@ -15,7 +15,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
-from ...helpers.entity import DeviceInfo
 
 
 @dataclass
@@ -78,10 +77,10 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """A semi-generic wrapper around Binary Sensor entities for IntelliFire."""
 
     def __init__(
-            self,
-            coordinator: IntellifireDataUpdateCoordinator,
-            entry_id,
-            description: IntellifireBinarySensorEntityDescription,
+        self,
+        coordinator: IntellifireDataUpdateCoordinator,
+        entry_id,
+        description: IntellifireBinarySensorEntityDescription,
     ):
         """Class initializer."""
         super().__init__(coordinator=coordinator)
@@ -92,7 +91,9 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         # Set the Display name the User will see
         self._attr_name = f"Fireplace {description.name}"
-        self._attr_unique_id = f"IntelliFire_{description.key}_{coordinator.api.data.serial}"
+        self._attr_unique_id = (
+            f"IntelliFire_{description.key}_{coordinator.api.data.serial}"
+        )
         # Configure the Device Info
         self._attr_device_info = self.coordinator.device_info
 
