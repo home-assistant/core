@@ -39,7 +39,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return await device.async_reset()
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -55,7 +55,7 @@ async def async_migrate_entry(hass, config_entry):
     # Normalise MAC address of device which also affects entity unique IDs
     if config_entry.version == 2:
         old_unique_id = config_entry.unique_id
-        new_unique_id = format_mac(old_unique_id)
+        new_unique_id = format_mac(old_unique_id) if old_unique_id else None
 
         @callback
         def update_unique_id(entity_entry):
