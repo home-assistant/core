@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_AUTHORIZATION,
@@ -147,7 +148,7 @@ LIFE360_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({DOMAIN: LIFE360_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up integration."""
     conf = config.get(DOMAIN, LIFE360_SCHEMA({}))
     hass.data[DOMAIN] = {"config": conf, "apis": {}}
