@@ -31,7 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = IntellifireDataUpdateCoordinator(
         hass=hass,
         api=api_object,
-        name=entry.data["name"],
         serial=api_object.data.serial,
     )
 
