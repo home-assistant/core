@@ -132,6 +132,9 @@ class FibaroSensor(FibaroDevice, SensorEntity):
 class FibaroEnergySensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Energy Sensor."""
 
+	_attr_device_class = SensorDeviceClass.ENERGY
+	_attr_state_class = SensorStateClass.TOTAL_INCREASING
+	_attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     def __init__(self, fibaro_device):
         """Initialize the sensor."""
         self.current_value = None
