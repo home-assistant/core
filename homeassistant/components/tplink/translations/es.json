@@ -1,8 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "no_devices_found": "No se encontraron dispositivos en la red",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
         },
         "flow_title": "{name} {model} ({host})",
         "step": {
@@ -18,6 +22,9 @@
                 }
             },
             "user": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "Si dejas el host vac\u00edo, se usar\u00e1 descubrimiento para encontrar dispositivos."
             }
         }
