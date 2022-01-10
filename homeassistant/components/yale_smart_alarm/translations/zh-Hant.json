@@ -25,5 +25,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "\u9580\u9396\u78bc\u8207\u6240\u9700\u6578\u5b57\u6578\u4e0d\u7b26\u5408"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "\u9810\u8a2d\u9580\u9396\u78bc\uff0c\u65bc\u672a\u63d0\u4f9b\u6642\u4f7f\u7528",
+                    "lock_code_digits": "\u9580\u9396 PIN \u78bc\u6578\u5b57\u6578"
+                }
+            }
+        }
     }
 }

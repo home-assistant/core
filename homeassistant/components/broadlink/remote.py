@@ -17,7 +17,6 @@ import voluptuous as vol
 
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_DELAY_SECS,
     ATTR_DEVICE,
@@ -32,7 +31,7 @@ from homeassistant.components.remote import (
     RemoteEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF
+from homeassistant.const import ATTR_COMMAND, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

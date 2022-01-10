@@ -29,31 +29,20 @@ async def async_setup_entry(
 class MazdaDeviceTracker(MazdaEntity, TrackerEntity):
     """Class for the device tracker."""
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Device Tracker"
+    _attr_icon = "mdi:car"
+    _attr_force_update = False
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return self.vin
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda device tracker."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car"
+        self._attr_name = f"{self.vehicle_name} Device Tracker"
+        self._attr_unique_id = self.vin
 
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
-
-    @property
-    def force_update(self):
-        """All updates do not need to be written to the state machine."""
-        return False
 
     @property
     def latitude(self):

@@ -227,8 +227,14 @@ class MazdaEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.client = client
         self.index = index
-        self.vin = self.coordinator.data[self.index]["vin"]
-        self.vehicle_id = self.coordinator.data[self.index]["id"]
+        self.vin = self.data["vin"]
+        self.vehicle_id = self.data["id"]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.vin)},
+            manufacturer="Mazda",
+            model=f"{self.data['modelYear']} {self.data['carlineName']}",
+            name=self.vehicle_name,
+        )
 
     @property
     def data(self):
@@ -236,16 +242,7 @@ class MazdaEntity(CoordinatorEntity):
         return self.coordinator.data[self.index]
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for the Mazda entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.vin)},
-            manufacturer="Mazda",
-            model=f"{self.data['modelYear']} {self.data['carlineName']}",
-            name=self.get_vehicle_name(),
-        )
-
-    def get_vehicle_name(self):
+    def vehicle_name(self):
         """Return the vehicle name, to be used as a prefix for names of other entities."""
         if "nickname" in self.data and len(self.data["nickname"]) > 0:
             return self.data["nickname"]

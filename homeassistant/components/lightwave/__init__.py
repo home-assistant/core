@@ -4,7 +4,13 @@ import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_SWITCHES
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_LIGHTS,
+    CONF_NAME,
+    CONF_SWITCHES,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -68,12 +74,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if lights := config[DOMAIN][CONF_LIGHTS]:
         hass.async_create_task(
-            async_load_platform(hass, "light", DOMAIN, lights, config)
+            async_load_platform(hass, Platform.LIGHT, DOMAIN, lights, config)
         )
 
     if switches := config[DOMAIN][CONF_SWITCHES]:
         hass.async_create_task(
-            async_load_platform(hass, "switch", DOMAIN, switches, config)
+            async_load_platform(hass, Platform.SWITCH, DOMAIN, switches, config)
         )
 
     if trv := config[DOMAIN][CONF_TRV]:

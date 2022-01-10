@@ -91,6 +91,12 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Sense HAT sensor platform."""
+    _LOGGER.warning(
+        "The Sense HAT integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
     data = SenseHatData(config.get(CONF_IS_HAT_ATTACHED))
     display_options = config[CONF_DISPLAY_OPTIONS]
     entities = [

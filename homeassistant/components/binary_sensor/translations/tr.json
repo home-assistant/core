@@ -147,11 +147,11 @@
             "on": "Ba\u011fland\u0131"
         },
         "door": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         },
         "garage_door": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         },
         "gas": {
@@ -187,7 +187,7 @@
             "on": "Alg\u0131land\u0131"
         },
         "opening": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         },
         "plug": {
@@ -227,7 +227,7 @@
             "on": "Alg\u0131land\u0131"
         },
         "window": {
-            "off": "Kapand\u0131",
+            "off": "Kapal\u0131",
             "on": "A\u00e7\u0131k"
         }
     },

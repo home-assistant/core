@@ -78,6 +78,12 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the PWM LED lights."""
+    _LOGGER.warning(
+        "The pigpio Daemon PWM LED integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     leds = []
     for led_conf in config[CONF_LEDS]:

@@ -42,7 +42,7 @@ async def light_fixture(
     light_obj.is_ssh_enabled = False
     light_obj.light_device_settings.is_indicator_enabled = False
 
-    mock_entry.api.bootstrap.cameras = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
     }
@@ -91,7 +91,7 @@ async def camera_fixture(
     camera_obj.osd_settings.is_debug_enabled = False
     camera_obj.smart_detect_settings.object_types = []
 
-    mock_entry.api.bootstrap.lights = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -134,7 +134,7 @@ async def camera_none_fixture(
     camera_obj.osd_settings.is_logo_enabled = False
     camera_obj.osd_settings.is_debug_enabled = False
 
-    mock_entry.api.bootstrap.lights = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -178,7 +178,7 @@ async def camera_privacy_fixture(
     camera_obj.osd_settings.is_logo_enabled = False
     camera_obj.osd_settings.is_debug_enabled = False
 
-    mock_entry.api.bootstrap.lights = {}
+    mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -384,11 +384,11 @@ async def test_switch_camera_simple(
     if description.name in ("High FPS", "Privacy Mode"):
         return
 
-    assert description.ufp_set_function is not None
+    assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_function] = Mock()
-    setattr(camera, description.ufp_set_function, AsyncMock())
-    set_method = getattr(camera, description.ufp_set_function)
+    camera.__fields__[description.ufp_set_method] = Mock()
+    setattr(camera, description.ufp_set_method, AsyncMock())
+    set_method = getattr(camera, description.ufp_set_method)
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, camera, description)
 

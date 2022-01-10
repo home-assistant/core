@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_TIMEOUT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
@@ -206,7 +207,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             async_load_platform(
                 hass,
-                "alarm_control_panel",
+                Platform.ALARM_CONTROL_PANEL,
                 "envisalink",
                 {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
                 config,
@@ -215,7 +216,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             async_load_platform(
                 hass,
-                "sensor",
+                Platform.SENSOR,
                 "envisalink",
                 {CONF_PARTITIONS: partitions, CONF_CODE: code},
                 config,
@@ -224,7 +225,7 @@ async def async_setup(hass, config):
     if zones:
         hass.async_create_task(
             async_load_platform(
-                hass, "binary_sensor", "envisalink", {CONF_ZONES: zones}, config
+                hass, Platform.BINARY_SENSOR, "envisalink", {CONF_ZONES: zones}, config
             )
         )
 
