@@ -132,6 +132,8 @@ HM_DEVICE_TYPES = {
         "ValveBoxW",
         "CO2SensorIP",
         "IPLockDLD",
+        "ParticulateMatterSensorIP",
+        "IPRemoteMotionV2W",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -182,6 +184,7 @@ HM_DEVICE_TYPES = {
         "IPLanRouter",
         "IPMultiIOPCB",
         "IPWHS2",
+        "IPRemoteMotionV2W",
     ],
     DISCOVER_COVER: [
         "Blind",
@@ -205,6 +208,8 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
         "IPWeatherSensorBasic",
         "IPThermostatWall",
         "IPThermostatWall2",
+        "ParticulateMatterSensorIP",
+        "CO2SensorIP",
     ]
 }
 
