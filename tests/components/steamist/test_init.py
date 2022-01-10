@@ -12,6 +12,7 @@ from homeassistant.components.steamist.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -19,6 +20,7 @@ from . import (
     DEFAULT_ENTRY_DATA,
     DEVICE_30303,
     DEVICE_IP_ADDRESS,
+    DEVICE_MODEL,
     DEVICE_NAME,
     FORMATTED_MAC_ADDRESS,
     MOCK_ASYNC_GET_STATUS_ACTIVE,
@@ -100,6 +102,14 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     assert config_entry.unique_id == FORMATTED_MAC_ADDRESS
     assert config_entry.data[CONF_NAME] == DEVICE_NAME
     assert config_entry.title == DEVICE_NAME
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}, identifiers={}
+    )
+    assert isinstance(device_entry, dr.DeviceEntry)
+    assert device_entry.name == DEVICE_NAME
+    assert device_entry.model == DEVICE_MODEL
 
 
 @pytest.mark.usefixtures("mock_single_broadcast_address")
