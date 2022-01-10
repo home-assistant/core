@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import _LOGGER, DOMAIN
+from .const import LOGGER, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
 
@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=info["title"], data=user_input)

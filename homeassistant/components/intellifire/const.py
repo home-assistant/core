@@ -5,4 +5,4 @@ import logging
 
 DOMAIN = "intellifire"
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)

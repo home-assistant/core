@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import _LOGGER, DOMAIN
+from .const import LOGGER, DOMAIN
 from .coordinator import IntellifireDataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
@@ -16,7 +16,7 @@ PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IntelliFire from a config entry."""
-    _LOGGER.debug("Setting up config entry: %s", entry.unique_id)
+    LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Define the API Object
     api_object = IntellifireAsync(entry.data["host"])

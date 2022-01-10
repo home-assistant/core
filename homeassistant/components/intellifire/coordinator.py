@@ -10,7 +10,7 @@ from intellifire4py import IntellifireAsync
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
+from .const import LOGGER, DOMAIN
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):
@@ -20,7 +20,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         """Initialize the Coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
             update_method=self._async_update_data,
@@ -29,7 +29,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         self.serial = serial
 
     async def _async_update_data(self):
-        _LOGGER.debug("Calling update loop on IntelliFire")
+        LOGGER.debug("Calling update loop on IntelliFire")
         async with timeout(100):
             try:
                 await self._api.poll(logging_level=logging.DEBUG)
