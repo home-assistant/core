@@ -1060,14 +1060,9 @@ def mock_storage(data=None):
 
     def mock_write_data(store, path, data_to_write):
         """Mock version of write data."""
-        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
         # To ensure that the data can be serialized
-        try:
-            raise_contains_mocks(data_to_write)
-        except ValueError as err:
-            raise ValueError(
-                f"Data to be stored contains mocks: {data_to_write}"
-            ) from err
+        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
+        raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
     async def mock_remove(store):
