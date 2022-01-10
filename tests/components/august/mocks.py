@@ -2,8 +2,6 @@
 import json
 import os
 import time
-
-# from unittest.mock import AsyncMock
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from yalexs.activity import (
@@ -207,6 +205,8 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, 
             side_effect=api_call_side_effects["unlock_return_activities"]
         )
 
+    api_instance.async_unlock_async = AsyncMock()
+    api_instance.async_lock_async = AsyncMock()
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
 
     return await _mock_setup_august(hass, api_instance, pubnub)
