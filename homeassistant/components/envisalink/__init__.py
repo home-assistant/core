@@ -1,6 +1,4 @@
 """Support for Envisalink devices."""
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -122,7 +120,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect: asyncio.Future[bool] = asyncio.Future()
+    sync_connect: asyncio.Future[
+        bool
+    ] = asyncio.Future()  # pylint: disable=unsubscriptable-object
 
     controller = EnvisalinkAlarmPanel(
         host,
