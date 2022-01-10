@@ -155,11 +155,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         return self._unit
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
