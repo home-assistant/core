@@ -5,12 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/webostv",
   "requirements": ["aiowebostv==0.1.1"],
   "codeowners": ["@bendavid"],
-  "ssdp": [{
-    "manufacturer": "LG Electronics.",
-    "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
-  }, {
-    "manufacturer": "LG Electronics",
-    "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
-  }],
+  "ssdp": [{"st": "urn:lge-com:service:webos-second-screen:1"}],
   "iot_class": "local_polling"
 }

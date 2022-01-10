@@ -98,6 +98,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except WEBOSTV_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(
+                    client.hello_info["deviceUUID"], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured({CONF_HOST: self._host})
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
                 return self.async_create_entry(title=self._name, data=data)
 

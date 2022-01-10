@@ -248,12 +248,7 @@ SSDP = {
     ],
     "webostv": [
         {
-            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
-            "manufacturer": "LG Electronics."
-        },
-        {
-            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
-            "manufacturer": "LG Electronics"
+            "st": "urn:lge-com:service:webos-second-screen:1"
         }
     ],
     "wemo": [
