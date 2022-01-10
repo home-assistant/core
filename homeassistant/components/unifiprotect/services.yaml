@@ -126,7 +126,7 @@ set_doorbell_message:
         text:
     duration:
       name: Duration
-      description: Number of minutes to display the message for before returning to the default message. Default is no expire.
+      description: Number of minutes to display the message for before returning to the default message. The default is to not expire.
       example: 5
       selector:
         number:
