@@ -45,15 +45,26 @@ def clean_tmpfile():
         pass
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: [],
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
+                PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
+                    "covers": {},
+                },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: [],
+                },
+            },
+        ),
     ],
 )
 async def test_no_covers(caplog: Any, hass: HomeAssistant, start_ha: Callable) -> None:
@@ -67,17 +78,30 @@ async def test_no_covers(caplog: Any, hass: HomeAssistant, start_ha: Callable) -
         assert "No covers added" in caplog.text
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
+                    "platform": DOMAIN,
+                    "covers": {
+                        "test": {},
+                    },
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_no_poll_when_cover_has_no_command_state(
@@ -95,18 +119,33 @@ async def test_no_poll_when_cover_has_no_command_state(
         assert not check_output.called
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_state": "echo state",
+                    "platform": DOMAIN,
+                    "covers": {
+                        "test": {
+                            "command_state": "echo state",
+                        },
+                    },
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_state": "echo state",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_poll_when_cover_has_command_state(
@@ -126,22 +165,41 @@ async def test_poll_when_cover_has_command_state(
         )
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_state": f"cat {PATH}",
-                    "command_open": f"echo 1 > {PATH}",
-                    "command_close": f"echo 1 > {PATH}",
-                    "command_stop": f"echo 0 > {PATH}",
-                    "value_template": "{{ value }}",
+                    "platform": DOMAIN,
+                    "covers": {
+                        "test": {
+                            "command_state": f"cat {PATH}",
+                            "command_open": f"echo 1 > {PATH}",
+                            "command_close": f"echo 1 > {PATH}",
+                            "command_stop": f"echo 0 > {PATH}",
+                            "value_template": "{{ value }}",
+                        },
+                    },
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_state": f"cat {PATH}",
+                        "command_open": f"echo 1 > {PATH}",
+                        "command_close": f"echo 1 > {PATH}",
+                        "command_stop": f"echo 0 > {PATH}",
+                        "value_template": "{{ value }}",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_state_value(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -174,19 +232,35 @@ async def test_state_value(hass: HomeAssistant, start_ha: Callable) -> None:
     assert entity_state.state == "closed"
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_state": "echo open",
-                    "value_template": "{{ value }}",
+                    "platform": DOMAIN,
+                    "covers": {
+                        "test": {
+                            "command_state": "echo open",
+                            "value_template": "{{ value }}",
+                        },
+                    },
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_state": "echo open",
+                        "value_template": "{{ value }}",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_reload(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -213,15 +287,28 @@ async def test_reload(hass: HomeAssistant, start_ha: Callable) -> None:
     assert hass.states.get("cover.from_yaml")
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {**ENTITY_NAME, "command_open": "exit 1"},
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
+                PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
+                    "covers": {
+                        "test": {"command_open": "exit 1"},
+                    },
+                },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {**ENTITY_NAME, "command_open": "exit 1"},
+                },
+            },
+        ),
     ],
 )
 async def test_move_cover_failure(
@@ -236,34 +323,64 @@ async def test_move_cover_failure(
     assert "Command failed" in caplog.text
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: [
-                    {
-                        "command_open": "echo open",
-                        "command_close": "echo close",
-                        "command_stop": "echo stop",
-                        "unique_id": "unique",
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
+                PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
+                    "covers": {
+                        "unique": {
+                            "command_open": "echo open",
+                            "command_close": "echo close",
+                            "command_stop": "echo stop",
+                            "unique_id": "unique",
+                        },
+                        "not_unique_1": {
+                            "command_open": "echo open",
+                            "command_close": "echo close",
+                            "command_stop": "echo stop",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                        "not_unique_2": {
+                            "command_open": "echo open",
+                            "command_close": "echo close",
+                            "command_stop": "echo stop",
+                            "unique_id": "not-so-unique-anymore",
+                        },
                     },
-                    {
-                        "command_open": "echo open",
-                        "command_close": "echo close",
-                        "command_stop": "echo stop",
-                        "unique_id": "not-so-unique-anymore",
-                    },
-                    {
-                        "command_open": "echo open",
-                        "command_close": "echo close",
-                        "command_stop": "echo stop",
-                        "unique_id": "not-so-unique-anymore",
-                    },
-                ],
+                },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: [
+                        {
+                            "command_open": "echo open",
+                            "command_close": "echo close",
+                            "command_stop": "echo stop",
+                            "unique_id": "unique",
+                        },
+                        {
+                            "command_open": "echo open",
+                            "command_close": "echo close",
+                            "command_stop": "echo stop",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                        {
+                            "command_open": "echo open",
+                            "command_close": "echo close",
+                            "command_stop": "echo stop",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                    ],
+                },
+            },
+        ),
     ],
 )
 async def test_unique_id(hass: HomeAssistant, start_ha: Callable) -> None:

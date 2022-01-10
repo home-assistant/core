@@ -47,19 +47,21 @@ def clean_tmpfile():
         pass
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_on": f"echo 1 > {PATH}",
-                    "command_off": f"echo 0 > {PATH}",
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_on": f"echo 1 > {PATH}",
+                        "command_off": f"echo 0 > {PATH}",
+                    },
                 },
             },
-        },
+        ),
     ],
 )
 async def test_state_none(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -93,22 +95,24 @@ async def test_state_none(hass: HomeAssistant, start_ha: Callable) -> None:
     assert entity_state.state == STATE_OFF
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_state": f"cat {PATH}",
-                    "command_on": f"echo 1 > {PATH}",
-                    "command_off": f"echo 0 > {PATH}",
-                    "value_template": '{{ value=="1" }}',
-                    "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_state": f"cat {PATH}",
+                        "command_on": f"echo 1 > {PATH}",
+                        "command_off": f"echo 0 > {PATH}",
+                        "value_template": '{{ value=="1" }}',
+                        "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
+                    },
                 },
             },
-        },
+        ),
     ],
 )
 async def test_state_value(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -144,22 +148,24 @@ async def test_state_value(hass: HomeAssistant, start_ha: Callable) -> None:
     assert entity_state.attributes.get("icon") == "mdi:off"
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_state": f"cat {PATH}",
-                    "command_on": f"echo '{ONCMD}' > {PATH}",
-                    "command_off": f"echo '{OFFCMD}' > {PATH}",
-                    "value_template": '{{ value_json.status=="ok" }}',
-                    "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_state": f"cat {PATH}",
+                        "command_on": f"echo '{ONCMD}' > {PATH}",
+                        "command_off": f"echo '{OFFCMD}' > {PATH}",
+                        "value_template": '{{ value_json.status=="ok" }}',
+                        "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
+                    },
                 },
             },
-        },
+        ),
     ],
 )
 async def test_state_json_value(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -195,20 +201,22 @@ async def test_state_json_value(hass: HomeAssistant, start_ha: Callable) -> None
     assert entity_state.attributes.get("icon") == "mdi:off"
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_state": f"cat {PATH}",
-                    "command_on": f"echo 1 > {PATH}",
-                    "command_off": f"echo 0 > {PATH}",
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_state": f"cat {PATH}",
+                        "command_on": f"echo 1 > {PATH}",
+                        "command_off": f"echo 0 > {PATH}",
+                    },
                 },
             },
-        },
+        ),
     ],
 )
 async def test_state_code(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -242,19 +250,21 @@ async def test_state_code(hass: HomeAssistant, start_ha: Callable) -> None:
     assert entity_state.state == STATE_ON
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_on": "echo 'on command'",
-                    "command_off": "echo 'off command'",
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_on": "echo 'on command'",
+                        "command_off": "echo 'off command'",
+                    },
                 },
             },
-        },
+        ),
     ],
 )
 async def test_assumed_state_should_be_true_if_command_state_is_none(
@@ -269,20 +279,22 @@ async def test_assumed_state_should_be_true_if_command_state_is_none(
     assert entity_state.attributes["assumed_state"]
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_on": "echo 'on command'",
-                    "command_off": "echo 'off command'",
-                    "command_state": "cat {}",
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_on": "echo 'on command'",
+                        "command_off": "echo 'off command'",
+                        "command_state": "cat {}",
+                    },
                 },
             },
-        },
+        ),
     ],
 )
 async def test_assumed_state_should_absent_if_command_state_present(
@@ -297,20 +309,22 @@ async def test_assumed_state_should_absent_if_command_state_present(
     assert "assumed_state" not in entity_state.attributes
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_on": "echo 'on command'",
-                    "command_off": "echo 'off command'",
-                    "friendly_name": "Test friendly name!",
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_on": "echo 'on command'",
+                        "command_off": "echo 'off command'",
+                        "friendly_name": "Test friendly name!",
+                    },
                 },
             },
-        },
+        ),
     ],
 )
 async def test_name_is_set_correctly(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -321,20 +335,37 @@ async def test_name_is_set_correctly(hass: HomeAssistant, start_ha: Callable) ->
     assert entity_state.name == "Test friendly name!"
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_on": "exit 0",
-                    "command_off": "exit 0'",
-                    "command_state": "echo 1",
+                    "platform": DOMAIN,
+                    "switches": {
+                        "test": {
+                            "command_on": "exit 0",
+                            "command_off": "exit 0'",
+                            "command_state": "echo 1",
+                        },
+                    },
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_on": "exit 0",
+                        "command_off": "exit 0'",
+                        "command_state": "echo 1",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_switch_command_state_fail(
@@ -363,20 +394,37 @@ async def test_switch_command_state_fail(
     assert "Command failed" in caplog.text
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_on": "exit 0",
-                    "command_off": "exit 0'",
-                    "command_state": "echo 1",
+                    "platform": DOMAIN,
+                    "switches": {
+                        "test": {
+                            "command_on": "exit 0",
+                            "command_off": "exit 0'",
+                            "command_state": "echo 1",
+                        },
+                    },
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_on": "exit 0",
+                        "command_off": "exit 0'",
+                        "command_state": "echo 1",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_switch_command_state_code_exceptions(
@@ -403,21 +451,39 @@ async def test_switch_command_state_code_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
-                    **ENTITY_NAME,
-                    "command_on": "exit 0",
-                    "command_off": "exit 0'",
-                    "command_state": "echo 1",
-                    "value_template": '{{ value=="1" }}',
+                    "platform": DOMAIN,
+                    "switches": {
+                        "test": {
+                            "command_on": "exit 0",
+                            "command_off": "exit 0'",
+                            "command_state": "echo 1",
+                            "value_template": '{{ value=="1" }}',
+                        },
+                    },
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command_on": "exit 0",
+                        "command_off": "exit 0'",
+                        "command_state": "echo 1",
+                        "value_template": '{{ value=="1" }}',
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_switch_command_state_value_exceptions(
@@ -444,15 +510,26 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: [],
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
+                PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
+                    "switches": {},
+                },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: [],
+                },
+            },
+        ),
     ],
 )
 async def test_no_switches(
@@ -464,31 +541,58 @@ async def test_no_switches(
     assert "No switches" in caplog.text
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
-                PLATFORM_DOMAIN: [
-                    {
-                        "command_on": "echo on",
-                        "command_off": "echo off",
-                        "unique_id": "unique",
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
+                PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
+                    "switches": {
+                        "unique": {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "unique",
+                        },
+                        "not_unique_1": {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                        "not_unique_2": {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "not-so-unique-anymore",
+                        },
                     },
-                    {
-                        "command_on": "echo on",
-                        "command_off": "echo off",
-                        "unique_id": "not-so-unique-anymore",
-                    },
-                    {
-                        "command_on": "echo on",
-                        "command_off": "echo off",
-                        "unique_id": "not-so-unique-anymore",
-                    },
-                ],
+                },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: [
+                        {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "unique",
+                        },
+                        {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                        {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                    ],
+                },
+            },
+        ),
     ],
 )
 async def test_unique_id(hass: HomeAssistant, start_ha: Callable) -> None:

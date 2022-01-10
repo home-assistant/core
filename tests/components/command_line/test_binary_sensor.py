@@ -14,20 +14,34 @@ from homeassistant.helpers import entity_registry
 ENTITY_NAME = {"name": "Test"}
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
                     **ENTITY_NAME,
                     "command": "echo 1",
                     "payload_on": "1",
                     "payload_off": "0",
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command": "echo 1",
+                        "payload_on": "1",
+                        "payload_off": "0",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_setup(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -40,13 +54,14 @@ async def test_setup(hass: HomeAssistant, start_ha: Callable) -> None:
     assert entity_state.name == "Test"
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
                     **ENTITY_NAME,
                     "command": "echo 10",
                     "payload_on": "1.0",
@@ -54,7 +69,21 @@ async def test_setup(hass: HomeAssistant, start_ha: Callable) -> None:
                     "value_template": "{{ value | multiply(0.1) }}",
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command": "echo 10",
+                        "payload_on": "1.0",
+                        "payload_off": "0",
+                        "value_template": "{{ value | multiply(0.1) }}",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_template(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -65,20 +94,34 @@ async def test_template(hass: HomeAssistant, start_ha: Callable) -> None:
     assert entity_state.state == STATE_ON
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 1)],
+            {
                 PLATFORM_DOMAIN: {
+                    "platform": DOMAIN,
                     **ENTITY_NAME,
                     "command": "echo 0",
                     "payload_on": "1",
                     "payload_off": "0",
                 },
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        **ENTITY_NAME,
+                        "command": "echo 0",
+                        "payload_on": "1",
+                        "payload_off": "0",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_sensor_off(hass: HomeAssistant, start_ha: Callable) -> None:
@@ -89,28 +132,55 @@ async def test_sensor_off(hass: HomeAssistant, start_ha: Callable) -> None:
     assert entity_state.state == STATE_OFF
 
 
-@pytest.mark.parametrize("domains", [[(DOMAIN, 1)]])
 @pytest.mark.parametrize(
-    "config",
+    "domains, config",
     [
-        {
-            DOMAIN: {
+        (
+            [(PLATFORM_DOMAIN, 3)],
+            {
                 PLATFORM_DOMAIN: [
                     {
+                        "platform": DOMAIN,
+                        **ENTITY_NAME,
                         "command": "echo 0",
                         "unique_id": "unique",
                     },
                     {
+                        "platform": DOMAIN,
+                        **ENTITY_NAME,
                         "command": "echo 1",
                         "unique_id": "not-so-unique-anymore",
                     },
                     {
+                        "platform": DOMAIN,
+                        **ENTITY_NAME,
                         "command": "echo 2",
                         "unique_id": "not-so-unique-anymore",
                     },
                 ],
             },
-        },
+        ),
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: [
+                        {
+                            "command": "echo 0",
+                            "unique_id": "unique",
+                        },
+                        {
+                            "command": "echo 1",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                        {
+                            "command": "echo 2",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                    ],
+                },
+            },
+        ),
     ],
 )
 async def test_unique_id(hass: HomeAssistant, start_ha: Callable) -> None:
