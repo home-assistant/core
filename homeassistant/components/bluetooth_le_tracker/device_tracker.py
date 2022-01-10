@@ -58,7 +58,7 @@ def setup_scanner(  # noqa: C901
     config: ConfigType,
     see: Callable[..., None],
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Set up the Bluetooth LE Scanner."""
 
     new_devices: dict[str, dict] = {}
@@ -158,7 +158,7 @@ def setup_scanner(  # noqa: C901
 
     if not devs_to_track and not track_new:
         _LOGGER.warning("No Bluetooth LE devices to track!")
-        return
+        return False
 
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
@@ -210,3 +210,4 @@ def setup_scanner(  # noqa: C901
         track_point_in_utc_time(hass, update_ble, dt_util.utcnow() + interval)
 
     update_ble(dt_util.utcnow())
+    return True
