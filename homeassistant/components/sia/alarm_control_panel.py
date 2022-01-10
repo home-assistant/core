@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from pysiaalarm import SIAEvent
 
@@ -28,17 +29,17 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
-    LOGGER,
     SIA_UNIQUE_ID_FORMAT_ALARM,
 )
-from .sia_entity_base import SIABaseEntity
-from .utils import SIARequiredKeysMixin
+from .sia_entity_base import SIABaseEntity, SIAEntityDescription
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class SIAAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription,
-    SIARequiredKeysMixin,
+    SIAEntityDescription,
 ):
     """Describes SIA alarm control panel entity."""
 
@@ -107,6 +108,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     """Class for SIA Alarm Control Panels."""
 
     entity_description: SIAAlarmControlPanelEntityDescription
+    _attr_supported_features = 0
 
     def __init__(
         self,
@@ -118,21 +120,24 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         entity_description: SIAAlarmControlPanelEntityDescription,
     ) -> None:
         """Create SIAAlarmControlPanel object."""
-        super().__init__(port, account, zone, ping_interval, entity_description)
-
-        self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_ALARM.format(
-            entry_id, account, zone
+        super().__init__(
+            port,
+            account,
+            zone,
+            ping_interval,
+            entity_description,
+            SIA_UNIQUE_ID_FORMAT_ALARM.format(entry_id, account, zone),
         )
+
         self._attr_state: StateType = None
         self._old_state: StateType = None
-        self._attr_supported_features = 0
 
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the alarm control panel."""
         new_state = self.entity_description.code_consequences.get(sia_event.code, None)
         if new_state is None:
             return False
-        LOGGER.debug("New state will be %s", new_state)
+        _LOGGER.debug("New state will be %s", new_state)
         if new_state == PREVIOUS_STATE:
             new_state = self._old_state
         self._attr_state, self._old_state = new_state, self._attr_state

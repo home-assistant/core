@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+import logging
 
 from pysiaalarm import SIAEvent
 
@@ -14,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -21,18 +23,18 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
-    LOGGER,
     SIA_HUB_ZONE,
     SIA_UNIQUE_ID_FORMAT_BINARY,
 )
-from .sia_entity_base import SIABaseEntity
-from .utils import SIARequiredKeysMixin
+from .sia_entity_base import SIABaseEntity, SIAEntityDescription
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class SIABinarySensorEntityDescription(
     BinarySensorEntityDescription,
-    SIARequiredKeysMixin,
+    SIAEntityDescription,
 ):
     """Describes SIA sensor entity."""
 
@@ -40,7 +42,7 @@ class SIABinarySensorEntityDescription(
 entity_description_power = SIABinarySensorEntityDescription(
     key="power",
     device_class=BinarySensorDeviceClass.POWER,
-    entity_category="diagnostic",
+    entity_category=EntityCategory.DIAGNOSTIC,
     code_consequences={
         "AT": False,
         "AR": True,
@@ -59,6 +61,7 @@ entity_description_smoke = SIABinarySensorEntityDescription(
         "KA": True,
         "KH": False,
     },
+    entity_registry_enabled_default=False,
     always_reset_availability=True,
 )
 
@@ -69,6 +72,7 @@ entity_description_moisture = SIABinarySensorEntityDescription(
         "WA": True,
         "WH": False,
     },
+    entity_registry_enabled_default=False,
     always_reset_availability=True,
 )
 
@@ -132,13 +136,18 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
         entity_description: SIABinarySensorEntityDescription,
     ) -> None:
         """Create SIABinarySensor object."""
-        super().__init__(port, account, zone, ping_interval, entity_description)
-
-        self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_BINARY.format(
-            entry_id,
+        super().__init__(
+            port,
             account,
             zone,
-            entity_description.device_class,
+            ping_interval,
+            entity_description,
+            SIA_UNIQUE_ID_FORMAT_BINARY.format(
+                entry_id,
+                account,
+                zone,
+                entity_description.device_class,
+            ),
         )
 
     def handle_last_state(self, last_state: State | None) -> None:
@@ -156,8 +165,8 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
         new_state = self.entity_description.code_consequences.get(sia_event.code, None)
         if new_state is None:
             return False
-        LOGGER.debug("New state will be %s", new_state)
-        self._attr_is_on = new_state
+        _LOGGER.debug("New state will be %s", new_state)
+        self._attr_is_on = bool(new_state)
         return True
 
     @callback

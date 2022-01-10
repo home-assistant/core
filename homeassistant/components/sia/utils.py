@@ -1,7 +1,6 @@
 """Helper functions for the SIA integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -9,36 +8,9 @@ from pysiaalarm import SIAEvent
 
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    ATTR_CODE,
-    ATTR_ID,
-    ATTR_MESSAGE,
-    ATTR_TIMESTAMP,
-    ATTR_ZONE,
-    SIA_NAME_FORMAT,
-    SIA_NAME_FORMAT_HUB,
-)
+from .const import ATTR_CODE, ATTR_ID, ATTR_MESSAGE, ATTR_TIMESTAMP, ATTR_ZONE
 
 PING_INTERVAL_MARGIN = 30
-
-
-@dataclass
-class SIARequiredKeysMixin:
-    """Mixin for required keys."""
-
-    code_consequences: dict[str, Any]
-    always_reset_availability: bool
-
-
-def get_name(
-    port: int, account: str, zone: int | None, device_class: str | None
-) -> str:
-    """Return the name of the zone."""
-    if not device_class:
-        device_class = "none"
-    if zone is None or zone == 0:
-        return SIA_NAME_FORMAT_HUB.format(port, account, device_class)
-    return SIA_NAME_FORMAT.format(port, account, zone, device_class)
 
 
 def get_unavailability_interval(ping: int) -> float:

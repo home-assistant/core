@@ -2,25 +2,47 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from dataclasses import dataclass
+import logging
 
 from pysiaalarm import SIAEvent
 
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import StateType
 
-from .alarm_control_panel import SIAAlarmControlPanelEntityDescription
-from .binary_sensor import SIABinarySensorEntityDescription
-from .const import DOMAIN, LOGGER, SIA_EVENT, SIA_HUB_ZONE
-from .utils import get_attr_from_sia_event, get_name, get_unavailability_interval
+from .const import DOMAIN, SIA_EVENT, SIA_HUB_ZONE, SIA_NAME_FORMAT, SIA_NAME_FORMAT_HUB
+from .utils import get_attr_from_sia_event, get_unavailability_interval
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def get_name(
+    port: int, account: str, zone: int | None, device_class: str | None
+) -> str:
+    """Return the name of the zone."""
+    if not device_class:
+        device_class = "none"
+    if zone is None or zone == 0:
+        return SIA_NAME_FORMAT_HUB.format(port, account, device_class)
+    return SIA_NAME_FORMAT.format(port, account, zone, device_class)
+
+
+@dataclass
+class SIAEntityDescription(EntityDescription):
+    """Required keys for SIA entities."""
+
+    code_consequences: dict[str, StateType | bool] = {}
+    always_reset_availability: bool = True
 
 
 class SIABaseEntity(RestoreEntity):
     """Base class for SIA entities."""
 
-    entity_description: SIAAlarmControlPanelEntityDescription | SIABinarySensorEntityDescription
+    entity_description: SIAEntityDescription
 
     def __init__(
         self,
@@ -28,8 +50,8 @@ class SIABaseEntity(RestoreEntity):
         account: str,
         zone: int | None,
         ping_interval: int,
-        entity_description: SIAAlarmControlPanelEntityDescription
-        | SIABinarySensorEntityDescription,
+        entity_description: SIAEntityDescription,
+        unique_id: str,
     ) -> None:
         """Create SIABaseEntity object."""
         self.port = port
@@ -37,6 +59,7 @@ class SIABaseEntity(RestoreEntity):
         self.zone = zone
         self.ping_interval = ping_interval
         self.entity_description = entity_description
+        self._attr_unique_id = unique_id
 
         self._cancel_availability_cb: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
@@ -46,6 +69,14 @@ class SIABaseEntity(RestoreEntity):
             self.account,
             self.zone,
             self.entity_description.device_class,
+        )
+        self._attr_device_info = DeviceInfo(
+            name=self.name,
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(
+                DOMAIN,
+                f"{self.port}_{self.account}",
+            ),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -83,7 +114,7 @@ class SIABaseEntity(RestoreEntity):
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
         """Listen to dispatcher events for this port and account and update state and attributes."""
-        LOGGER.debug("Received event: %s", sia_event)
+        _LOGGER.debug("Received event: %s", sia_event)
         if int(sia_event.ri) not in (self.zone, SIA_HUB_ZONE):
             return
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
@@ -117,17 +148,3 @@ class SIABaseEntity(RestoreEntity):
         """Set unavailable."""
         self._attr_available = False
         self.async_write_ha_state()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info."""
-        assert self.name
-        assert self.unique_id
-        return DeviceInfo(
-            name=self.name,
-            identifiers={(DOMAIN, self.unique_id)},
-            via_device=(
-                DOMAIN,
-                f"{self.port}_{self.account}",
-            ),
-        )
