@@ -21,6 +21,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.util.location import async_detect_location_info
 
 from .const import (
     DOMAIN,
@@ -220,8 +221,23 @@ class CloudRegisterView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
+        client_metadata = None
+
+        if location_info := await async_detect_location_info(
+            hass.helpers.aiohttp_client.async_get_clientsession()
+        ):
+            client_metadata = {
+                "NC_COUNTRY_CODE": location_info.country_code,
+                "NC_REGION_CODE": location_info.region_code,
+                "NC_ZIP_CODE": location_info.zip_code,
+            }
+
         async with async_timeout.timeout(REQUEST_TIMEOUT):
-            await cloud.auth.async_register(data["email"], data["password"])
+            await cloud.auth.async_register(
+                data["email"],
+                data["password"],
+                client_metadata=client_metadata,
+            )
 
         return self.json_message("ok")
 
