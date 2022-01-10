@@ -77,14 +77,11 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         self.entity_id = f"{DOMAIN}.{self.ha_id}"
         if fibaro_device.type in SENSOR_TYPES:
             self.entity_description = SENSOR_TYPES[fibaro_device.type]
-            self._attr_native_unit_of_measurement = (
-                self.entity_description.native_unit_of_measurement
-            )
         else:
             self.entity_description = SENSOR_TYPES["unknown"]
-            self._attr_native_unit_of_measurement = None
+
         with suppress(KeyError, ValueError):
-            if not self._attr_native_unit_of_measurement:
+            if not self.entyty_description.native_unit_of_measurement:
                 if self.fibaro_device.properties.unit == "lux":
                     self._attr_native_unit_of_measurement = LIGHT_LUX
                 elif self.fibaro_device.properties.unit == "C":
