@@ -357,7 +357,7 @@ async def test_websocket_status(
             "alexa_default_expose": None,
             "alexa_entity_configs": {},
             "alexa_report_state": False,
-            "google_report_state": False,
+            "google_report_state": True,
             "remote_enabled": False,
             "tts_default_voice": ["en-US", "female"],
         },
