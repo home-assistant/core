@@ -7,7 +7,12 @@ import time
 import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
@@ -56,7 +61,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
     hass.data[DOMAIN].start()
 
-    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
     return True
 
 

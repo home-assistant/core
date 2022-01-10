@@ -7,7 +7,7 @@ import time
 from maxcube.cube import MaxCube
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -76,8 +76,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if connection_failed >= len(gateways):
         return False
 
-    load_platform(hass, "climate", DOMAIN, {}, config)
-    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
 
     return True
 

@@ -5,7 +5,7 @@ import logging
 from sisyphus_control import Table
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -51,10 +51,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         tables[host] = TableHolder(hass, session, host, name)
 
         hass.async_create_task(
-            async_load_platform(hass, "light", DOMAIN, {CONF_HOST: host}, config)
+            async_load_platform(hass, Platform.LIGHT, DOMAIN, {CONF_HOST: host}, config)
         )
         hass.async_create_task(
-            async_load_platform(hass, "media_player", DOMAIN, {CONF_HOST: host}, config)
+            async_load_platform(
+                hass, Platform.MEDIA_PLAYER, DOMAIN, {CONF_HOST: host}, config
+            )
         )
 
     if isinstance(table_configs, dict):  # AUTODETECT_SCHEMA
