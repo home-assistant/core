@@ -39,10 +39,9 @@ def async_update_entry_from_discovery(
 ) -> bool:
     """Update a config entry from a discovery."""
     data_updates: dict[str, Any] = {}
-    mac_address = device.mac
     updates: dict[str, Any] = {}
     if not entry.unique_id:
-        updates["unique_id"] = dr.format_mac(mac_address)
+        updates["unique_id"] = dr.format_mac(device.mac)
     if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
         updates["title"] = data_updates[CONF_NAME] = device.name
     if not entry.data.get(CONF_MODEL) and "-" in device.hostname:

@@ -45,7 +45,9 @@
             "last": "Recuerda el \u00faltimo estado",
             "memory": "Recuerda el \u00faltimo estado",
             "off": "Apagado",
-            "on": "Encendido"
+            "on": "Encendido",
+            "power_off": "Apagado",
+            "power_on": "Encendido"
         }
     }
 }

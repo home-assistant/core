@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
             "cannot_connect": "La conexi\u00f3n con las credenciales del configuration.yaml ha fallado, por favor elim\u00ednelo de yaml y utilice el flujo de configuraci\u00f3n",
             "single_instance_allowed": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "unknown": "La conexi\u00f3n con las credenciales de configuration.yaml ha fallado con un error desconocido, por favor, elim\u00ednelo de yaml y utilice el flujo de configuraci\u00f3n."

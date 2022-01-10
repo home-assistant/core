@@ -7,7 +7,9 @@
             "heating_temp": "Temperatura de calentamiento",
             "reserve_1": "Reserva 1",
             "reserve_2": "Reserva 2",
-            "reserve_3": "Reserva 3"
+            "reserve_3": "Reserva 3",
+            "standby": "Standby",
+            "warm": "Conservaci\u00f3n del calor"
         }
     }
 }
