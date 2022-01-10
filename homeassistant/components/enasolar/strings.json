@@ -2,12 +2,10 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup EnaSolar Inverter connection",
         "data": {
           "host": "FQDN or IP Address of the Inverter",
           "name": "A name for the Inverter (optional)"
-        },
-        "description": "Enter the connection data"
+        }
       },
       "inverter": {
         "title": "EnaSolar Model Characteristics",

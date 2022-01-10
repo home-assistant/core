@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_ENERGY,
@@ -21,7 +22,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
@@ -44,7 +45,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Add enasolar entry."""
 
     # Use all sensors by default, but split them to have two update frequencies
@@ -53,13 +56,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     enasolar = hass.data[DOMAIN][config_entry.entry_id][ENASOLAR]
 
-    if config_entry.options != {}:
-        enasolar.sun_up = dt_util.parse_time(config_entry.options[CONF_SUN_UP])
-        enasolar.sun_down = dt_util.parse_time(config_entry.options[CONF_SUN_DOWN])
-    else:
-        enasolar.sun_up = dt_util.parse_time(DEFAULT_SUN_UP)
-        enasolar.sun_down = dt_util.parse_time(DEFAULT_SUN_DOWN)
-
+    enasolar.sun_up = dt_util.parse_time(
+        config_entry.options.get(CONF_SUN_UP, DEFAULT_SUN_UP)
+    )
+    enasolar.sun_down = dt_util.parse_time(
+        config_entry.options.get(CONF_SUN_DOWN, DEFAULT_SUN_DOWN)
+    )
     enasolar.capability = config_entry.data[CONF_CAPABILITY]
     enasolar.dc_strings = config_entry.data[CONF_DC_STRINGS]
     enasolar.max_output = config_entry.data[CONF_MAX_OUTPUT]
@@ -188,7 +190,9 @@ def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TY
 class EnaSolarSensor(SensorEntity):
     """Representation of a EnaSolar sensor."""
 
-    def __init__(self, pyenasolar_sensor, inverter_name=None, serial_no=None):
+    def __init__(
+        self, pyenasolar_sensor, inverter_name: str = None, serial_no: str = None
+    ):
         """Initialize the EnaSolar sensor."""
         self.sensor = pyenasolar_sensor
         if inverter_name:
@@ -204,13 +208,6 @@ class EnaSolarSensor(SensorEntity):
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         self._attr_native_unit_of_measurement = ENASOLAR_UNIT_MAPPINGS[self.sensor.unit]
         self._attr_should_poll = False
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        if hasattr(self, "_attr_name"):
-            return self._attr_name
-        return None
 
     @property
     def native_value(self):

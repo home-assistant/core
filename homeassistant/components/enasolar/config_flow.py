@@ -11,7 +11,7 @@ import pyenasolar
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import OptionsFlow
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -38,10 +38,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_ip(host):
+def _get_ip(host: str) -> str | None:
     """Get the ip address from the host name."""
     with contextlib.suppress(socket.gaierror):
         return socket.gethostbyname(host)
+    return None
 
 
 class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -56,7 +57,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._enasolar = pyenasolar.EnaSolar()
         self._data: dict[str, Any] = {}
 
-    def _conf_for_inverter_exists(self, serial) -> bool:
+    def _conf_for_inverter_exists(self, serial: str) -> bool:
         """Return True if inverter exists in configuration."""
         return any(
             entry
@@ -64,7 +65,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if serial == entry.unique_id
         )
 
-    async def _try_connect(self, host) -> str | None:
+    async def _try_connect(self, host: str) -> str | None:
         """Needed to mock connection when running tests."""
         error = None
         try:
@@ -78,17 +79,19 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             error = "unknown"
         return error
 
-    def get_serial_no(self):
+    def get_serial_no(self) -> str:
         """Needed to mock serial_no when running tests."""
         return self._enasolar.get_serial_no()
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get options flow for this handler."""
         return EnaSolarOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Step when user initializes an integration."""
         _errors = {}
 
@@ -108,7 +111,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if self._conf_for_inverter_exists(self.get_serial_no()):
                         return self.async_abort(reason="already_configured")
                     await self.async_set_unique_id(self.get_serial_no())
-                    return await self.async_step_inverter()
+                    return await self.async_step_inverter(None)
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
@@ -126,7 +129,9 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    async def async_step_inverter(self, user_input=None) -> FlowResult:
+    async def async_step_inverter(
+        self, user_input: dict[str, Any] | None
+    ) -> FlowResult:
         """Give the user the opportunities to override inverter config."""
 
         _errors = {}
@@ -170,12 +175,12 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
     """Allow Polling window to be updated."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize EnaSolar options flow."""
         self.config_entry = config_entry
         self._options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None) -> FlowResult:
         """Allow user to reset the Polling times."""
 
         _errors = {}
