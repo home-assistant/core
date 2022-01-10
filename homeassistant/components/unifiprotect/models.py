@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data import NVR, ProtectAdoptableDeviceModel
 from pyunifiprotect.data.base import ProtectDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
@@ -25,7 +24,7 @@ class ProtectRequiredKeysMixin:
     ufp_value_fn: Callable[[ProtectAdoptableDeviceModel | NVR], Any] | None = None
     ufp_enabled: str | None = None
 
-    def get_ufp_value(self, obj: ProtectAdoptableDeviceModel | NVR) -> Any:
+    def get_ufp_value(self, obj: ProtectDeviceModel) -> Any:
         """Return value from UniFi Protect device."""
         if self.ufp_value is not None:
             return get_nested_attr(obj, self.ufp_value)
@@ -53,7 +52,7 @@ class ProtectSetableKeysMixin(ProtectRequiredKeysMixin):
         [ProtectDeviceModel, Any], Coroutine[Any, Any, None]
     ] | None = None
 
-    async def ufp_set(self, obj: ProtectAdoptableDeviceModel, value: Any) -> None:
+    async def ufp_set(self, obj: ProtectDeviceModel, value: Any) -> None:
         """Set value for UniFi Protect device."""
         assert isinstance(self, EntityDescription)
         _LOGGER.debug("Setting %s to %s for %s", self.name, value, obj.name)
