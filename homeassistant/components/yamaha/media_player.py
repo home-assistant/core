@@ -149,9 +149,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Yamaha platform."""
-    if not discovery_info:
-        return
-
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
     # for. Map each device from its zone_id .
