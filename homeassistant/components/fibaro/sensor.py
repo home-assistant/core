@@ -150,6 +150,6 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
     def update(self):
         """Update the state."""
         with suppress(KeyError, ValueError):
-            self.current_value = convert(
+            self._attr_native_value = convert(
                 self.fibaro_device.properties.energy, float, 0.0
             )
