@@ -31,7 +31,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator):
         self._LOGGER = _LOGGER
 
     async def _async_update_data(self):
-        _LOGGER.debug("Calling update loop on Intellifire")
+        _LOGGER.debug("Calling update loop on IntelliFire")
         async with timeout(100):
             try:
                 await self._api.poll(logging_level=logging.DEBUG)
