@@ -66,8 +66,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
-        vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_REMOVE_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -79,8 +83,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays = config.get(CONF_ADD_HOLIDAYS, [])
-    remove_holidays = config.get(CONF_REMOVE_HOLIDAYS, [])
+    add_holidays = config[CONF_ADD_HOLIDAYS]
+    remove_holidays = config[CONF_REMOVE_HOLIDAYS]
     country = config[CONF_COUNTRY]
     days_offset = config[CONF_OFFSET]
     excludes = config[CONF_EXCLUDES]
