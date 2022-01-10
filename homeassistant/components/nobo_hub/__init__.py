@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_SERIAL, DOMAIN
 
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 
 _LOGGER = logging.getLogger(__name__)
 
