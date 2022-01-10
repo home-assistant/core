@@ -356,7 +356,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["blue"] = rgb[2]
             values["hue"] = hs_color[0]
             values["sat"] = hs_color[1]
-            
+
             if self._optimistic:
                 self._hs = kwargs[ATTR_HS_COLOR]
 
