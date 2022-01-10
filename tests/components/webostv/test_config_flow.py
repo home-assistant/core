@@ -1,7 +1,7 @@
 """Test the WebOS Tv config flow."""
 from unittest.mock import Mock, patch
 
-from bscpylgtv import PyLGTVPairException
+from aiowebostv import WebOsTvPairError
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -144,7 +144,7 @@ async def test_form_pairexception(hass, client):
         data=MOCK_YAML_CONFIG,
     )
 
-    client.connect = Mock(side_effect=PyLGTVPairException("error"))
+    client.connect = Mock(side_effect=WebOsTvPairError("error"))
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )

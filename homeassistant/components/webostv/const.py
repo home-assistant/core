@@ -1,7 +1,7 @@
 """Constants used for LG webOS Smart TV."""
 import asyncio
 
-from bscpylgtv import PyLGTVCmdException
+from aiowebostv import WebOsTvCommandError
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 DOMAIN = "webostv"
@@ -29,7 +29,7 @@ WEBOSTV_EXCEPTIONS = (
     ConnectionClosed,
     ConnectionClosedOK,
     ConnectionRefusedError,
-    PyLGTVCmdException,
+    WebOsTvCommandError,
     asyncio.TimeoutError,
     asyncio.CancelledError,
 )

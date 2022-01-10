@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from urllib.parse import urlparse
 
-from bscpylgtv import PyLGTVPairException
+from aiowebostv import WebOsTvPairError
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -93,7 +93,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             try:
                 client = await async_control_connect(self._host, None)
-            except PyLGTVPairException:
+            except WebOsTvPairError:
                 return self.async_abort(reason="error_pairing")
             except WEBOSTV_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
