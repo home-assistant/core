@@ -28,9 +28,9 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .api import AvmApi
 from .common import FritzBoxBaseEntity, FritzBoxTools
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
+from .wrapper import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,7 +277,7 @@ async def async_setup_entry(
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_device: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-    api = AvmApi(avm_device)
+    api = AvmWrapper(avm_device)
 
     dsl: bool = False
     dslinterface = await api.get_wan_dsl_interface_config()

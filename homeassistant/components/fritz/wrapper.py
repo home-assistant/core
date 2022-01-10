@@ -1,4 +1,4 @@
-"""AVM FRITZ!Box connectivity sensor."""
+"""AVM FRITZ!Box API wrapper."""
 from __future__ import annotations
 
 from functools import partial
@@ -19,11 +19,11 @@ from .common import FritzBoxTools
 _LOGGER = logging.getLogger(__name__)
 
 
-class AvmApi:
-    """Setup AVM api calls."""
+class AvmWrapper:
+    """Setup AVM wrapper for API calls."""
 
     def __init__(self, avm_device: FritzBoxTools) -> None:
-        """Init API class."""
+        """Init wrapper API class."""
 
         self._avm_device = avm_device
 
