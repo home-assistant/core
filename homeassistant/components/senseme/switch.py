@@ -48,7 +48,7 @@ def _set_motion_light_auto(device: SensemeDevice, value: bool) -> None:
     device.motion_light_auto = value
 
 
-FAN_SWITCHS = [
+FAN_SWITCHES = [
     # Turning on sleep mode will disable Whoosh
     SenseMESwitchEntityDescription(
         key="sleep_mode",
@@ -99,14 +99,14 @@ async def async_setup_entry(
     descriptions: list[SenseMESwitchEntityDescription] = []
 
     if device.is_fan:
-        descriptions.extend(FAN_SWITCHS)
+        descriptions.extend(FAN_SWITCHES)
         if device.has_light:
             descriptions.extend(FAN_LIGHT_SWITCHES)
     elif device.is_light:
         descriptions.extend(LIGHT_SWITCHES)
 
     async_add_entities(
-        [HASensemeSwitch(device, description) for description in descriptions]
+        HASensemeSwitch(device, description) for description in descriptions
     )
 
 
