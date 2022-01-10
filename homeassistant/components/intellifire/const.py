@@ -1,4 +1,4 @@
-"""Constants for the Intellifire integration."""
+"""Constants for the IntelliFire integration."""
 from __future__ import annotations
 
 import logging
