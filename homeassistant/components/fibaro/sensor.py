@@ -68,9 +68,9 @@ def setup_platform(
     for device in hass.data[FIBARO_DEVICES]["sensor"]:
         entities.append(FibaroSensor(device))
     for device_type in ("cover", "light", "switch"):
-    	for device in hass.data[FIBARO_DEVICES][device_type]:
-        	if "energy" in device.interfaces:
-            	entities.append(FibaroEnergySensor(device))
+        for device in hass.data[FIBARO_DEVICES][device_type]:
+            if "energy" in device.interfaces:
+                entities.append(FibaroEnergySensor(device))
 
     add_entities(entities, True)
 
@@ -132,9 +132,10 @@ class FibaroSensor(FibaroDevice, SensorEntity):
 class FibaroEnergySensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Energy Sensor."""
 
-	_attr_device_class = SensorDeviceClass.ENERGY
-	_attr_state_class = SensorStateClass.TOTAL_INCREASING
-	_attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
     def __init__(self, fibaro_device):
         """Initialize the sensor."""
         self.current_value = None
@@ -143,10 +144,9 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         self.entity_id = f"{DOMAIN}.{self.ha_id}_energy"
         self._name = f"{fibaro_device.friendly_name} Energy"
 
-
     def update(self):
         """Update the state."""
         with suppress(KeyError, ValueError):
             self._attr_native_value = convert(
-                self.fibaro_device.properties.energy, float, 0.0
+                self.fibaro_device.properties.energy, float
             )
