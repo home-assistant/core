@@ -98,7 +98,6 @@ async def async_restore_climate_entities(
         ent_reg, config_entry.entry_id
     )
 
-    restore_entries = []
     for entry in entries:
 
         if entry.domain != CLIMATE_DOMAIN:
@@ -106,11 +105,7 @@ async def async_restore_climate_entities(
 
         _LOGGER.debug("Setup sleeping climate device %s", wrapper.name)
         _LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
-
-        restore_entries.append(BlockSleepingClimate(wrapper, None, None, entry))
-
-    if restore_entries:
-        async_add_entities(restore_entries)
+        async_add_entities([BlockSleepingClimate(wrapper, None, None, entry)])
 
 
 class BlockSleepingClimate(
