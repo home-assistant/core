@@ -68,7 +68,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         hostname = discovery_info.hostname
-        if hostname is None or not hostname.startswith("lutron-"):
+        if hostname is None or not hostname.lower().startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
 
         self.lutron_id = hostname.split("-")[1].replace(".local.", "")

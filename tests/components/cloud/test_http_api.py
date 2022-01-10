@@ -15,6 +15,7 @@ from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN, RequireRelink
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.core import State
+from homeassistant.util.location import LocationInfo
 
 from . import mock_cloud, mock_cloud_prefs
 
@@ -203,16 +204,60 @@ async def test_logout_view_unknown_error(hass, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_register_view(mock_cognito, cloud_client):
-    """Test logging out."""
-    req = await cloud_client.post(
-        "/api/cloud/register", json={"email": "hello@bla.com", "password": "falcon42"}
-    )
+async def test_register_view_no_location(mock_cognito, cloud_client):
+    """Test register without location."""
+    with patch(
+        "homeassistant.components.cloud.http_api.async_detect_location_info",
+        return_value=None,
+    ):
+        req = await cloud_client.post(
+            "/api/cloud/register",
+            json={"email": "hello@bla.com", "password": "falcon42"},
+        )
     assert req.status == HTTPStatus.OK
     assert len(mock_cognito.register.mock_calls) == 1
-    result_email, result_pass = mock_cognito.register.mock_calls[0][1]
+    call = mock_cognito.register.mock_calls[0]
+    result_email, result_pass = call.args
     assert result_email == "hello@bla.com"
     assert result_pass == "falcon42"
+    assert call.kwargs["client_metadata"] is None
+
+
+async def test_register_view_with_location(mock_cognito, cloud_client):
+    """Test register with location."""
+    with patch(
+        "homeassistant.components.cloud.http_api.async_detect_location_info",
+        return_value=LocationInfo(
+            **{
+                "country_code": "XX",
+                "zip_code": "12345",
+                "region_code": "GH",
+                "ip": "1.2.3.4",
+                "city": "Gotham",
+                "region_name": "Gotham",
+                "time_zone": "Earth/Gotham",
+                "currency": "XXX",
+                "latitude": "12.34567",
+                "longitude": "12.34567",
+                "use_metric": True,
+            }
+        ),
+    ):
+        req = await cloud_client.post(
+            "/api/cloud/register",
+            json={"email": "hello@bla.com", "password": "falcon42"},
+        )
+    assert req.status == HTTPStatus.OK
+    assert len(mock_cognito.register.mock_calls) == 1
+    call = mock_cognito.register.mock_calls[0]
+    result_email, result_pass = call.args
+    assert result_email == "hello@bla.com"
+    assert result_pass == "falcon42"
+    assert call.kwargs["client_metadata"] == {
+        "NC_COUNTRY_CODE": "XX",
+        "NC_REGION_CODE": "GH",
+        "NC_ZIP_CODE": "12345",
+    }
 
 
 async def test_register_view_bad_data(mock_cognito, cloud_client):
@@ -357,7 +402,7 @@ async def test_websocket_status(
             "alexa_default_expose": None,
             "alexa_entity_configs": {},
             "alexa_report_state": False,
-            "google_report_state": False,
+            "google_report_state": True,
             "remote_enabled": False,
             "tts_default_voice": ["en-US", "female"],
         },

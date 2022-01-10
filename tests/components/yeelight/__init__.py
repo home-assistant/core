@@ -157,7 +157,7 @@ def _mocked_bulb(cannot_connect=False):
     return bulb
 
 
-def _patched_ssdp_listener(info, *args, **kwargs):
+def _patched_ssdp_listener(info: ssdp.SsdpHeaders, *args, **kwargs):
     listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):
@@ -181,12 +181,7 @@ def _patch_discovery(no_device=False, capabilities=None):
     def _generate_fake_ssdp_listener(*args, **kwargs):
         info = None
         if not no_device:
-            info = ssdp.SsdpServiceInfo(
-                ssdp_usn="",
-                ssdp_st=scanner.SSDP_ST,
-                upnp={},
-                ssdp_headers=capabilities or CAPABILITIES,
-            )
+            info = capabilities or CAPABILITIES
         return _patched_ssdp_listener(info, *args, **kwargs)
 
     return patch(

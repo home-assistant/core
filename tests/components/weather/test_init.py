@@ -168,3 +168,26 @@ async def test_precipitation_conversion(
         native_value, native_unit, unit_system.accumulated_precipitation_unit
     )
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected, rel=1e-2)
+
+
+async def test_none_forecast(
+    hass,
+    enable_custom_integrations,
+):
+    """Test that conversion with None values succeeds."""
+    entity0 = await create_entity(
+        hass,
+        pressure=None,
+        pressure_unit=PRESSURE_INHG,
+        wind_speed=None,
+        wind_speed_unit=SPEED_METERS_PER_SECOND,
+        precipitation=None,
+        precipitation_unit=LENGTH_MILLIMETERS,
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    assert forecast[ATTR_FORECAST_PRESSURE] is None
+    assert forecast[ATTR_FORECAST_WIND_SPEED] is None
+    assert forecast[ATTR_FORECAST_PRECIPITATION] is None

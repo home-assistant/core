@@ -7,13 +7,17 @@ import aiobotocore
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CREDENTIALS,
     CONF_NAME,
     CONF_PROFILE_NAME,
     CONF_SERVICE,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
 from .const import (
@@ -81,7 +85,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up AWS component."""
     hass.data[DATA_HASS_CONFIG] = config
 
@@ -101,13 +105,13 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry.
 
     Validate and save sessions per aws credential.
     """
-    config = hass.data.get(DATA_HASS_CONFIG)
-    conf = hass.data.get(DATA_CONFIG)
+    config = hass.data[DATA_HASS_CONFIG]
+    conf = hass.data[DATA_CONFIG]
 
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
@@ -146,7 +150,9 @@ async def async_setup_entry(hass, entry):
     # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
         hass.async_create_task(
-            discovery.async_load_platform(hass, "notify", DOMAIN, notify_config, config)
+            discovery.async_load_platform(
+                hass, Platform.NOTIFY, DOMAIN, notify_config, config
+            )
         )
 
     return validation

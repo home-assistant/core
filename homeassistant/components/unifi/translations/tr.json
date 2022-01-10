@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Sunucu",
                     "password": "Parola",
                     "port": "Port",
                     "site": "Site Kimli\u011fi",

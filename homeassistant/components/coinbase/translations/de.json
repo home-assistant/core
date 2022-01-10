@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_auth_key": "API-Anmeldeinformationen von Coinbase aufgrund eines ung\u00fcltigen API-Schl\u00fcssels abgelehnt.",
+            "invalid_auth_secret": "API-Anmeldeinformationen von Coinbase aufgrund eines ung\u00fcltigen API-Geheimnisses abgelehnt.",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {

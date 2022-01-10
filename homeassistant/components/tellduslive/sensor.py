@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from homeassistant.components import sensor, tellduslive
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_MILLIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
@@ -16,7 +18,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UV_INDEX,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entry import TelldusLiveEntity
 
@@ -38,13 +42,13 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_TEMPERATURE,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SENSOR_TYPE_HUMIDITY: SensorEntityDescription(
         key=SENSOR_TYPE_HUMIDITY,
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
     SENSOR_TYPE_RAINRATE: SensorEntityDescription(
         key=SENSOR_TYPE_RAINRATE,
@@ -86,13 +90,13 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_LUMINANCE,
         name="Luminance",
         native_unit_of_measurement=LIGHT_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     SENSOR_TYPE_DEW_POINT: SensorEntityDescription(
         key=SENSOR_TYPE_DEW_POINT,
         name="Dew Point",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SENSOR_TYPE_BAROMETRIC_PRESSURE: SensorEntityDescription(
         key=SENSOR_TYPE_BAROMETRIC_PRESSURE,
@@ -102,7 +106,11 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_sensor(device_id):

@@ -9,6 +9,7 @@ from async_timeout import timeout
 import pyevilgenius
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
@@ -19,7 +20,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
-PLATFORMS = ["light"]
+PLATFORMS = [Platform.LIGHT]
 
 UPDATE_INTERVAL = 10
 

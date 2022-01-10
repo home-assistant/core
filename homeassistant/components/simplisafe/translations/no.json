@@ -32,11 +32,12 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Autorisasjonskode",
                     "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
                     "password": "Passord",
                     "username": "E-post"
                 },
-                "description": "Fra og med 2021 har SimpliSafe flyttet til en ny godkjenningsmekanisme via nettappen. P\u00e5 grunn av tekniske begrensninger er det et manuelt trinn p\u00e5 slutten av denne prosessen; S\u00f8rg for at du leser [dokumentasjonen] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) f\u00f8r du starter. \n\n N\u00e5r du er klar, klikker du [her] ( {url} ) for \u00e5 \u00e5pne SimpliSafe -webappen og legge inn legitimasjonen din. N\u00e5r prosessen er fullf\u00f8rt, g\u00e5r du tilbake hit og klikker Send.",
+                "description": "SimpliSafe autentiserer med Home Assistant via SimpliSafe-nettappen. P\u00e5 grunn av tekniske begrensninger er det et manuelt trinn p\u00e5 slutten av denne prosessen; s\u00f8rg for at du leser [dokumentasjonen]( {docs_url} ) f\u00f8r du starter. \n\n 1. Klikk [her]( {url} ) for \u00e5 \u00e5pne SimpliSafe-nettappen og angi legitimasjonen din. \n\n 2. N\u00e5r p\u00e5loggingsprosessen er fullf\u00f8rt, g\u00e5 tilbake hit og skriv inn autorisasjonskoden nedenfor.",
                 "title": "Fyll ut informasjonen din."
             }
         }

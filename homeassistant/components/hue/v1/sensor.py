@@ -6,16 +6,13 @@ from aiohue.v1.sensors import (
     TYPE_ZLL_TEMPERATURE,
 )
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    LIGHT_LUX,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.helpers.entity import EntityCategory
 
 from ..const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
@@ -42,7 +39,7 @@ class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
 class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
-    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_device_class = SensorDeviceClass.ILLUMINANCE
     _attr_native_unit_of_measurement = LIGHT_LUX
 
     @property
@@ -77,8 +74,8 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
 class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -93,10 +90,10 @@ class HueTemperature(GenericHueGaugeSensorEntity):
 class HueBattery(GenericHueSensor, SensorEntity):
     """Battery class for when a batt-powered device is only represented as an event."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def unique_id(self):

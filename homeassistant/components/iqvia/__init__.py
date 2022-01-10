@@ -11,6 +11,7 @@ from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -37,7 +38,7 @@ from .const import (
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

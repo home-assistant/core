@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Final, Literal, Tuple, TypedDict
 
+from homeassistant.const import Platform
+
 ATTR_DEVICES: Final = "devices"
 ATTR_GATEWAY_ID: Final = "gateway_id"
 
@@ -144,15 +146,15 @@ SWITCH_TYPES: dict[SensorType, set[ValueType]] = {
 }
 
 
-PLATFORM_TYPES: dict[str, dict[SensorType, set[ValueType]]] = {
-    "binary_sensor": BINARY_SENSOR_TYPES,
-    "climate": CLIMATE_TYPES,
-    "cover": COVER_TYPES,
-    "device_tracker": DEVICE_TRACKER_TYPES,
-    "light": LIGHT_TYPES,
-    "notify": NOTIFY_TYPES,
-    "sensor": SENSOR_TYPES,
-    "switch": SWITCH_TYPES,
+PLATFORM_TYPES: dict[Platform, dict[SensorType, set[ValueType]]] = {
+    Platform.BINARY_SENSOR: BINARY_SENSOR_TYPES,
+    Platform.CLIMATE: CLIMATE_TYPES,
+    Platform.COVER: COVER_TYPES,
+    Platform.DEVICE_TRACKER: DEVICE_TRACKER_TYPES,
+    Platform.LIGHT: LIGHT_TYPES,
+    Platform.NOTIFY: NOTIFY_TYPES,
+    Platform.SENSOR: SENSOR_TYPES,
+    Platform.SWITCH: SWITCH_TYPES,
 }
 
 FLAT_PLATFORM_TYPES: dict[tuple[str, SensorType], set[ValueType]] = {
@@ -161,13 +163,13 @@ FLAT_PLATFORM_TYPES: dict[tuple[str, SensorType], set[ValueType]] = {
     for s_type_name, v_type_name in platform_types.items()
 }
 
-TYPE_TO_PLATFORMS: dict[SensorType, list[str]] = defaultdict(list)
+TYPE_TO_PLATFORMS: dict[SensorType, list[Platform]] = defaultdict(list)
 
 for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
         TYPE_TO_PLATFORMS[s_type_name].append(platform)
 
 PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
-    "notify",
-    "device_tracker",
+    Platform.NOTIFY,
+    Platform.DEVICE_TRACKER,
 }

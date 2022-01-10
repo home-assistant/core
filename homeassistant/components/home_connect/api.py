@@ -7,12 +7,12 @@ import homeconnect
 from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     CONF_DEVICE,
     CONF_ENTITIES,
-    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TIME_SECONDS,
 )
@@ -159,7 +159,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         device.
         """
         sensors = {
-            "Remaining Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, 1),
+            "Remaining Program Time": (None, None, SensorDeviceClass.TIMESTAMP, 1),
             "Duration": (TIME_SECONDS, "mdi:update", None, 1),
             "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
         }

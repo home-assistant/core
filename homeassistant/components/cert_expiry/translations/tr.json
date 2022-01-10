@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "name": "Sertifikan\u0131n ad\u0131",
                     "port": "Port"
                 },

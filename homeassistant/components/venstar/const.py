@@ -25,5 +25,6 @@ HOLD_MODE_OFF = "off"
 HOLD_MODE_TEMPERATURE = "temperature"
 
 VENSTAR_TIMEOUT = 5
+VENSTAR_SLEEP = 1.0
 
 _LOGGER = logging.getLogger(__name__)

@@ -4,6 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -54,7 +57,9 @@ SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the StarLine switch."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = [

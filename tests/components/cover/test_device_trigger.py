@@ -10,6 +10,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
 )
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     CONF_PLATFORM,
     STATE_CLOSED,
@@ -125,7 +126,9 @@ async def test_get_triggers(
         }
         for trigger in expected_trigger_types
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -149,11 +152,13 @@ async def test_get_trigger_capabilities(
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 4
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == {
             "extra_fields": [
@@ -202,11 +207,13 @@ async def test_get_trigger_capabilities_set_pos(
             },
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         if trigger["type"] == "position":
             assert capabilities == expected_capabilities
@@ -262,11 +269,13 @@ async def test_get_trigger_capabilities_set_tilt_pos(
             },
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         if trigger["type"] == "tilt_position":
             assert capabilities == expected_capabilities

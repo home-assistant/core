@@ -8,14 +8,14 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
 from .const import (
-    ATTR_FORECAST_DAYTIME,
     ATTRIBUTION,
     CONDITION_CLASSES,
     DEFAULT_NAME,
@@ -33,7 +33,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigType, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
@@ -47,7 +47,7 @@ async def async_setup_entry(
     )
 
 
-def _build_forecast_data(timestep, use_3hourly):
+def _build_forecast_data(timestep):
     data = {}
     data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
     if timestep.weather:
@@ -60,9 +60,6 @@ def _build_forecast_data(timestep, use_3hourly):
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
         data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
-    if not use_3hourly:
-        # if it's close to noon, mark as Day, otherwise as Night
-        data[ATTR_FORECAST_DAYTIME] = abs(timestep.date.hour - 12) < 6
     return data
 
 
@@ -86,7 +83,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         )
         self._attr_name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
         self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
-        self._use_3hourly = use_3hourly
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
@@ -160,7 +156,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         if self.coordinator.data.forecast is None:
             return None
         return [
-            _build_forecast_data(timestep, self._use_3hourly)
+            _build_forecast_data(timestep)
             for timestep in self.coordinator.data.forecast
         ]
 

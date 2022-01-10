@@ -1,6 +1,7 @@
 """The WiLight integration."""
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -10,7 +11,7 @@ from .parent_device import WiLightParent
 DOMAIN = "wilight"
 
 # List the platforms that you want to support.
-PLATFORMS = ["cover", "fan", "light"]
+PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

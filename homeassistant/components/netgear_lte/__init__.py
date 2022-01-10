@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -28,6 +29,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from . import sensor_types
 
@@ -171,7 +173,7 @@ class LTEData:
         return next(iter(self.modem_data.values()))
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
     if DATA_KEY not in hass.data:
         websession = async_create_clientsession(
@@ -179,7 +181,7 @@ async def async_setup(hass, config):
         )
         hass.data[DATA_KEY] = LTEData(websession)
 
-        async def service_handler(service):
+        async def service_handler(service: ServiceCall) -> None:
             """Apply a service."""
             host = service.data.get(ATTR_HOST)
             conf = {CONF_HOST: host}
@@ -231,7 +233,7 @@ async def async_setup(hass, config):
             }
             hass.async_create_task(
                 discovery.async_load_platform(
-                    hass, NOTIFY_DOMAIN, DOMAIN, discovery_info, config
+                    hass, Platform.NOTIFY, DOMAIN, discovery_info, config
                 )
             )
 
@@ -240,7 +242,7 @@ async def async_setup(hass, config):
         discovery_info = {CONF_HOST: lte_conf[CONF_HOST], SENSOR_DOMAIN: sensor_conf}
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, SENSOR_DOMAIN, DOMAIN, discovery_info, config
+                hass, Platform.SENSOR, DOMAIN, discovery_info, config
             )
         )
 
@@ -252,7 +254,7 @@ async def async_setup(hass, config):
         }
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, BINARY_SENSOR_DOMAIN, DOMAIN, discovery_info, config
+                hass, Platform.BINARY_SENSOR, DOMAIN, discovery_info, config
             )
         )
 

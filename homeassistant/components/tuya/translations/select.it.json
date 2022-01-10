@@ -14,6 +14,10 @@
             "0": "Bassa sensibilit\u00e0",
             "1": "Alta sensibilit\u00e0"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Spingere",
+            "switch": "Interruttore"
+        },
         "tuya__ipc_work_mode": {
             "0": "Modalit\u00e0 a basso consumo",
             "1": "Modalit\u00e0 di lavoro continua"

@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port"
                 },
                 "title": "Cihaza ba\u011flan\u0131n"

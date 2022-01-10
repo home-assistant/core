@@ -27,7 +27,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 },
                 "description": "Ev Asistan\u0131 ile izleme ve kontrole izin vermek i\u00e7in Bosch Ak\u0131ll\u0131 Ev Denetleyicinizi kurun.",
                 "title": "SHC kimlik do\u011frulama parametreleri"

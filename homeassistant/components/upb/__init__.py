@@ -1,9 +1,9 @@
 """Support the UPB PIM."""
-
 import upb_lib
 
-from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
@@ -14,10 +14,10 @@ from .const import (
     EVENT_UPB_SCENE_CHANGED,
 )
 
-PLATFORMS = ["light", "scene"]
+PLATFORMS = [Platform.LIGHT, Platform.SCENE]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a new config_entry for UPB PIM."""
 
     url = config_entry.data[CONF_HOST]
@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config_entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS

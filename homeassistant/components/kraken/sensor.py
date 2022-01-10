@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
@@ -119,8 +119,10 @@ class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
         self._attr_unique_id = self._attr_name.lower()
         self._received_data_at_least_once = False
         self._available = True
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
         self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.kraken.com/",
             entry_type=device_registry.DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{source_asset}_{self._target_asset}")},
             manufacturer="Kraken.com",

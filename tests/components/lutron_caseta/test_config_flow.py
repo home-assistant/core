@@ -427,7 +427,7 @@ async def test_zeroconf_host_already_configured(hass, tmpdir):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
-            hostname="lutron-abc.local.",
+            hostname="LuTrOn-abc.local.",
             name="mock_name",
             port=None,
             properties={},
@@ -454,7 +454,7 @@ async def test_zeroconf_lutron_id_already_configured(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
-            hostname="lutron-abc.local.",
+            hostname="LuTrOn-abc.local.",
             name="mock_name",
             port=None,
             properties={},
@@ -504,7 +504,7 @@ async def test_zeroconf(hass, source, tmpdir):
         context={"source": source},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
-            hostname="lutron-abc.local.",
+            hostname="LuTrOn-abc.local.",
             name="mock_name",
             port=None,
             properties={},

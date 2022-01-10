@@ -9,8 +9,6 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_LOCATE,
@@ -23,6 +21,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.const import STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 import homeassistant.util.dt as dt_util

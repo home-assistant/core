@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 },
                 "description": "Home Assistant ile entegre etmek i\u00e7in MusicCast'i kurun."
             }

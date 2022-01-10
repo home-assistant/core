@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from pyfronius import FroniusError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
@@ -19,6 +20,17 @@ from homeassistant.setup import async_setup_component
 from . import MOCK_HOST, mock_responses
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def no_setup():
+    """Disable setting up the whole integration in config_flow tests."""
+    with patch(
+        "homeassistant.components.fronius.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
 
 INVERTER_INFO_RETURN_VALUE = {
     "inverters": [
@@ -172,7 +184,7 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_existing(hass):
+async def test_form_already_existing(hass: HomeAssistant) -> None:
     """Test existing entry."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -224,17 +236,22 @@ async def test_form_updates_host(hass, aioclient_mock):
     )
 
     mock_responses(aioclient_mock, host=new_host)
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "host": new_host,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.fronius.async_unload_entry",
+        return_value=True,
+    ) as mock_unload_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": new_host,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_configured"
 
+    mock_unload_entry.assert_called_with(hass, entry)
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data == {

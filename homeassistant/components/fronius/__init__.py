@@ -4,12 +4,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import logging
-from typing import TypeVar
+from typing import Final, TypeVar
 
 from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST
+from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -27,8 +27,8 @@ from .coordinator import (
     FroniusStorageUpdateCoordinator,
 )
 
-_LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[str] = ["sensor"]
+_LOGGER: Final = logging.getLogger(__name__)
+PLATFORMS: Final = [Platform.SENSOR]
 
 FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
 
@@ -42,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = solar_net
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    # reload on config_entry update
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
     return True
 
 
@@ -56,11 +54,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             solar_net.cleanup_callbacks.pop()()
 
     return unload_ok
-
-
-async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update a given config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class FroniusSolarNet:
@@ -160,7 +153,10 @@ class FroniusSolarNet:
         )
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
-            solar_net_device[ATTR_MODEL] = _logger_info["product_type"]["value"]
+            # API v0 doesn't provide product_type
+            solar_net_device[ATTR_MODEL] = _logger_info.get("product_type", {}).get(
+                "value", "Datalogger Web"
+            )
             solar_net_device[ATTR_SW_VERSION] = _logger_info["software_version"][
                 "value"
             ]

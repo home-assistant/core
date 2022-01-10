@@ -1,8 +1,13 @@
 """Support for Abode Security System switches."""
+from __future__ import annotations
+
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AbodeAutomation, AbodeDevice
 from .const import DOMAIN
@@ -12,11 +17,15 @@ DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
 ICON = "mdi:robot"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Abode switch devices."""
     data = hass.data[DOMAIN]
 
-    entities = []
+    entities: list[SwitchEntity] = []
 
     for device_type in DEVICE_TYPES:
         for device in data.abode.get_devices(generic_type=device_type):

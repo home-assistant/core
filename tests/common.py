@@ -69,7 +69,9 @@ CLIENT_REDIRECT_URI = "https://example.com/app/callback"
 
 
 async def async_get_device_automations(
-    hass: HomeAssistant, automation_type: str, device_id: str
+    hass: HomeAssistant,
+    automation_type: device_automation.DeviceAutomationType,
+    device_id: str,
 ) -> Any:
     """Get a device automation for a single device id."""
     automations = await device_automation.async_get_device_automations(
@@ -284,7 +286,12 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
 
-    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries = config_entries.ConfigEntries(
+        hass,
+        {
+            "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
+        },
+    )
     hass.config_entries._entries = {}
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
@@ -902,8 +909,9 @@ def init_recorder_component(hass, add_config=None):
 
 async def async_init_recorder_component(hass, add_config=None):
     """Initialize the recorder asynchronously."""
-    config = dict(add_config) if add_config else {}
-    config[recorder.CONF_DB_URL] = "sqlite://"
+    config = add_config or {}
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert await async_setup_component(
@@ -1052,8 +1060,9 @@ def mock_storage(data=None):
 
     def mock_write_data(store, path, data_to_write):
         """Mock version of write data."""
-        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
         # To ensure that the data can be serialized
+        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
+        raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
     async def mock_remove(store):
@@ -1237,3 +1246,17 @@ def assert_lists_same(a, b):
     assert collections.Counter([hashdict(i) for i in a]) == collections.Counter(
         [hashdict(i) for i in b]
     )
+
+
+def raise_contains_mocks(val):
+    """Raise for mocks."""
+    if isinstance(val, Mock):
+        raise ValueError
+
+    if isinstance(val, dict):
+        for dict_value in val.values():
+            raise_contains_mocks(dict_value)
+
+    if isinstance(val, list):
+        for dict_value in val:
+            raise_contains_mocks(dict_value)

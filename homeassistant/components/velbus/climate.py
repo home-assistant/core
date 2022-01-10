@@ -61,6 +61,11 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
             None,
         )
 
+    @property
+    def current_temperature(self) -> int | None:
+        """Return the current temperature."""
+        return self._channel.get_state()
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:

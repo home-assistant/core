@@ -18,7 +18,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -27,6 +28,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -316,7 +318,7 @@ def filter_turn_on_params(light, params):
     return params
 
 
-async def async_setup(hass, config):  # noqa: C901
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -382,14 +384,22 @@ async def async_setup(hass, config):  # noqa: C901
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
         # If a color temperature is specified, emulate it if not supported by the light
-        if (
-            ATTR_COLOR_TEMP in params
-            and COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes
-        ):
-            color_temp = params.pop(ATTR_COLOR_TEMP)
-            if color_supported(legacy_supported_color_modes):
-                temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
-                params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
+        if ATTR_COLOR_TEMP in params:
+            if (
+                supported_color_modes
+                and COLOR_MODE_COLOR_TEMP not in supported_color_modes
+                and COLOR_MODE_RGBWW in supported_color_modes
+            ):
+                color_temp = params.pop(ATTR_COLOR_TEMP)
+                brightness = params.get(ATTR_BRIGHTNESS, light.brightness)
+                params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
+                    color_temp, brightness, light.min_mireds, light.max_mireds
+                )
+            elif COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes:
+                color_temp = params.pop(ATTR_COLOR_TEMP)
+                if color_supported(legacy_supported_color_modes):
+                    temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
+                    params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
 
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes
@@ -956,18 +966,6 @@ class LightEntity(ToggleEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._attr_supported_features
-
-
-class Light(LightEntity):
-    """Representation of a light (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "Light is deprecated, modify %s to extend LightEntity",
-            cls.__name__,
-        )
 
 
 def legacy_supported_features(

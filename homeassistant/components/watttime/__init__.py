@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -23,7 +24,7 @@ from .const import DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
-PLATFORMS: list[str] = ["sensor"]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

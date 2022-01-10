@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.hue import config_flow, const
 from homeassistant.components.hue.errors import CannotConnect
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -701,17 +702,33 @@ async def test_options_flow_v2(hass):
     """Test options config flow for a V2 bridge."""
     entry = MockConfigEntry(
         domain="hue",
-        unique_id="v2bridge",
+        unique_id="aabbccddeeff",
         data={"host": "0.0.0.0", "api_version": 2},
     )
     entry.add_to_hass(hass)
+
+    dev_reg = dr.async_get(hass)
+    mock_dev_id = "aabbccddee"
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(const.DOMAIN, mock_dev_id)}
+    )
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
-    # V2 bridge does not have config options
-    assert result["data_schema"] is None
+    schema = result["data_schema"].schema
+    assert _get_schema_default(schema, const.CONF_IGNORE_AVAILABILITY) == []
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={const.CONF_IGNORE_AVAILABILITY: [mock_dev_id]},
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        const.CONF_IGNORE_AVAILABILITY: [mock_dev_id],
+    }
 
 
 async def test_bridge_zeroconf(hass, aioclient_mock):

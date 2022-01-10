@@ -6,7 +6,8 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType
@@ -31,7 +32,7 @@ from .helpers import savable_state
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 
-PLATFORMS = "sensor", "binary_sensor", "device_tracker"
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -60,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
     )
 
     websocket_api.async_setup_commands(hass)
@@ -68,7 +69,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a mobile_app entry."""
     registration = entry.data
 
@@ -99,7 +100,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a mobile app entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
@@ -115,7 +116,7 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-async def async_remove_entry(hass, entry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
     hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
     store = hass.data[DOMAIN][DATA_STORE]

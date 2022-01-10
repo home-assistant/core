@@ -20,8 +20,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PATH,
     CONF_PORT,
+    Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -40,7 +41,7 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"
@@ -128,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise vol.Invalid from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
-    async def handle_send_command(call):
+    async def handle_send_command(call: ServiceCall) -> None:
         """Handle the send_command service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
@@ -154,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise HomeAssistantError("Error sending command") from exception
         _LOGGER.debug("Sent command. Response message was: %s", response.message)
 
-    async def handle_open(call):
+    async def handle_open(call: ServiceCall) -> None:
         """Handle the open service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
@@ -170,7 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise HomeAssistantError("Error sending") from exception
         _LOGGER.debug("Sent open request")
 
-    async def handle_send_keypress(call):
+    async def handle_send_keypress(call: ServiceCall) -> None:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
@@ -189,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise HomeAssistantError("Error sending") from exception
         _LOGGER.debug("Sent keypress request")
 
-    async def handle_send_text(call):
+    async def handle_send_text(call: ServiceCall) -> None:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]

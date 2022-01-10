@@ -32,7 +32,7 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Ana bilgisayar",
+                    "ip_address": "Sunucu",
                     "password": "Parola"
                 },
                 "description": "Ki\u015fisel bir AirVisual \u00fcnitesini izleyin. Parola, \u00fcnitenin kullan\u0131c\u0131 aray\u00fcz\u00fcnden al\u0131nabilir.",

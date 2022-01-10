@@ -20,10 +20,17 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
+    HASSIO_USER_NAME,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HASS_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import (
@@ -68,7 +75,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_FRONTEND_REPO = "development_repo"
 
@@ -439,11 +446,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
             # Migrate old name
             if user.name == "Hass.io":
-                await hass.auth.async_update_user(user, name="Supervisor")
+                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
 
     if refresh_token is None:
         user = await hass.auth.async_create_system_user(
-            "Supervisor", group_ids=[GROUP_ID_ADMIN]
+            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data["hassio_user"] = user.id
@@ -486,7 +493,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     await push_config(None)
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
         api_endpoint = MAP_SERVICE_API[service.service]
 
@@ -564,7 +571,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Fetch data
     await update_info_data(None)
 
-    async def async_handle_core_service(call):
+    async def async_handle_core_service(call: ServiceCall) -> None:
         """Service handler for handling core services."""
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass

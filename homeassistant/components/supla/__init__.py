@@ -9,9 +9,11 @@ from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -51,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, base_config):
+async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Supla component."""
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]

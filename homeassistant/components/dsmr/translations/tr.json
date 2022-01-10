@@ -18,7 +18,7 @@
             "setup_network": {
                 "data": {
                     "dsmr_version": "DSMR s\u00fcr\u00fcm\u00fcn\u00fc se\u00e7in",
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port"
                 },
                 "title": "Ba\u011flant\u0131 adresini se\u00e7in"

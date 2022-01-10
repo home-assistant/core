@@ -10,8 +10,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_TIMEOUT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -181,7 +182,7 @@ async def async_setup(hass, config):
         _LOGGER.info("Shutting down Envisalink")
         controller.stop()
 
-    async def handle_custom_function(call):
+    async def handle_custom_function(call: ServiceCall) -> None:
         """Handle custom/PGM service."""
         custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
         partition = call.data.get(ATTR_PARTITION)
@@ -206,7 +207,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             async_load_platform(
                 hass,
-                "alarm_control_panel",
+                Platform.ALARM_CONTROL_PANEL,
                 "envisalink",
                 {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
                 config,
@@ -215,7 +216,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             async_load_platform(
                 hass,
-                "sensor",
+                Platform.SENSOR,
                 "envisalink",
                 {CONF_PARTITIONS: partitions, CONF_CODE: code},
                 config,
@@ -224,7 +225,7 @@ async def async_setup(hass, config):
     if zones:
         hass.async_create_task(
             async_load_platform(
-                hass, "binary_sensor", "envisalink", {CONF_ZONES: zones}, config
+                hass, Platform.BINARY_SENSOR, "envisalink", {CONF_ZONES: zones}, config
             )
         )
 
