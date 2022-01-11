@@ -102,12 +102,18 @@ tests: &tests
   - codecov.yaml
   - requirements_test_pre_commit.txt
   - requirements_test.txt
+  - tests/auth/**
+  - tests/backports/*
   - tests/common.py
   - tests/conftest.py
+  - tests/hassfest/*
+  - tests/helpers/*
   - tests/ignore_uncaught_exceptions.py
   - tests/mock/*
+  - tests/scripts/*
   - tests/test_util/*
   - tests/testing_config/**
+  - tests/util/**
 
 other: &other
   - .github/workflows/*
