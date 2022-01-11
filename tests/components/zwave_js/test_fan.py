@@ -4,8 +4,28 @@ import math
 import pytest
 from voluptuous.error import MultipleInvalid
 from zwave_js_server.event import Event
+from zwave_js_server.const import CommandClass
+from zwave_js_server.event import Event
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, ATTR_PERCENTAGE_STEP
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
+    ATTR_PRESET_MODE,
+    ATTR_SPEED,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PRESET_MODE,
+    SPEED_MEDIUM,
+    SUPPORT_PRESET_MODE,
+)
+from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 
 
 async def test_generic_fan(hass, client, fan_generic, integration):
@@ -304,3 +324,196 @@ async def test_fixed_speeds_fan(hass, client, ge_12730, integration):
 
     state = hass.states.get(entity_id)
     assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
+
+
+async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
+    """Test the fan entity for a z-wave fan."""
+    node = climate_adc_t3000
+    entity_id = "fan.adc_t3000"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_FAN_STATE) == "Idle / off"
+    assert state.attributes.get(ATTR_PRESET_MODE) == "Auto low"
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_PRESET_MODE
+
+    # Test setting preset mode
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Low"},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 68
+    assert args["valueId"] == {
+        "ccVersion": 3,
+        "commandClassName": "Thermostat Fan Mode",
+        "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
+        "endpoint": 0,
+        "property": "mode",
+        "propertyName": "mode",
+        "metadata": {
+            "label": "Thermostat fan mode",
+            "max": 255,
+            "min": 0,
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "states": {"0": "Auto low", "1": "Low", "6": "Circulation"},
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
+    # Test setting unknown preset mode
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Turbo"},
+            blocking=True,
+        )
+
+    client.async_send_command.reset_mock()
+
+    # Test turning off
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 68
+    assert args["valueId"] == {
+        "ccVersion": 3,
+        "commandClassName": "Thermostat Fan Mode",
+        "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
+        "endpoint": 0,
+        "property": "off",
+        "propertyName": "off",
+        "metadata": {
+            "label": "Thermostat fan turned off",
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+        },
+        "value": False,
+    }
+    assert args["value"]
+
+    client.async_send_command.reset_mock()
+
+    # Test turning on
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 68
+    assert args["valueId"] == {
+        "ccVersion": 3,
+        "commandClassName": "Thermostat Fan Mode",
+        "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
+        "endpoint": 0,
+        "property": "off",
+        "propertyName": "off",
+        "metadata": {
+            "label": "Thermostat fan turned off",
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+        },
+        "value": False,
+    }
+    assert not args["value"]
+
+    client.async_send_command.reset_mock()
+
+    # Test fan state update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 68,
+            "args": {
+                "commandClassName": "Thermostat Fan State",
+                "commandClass": CommandClass.THERMOSTAT_FAN_STATE.value,
+                "endpoint": 0,
+                "property": "state",
+                "newValue": 4,
+                "prevValue": 0,
+                "propertyName": "state",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_FAN_STATE) == "Circulation mode"
+
+    client.async_send_command.reset_mock()
+
+    # Test fan mode update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 68,
+            "args": {
+                "commandClassName": "Thermostat Fan Mode",
+                "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
+                "endpoint": 0,
+                "property": "mode",
+                "newValue": 1,
+                "prevValue": 0,
+                "propertyName": "mode",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_PRESET_MODE) == "Low"
+
+    client.async_send_command.reset_mock()
+
+    # Test fan mode turned off update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 68,
+            "args": {
+                "commandClassName": "Thermostat Fan Mode",
+                "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
+                "endpoint": 0,
+                "property": "off",
+                "newValue": True,
+                "prevValue": False,
+                "propertyName": "off",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF

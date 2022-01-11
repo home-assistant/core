@@ -34,6 +34,7 @@ from zwave_js_server.const.command_class.sound_switch import (
 )
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_FAN_MODE_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_SETPOINT_PROPERTY,
 )
@@ -508,6 +509,16 @@ DISCOVERY_SCHEMAS = [
             },
             property={DOOR_STATUS_PROPERTY},
             type={"any"},
+        ),
+    ),
+    # thermostat fan
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="thermostat_fan",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_FAN_MODE},
+            property={THERMOSTAT_FAN_MODE_PROPERTY},
+            type={"number"},
         ),
     ),
     # humidifier
