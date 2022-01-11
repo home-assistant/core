@@ -65,7 +65,9 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
         code = kwargs.get(ATTR_CODE, self._coordinator.entry.options.get(CONF_CODE))
 
         if not code or not self._coordinator.yale:
-            return
+            raise HomeAssistantError(
+                f"No code provided, {self._attr_name} not unlocked"
+            )
 
         try:
             get_lock = await self.hass.async_add_executor_job(
