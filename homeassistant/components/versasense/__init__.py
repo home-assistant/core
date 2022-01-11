@@ -87,7 +87,8 @@ def _add_entity_info_to_list(peripheral, device, entity_info_list):
             KEY_PARENT_MAC: device.mac,
         }
 
-        entity_info_list[peripheral.identifier] = entity_info
+        key = f"{entity_info[KEY_PARENT_MAC]}/{entity_info[KEY_IDENTIFIER]}/{entity_info[KEY_MEASUREMENT]}"
+        entity_info_list[key] = entity_info
 
     return entity_info_list
 
