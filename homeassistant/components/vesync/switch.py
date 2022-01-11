@@ -20,6 +20,8 @@ DEV_TYPE_TO_HA = {
     "ESWL01": "switch",
     "ESWL03": "switch",
     "ESO15-TB": "outlet",
+    "Classic300S": "humidifier_display",
+    "Dual200S": "humidifier_display",
 }
 
 
@@ -51,6 +53,8 @@ def _async_setup_entities(devices, async_add_entities):
             dev_list.append(VeSyncSwitchHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
             dev_list.append(VeSyncLightSwitch(dev))
+        elif DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier_display":
+            dev_list.append(VeSyncHumidifierDisplaySwitch(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
@@ -101,3 +105,38 @@ class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
         """Initialize Light Switch device class."""
         super().__init__(switch)
         self.switch = switch
+
+
+class VeSyncHumidifierDisplaySwitch(VeSyncDevice, SwitchEntity):
+    """Class for VeSync humidifier display switch Device Representations."""
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            "name": self.name,
+            "manufacturer": "Levoit",
+            "model": self.device.device_type,
+        }
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self.device.device_name + " (display)"
+
+    @property
+    def is_on(self):
+        """Return True if device is on."""
+        return self.device.enabled and self.device.details["display"]
+
+    def turn_off(self, **kwargs):
+        """Turn the device off."""
+        self.device.turn_off_display()
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self.device.turn_on_display()

@@ -23,6 +23,7 @@ DEV_TYPE_TO_HA = {
     "ESWD16": "walldimmer",
     "ESL100": "bulb-dimmable",
     "ESL100CW": "bulb-tunable-white",
+    "Classic300S": "humidifier_night_light",
 }
 
 

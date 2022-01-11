@@ -3,9 +3,14 @@ import logging
 
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
-from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from .const import DOMAIN, VS_FANS, VS_HUMIDIFIERS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
+
+HUMI_DEV_TYPE_TO_HA = {
+    "Classic300S": "humidifier",
+    "Dual200S": "humidifier",
+}
 
 
 async def async_process_devices(hass, manager):
@@ -13,24 +18,38 @@ async def async_process_devices(hass, manager):
     devices = {}
     devices[VS_SWITCHES] = []
     devices[VS_FANS] = []
+    devices[VS_HUMIDIFIERS] = []
     devices[VS_LIGHTS] = []
     devices[VS_SENSORS] = []
+
+    fans_count = 0
+    humidifiers_count = 0
+    lights_count = 0
+    outlets_count = 0
+    switches_count = 0
 
     await hass.async_add_executor_job(manager.update)
 
     if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
-        _LOGGER.info("%d VeSync fans found", len(manager.fans))
+        for fan in manager.fans:
+            if HUMI_DEV_TYPE_TO_HA.get(fan.device_type):
+                devices[VS_HUMIDIFIERS].append(fan)
+                devices[VS_SWITCHES].append(fan)
+                devices[VS_LIGHTS].append(fan)
+                humidifiers_count += 1
+                switches_count += 1
+                lights_count += 1
+            else:
+                devices[VS_FANS].append(fan)
+                fans_count += 1
 
     if manager.bulbs:
         devices[VS_LIGHTS].extend(manager.bulbs)
-        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
+        lights_count += len(manager.bulbs)
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
-        # Expose outlets' power & energy usage as separate sensors
-        devices[VS_SENSORS].extend(manager.outlets)
-        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
+        outlets_count += len(manager.outlets)
 
     if manager.switches:
         for switch in manager.switches:
@@ -38,8 +57,18 @@ async def async_process_devices(hass, manager):
                 devices[VS_SWITCHES].append(switch)
             else:
                 devices[VS_LIGHTS].append(switch)
-        _LOGGER.info("%d VeSync switches found", len(manager.switches))
+        switches_count += len(manager.switches)
 
+    if fans_count > 0:
+        _LOGGER.info("%d VeSync fans found", fans_count)
+    if humidifiers_count > 0:
+        _LOGGER.info("%d VeSync humidifiers found", humidifiers_count)
+    if lights_count > 0:
+        _LOGGER.info("%d VeSync lights found", lights_count)
+    if outlets_count > 0:
+        _LOGGER.info("%d VeSync outlets found", outlets_count)
+    if switches_count > 0:
+        _LOGGER.info("%d VeSync switches found", switches_count)
     return devices
 
 
