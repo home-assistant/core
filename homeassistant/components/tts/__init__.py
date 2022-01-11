@@ -10,7 +10,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Optional, Tuple, cast
+from typing import Optional, cast
 
 from aiohttp import web
 import mutagen
@@ -46,7 +46,7 @@ from homeassistant.util.yaml import load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
-TtsAudioType = Tuple[Optional[str], Optional[bytes]]
+TtsAudioType = tuple[Optional[str], Optional[bytes]]
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
