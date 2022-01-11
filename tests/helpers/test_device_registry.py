@@ -218,7 +218,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.name_by_user == "Test Friendly Name"
     assert entry.hw_version == "hw_version"
     assert entry.entry_type is device_registry.DeviceEntryType.SERVICE
-    assert entry.disabled_by is device_registry.DeviceEntryDisabler.USER
+    assert entry.disabled_by == device_registry.DeviceEntryDisabler.USER
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
@@ -913,7 +913,7 @@ async def test_update(registry):
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
-    assert updated_entry.disabled_by is device_registry.DeviceEntryDisabler.USER
+    assert updated_entry.disabled_by == device_registry.DeviceEntryDisabler.USER
 
     assert registry.async_get_device({("hue", "456")}) is None
     assert registry.async_get_device({("bla", "123")}) is None
@@ -1508,10 +1508,10 @@ async def test_disable_config_entry_disables_devices(hass, registry):
 
     entry1 = registry.async_get(entry1.id)
     assert entry1.disabled
-    assert entry1.disabled_by is device_registry.DeviceEntryDisabler.CONFIG_ENTRY
+    assert entry1.disabled_by == device_registry.DeviceEntryDisabler.CONFIG_ENTRY
     entry2 = registry.async_get(entry2.id)
     assert entry2.disabled
-    assert entry2.disabled_by is device_registry.DeviceEntryDisabler.USER
+    assert entry2.disabled_by == device_registry.DeviceEntryDisabler.USER
 
     await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
     await hass.async_block_till_done()
@@ -1520,7 +1520,7 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     assert not entry1.disabled
     entry2 = registry.async_get(entry2.id)
     assert entry2.disabled
-    assert entry2.disabled_by is device_registry.DeviceEntryDisabler.USER
+    assert entry2.disabled_by == device_registry.DeviceEntryDisabler.USER
 
 
 async def test_only_disable_device_if_all_config_entries_are_disabled(hass, registry):
@@ -1556,7 +1556,7 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(hass, regi
 
     entry1 = registry.async_get(entry1.id)
     assert entry1.disabled
-    assert entry1.disabled_by is device_registry.DeviceEntryDisabler.CONFIG_ENTRY
+    assert entry1.disabled_by == device_registry.DeviceEntryDisabler.CONFIG_ENTRY
 
     await hass.config_entries.async_set_disabled_by(config_entry1.entry_id, None)
     await hass.async_block_till_done()

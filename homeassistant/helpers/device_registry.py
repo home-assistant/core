@@ -732,7 +732,7 @@ def async_config_entry_disabled_by_changed(
 
     if not config_entry.disabled_by:
         for device in devices:
-            if device.disabled_by is not DeviceEntryDisabler.CONFIG_ENTRY:
+            if device.disabled_by != DeviceEntryDisabler.CONFIG_ENTRY:
                 continue
             registry.async_update_device(device.id, disabled_by=None)
         return
