@@ -1,6 +1,6 @@
 """Tradfri utility function tests."""
 
-from homeassistant.components.tradfri.utils import _from_fan_percentage, _from_fan_speed
+from homeassistant.components.tradfri.fan import _from_fan_percentage, _from_fan_speed
 
 
 def test_from_fan_speed():
