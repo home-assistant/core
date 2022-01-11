@@ -73,9 +73,9 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         self.url = discovery_info.host
         self.uuid = await get_uuid(self.url, self.token)
-        if self.uuid is not None:
-            await self.async_set_unique_id(self.uuid + self.url)
-            self._abort_if_unique_id_configured()
-        else:
+        if self.uuid is None:
             return self.async_abort(reason="no_valid_uuid_set")
+
+        await self.async_set_unique_id(f"{self.uuid}_{self.url}")
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()
