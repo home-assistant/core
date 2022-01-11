@@ -47,22 +47,13 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.url.startswith(("ws://", "wss://")):
                 self.url = f"ws://{self.url}"
             self.url = url_normalize(self.url, default_scheme="ws")
-            if "://" not in self.url:
-                errors[CONF_URL] = "invalid_url"
-                self.url = None
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=schema,
-                    errors=errors,
-                )
             if self.uuid is None:
                 self.uuid = await get_uuid(self.url, self.token)
                 if self.uuid is not None:
                     await self.async_set_unique_id(self.uuid + self.url)
                     self._abort_if_unique_id_configured()
-                errors[CONF_URL] = "could_not_retrieve_data"
-            else:
-                return self.async_abort(reason="no_valid_uuid_set")
+                else:
+                    return self.async_abort(reason="no_valid_uuid_set")
             return self.async_create_entry(
                 title=self.url,
                 data={"url": self.url, "token": self.token},
