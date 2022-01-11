@@ -154,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("API disabled, API must be enabled in the app")
             raise AbortFlow("api_not_enabled") from ex
 
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             _LOGGER.error(
                 "Error connecting with Energy Device at %s",
                 ip_address,
