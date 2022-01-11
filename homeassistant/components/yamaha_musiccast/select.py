@@ -59,6 +59,4 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
     @property
     def current_option(self):
         """Return the currently selected option."""
-        return self.capability.options.get(
-            self.capability.current, self.capability.current
-        )
+        return self.capability.options.get(self.capability.current)
