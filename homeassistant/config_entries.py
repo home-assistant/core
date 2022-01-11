@@ -19,6 +19,7 @@ from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platfo
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry
+from .helpers.event import async_call_later
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import async_process_deps_reqs, async_setup_component
@@ -375,8 +376,8 @@ class ConfigEntry:
                 await self.async_setup(hass, integration=integration, tries=tries)
 
             if hass.state == CoreState.running:
-                self._async_cancel_retry_setup = hass.helpers.event.async_call_later(
-                    wait_time, setup_again
+                self._async_cancel_retry_setup = async_call_later(
+                    hass, wait_time, setup_again
                 )
             else:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
@@ -1561,8 +1562,8 @@ class EntityRegistryDisabledHandler:
         if self._remove_call_later:
             self._remove_call_later()
 
-        self._remove_call_later = self.hass.helpers.event.async_call_later(
-            RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+        self._remove_call_later = async_call_later(
+            self.hass, RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
         )
 
     async def _handle_reload(self, _now: Any) -> None:
