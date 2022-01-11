@@ -732,7 +732,12 @@ class HomeKit:
         """Remove all pairings for an accessory so it can be repaired."""
         state = self.driver.state
         for client_uuid in list(state.paired_clients):
-            state.remove_paired_client(client_uuid)
+            # We need to check again since removing a single client
+            # can result in removing all the clients that the client
+            # granted access to if it was an admin, otherwise
+            # remove_paired_client can generate a KeyError
+            if client_uuid in state.paired_clients:
+                state.remove_paired_client(client_uuid)
         self.driver.async_persist()
         self.driver.async_update_advertisement()
         self._async_show_setup_message()
