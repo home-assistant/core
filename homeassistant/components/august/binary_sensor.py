@@ -61,6 +61,17 @@ def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
     return _activity_time_based_state(latest)
 
 
+def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    latest = data.activity_stream.get_latest_device_activity(
+        detail.device_id, {ActivityType.DOORBELL_IMAGE_CAPTURE}
+    )
+
+    if latest is None:
+        return False
+
+    return _activity_time_based_state(latest)
+
+
 def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail) -> bool:
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_DING}
@@ -124,6 +135,13 @@ SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
         name="Motion",
         device_class=DEVICE_CLASS_MOTION,
         value_fn=_retrieve_motion_state,
+        is_time_based=True,
+    ),
+    AugustBinarySensorEntityDescription(
+        key="doorbell_image_capture",
+        name="Image Capture",
+        icon="mdi:file-image",
+        value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),
     AugustBinarySensorEntityDescription(

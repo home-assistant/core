@@ -41,10 +41,16 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
+        if self._data.activity_stream.pubnub.connected:
+            await self._data.async_lock_async(self._device_id)
+            return
         await self._call_lock_operation(self._data.async_lock)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
+        if self._data.activity_stream.pubnub.connected:
+            await self._data.async_unlock_async(self._device_id)
+            return
         await self._call_lock_operation(self._data.async_unlock)
 
     async def _call_lock_operation(self, lock_operation):

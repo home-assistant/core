@@ -24,7 +24,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.13.0
+# PySwitchbot==0.13.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -45,7 +45,7 @@ RtmAPI==0.7.2
 WSDiscovery==2.0.0
 
 # homeassistant.components.waze_travel_time
-WazeRouteCalculator==0.13
+WazeRouteCalculator==0.14
 
 # homeassistant.components.abode
 abodepy==1.2.0
@@ -121,7 +121,7 @@ aioflo==2021.11.0
 aioguardian==2021.11.0
 
 # homeassistant.components.harmony
-aioharmony==0.2.8
+aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
 aiohomekit==0.6.4
@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.32
+flux_led==0.27.45
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -494,7 +494,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.50.0
+hass-nabucasa==0.51.0
 
 # homeassistant.components.tasmota
 hatasmota==0.3.1
@@ -515,7 +515,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211229.0
+home-assistant-frontend==20211229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -850,7 +850,7 @@ pybotvac==0.0.22
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==10.2.2
+pychromecast==10.2.3
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -1257,7 +1257,7 @@ samsungtvws==1.6.0
 scapy==2.4.5
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.5.3
+screenlogicpy==0.5.4
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -1291,7 +1291,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.25.2
+soco==0.25.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1464,7 +1464,7 @@ xmltodict==0.12.0
 yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
-yalexs==1.1.13
+yalexs==1.1.17
 
 # homeassistant.components.yeelight
 yeelight==0.7.8
