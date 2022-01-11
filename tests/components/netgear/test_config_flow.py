@@ -1,7 +1,7 @@
 """Tests for the Netgear config flow."""
 from unittest.mock import Mock, patch
 
-from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
+from pynetgear import DEFAULT_USER
 import pytest
 
 from homeassistant import data_entry_flow
@@ -100,72 +100,6 @@ async def test_user(hass, service):
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-
-
-async def test_import_required(hass, service):
-    """Test import step, with required config only."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_PASSWORD: PASSWORD}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == SERIAL
-    assert result["title"] == TITLE
-    assert result["data"].get(CONF_HOST) == DEFAULT_HOST
-    assert result["data"].get(CONF_PORT) == DEFAULT_PORT
-    assert result["data"].get(CONF_SSL) is False
-    assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-
-
-async def test_import_required_login_failed(hass, service_failed):
-    """Test import step, with required config only, while wrong password or connection issue."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_PASSWORD: PASSWORD}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "config"}
-
-
-async def test_import_all(hass, service):
-    """Test import step, with all config provided."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == SERIAL
-    assert result["title"] == TITLE
-    assert result["data"].get(CONF_HOST) == HOST
-    assert result["data"].get(CONF_PORT) == PORT
-    assert result["data"].get(CONF_SSL) == SSL
-    assert result["data"].get(CONF_USERNAME) == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-
-
-async def test_import_all_connection_failed(hass, service_failed):
-    """Test import step, with all config provided, while wrong host."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "config"}
 
 
 async def test_abort_if_already_setup(hass, service):
