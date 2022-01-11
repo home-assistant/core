@@ -91,6 +91,7 @@ async def async_setup_entry(
         ]
     )
 
+
 class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     """Representation of the next launch sensor."""
 
@@ -144,4 +145,3 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
-    
