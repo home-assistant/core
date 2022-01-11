@@ -15,7 +15,7 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable, Dict, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypedDict, TypeVar, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -33,8 +33,6 @@ from .util.async_ import gather_with_concurrency
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from .core import HomeAssistant
-
-# mypy: disallow-any-generics
 
 CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
     "CALLABLE_T", bound=Callable[..., Any]
@@ -159,9 +157,9 @@ async def async_get_custom_components(
 
     if isinstance(reg_or_evt, asyncio.Event):
         await reg_or_evt.wait()
-        return cast(Dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
+        return cast(dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
 
-    return cast(Dict[str, "Integration"], reg_or_evt)
+    return cast(dict[str, "Integration"], reg_or_evt)
 
 
 async def async_get_config_flows(hass: HomeAssistant) -> set[str]:

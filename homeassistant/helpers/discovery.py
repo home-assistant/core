@@ -23,8 +23,6 @@ EVENT_LOAD_PLATFORM = "load_platform.{}"
 ATTR_PLATFORM = "platform"
 ATTR_DISCOVERED = "discovered"
 
-# mypy: disallow-any-generics
-
 
 class DiscoveryDict(TypedDict):
     """Discovery data."""

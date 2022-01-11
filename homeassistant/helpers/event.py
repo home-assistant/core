@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Callable, List, Union, cast
+from typing import Any, Callable, Union, cast
 
 import attr
 from typing_extensions import Concatenate, ParamSpec
@@ -1079,7 +1079,7 @@ class _TrackTemplateResultInfo:
 TrackTemplateResultListener = Callable[
     [
         Union[Event, None],
-        List[TrackTemplateResult],
+        list[TrackTemplateResult],
     ],
     None,
 ]

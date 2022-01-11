@@ -17,7 +17,6 @@ from homeassistant.components.unifiprotect.binary_sensor import (
 )
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,
-    ATTR_EVENT_THUMB,
     DEFAULT_ATTRIBUTION,
 )
 from homeassistant.const import (
@@ -258,7 +257,6 @@ async def test_binary_sensor_setup_camera_all(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 0
-    assert state.attributes[ATTR_EVENT_THUMB] is None
 
 
 async def test_binary_sensor_setup_camera_none(
@@ -350,6 +348,3 @@ async def test_binary_sensor_update_motion(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 100
-    assert state.attributes[ATTR_EVENT_THUMB].startswith(
-        f"/api/ufp/thumbnail/test_event_id?entity_id={entity_id}&token="
-    )
