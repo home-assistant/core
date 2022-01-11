@@ -1232,4 +1232,7 @@ async def test_database_lock_without_instance(hass):
 
     instance: Recorder = hass.data[DATA_INSTANCE]
     with patch.object(instance, "engine", None):
-        assert await instance.lock_database()
+        try:
+            assert await instance.lock_database()
+        finally:
+            assert instance.unlock_database()
