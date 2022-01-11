@@ -17,6 +17,7 @@ from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -534,7 +535,8 @@ class ADBDevice(MediaPlayerEntity):
             self.async_write_ha_state()
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 msg,
                 title="Android TV",
             )
