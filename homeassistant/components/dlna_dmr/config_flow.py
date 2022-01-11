@@ -380,8 +380,8 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
-    model = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
+    manufacturer = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or "").lower()
+    model = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or "").lower()
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi
