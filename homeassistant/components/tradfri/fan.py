@@ -25,7 +25,7 @@ from .const import (
     DOMAIN,
     KEY_API,
 )
-from .utils import _from_fan_speed, _from_percentage
+from .utils import _from_fan_percentage, _from_fan_speed
 
 
 async def async_setup_entry(
@@ -134,7 +134,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
             return
 
         if percentage is not None:
-            await self._api(self._device_control.set_mode(_from_percentage(percentage)))
+            await self._api(self._device_control.set_mode(_from_fan_speed(percentage)))
             return
 
         preset_mode = preset_mode or ATTR_AUTO
@@ -145,7 +145,9 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         if not self._device_control:
             return
 
-        await self._api(self._device_control.set_fan_speed(_from_fan_speed(percentage)))
+        await self._api(
+            self._device_control.set_fan_speed(_from_fan_percentage(percentage))
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""

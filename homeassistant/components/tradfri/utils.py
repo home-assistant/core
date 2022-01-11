@@ -9,24 +9,19 @@ from typing import Any
 from pytradfri.command import Command
 from pytradfri.error import PytradfriError
 
+from .const import ATTR_MAX_FAN_STEPS
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def _from_percentage(percentage: int) -> int:
+def _from_fan_percentage(percentage: int) -> int:
     """Convert percent to a value that the Tradfri API understands."""
-    if percentage < 20:
-        # The device cannot be set to speed 5 (10%), so we should turn off the device
-        # for any value below 20
-        return 0
-
-    nearest_10: int = round(percentage / 10) * 10  # Round to nearest multiple of 10
-    return round(nearest_10 / 100 * 50)
+    return round(percentage / 100 * ATTR_MAX_FAN_STEPS)
 
 
 def _from_fan_speed(fan_speed: int) -> int:
     """Convert the Tradfri API fan speed to a percentage value."""
-    nearest_10: int = round(fan_speed / 10) * 10  # Round to nearest multiple of 10
-    return round(nearest_10 / 50 * 100)
+    return round(fan_speed / ATTR_MAX_FAN_STEPS * 100)
 
 
 def tradfri_handle_api_error(
