@@ -55,24 +55,23 @@ _CLOUD_ERRORS = {
 
 async def async_setup(hass):
     """Initialize the HTTP API."""
-    async_register_command = hass.components.websocket_api.async_register_command
-    async_register_command(websocket_cloud_status)
-    async_register_command(websocket_subscription)
-    async_register_command(websocket_update_prefs)
-    async_register_command(websocket_hook_create)
-    async_register_command(websocket_hook_delete)
-    async_register_command(websocket_remote_connect)
-    async_register_command(websocket_remote_disconnect)
+    websocket_api.async_register_command(hass, websocket_cloud_status)
+    websocket_api.async_register_command(hass, websocket_subscription)
+    websocket_api.async_register_command(hass, websocket_update_prefs)
+    websocket_api.async_register_command(hass, websocket_hook_create)
+    websocket_api.async_register_command(hass, websocket_hook_delete)
+    websocket_api.async_register_command(hass, websocket_remote_connect)
+    websocket_api.async_register_command(hass, websocket_remote_disconnect)
 
-    async_register_command(google_assistant_list)
-    async_register_command(google_assistant_update)
+    websocket_api.async_register_command(hass, google_assistant_list)
+    websocket_api.async_register_command(hass, google_assistant_update)
 
-    async_register_command(alexa_list)
-    async_register_command(alexa_update)
-    async_register_command(alexa_sync)
+    websocket_api.async_register_command(hass, alexa_list)
+    websocket_api.async_register_command(hass, alexa_update)
+    websocket_api.async_register_command(hass, alexa_sync)
 
-    async_register_command(thingtalk_convert)
-    async_register_command(tts_info)
+    websocket_api.async_register_command(hass, thingtalk_convert)
+    websocket_api.async_register_command(hass, tts_info)
 
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
