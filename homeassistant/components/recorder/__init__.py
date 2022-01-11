@@ -1057,8 +1057,10 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if self.engine.dialect.name != "sqlite":
-            _LOGGER.debug("Not a SQLite database, locking not necessary")
+        if not self.engine or self.engine.dialect.name != "sqlite":
+            _LOGGER.debug(
+                "Not a SQLite database or not connected, locking not necessary"
+            )
             return True
 
         if self._database_lock_task:
@@ -1084,8 +1086,10 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if self.engine.dialect.name != "sqlite":
-            _LOGGER.debug("Not a SQLite database, locking not necessary")
+        if not self.engine or self.engine.dialect.name != "sqlite":
+            _LOGGER.debug(
+                "Not a SQLite database or not connected, unlocking not necessary"
+            )
             return True
 
         if not self._database_lock_task:
