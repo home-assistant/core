@@ -87,8 +87,8 @@ ICON_WATERING = "mdi:water"
 ICON_PAUSE = "mdi:pause-circle-outline"
 
 
-def entities_from_discovered_wilight(hass, api_device):
-    """Parse configuration and add WiLight light entities."""
+def entities_from_discovered_wilight(api_device):
+    """Parse configuration and add WiLight switch entities."""
     entities = []
     for item in api_device.items:
         if item["type"] == ITEM_SWITCH:
@@ -109,7 +109,7 @@ async def async_setup_entry(
     parent = hass.data[DOMAIN][entry.entry_id]
 
     # Handle a discovered WiLight device.
-    entities = entities_from_discovered_wilight(hass, parent.api)
+    entities = entities_from_discovered_wilight(parent.api)
     async_add_entities(entities)
 
     # Handle services for a discovered WiLight device.
