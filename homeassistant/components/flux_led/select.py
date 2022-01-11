@@ -219,7 +219,7 @@ class FluxWhiteChannelSelect(FluxConfigSelect):
 
     @property
     def current_option(self) -> str | None:
-        """Return the current operating mode."""
+        """Return the current white channel type."""
         return _human_readable_option(
             self.coordinator.entry.data.get(
                 CONF_WHITE_CHANNEL_TYPE, DEFAULT_WHITE_CHANNEL_TYPE.name
