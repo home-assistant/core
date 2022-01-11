@@ -4,7 +4,7 @@ import logging
 import pyversasense as pyv
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
@@ -70,10 +70,10 @@ async def _configure_entities(hass, config, consumer):
                 )
 
     if sensor_info_list:
-        _load_platform(hass, config, Platform.SENSOR, sensor_info_list)
+        _load_platform(hass, config, "sensor", sensor_info_list)
 
     if switch_info_list:
-        _load_platform(hass, config, Platform.SWITCH, switch_info_list)
+        _load_platform(hass, config, "switch", switch_info_list)
 
 
 def _add_entity_info_to_list(peripheral, device, entity_info_list):
