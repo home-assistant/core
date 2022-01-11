@@ -7,7 +7,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.netgear.const import CONF_CONSIDER_HOME, DOMAIN, PORT_80
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -109,15 +109,6 @@ async def test_abort_if_already_setup(hass, service):
         data={CONF_PASSWORD: PASSWORD},
         unique_id=SERIAL,
     ).add_to_hass(hass)
-
-    # Should fail, same SERIAL (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
     # Should fail, same SERIAL (flow)
     result = await hass.config_entries.flow.async_init(
