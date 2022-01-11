@@ -398,8 +398,11 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             state_attr[ATTR_CRON_PATTERN] = self._cron_pattern
         if self._tariff is not None:
             state_attr[ATTR_TARIFF] = self._tariff
-        # SensorEntity blocks last_reset for total_increasing sensor, add it as an extra
-        # attribute instead
+        # last_reset in utility meter was used before last_reset was added for long term
+        # statistics in base sensor. base sensor only supports last reset
+        # sensors with state_class set to total.
+        # To avoid a breaking change we set last_reset directly
+        # in extra state attributes.
         if last_reset := self._last_reset:
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
 
