@@ -15,6 +15,7 @@ from aiohttp.web import Application, Request, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -123,8 +124,8 @@ async def process_wrong_login(request: Request) -> None:
 
     _LOGGER.warning(log_msg)
 
-    hass.components.persistent_notification.async_create(
-        notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+    persistent_notification.async_create(
+        hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
 
     # Check if ban middleware is loaded
@@ -153,7 +154,8 @@ async def process_wrong_login(request: Request) -> None:
 
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
 
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             f"Too many login attempts from {remote_addr}",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
