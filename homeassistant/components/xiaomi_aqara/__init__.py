@@ -6,6 +6,7 @@ import voluptuous as vol
 from xiaomi_gateway import XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries, core
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
@@ -99,7 +100,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Service to add a new sub-device within the next 30 seconds."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, join_permission="yes")
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             "Join permission enabled for 30 seconds! "
             "Please press the pairing button of the new device once.",
             title="Xiaomi Aqara Gateway",
