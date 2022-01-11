@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
+from typing import Any, Awaitable, Callable, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -632,7 +632,7 @@ async def _async_process_config(
                 try:
                     raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
-                        Dict[str, Any],
+                        dict[str, Any],
                         await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:
