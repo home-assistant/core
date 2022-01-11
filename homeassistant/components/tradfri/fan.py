@@ -142,7 +142,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn on the fan."""
+        """Turn on the fan. Auto-mode if no argument is given."""
         if not self._device_control:
             return
 
@@ -150,8 +150,8 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
             await self._api(self._device_control.set_mode(_from_percentage(percentage)))
             return
 
-        if preset_mode:
-            await self.async_set_preset_mode(preset_mode)
+        preset_mode = preset_mode or ATTR_AUTO
+        await self.async_set_preset_mode(preset_mode)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
