@@ -6,6 +6,7 @@ from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
@@ -151,7 +152,8 @@ async def async_migrate_entry(hass, entry):
             Please remove the PS4 Integration and re-configure
             [here](/config/integrations)."""
 
-    hass.components.persistent_notification.async_create(
+    persistent_notification.async_create(
+        hass,
         title="PlayStation 4 Integration Configuration Requires Update",
         message=msg,
         notification_id="config_entry_migration",

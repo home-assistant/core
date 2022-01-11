@@ -7,7 +7,7 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import websocket_api
+from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -278,7 +278,8 @@ async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dic
         filtered.append(person_conf)
 
     if person_invalid_user:
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             f"""
 The following persons point at invalid users:
 
