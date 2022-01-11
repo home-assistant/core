@@ -312,6 +312,7 @@ def test_setup_scanner():
             "password": TEST_PASSWORD,
             "host": TEST_HOST,
             "callsigns": ["XX0FOO*", "YY0BAR-1"],
+            "timeout": device_tracker.DEFAULT_TIMEOUT,
         }
 
         see = Mock()

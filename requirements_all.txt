@@ -758,7 +758,7 @@ goodwe==0.2.10
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.1.0
+google-cloud-pubsub==2.9.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==0.4.0
@@ -1246,7 +1246,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.2.0
+pillow==9.0.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1564,7 +1564,7 @@ pyhik==0.3.0
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.76
+pyhomematic==0.1.77
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6

@@ -139,7 +139,7 @@ class AzureEventHub:
         self._max_delay = self._entry.options.get(CONF_MAX_DELAY, DEFAULT_MAX_DELAY)
 
         self._shutdown = False
-        self._queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
+        self._queue: asyncio.PriorityQueue[
             tuple[int, tuple[datetime, State | None]]
         ] = asyncio.PriorityQueue()
         self._listener_remover: Callable[[], None] | None = None

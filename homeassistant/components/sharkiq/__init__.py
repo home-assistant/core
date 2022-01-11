@@ -15,6 +15,7 @@ from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import _LOGGER, API_TIMEOUT, DOMAIN, PLATFORMS
 from .update_coordinator import SharkIqUpdateCoordinator
@@ -45,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
-        websession=hass.helpers.aiohttp_client.async_get_clientsession(),
+        websession=async_get_clientsession(hass),
     )
 
     try:
