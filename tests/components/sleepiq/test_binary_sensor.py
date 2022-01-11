@@ -1,45 +1,51 @@
 """The tests for SleepIQ binary sensor platform."""
-from unittest.mock import MagicMock
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.helpers import entity_registry as er
 
-from homeassistant.components.sleepiq import binary_sensor as sleepiq
-from homeassistant.setup import async_setup_component
-
-from tests.components.sleepiq.test_init import mock_responses
-
-CONFIG = {"username": "foo", "password": "bar"}
+from tests.components.sleepiq import init_integration
 
 
-async def test_sensor_setup(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock)
+async def test_binary_sensors(hass, requests_mock) -> None:
+    """Test the SleepIQ binary sensors for a bed with two sides."""
+    await init_integration(hass, requests_mock)
 
-    await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
+    entity_registry = er.async_get(hass)
 
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 2
+    state = hass.states.get("binary_sensor.sleepnumber_ile_test1_is_in_bed")
+    assert state.state == "on"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.OCCUPANCY
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "SleepNumber ILE Test1 Is In Bed"
 
-    left_side = devices[1]
-    assert left_side.name == "SleepNumber ILE Test1 Is In Bed"
-    assert left_side.state == "on"
+    state = hass.states.get("binary_sensor.sleepnumber_ile_test2_is_in_bed")
+    assert state.state == "off"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed-empty"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.OCCUPANCY
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "SleepNumber ILE Test2 Is In Bed"
 
-    right_side = devices[0]
-    assert right_side.name == "SleepNumber ILE Test2 Is In Bed"
-    assert right_side.state == "off"
+    entry = entity_registry.async_get("binary_sensor.sleepnumber_ile_test1_is_in_bed")
+    assert entry
+    assert entry.unique_id == "-31_Test1_is_in_bed"
+
+    entry = entity_registry.async_get("binary_sensor.sleepnumber_ile_test2_is_in_bed")
+    assert entry
+    assert entry.unique_id == "-31_Test2_is_in_bed"
 
 
-async def test_setup_single(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock, single=True)
+async def test_binary_sensors_single(hass, requests_mock) -> None:
+    """Test the SleepIQ binary sensor for a single bed."""
+    await init_integration(hass, requests_mock)
 
-    await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
+    entity_registry = er.async_get(hass)
 
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 1
+    state = hass.states.get("binary_sensor.sleepnumber_ile_test1_is_in_bed")
+    assert state
+    assert state.state == "on"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.OCCUPANCY
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "SleepNumber ILE Test1 Is In Bed"
 
-    right_side = devices[0]
-    assert right_side.name == "SleepNumber ILE Test1 Is In Bed"
-    assert right_side.state == "on"
+    entry = entity_registry.async_get("binary_sensor.sleepnumber_ile_test1_is_in_bed")
+    assert entry
+    assert entry.unique_id == "-31_Test1_is_in_bed"
