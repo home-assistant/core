@@ -181,7 +181,7 @@ aiogithubapi==21.11.0
 aioguardian==2021.11.0
 
 # homeassistant.components.harmony
-aioharmony==0.2.8
+aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
 aiohomekit==0.6.10
@@ -192,6 +192,9 @@ aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
 aiohue==3.0.11
+
+# homeassistant.components.homewizard
+aiohwenergy==0.6.0
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -678,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.44
+flux_led==0.27.45
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -803,7 +806,7 @@ ha-philipsjs==2.7.6
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.16
+hangups==0.4.17
 
 # homeassistant.components.cloud
 hass-nabucasa==0.51.0
@@ -839,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211229.0
+home-assistant-frontend==20211229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10

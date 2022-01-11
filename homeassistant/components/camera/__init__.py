@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Awaitable, Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -14,7 +14,7 @@ import inspect
 import logging
 import os
 from random import SystemRandom
-from typing import Final, cast, final
+from typing import Awaitable, Callable, Final, Optional, cast, final
 
 from aiohttp import web
 import async_timeout
@@ -287,17 +287,23 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     return cast(Camera, camera)
 
 
+# An RtspToWebRtcProvider accepts these inputs:
+#     stream_source: The RTSP url
+#     offer_sdp: The WebRTC SDP offer
+#     stream_id: A unique id for the stream, used to update an existing source
+# The output is the SDP answer, or None if the source or offer is not eligible.
+# The Callable may throw HomeAssistantError on failure.
+RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[Optional[str]]]
+
+
 def async_register_rtsp_to_web_rtc_provider(
     hass: HomeAssistant,
     domain: str,
-    provider: Callable[[str, str], Awaitable[str | None]],
+    provider: RtspToWebRtcProviderType,
 ) -> Callable[[], None]:
     """Register an RTSP to WebRTC provider.
 
-    Integrations may register a Callable that accepts a `stream_source` and
-    SDP `offer` as an input, and the output is the SDP `answer`. An implementation
-    may return None if the source or offer is not eligible or throw HomeAssistantError
-    on failure. The first provider to satisfy the offer will be used.
+    The first provider to satisfy the offer will be used.
     """
     if DOMAIN not in hass.data:
         raise ValueError("Unexpected state, camera not loaded")
@@ -327,9 +333,9 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
 
 def _async_get_rtsp_to_web_rtc_providers(
     hass: HomeAssistant,
-) -> Iterable[Callable[[str, str], Awaitable[str | None]]]:
+) -> Iterable[RtspToWebRtcProviderType]:
     """Return registered RTSP to WebRTC providers."""
-    providers: dict[str, Callable[[str, str], Awaitable[str | None]]] = hass.data.get(
+    providers: dict[str, RtspToWebRtcProviderType] = hass.data.get(
         DATA_RTSP_TO_WEB_RTC, {}
     )
     return providers.values()
@@ -548,7 +554,7 @@ class Camera(Entity):
         if not stream_source:
             return None
         for provider in _async_get_rtsp_to_web_rtc_providers(self.hass):
-            answer_sdp = await provider(stream_source, offer_sdp)
+            answer_sdp = await provider(stream_source, offer_sdp, self.entity_id)
             if answer_sdp:
                 return answer_sdp
         raise HomeAssistantError("WebRTC offer was not accepted by any providers")
