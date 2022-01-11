@@ -40,7 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "Fireplace"
     assert result2["data"] == {"host": "1.1.1.1"}
 
-    #assert len(mock_setup_entry.mock_calls) == 23
+    # assert len(mock_setup_entry.mock_calls) == 23
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -131,9 +131,5 @@ async def test_validate_input(hass: HomeAssistant) -> None:
         assert mobj.serial == "12345"
 
         result = await validate_input(hass, {"host": "127.0.0.1"})
-        assert result.return_value == "12234"
 
-
-
-
-
+        assert result() == "1234"
