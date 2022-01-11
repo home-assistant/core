@@ -116,7 +116,8 @@ def check_loop(strict: bool = True) -> None:
     # Did not source from integration? Hard error.
     if found_frame is None:
         raise RuntimeError(
-            "Detected blocking call inside the event loop. This is causing stability issues. Please report issue"
+            "Detected blocking call inside the event loop. "
+            "This is causing stability issues. Please report issue"
         )
 
     start = index + len(path)
@@ -130,7 +131,8 @@ def check_loop(strict: bool = True) -> None:
         extra = ""
 
     _LOGGER.warning(
-        "Detected blocking call inside the event loop. This is causing stability issues. Please report issue%s for %s doing blocking calls at %s, line %s: %s",
+        "Detected blocking call inside the event loop. This is causing stability issues. "
+        "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
         extra,
         integration,
         found_frame.filename[index:],
