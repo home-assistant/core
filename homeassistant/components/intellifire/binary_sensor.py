@@ -21,7 +21,7 @@ from .const import DOMAIN
 class IntellifireSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[IntellifirePollData], bool | None]
+    value_fn: Callable[[IntellifirePollData], bool]
 
 
 @dataclass
@@ -76,6 +76,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """A semi-generic wrapper around Binary Sensor entities for IntelliFire."""
 
+    # Define types
+    coordinator: IntellifireDataUpdateCoordinator
+    entity_description: IntellifireBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: IntellifireDataUpdateCoordinator,
@@ -84,10 +88,7 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
     ):
         """Class initializer."""
         super().__init__(coordinator=coordinator)
-        self.entity_description: IntellifireBinarySensorEntityDescription = description
-
-        self.coordinator = coordinator
-        self._entry_id = entry_id
+        self.entity_description = description
 
         # Set the Display name the User will see
         self._attr_name = f"Fireplace {description.name}"
@@ -98,6 +99,6 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_info = self.coordinator.device_info
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Use this to get the correct value."""
-        return bool(self.entity_description.value_fn(self.coordinator.api.data))
+        return self.entity_description.value_fn(self.coordinator.api.data)
