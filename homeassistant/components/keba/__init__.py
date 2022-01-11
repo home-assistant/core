@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "keba"
-PLATORMS = (Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK, Platform.NOTIFY)
+PLATFORMS = (Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK, Platform.NOTIFY)
 
 CONF_RFID = "rfid"
 CONF_FS = "failsafe"
@@ -93,7 +93,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.services.async_register(DOMAIN, service, execute_service)
 
     # Load components
-    for platform in PLATORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
         )
