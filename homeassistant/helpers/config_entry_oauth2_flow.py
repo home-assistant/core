@@ -13,7 +13,7 @@ from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -346,7 +346,7 @@ async def async_get_implementations(
 ) -> dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
     registered = cast(
-        Dict[str, AbstractOAuth2Implementation],
+        dict[str, AbstractOAuth2Implementation],
         hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}),
     )
 
