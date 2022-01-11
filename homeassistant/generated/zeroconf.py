@@ -162,6 +162,12 @@ ZEROCONF = {
             }
         },
         {
+            "domain": "pure_energie",
+            "properties": {
+                "macaddress": "84df0c*"
+            }
+        },
+        {
             "domain": "rachio",
             "name": "rachio*"
         },

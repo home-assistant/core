@@ -802,7 +802,7 @@ progettihwsw==0.1.1
 prometheus_client==0.7.1
 
 # homeassistant.components.pure_energie
-pure-energie==0.2.0
+pure-energie==0.3.0
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0

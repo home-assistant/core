@@ -3,14 +3,16 @@
   "name": "Pure Energie",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pure_energie",
-  "requirements": ["pure-energie==0.2.0"],
+  "requirements": ["pure-energie==0.3.0"],
   "codeowners": ["@klaasnicolaas"],
   "quality_scale": "platinum",
   "iot_class": "local_polling",
-  "dhcp": [
+  "zeroconf": [
     {
-      "hostname": "smartbridge-*",
-      "macaddress": "84DF0C*"
+      "type": "_http._tcp.local.",
+      "properties": {
+        "macaddress": "84df0c*"
+      }
     }
   ]
 }
