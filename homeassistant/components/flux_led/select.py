@@ -230,9 +230,8 @@ class FluxWhiteChannelSelect(FluxConfigSelect):
         """Change the ic type."""
         entry = self.coordinator.entry
         hass = self.hass
-        config_entries = hass.config_entries
-        config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_WHITE_CHANNEL_TYPE: option.lower()}
         )
         # reload since we need to reinit the device
-        hass.async_create_task(config_entries.async_reload(entry.entry_id))
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
