@@ -11,6 +11,7 @@ import async_timeout
 
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 
@@ -129,7 +130,7 @@ async def async_send_changereport_message(
     message.set_endpoint_full(token, endpoint)
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     try:
         async with async_timeout.timeout(DEFAULT_TIMEOUT):
@@ -198,7 +199,7 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     )
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     return await session.post(
         config.endpoint, headers=headers, json=message_serialized, allow_redirects=True
@@ -231,7 +232,7 @@ async def async_send_delete_message(hass, config, entity_ids):
     )
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     return await session.post(
         config.endpoint, headers=headers, json=message_serialized, allow_redirects=True
@@ -261,7 +262,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     message.set_endpoint_full(token, endpoint)
 
     message_serialized = message.serialize()
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     try:
         async with async_timeout.timeout(DEFAULT_TIMEOUT):

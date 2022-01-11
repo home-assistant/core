@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from datetime import timedelta
-from typing import Any, Dict, Mapping, Optional, Tuple, cast
+from typing import Any, Mapping, Optional, cast
 
 import jwt
 
@@ -21,9 +21,9 @@ from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_REMOVED = "user_removed"
 
-_MfaModuleDict = Dict[str, MultiFactorAuthModule]
-_ProviderKey = Tuple[str, Optional[str]]
-_ProviderDict = Dict[_ProviderKey, AuthProvider]
+_MfaModuleDict = dict[str, MultiFactorAuthModule]
+_ProviderKey = tuple[str, Optional[str]]
+_ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
 class InvalidAuthError(Exception):

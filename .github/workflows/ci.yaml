@@ -12,7 +12,7 @@ on:
 env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 1
-  DEFAULT_PYTHON: 3.8
+  DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -467,7 +467,7 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -524,7 +524,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -593,7 +593,7 @@ jobs:
       - prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -633,7 +633,7 @@ jobs:
       - prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -681,7 +681,7 @@ jobs:
       fail-fast: false
       matrix:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -732,7 +732,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Run pytest (partially)
-        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
+        if: needs.changes.outputs.test_full_suite == 'false'
         timeout-minutes: 10
         shell: bash
         run: |
@@ -757,7 +757,7 @@ jobs:
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Run pytest (partially); no coverage
-        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version == '3.8'
+        if: needs.changes.outputs.test_full_suite == 'false'
         timeout-minutes: 10
         run: |
           . venv/bin/activate

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Final
+from typing import Any, Final, Union
 
 from pyoverkiz.enums import UIClass
 from pyoverkiz.enums.ui import UIWidget
@@ -37,3 +37,5 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform] = {
     UIClass.DOOR_LOCK: Platform.LOCK,
     UIClass.LIGHT: Platform.LIGHT,
 }
+
+OverkizStateType = Union[str, int, float, bool, dict[Any, Any], list[Any], None]

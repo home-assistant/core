@@ -102,6 +102,7 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     setup_tasks = [
         asyncio.create_task(async_setup_platform(integration_name, p_config))
         for integration_name, p_config in config_per_platform(config, DOMAIN)
+        if integration_name is not None
     ]
 
     if setup_tasks:

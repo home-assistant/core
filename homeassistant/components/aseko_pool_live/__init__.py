@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from aioaseko import APIUnavailable, MobileAccount, Unit, Variable
 
@@ -52,7 +51,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class AsekoDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Variable]]):
+class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Variable]]):
     """Class to manage fetching Aseko unit data from single endpoint."""
 
     def __init__(self, hass: HomeAssistant, unit: Unit) -> None:

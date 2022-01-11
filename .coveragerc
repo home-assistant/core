@@ -576,6 +576,7 @@ omit =
     homeassistant/components/lametric/*
     homeassistant/components/lannouncer/notify.py
     homeassistant/components/lastfm/sensor.py
+    homeassistant/components/launch_library/__init__.py
     homeassistant/components/launch_library/const.py
     homeassistant/components/launch_library/sensor.py
     homeassistant/components/lcn/binary_sensor.py
@@ -949,6 +950,12 @@ omit =
     homeassistant/components/sense/sensor.py
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
+    homeassistant/components/senseme/__init__.py
+    homeassistant/components/senseme/binary_sensor.py
+    homeassistant/components/senseme/discovery.py
+    homeassistant/components/senseme/entity.py
+    homeassistant/components/senseme/fan.py
+    homeassistant/components/senseme/switch.py
     homeassistant/components/sensibo/__init__.py
     homeassistant/components/sensibo/climate.py
     homeassistant/components/serial/sensor.py
@@ -1241,6 +1248,7 @@ omit =
     homeassistant/components/vesync/const.py
     homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/light.py
+    homeassistant/components/vesync/sensor.py
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/binary_sensor.py
@@ -1324,6 +1332,7 @@ omit =
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yale_smart_alarm/const.py
     homeassistant/components/yale_smart_alarm/coordinator.py
+    homeassistant/components/yale_smart_alarm/lock.py
     homeassistant/components/yamaha_musiccast/__init__.py
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yamaha_musiccast/number.py

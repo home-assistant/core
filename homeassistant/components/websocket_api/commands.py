@@ -9,8 +9,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
-from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED,
+    MATCH_ALL,
+    SIGNAL_BOOTSTRAP_INTEGRATONS,
+)
 from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     HomeAssistantError,

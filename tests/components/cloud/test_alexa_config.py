@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
@@ -127,7 +128,7 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
         Mock(
             alexa_access_token_url="http://example/alexa_token",
             auth=Mock(async_check_token=AsyncMock()),
-            websession=hass.helpers.aiohttp_client.async_get_clientsession(),
+            websession=async_get_clientsession(hass),
         ),
     )
 

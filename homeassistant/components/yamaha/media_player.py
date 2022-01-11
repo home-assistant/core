@@ -31,7 +31,9 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -99,15 +101,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    def __init__(self, config: ConfigType, discovery_info: DiscoveryInfoType) -> None:
+    def __init__(
+        self, config: ConfigType, discovery_info: DiscoveryInfoType | None
+    ) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
         self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
-        self.source_ignore = config.get(CONF_SOURCE_IGNORE)
-        self.source_names = config.get(CONF_SOURCE_NAMES)
-        self.zone_ignore = config.get(CONF_ZONE_IGNORE)
-        self.zone_names = config.get(CONF_ZONE_NAMES)
+        self.source_ignore = config[CONF_SOURCE_IGNORE]
+        self.source_names = config[CONF_SOURCE_NAMES]
+        self.zone_ignore = config[CONF_ZONE_IGNORE]
+        self.zone_names = config[CONF_ZONE_NAMES]
         self.from_discovery = False
         if discovery_info is not None:
             self.name = discovery_info.get("name")
@@ -138,9 +142,13 @@ def _discovery(config_info):
     return receivers
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Yamaha platform."""
-
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
     # for. Map each device from its zone_id .

@@ -175,6 +175,12 @@ STRICT_SETTINGS: Final[list[str]] = [
     # "no_implicit_reexport",
 ]
 
+# Strict settings are already applied for core files.
+# To enable granular typing, add additional settings if core files are given.
+STRICT_SETTINGS_CORE: Final[list[str]] = [
+    "disallow_any_generics",
+]
+
 
 def generate_and_validate(config: Config) -> str:
     """Validate and generate mypy config."""
@@ -185,11 +191,19 @@ def generate_and_validate(config: Config) -> str:
         lines = fp.readlines()
 
     # Filter empty and commented lines.
-    strict_modules: list[str] = [
+    parsed_modules: list[str] = [
         line.strip()
         for line in lines
         if line.strip() != "" and not line.startswith("#")
     ]
+
+    strict_modules: list[str] = []
+    strict_core_modules: list[str] = []
+    for module in parsed_modules:
+        if module.startswith("homeassistant.components"):
+            strict_modules.append(module)
+        else:
+            strict_core_modules.append(module)
 
     ignored_modules_set: set[str] = set(IGNORED_MODULES)
     for module in strict_modules:
@@ -206,7 +220,7 @@ def generate_and_validate(config: Config) -> str:
             )
 
     # Validate that all modules exist.
-    all_modules = strict_modules + IGNORED_MODULES
+    all_modules = strict_modules + strict_core_modules + IGNORED_MODULES
     for module in all_modules:
         if module.endswith(".*"):
             module_path = Path(module[:-2].replace(".", os.path.sep))
@@ -233,6 +247,12 @@ def generate_and_validate(config: Config) -> str:
         mypy_config.set(general_section, key, value)
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
+
+    for core_module in strict_core_modules:
+        core_section = f"mypy-{core_module}"
+        mypy_config.add_section(core_section)
+        for key in STRICT_SETTINGS_CORE:
+            mypy_config.set(core_section, key, "true")
 
     # By default strict checks are disabled for components.
     components_section = "mypy-homeassistant.components.*"

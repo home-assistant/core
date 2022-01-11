@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, List, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -191,7 +191,7 @@ def get_entity_ids(
 
     entity_ids = group.attributes[ATTR_ENTITY_ID]
     if not domain_filter:
-        return cast(List[str], entity_ids)
+        return cast(list[str], entity_ids)
 
     domain_filter = f"{domain_filter.lower()}."
 
