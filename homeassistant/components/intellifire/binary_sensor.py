@@ -21,7 +21,7 @@ from .const import DOMAIN
 class IntellifireSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[IntellifirePollData], bool | None]
+    value_fn: Callable[[IntellifirePollData], bool]
 
 
 @dataclass
