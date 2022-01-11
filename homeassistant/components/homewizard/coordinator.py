@@ -50,7 +50,7 @@ class HWEnergyDeviceUpdateCoordinator(
                     "API disabled, API must be enabled in the app"
                 ) from ex
 
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 raise UpdateFailed(
                     f"Error connecting with Energy Device at {self.api.host}"
                 ) from ex
@@ -82,7 +82,7 @@ class HWEnergyDeviceUpdateCoordinator(
         except aiohwenergy.AiohwenergyException as ex:
             raise UpdateFailed("Unknown Energy API error occurred") from ex
 
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             raise UpdateFailed(
                 f"Unknown error connecting with Energy Device at {self.api.host}"
             ) from ex
