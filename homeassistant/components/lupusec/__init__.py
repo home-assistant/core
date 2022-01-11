@@ -5,6 +5,7 @@ import lupupy
 from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -58,7 +59,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     except LupusecException as ex:
         _LOGGER.error(ex)
 
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
