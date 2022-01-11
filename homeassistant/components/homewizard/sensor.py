@@ -198,4 +198,4 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
     @property
     def available(self) -> bool:
         """Return availability of meter."""
-        return self.data_type in self.data["data"]
+        return super().available and self.data_type in self.data["data"]
