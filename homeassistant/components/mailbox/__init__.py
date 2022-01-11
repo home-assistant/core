@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -44,7 +44,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(MailboxMediaView(mailboxes))
     hass.http.register_view(MailboxDeleteView(mailboxes))
 
-    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
+    async def async_setup_platform(
+        p_type: str,
+        p_config: ConfigType | None = None,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Set up a mailbox platform."""
         if p_config is None:
             p_config = {}
@@ -87,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))  # type: ignore[no-untyped-call]
+        asyncio.create_task(async_setup_platform(p_type, p_config))
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
 
@@ -106,7 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class MailboxEntity(Entity):
     """Entity for each mailbox platform to provide a badge display."""
 
-    def __init__(self, mailbox):
+    def __init__(self, mailbox: Mailbox) -> None:
         """Initialize mailbox entity."""
         self.mailbox = mailbox
         self.message_count = 0
