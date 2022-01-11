@@ -41,6 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+NextLaunchSensor = SensorEntityDescription(
+    key="next_launch",
+    icon="mdi:rocket-launch",
+)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -79,11 +85,8 @@ async def async_setup_entry(
             NextLaunchSensor(
                 coordinator,
                 entry.entry_id,
-                SensorEntityDescription(
-                    key="next_launch",
-                    icon="mdi:rocket-launch",
-                    name=name,
-                ),
+                name,
+                NextLaunchSensor,
             ),
         ]
     )
@@ -99,11 +102,13 @@ class LaunchLibraryEntity(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         entry_id: str,
+        name: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a Launch Library base entity."""
         super().__init__(coordinator)
-        self._attr_name = description.name
+        self._attr_name = name
+        self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
