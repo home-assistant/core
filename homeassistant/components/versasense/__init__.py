@@ -89,8 +89,8 @@ def _add_entity_info(peripheral, device, entity_dict) -> None:
     return entity_dict
 
 
-def _load_platform(hass, config, entity_type, entity_info_list):
+def _load_platform(hass, config, entity_type, entity_info):
     """Load platform with list of entity info."""
     hass.async_create_task(
-        async_load_platform(hass, entity_type, DOMAIN, entity_info_list, config)
+        async_load_platform(hass, entity_type, DOMAIN, entity_info, config)
     )
