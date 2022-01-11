@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
@@ -98,9 +99,7 @@ async def async_migrate_entry(hass, entry):
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(
-            hass.helpers.aiohttp_client.async_get_clientsession()
-        )
+        loc = await location.async_detect_location_info(async_get_clientsession(hass))
         if loc:
             country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
