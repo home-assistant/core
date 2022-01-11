@@ -61,6 +61,8 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(self.uuid + self.url)
                     self._abort_if_unique_id_configured()
                 errors[CONF_URL] = "could_not_retrieve_data"
+            else:
+                return self.async_abort(reason="no_valid_uuid_set")
             return self.async_create_entry(
                 title=self.url,
                 data={"url": self.url, "token": self.token},
@@ -83,5 +85,6 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self.uuid is not None:
             await self.async_set_unique_id(self.uuid + self.url)
             self._abort_if_unique_id_configured()
-
+        else:
+            return self.async_abort(reason="no_valid_uuid_set")
         return await self.async_step_user()
