@@ -262,6 +262,7 @@ class SensorEntity(Entity):
         None  # Subclasses of SensorEntity should not set this
     )
     _last_reset_reported = False
+    _no_check_last_reset = False
     _temperature_conversion_reported = False
 
     # Temporary private attribute to track if deprecation has been logged.
@@ -310,6 +311,7 @@ class SensorEntity(Entity):
             if (
                 self.state_class != SensorStateClass.TOTAL
                 and not self._last_reset_reported
+                and not self._no_check_last_reset
             ):
                 self._last_reset_reported = True
                 report_issue = self._suggest_report_issue()
@@ -326,7 +328,7 @@ class SensorEntity(Entity):
                     report_issue,
                 )
 
-            if self.state_class == SensorStateClass.TOTAL:
+            if self.state_class == SensorStateClass.TOTAL or self._no_check_last_reset:
                 return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None

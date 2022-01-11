@@ -140,6 +140,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class UtilityMeterSensor(RestoreEntity, SensorEntity):
     """Representation of an utility meter sensor."""
 
+    _no_check_last_reset = True
+
     def __init__(
         self,
         parent_meter,
