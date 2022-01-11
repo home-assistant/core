@@ -60,7 +60,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_setup_august(hass, config_entry, august_gateway):
+async def async_setup_august(
+    hass: HomeAssistant, config_entry: ConfigEntry, august_gateway: AugustGateway
+) -> bool:
     """Set up the August component."""
 
     if CONF_PASSWORD in config_entry.data:
@@ -245,11 +247,29 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
+    async def async_lock_async(self, device_id):
+        """Lock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_lock_async,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
     async def async_unlock(self, device_id):
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_unlock_return_activities,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
+    async def async_unlock_async(self, device_id):
+        """Unlock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_unlock_async,
             self._august_gateway.access_token,
             device_id,
         )

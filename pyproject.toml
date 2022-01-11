@@ -17,7 +17,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
-py-version = "3.8"
+py-version = "3.9"
 ignore = [
     "tests",
 ]
@@ -76,6 +76,7 @@ good-names = [
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
 # consider-using-assignment-expr (Pylint CodeStyle extension)
+# deprecated-typing-alias (temporarily while updating code to Python 3.9)
 disable = [
     "format",
     "abstract-class-little-used",
@@ -101,6 +102,7 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
+    "deprecated-typing-alias",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up

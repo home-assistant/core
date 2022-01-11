@@ -1,4 +1,6 @@
 """Stock market information from Alpha Vantage."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -8,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +66,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Alpha Vantage sensor."""
     api_key = config[CONF_API_KEY]
     symbols = config.get(CONF_SYMBOLS, [])
@@ -75,7 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     timeseries = TimeSeries(key=api_key)
 
-    dev = []
+    dev: list[SensorEntity] = []
     for symbol in symbols:
         try:
             _LOGGER.debug("Configuring timeseries for symbols: %s", symbol[CONF_SYMBOL])

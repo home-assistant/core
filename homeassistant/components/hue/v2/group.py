@@ -7,6 +7,7 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
+from aiohue.v2.models.feature import DynamicsFeatureStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -105,7 +106,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self._attr_entity_registry_enabled_default = bridge.config_entry.options.get(
             CONF_ALLOW_HUE_GROUPS, False
         )
-
+        self._dynamic_mode_active = False
         self._update_values()
 
     async def async_added_to_hass(self) -> None:
@@ -148,6 +149,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             "hue_scenes": scenes,
             "hue_type": self.group.type.value,
             "lights": lights,
+            "dynamics": self._dynamic_mode_active,
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -261,6 +263,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         total_brightness = 0
         all_lights = self.controller.get_lights(self.resource.id)
         lights_in_colortemp_mode = 0
+        lights_in_dynamic_mode = 0
         # loop through all lights to find capabilities
         for light in all_lights:
             if color_temp := light.color_temperature:
@@ -278,6 +281,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             if dimming := light.dimming:
                 lights_with_dimming_support += 1
                 total_brightness += dimming.brightness
+            if (
+                light.dynamics
+                and light.dynamics.status == DynamicsFeatureStatus.DYNAMIC_PALETTE
+            ):
+                lights_in_dynamic_mode += 1
+
         # this is a bit hacky because light groups may contain lights
         # of different capabilities. We set a colormode as supported
         # if any of the lights support it
@@ -296,9 +305,13 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             )
         else:
             supported_color_modes.add(COLOR_MODE_ONOFF)
+        self._dynamic_mode_active = lights_in_dynamic_mode > 0
         self._attr_supported_color_modes = supported_color_modes
         # pick a winner for the current colormode
-        if lights_in_colortemp_mode == lights_with_color_temp_support:
+        if (
+            lights_with_color_temp_support > 0
+            and lights_in_colortemp_mode == lights_with_color_temp_support
+        ):
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
         elif lights_with_color_support > 0:
             self._attr_color_mode = COLOR_MODE_XY

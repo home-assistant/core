@@ -7,6 +7,10 @@
         "data": {
           "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
         }
+      },
+      "hassio_confirm": {
+        "title": "RTSPtoWebRTC via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the RTSPtoWebRTC server provided by the add-on: {addon}?"
       }
     },
     "error": {

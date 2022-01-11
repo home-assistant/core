@@ -29,13 +29,13 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    devices: list[LeafEntity] = []
+    entities: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
-        devices.append(LeafPluggedInSensor(datastore))
-        devices.append(LeafChargingSensor(datastore))
+        entities.append(LeafPluggedInSensor(datastore))
+        entities.append(LeafChargingSensor(datastore))
 
-    add_entities(devices, True)
+    add_entities(entities, True)
 
 
 class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):

@@ -18,9 +18,9 @@ from homeassistant.components.google_assistant import const as gc, smart_home as
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util.aiohttp import MockRequest
+from homeassistant.util.aiohttp import MockRequest, serialize_response
 
-from . import alexa_config, google_config, utils
+from . import alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
 
@@ -225,7 +225,7 @@ class CloudClient(Interface):
             found["webhook_id"], request
         )
 
-        response_dict = utils.aiohttp_serialize_response(response)
+        response_dict = serialize_response(response)
         body = response_dict.get("body")
 
         return {

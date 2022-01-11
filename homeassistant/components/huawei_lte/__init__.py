@@ -461,7 +461,7 @@ async def async_setup_entry(  # noqa: C901
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
         hass,
-        NOTIFY_DOMAIN,
+        Platform.NOTIFY,
         DOMAIN,
         {
             ATTR_UNIQUE_ID: entry.unique_id,
@@ -653,14 +653,6 @@ class HuaweiLteBaseEntity(Entity):
         """Huawei LTE entities report their state without polling."""
         return False
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get info for matching with parent router."""
-        return DeviceInfo(
-            connections=self.router.device_connections,
-            identifiers=self.router.device_identifiers,
-        )
-
     async def async_update(self) -> None:
         """Update state."""
         raise NotImplementedError
@@ -681,3 +673,15 @@ class HuaweiLteBaseEntity(Entity):
         for unsub in self._unsub_handlers:
             unsub()
         self._unsub_handlers.clear()
+
+
+class HuaweiLteBaseEntityWithDevice(HuaweiLteBaseEntity):
+    """Base entity with device info."""
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Get info for matching with parent router."""
+        return DeviceInfo(
+            connections=self.router.device_connections,
+            identifiers=self.router.device_identifiers,
+        )

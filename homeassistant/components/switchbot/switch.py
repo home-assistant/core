@@ -119,6 +119,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
         super().__init__(coordinator, idx, mac, name)
         self._attr_unique_id = idx
         self._device = device
+        self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -138,6 +139,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             )
             if self._last_run_success:
                 self._attr_is_on = True
+                self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
@@ -149,6 +151,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             )
             if self._last_run_success:
                 self._attr_is_on = False
+                self.async_write_ha_state()
 
     @property
     def assumed_state(self) -> bool:

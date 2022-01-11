@@ -1,5 +1,6 @@
 """Doorsensor Support for the Nuki Lock."""
-from pynuki import STATE_DOORSENSOR_OPENED
+
+from pynuki.constants import STATE_DOORSENSOR_OPENED
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

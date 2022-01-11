@@ -10,13 +10,16 @@ import simplehound.core as hound
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_API_KEY,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

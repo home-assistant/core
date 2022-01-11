@@ -5,13 +5,11 @@ import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
-    STATE_OFF,
-    STATE_ON,
     SUPPORT_OPERATION_MODE,
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import STATE_OFF, STATE_ON, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo

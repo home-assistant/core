@@ -1,19 +1,26 @@
 """Support for Spider Powerplugs (energy & power)."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize a Spider Power Plug."""
     api = hass.data[DOMAIN][config.entry_id]
-    entities = []
+    entities: list[SensorEntity] = []
 
     for entity in await hass.async_add_executor_job(api.get_power_plugs):
         entities.append(SpiderPowerPlugEnergy(api, entity))

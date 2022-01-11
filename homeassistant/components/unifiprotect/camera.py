@@ -5,7 +5,7 @@ from collections.abc import Generator
 import logging
 
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera as UFPCamera
+from pyunifiprotect.data import Camera as UFPCamera, StateType
 from pyunifiprotect.data.devices import CameraChannel
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
@@ -88,6 +88,8 @@ async def async_setup_entry(
 class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
 
+    device: UFPCamera
+
     def __init__(
         self,
         data: ProtectData,
@@ -98,12 +100,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         disable_stream: bool,
     ) -> None:
         """Initialize an UniFi camera."""
-        self.device: UFPCamera = camera
         self.channel = channel
         self._secure = secure
         self._disable_stream = disable_stream
         self._last_image: bytes | None = None
-        super().__init__(data)
+        super().__init__(data, camera)
 
         if self._secure:
             self._attr_unique_id = f"{self.device.id}_{self.channel.id}"
@@ -137,9 +138,12 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         super()._async_update_device_from_protect()
         self.channel = self.device.channels[self.channel.id]
         self._attr_motion_detection_enabled = (
-            self.device.is_connected and self.device.feature_flags.has_motion_zones
+            self.device.state == StateType.CONNECTED
+            and self.device.feature_flags.has_motion_zones
         )
-        self._attr_is_recording = self.device.is_connected and self.device.is_recording
+        self._attr_is_recording = (
+            self.device.state == StateType.CONNECTED and self.device.is_recording
+        )
 
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {

@@ -14,11 +14,11 @@ import weakref
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
-from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from .core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from .components import persistent_notification
+from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
+from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry
-from .helpers.event import Event
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import async_process_deps_reqs, async_setup_component
@@ -658,9 +658,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):
-            self.hass.components.persistent_notification.async_dismiss(
-                DISCOVERY_NOTIFICATION_ID
-            )
+            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
 
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
@@ -758,7 +756,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Create notification.
         if source in DISCOVERY_SOURCES:
             self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 title="New devices discovered",
                 message=(
                     "We have discovered new devices on your network. "
@@ -767,7 +766,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 notification_id=DISCOVERY_NOTIFICATION_ID,
             )
         elif source == SOURCE_REAUTH:
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 title="Integration requires reconfiguration",
                 message=(
                     "At least one of your integrations requires reconfiguration to "
@@ -1101,13 +1101,15 @@ class ConfigEntries:
 
     @callback
     def async_setup_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[str]
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
 
-    async def async_forward_entry_setup(self, entry: ConfigEntry, domain: str) -> bool:
+    async def async_forward_entry_setup(
+        self, entry: ConfigEntry, domain: Platform | str
+    ) -> bool:
         """Forward the setup of an entry to a different component.
 
         By default an entry is setup with the component it belongs to. If that
@@ -1130,7 +1132,7 @@ class ConfigEntries:
         return True
 
     async def async_unload_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[str]
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> bool:
         """Forward the unloading of an entry to platforms."""
         return all(
@@ -1142,7 +1144,9 @@ class ConfigEntries:
             )
         )
 
-    async def async_forward_entry_unload(self, entry: ConfigEntry, domain: str) -> bool:
+    async def async_forward_entry_unload(
+        self, entry: ConfigEntry, domain: Platform | str
+    ) -> bool:
         """Forward the unloading of an entry to a different component."""
         # It was never loaded.
         if domain not in self.hass.config.components:
@@ -1379,8 +1383,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             )
             if ent["flow_id"] != self.flow_id
         ):
-            self.hass.components.persistent_notification.async_dismiss(
-                RECONFIGURE_NOTIFICATION_ID
+            persistent_notification.async_dismiss(
+                self.hass, RECONFIGURE_NOTIFICATION_ID
             )
 
         return super().async_abort(

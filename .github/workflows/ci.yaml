@@ -12,7 +12,7 @@ on:
 env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 1
-  DEFAULT_PYTHON: 3.8
+  DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -132,6 +132,7 @@ jobs:
   prepare-base:
     name: Prepare base dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
       pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
@@ -466,7 +467,7 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -520,9 +521,10 @@ jobs:
   prepare-tests:
     name: Prepare tests for Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -585,12 +587,13 @@ jobs:
   pylint:
     name: Check pylint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs:
       - changes
       - prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -630,7 +633,7 @@ jobs:
       - prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -678,7 +681,7 @@ jobs:
       fail-fast: false
       matrix:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -712,6 +715,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Run pytest (fully)
         if: needs.changes.outputs.test_full_suite == 'true'
+        timeout-minutes: 45
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \
@@ -728,9 +732,17 @@ jobs:
             -p no:sugar \
             tests
       - name: Run pytest (partially)
-        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
+        if: needs.changes.outputs.test_full_suite == 'false'
+        timeout-minutes: 10
+        shell: bash
         run: |
           . venv/bin/activate
+
+          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
+            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
+            exit 1
+          fi
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -745,7 +757,8 @@ jobs:
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Run pytest (partially); no coverage
-        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version == '3.8'
+        if: needs.changes.outputs.test_full_suite == 'false'
+        timeout-minutes: 10
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \

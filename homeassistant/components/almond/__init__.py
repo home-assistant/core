@@ -221,7 +221,7 @@ async def _configure_almond_for_ha(
             await hass.auth.async_remove_refresh_token(token)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Almond."""
     conversation.async_set_agent(hass, None)
     return True

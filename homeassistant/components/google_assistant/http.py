@@ -12,9 +12,10 @@ from aiohttp import ClientError, ClientResponseError
 from aiohttp.web import Request, Response
 import jwt
 
-# Typing imports
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
+
+# Typing imports
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -83,6 +84,12 @@ class GoogleConfig(AbstractConfig):
         self._config = config
         self._access_token = None
         self._access_token_renew = None
+
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        await super().async_initialize()
+
+        self.async_enable_local_sdk()
 
     @property
     def enabled(self):

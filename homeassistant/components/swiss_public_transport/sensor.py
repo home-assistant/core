@@ -63,7 +63,7 @@ async def async_setup_platform(
     destination = config.get(CONF_DESTINATION)
 
     session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, hass.loop, session)
+    opendata = OpendataTransport(start, destination, session)
 
     try:
         await opendata.async_get_data()
