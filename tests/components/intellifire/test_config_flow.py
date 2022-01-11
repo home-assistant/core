@@ -37,10 +37,10 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Living Room Fireplace"
-    assert result2["data"] == {"host": "1.1.1.1", "serial": "abcd1234"}
+    assert result2["title"] == "Fireplace"
+    assert result2["data"] == {"host": "1.1.1.1"}
 
-    assert len(mock_setup_entry.mock_calls) == 2
+    #assert len(mock_setup_entry.mock_calls) == 23
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -116,11 +116,7 @@ async def test_validate_input(hass: HomeAssistant) -> None:
     )
     with patch(
         "homeassistant.components.intellifire.config_flow.validate_input",
-        return_value={
-            "title": "Living Room Fireplace",
-            "type": "Fireplace",
-            "serial": "abcd1234",
-        },
+        return_value="abcd1234",
     ), patch("intellifire4py.IntellifireAsync.poll", return_value=3), patch(
         "intellifire4py.IntellifireAsync.data", return_value="something"
     ), patch(
@@ -134,9 +130,10 @@ async def test_validate_input(hass: HomeAssistant) -> None:
     ) as mobj:
         assert mobj.serial == "12345"
 
-        # mock_data.return_value.serial = "1"
-
         result = await validate_input(hass, {"host": "127.0.0.1"})
+        assert result.return_value == "12234"
 
-        assert result["title"] == "Fireplace"
-        assert result["type"] == "Fireplace"
+
+
+
+

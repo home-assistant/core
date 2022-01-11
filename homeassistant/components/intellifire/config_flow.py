@@ -29,7 +29,7 @@ async def validate_input(hass: HomeAssistant, host: str) -> str:
         raise CannotConnect from exception
 
     # Return the serial number which will be used to calculate a unique ID for the device/sensors
-    return api.data.serial_number
+    return api.data.serial
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -51,11 +51,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             serial = await validate_input(self.hass, user_input[CONF_HOST])
         except CannotConnect:
             errors["base"] = "cannot_connect"
+            LOGGER.exception("Connection Exception")
+            return self.async_show_form(step_id="user",data_schema=STEP_USER_DATA_SCHEMA,errors=errors)
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected Exception")
             errors["base"] = "unknown"
+            return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
         else:
-            # return self.async_create_entry(title=info["title"], data=user_input)
             await self.async_set_unique_id(serial)
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: user_input[CONF_HOST]}
@@ -63,9 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title="Fireplace",
-            data={
-                CONF_HOST: user_input[CONF_HOST],
-            },
+            data={CONF_HOST: user_input[CONF_HOST]},
         )
 
 
