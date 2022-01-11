@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.base_device import DeviceType
+from flux_led.const import DEFAULT_WHITE_CHANNEL_TYPE, WhiteChannelType
 from flux_led.protocol import PowerRestoreState, RemoteConfig
 
 from homeassistant import config_entries
@@ -12,9 +13,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_WHITE_CHANNEL_TYPE, DOMAIN, FLUX_COLOR_MODE_RGBW
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxBaseEntity, FluxEntity
+from .util import _human_readable_option
+
+NAME_TO_POWER_RESTORE_STATE = {
+    _human_readable_option(option.name): option for option in PowerRestoreState
+}
 
 
 async def async_setup_entry(
@@ -31,6 +37,7 @@ async def async_setup_entry(
         | FluxWiringsSelect
         | FluxICTypeSelect
         | FluxRemoteConfigSelect
+        | FluxWhiteChannelSelect
     ] = []
     name = entry.data[CONF_NAME]
     unique_id = entry.unique_id
@@ -57,13 +64,15 @@ async def async_setup_entry(
                 coordinator, unique_id, f"{name} Remote Config", "remote_config"
             )
         )
+    if FLUX_COLOR_MODE_RGBW in device.color_modes:
+        entities.append(
+            FluxWhiteChannelSelect(
+                coordinator, unique_id, f"{name} White Channel", "white_channel"
+            )
+        )
 
     if entities:
         async_add_entities(entities)
-
-
-def _human_readable_option(const_option: str) -> str:
-    return const_option.replace("_", " ").title()
 
 
 class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
@@ -82,10 +91,7 @@ class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
         self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_power_restored"
-        self._name_to_state = {
-            _human_readable_option(option.name): option for option in PowerRestoreState
-        }
-        self._attr_options = list(self._name_to_state)
+        self._attr_options = list(NAME_TO_POWER_RESTORE_STATE)
         self._async_set_current_option_from_device()
 
     @callback
@@ -98,7 +104,9 @@ class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the power state."""
-        await self._device.async_set_power_restore(channel1=self._name_to_state[option])
+        await self._device.async_set_power_restore(
+            channel1=NAME_TO_POWER_RESTORE_STATE[option]
+        )
         self._async_set_current_option_from_device()
         self.async_write_ha_state()
 
@@ -202,3 +210,29 @@ class FluxRemoteConfigSelect(FluxConfigSelect):
         """Change the remote config setting."""
         remote_config: RemoteConfig = self._name_to_state[option]
         await self._device.async_config_remotes(remote_config)
+
+
+class FluxWhiteChannelSelect(FluxConfigSelect):
+    """Representation of Flux white channel."""
+
+    _attr_options = [_human_readable_option(option.name) for option in WhiteChannelType]
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current operating mode."""
+        return _human_readable_option(
+            self.coordinator.entry.data.get(
+                CONF_WHITE_CHANNEL_TYPE, DEFAULT_WHITE_CHANNEL_TYPE.name
+            )
+        )
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the ic type."""
+        entry = self.coordinator.entry
+        hass = self.hass
+        config_entries = hass.config_entries
+        config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_WHITE_CHANNEL_TYPE: option.lower()}
+        )
+        # reload since we need to reinit the device
+        hass.async_create_task(config_entries.async_reload(entry.entry_id))
