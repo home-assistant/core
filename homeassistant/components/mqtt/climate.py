@@ -794,25 +794,12 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set a preset mode."""
-        if preset_mode == self.preset_mode:
-            return
-
         # Track if we should optimistic update the state
-        optimistic_update = False
-
-        if self._away:
-            optimistic_update = optimistic_update or await self._set_away_mode(False)
-        elif preset_mode == PRESET_AWAY:
-            if self._hold:
-                await self._set_hold_mode(None)
-            optimistic_update = optimistic_update or await self._set_away_mode(True)
-        else:
-            hold_mode = preset_mode
-            if preset_mode == PRESET_NONE:
-                hold_mode = None
-            optimistic_update = optimistic_update or await self._set_hold_mode(
-                hold_mode
-            )
+        optimistic_update = await self._set_away_mode(preset_mode == PRESET_AWAY)
+        hold_mode = preset_mode
+        if preset_mode in [PRESET_NONE, PRESET_AWAY]:
+            hold_mode = None
+        optimistic_update = await self._set_hold_mode(hold_mode) or optimistic_update
 
         if optimistic_update:
             self.async_write_ha_state()
