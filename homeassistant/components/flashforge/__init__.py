@@ -17,8 +17,6 @@ PLATFORMS = [SENSOR_DOMAIN]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FlashForge 3D Printer from a config entry."""
     printer = Printer(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
-    # await printer.updateMachineInfo()
-    # printer = entry.data[CONF_OBJECT]
 
     hass.data.setdefault(DOMAIN, {})
 

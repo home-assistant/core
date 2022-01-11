@@ -21,8 +21,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the available FlashForge sensors platform."""
 
-    # This is called after async_setup_entry in __init__.py
-
     # Get coordinator and unique id.
     coordinator: FlashForgeDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
@@ -30,7 +28,6 @@ async def async_setup_entry(
     printer: Printer = hass.data[DOMAIN][config_entry.entry_id]["printer"]
     device_id = config_entry.unique_id or ""
 
-    # Create a list of your sensors on this platform.
     entities: list[SensorEntity] = []
 
     # Create temperature sensors.

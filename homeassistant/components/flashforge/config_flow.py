@@ -15,17 +15,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN
 
-# async def _async_has_devices(hass: HomeAssistant) -> bool:
-#     """Return if there are devices that can be discovered."""
-# T O D O Check if there are any devices that can be discovered in the network.
-#     devices = await hass.async_add_executor_job(ffpp.Printer.discover)
-#     return len(devices) > 0
-
-
-# config_entry_flow.register_discovery_flow(
-#     DOMAIN, "FlashForge 3D Printer", _async_has_devices
-# )
-
 
 class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow."""
@@ -40,12 +29,10 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Run when user trying to add component."""
-        # Default values.
         errors = {}
         self.port = 8899
         self.ip_addr = None
 
-        # Validate user data
         if user_input is not None:
 
             if CONF_IP_ADDRESS not in user_input:
@@ -53,7 +40,6 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # then show the confirm form.
                 return await self.async_step_auto()
 
-            # Update fields to the last state.
             self.ip_addr = user_input[CONF_IP_ADDRESS]
             self.port = user_input[CONF_PORT]
 
