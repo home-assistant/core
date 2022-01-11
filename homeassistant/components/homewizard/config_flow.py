@@ -155,7 +155,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow("api_not_enabled") from ex
 
         except Exception as ex:
-            _LOGGER.error(
+            _LOGGER.exception(
                 "Error connecting with Energy Device at %s",
                 ip_address,
             )
