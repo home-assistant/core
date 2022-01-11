@@ -3,10 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import re
 from typing import Any
-
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -39,9 +36,7 @@ ATTR_TIME = "alert time"
 class ECSensorEntityDescription(SensorEntityDescription):
     """Class describing EC sensor entities."""
 
-    value: Callable[[str, Any], Any] = lambda key, ecdata: ecdata.conditions.get(
-        key, {}
-    ).get("value")
+    value: Callable[[str, Any], Any] | None = None
     transform: Callable[[Any], Any] | None = None
 
 
@@ -127,10 +122,14 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ECSensorEntityDescription(
-        key="tendency", name="Tendency", transform=lambda val: str(val).capitalize()
+        key="tendency",
+        name="Tendency",
+        transform=lambda val: str(val).capitalize(),
     ),
     ECSensorEntityDescription(
-        key="text_summary", name="Summary", transform=lambda val: val[:255]
+        key="text_summary",
+        name="Summary",
+        transform=lambda val: val[:255],
     ),
     ECSensorEntityDescription(
         key="timestamp",
@@ -218,15 +217,6 @@ ALERT_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return None
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -257,6 +247,8 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
 class ECSensor(ECBaseSensor):
     """Environment Canada sensor for conditions."""
 
+    entity_description: ECSensorEntityDescription
+
     def __init__(self, coordinator, description):
         """Initialize the sensor."""
         super().__init__(coordinator, description)
@@ -269,7 +261,10 @@ class ECSensor(ECBaseSensor):
     def native_value(self):
         """Update current conditions."""
         sensor_type = self.entity_description.key
-        value = self.entity_description.value(sensor_type, self._ec_data)
+        if self.entity_description.value:
+            value = self.entity_description.value(sensor_type, self._ec_data)
+        else:
+            value = self._ec_data.conditions.get(sensor_type, {}).get("value")
         if self.entity_description.transform:
             value = self.entity_description.transform(value)
         return value
