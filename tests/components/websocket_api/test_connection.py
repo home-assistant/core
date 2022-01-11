@@ -20,7 +20,7 @@ async def test_send_big_result(hass, websocket_client):
     async def send_big_result(hass, connection, msg):
         await connection.send_big_result(msg["id"], {"big": "result"})
 
-    hass.components.websocket_api.async_register_command(send_big_result)
+    websocket_api.async_register_command(hass, send_big_result)
 
     await websocket_client.send_json({"id": 5, "type": "big_result"})
 
