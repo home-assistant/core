@@ -1,11 +1,16 @@
 """Tests for select platform."""
 from unittest.mock import patch
 
+from flux_led.const import (
+    COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
+    COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
+    WhiteChannelType,
+)
 from flux_led.protocol import PowerRestoreState, RemoteConfig
 import pytest
 
 from homeassistant.components import flux_led
-from homeassistant.components.flux_led.const import DOMAIN
+from homeassistant.components.flux_led.const import CONF_WHITE_CHANNEL_TYPE, DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -191,3 +196,51 @@ async def test_select_24ghz_remote_config(hass: HomeAssistant) -> None:
     )
     bulb.async_config_remotes.assert_called_once_with(RemoteConfig.PAIRED_ONLY)
     bulb.async_config_remotes.reset_mock()
+
+
+async def test_select_white_channel_type(hass: HomeAssistant) -> None:
+    """Test selecting the white channel type."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.color_modes = {FLUX_COLOR_MODE_RGBW, FLUX_COLOR_MODE_CCT}
+    bulb.color_mode = FLUX_COLOR_MODE_RGBW
+    bulb.raw_state = bulb.raw_state._replace(model_num=0x06)  # rgbw
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    operating_mode_entity_id = "select.bulb_rgbcw_ddeeff_white_channel"
+    state = hass.states.get(operating_mode_entity_id)
+    assert state.state == WhiteChannelType.WARM.name.title()
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            "select_option",
+            {ATTR_ENTITY_ID: operating_mode_entity_id, ATTR_OPTION: "INVALID"},
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.flux_led.async_setup_entry"
+    ) as mock_setup_entry:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            "select_option",
+            {
+                ATTR_ENTITY_ID: operating_mode_entity_id,
+                ATTR_OPTION: WhiteChannelType.NATURAL.name.title(),
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert (
+        config_entry.data[CONF_WHITE_CHANNEL_TYPE]
+        == WhiteChannelType.NATURAL.name.lower()
+    )
+    assert len(mock_setup_entry.mock_calls) == 1
