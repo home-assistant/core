@@ -166,7 +166,7 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
         # Special case for export, not everyone has solarpanels
-        # The change that 'export' is non-zero when you have solar panels is nil
+        # The chance that 'export' is non-zero when you have solar panels is nil
         if self.data_type in [
             "total_power_export_t1_kwh",
             "total_power_export_t2_kwh",
