@@ -136,7 +136,7 @@ async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> N
     await _async_call_nvr(instances, "set_default_doorbell_message", message)
 
 
-def setup_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the global UniFi Protect services."""
     services = [
         (
@@ -161,7 +161,7 @@ def setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(DOMAIN, name, method, schema=schema)
 
 
-def cleanup_services(hass: HomeAssistant) -> None:
+def async_cleanup_services(hass: HomeAssistant) -> None:
     """Cleanup global UniFi Protect services (if all config entries unloaded)."""
     loaded_entries = [
         entry
