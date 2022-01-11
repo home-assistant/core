@@ -765,3 +765,5 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
+
+SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
