@@ -398,6 +398,8 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             state_attr[ATTR_CRON_PATTERN] = self._cron_pattern
         if self._tariff is not None:
             state_attr[ATTR_TARIFF] = self._tariff
+        # SensorEntity blocks last_reset for total_increasing sensor, add it as an extra
+        # attribute instead
         if last_reset := self._last_reset:
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
 
@@ -407,8 +409,3 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
-
-    @property
-    def last_reset(self):
-        """Return the time when the sensor was last reset."""
-        return self._last_reset
