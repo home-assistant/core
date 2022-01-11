@@ -291,6 +291,7 @@ async def async_extract_config(
         *(
             async_create_platform_type(hass, config, p_type, p_config)
             for p_type, p_config in config_per_platform(config, DOMAIN)
+            if p_type is not None
         )
     ):
         if platform is None:
