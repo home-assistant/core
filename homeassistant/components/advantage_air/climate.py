@@ -49,7 +49,11 @@ AC_HVAC_MODES = [
     HVAC_MODE_DRY,
 ]
 
+MYAIR5 = "MyAir5"
+MYAIR5_FAN_AUTO = "autoAA"
+
 ADVANTAGE_AIR_FAN_MODES = {
+    MYAIR5_FAN_AUTO: FAN_AUTO,
     "auto": FAN_AUTO,
     "low": FAN_LOW,
     "medium": FAN_MEDIUM,
@@ -60,6 +64,7 @@ FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
 ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL]
+
 
 PARALLEL_UPDATES = 0
 
@@ -151,9 +156,14 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set the Fan Mode."""
-        await self.async_change(
-            {self.ac_key: {"info": {"fan": HASS_FAN_MODES.get(fan_mode)}}}
-        )
+        mode = HASS_FAN_MODES.get(fan_mode)
+        # MyAir5 has a unique automatic fan mode branded "myfan" that reports as "autoAA"
+        if (
+            self.coordinator.data["system"]["sysType"] == MYAIR5
+            and fan_mode == FAN_AUTO
+        ):
+            mode = MYAIR5_FAN_AUTO
+        await self.async_change({self.ac_key: {"info": {"fan": mode}}})
 
     async def async_set_temperature(self, **kwargs):
         """Set the Temperature."""

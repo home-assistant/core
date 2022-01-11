@@ -152,7 +152,7 @@
         "hasThingsLight": false,
         "name": "testname",
         "rid": "uniqueid",
-        "sysType": "e-zone",
+        "sysType": "MyAir5",
         "myAppRev": "testversion"
     }
 }
