@@ -23,7 +23,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for P1 meter."""
 
     VERSION = 1
-    config: dict[str, str | int] = {}
+
+    def __init__(self) -> None:
+        """Initialize the HomeWizard config flow."""
+        self.config: dict[str, str | int] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
