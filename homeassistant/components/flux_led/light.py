@@ -199,9 +199,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, unique_id, name, None)
-        self._attr_min_mireds = (
-            color_temperature_kelvin_to_mired(self._device.max_temp) + 1
-        )  # for rounding
+        self._attr_min_mireds = color_temperature_kelvin_to_mired(self._device.max_temp)
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = _hass_color_modes(self._device)
         custom_effects: list[str] = []
