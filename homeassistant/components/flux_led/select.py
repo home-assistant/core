@@ -227,7 +227,7 @@ class FluxWhiteChannelSelect(FluxConfigSelect):
         )
 
     async def async_select_option(self, option: str) -> None:
-        """Change the ic type."""
+        """Change the white channel type."""
         entry = self.coordinator.entry
         hass = self.hass
         hass.config_entries.async_update_entry(
