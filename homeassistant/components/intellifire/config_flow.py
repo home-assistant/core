@@ -7,30 +7,29 @@ from intellifire4py import IntellifireAsync
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, host: str) -> str:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    api = IntellifireAsync(data["host"])
+    api = IntellifireAsync(host)
     try:
         await api.poll()
     except Exception as exception:
         raise CannotConnect from exception
 
-    serial_number = api.data.serial
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Fireplace", "type": "Fireplace", "serial": serial_number}
+    # Return the serial number which will be used to calculate a unique ID for the device/sensors
+    return api.data.serial_number
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,27 +48,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            info = await validate_input(self.hass, user_input)
-            # Store serial into 'user_input' which is going to be stored with the config entry
-            user_input["serial"] = info["serial"]
+            serial = await validate_input(self.hass, user_input[CONF_HOST])
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            # return self.async_create_entry(title=info["title"], data=user_input)
+            await self.async_set_unique_id(serial)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: user_input[CONF_HOST]}
+            )
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
+        return self.async_create_entry(
+            title="Fireplace",
+            data={
+                CONF_HOST: user_input[CONF_HOST],
+            },
         )
 
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
