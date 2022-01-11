@@ -1,5 +1,4 @@
 """Support for power & energy sensors for VeSync outlets."""
-from datetime import datetime
 import logging
 
 from homeassistant.components.sensor import (
@@ -125,11 +124,6 @@ class VeSyncEnergySensor(VeSyncSensorEntity):
     def device_class(self):
         """Return the energy device class."""
         return SensorDeviceClass.ENERGY
-
-    @property
-    def last_reset(self):
-        """Return datetime representing beginning of day."""
-        return datetime.today()
 
     @property
     def native_value(self):

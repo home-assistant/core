@@ -158,9 +158,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     assert len(notifications) == 0
 
     # Create
-    hass.components.persistent_notification.async_create(
-        "test", notification_id="Beer 2"
-    )
+    pn.async_create(hass, "test", notification_id="Beer 2")
     await client.send_json({"id": 6, "type": "persistent_notification/get"})
     msg = await client.receive_json()
     assert msg["id"] == 6
@@ -186,7 +184,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     assert notifications[0]["status"] == pn.STATUS_READ
 
     # Dismiss
-    hass.components.persistent_notification.async_dismiss("Beer 2")
+    pn.async_dismiss(hass, "Beer 2")
     await client.send_json({"id": 8, "type": "persistent_notification/get"})
     msg = await client.receive_json()
     notifications = msg["result"]

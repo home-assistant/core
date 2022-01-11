@@ -193,6 +193,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==3.0.11
 
+# homeassistant.components.homewizard
+aiohwenergy==0.6.0
+
 # homeassistant.components.imap
 aioimaplib==0.9.0
 
@@ -755,7 +758,7 @@ goodwe==0.2.10
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.1.0
+google-cloud-pubsub==2.9.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==0.4.0
@@ -803,7 +806,7 @@ ha-philipsjs==2.7.6
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.16
+hangups==0.4.17
 
 # homeassistant.components.cloud
 hass-nabucasa==0.51.0
@@ -839,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211229.0
+home-assistant-frontend==20211229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1243,7 +1246,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.2.0
+pillow==9.0.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1561,7 +1564,7 @@ pyhik==0.3.0
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.76
+pyhomematic==0.1.77
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6

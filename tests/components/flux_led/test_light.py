@@ -12,6 +12,7 @@ from flux_led.const import (
     COLOR_MODES_RGB_W as FLUX_COLOR_MODES_RGB_W,
     MODE_MUSIC,
     MultiColorEffects,
+    WhiteChannelType,
 )
 from flux_led.protocol import MusicMode
 import pytest
@@ -528,7 +529,7 @@ async def test_rgbw_light_cold_white(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: IP_ADDRESS,
             CONF_NAME: DEFAULT_ENTRY_TITLE,
-            CONF_WHITE_CHANNEL_TYPE: "cold",
+            CONF_WHITE_CHANNEL_TYPE: WhiteChannelType.COLD.name.lower(),
         },
         unique_id=MAC_ADDRESS,
     )
@@ -634,7 +635,7 @@ async def test_rgbw_light_warm_white(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: IP_ADDRESS,
             CONF_NAME: DEFAULT_ENTRY_TITLE,
-            CONF_WHITE_CHANNEL_TYPE: "warm",
+            CONF_WHITE_CHANNEL_TYPE: WhiteChannelType.WARM.name.lower(),
         },
         unique_id=MAC_ADDRESS,
     )

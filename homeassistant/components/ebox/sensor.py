@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -149,7 +150,7 @@ async def async_setup_platform(
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    httpsession = async_get_clientsession(hass)
     ebox_data = EBoxData(username, password, httpsession)
 
     name = config.get(CONF_NAME)

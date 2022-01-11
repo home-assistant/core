@@ -65,6 +65,7 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
+homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
