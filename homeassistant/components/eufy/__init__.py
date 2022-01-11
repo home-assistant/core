@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-EUFY_DISPATCH = {
+PLATFORMS = {
     "T1011": Platform.LIGHT,
     "T1012": Platform.LIGHT,
     "T1013": Platform.LIGHT,
@@ -63,19 +63,19 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         for device in data:
             kind = device["type"]
-            if kind not in EUFY_DISPATCH:
+            if kind not in PLATFORMS:
                 continue
-            discovery.load_platform(hass, EUFY_DISPATCH[kind], DOMAIN, device, config)
+            discovery.load_platform(hass, PLATFORMS[kind], DOMAIN, device, config)
 
     for device_info in config[DOMAIN][CONF_DEVICES]:
         kind = device_info["type"]
-        if kind not in EUFY_DISPATCH:
+        if kind not in PLATFORMS:
             continue
         device = {}
         device["address"] = device_info["address"]
         device["code"] = device_info["access_token"]
         device["type"] = device_info["type"]
         device["name"] = device_info["name"]
-        discovery.load_platform(hass, EUFY_DISPATCH[kind], DOMAIN, device, config)
+        discovery.load_platform(hass, PLATFORMS[kind], DOMAIN, device, config)
 
     return True
