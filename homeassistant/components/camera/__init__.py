@@ -353,13 +353,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CAMERA_THUMBNAIL, websocket_camera_thumbnail, SCHEMA_WS_CAMERA_THUMBNAIL
+    websocket_api.async_register_command(
+        hass,
+        WS_TYPE_CAMERA_THUMBNAIL,
+        websocket_camera_thumbnail,
+        SCHEMA_WS_CAMERA_THUMBNAIL,
     )
-    hass.components.websocket_api.async_register_command(ws_camera_stream)
-    hass.components.websocket_api.async_register_command(ws_camera_web_rtc_offer)
-    hass.components.websocket_api.async_register_command(websocket_get_prefs)
-    hass.components.websocket_api.async_register_command(websocket_update_prefs)
+    websocket_api.async_register_command(hass, ws_camera_stream)
+    websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
+    websocket_api.async_register_command(hass, websocket_get_prefs)
+    websocket_api.async_register_command(hass, websocket_update_prefs)
 
     await component.async_setup(config)
 

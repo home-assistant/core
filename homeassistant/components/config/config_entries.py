@@ -31,10 +31,10 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
-    hass.components.websocket_api.async_register_command(config_entry_disable)
-    hass.components.websocket_api.async_register_command(config_entry_update)
-    hass.components.websocket_api.async_register_command(config_entries_progress)
-    hass.components.websocket_api.async_register_command(ignore_config_flow)
+    websocket_api.async_register_command(hass, config_entry_disable)
+    websocket_api.async_register_command(hass, config_entry_update)
+    websocket_api.async_register_command(hass, config_entries_progress)
+    websocket_api.async_register_command(hass, ignore_config_flow)
 
     return True
 
