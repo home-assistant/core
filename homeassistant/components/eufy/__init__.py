@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -43,13 +44,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 EUFY_DISPATCH = {
-    "T1011": "light",
-    "T1012": "light",
-    "T1013": "light",
-    "T1201": "switch",
-    "T1202": "switch",
-    "T1203": "switch",
-    "T1211": "switch",
+    "T1011": Platform.LIGHT,
+    "T1012": Platform.LIGHT,
+    "T1013": Platform.LIGHT,
+    "T1201": Platform.SWITCH,
+    "T1202": Platform.SWITCH,
+    "T1203": Platform.SWITCH,
+    "T1211": Platform.SWITCH,
 }
 
 
