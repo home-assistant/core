@@ -4,17 +4,10 @@ from __future__ import annotations
 import datetime
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SOURCE_TYPE_ROUTER,
-)
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -31,19 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 YAML_DEFAULT_HOST = "169.254.1.1"
 YAML_DEFAULT_USERNAME = "admin"
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST),
-    cv.deprecated(CONF_USERNAME),
-    cv.deprecated(CONF_PASSWORD),
-    PARENT_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_HOST, default=YAML_DEFAULT_HOST): cv.string,
-            vol.Optional(CONF_USERNAME, default=YAML_DEFAULT_USERNAME): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
-        }
-    ),
-)
 
 
 async def async_setup_entry(
