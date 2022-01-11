@@ -19,8 +19,6 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -46,6 +44,7 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    MULTI_BRIGHTNESS_COLOR_MODES,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -300,9 +299,9 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         # Handle switch to CCT Color Mode
         if color_temp_mired := kwargs.get(ATTR_COLOR_TEMP):
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
-            if ATTR_BRIGHTNESS not in kwargs and self.color_mode in (
-                COLOR_MODE_RGBWW,
-                COLOR_MODE_RGBW,
+            if (
+                ATTR_BRIGHTNESS not in kwargs
+                and self.color_mode in MULTI_BRIGHTNESS_COLOR_MODES
             ):
                 # When switching to color temp from RGBWW or RGB&W mode,
                 # we do not want the overall brightness of any channel
