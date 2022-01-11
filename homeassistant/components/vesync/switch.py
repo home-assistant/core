@@ -88,16 +88,6 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
             "yearly_energy_total": self.smartplug.yearly_energy_total,
         }
 
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self.smartplug.power
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return self.smartplug.energy_today
-
     def update(self):
         """Update outlet details and energy usage."""
         self.smartplug.update()

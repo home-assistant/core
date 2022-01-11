@@ -115,6 +115,8 @@ ATTR_DND_START = "start"
 ATTR_DND_END = "end"
 ATTR_LAST_CLEAN_TIME = "duration"
 ATTR_LAST_CLEAN_AREA = "area"
+ATTR_STATUS_CLEAN_TIME = "clean_time"
+ATTR_STATUS_CLEAN_AREA = "clean_area"
 ATTR_LAST_CLEAN_START = "start"
 ATTR_LAST_CLEAN_END = "end"
 ATTR_CLEAN_HISTORY_TOTAL_DURATION = "total_duration"
@@ -445,6 +447,22 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last Clean Area",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    f"current_{ATTR_STATUS_CLEAN_TIME}": XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:timer-sand",
+        key=ATTR_STATUS_CLEAN_TIME,
+        parent_key=VacuumCoordinatorDataAttributes.status,
+        name="Current Clean Duration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    f"current_{ATTR_LAST_CLEAN_AREA}": XiaomiMiioSensorDescription(
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+        icon="mdi:texture-box",
+        key=ATTR_STATUS_CLEAN_AREA,
+        parent_key=VacuumCoordinatorDataAttributes.status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="Current Clean Area",
     ),
     f"clean_history_{ATTR_CLEAN_HISTORY_TOTAL_DURATION}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,

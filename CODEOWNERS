@@ -392,6 +392,8 @@ homeassistant/components/homekit_controller/* @Jc2k @bdraco
 tests/components/homekit_controller/* @Jc2k @bdraco
 homeassistant/components/homematic/* @pvizeli @danielperna84
 tests/components/homematic/* @pvizeli @danielperna84
+homeassistant/components/homewizard/* @DCSBL
+tests/components/homewizard/* @DCSBL
 homeassistant/components/honeywell/* @rdfurman
 tests/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
@@ -488,7 +490,7 @@ homeassistant/components/kraken/* @eifinger
 tests/components/kraken/* @eifinger
 homeassistant/components/kulersky/* @emlove
 tests/components/kulersky/* @emlove
-homeassistant/components/lametric/* @robbiet480
+homeassistant/components/lametric/* @robbiet480 @frenck
 homeassistant/components/launch_library/* @ludeeus @DurgNomis-drol
 tests/components/launch_library/* @ludeeus @DurgNomis-drol
 homeassistant/components/lcn/* @alengwenus

@@ -2,7 +2,9 @@
 # If component is fully covered with type annotations, please add it here
 # to enable strict mypy checks.
 
+homeassistant.core
 homeassistant.components
+homeassistant.components.abode.*
 homeassistant.components.acer_projector.*
 homeassistant.components.accuweather.*
 homeassistant.components.actiontec.*
@@ -63,6 +65,7 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
+homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*

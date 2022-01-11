@@ -231,8 +231,8 @@ async def async_setup(hass, config):
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
-    hass.components.websocket_api.async_register_command(websocket_handle_thumbnail)
-    hass.components.websocket_api.async_register_command(websocket_browse_media)
+    websocket_api.async_register_command(hass, websocket_handle_thumbnail)
+    websocket_api.async_register_command(hass, websocket_browse_media)
     hass.http.register_view(MediaPlayerImageView(component))
 
     await component.async_setup(config)

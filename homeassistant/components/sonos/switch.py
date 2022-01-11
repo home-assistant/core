@@ -106,7 +106,7 @@ async def async_setup_entry(
             entities.append(SonosAlarmEntity(alarm_id, speaker))
         async_add_entities(entities)
 
-    def available_soco_attributes(speaker: SonosSpeaker) -> list[tuple[str, bool]]:
+    def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
         features = []
         for feature_type in ALL_FEATURES:
             try:

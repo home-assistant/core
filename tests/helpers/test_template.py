@@ -314,6 +314,12 @@ def test_isnumber(hass, value, expected):
         )
         == expected
     )
+    assert (
+        template.Template("{{ value is is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
 
 
 def test_rounding_value(hass):

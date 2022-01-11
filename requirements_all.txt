@@ -53,7 +53,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.6.4
+PyTurboJPEG==1.6.5
 
 # homeassistant.components.vicare
 PyViCare==2.15.0
@@ -181,7 +181,7 @@ aiogithubapi==21.11.0
 aioguardian==2021.11.0
 
 # homeassistant.components.harmony
-aioharmony==0.2.8
+aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
 aiohomekit==0.6.10
@@ -192,6 +192,9 @@ aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
 aiohue==3.0.11
+
+# homeassistant.components.homewizard
+aiohwenergy==0.6.0
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -554,7 +557,7 @@ denonavr==0.10.9
 devolo-home-control-api==0.17.4
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==0.6.3
+devolo-plc-api==0.7.1
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -678,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.44
+flux_led==0.27.45
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -755,7 +758,7 @@ goodwe==0.2.10
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.1.0
+google-cloud-pubsub==2.9.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==0.4.0
@@ -803,10 +806,10 @@ ha-philipsjs==2.7.6
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.16
+hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.50.0
+hass-nabucasa==0.51.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -839,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211229.0
+home-assistant-frontend==20211229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1243,7 +1246,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.2.0
+pillow==9.0.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1561,7 +1564,7 @@ pyhik==0.3.0
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.76
+pyhomematic==0.1.77
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -2166,7 +2169,7 @@ sense-hat==2.2.0
 sense_energy==0.9.3
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.1
+sentry-sdk==1.5.2
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8

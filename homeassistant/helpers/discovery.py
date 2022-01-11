@@ -129,7 +129,7 @@ def load_platform(
     hass: core.HomeAssistant,
     component: Platform | str,
     platform: str,
-    discovered: DiscoveryInfoType,
+    discovered: DiscoveryInfoType | None,
     hass_config: ConfigType,
 ) -> None:
     """Load a component and platform dynamically."""
@@ -145,7 +145,7 @@ async def async_load_platform(
     hass: core.HomeAssistant,
     component: Platform | str,
     platform: str,
-    discovered: DiscoveryInfoType,
+    discovered: DiscoveryInfoType | None,
     hass_config: ConfigType,
 ) -> None:
     """Load a component and platform dynamically.
