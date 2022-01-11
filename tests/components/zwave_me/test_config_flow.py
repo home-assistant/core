@@ -55,13 +55,14 @@ async def test_form(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "ws://192.168.1.14"
-        assert result2["data"] == {
-            "url": "ws://192.168.1.14",
-            "token": "test-token",
-        }
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "ws://192.168.1.14"
+    assert result2["data"] == {
+        "url": "ws://192.168.1.14",
+        "token": "test-token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @patch("homeassistant.components.zwave_me.get_uuid", mock_uuid)
