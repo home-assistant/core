@@ -302,13 +302,14 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         # Handle switch to CCT Color Mode
         if color_temp_mired := kwargs.get(ATTR_COLOR_TEMP):
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
-            if self.color_mode in (COLOR_MODE_RGBWW, COLOR_MODE_RGBW):
+            if ATTR_BRIGHTNESS not in kwargs and self.color_mode in (
+                COLOR_MODE_RGBWW,
+                COLOR_MODE_RGBW,
+            ):
                 # When switching to color temp from RGBWW or RGB&W mode,
-                # we do not want the overall brightness, we only
-                # want the brightness of the white channels
-                brightness = kwargs.get(
-                    ATTR_BRIGHTNESS, self._device.getWhiteTemperature()[1]
-                )
+                # we do not want the overall brightness of any channel
+                # otherwise we may end up at 0
+                brightness = max(self.rgbww_color)
             await self._device.async_set_white_temp(color_temp_kelvin, brightness)
             return
         # Handle switch to RGB Color Mode
