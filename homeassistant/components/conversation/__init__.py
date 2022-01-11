@@ -73,9 +73,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_PROCESS, handle_service, schema=SERVICE_PROCESS_SCHEMA
     )
     hass.http.register_view(ConversationProcessView())
-    hass.components.websocket_api.async_register_command(websocket_process)
-    hass.components.websocket_api.async_register_command(websocket_get_agent_info)
-    hass.components.websocket_api.async_register_command(websocket_set_onboarding)
+    websocket_api.async_register_command(hass, websocket_process)
+    websocket_api.async_register_command(hass, websocket_get_agent_info)
+    websocket_api.async_register_command(hass, websocket_set_onboarding)
 
     return True
 
