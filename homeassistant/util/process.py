@@ -5,8 +5,6 @@ from __future__ import annotations
 import subprocess
 from typing import Any
 
-# mypy: disallow-any-generics
-
 
 def kill_subprocess(process: subprocess.Popen[Any]) -> None:
     """Force kill a subprocess and wait for it to exit."""
