@@ -312,7 +312,7 @@ class DeviceRegistry:
         default_model: str | None | UndefinedType = UNDEFINED,
         default_name: str | None | UndefinedType = UNDEFINED,
         # To disable a device if it gets created
-        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | None | UndefinedType = None,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         identifiers: set[tuple[str, str]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
