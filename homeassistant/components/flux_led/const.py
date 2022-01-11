@@ -57,6 +57,8 @@ CONF_MINOR_VERSION: Final = "minor_version"
 CONF_REMOTE_ACCESS_ENABLED: Final = "remote_access_enabled"
 CONF_REMOTE_ACCESS_HOST: Final = "remote_access_host"
 CONF_REMOTE_ACCESS_PORT: Final = "remote_access_port"
+CONF_WHITE_CHANNEL_TYPE: Final = "white_channel_type"
+
 
 TRANSITION_GRADUAL: Final = "gradual"
 TRANSITION_JUMP: Final = "jump"
