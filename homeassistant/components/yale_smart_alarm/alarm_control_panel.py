@@ -1,6 +1,8 @@
 """Support for Yale Alarm."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 from yalesmartalarmclient.const import (
     YALE_STATE_ARM_FULL,
@@ -19,12 +21,12 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -100,20 +102,22 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None) -> None:
         """Send disarm command."""
-        if self._coordinator.yale:
-            try:
-                alarm_state = await self.hass.async_add_executor_job(
-                    self._coordinator.yale.disarm
-                )
-            except (
-                AuthenticationError,
-                ConnectionError,
-                TimeoutError,
-                UnknownError,
-            ) as error:
-                raise HomeAssistantError(
-                    f"Could not verify disarmed for {self._attr_name}: {error}"
-                ) from error
+        if TYPE_CHECKING:
+            assert self._coordinator.yale, "Connection to API is missing"
+
+        try:
+            alarm_state = await self.hass.async_add_executor_job(
+                self._coordinator.yale.disarm
+            )
+        except (
+            AuthenticationError,
+            ConnectionError,
+            TimeoutError,
+            UnknownError,
+        ) as error:
+            raise HomeAssistantError(
+                f"Could not verify disarmed for {self._attr_name}: {error}"
+            ) from error
 
         LOGGER.debug("Alarm disarmed: %s", alarm_state)
         if alarm_state:
@@ -124,20 +128,22 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_home(self, code=None) -> None:
         """Send arm home command."""
-        if self._coordinator.yale:
-            try:
-                alarm_state = await self.hass.async_add_executor_job(
-                    self._coordinator.yale.arm_partial
-                )
-            except (
-                AuthenticationError,
-                ConnectionError,
-                TimeoutError,
-                UnknownError,
-            ) as error:
-                raise HomeAssistantError(
-                    f"Could not verify armed home for {self._attr_name}: {error}"
-                ) from error
+        if TYPE_CHECKING:
+            assert self._coordinator.yale, "Connection to API is missing"
+
+        try:
+            alarm_state = await self.hass.async_add_executor_job(
+                self._coordinator.yale.arm_partial
+            )
+        except (
+            AuthenticationError,
+            ConnectionError,
+            TimeoutError,
+            UnknownError,
+        ) as error:
+            raise HomeAssistantError(
+                f"Could not verify armed home for {self._attr_name}: {error}"
+            ) from error
 
         LOGGER.debug("Alarm armed home: %s", alarm_state)
         if alarm_state:
@@ -148,20 +154,22 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
-        if self._coordinator.yale:
-            try:
-                alarm_state = await self.hass.async_add_executor_job(
-                    self._coordinator.yale.arm_full
-                )
-            except (
-                AuthenticationError,
-                ConnectionError,
-                TimeoutError,
-                UnknownError,
-            ) as error:
-                raise HomeAssistantError(
-                    f"Could not verify armed away for {self._attr_name}: {error}"
-                ) from error
+        if TYPE_CHECKING:
+            assert self._coordinator.yale, "Connection to API is missing"
+
+        try:
+            alarm_state = await self.hass.async_add_executor_job(
+                self._coordinator.yale.arm_full
+            )
+        except (
+            AuthenticationError,
+            ConnectionError,
+            TimeoutError,
+            UnknownError,
+        ) as error:
+            raise HomeAssistantError(
+                f"Could not verify armed away for {self._attr_name}: {error}"
+            ) from error
 
         LOGGER.debug("Alarm armed away: %s", alarm_state)
         if alarm_state:
@@ -170,9 +178,14 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
             return
         raise HomeAssistantError("Could not arm away, check system ready for arming.")
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_state = STATE_MAP.get(self.coordinator.data["alarm"])
-        self._attr_available = STATE_MAP.get(self.coordinator.data["alarm"]) is not None
-        super()._handle_coordinator_update()
+    @property
+    def available(self) -> bool:
+        """Return True if alarm is available."""
+        if STATE_MAP.get(self.coordinator.data["alarm"]) is None:
+            return False
+        return super().available
+
+    @property
+    def state(self) -> StateType:
+        """Return the state of the alarm."""
+        return STATE_MAP.get(self.coordinator.data["alarm"])
