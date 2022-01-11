@@ -1,12 +1,14 @@
 """Lock for Yale Alarm."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,9 +64,12 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
+        if TYPE_CHECKING:
+            assert self._coordinator.yale, "Connection to API is missing"
+
         code = kwargs.get(ATTR_CODE, self._coordinator.entry.options.get(CONF_CODE))
 
-        if not code or not self._coordinator.yale:
+        if not code:
             raise HomeAssistantError(
                 f"No code provided, {self._attr_name} not unlocked"
             )
@@ -90,16 +95,18 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
         LOGGER.debug("Door unlock: %s", lock_state)
         if lock_state:
-            self._attr_is_locked = False
+            for lock in self.coordinator.data["locks"]:
+                if lock["address"] == self._attr_unique_id:
+                    lock["_state"] = "unlocked"
+                    LOGGER.debug("lock data %s", self.coordinator.data["locks"])
             self.async_write_ha_state()
             return
         raise HomeAssistantError("Could not unlock, check system ready for unlocking")
 
     async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
-
-        if not self._coordinator.yale:
-            return
+        if TYPE_CHECKING:
+            assert self._coordinator.yale, "Connection to API is missing"
 
         try:
             get_lock = await self.hass.async_add_executor_job(
@@ -121,17 +128,18 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
         LOGGER.debug("Door unlock: %s", lock_state)
         if lock_state:
-            self._attr_is_locked = True
+            for lock in self.coordinator.data["locks"]:
+                if lock["address"] == self._attr_unique_id:
+                    lock["_state"] = "locked"
             self.async_write_ha_state()
             return
         raise HomeAssistantError("Could not unlock, check system ready for unlocking")
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    @property
+    def is_locked(self) -> bool | None:
+        """Return true if the lock is locked."""
         for lock in self.coordinator.data["locks"]:
-            if lock["address"] == self._attr_unique_id:
-                self._attr_is_locked = lock["_state"] == "locked"
-                LOGGER.debug("Full data %s", lock)
-
-        super()._handle_coordinator_update()
+            return bool(
+                lock["address"] == self._attr_unique_id and lock["_state"] == "locked"
+            )
+        return None
