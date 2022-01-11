@@ -121,7 +121,7 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
         LOGGER.debug("Alarm disarmed: %s", alarm_state)
         if alarm_state:
-            self._attr_state = STATE_MAP.get(YALE_STATE_DISARM)
+            self.coordinator.data["alarm"] = YALE_STATE_DISARM
             self.async_write_ha_state()
             return
         raise HomeAssistantError("Could not disarm, check system ready for disarming.")
@@ -147,7 +147,7 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
         LOGGER.debug("Alarm armed home: %s", alarm_state)
         if alarm_state:
-            self._attr_state = STATE_MAP.get(YALE_STATE_ARM_PARTIAL)
+            self.coordinator.data["alarm"] = YALE_STATE_ARM_PARTIAL
             self.async_write_ha_state()
             return
         raise HomeAssistantError("Could not arm home, check system ready for arming.")
@@ -173,7 +173,7 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
         LOGGER.debug("Alarm armed away: %s", alarm_state)
         if alarm_state:
-            self._attr_state = STATE_MAP.get(YALE_STATE_ARM_FULL)
+            self.coordinator.data["alarm"] = YALE_STATE_ARM_FULL
             self.async_write_ha_state()
             return
         raise HomeAssistantError("Could not arm away, check system ready for arming.")
