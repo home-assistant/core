@@ -14,7 +14,7 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
-from typing import Any, Dict, List, Union, cast
+from typing import Any, Union, cast
 
 import voluptuous as vol
 
@@ -76,12 +76,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
     @property
     def trusted_networks(self) -> list[IPNetwork]:
         """Return trusted networks."""
-        return cast(List[IPNetwork], self.config[CONF_TRUSTED_NETWORKS])
+        return cast(list[IPNetwork], self.config[CONF_TRUSTED_NETWORKS])
 
     @property
     def trusted_users(self) -> dict[IPNetwork, Any]:
         """Return trusted users per network."""
-        return cast(Dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
+        return cast(dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
 
     @property
     def trusted_proxies(self) -> list[IPNetwork]:
