@@ -34,7 +34,6 @@ from .const import (
 )
 from .data import ProtectData
 from .services import async_cleanup_services, async_setup_services
-from .views import ThumbnailProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     async_setup_services(hass)
-    hass.http.register_view(ThumbnailProxyView(hass))
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
