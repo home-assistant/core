@@ -22,8 +22,6 @@ from .exceptions import HomeAssistantError
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
-# mypy: disallow-any-generics
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"

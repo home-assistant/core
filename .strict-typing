@@ -2,7 +2,29 @@
 # If component is fully covered with type annotations, please add it here
 # to enable strict mypy checks.
 
+# Stict typing is enabled by default for core files.
+# Add it here to add 'disallow_any_generics'.
+# --- Only for core file! ---
+homeassistant.exceptions
 homeassistant.core
+homeassistant.loader
+homeassistant.requirements
+homeassistant.runner
+homeassistant.setup
+homeassistant.auth.auth_store
+homeassistant.auth.providers.*
+homeassistant.helpers.area_registry
+homeassistant.helpers.condition
+homeassistant.helpers.discovery
+homeassistant.helpers.entity_values
+homeassistant.helpers.reload
+homeassistant.helpers.script_variables
+homeassistant.helpers.translation
+homeassistant.util.color
+homeassistant.util.process
+homeassistant.util.unit_system
+
+# --- Add components below this line ---
 homeassistant.components
 homeassistant.components.abode.*
 homeassistant.components.acer_projector.*

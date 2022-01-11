@@ -70,8 +70,6 @@ from .trace import (
 )
 from .typing import ConfigType, TemplateVarsType
 
-# mypy: disallow-any-generics
-
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
