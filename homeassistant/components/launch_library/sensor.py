@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-NextLaunchSensor = SensorEntityDescription(
+NEXTLAUNCHSENSOR = SensorEntityDescription(
     key="next_launch",
     icon="mdi:rocket-launch",
 )
@@ -86,7 +86,7 @@ async def async_setup_entry(
                 coordinator,
                 entry.entry_id,
                 name,
-                NextLaunchSensor,
+                NEXTLAUNCHSENSOR,
             ),
         ]
     )
