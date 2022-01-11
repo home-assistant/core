@@ -109,7 +109,7 @@ tests: &tests
   - tests/helpers/*
   - tests/ignore_uncaught_exceptions.py
   - tests/mock/*
-  - tests/scripts/**
+  - tests/scripts/*
   - tests/test_util/*
   - tests/testing_config/**
   - tests/util/**
