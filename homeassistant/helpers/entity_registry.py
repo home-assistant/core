@@ -50,15 +50,6 @@ from .typing import UNDEFINED, UndefinedType
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
-# pylint: disable-next=fixme
-# TODO 3.9: Replace EntityRegistryUserDict with generic UserDict at runtime
-if TYPE_CHECKING:
-    # pylint: disable-next=unsubscriptable-object
-    EntityRegistryUserDict = UserDict[str, "RegistryEntry"]
-else:
-    EntityRegistryUserDict = UserDict
-
-
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
@@ -174,7 +165,7 @@ class EntityRegistryStore(storage.Store):
         return await _async_migrate(old_major_version, old_minor_version, old_data)
 
 
-class EntityRegistryItems(EntityRegistryUserDict):
+class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
     """Container for entity registry items, maps entity_id -> entry.
 
     Maintains two additional indexes:
