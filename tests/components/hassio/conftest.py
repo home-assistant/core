@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 from homeassistant.core import CoreState
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
 from . import HASSIO_TOKEN
@@ -70,7 +71,7 @@ def hassio_handler(hass, aioclient_mock):
     """Create mock hassio handler."""
 
     async def get_client_session():
-        return hass.helpers.aiohttp_client.async_get_clientsession()
+        return async_get_clientsession(hass)
 
     websession = hass.loop.run_until_complete(get_client_session())
 
