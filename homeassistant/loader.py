@@ -34,8 +34,6 @@ from .util.async_ import gather_with_concurrency
 if TYPE_CHECKING:
     from .core import HomeAssistant
 
-# mypy: disallow-any-generics
-
 CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
     "CALLABLE_T", bound=Callable[..., Any]
 )
