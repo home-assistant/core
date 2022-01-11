@@ -77,7 +77,6 @@ async def test_zeroconf(hass: HomeAssistant):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=MOCK_ZEROCONF_DATA,
         )
-        await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
 
