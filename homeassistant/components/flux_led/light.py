@@ -7,12 +7,7 @@ from typing import Any, Final
 
 from flux_led.const import MultiColorEffects
 from flux_led.protocol import MusicMode
-from flux_led.utils import (
-    color_temp_to_white_levels,
-    rgbcw_brightness,
-    rgbcw_to_rgbwc,
-    rgbw_brightness,
-)
+from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbwc, rgbw_brightness
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -24,6 +19,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
+    COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
@@ -306,20 +302,14 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         # Handle switch to CCT Color Mode
         if color_temp_mired := kwargs.get(ATTR_COLOR_TEMP):
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
-            if self.color_mode != COLOR_MODE_RGBWW:
-                await self._device.async_set_white_temp(color_temp_kelvin, brightness)
-                return
-
-            # When switching to color temp from RGBWW mode,
-            # we do not want the overall brightness, we only
-            # want the brightness of the white channels
-            brightness = kwargs.get(
-                ATTR_BRIGHTNESS, self._device.getWhiteTemperature()[1]
-            )
-            channels = color_temp_to_white_levels(color_temp_kelvin, brightness)
-            warm = channels.warm_white
-            cold = channels.cool_white
-            await self._device.async_set_levels(r=0, b=0, g=0, w=warm, w2=cold)
+            if self.color_mode in (COLOR_MODE_RGBWW, COLOR_MODE_RGBW):
+                # When switching to color temp from RGBWW or RGB&W mode,
+                # we do not want the overall brightness, we only
+                # want the brightness of the white channels
+                brightness = kwargs.get(
+                    ATTR_BRIGHTNESS, self._device.getWhiteTemperature()[1]
+                )
+            await self._device.async_set_white_temp(color_temp_kelvin, brightness)
             return
         # Handle switch to RGB Color Mode
         if rgb := kwargs.get(ATTR_RGB_COLOR):
