@@ -106,6 +106,7 @@ tests: &tests
   - tests/backports/*
   - tests/common.py
   - tests/conftest.py
+  - tests/hassfest/*
   - tests/helpers/*
   - tests/ignore_uncaught_exceptions.py
   - tests/mock/*
