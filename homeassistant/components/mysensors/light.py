@@ -1,7 +1,7 @@
 """Support for MySensors lights."""
 from __future__ import annotations
 
-from typing import Any, Tuple, cast
+from typing import Any, cast
 
 from homeassistant.components import mysensors
 from homeassistant.components.light import (
@@ -195,7 +195,7 @@ class MySensorsLightRGB(MySensorsLight):
         """Update the controller with values from RGB child."""
         value = self._values[self.value_type]
         self._attr_rgb_color = cast(
-            Tuple[int, int, int], tuple(rgb_hex_to_rgb_list(value))
+            tuple[int, int, int], tuple(rgb_hex_to_rgb_list(value))
         )
 
 
@@ -234,5 +234,5 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         """Update the controller with values from RGBW child."""
         value = self._values[self.value_type]
         self._attr_rgbw_color = cast(
-            Tuple[int, int, int, int], tuple(rgb_hex_to_rgb_list(value))
+            tuple[int, int, int, int], tuple(rgb_hex_to_rgb_list(value))
         )
