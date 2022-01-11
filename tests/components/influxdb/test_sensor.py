@@ -57,15 +57,9 @@ BASE_V1_QUERY_MIXED = {
             "measurement": "measurement",
             "where": "where",
             "field": "field",
-        },
-        {
-            "name": "test2",
-            "measurement": "measurement",
-            "where": "where",
-            "field": "field",
-        },
+        }
     ],
-    # "queries_raw": [{"name": "test_r", "query": "query", "field": "value"}],
+    "queries_raw": [{"name": "test_r", "query": "query", "field": "value"}],
 }
 BASE_V1_QUERY_RAW = {
     "queries_raw": [{"name": "test", "query": "query", "field": "value"}]
@@ -552,7 +546,6 @@ async def test_state_for_unconsistent_field(
             _set_query_mock_v2,
             _make_v2_resultset,
         ),
-        # Not tested config: test query not working with more than one sensor
         (
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
