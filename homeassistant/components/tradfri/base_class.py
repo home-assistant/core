@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import wraps
 import logging
 from typing import Any
 
@@ -24,24 +23,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, SIGNAL_GW
+from .utils import tradfri_handle_api_error
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def handle_error(
-    func: Callable[[Command | list[Command]], Any]
-) -> Callable[[str], Any]:
-    """Handle tradfri api call error."""
-
-    @wraps(func)
-    async def wrapper(command: Command | list[Command]) -> None:
-        """Decorate api call."""
-        try:
-            await func(command)
-        except PytradfriError as err:
-            _LOGGER.error("Unable to execute command %s: %s", command, err)
-
-    return wrapper
 
 
 class TradfriBaseClass(Entity):
@@ -59,7 +43,7 @@ class TradfriBaseClass(Entity):
         gateway_id: str,
     ) -> None:
         """Initialize a device."""
-        self._api = handle_error(api)
+        self._api = tradfri_handle_api_error(api)
         self._attr_name = device.name
         self._device: Device = device
         self._device_control: BlindControl | LightControl | SocketControl | SignalRepeaterControl | AirPurifierControl | None = (
