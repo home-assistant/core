@@ -91,9 +91,8 @@ async def async_setup_entry(
         ]
     )
 
-
-class LaunchLibraryEntity(CoordinatorEntity, SensorEntity):
-    """Base entity class for launch library sensors."""
+class NextLaunchSensor(CoordinatorEntity, SensorEntity):
+    """Representation of the next launch sensor."""
 
     _attr_attribution = ATTRIBUTION
     _next_launch: Launch | None = None
@@ -116,21 +115,6 @@ class LaunchLibraryEntity(CoordinatorEntity, SensorEntity):
         """Return if the sensor is available."""
         return super().available and self._next_launch is not None
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._next_launch = next((launch for launch in self.coordinator.data), None)
-        super()._handle_coordinator_update()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
-
-
-class NextLaunchSensor(LaunchLibraryEntity):
-    """Representation of the next launch sensor."""
-
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
@@ -149,3 +133,15 @@ class NextLaunchSensor(LaunchLibraryEntity):
             ATTR_AGENCY_COUNTRY_CODE: self._next_launch.pad.location.country_code,
             ATTR_STREAM: self._next_launch.webcast_live,
         }
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._next_launch = next((launch for launch in self.coordinator.data), None)
+        super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+    
