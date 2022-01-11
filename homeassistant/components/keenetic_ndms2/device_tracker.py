@@ -4,43 +4,23 @@ from __future__ import annotations
 import logging
 
 from ndms2_client import Device
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    CONF_LEGACY_INTERFACE,
-    DEFAULT_INTERFACE,
-    DEFAULT_TELNET_PORT,
-    DOMAIN,
-    ROUTER,
-)
+from .const import DOMAIN, ROUTER
 from .router import KeeneticRouter
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_TELNET_PORT): cv.port,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_LEGACY_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
