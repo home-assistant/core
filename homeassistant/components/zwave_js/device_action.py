@@ -14,7 +14,14 @@ from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_DOMAIN,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_ENTITY_ID,
+    CONF_TYPE,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
@@ -227,7 +234,22 @@ async def async_call_action_from_config(
     if action_type not in ACTION_TYPES:
         raise HomeAssistantError(f"Unhandled action type {action_type}")
 
-    service_data = {k: v for k, v in config.items() if v not in (None, "")}
+    # Don't include domain, subtype or any null/empty values in the service call
+    service_data = {
+        k: v
+        for k, v in config.items()
+        if k not in (ATTR_DOMAIN, CONF_SUBTYPE) and v not in (None, "")
+    }
+
+    # Entity services (including refresh value which is a fake entity service) expects
+    # just an entity ID
+    if action_type in (
+        SERVICE_REFRESH_VALUE,
+        SERVICE_SET_LOCK_USERCODE,
+        SERVICE_CLEAR_LOCK_USERCODE,
+        SERVICE_RESET_METER,
+    ):
+        service_data.pop(ATTR_DEVICE_ID)
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
     )
@@ -283,7 +305,10 @@ async def async_get_action_capabilities(
             "extra_fields": vol.Schema(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
-                        {cc.value: cc.name for cc in CommandClass}
+                        {
+                            CommandClass(cc.id).value: cc.name
+                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                        }
                     ),
                     vol.Required(ATTR_PROPERTY): cv.string,
                     vol.Optional(ATTR_PROPERTY_KEY): cv.string,
