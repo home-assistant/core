@@ -50,8 +50,8 @@ async def _configure_entities(hass, config, consumer):
     devices = await consumer.fetchDevices()
     _LOGGER.debug(devices)
 
-    sensor_info_list = []
-    switch_info_list = []
+    sensor_info_list = {}
+    switch_info_list = {}
 
     for mac, device in devices.items():
         _LOGGER.info("Device connected: %s %s", device.name, mac)
@@ -87,7 +87,8 @@ def _add_entity_info_to_list(peripheral, device, entity_info_list):
             KEY_PARENT_MAC: device.mac,
         }
 
-        entity_info_list.append(entity_info)
+        key = f"{entity_info[KEY_PARENT_MAC]}/{entity_info[KEY_IDENTIFIER]}/{entity_info[KEY_MEASUREMENT]}"
+        entity_info_list[key] = entity_info
 
     return entity_info_list
 
