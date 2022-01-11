@@ -138,7 +138,8 @@ def check_loop() -> None:
         found_frame.line.strip(),
     )
     raise RuntimeError(
-        f"Blocking calls must be done in the executor; Use `await hass.async_add_executor_job()` "
+        "Blocking calls must be done in the executor or a separate thread; "
+        "Use `await hass.async_add_executor_job()` "
         f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
     )
 
