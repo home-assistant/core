@@ -43,11 +43,12 @@ class AvmWrapper:
             return None
 
         try:
-            return self._avm_device.connection.call_action(  # type: ignore[no-any-return]
+            result: dict = self._avm_device.connection.call_action(
                 f"{service_name}:{service_suffix}",
                 action_name,
                 **kwargs,
             )
+            return result
         except FritzSecurityError:
             _LOGGER.error(
                 "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
