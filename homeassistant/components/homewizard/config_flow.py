@@ -146,12 +146,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # This is to test the connection and to get info for unique_id
         energy_api = aiohwenergy.HomeWizardEnergy(ip_address)
 
-        initialized = False
         try:
             with async_timeout.timeout(10):
                 await energy_api.initialize()
-                if energy_api.device is not None:
-                    initialized = True
 
         except aiohwenergy.DisabledError as ex:
             _LOGGER.error("API disabled, API must be enabled in the app")
@@ -167,7 +164,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         finally:
             await energy_api.close()
 
-        if not initialized:
+        if energy_api.device is None:
             _LOGGER.error("Initialization failed")
             raise AbortFlow("unknown_error")
 
