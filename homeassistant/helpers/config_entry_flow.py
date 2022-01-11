@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio  # pylint: disable=unused-import  # used in cast as string
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import Any, Union, cast
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, mqtt, ssdp, zeroconf

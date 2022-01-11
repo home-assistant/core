@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import partial, wraps
 import inspect
 import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, Awaitable, Callable, cast, overload
+from typing import Any, cast, overload
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback, is_callback

@@ -1,8 +1,9 @@
 """Helpers to deal with permissions."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, Optional, cast
+from typing import Optional, cast
 
 from .const import SUBCAT_ALL
 from .models import PermissionLookup
