@@ -10,8 +10,8 @@ def enable() -> None:
     # Prevent urllib3 and requests doing I/O in event loop
     HTTPConnection.putrequest = protect_loop(HTTPConnection.putrequest)  # type: ignore
 
-    # Prevent sleeping in event loop
-    time.sleep = protect_loop(time.sleep)
+    # Prevent sleeping in event loop. Non-strict since 2022.02
+    time.sleep = protect_loop(time.sleep, strict=False)
 
     # Currently disabled. pytz doing I/O when getting timezone.
     # Prevent files being opened inside the event loop
