@@ -70,7 +70,7 @@ class LaMetricNotificationService(BaseNotificationService):
         cycles: int,
         priority: str,
         icon_type: str,
-    ):
+    ) -> None:
         """Initialize the service."""
         self.hasslametricmanager = hasslametricmanager
         self._icon = icon
