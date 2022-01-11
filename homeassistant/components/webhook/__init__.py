@@ -128,8 +128,8 @@ async def async_handle_webhook(hass, webhook_id, request):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the webhook component."""
     hass.http.register_view(WebhookView)
-    hass.components.websocket_api.async_register_command(websocket_list)
-    hass.components.websocket_api.async_register_command(websocket_handle)
+    websocket_api.async_register_command(hass, websocket_list)
+    websocket_api.async_register_command(hass, websocket_handle)
     return True
 
 
