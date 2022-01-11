@@ -14,8 +14,6 @@ from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entr
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_APS = "accesspoints"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
