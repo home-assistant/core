@@ -29,12 +29,15 @@ from .const import (
 
 def _from_fan_percentage(percentage: int) -> int:
     """Convert percent to a value that the Tradfri API understands."""
+    if percentage == 0:
+        return 0
+
     return round(max(2, (percentage / 100 * ATTR_MAX_FAN_STEPS) + 1))
 
 
 def _from_fan_speed(fan_speed: int) -> int:
     """Convert the Tradfri API fan speed to a percentage value."""
-    return round((fan_speed - 1) / ATTR_MAX_FAN_STEPS * 100)
+    return max(round((fan_speed - 1) / ATTR_MAX_FAN_STEPS * 100), 0)
 
 
 async def async_setup_entry(
