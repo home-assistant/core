@@ -21,12 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Define the API Object
     api_object = IntellifireAsync(entry.data["host"])
 
-    try:
-        # If we can't actually hti the fireplace then lets warn the user
-        await api_object.poll()
-    except Exception as exception:
-        raise ConfigEntryNotReady from exception
-
     # Define the update coordinator
     coordinator = IntellifireDataUpdateCoordinator(
         hass=hass,
