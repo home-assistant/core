@@ -36,10 +36,6 @@ voluptuous==0.12.2
 yarl==1.6.3
 zeroconf==0.38.1
 
-# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
-# https://github.com/home-assistant/core/issues/61756
-pillow==8.2.0
-
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
