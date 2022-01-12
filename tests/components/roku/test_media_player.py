@@ -464,7 +464,8 @@ async def test_services(
             blocking=True,
         )
 
-        launch_mock.assert_called_once_with("291097",
+        launch_mock.assert_called_once_with(
+            "291097",
             {
                 "contentID": "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
                 "MediaType": "movie",
