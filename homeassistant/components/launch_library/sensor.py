@@ -41,9 +41,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-NEXTLAUNCHSENSOR = SensorEntityDescription(
+SENSOR_DESCRIPTION = SensorEntityDescription(
     key="next_launch",
     icon="mdi:rocket-launch",
+    name=DEFAULT_NAME,
 )
 
 
@@ -86,7 +87,7 @@ async def async_setup_entry(
                 coordinator,
                 entry.entry_id,
                 name,
-                NEXTLAUNCHSENSOR,
+                SENSOR_DESCRIPTION,
             ),
         ]
     )
@@ -108,8 +109,8 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
         """Initialize a Launch Library base entity."""
         super().__init__(coordinator)
         self._attr_name = name
-        self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
+        self.entity_description = description
 
     @property
     def available(self) -> bool:
