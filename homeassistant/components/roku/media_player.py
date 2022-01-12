@@ -49,6 +49,7 @@ from .const import (
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     DOMAIN,
+    LAUNCH_MEDIA_TYPES,
     SERVICE_LAUNCH,
     SERVICE_SEARCH,
 )
@@ -74,8 +75,9 @@ SUPPORT_ROKU = (
 LAUNCH_SCHEMA = {
     vol.Required(ATTR_APP_ID): str,
     vol.Optional(ATTR_CONTENT_ID): str,
-    vol.Required(ATTR_MEDIA_TYPE): str,
+    vol.Required(ATTR_MEDIA_TYPE): vol.In(LAUNCH_MEDIA_TYPES),
 }
+
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 
