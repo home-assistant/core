@@ -305,7 +305,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             ):
                 # When switching to color temp from RGBWW or RGB&W mode,
                 # we do not want the overall brightness of the RGB channels
-                brightness = max(self.rgb_color)
+                brightness = max(self._device.rgb)
             await self._device.async_set_white_temp(color_temp_kelvin, brightness)
             return
         # Handle switch to RGB Color Mode
