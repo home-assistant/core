@@ -61,10 +61,6 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
-# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
-# https://github.com/home-assistant/core/issues/61756
-pillow==8.2.0
-
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
