@@ -74,7 +74,7 @@ SUPPORT_ROKU = (
 
 LAUNCH_SCHEMA = {
     vol.Required(ATTR_APP_ID): str,
-    vol.Optional(ATTR_CONTENT_ID): str,
+    vol.Required(ATTR_CONTENT_ID): str,
     vol.Required(ATTR_MEDIA_TYPE): vol.In(LAUNCH_MEDIA_TYPES),
 }
 
@@ -256,12 +256,15 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 
     @roku_exception_handler
-    async def launch(self, app_id: str, content_id: str | None = None):
-        """Launch application (channel) with deeplink support."""
+    async def launch(self, app_id: str, content_id: str, media_type: str):
+        """Launch application with content deeplink."""
         params = {}
 
         if content_id is not None:
             params["contentID"] = content_id
+
+        if media_type is not None:
+            params["MediaType"] = media_type
 
         await self.coordinator.roku.launch(app_id, params)
 
