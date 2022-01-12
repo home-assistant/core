@@ -12,14 +12,7 @@ launch:
       required: true
       example: "291097"
       selector:
-        text:
-    media_type:
-      name: Media Type
-      description: "The type of media being launched."
-      required: true
-      example: "movie"
-      selector:
-        
+        text:  
     content_id:
       name: Content ID
       description: The content ID to launch the application with.
@@ -27,6 +20,20 @@ launch:
       example: "8e06a8b7-d667-4e31-939d-f40a6dd78a88"
       selector:
         text:
+    media_type:
+      name: Media Type
+      description: "The type of media being launched."
+      required: true
+      selector:
+        select:
+          options:
+            - "movie"
+            - "episode"
+            - "season"
+            - "series"
+            - "shortFormVideo"
+            - "special"
+            - "live"
 search:
   name: Search
   description: Emulates opening the search screen and entering the search keyword.
