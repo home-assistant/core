@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
@@ -22,13 +22,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         Define a callback to migrate appropriate to new unique IDs.
 
         Old: {latitude}, {longitude}
-        New: {entry_id}, {latitude}, {longitude}
+        New: {entry_id}
         """
 
         if entity_entry.unique_id.startswith(entry.entry_id):
             return None
 
-        new_unique_id = f"{entry.entry_id}, {entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
+        new_unique_id = f"{entry.entry_id}"
 
         _LOGGER.debug(
             "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",

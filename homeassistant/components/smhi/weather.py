@@ -117,7 +117,7 @@ class SmhiWeather(WeatherEntity):
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
-        self._attr_unique_id = f"{entry_id}, {self._latitude}, {self._longitude}"
+        self._attr_unique_id = f"{entry_id}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
