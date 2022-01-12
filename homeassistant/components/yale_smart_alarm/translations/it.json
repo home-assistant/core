@@ -25,5 +25,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Il codice non corrisponde al numero di cifre richiesto"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Codice predefinito per le serrature, utilizzato se non ne viene fornito alcuno",
+                    "lock_code_digits": "Numero di cifre nel codice PIN per le serrature"
+                }
+            }
+        }
     }
 }

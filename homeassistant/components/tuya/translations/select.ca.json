@@ -48,6 +48,38 @@
             "on": "ON",
             "power_off": "OFF",
             "power_on": "ON"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Tancada",
+            "high": "Alt",
+            "low": "Baix",
+            "middle": "Mig"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Gran",
+            "middle": "Mitj\u00e0",
+            "small": "Petit"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Arc",
+            "chargego": "Retornar a la base",
+            "left_bow": "Arc a esquerra",
+            "left_spiral": "Espiral a esquerra",
+            "mop": "Fregar",
+            "part": "Surt",
+            "partial_bow": "Arc parcial",
+            "pick_zone": "Tria zona",
+            "point": "Punt",
+            "pose": "Posa",
+            "random": "Aleatori",
+            "right_bow": "Arc a dreta",
+            "right_spiral": "Espiral a dreta",
+            "single": "Individual",
+            "smart": "Intel\u00b7ligent",
+            "spiral": "Espiral",
+            "standby": "En espera",
+            "wall_follow": "Segueix paret",
+            "zone": "Zona"
         }
     }
 }
