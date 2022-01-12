@@ -322,7 +322,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:lock",
         entity_registry_enabled_default=False,
         native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
-            str(value), cast(str, value)
+            cast(str, value), cast(str, value)
         ),
     ),
     OverkizSensorDescription(
@@ -347,7 +347,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=OverkizDeviceClass.SENSOR_DEFECT,
         native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
-            str(value), cast(str, value)
+            cast(str, value), cast(str, value)
         ),
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
