@@ -1,50 +1,36 @@
 """RKI Covid numbers sensor."""
+from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-from typing import Callable, Dict, Optional
+from typing import Any
 
 from rki_covid_parser.parser import RkiCovidParser
-import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import PLATFORM_SCHEMA, STATE_CLASS_MEASUREMENT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     HomeAssistantType,
 )
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    CoordinatorEntity,
+)
 
 from . import get_coordinator
 from .const import (
     ATTR_COUNTY,
     ATTRIBUTION,
-    CONF_BASEURL,
     CONF_DISTRICT_NAME,
     CONF_DISTRICTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-# wait for x minutes after restart, before refreshing
-SCAN_INTERVAL = timedelta(minutes=10)
-
-# schema for each config entry
-DISTRICT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
-
-# schema for each platform sensor
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_BASEURL): str,
-        vol.Required(CONF_DISTRICTS): vol.All(cv.ensure_list, [DISTRICT_SCHEMA]),
-    }
-)
 
 SENSORS = {
     "count": "mdi:virus",
@@ -76,15 +62,11 @@ DISTRICT_SENSORS = {
 async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
-    async_add_entities: Callable,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
-    _LOGGER.debug("setup sensor for platform")
     session = async_get_clientsession(hass)
-
-    if CONF_BASEURL in config:
-        _LOGGER.warning("Baseurl is not supported anymore.")
 
     parser = RkiCovidParser(session)
     coordinator = await get_coordinator(hass, parser)
@@ -94,6 +76,7 @@ async def async_setup_platform(
 
     districts = config[CONF_DISTRICTS]
 
+    # district sensors
     sensors = [
         RKICovidNumbersSensor(coordinator, district[CONF_DISTRICT_NAME], info_type)
         for info_type in SENSORS
@@ -101,6 +84,7 @@ async def async_setup_platform(
     ]
     async_add_entities(sensors, update_before_add=True)
 
+    # sensors on state level (additional sensors)
     for district in districts:
         if district.startswith("BL"):
             district_sensors = [
@@ -139,18 +123,18 @@ async def async_setup_entry(
         async_add_entities(district_sensors, update_before_add=True)
 
 
-class RKICovidNumbersSensor(CoordinatorEntity):
+class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
     """Representation of a sensor."""
 
-    name = None
-    unique_id = None
+    _attr_attribution = ATTRIBUTION
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(
         self,
-        coordinator: update_coordinator.DataUpdateCoordinator,
-        district: Dict[str, str],
+        coordinator: DataUpdateCoordinator[Any],
+        district: dict[str, str],
         info_type: str,
-    ):
+    ) -> None:
         """Initialize a new sensor."""
         _LOGGER.debug(f"initialize {info_type} sensor for {district}")
         super().__init__(coordinator)
@@ -158,16 +142,20 @@ class RKICovidNumbersSensor(CoordinatorEntity):
         data = coordinator.data[district]
 
         if data.county:
-            self.name = f"{data.county} {info_type}"
+            self._attr_name = f"{data.county} {info_type}"
         else:
-            self.name = f"{data.name} {info_type}"
-        self.unique_id = f"{district}-{info_type}"
+            self._attr_name = f"{data.name} {info_type}"
+
+        self._attr_unique_id = f"{district}.{info_type}"
+
         self.district = district
         self.info_type = info_type
         self.updated = datetime.now()
-        self._attr_attribution = f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
-        self._attr_unit_of_measurement = self._measurement_unit()
-        self._attr_state = self._native_state()
+        self._attr_native_unit_of_measurement = self._measurement_unit()
+        self._attr_native_value = self._native_value()
+
+    def _native_value(self):
+        return getattr(self.coordinator.data[self.district], self.info_type)
 
     @property
     def available(self) -> bool:
@@ -177,22 +165,10 @@ class RKICovidNumbersSensor(CoordinatorEntity):
             and self.district in self.coordinator.data
         )
 
-    def _native_state(self) -> Optional[str]:
-        """Return current state."""
-        try:
-            return getattr(self.coordinator.data[self.district], self.info_type)
-        except AttributeError:
-            return None
-
     @property
     def icon(self):
         """Return the icon."""
         return {**SENSORS, **DISTRICT_SENSORS}[self.info_type]
-
-    @property
-    def state_class(self):
-        """Opt-in for long-term statistics."""
-        return STATE_CLASS_MEASUREMENT
 
     def _measurement_unit(self) -> str:
         """Return unit of measurement."""

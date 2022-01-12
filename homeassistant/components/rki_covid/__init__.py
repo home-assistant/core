@@ -7,15 +7,26 @@ import aiohttp
 import async_timeout
 from rki_covid_parser.parser import RkiCovidParser
 
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
-from homeassistant.helpers import aiohttp_client, update_coordinator
+from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .data import DistrictData, StateData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Initialize the data coordinator during component setup."""
+    session = async_get_clientsession(hass)
+
+    parser = RkiCovidParser(session)
+    await get_coordinator(hass, parser)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -34,21 +45,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def get_coordinator(hass: HomeAssistant, parser: RkiCovidParser):
     """Get the data update coordinator."""
-    _LOGGER.debug("initialize the data coordinator.")
+    _LOGGER.debug("initialize the data coordinator")
     if DOMAIN in hass.data:
         return hass.data[DOMAIN]
 
     async def async_get_districts():
-        """Fetch data from rki-covid-parser library.
-
-        Here the data for each district is loaded.
-        """
-        _LOGGER.debug("fetch data from rki-covid-parser.")
+        """Fetch data for each district from rki-covid-parser library."""
+        _LOGGER.debug("Fetch data from rki-covid-parser")
         try:
             with async_timeout.timeout(30):
-                # return {case.county: case for case in await api.load_districts()}
                 await parser.load_data()
-                _LOGGER.debug("fetching finished.")
+                _LOGGER.debug("Fetch data from rki-covid-parser finished successfully")
 
                 items = {}
 
@@ -124,7 +131,7 @@ async def get_coordinator(hass: HomeAssistant, parser: RkiCovidParser):
                     parser.country.lastUpdate,
                 )
 
-                _LOGGER.debug("parsing data finished.")
+                _LOGGER.debug("Parsing data finished")
                 return items
 
         except asyncio.TimeoutError as err:
