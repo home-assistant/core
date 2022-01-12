@@ -35,7 +35,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="on_off",  # This is the sensor name
         name="Power",  # This is the human readable name
-        icon="mdi:power",
         device_class=BinarySensorDeviceClass.POWER,
         value_fn=lambda data: data.is_on,
     ),
