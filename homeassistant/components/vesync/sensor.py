@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 
 from .common import VeSyncBaseEntity
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SENSORS
+from .const import DOMAIN, VS_DISCOVERY, VS_SENSORS
 from .switch import DEV_TYPE_TO_HA
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,8 +26,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SENSORS), discover)
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SENSORS), discover)
+    )
 
     _setup_entities(hass.data[DOMAIN][VS_SENSORS], async_add_entities)
 
