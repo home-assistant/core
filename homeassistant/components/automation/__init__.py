@@ -1,8 +1,9 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
