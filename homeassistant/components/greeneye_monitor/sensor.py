@@ -1,7 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Union, cast
 
 import greeneye
 
@@ -16,9 +16,9 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_CHANNELS,
@@ -45,11 +45,14 @@ COUNTER_ICON = "mdi:counter"
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a single GEM temperature sensor."""
+    if not discovery_info:
+        return
+
     entities: list[GEMSensor] = []
     for monitor_config in discovery_info[CONF_MONITORS]:
         monitor_serial_number = monitor_config[CONF_SERIAL_NUMBER]
@@ -186,7 +189,7 @@ class CurrentSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return self._sensor.watts
+        return cast(float, self._sensor.watts)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -237,7 +240,7 @@ class PulseCounter(GEMSensor):
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return result
+        return cast(float, result)
 
     @property
     def _seconds_per_time_unit(self) -> int:
@@ -289,7 +292,7 @@ class TemperatureSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return self._sensor.temperature
+        return cast(float, self._sensor.temperature)
 
 
 class VoltageSensor(GEMSensor):
@@ -313,4 +316,4 @@ class VoltageSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return self._sensor.voltage
+        return cast(float, self._sensor.voltage)
