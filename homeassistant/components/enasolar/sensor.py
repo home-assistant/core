@@ -35,7 +35,6 @@ from .const import (
     DEFAULT_SUN_DOWN,
     DEFAULT_SUN_UP,
     DOMAIN,
-    ENASOLAR,
     ENASOLAR_UNIT_MAPPINGS,
     SCAN_DATA_MIN_INTERVAL,
     SCAN_MAX_INTERVAL,
@@ -54,7 +53,7 @@ async def async_setup_entry(
     hass_meter_sensors = []
     hass_data_sensors = []
 
-    enasolar = hass.data[DOMAIN][config_entry.entry_id][ENASOLAR]
+    enasolar = hass.data[DOMAIN][config_entry.entry_id]
 
     enasolar.sun_up = dt_util.parse_time(
         config_entry.options.get(CONF_SUN_UP, DEFAULT_SUN_UP)

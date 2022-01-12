@@ -16,7 +16,7 @@
         "step": {
             "inverter": {
                 "data": {
-                    "capability": "Capability bits - see documentation",
+                    "capability": "Inverter Capabilities",
                     "dc_strings": "Number of DC strings in the array",
                     "max_output": "Maximum AC Output Power"
                 },
@@ -26,9 +26,7 @@
                 "data": {
                     "host": "FQDN or IP Address of the Inverter",
                     "name": "A name for the Inverter (optional)"
-                },
-                "description": "Enter the connection data",
-                "title": "Setup EnaSolar Inverter connection"
+                }
             }
         }
     },

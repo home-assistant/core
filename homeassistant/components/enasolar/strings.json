@@ -12,7 +12,7 @@
         "data": {
            "max_output": "Maximum AC Output Power",
            "dc_strings": "Number of DC strings in the array",
-           "capability": "Capability bits - see documentation"
+           "capability": "Inverter Capabilities"
         }
       }
     },

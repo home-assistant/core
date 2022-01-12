@@ -22,6 +22,7 @@ from tests.common import MockConfigEntry
 NAME = "My Inverter"
 IP_ADDRESS = "1.2.3.4"
 SERIAL_NO = 1234567890
+CAPABILITY = 3
 
 
 async def test_form(hass):
@@ -40,6 +41,9 @@ async def test_form(hass):
         return_value=None,
     ), patch(
         "homeassistant.components.enasolar.config_flow._get_ip", return_value=IP_ADDRESS
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_capability",
+        return_value=CAPABILITY,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -85,6 +89,9 @@ async def test_user(hass):
     ), patch(
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_serial_no",
         return_value=SERIAL_NO,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_capability",
+        return_value=CAPABILITY,
     ):
         result = await flow.async_step_user({CONF_HOST: DEFAULT_HOST, CONF_NAME: NAME})
 
@@ -97,7 +104,7 @@ async def test_inverter(hass):
     flow = init_config_flow(hass)
 
     #   Firstly with no data should return the form
-    result = await flow.async_step_inverter()
+    result = await flow.async_step_inverter(None)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "inverter"
@@ -107,14 +114,16 @@ async def test_inverter(hass):
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
         return_value=True,
     ), patch(
-        "homeassistant.components.enasolar.config_flow._get_ip",
-        return_value=IP_ADDRESS,
+        "homeassistant.components.enasolar.config_flow._get_ip", return_value=IP_ADDRESS
     ), patch(
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
         return_value=None,
     ), patch(
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_serial_no",
         return_value=SERIAL_NO,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_capability",
+        return_value=CAPABILITY,
     ):
         result = await flow.async_step_user({CONF_HOST: DEFAULT_HOST, CONF_NAME: NAME})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -124,14 +133,16 @@ async def test_inverter(hass):
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
         return_value=True,
     ), patch(
-        "homeassistant.components.enasolar.config_flow._get_ip",
-        return_value=IP_ADDRESS,
+        "homeassistant.components.enasolar.config_flow._get_ip", return_value=IP_ADDRESS
     ), patch(
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
         return_value=None,
     ), patch(
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_serial_no",
         return_value=SERIAL_NO,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_capability",
+        return_value=CAPABILITY,
     ):
         result = await flow.async_step_inverter(
             {CONF_MAX_OUTPUT: 3.8, CONF_DC_STRINGS: 1, CONF_CAPABILITY: 256}
@@ -141,30 +152,10 @@ async def test_inverter(hass):
     assert result["data"] == {
         CONF_MAX_OUTPUT: 3.8,
         CONF_DC_STRINGS: 1,
-        CONF_CAPABILITY: 256,
+        CONF_CAPABILITY: ["power"],
         CONF_HOST: DEFAULT_HOST,
         CONF_NAME: NAME,
     }
-
-    #   With all invalid data provided
-    with patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow._get_ip",
-        return_value=IP_ADDRESS,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_serial_no",
-        return_value=SERIAL_NO,
-    ):
-        result = await flow.async_step_inverter(
-            {CONF_MAX_OUTPUT: 8, CONF_DC_STRINGS: 3, CONF_CAPABILITY: 512}
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"capability": "capability_invalid"}
 
 
 async def test_abort_if_already_setup(hass):
@@ -187,14 +178,16 @@ async def test_abort_if_already_setup(hass):
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
         return_value=True,
     ), patch(
-        "homeassistant.components.enasolar.config_flow._get_ip",
-        return_value=IP_ADDRESS,
+        "homeassistant.components.enasolar.config_flow._get_ip", return_value=IP_ADDRESS
     ), patch(
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
         return_value=None,
     ), patch(
         "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_serial_no",
         return_value=SERIAL_NO,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_capability",
+        return_value=CAPABILITY,
     ):
         result = await flow.async_step_user({CONF_HOST: DEFAULT_HOST, CONF_NAME: NAME})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
