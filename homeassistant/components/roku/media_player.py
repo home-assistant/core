@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_APP_ID,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_BROWSE_MEDIA,
@@ -44,7 +45,6 @@ from homeassistant.helpers.network import is_internal_request
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
 from .const import (
-    ATTR_APP_ID,
     ATTR_CONTENT_ID,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
