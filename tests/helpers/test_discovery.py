@@ -131,7 +131,7 @@ class TestHelpersDiscovery:
         def component_setup(hass, config):
             """Set up mock component."""
             discovery.load_platform(
-                hass, Platform.SWITCH, "test_circular", "disc", config
+                hass, Platform.SWITCH, "test_circular", {"key": "value"}, config
             )
             component_calls.append(1)
             return True
