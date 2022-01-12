@@ -77,6 +77,12 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
+        SERVICE_LAUNCH,
+        LAUNCH_SCHEMA,
+        "launch",
+    )
+
+    platform.async_register_entity_service(
         SERVICE_SEARCH,
         SEARCH_SCHEMA,
         "search",
@@ -233,6 +239,16 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def source_list(self) -> list:
         """List of available input sources."""
         return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
+
+    @roku_exception_handler
+    async def launch(self, app_id: str, content_id: str | None = None):
+        """Launch application (channel) with deeplink support."""
+        params = {}
+
+        if content_id is not None:
+            params["contentID"] = content_id
+
+        await self.coordinator.roku.launch(app_id, params)
 
     @roku_exception_handler
     async def search(self, keyword):
