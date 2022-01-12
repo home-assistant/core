@@ -368,9 +368,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if media_type == MEDIA_TYPE_APP:
             params = {
-                HA_ATTRS_TO_LAUNCH_PARAMS[kwarg]: value
-                for (kwarg, value) in kwargs.items()
-                if kwarg in HA_ATTRS_TO_LAUNCH_PARAMS
+                param: kwargs[kwarg]
+                for (kwarg, param) in HA_ATTRS_TO_LAUNCH_PARAMS.items()
+                if kwarg in kwargs
             }
 
             await self.coordinator.roku.launch(media_id, params)
