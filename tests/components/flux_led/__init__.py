@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import contextmanager
 import datetime
-from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from flux_led import DeviceType

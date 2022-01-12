@@ -1,7 +1,7 @@
 """Common libraries for test setup."""
 
+from collections.abc import Awaitable, Callable
 import time
-from typing import Awaitable, Callable
 from unittest.mock import patch
 
 from google_nest_sdm.device_manager import DeviceManager
