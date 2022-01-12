@@ -52,24 +52,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             errors["base"] = "cannot_connect"
             LOGGER.exception("Connection Exception")
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-            )
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected Exception")
             errors["base"] = "unknown"
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-            )
         else:
             await self.async_set_unique_id(serial)
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: user_input[CONF_HOST]}
             )
 
-        return self.async_create_entry(
-            title="Fireplace",
-            data={CONF_HOST: user_input[CONF_HOST]},
+            return self.async_create_entry(
+                title="Fireplace",
+                data={CONF_HOST: user_input[CONF_HOST]},
+            )
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
 
