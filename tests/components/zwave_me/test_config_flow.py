@@ -135,6 +135,5 @@ async def test_handle_error_user(hass: HomeAssistant):
                 "token": "test-token",
             },
         )
-        await hass.async_block_till_done()
         assert result2["type"] == RESULT_TYPE_ABORT
         assert result2["reason"] == "no_valid_uuid_set"
