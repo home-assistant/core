@@ -760,6 +760,8 @@ async def test_integration_services(
         )
         launch_mock.assert_called_once_with(
             "291097",
-            "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
-            "movie",
+            {
+                "contentID": "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
+                "MediaType": "movie",
+            },
         )
