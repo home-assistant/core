@@ -232,7 +232,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
-        auto = list(filter(lambda e: not e.user_defined, component.entities))
+        auto: list[Entity] = list(
+            filter(
+                lambda e: not isinstance(e, Group) or not e.user_defined,
+                component.entities,
+            )
+        )
 
         if (conf := await component.async_prepare_reload()) is None:
             return
@@ -284,7 +289,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             return
 
-        if group is None:
+        if group is None or not isinstance(group, Group):
             _LOGGER.warning("%s:Group '%s' doesn't exist!", service.service, object_id)
             return
 
