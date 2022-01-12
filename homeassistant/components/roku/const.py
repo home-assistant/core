@@ -8,4 +8,5 @@ ATTR_KEYWORD = "keyword"
 DEFAULT_PORT = 8060
 
 # Services
+SERVICE_LAUNCH = "launch"
 SERVICE_SEARCH = "search"
