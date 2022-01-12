@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
+from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
@@ -135,7 +135,7 @@ async def async_setup_platform(
 
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
-    entity = AmcrestCam(name, device, hass.data[DATA_FFMPEG])
+    entity = AmcrestCam(name, device, get_ffmpeg_manager(hass))
 
     # 2021.9.0 introduced unique id's for the camera entity, but these were not
     # unique for different resolution streams.  If any cameras were configured
@@ -411,7 +411,7 @@ class AmcrestCam(Camera):
                 self._rtsp_url = await self._api.async_rtsp_url(typeno=self._resolution)
 
             (
-                self.is_streaming,
+                self._attr_is_streaming,
                 self._is_recording,
                 self._motion_detection_enabled,
                 self._audio_enabled,

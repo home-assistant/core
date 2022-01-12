@@ -1,1 +1,1 @@
-"""Tests for here_travel_time component."""
+"""Tests for HERE Travel Time."""

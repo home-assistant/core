@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
@@ -101,16 +101,22 @@ def request_app_setup(
         else:
             setup_platform(hass, config, add_entities, discovery_info)
 
-    start_url = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
-
-    description = f"""Please create a Fitbit developer app at
+    try:
+        description = f"""Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
                        For the OAuth 2.0 Application Type choose Personal.
-                       Set the Callback URL to {start_url}.
+                       Set the Callback URL to {get_url(hass, require_ssl=True)}{FITBIT_AUTH_CALLBACK_PATH}.
+                       (Note: Your Home Assistant instance must be accessible via HTTPS.)
                        They will provide you a Client ID and secret.
                        These need to be saved into the file located at: {config_path}.
                        Then come back here and hit the below button.
                        """
+    except NoURLAvailableError:
+        _LOGGER.error(
+            "Could not find an SSL enabled URL for your Home Assistant instance. "
+            "Fitbit requires that your Home Assistant instance is accessible via HTTPS"
+        )
+        return
 
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
@@ -136,7 +142,7 @@ def request_oauth_completion(hass: HomeAssistant) -> None:
     def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
         """Handle configuration updates."""
 
-    start_url = f"{get_url(hass)}{FITBIT_AUTH_START}"
+    start_url = f"{get_url(hass, require_ssl=True)}{FITBIT_AUTH_START}"
 
     description = f"Please authorize Fitbit by visiting {start_url}"
 
@@ -236,7 +242,7 @@ def setup_platform(
             config_file.get(CONF_CLIENT_ID), config_file.get(CONF_CLIENT_SECRET)
         )
 
-        redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
+        redirect_uri = f"{get_url(hass, require_ssl=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
         fitbit_auth_start_url, _ = oauth.authorize_token_url(
             redirect_uri=redirect_uri,
@@ -372,12 +378,13 @@ class FitbitSensor(SensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        if self.entity_description.key == "devices/battery" and self.extra is not None:
-            extra_battery = self.extra.get("battery")
-            if extra_battery is not None:
-                battery_level = BATTERY_LEVELS.get(extra_battery)
-                if battery_level is not None:
-                    return icon_for_battery_level(battery_level=battery_level)
+        if (
+            self.entity_description.key == "devices/battery"
+            and self.extra is not None
+            and (extra_battery := self.extra.get("battery")) is not None
+            and (battery_level := BATTERY_LEVELS.get(extra_battery)) is not None
+        ):
+            return icon_for_battery_level(battery_level=battery_level)
         return self.entity_description.icon
 
     @property

@@ -16,11 +16,12 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service import ServiceCall
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -40,7 +41,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "lock", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=3)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -99,12 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             hass,
         )
-    except SurePetcareAuthenticationError:
+    except SurePetcareAuthenticationError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
-        return False
+        raise ConfigEntryAuthFailed from error
     except SurePetcareError as error:
-        _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
-        return False
+        raise ConfigEntryNotReady from error
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -188,6 +188,8 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator):
         """Get the latest data from Sure Petcare."""
         try:
             return await self.surepy.get_entities(refresh=True)
+        except SurePetcareAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Invalid username/password") from err
         except SurePetcareError as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 

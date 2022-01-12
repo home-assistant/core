@@ -1,15 +1,21 @@
 """Support for Dark Sky weather service."""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
+from typing import Literal, NamedTuple
 
 import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -21,8 +27,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     DEGREE,
     LENGTH_CENTIMETERS,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
     PERCENTAGE,
+    PRECIPITATION_INCHES,
     PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_MBAR,
     SPEED_KILOMETERS_PER_HOUR,
@@ -32,7 +41,10 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     UV_INDEX,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,352 +67,427 @@ DEPRECATED_SENSOR_TYPES = {
     "temperature_min",
 }
 
-# Sensor types are defined like so:
-# Name, si unit, us unit, ca unit, uk unit, uk2 unit
-SENSOR_TYPES = {
-    "summary": [
-        "Summary",
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        ["currently", "hourly", "daily"],
-    ],
-    "minutely_summary": ["Minutely Summary", None, None, None, None, None, None, []],
-    "hourly_summary": ["Hourly Summary", None, None, None, None, None, None, []],
-    "daily_summary": ["Daily Summary", None, None, None, None, None, None, []],
-    "icon": [
-        "Icon",
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        ["currently", "hourly", "daily"],
-    ],
-    "nearest_storm_distance": [
-        "Nearest Storm Distance",
-        LENGTH_KILOMETERS,
-        "mi",
-        LENGTH_KILOMETERS,
-        LENGTH_KILOMETERS,
-        "mi",
-        "mdi:weather-lightning",
-        ["currently"],
-    ],
-    "nearest_storm_bearing": [
-        "Nearest Storm Bearing",
-        DEGREE,
-        DEGREE,
-        DEGREE,
-        DEGREE,
-        DEGREE,
-        "mdi:weather-lightning",
-        ["currently"],
-    ],
-    "precip_type": [
-        "Precip",
-        None,
-        None,
-        None,
-        None,
-        None,
-        "mdi:weather-pouring",
-        ["currently", "minutely", "hourly", "daily"],
-    ],
-    "precip_intensity": [
-        "Precip Intensity",
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        "in",
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        "mdi:weather-rainy",
-        ["currently", "minutely", "hourly", "daily"],
-    ],
-    "precip_probability": [
-        "Precip Probability",
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        "mdi:water-percent",
-        ["currently", "minutely", "hourly", "daily"],
-    ],
-    "precip_accumulation": [
-        "Precip Accumulation",
-        LENGTH_CENTIMETERS,
-        "in",
-        LENGTH_CENTIMETERS,
-        LENGTH_CENTIMETERS,
-        LENGTH_CENTIMETERS,
-        "mdi:weather-snowy",
-        ["hourly", "daily"],
-    ],
-    "temperature": [
-        "Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["currently", "hourly"],
-    ],
-    "apparent_temperature": [
-        "Apparent Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["currently", "hourly"],
-    ],
-    "dew_point": [
-        "Dew Point",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["currently", "hourly", "daily"],
-    ],
-    "wind_speed": [
-        "Wind Speed",
-        SPEED_METERS_PER_SECOND,
-        SPEED_MILES_PER_HOUR,
-        SPEED_KILOMETERS_PER_HOUR,
-        SPEED_MILES_PER_HOUR,
-        SPEED_MILES_PER_HOUR,
-        "mdi:weather-windy",
-        ["currently", "hourly", "daily"],
-    ],
-    "wind_bearing": [
-        "Wind Bearing",
-        DEGREE,
-        DEGREE,
-        DEGREE,
-        DEGREE,
-        DEGREE,
-        "mdi:compass",
-        ["currently", "hourly", "daily"],
-    ],
-    "wind_gust": [
-        "Wind Gust",
-        SPEED_METERS_PER_SECOND,
-        SPEED_MILES_PER_HOUR,
-        SPEED_KILOMETERS_PER_HOUR,
-        SPEED_MILES_PER_HOUR,
-        SPEED_MILES_PER_HOUR,
-        "mdi:weather-windy-variant",
-        ["currently", "hourly", "daily"],
-    ],
-    "cloud_cover": [
-        "Cloud Coverage",
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        "mdi:weather-partly-cloudy",
-        ["currently", "hourly", "daily"],
-    ],
-    "humidity": [
-        "Humidity",
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        PERCENTAGE,
-        "mdi:water-percent",
-        ["currently", "hourly", "daily"],
-    ],
-    "pressure": [
-        "Pressure",
-        PRESSURE_MBAR,
-        PRESSURE_MBAR,
-        PRESSURE_MBAR,
-        PRESSURE_MBAR,
-        PRESSURE_MBAR,
-        "mdi:gauge",
-        ["currently", "hourly", "daily"],
-    ],
-    "visibility": [
-        "Visibility",
-        LENGTH_KILOMETERS,
-        "mi",
-        LENGTH_KILOMETERS,
-        LENGTH_KILOMETERS,
-        "mi",
-        "mdi:eye",
-        ["currently", "hourly", "daily"],
-    ],
-    "ozone": [
-        "Ozone",
-        "DU",
-        "DU",
-        "DU",
-        "DU",
-        "DU",
-        "mdi:eye",
-        ["currently", "hourly", "daily"],
-    ],
-    "apparent_temperature_max": [
-        "Daily High Apparent Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "apparent_temperature_high": [
-        "Daytime High Apparent Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "apparent_temperature_min": [
-        "Daily Low Apparent Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "apparent_temperature_low": [
-        "Overnight Low Apparent Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "temperature_max": [
-        "Daily High Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "temperature_high": [
-        "Daytime High Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "temperature_min": [
-        "Daily Low Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "temperature_low": [
-        "Overnight Low Temperature",
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "precip_intensity_max": [
-        "Daily Max Precip Intensity",
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        "in",
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        "mdi:thermometer",
-        ["daily"],
-    ],
-    "uv_index": [
-        "UV Index",
-        UV_INDEX,
-        UV_INDEX,
-        UV_INDEX,
-        UV_INDEX,
-        UV_INDEX,
-        "mdi:weather-sunny",
-        ["currently", "hourly", "daily"],
-    ],
-    "moon_phase": [
-        "Moon Phase",
-        None,
-        None,
-        None,
-        None,
-        None,
-        "mdi:weather-night",
-        ["daily"],
-    ],
-    "sunrise_time": [
-        "Sunrise",
-        None,
-        None,
-        None,
-        None,
-        None,
-        "mdi:white-balance-sunny",
-        ["daily"],
-    ],
-    "sunset_time": [
-        "Sunset",
-        None,
-        None,
-        None,
-        None,
-        None,
-        "mdi:weather-night",
-        ["daily"],
-    ],
-    "alerts": ["Alerts", None, None, None, None, None, "mdi:alert-circle-outline", []],
+MAP_UNIT_SYSTEM: dict[
+    Literal["si", "us", "ca", "uk", "uk2"],
+    Literal["si_unit", "us_unit", "ca_unit", "uk_unit", "uk2_unit"],
+] = {
+    "si": "si_unit",
+    "us": "us_unit",
+    "ca": "ca_unit",
+    "uk": "uk_unit",
+    "uk2": "uk2_unit",
 }
 
-CONDITION_PICTURES = {
-    "clear-day": ["/static/images/darksky/weather-sunny.svg", "mdi:weather-sunny"],
-    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-night"],
-    "rain": ["/static/images/darksky/weather-pouring.svg", "mdi:weather-pouring"],
-    "snow": ["/static/images/darksky/weather-snowy.svg", "mdi:weather-snowy"],
-    "sleet": ["/static/images/darksky/weather-hail.svg", "mdi:weather-snowy-rainy"],
-    "wind": ["/static/images/darksky/weather-windy.svg", "mdi:weather-windy"],
-    "fog": ["/static/images/darksky/weather-fog.svg", "mdi:weather-fog"],
-    "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
-    "partly-cloudy-day": [
-        "/static/images/darksky/weather-partlycloudy.svg",
-        "mdi:weather-partly-cloudy",
-    ],
-    "partly-cloudy-night": [
-        "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-night-partly-cloudy",
-    ],
+
+@dataclass
+class DarkskySensorEntityDescription(SensorEntityDescription):
+    """Describes Darksky sensor entity."""
+
+    si_unit: str | None = None
+    us_unit: str | None = None
+    ca_unit: str | None = None
+    uk_unit: str | None = None
+    uk2_unit: str | None = None
+    forecast_mode: list[str] = field(default_factory=list)
+
+
+SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
+    "summary": DarkskySensorEntityDescription(
+        key="summary",
+        name="Summary",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "minutely_summary": DarkskySensorEntityDescription(
+        key="minutely_summary",
+        name="Minutely Summary",
+        forecast_mode=[],
+    ),
+    "hourly_summary": DarkskySensorEntityDescription(
+        key="hourly_summary",
+        name="Hourly Summary",
+        forecast_mode=[],
+    ),
+    "daily_summary": DarkskySensorEntityDescription(
+        key="daily_summary",
+        name="Daily Summary",
+        forecast_mode=[],
+    ),
+    "icon": DarkskySensorEntityDescription(
+        key="icon",
+        name="Icon",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "nearest_storm_distance": DarkskySensorEntityDescription(
+        key="nearest_storm_distance",
+        name="Nearest Storm Distance",
+        si_unit=LENGTH_KILOMETERS,
+        us_unit=LENGTH_MILES,
+        ca_unit=LENGTH_KILOMETERS,
+        uk_unit=LENGTH_KILOMETERS,
+        uk2_unit=LENGTH_MILES,
+        icon="mdi:weather-lightning",
+        forecast_mode=["currently"],
+    ),
+    "nearest_storm_bearing": DarkskySensorEntityDescription(
+        key="nearest_storm_bearing",
+        name="Nearest Storm Bearing",
+        si_unit=DEGREE,
+        us_unit=DEGREE,
+        ca_unit=DEGREE,
+        uk_unit=DEGREE,
+        uk2_unit=DEGREE,
+        icon="mdi:weather-lightning",
+        forecast_mode=["currently"],
+    ),
+    "precip_type": DarkskySensorEntityDescription(
+        key="precip_type",
+        name="Precip",
+        icon="mdi:weather-pouring",
+        forecast_mode=["currently", "minutely", "hourly", "daily"],
+    ),
+    "precip_intensity": DarkskySensorEntityDescription(
+        key="precip_intensity",
+        name="Precip Intensity",
+        si_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        us_unit=PRECIPITATION_INCHES,
+        ca_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        uk_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        uk2_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        icon="mdi:weather-rainy",
+        forecast_mode=["currently", "minutely", "hourly", "daily"],
+    ),
+    "precip_probability": DarkskySensorEntityDescription(
+        key="precip_probability",
+        name="Precip Probability",
+        si_unit=PERCENTAGE,
+        us_unit=PERCENTAGE,
+        ca_unit=PERCENTAGE,
+        uk_unit=PERCENTAGE,
+        uk2_unit=PERCENTAGE,
+        icon="mdi:water-percent",
+        forecast_mode=["currently", "minutely", "hourly", "daily"],
+    ),
+    "precip_accumulation": DarkskySensorEntityDescription(
+        key="precip_accumulation",
+        name="Precip Accumulation",
+        si_unit=LENGTH_CENTIMETERS,
+        us_unit=LENGTH_INCHES,
+        ca_unit=LENGTH_CENTIMETERS,
+        uk_unit=LENGTH_CENTIMETERS,
+        uk2_unit=LENGTH_CENTIMETERS,
+        icon="mdi:weather-snowy",
+        forecast_mode=["hourly", "daily"],
+    ),
+    "temperature": DarkskySensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["currently", "hourly"],
+    ),
+    "apparent_temperature": DarkskySensorEntityDescription(
+        key="apparent_temperature",
+        name="Apparent Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["currently", "hourly"],
+    ),
+    "dew_point": DarkskySensorEntityDescription(
+        key="dew_point",
+        name="Dew Point",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "wind_speed": DarkskySensorEntityDescription(
+        key="wind_speed",
+        name="Wind Speed",
+        si_unit=SPEED_METERS_PER_SECOND,
+        us_unit=SPEED_MILES_PER_HOUR,
+        ca_unit=SPEED_KILOMETERS_PER_HOUR,
+        uk_unit=SPEED_MILES_PER_HOUR,
+        uk2_unit=SPEED_MILES_PER_HOUR,
+        icon="mdi:weather-windy",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "wind_bearing": DarkskySensorEntityDescription(
+        key="wind_bearing",
+        name="Wind Bearing",
+        si_unit=DEGREE,
+        us_unit=DEGREE,
+        ca_unit=DEGREE,
+        uk_unit=DEGREE,
+        uk2_unit=DEGREE,
+        icon="mdi:compass",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "wind_gust": DarkskySensorEntityDescription(
+        key="wind_gust",
+        name="Wind Gust",
+        si_unit=SPEED_METERS_PER_SECOND,
+        us_unit=SPEED_MILES_PER_HOUR,
+        ca_unit=SPEED_KILOMETERS_PER_HOUR,
+        uk_unit=SPEED_MILES_PER_HOUR,
+        uk2_unit=SPEED_MILES_PER_HOUR,
+        icon="mdi:weather-windy-variant",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "cloud_cover": DarkskySensorEntityDescription(
+        key="cloud_cover",
+        name="Cloud Coverage",
+        si_unit=PERCENTAGE,
+        us_unit=PERCENTAGE,
+        ca_unit=PERCENTAGE,
+        uk_unit=PERCENTAGE,
+        uk2_unit=PERCENTAGE,
+        icon="mdi:weather-partly-cloudy",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "humidity": DarkskySensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        si_unit=PERCENTAGE,
+        us_unit=PERCENTAGE,
+        ca_unit=PERCENTAGE,
+        uk_unit=PERCENTAGE,
+        uk2_unit=PERCENTAGE,
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "pressure": DarkskySensorEntityDescription(
+        key="pressure",
+        name="Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        si_unit=PRESSURE_MBAR,
+        us_unit=PRESSURE_MBAR,
+        ca_unit=PRESSURE_MBAR,
+        uk_unit=PRESSURE_MBAR,
+        uk2_unit=PRESSURE_MBAR,
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "visibility": DarkskySensorEntityDescription(
+        key="visibility",
+        name="Visibility",
+        si_unit=LENGTH_KILOMETERS,
+        us_unit=LENGTH_MILES,
+        ca_unit=LENGTH_KILOMETERS,
+        uk_unit=LENGTH_KILOMETERS,
+        uk2_unit=LENGTH_MILES,
+        icon="mdi:eye",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "ozone": DarkskySensorEntityDescription(
+        key="ozone",
+        name="Ozone",
+        device_class=SensorDeviceClass.OZONE,
+        si_unit="DU",
+        us_unit="DU",
+        ca_unit="DU",
+        uk_unit="DU",
+        uk2_unit="DU",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "apparent_temperature_max": DarkskySensorEntityDescription(
+        key="apparent_temperature_max",
+        name="Daily High Apparent Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "apparent_temperature_high": DarkskySensorEntityDescription(
+        key="apparent_temperature_high",
+        name="Daytime High Apparent Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "apparent_temperature_min": DarkskySensorEntityDescription(
+        key="apparent_temperature_min",
+        name="Daily Low Apparent Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "apparent_temperature_low": DarkskySensorEntityDescription(
+        key="apparent_temperature_low",
+        name="Overnight Low Apparent Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "temperature_max": DarkskySensorEntityDescription(
+        key="temperature_max",
+        name="Daily High Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "temperature_high": DarkskySensorEntityDescription(
+        key="temperature_high",
+        name="Daytime High Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "temperature_min": DarkskySensorEntityDescription(
+        key="temperature_min",
+        name="Daily Low Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "temperature_low": DarkskySensorEntityDescription(
+        key="temperature_low",
+        name="Overnight Low Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        si_unit=TEMP_CELSIUS,
+        us_unit=TEMP_FAHRENHEIT,
+        ca_unit=TEMP_CELSIUS,
+        uk_unit=TEMP_CELSIUS,
+        uk2_unit=TEMP_CELSIUS,
+        forecast_mode=["daily"],
+    ),
+    "precip_intensity_max": DarkskySensorEntityDescription(
+        key="precip_intensity_max",
+        name="Daily Max Precip Intensity",
+        si_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        us_unit=PRECIPITATION_INCHES,
+        ca_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        uk_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        uk2_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        icon="mdi:thermometer",
+        forecast_mode=["daily"],
+    ),
+    "uv_index": DarkskySensorEntityDescription(
+        key="uv_index",
+        name="UV Index",
+        si_unit=UV_INDEX,
+        us_unit=UV_INDEX,
+        ca_unit=UV_INDEX,
+        uk_unit=UV_INDEX,
+        uk2_unit=UV_INDEX,
+        icon="mdi:weather-sunny",
+        forecast_mode=["currently", "hourly", "daily"],
+    ),
+    "moon_phase": DarkskySensorEntityDescription(
+        key="moon_phase",
+        name="Moon Phase",
+        icon="mdi:weather-night",
+        forecast_mode=["daily"],
+    ),
+    "sunrise_time": DarkskySensorEntityDescription(
+        key="sunrise_time",
+        name="Sunrise",
+        icon="mdi:white-balance-sunny",
+        forecast_mode=["daily"],
+    ),
+    "sunset_time": DarkskySensorEntityDescription(
+        key="sunset_time",
+        name="Sunset",
+        icon="mdi:weather-night",
+        forecast_mode=["daily"],
+    ),
+    "alerts": DarkskySensorEntityDescription(
+        key="alerts",
+        name="Alerts",
+        icon="mdi:alert-circle-outline",
+        forecast_mode=[],
+    ),
+}
+
+
+class ConditionPicture(NamedTuple):
+    """Entity picture and icon for condition."""
+
+    entity_picture: str
+    icon: str
+
+
+CONDITION_PICTURES: dict[str, ConditionPicture] = {
+    "clear-day": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-sunny.svg",
+        icon="mdi:weather-sunny",
+    ),
+    "clear-night": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-night.svg",
+        icon="mdi:weather-night",
+    ),
+    "rain": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-pouring.svg",
+        icon="mdi:weather-pouring",
+    ),
+    "snow": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-snowy.svg",
+        icon="mdi:weather-snowy",
+    ),
+    "sleet": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-hail.svg",
+        icon="mdi:weather-snowy-rainy",
+    ),
+    "wind": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-windy.svg",
+        icon="mdi:weather-windy",
+    ),
+    "fog": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-fog.svg",
+        icon="mdi:weather-fog",
+    ),
+    "cloudy": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-cloudy.svg",
+        icon="mdi:weather-cloudy",
+    ),
+    "partly-cloudy-day": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-partlycloudy.svg",
+        icon="mdi:weather-partly-cloudy",
+    ),
+    "partly-cloudy-night": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-cloudy.svg",
+        icon="mdi:weather-night-partly-cloudy",
+    ),
 }
 
 # Language Supported Codes
@@ -486,7 +573,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -519,30 +611,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     forecast = config.get(CONF_FORECAST)
     forecast_hour = config.get(CONF_HOURLY_FORECAST)
-    sensors = []
+    sensors: list[SensorEntity] = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
             _LOGGER.warning("Monitored condition %s is deprecated", variable)
-        if not SENSOR_TYPES[variable][7] or "currently" in SENSOR_TYPES[variable][7]:
+        description = SENSOR_TYPES[variable]
+        if not description.forecast_mode or "currently" in description.forecast_mode:
             if variable == "alerts":
-                sensors.append(DarkSkyAlertSensor(forecast_data, variable, name))
+                sensors.append(DarkSkyAlertSensor(forecast_data, description, name))
             else:
-                sensors.append(DarkSkySensor(forecast_data, variable, name))
+                sensors.append(DarkSkySensor(forecast_data, description, name))
 
-        if forecast is not None and "daily" in SENSOR_TYPES[variable][7]:
-            for forecast_day in forecast:
-                sensors.append(
+        if forecast is not None and "daily" in description.forecast_mode:
+            sensors.extend(
+                [
                     DarkSkySensor(
-                        forecast_data, variable, name, forecast_day=forecast_day
+                        forecast_data, description, name, forecast_day=forecast_day
                     )
-                )
-        if forecast_hour is not None and "hourly" in SENSOR_TYPES[variable][7]:
-            for forecast_h in forecast_hour:
-                sensors.append(
+                    for forecast_day in forecast
+                ]
+            )
+        if forecast_hour is not None and "hourly" in description.forecast_mode:
+            sensors.extend(
+                [
                     DarkSkySensor(
-                        forecast_data, variable, name, forecast_hour=forecast_h
+                        forecast_data, description, name, forecast_hour=forecast_h
                     )
-                )
+                    for forecast_h in forecast_hour
+                ]
+            )
 
     add_entities(sensors, True)
 
@@ -550,33 +647,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DarkSkySensor(SensorEntity):
     """Implementation of a Dark Sky sensor."""
 
+    entity_description: DarkskySensorEntityDescription
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(
-        self, forecast_data, sensor_type, name, forecast_day=None, forecast_hour=None
+        self,
+        forecast_data,
+        description: DarkskySensorEntityDescription,
+        name,
+        forecast_day=None,
+        forecast_hour=None,
     ):
         """Initialize the sensor."""
-        self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self.entity_description = description
         self.forecast_data = forecast_data
-        self.type = sensor_type
         self.forecast_day = forecast_day
         self.forecast_hour = forecast_hour
-        self._state = None
         self._icon = None
         self._unit_of_measurement = None
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        if self.forecast_day is not None:
-            return f"{self.client_name} {self._name} {self.forecast_day}d"
-        if self.forecast_hour is not None:
-            return f"{self.client_name} {self._name} {self.forecast_hour}h"
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+        if forecast_day is not None:
+            self._attr_name = f"{name} {description.name} {forecast_day}d"
+        elif forecast_hour is not None:
+            self._attr_name = f"{name} {description.name} {forecast_hour}h"
+        else:
+            self._attr_name = f"{name} {description.name}"
 
     @property
     def native_unit_of_measurement(self):
@@ -591,41 +686,29 @@ class DarkSkySensor(SensorEntity):
     @property
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
-        if self._icon is None or "summary" not in self.type:
+        if self._icon is None or "summary" not in self.entity_description.key:
             return None
 
         if self._icon in CONDITION_PICTURES:
-            return CONDITION_PICTURES[self._icon][0]
+            return CONDITION_PICTURES[self._icon].entity_picture
 
         return None
 
     def update_unit_of_measurement(self):
         """Update units based on unit system."""
-        unit_index = {"si": 1, "us": 2, "ca": 3, "uk": 4, "uk2": 5}.get(
-            self.unit_system, 1
-        )
-        self._unit_of_measurement = SENSOR_TYPES[self.type][unit_index]
+        unit_key = MAP_UNIT_SYSTEM.get(self.unit_system, "si_unit")
+        self._unit_of_measurement = getattr(self.entity_description, unit_key)
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if "summary" in self.type and self._icon in CONDITION_PICTURES:
-            return CONDITION_PICTURES[self._icon][1]
+        if (
+            "summary" in self.entity_description.key
+            and self._icon in CONDITION_PICTURES
+        ):
+            return CONDITION_PICTURES[self._icon].icon
 
-        return SENSOR_TYPES[self.type][6]
-
-    @property
-    def device_class(self):
-        """Device class of the entity."""
-        if SENSOR_TYPES[self.type][1] == TEMP_CELSIUS:
-            return DEVICE_CLASS_TEMPERATURE
-
-        return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        return self.entity_description.icon
 
     def update(self):
         """Get the latest data from Dark Sky and updates the states."""
@@ -636,39 +719,42 @@ class DarkSkySensor(SensorEntity):
         self.forecast_data.update()
         self.update_unit_of_measurement()
 
-        if self.type == "minutely_summary":
+        sensor_type = self.entity_description.key
+        if sensor_type == "minutely_summary":
             self.forecast_data.update_minutely()
             minutely = self.forecast_data.data_minutely
-            self._state = getattr(minutely, "summary", "")
+            self._attr_native_value = getattr(minutely, "summary", "")
             self._icon = getattr(minutely, "icon", "")
-        elif self.type == "hourly_summary":
+        elif sensor_type == "hourly_summary":
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
-            self._state = getattr(hourly, "summary", "")
+            self._attr_native_value = getattr(hourly, "summary", "")
             self._icon = getattr(hourly, "icon", "")
         elif self.forecast_hour is not None:
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             if hasattr(hourly, "data"):
-                self._state = self.get_state(hourly.data[self.forecast_hour])
+                self._attr_native_value = self.get_state(
+                    hourly.data[self.forecast_hour]
+                )
             else:
-                self._state = 0
-        elif self.type == "daily_summary":
+                self._attr_native_value = 0
+        elif sensor_type == "daily_summary":
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
-            self._state = getattr(daily, "summary", "")
+            self._attr_native_value = getattr(daily, "summary", "")
             self._icon = getattr(daily, "icon", "")
         elif self.forecast_day is not None:
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
             if hasattr(daily, "data"):
-                self._state = self.get_state(daily.data[self.forecast_day])
+                self._attr_native_value = self.get_state(daily.data[self.forecast_day])
             else:
-                self._state = 0
+                self._attr_native_value = 0
         else:
             self.forecast_data.update_currently()
             currently = self.forecast_data.data_currently
-            self._state = self.get_state(currently)
+            self._attr_native_value = self.get_state(currently)
 
     def get_state(self, data):
         """
@@ -676,21 +762,21 @@ class DarkSkySensor(SensorEntity):
 
         If the sensor type is unknown, the current state is returned.
         """
-        lookup_type = convert_to_camel(self.type)
-        state = getattr(data, lookup_type, None)
+        sensor_type = self.entity_description.key
+        lookup_type = convert_to_camel(sensor_type)
 
-        if state is None:
-            return state
+        if (state := getattr(data, lookup_type, None)) is None:
+            return None
 
-        if "summary" in self.type:
+        if "summary" in sensor_type:
             self._icon = getattr(data, "icon", "")
 
         # Some state data needs to be rounded to whole values or converted to
         # percentages
-        if self.type in ["precip_probability", "cloud_cover", "humidity"]:
+        if sensor_type in {"precip_probability", "cloud_cover", "humidity"}:
             return round(state * 100, 1)
 
-        if self.type in [
+        if sensor_type in {
             "dew_point",
             "temperature",
             "apparent_temperature",
@@ -706,7 +792,7 @@ class DarkSkySensor(SensorEntity):
             "pressure",
             "ozone",
             "uvIndex",
-        ]:
+        }:
             return round(state, 1)
         return state
 
@@ -714,30 +800,23 @@ class DarkSkySensor(SensorEntity):
 class DarkSkyAlertSensor(SensorEntity):
     """Implementation of a Dark Sky sensor."""
 
-    def __init__(self, forecast_data, sensor_type, name):
+    entity_description: DarkskySensorEntityDescription
+    _attr_native_value: int | None
+
+    def __init__(
+        self, forecast_data, description: DarkskySensorEntityDescription, name
+    ):
         """Initialize the sensor."""
-        self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self.entity_description = description
         self.forecast_data = forecast_data
-        self.type = sensor_type
-        self._state = None
-        self._icon = None
         self._alerts = None
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+        self._attr_name = f"{name} {description.name}"
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self._state is not None and self._state > 0:
+        if self._attr_native_value is not None and self._attr_native_value > 0:
             return "mdi:alert-circle"
         return "mdi:alert-circle-outline"
 
@@ -755,7 +834,7 @@ class DarkSkyAlertSensor(SensorEntity):
         self.forecast_data.update()
         self.forecast_data.update_alerts()
         alerts = self.forecast_data.data_alerts
-        self._state = self.get_state(alerts)
+        self._attr_native_value = self.get_state(alerts)
 
     def get_state(self, data):
         """

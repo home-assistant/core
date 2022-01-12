@@ -5,7 +5,8 @@
         "title": "Connect to your Sense Energy Monitor",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "timeout": "Timeout"
         }
       }
     },

@@ -14,7 +14,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from . import (
     USER_INPUT,
@@ -29,7 +28,6 @@ DOMAIN = "switchbot"
 
 async def test_user_form_valid_mac(hass):
     """Test the user initiated form with password and valid mac."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -94,7 +92,6 @@ async def test_user_form_valid_mac(hass):
 
 async def test_async_step_import(hass):
     """Test the config import flow."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -113,7 +110,6 @@ async def test_async_step_import(hass):
 
 async def test_user_form_exception(hass, switchbot_config_flow):
     """Test we handle exception on user form."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     switchbot_config_flow.side_effect = NotConnectedError
 

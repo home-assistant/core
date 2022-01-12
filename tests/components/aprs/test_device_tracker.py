@@ -312,6 +312,7 @@ def test_setup_scanner():
             "password": TEST_PASSWORD,
             "host": TEST_HOST,
             "callsigns": ["XX0FOO*", "YY0BAR-1"],
+            "timeout": device_tracker.DEFAULT_TIMEOUT,
         }
 
         see = Mock()
@@ -327,19 +328,18 @@ def test_setup_scanner():
 
 def test_setup_scanner_timeout():
     """Test setup_scanner failure from timeout."""
-    hass = get_test_home_assistant()
-    hass.start()
+    with patch("aprslib.IS.connect", side_effect=TimeoutError):
+        hass = get_test_home_assistant()
+        hass.start()
 
-    config = {
-        "username": TEST_CALLSIGN,
-        "password": TEST_PASSWORD,
-        "host": "localhost",
-        "timeout": 0.01,
-        "callsigns": ["XX0FOO*", "YY0BAR-1"],
-    }
+        config = {
+            "username": TEST_CALLSIGN,
+            "password": TEST_PASSWORD,
+            "host": "localhost",
+            "timeout": 0.01,
+            "callsigns": ["XX0FOO*", "YY0BAR-1"],
+        }
 
-    see = Mock()
-    try:
+        see = Mock()
         assert not device_tracker.setup_scanner(hass, config, see)
-    finally:
         hass.stop()

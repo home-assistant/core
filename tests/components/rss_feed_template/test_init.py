@@ -1,8 +1,9 @@
 """The tests for the rss_feed_api component."""
+from http import HTTPStatus
+
 from defusedxml import ElementTree
 import pytest
 
-from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 
@@ -30,7 +31,7 @@ def mock_http_client(loop, hass, hass_client):
 async def test_get_nonexistant_feed(mock_http_client):
     """Test if we can retrieve the correct rss feed."""
     resp = await mock_http_client.get("/api/rss_template/otherfeed")
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_get_rss_feed(mock_http_client, hass):
@@ -40,7 +41,7 @@ async def test_get_rss_feed(mock_http_client, hass):
     hass.states.async_set("test.test3", "a_state_3")
 
     resp = await mock_http_client.get("/api/rss_template/testfeed")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     text = await resp.text()
 

@@ -1,6 +1,7 @@
 """Adds config flow for Airly."""
 from __future__ import annotations
 
+from http import HTTPStatus
 from typing import Any
 
 from aiohttp import ClientSession
@@ -10,14 +11,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -60,9 +54,9 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         use_nearest=True,
                     )
             except AirlyError as err:
-                if err.status_code == HTTP_UNAUTHORIZED:
+                if err.status_code == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_api_key"
-                if err.status_code == HTTP_NOT_FOUND:
+                if err.status_code == HTTPStatus.NOT_FOUND:
                     errors["base"] = "wrong_location"
             else:
                 if not location_point_valid:
@@ -109,7 +103,7 @@ async def test_location(
         measurements = airly.create_measurements_session_point(
             latitude=latitude, longitude=longitude
         )
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         await measurements.update()
 
     current = measurements.current

@@ -37,7 +37,16 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    LENGTH_METERS,
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -112,6 +121,10 @@ class BrWeather(WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_visibility_unit = LENGTH_METERS
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
 
     def __init__(self, data, config, coordinates):
         """Initialize the platform with a data instance and station name."""
@@ -133,12 +146,13 @@ class BrWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        if self._data and self._data.condition:
-            ccode = self._data.condition.get(CONDCODE)
-            if ccode:
-                conditions = self.hass.data[DOMAIN].get(DATA_CONDITION)
-                if conditions:
-                    return conditions.get(ccode)
+        if (
+            self._data
+            and self._data.condition
+            and (ccode := self._data.condition.get(CONDCODE))
+            and (conditions := self.hass.data[DOMAIN].get(DATA_CONDITION))
+        ):
+            return conditions.get(ccode)
 
     @property
     def temperature(self):

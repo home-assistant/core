@@ -326,10 +326,10 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
-    hass.components.websocket_api.async_register_command(websocket_get_panels)
-    hass.components.websocket_api.async_register_command(websocket_get_themes)
-    hass.components.websocket_api.async_register_command(websocket_get_translations)
-    hass.components.websocket_api.async_register_command(websocket_get_version)
+    websocket_api.async_register_command(hass, websocket_get_panels)
+    websocket_api.async_register_command(hass, websocket_get_themes)
+    websocket_api.async_register_command(hass, websocket_get_translations)
+    websocket_api.async_register_command(hass, websocket_get_version)
     hass.http.register_view(ManifestJSONView())
 
     conf = config.get(DOMAIN, {})
@@ -567,8 +567,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     def get_template(self) -> jinja2.Template:
         """Get template."""
-        tpl = self._template_cache
-        if tpl is None:
+        if (tpl := self._template_cache) is None:
             with (_frontend_root(self.repo_path) / "index.html").open(
                 encoding="utf8"
             ) as file:

@@ -10,7 +10,9 @@ from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +20,6 @@ DEVICE_DESCRIPTOR = "device_descriptor"
 DEVICE_ID_GROUP = "Device description"
 DEVICE_NAME = "device_name"
 DOMAIN = "keyboard_remote"
-VALUE = "value"
 
 ICON = "mdi:remote"
 
@@ -61,9 +62,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the keyboard_remote."""
-    config = config.get(DOMAIN)
+    config = config[DOMAIN]
 
     remote = KeyboardRemote(hass, config)
     remote.setup()

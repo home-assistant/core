@@ -14,6 +14,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_HOST,
@@ -31,7 +32,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
 
@@ -108,12 +111,12 @@ class TwinklyLight(LightEntity):
     def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return (
-            {
-                "identifiers": {(DOMAIN, self._id)},
-                "name": self.name,
-                "manufacturer": "LEDWORKS",
-                "model": self.model,
-            }
+            DeviceInfo(
+                identifiers={(DOMAIN, self._id)},
+                manufacturer="LEDWORKS",
+                model=self.model,
+                name=self.name,
+            )
             if self._id
             else None  # device_info is available only for entities configured from the UI
         )

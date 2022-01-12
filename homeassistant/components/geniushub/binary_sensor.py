@@ -1,7 +1,10 @@
 """Support for Genius Hub binary_sensor devices."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, GeniusDevice
 
@@ -9,7 +12,10 @@ GH_STATE_ATTR = "outputOnOff"
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:

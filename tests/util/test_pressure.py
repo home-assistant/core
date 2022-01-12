@@ -2,8 +2,10 @@
 import pytest
 
 from homeassistant.const import (
+    PRESSURE_CBAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_KPA,
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -20,6 +22,8 @@ def test_convert_same_unit():
     assert pressure_util.convert(3, PRESSURE_HPA, PRESSURE_HPA) == 3
     assert pressure_util.convert(4, PRESSURE_MBAR, PRESSURE_MBAR) == 4
     assert pressure_util.convert(5, PRESSURE_INHG, PRESSURE_INHG) == 5
+    assert pressure_util.convert(6, PRESSURE_KPA, PRESSURE_KPA) == 6
+    assert pressure_util.convert(7, PRESSURE_CBAR, PRESSURE_CBAR) == 7
 
 
 def test_convert_invalid_unit():
@@ -49,9 +53,38 @@ def test_convert_from_hpascals():
     assert pressure_util.convert(hpascals, PRESSURE_HPA, PRESSURE_PA) == pytest.approx(
         100000
     )
+    assert pressure_util.convert(hpascals, PRESSURE_HPA, PRESSURE_KPA) == pytest.approx(
+        100
+    )
     assert pressure_util.convert(
         hpascals, PRESSURE_HPA, PRESSURE_MBAR
     ) == pytest.approx(1000)
+    assert pressure_util.convert(
+        hpascals, PRESSURE_HPA, PRESSURE_CBAR
+    ) == pytest.approx(100)
+
+
+def test_convert_from_kpascals():
+    """Test conversion from hPA to other units."""
+    kpascals = 100
+    assert pressure_util.convert(kpascals, PRESSURE_KPA, PRESSURE_PSI) == pytest.approx(
+        14.5037743897
+    )
+    assert pressure_util.convert(
+        kpascals, PRESSURE_KPA, PRESSURE_INHG
+    ) == pytest.approx(29.5299801647)
+    assert pressure_util.convert(kpascals, PRESSURE_KPA, PRESSURE_PA) == pytest.approx(
+        100000
+    )
+    assert pressure_util.convert(kpascals, PRESSURE_KPA, PRESSURE_HPA) == pytest.approx(
+        1000
+    )
+    assert pressure_util.convert(
+        kpascals, PRESSURE_KPA, PRESSURE_MBAR
+    ) == pytest.approx(1000)
+    assert pressure_util.convert(
+        kpascals, PRESSURE_KPA, PRESSURE_CBAR
+    ) == pytest.approx(100)
 
 
 def test_convert_from_inhg():
@@ -59,6 +92,9 @@ def test_convert_from_inhg():
     inhg = 30
     assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_PSI) == pytest.approx(
         14.7346266155
+    )
+    assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_KPA) == pytest.approx(
+        101.59167
     )
     assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_HPA) == pytest.approx(
         1015.9167
@@ -68,4 +104,7 @@ def test_convert_from_inhg():
     )
     assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_MBAR) == pytest.approx(
         1015.9167
+    )
+    assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_CBAR) == pytest.approx(
+        101.59167
     )

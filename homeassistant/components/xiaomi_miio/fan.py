@@ -24,9 +24,11 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -172,7 +174,11 @@ FAN_DIRECTIONS_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Fan from a config entry."""
     entities = []
 
@@ -222,14 +228,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities.append(entity)
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Map services to methods on XiaomiAirPurifier."""
         method = SERVICE_TO_METHOD[service.service]
         params = {
             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
         }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
+        if entity_ids := service.data.get(ATTR_ENTITY_ID):
             filtered_entities = [
                 entity
                 for entity in hass.data[DATA_KEY].values()
@@ -369,7 +374,7 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {
-                key: getattr(self.coordinator.data, value)
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
                 for key, value in self._available_attributes.items()
             }
         )
@@ -434,7 +439,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {
-                key: getattr(self.coordinator.data, value)
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
                 for key, value in self._available_attributes.items()
             }
         )

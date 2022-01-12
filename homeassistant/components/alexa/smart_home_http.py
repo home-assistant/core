@@ -3,7 +3,10 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, ENTITY_CATEGORIES
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .auth import Auth
 from .config import AbstractConfig
@@ -60,7 +63,15 @@ class AlexaConfig(AbstractConfig):
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
-        return self._config[CONF_FILTER](entity_id)
+        if not self._config[CONF_FILTER].empty_filter:
+            return self._config[CONF_FILTER](entity_id)
+
+        entity_registry = er.async_get(self.hass)
+        if registry_entry := entity_registry.async_get(entity_id):
+            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
+        else:
+            auxiliary_entity = False
+        return not auxiliary_entity
 
     @core.callback
     def async_invalidate_access_token(self):
@@ -76,7 +87,7 @@ class AlexaConfig(AbstractConfig):
         return await self._auth.async_do_auth(code)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     """Activate Smart Home functionality of Alexa component.
 
     This is optional, triggered by having a `smart_home:` sub-section in the

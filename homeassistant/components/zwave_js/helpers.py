@@ -67,6 +67,19 @@ def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
 
 
 @callback
+def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] | None:
+    """Get extended device registry identifier for Z-Wave node."""
+    if None in (node.manufacturer_id, node.product_type, node.product_id):
+        return None
+
+    domain, dev_id = get_device_id(client, node)
+    return (
+        domain,
+        f"{dev_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}",
+    )
+
+
+@callback
 def get_home_and_node_id_from_device_id(device_id: tuple[str, ...]) -> list[str]:
     """
     Get home ID and node ID for Z-Wave device registry entry.
@@ -87,9 +100,8 @@ def async_get_node_from_device_id(
     """
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
 
-    if not device_entry:
+    if not (device_entry := dev_reg.async_get(device_id)):
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Use device config entry ID's to validate that this is a valid zwave_js device
@@ -230,8 +242,7 @@ def async_get_node_status_sensor_entity_id(
         ent_reg = er.async_get(hass)
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(device_id)
-    if not device:
+    if not (device := dev_reg.async_get(device_id)):
         raise HomeAssistantError("Invalid Device ID provided")
 
     entry_id = next(entry_id for entry_id in device.config_entries)

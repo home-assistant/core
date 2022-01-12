@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 from pprint import pformat
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -14,17 +14,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_TYPE, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_TYPE, CONF_URL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
+    DEFAULT_NAME,
     DOMAIN,
 )
 from .data import get_domain_data
@@ -50,7 +50,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: list[Mapping[str, str]] = []
+        self._discoveries: dict[str, ssdp.SsdpServiceInfo] = {}
+        self._location: str | None = None
+        self._udn: str | None = None
+        self._device_type: str | None = None
+        self._name: str | None = None
+        self._options: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -61,172 +66,210 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return DlnaDmrOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input: FlowInput = None) -> FlowResult:
-        """Handle a flow initialized by the user: manual URL entry.
+        """Handle a flow initialized by the user.
 
-        Discovered devices will already be displayed, no need to prompt user
-        with them here.
+        Let user choose from a list of found and unconfigured devices or to
+        enter an URL manually.
         """
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
+        if user_input is not None:
+            if not (host := user_input.get(CONF_HOST)):
+                # No device chosen, user might want to directly enter an URL
+                return await self.async_step_manual()
+            # User has chosen a device, ask for confirmation
+            discovery = self._discoveries[host]
+            await self._async_set_info_from_discovery(discovery)
+            return self._create_entry()
+
+        if not (discoveries := await self._async_get_discoveries()):
+            # Nothing found, maybe the user knows an URL to try
+            return await self.async_step_manual()
+
+        self._discoveries = {
+            discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            or cast(str, urlparse(discovery.ssdp_location).hostname): discovery
+            for discovery in discoveries
+        }
+
+        data_schema = vol.Schema(
+            {vol.Optional(CONF_HOST): vol.In(self._discoveries.keys())}
+        )
+        return self.async_show_form(step_id="user", data_schema=data_schema)
+
+    async def async_step_manual(self, user_input: FlowInput = None) -> FlowResult:
+        """Manual URL entry by the user."""
+        LOGGER.debug("async_step_manual: user_input: %s", user_input)
+
+        # Device setup manually, assume we don't get SSDP broadcast notifications
+        self._options[CONF_POLL_AVAILABILITY] = True
+
         errors = {}
         if user_input is not None:
+            self._location = user_input[CONF_URL]
             try:
-                discovery = await self._async_connect(user_input[CONF_URL])
+                await self._async_connect()
             except ConnectError as err:
                 errors["base"] = err.args[0]
             else:
-                # If unmigrated config was imported earlier then use it
-                import_data = get_domain_data(self.hass).unmigrated_config.get(
-                    user_input[CONF_URL]
-                )
-                if import_data is not None:
-                    return await self.async_step_import(import_data)
-                # Device setup manually, assume we don't get SSDP broadcast notifications
-                options = {CONF_POLL_AVAILABILITY: True}
-                return await self._async_create_entry_from_discovery(discovery, options)
+                return self._create_entry()
 
         data_schema = vol.Schema({CONF_URL: str})
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="manual", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_data: FlowInput = None) -> FlowResult:
-        """Import a new DLNA DMR device from a config entry.
-
-        This flow is triggered by `async_setup`. If no device has been
-        configured before, find any matching device and create a config_entry
-        for it. Otherwise, do nothing.
-        """
-        LOGGER.debug("async_step_import: import_data: %s", import_data)
-
-        if not import_data or CONF_URL not in import_data:
-            LOGGER.debug("Entry not imported: incomplete_config")
-            return self.async_abort(reason="incomplete_config")
-
-        self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
-
-        location = import_data[CONF_URL]
-        self._discoveries = await self._async_get_discoveries()
-
-        poll_availability = True
-
-        # Find the device in the list of unconfigured devices
-        for discovery in self._discoveries:
-            if discovery[ssdp.ATTR_SSDP_LOCATION] == location:
-                # Device found via SSDP, it shouldn't need polling
-                poll_availability = False
-                LOGGER.debug(
-                    "Entry %s found via SSDP, with UDN %s",
-                    import_data[CONF_URL],
-                    discovery[ssdp.ATTR_SSDP_UDN],
-                )
-                break
-        else:
-            # Not in discoveries. Try connecting directly.
-            try:
-                discovery = await self._async_connect(location)
-            except ConnectError as err:
-                LOGGER.debug(
-                    "Entry %s not imported: %s", import_data[CONF_URL], err.args[0]
-                )
-                # Store the config to apply if the device is added later
-                get_domain_data(self.hass).unmigrated_config[location] = import_data
-                return self.async_abort(reason=err.args[0])
-
-        # Set options from the import_data, except listen_ip which is no longer used
-        options = {
-            CONF_LISTEN_PORT: import_data.get(CONF_LISTEN_PORT),
-            CONF_CALLBACK_URL_OVERRIDE: import_data.get(CONF_CALLBACK_URL_OVERRIDE),
-            CONF_POLL_AVAILABILITY: poll_availability,
-        }
-
-        # Override device name if it's set in the YAML
-        if CONF_NAME in import_data:
-            discovery = dict(discovery)
-            discovery[ssdp.ATTR_UPNP_FRIENDLY_NAME] = import_data[CONF_NAME]
-
-        LOGGER.debug("Entry %s ready for import", import_data[CONF_URL])
-        return await self._async_create_entry_from_discovery(discovery, options)
-
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
         LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
-        self._discoveries = [discovery_info]
+        await self._async_set_info_from_discovery(discovery_info)
 
-        udn = discovery_info[ssdp.ATTR_SSDP_UDN]
-        location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+        if _is_ignored_device(discovery_info):
+            return self.async_abort(reason="alternative_integration")
 
-        # Abort if already configured, but update the last-known location
-        await self.async_set_unique_id(udn)
-        self._abort_if_unique_id_configured(
-            updates={CONF_URL: location}, reload_on_update=False
-        )
+        # Abort if the device doesn't support all services required for a DmrDevice.
+        # Use the discovery_info instead of DmrDevice.is_profile_device to avoid
+        # contacting the device again.
+        discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+        if not discovery_service_list:
+            return self.async_abort(reason="not_dmr")
+        discovery_service_ids = {
+            service.get("serviceId")
+            for service in discovery_service_list.get("service") or []
+        }
+        if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
+            return self.async_abort(reason="not_dmr")
 
-        # If the device needs migration because it wasn't turned on when HA
-        # started, silently migrate it now.
-        import_data = get_domain_data(self.hass).unmigrated_config.get(location)
-        if import_data is not None:
-            return await self.async_step_import(import_data)
+        # Abort if another config entry has the same location, in case the
+        # device doesn't have a static and unique UDN (breaking the UPnP spec).
+        self._async_abort_entries_match({CONF_URL: self._location})
 
-        parsed_url = urlparse(location)
-        name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or parsed_url.hostname
-        self.context["title_placeholders"] = {"name": name}
+        self.context["title_placeholders"] = {"name": self._name}
+
+        return await self.async_step_confirm()
+
+    async def async_step_unignore(self, user_input: Mapping[str, Any]) -> FlowResult:
+        """Rediscover previously ignored devices by their unique_id."""
+        LOGGER.debug("async_step_unignore: user_input: %s", user_input)
+        self._udn = user_input["unique_id"]
+        assert self._udn
+        await self.async_set_unique_id(self._udn)
+
+        # Find a discovery matching the unignored unique_id for a DMR device
+        for dev_type in DmrDevice.DEVICE_TYPES:
+            discovery = await ssdp.async_get_discovery_info_by_udn_st(
+                self.hass, self._udn, dev_type
+            )
+            if discovery:
+                break
+        else:
+            return self.async_abort(reason="discovery_error")
+
+        await self._async_set_info_from_discovery(discovery, abort_if_configured=False)
+
+        self.context["title_placeholders"] = {"name": self._name}
 
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input: FlowInput = None) -> FlowResult:
-        """Allow the user to confirm adding the device.
-
-        Also check that the device is still available, otherwise when it is
-        added to HA it won't report the correct DeviceInfo.
-        """
+        """Allow the user to confirm adding the device."""
         LOGGER.debug("async_step_confirm: %s", user_input)
 
-        errors = {}
         if user_input is not None:
-            discovery = self._discoveries[0]
-            try:
-                await self._async_connect(discovery[ssdp.ATTR_SSDP_LOCATION])
-            except ConnectError as err:
-                errors["base"] = err.args[0]
-            else:
-                return await self._async_create_entry_from_discovery(discovery)
+            return self._create_entry()
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="confirm", errors=errors)
+        return self.async_show_form(step_id="confirm")
 
-    async def _async_create_entry_from_discovery(
-        self,
-        discovery: Mapping[str, Any],
-        options: Mapping[str, Any] | None = None,
-    ) -> FlowResult:
-        """Create an entry from discovery."""
-        LOGGER.debug("_async_create_entry_from_discovery: discovery: %s", discovery)
+    async def _async_connect(self) -> None:
+        """Connect to a device to confirm it works and gather extra information.
 
-        location = discovery[ssdp.ATTR_SSDP_LOCATION]
-        udn = discovery[ssdp.ATTR_SSDP_UDN]
+        Updates this flow's unique ID to the device UDN if not already done.
+        Raises ConnectError if something goes wrong.
+        """
+        LOGGER.debug("_async_connect: location: %s", self._location)
+        assert self._location, "self._location has not been set before connect"
+
+        domain_data = get_domain_data(self.hass)
+        try:
+            device = await domain_data.upnp_factory.async_create_device(self._location)
+        except UpnpError as err:
+            raise ConnectError("cannot_connect") from err
+
+        if not DmrDevice.is_profile_device(device):
+            raise ConnectError("not_dmr")
+
+        device = find_device_of_type(device, DmrDevice.DEVICE_TYPES)
+
+        if not self._udn:
+            self._udn = device.udn
+            await self.async_set_unique_id(self._udn)
 
         # Abort if already configured, but update the last-known location
-        await self.async_set_unique_id(udn)
-        self._abort_if_unique_id_configured(updates={CONF_URL: location})
+        self._abort_if_unique_id_configured(
+            updates={CONF_URL: self._location}, reload_on_update=False
+        )
 
-        parsed_url = urlparse(location)
-        title = discovery.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or parsed_url.hostname
+        if not self._device_type:
+            self._device_type = device.device_type
 
+        if not self._name:
+            self._name = device.name
+
+    def _create_entry(self) -> FlowResult:
+        """Create a config entry, assuming all required information is now known."""
+        LOGGER.debug(
+            "_async_create_entry: location: %s, UDN: %s", self._location, self._udn
+        )
+        assert self._location
+        assert self._udn
+        assert self._device_type
+
+        title = self._name or urlparse(self._location).hostname or DEFAULT_NAME
         data = {
-            CONF_URL: discovery[ssdp.ATTR_SSDP_LOCATION],
-            CONF_DEVICE_ID: discovery[ssdp.ATTR_SSDP_UDN],
-            CONF_TYPE: discovery.get(ssdp.ATTR_SSDP_NT) or discovery[ssdp.ATTR_SSDP_ST],
+            CONF_URL: self._location,
+            CONF_DEVICE_ID: self._udn,
+            CONF_TYPE: self._device_type,
         }
-        return self.async_create_entry(title=title, data=data, options=options)
+        return self.async_create_entry(title=title, data=data, options=self._options)
 
-    async def _async_get_discoveries(self) -> list[Mapping[str, str]]:
+    async def _async_set_info_from_discovery(
+        self, discovery_info: ssdp.SsdpServiceInfo, abort_if_configured: bool = True
+    ) -> None:
+        """Set information required for a config entry from the SSDP discovery."""
+        LOGGER.debug(
+            "_async_set_info_from_discovery: location: %s, UDN: %s",
+            discovery_info.ssdp_location,
+            discovery_info.ssdp_udn,
+        )
+
+        if not self._location:
+            self._location = discovery_info.ssdp_location
+            assert isinstance(self._location, str)
+
+        self._udn = discovery_info.ssdp_udn
+        await self.async_set_unique_id(self._udn)
+
+        if abort_if_configured:
+            # Abort if already configured, but update the last-known location
+            self._abort_if_unique_id_configured(
+                updates={CONF_URL: self._location}, reload_on_update=False
+            )
+
+        self._device_type = discovery_info.ssdp_nt or discovery_info.ssdp_st
+        self._name = (
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            or urlparse(self._location).hostname
+            or DEFAULT_NAME
+        )
+
+    async def _async_get_discoveries(self) -> list[ssdp.SsdpServiceInfo]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
         LOGGER.debug("_get_discoveries")
 
         # Get all compatible devices from ssdp's cache
-        discoveries: list[Mapping[str, str]] = []
+        discoveries: list[ssdp.SsdpServiceInfo] = []
         for udn_st in DmrDevice.DEVICE_TYPES:
             st_discoveries = await ssdp.async_get_discovery_info_by_st(
                 self.hass, udn_st
@@ -235,41 +278,14 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Filter out devices already configured
         current_unique_ids = {
-            entry.unique_id for entry in self._async_current_entries()
+            entry.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
         }
         discoveries = [
-            disc
-            for disc in discoveries
-            if disc[ssdp.ATTR_SSDP_UDN] not in current_unique_ids
+            disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids
         ]
 
         return discoveries
-
-    async def _async_connect(self, location: str) -> dict[str, str]:
-        """Connect to a device to confirm it works and get discovery information.
-
-        Raises ConnectError if something goes wrong.
-        """
-        LOGGER.debug("_async_connect(location=%s)", location)
-        domain_data = get_domain_data(self.hass)
-        try:
-            device = await domain_data.upnp_factory.async_create_device(location)
-        except UpnpError as err:
-            raise ConnectError("could_not_connect") from err
-
-        try:
-            device = find_device_of_type(device, DmrDevice.DEVICE_TYPES)
-        except UpnpError as err:
-            raise ConnectError("not_dmr") from err
-
-        discovery = {
-            ssdp.ATTR_SSDP_LOCATION: location,
-            ssdp.ATTR_SSDP_UDN: device.udn,
-            ssdp.ATTR_SSDP_ST: device.device_type,
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: device.name,
-        }
-
-        return discovery
 
 
 class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
@@ -315,8 +331,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
 
         def _add_with_suggestion(key: str, validator: Callable) -> None:
             """Add a field to with a suggested, not default, value."""
-            suggested_value = options.get(key)
-            if suggested_value is None:
+            if (suggested_value := options.get(key)) is None:
                 fields[vol.Optional(key)] = validator
             else:
                 fields[
@@ -338,3 +353,49 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(fields),
             errors=errors,
         )
+
+
+def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+    """Return True if this device should be ignored for discovery.
+
+    These devices are supported better by other integrations, so don't bug
+    the user about them. The user can add them if desired by via the user config
+    flow, which will list all discovered but unconfigured devices.
+    """
+    # Did the discovery trigger more than just this flow?
+    if len(discovery_info.x_homeassistant_matching_domains) > 1:
+        LOGGER.debug(
+            "Ignoring device supported by multiple integrations: %s",
+            discovery_info.x_homeassistant_matching_domains,
+        )
+        return True
+
+    # Is the root device not a DMR?
+    if (
+        discovery_info.upnp.get(ssdp.ATTR_UPNP_DEVICE_TYPE)
+        not in DmrDevice.DEVICE_TYPES
+    ):
+        return True
+
+    # Special cases for devices with other discovery methods (e.g. mDNS), or
+    # that advertise multiple unrelated (sent in separate discovery packets)
+    # UPnP devices.
+    manufacturer = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or "").lower()
+    model = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or "").lower()
+
+    if manufacturer.startswith("xbmc") or model == "kodi":
+        # kodi
+        return True
+    if "philips" in manufacturer and "tv" in model:
+        # philips_js
+        # These TVs don't have a stable UDN, so also get discovered as a new
+        # device every time they are turned on.
+        return True
+    if manufacturer.startswith("samsung") and "tv" in model:
+        # samsungtv
+        return True
+    if manufacturer.startswith("lg") and "tv" in model:
+        # webostv
+        return True
+
+    return False

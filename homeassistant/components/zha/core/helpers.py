@@ -167,8 +167,7 @@ async def async_get_zha_device(hass, device_id):
 def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
-        value = state.attributes.get(key)
-        if value is not None:
+        if (value := state.attributes.get(key)) is not None:
             yield value
 
 

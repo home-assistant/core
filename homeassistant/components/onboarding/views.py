@@ -129,7 +129,9 @@ class UserOnboardingView(_BaseOnboardingView):
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
 
-            user = await hass.auth.async_create_user(data["name"], [GROUP_ID_ADMIN])
+            user = await hass.auth.async_create_user(
+                data["name"], group_ids=[GROUP_ID_ADMIN]
+            )
             await hass.async_add_executor_job(
                 provider.data.add_auth, data["username"], data["password"]
             )

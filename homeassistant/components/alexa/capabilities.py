@@ -12,16 +12,16 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+from homeassistant.components.alarm_control_panel import FORMAT_NUMBER
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
 import homeassistant.components.climate.const as climate
-from homeassistant.components.lock import STATE_LOCKING, STATE_UNLOCKING
 import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
+    ATTR_CODE_FORMAT,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -31,6 +31,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_IDLE,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -38,6 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import State
 import homeassistant.util.color as color_util
@@ -182,8 +184,7 @@ class AlexaCapability:
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
 
-        instance = self.instance
-        if instance is not None:
+        if (instance := self.instance) is not None:
             result["instance"] = instance
 
         properties_supported = self.properties_supported()
@@ -264,8 +265,7 @@ class AlexaCapability:
                 "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                 "uncertaintyInMilliseconds": 0,
             }
-            instance = self.instance
-            if instance is not None:
+            if (instance := self.instance) is not None:
                 result["instance"] = instance
 
             yield result
@@ -697,6 +697,7 @@ class AlexaSpeaker(AlexaCapability):
         "en-US",
         "es-ES",
         "es-MX",
+        "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
         "ja-JP",
     }
@@ -754,6 +755,7 @@ class AlexaStepSpeaker(AlexaCapability):
         "en-IN",
         "en-US",
         "es-ES",
+        "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
     }
 
@@ -1098,8 +1100,7 @@ class AlexaThermostatController(AlexaCapability):
         supported_modes = []
         hvac_modes = self.entity.attributes.get(climate.ATTR_HVAC_MODES)
         for mode in hvac_modes:
-            thermostat_mode = API_THERMOSTAT_MODES.get(mode)
-            if thermostat_mode:
+            if thermostat_mode := API_THERMOSTAT_MODES.get(mode):
                 supported_modes.append(thermostat_mode)
 
         preset_modes = self.entity.attributes.get(climate.ATTR_PRESET_MODES)
@@ -1538,7 +1539,9 @@ class AlexaRangeController(AlexaCapability):
                 labels=["Percentage", AlexaGlobalCatalog.SETTING_FAN_SPEED],
                 min_value=0,
                 max_value=100,
-                precision=percentage_step if percentage_step else 100,
+                # precision must be a divider of 100 and must be an integer; set step
+                # size to 1 for a consistent behavior except for on/off fans
+                precision=1 if percentage_step else 100,
                 unit=AlexaGlobalCatalog.UNIT_PERCENT,
             )
             return self._resource.serialize_capability_resources()

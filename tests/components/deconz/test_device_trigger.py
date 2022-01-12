@@ -8,6 +8,7 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.deconz import device_trigger
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -69,7 +70,9 @@ async def test_get_triggers(hass, aioclient_mock):
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
 
     expected_triggers = [
         {
@@ -158,7 +161,9 @@ async def test_get_triggers_manage_unsupported_remotes(hass, aioclient_mock):
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
 
     expected_triggers = []
 
@@ -169,7 +174,6 @@ async def test_functional_device_trigger(
     hass, aioclient_mock, mock_deconz_websocket, automation_calls
 ):
     """Test proper matching and attachment of device trigger automation."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     data = {
         "sensors": {

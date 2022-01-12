@@ -1,6 +1,4 @@
 """Config flow for Plaato."""
-import logging
-
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
@@ -23,8 +21,6 @@ from .const import (
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
-
-_LOGGER = logging.getLogger(__package__)
 
 
 class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -7,6 +7,7 @@ from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 from .common import FakeDiscovery
 
 
+@patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_creating_entry_sets_up_climate(hass):
     """Test setting up Gree creates the climate components."""
     with patch(
@@ -32,6 +33,7 @@ async def test_creating_entry_sets_up_climate(hass):
         assert len(setup.mock_calls) == 1
 
 
+@patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_creating_entry_has_no_devices(hass):
     """Test setting up Gree creates the climate components."""
     with patch(

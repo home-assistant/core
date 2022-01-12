@@ -10,15 +10,11 @@ from sqlalchemy import and_, bindparam, func
 from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.models import (
-    States,
-    process_timestamp_to_utc_isoformat,
-)
-from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .models import LazyState
+from .models import LazyState, States, process_timestamp_to_utc_isoformat
+from .util import execute, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -61,12 +57,12 @@ def async_setup(hass):
 
 
 def get_significant_states(hass, *args, **kwargs):
-    """Wrap _get_significant_states with a sql session."""
+    """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
-        return _get_significant_states(hass, session, *args, **kwargs)
+        return get_significant_states_with_session(hass, session, *args, **kwargs)
 
 
-def _get_significant_states(
+def get_significant_states_with_session(
     hass,
     session,
     start_time,

@@ -27,8 +27,13 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Network Key",
+                    "s0_legacy_key": "S0 Key (Legacy)",
+                    "s2_access_control_key": "S2 Access Control Key",
+                    "s2_authenticated_key": "S2 Authenticated Key",
+                    "s2_unauthenticated_key": "S2 Unauthenticated Key",
                     "usb_path": "USB Device Path"
                 },
+                "description": "The add-on will generate security keys if those fields are left empty.",
                 "title": "Enter the Z-Wave JS add-on configuration"
             },
             "hassio_confirm": {
@@ -109,8 +114,13 @@
                     "emulate_hardware": "Emulate Hardware",
                     "log_level": "Log level",
                     "network_key": "Network Key",
+                    "s0_legacy_key": "S0 Key (Legacy)",
+                    "s2_access_control_key": "S2 Access Control Key",
+                    "s2_authenticated_key": "S2 Authenticated Key",
+                    "s2_unauthenticated_key": "S2 Unauthenticated Key",
                     "usb_path": "USB Device Path"
                 },
+                "description": "The add-on will generate security keys if those fields are left empty.",
                 "title": "Enter the Z-Wave JS add-on configuration"
             },
             "install_addon": {

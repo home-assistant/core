@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Kimlik do\u011frulama URL'sini olu\u015ftururken zaman a\u015f\u0131m\u0131 ger\u00e7ekle\u015fti.",
-            "missing_configuration": "Spotify entegrasyonu ayarlanmam\u0131\u015f. L\u00fctfen dok\u00fcmentasyonu takip et."
+            "missing_configuration": "Spotify entegrasyonu ayarlanmam\u0131\u015f. L\u00fctfen dok\u00fcmentasyonu takip et.",
+            "no_url_available": "Kullan\u0131labilir URL yok. Bu hata hakk\u0131nda bilgi i\u00e7in [yard\u0131m b\u00f6l\u00fcm\u00fcne bak\u0131n]({docs_url})",
+            "reauth_account_mismatch": "Kimli\u011fi do\u011frulanm\u0131\u015f Spotify hesab\u0131, yeniden kimlik do\u011frulamas\u0131 gereken hesapla e\u015fle\u015fmiyor."
         },
         "create_entry": {
             "default": "Spotify ile kimlik ba\u015far\u0131yla do\u011fruland\u0131."
@@ -10,6 +12,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7"
+            },
+            "reauth_confirm": {
+                "description": "Spotify entegrasyonunun \u015fu hesap i\u00e7in Spotify ile yeniden kimlik do\u011frulamas\u0131 yapmas\u0131 gerekiyor: {account}",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
             }
         }
     },

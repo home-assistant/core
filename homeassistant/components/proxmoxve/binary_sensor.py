@@ -1,12 +1,21 @@
 """Binary sensor to read Proxmox VE data."""
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up binary sensors."""
     if discovery_info is None:
         return
@@ -25,10 +34,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
             for vm_id in node_config["vms"]:
                 coordinator = host_name_coordinators[node_name][vm_id]
-                coordinator_data = coordinator.data
 
                 # unfound vm case
-                if coordinator_data is None:
+                if (coordinator_data := coordinator.data) is None:
                     continue
 
                 vm_name = coordinator_data["name"]
@@ -39,10 +47,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
             for container_id in node_config["containers"]:
                 coordinator = host_name_coordinators[node_name][container_id]
-                coordinator_data = coordinator.data
 
                 # unfound container case
-                if coordinator_data is None:
+                if (coordinator_data := coordinator.data) is None:
                     continue
 
                 container_name = coordinator_data["name"]
@@ -88,9 +95,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
-        data = self.coordinator.data
-
-        if data is None:
+        if (data := self.coordinator.data) is None:
             return None
 
         return data["status"] == "running"

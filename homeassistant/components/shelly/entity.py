@@ -19,7 +19,7 @@ from homeassistant.helpers import (
     entity_registry,
     update_coordinator,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -135,7 +135,7 @@ async def async_restore_block_attribute_entities(
             name="",
             icon=entry.original_icon,
             unit=entry.unit_of_measurement,
-            device_class=entry.device_class,
+            device_class=entry.original_device_class,
         )
 
         entities.append(
@@ -166,6 +166,10 @@ async def async_setup_entry_rpc(
         key_instances = get_rpc_key_instances(wrapper.device.status, description.key)
 
         for key in key_instances:
+            # Filter non-existing sensors
+            if description.sub_key not in wrapper.device.status[key]:
+                continue
+
             # Filter and remove entities that according to settings should not create an entity
             if description.removal_condition and description.removal_condition(
                 wrapper.device.config, key
@@ -233,6 +237,7 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     extra_state_attributes: Callable[[Block], dict | None] | None = None
+    entity_category: EntityCategory | None = None
 
 
 @dataclass
@@ -240,16 +245,18 @@ class RpcAttributeDescription:
     """Class to describe a RPC sensor."""
 
     key: str
+    sub_key: str
     name: str
     icon: str | None = None
     unit: str | None = None
-    value: Callable[[dict, Any], Any] | None = None
+    value: Callable[[Any, Any], Any] | None = None
     device_class: str | None = None
     state_class: str | None = None
     default_enabled: bool = True
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
-    extra_state_attributes: Callable[[dict], dict | None] | None = None
+    extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
+    entity_category: EntityCategory | None = None
 
 
 @dataclass
@@ -264,6 +271,7 @@ class RestAttributeDescription:
     state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
+    entity_category: EntityCategory | None = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -429,9 +437,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        value = getattr(self.block, self.attribute)
-
-        if value is None:
+        if (value := getattr(self.block, self.attribute)) is None:
             return None
 
         return cast(StateType, self.description.value(value))
@@ -463,6 +469,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
             return None
 
         return self.description.extra_state_attributes(self.block)
+
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return category of entity."""
+        return self.description.entity_category
 
 
 class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
@@ -536,6 +547,11 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
         return self.description.extra_state_attributes(self.wrapper.device.status)
 
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return category of entity."""
+        return self.description.entity_category
+
 
 class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
     """Helper class to represent a rpc attribute."""
@@ -549,6 +565,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper, key)
+        self.sub_key = description.sub_key
         self.attribute = attribute
         self.description = description
 
@@ -564,8 +581,11 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         """Value of sensor."""
         if callable(self.description.value):
             self._last_value = self.description.value(
-                self.wrapper.device.status[self.key], self._last_value
+                self.wrapper.device.status[self.key][self.sub_key], self._last_value
             )
+        else:
+            self._last_value = self.wrapper.device.status[self.key][self.sub_key]
+
         return self._last_value
 
     @property
@@ -576,7 +596,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         if not available or not self.description.available:
             return available
 
-        return self.description.available(self.wrapper.device.status[self.key])
+        return self.description.available(
+            self.wrapper.device.status[self.key][self.sub_key]
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -584,9 +606,17 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         if self.description.extra_state_attributes is None:
             return None
 
+        assert self.wrapper.device.shelly
+
         return self.description.extra_state_attributes(
-            self.wrapper.device.status[self.key]
+            self.wrapper.device.status[self.key][self.sub_key],
+            self.wrapper.device.shelly,
         )
+
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return category of entity."""
+        return self.description.entity_category
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):

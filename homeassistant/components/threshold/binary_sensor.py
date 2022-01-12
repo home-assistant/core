@@ -1,4 +1,6 @@
 """Support for monitoring if a sensor value is below/above a threshold."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -16,9 +18,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +61,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Threshold sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
@@ -95,8 +104,7 @@ class ThresholdSensor(BinarySensorEntity):
         @callback
         def async_threshold_sensor_state_listener(event):
             """Handle sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
 
             try:

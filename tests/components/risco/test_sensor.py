@@ -147,7 +147,7 @@ def _check_state(hass, category, entity_id):
     event_index = CATEGORIES_TO_EVENTS[category]
     event = TEST_EVENTS[event_index]
     state = hass.states.get(entity_id)
-    assert state.state == event.time
+    assert state.state == dt.parse_datetime(event.time).isoformat()
     assert state.attributes["category_id"] == event.category_id
     assert state.attributes["category_name"] == event.category_name
     assert state.attributes["type_id"] == event.type_id

@@ -5,27 +5,24 @@ import logging
 
 from rokuecp import RokuConnectionError, RokuError
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.REMOTE]
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    coordinator = hass.data[DOMAIN].get(entry.entry_id)
-    if not coordinator:
+    if not (coordinator := hass.data[DOMAIN].get(entry.entry_id)):
         coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
         hass.data[DOMAIN][entry.entry_id] = coordinator
 

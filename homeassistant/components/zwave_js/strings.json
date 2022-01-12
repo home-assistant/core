@@ -22,9 +22,13 @@
       },
       "configure_addon": {
         "title": "Enter the Z-Wave JS add-on configuration",
+        "description": "The add-on will generate security keys if those fields are left empty.",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
-          "network_key": "Network Key"
+          "s0_legacy_key": "S0 Key (Legacy)",
+          "s2_authenticated_key": "S2 Authenticated Key",
+          "s2_unauthenticated_key": "S2 Unauthenticated Key",
+          "s2_access_control_key": "S2 Access Control Key"
         }
       },
       "start_addon": {
@@ -76,9 +80,13 @@
       },
       "configure_addon": {
         "title": "Enter the Z-Wave JS add-on configuration",
+        "description": "The add-on will generate security keys if those fields are left empty.",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
-          "network_key": "Network Key",
+          "s0_legacy_key": "S0 Key (Legacy)",
+          "s2_authenticated_key": "S2 Authenticated Key",
+          "s2_unauthenticated_key": "S2 Unauthenticated Key",
+          "s2_access_control_key": "S2 Access Control Key",
           "log_level": "Log level",
           "emulate_hardware": "Emulate Hardware"
         }

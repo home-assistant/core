@@ -332,27 +332,13 @@ def test_multi_sensor_match(channel, entity_registry):
     ch_illuminati = channel("illuminance", 0x0401)
 
     match, claimed = entity_registry.get_multi_entity(
-        "manufacturer",
-        "model",
-        primary_channel=ch_illuminati,
-        aux_channels=[ch_se, ch_illuminati],
-    )
-
-    assert s.binary_sensor not in match
-    assert s.component not in match
-    assert set(claimed) == set()
-
-    match, claimed = entity_registry.get_multi_entity(
-        "manufacturer",
-        "model",
-        primary_channel=ch_se,
-        aux_channels=[ch_se, ch_illuminati],
+        "manufacturer", "model", channels=[ch_se, ch_illuminati]
     )
 
     assert s.binary_sensor in match
     assert s.component not in match
     assert set(claimed) == {ch_se}
-    assert {cls.__name__ for cls in match[s.binary_sensor]} == {
+    assert {cls.entity_class.__name__ for cls in match[s.binary_sensor]} == {
         SmartEnergySensor2.__name__
     }
 
@@ -371,17 +357,16 @@ def test_multi_sensor_match(channel, entity_registry):
         pass
 
     match, claimed = entity_registry.get_multi_entity(
-        "manufacturer",
-        "model",
-        primary_channel=ch_se,
-        aux_channels={ch_se, ch_illuminati},
+        "manufacturer", "model", channels={ch_se, ch_illuminati}
     )
 
     assert s.binary_sensor in match
     assert s.component in match
     assert set(claimed) == {ch_se, ch_illuminati}
-    assert {cls.__name__ for cls in match[s.binary_sensor]} == {
+    assert {cls.entity_class.__name__ for cls in match[s.binary_sensor]} == {
         SmartEnergySensor2.__name__,
         SmartEnergySensor3.__name__,
     }
-    assert {cls.__name__ for cls in match[s.component]} == {SmartEnergySensor1.__name__}
+    assert {cls.entity_class.__name__ for cls in match[s.component]} == {
+        SmartEnergySensor1.__name__
+    }

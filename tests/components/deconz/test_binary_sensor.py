@@ -2,11 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_VIBRATION,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_NEW_DEVICES,
@@ -14,14 +10,15 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    DEVICE_CLASS_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .test_gateway import (
@@ -82,18 +79,23 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 5
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == STATE_OFF
-    assert presence_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MOTION
+    assert (
+        presence_sensor.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOTION
+    )
     presence_temp = hass.states.get("sensor.presence_sensor_temperature")
     assert presence_temp.state == "0.1"
-    assert presence_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
+    assert presence_temp.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert hass.states.get("binary_sensor.temperature_sensor") is None
     assert hass.states.get("binary_sensor.clip_presence_sensor") is None
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == STATE_ON
-    assert vibration_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_VIBRATION
+    assert (
+        vibration_sensor.attributes[ATTR_DEVICE_CLASS]
+        == BinarySensorDeviceClass.VIBRATION
+    )
     vibration_temp = hass.states.get("sensor.vibration_sensor_temperature")
     assert vibration_temp.state == "0.1"
-    assert vibration_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
+    assert vibration_temp.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
     event_changed_sensor = {
         "t": "event",
@@ -133,10 +135,14 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
+    ent_reg = er.async_get(hass)
+
     assert len(hass.states.async_all()) == 3
     presence_tamper = hass.states.get("binary_sensor.presence_sensor_tampered")
     assert presence_tamper.state == STATE_OFF
-    assert presence_tamper.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_PROBLEM
+    assert (
+        presence_tamper.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.TAMPER
+    )
 
     event_changed_sensor = {
         "t": "event",
@@ -149,6 +155,10 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence_sensor_tampered").state == STATE_ON
+    assert (
+        ent_reg.async_get("binary_sensor.presence_sensor_tampered").entity_category
+        == EntityCategory.DIAGNOSTIC
+    )
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -181,6 +191,17 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
                 "config": {},
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
+            "3": {
+                "config": {"on": True, "reachable": True},
+                "etag": "fda064fca03f17389d0799d7cb1883ee",
+                "manufacturername": "Philips",
+                "modelid": "CLIPGenericFlag",
+                "name": "Clip Flag Boot Time",
+                "state": {"flag": True, "lastupdated": "2021-09-30T07:09:06.281"},
+                "swversion": "1.0",
+                "type": "CLIPGenericFlag",
+                "uniqueid": "/sensors/3",
+            },
         }
     }
 
@@ -189,9 +210,10 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
             hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
         )
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
     assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
+    assert hass.states.get("binary_sensor.clip_flag_boot_time").state == STATE_ON
 
     # Disallow clip sensors
 
@@ -202,6 +224,7 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
 
     assert len(hass.states.async_all()) == 1
     assert not hass.states.get("binary_sensor.clip_presence_sensor")
+    assert not hass.states.get("binary_sensor.clip_flag_boot_time")
 
     # Allow clip sensors
 
@@ -210,8 +233,9 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
     assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
+    assert hass.states.get("binary_sensor.clip_flag_boot_time").state == STATE_ON
 
 
 async def test_add_new_binary_sensor(hass, aioclient_mock, mock_deconz_websocket):

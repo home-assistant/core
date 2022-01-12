@@ -27,7 +27,7 @@
                 "title": "Potwierdzanie dodania us\u0142ugi Hyperion Ambilight"
             },
             "create_token": {
-                "description": "Naci\u015bnij **Prze\u015blij** poni\u017cej, aby za\u017c\u0105da\u0107 nowego tokena uwierzytelniania. Nast\u0105pi przekierowanie do interfejsu u\u017cytkownika Hyperion, aby zatwierdzi\u0107 \u017c\u0105danie. Sprawd\u017a, czy wy\u015bwietlany identyfikator to \u201e {auth_id} \u201d",
+                "description": "Naci\u015bnij **Zatwierd\u017a** poni\u017cej, aby za\u017c\u0105da\u0107 nowego tokena uwierzytelniania. Nast\u0105pi przekierowanie do interfejsu u\u017cytkownika Hyperion, aby zatwierdzi\u0107 \u017c\u0105danie. Sprawd\u017a, czy wy\u015bwietlany identyfikator to \u201e {auth_id} \u201d",
                 "title": "Automatyczne tworzenie nowego tokena uwierzytelniaj\u0105cego"
             },
             "create_token_external": {

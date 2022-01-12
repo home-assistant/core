@@ -2,19 +2,19 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -519,7 +519,7 @@ async def test_registry_respect_entity_disabled(hass):
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
-                disabled_by=er.DISABLED_USER,
+                disabled_by=er.RegistryEntryDisabler.USER,
             )
         },
     )
@@ -832,13 +832,15 @@ async def test_device_info_called(hass):
                     unique_id="qwer",
                     device_info={
                         "identifiers": {("hue", "1234")},
+                        "configuration_url": "http://192.168.0.100/config",
                         "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
                         "manufacturer": "test-manuf",
                         "model": "test-model",
                         "name": "test-name",
                         "sw_version": "test-sw",
+                        "hw_version": "test-hw",
                         "suggested_area": "Heliport",
-                        "entry_type": "service",
+                        "entry_type": dr.DeviceEntryType.SERVICE,
                         "via_device": ("hue", "via-id"),
                     },
                 ),
@@ -860,13 +862,15 @@ async def test_device_info_called(hass):
     device = registry.async_get_device({("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
+    assert device.configuration_url == "http://192.168.0.100/config"
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "abcd")}
+    assert device.entry_type is dr.DeviceEntryType.SERVICE
     assert device.manufacturer == "test-manuf"
     assert device.model == "test-model"
     assert device.name == "test-name"
-    assert device.sw_version == "test-sw"
     assert device.suggested_area == "Heliport"
-    assert device.entry_type == "service"
+    assert device.sw_version == "test-sw"
+    assert device.hw_version == "test-hw"
     assert device.via_device_id == via.id
 
 
@@ -916,6 +920,144 @@ async def test_device_info_not_overrides(hass):
     assert device2.model == "test-model"
 
 
+async def test_device_info_invalid_url(hass, caplog):
+    """Test device info is forwarded correctly."""
+    registry = dr.async_get(hass)
+    registry.async_get_or_create(
+        config_entry_id="123",
+        connections=set(),
+        identifiers={("hue", "via-id")},
+        manufacturer="manufacturer",
+        model="via",
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                # Valid device info, but invalid url
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "configuration_url": "foo://192.168.0.100/config",
+                    },
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    device = registry.async_get_device({("hue", "1234")})
+    assert device is not None
+    assert device.identifiers == {("hue", "1234")}
+    assert device.configuration_url is None
+
+    assert (
+        "Ignoring invalid device configuration_url 'foo://192.168.0.100/config'"
+        in caplog.text
+    )
+
+
+async def test_device_info_homeassistant_url(hass, caplog):
+    """Test device info with homeassistant URL."""
+    registry = dr.async_get(hass)
+    registry.async_get_or_create(
+        config_entry_id="123",
+        connections=set(),
+        identifiers={("mqtt", "via-id")},
+        manufacturer="manufacturer",
+        model="via",
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                # Valid device info, with homeassistant url
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("mqtt", "1234")},
+                        "configuration_url": "homeassistant://config/mqtt",
+                    },
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    device = registry.async_get_device({("mqtt", "1234")})
+    assert device is not None
+    assert device.identifiers == {("mqtt", "1234")}
+    assert device.configuration_url == "homeassistant://config/mqtt"
+
+
+async def test_device_info_change_to_no_url(hass, caplog):
+    """Test device info changes to no URL."""
+    registry = dr.async_get(hass)
+    registry.async_get_or_create(
+        config_entry_id="123",
+        connections=set(),
+        identifiers={("mqtt", "via-id")},
+        manufacturer="manufacturer",
+        model="via",
+        configuration_url="homeassistant://config/mqtt",
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                # Valid device info, with homeassistant url
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("mqtt", "1234")},
+                        "configuration_url": None,
+                    },
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    device = registry.async_get_device({("mqtt", "1234")})
+    assert device is not None
+    assert device.identifiers == {("mqtt", "1234")}
+    assert device.configuration_url is None
+
+
 async def test_entity_disabled_by_integration(hass):
     """Test entity disabled by integration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
@@ -937,7 +1079,45 @@ async def test_entity_disabled_by_integration(hass):
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default.disabled_by is None
     entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
-    assert entry_disabled.disabled_by == er.DISABLED_INTEGRATION
+    assert entry_disabled.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_entity_disabled_by_device(hass: HomeAssistant):
+    """Test entity disabled by device."""
+
+    connections = {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
+    entity_disabled = MockEntity(
+        unique_id="disabled", device_info=DeviceInfo(connections=connections)
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([entity_disabled])
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id", domain=DOMAIN)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=connections,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert entity_disabled.hass is None
+    assert entity_disabled.platform is None
+
+    registry = er.async_get(hass)
+
+    entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
+    assert entry_disabled.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
 async def test_entity_info_added_to_entity_registry(hass):
@@ -945,10 +1125,13 @@ async def test_entity_info_added_to_entity_registry(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
 
     entity_default = MockEntity(
-        unique_id="default",
         capability_attributes={"max": 100},
-        supported_features=5,
         device_class="mock-device-class",
+        entity_category="config",
+        icon="nice:icon",
+        name="best name",
+        supported_features=5,
+        unique_id="default",
         unit_of_measurement=PERCENTAGE,
     )
 
@@ -957,10 +1140,22 @@ async def test_entity_info_added_to_entity_registry(hass):
     registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
-    assert entry_default.capabilities == {"max": 100}
-    assert entry_default.supported_features == 5
-    assert entry_default.device_class == "mock-device-class"
-    assert entry_default.unit_of_measurement == PERCENTAGE
+    assert entry_default == er.RegistryEntry(
+        "test_domain.best_name",
+        "default",
+        "test_domain",
+        capabilities={"max": 100},
+        device_class=None,
+        entity_category="config",
+        icon=None,
+        id=ANY,
+        name=None,
+        original_device_class="mock-device-class",
+        original_icon="nice:icon",
+        original_name="best name",
+        supported_features=5,
+        unit_of_measurement=PERCENTAGE,
+    )
 
 
 async def test_override_restored_entities(hass):

@@ -8,11 +8,13 @@ from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
@@ -22,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-PLATFORMS = ["climate", "sensor", "switch"]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -49,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -62,9 +64,9 @@ async def async_unload_entry(hass, entry):
 async def daikin_api_setup(hass, host, key, uuid, password):
     """Create a Daikin instance only once."""
 
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
     try:
-        with timeout(TIMEOUT):
+        async with timeout(TIMEOUT):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )
@@ -109,13 +111,13 @@ class DaikinApi:
         return self._available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         info = self.device.values
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "manufacturer": "Daikin",
-            "model": info.get("model"),
-            "name": info.get("name"),
-            "sw_version": info.get("ver", "").replace("_", "."),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer="Daikin",
+            model=info.get("model"),
+            name=info.get("name"),
+            sw_version=info.get("ver", "").replace("_", "."),
+        )

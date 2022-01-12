@@ -33,7 +33,7 @@ API_CACHED_ATTRS = (
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
 
     august_gateway = AugustGateway(hass)
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady from err
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     hass.data[DOMAIN][entry.entry_id][DATA_AUGUST].async_stop()
@@ -60,7 +60,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_setup_august(hass, config_entry, august_gateway):
+async def async_setup_august(
+    hass: HomeAssistant, config_entry: ConfigEntry, august_gateway: AugustGateway
+) -> bool:
     """Set up the August component."""
 
     if CONF_PASSWORD in config_entry.data:
@@ -245,11 +247,29 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
+    async def async_lock_async(self, device_id):
+        """Lock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_lock_async,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
     async def async_unlock(self, device_id):
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_unlock_return_activities,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
+    async def async_unlock_async(self, device_id):
+        """Unlock the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_unlock_async,
             self._august_gateway.access_token,
             device_id,
         )
@@ -272,19 +292,13 @@ class AugustData(AugustSubscriberMixin):
     def _remove_inoperative_doorbells(self):
         for doorbell in list(self.doorbells):
             device_id = doorbell.device_id
-            doorbell_is_operative = False
-            doorbell_detail = self._device_detail_by_id.get(device_id)
-            if doorbell_detail is None:
-                _LOGGER.info(
-                    "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
-                    doorbell.device_name,
-                )
-            else:
-                doorbell_is_operative = True
-
-            if not doorbell_is_operative:
-                del self._doorbells_by_id[device_id]
-                del self._device_detail_by_id[device_id]
+            if self._device_detail_by_id.get(device_id):
+                continue
+            _LOGGER.info(
+                "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
+                doorbell.device_name,
+            )
+            del self._doorbells_by_id[device_id]
 
     def _remove_inoperative_locks(self):
         # Remove non-operative locks as there must
@@ -292,7 +306,6 @@ class AugustData(AugustSubscriberMixin):
         # be usable
         for lock in list(self.locks):
             device_id = lock.device_id
-            lock_is_operative = False
             lock_detail = self._device_detail_by_id.get(device_id)
             if lock_detail is None:
                 _LOGGER.info(
@@ -304,14 +317,12 @@ class AugustData(AugustSubscriberMixin):
                     "The lock %s could not be setup because it does not have a bridge (Connect)",
                     lock.device_name,
                 )
+                del self._device_detail_by_id[device_id]
             # Bridge may come back online later so we still add the device since we will
             # have a pubnub subscription to tell use when it recovers
             else:
-                lock_is_operative = True
-
-            if not lock_is_operative:
-                del self._locks_by_id[device_id]
-                del self._device_detail_by_id[device_id]
+                continue
+            del self._locks_by_id[device_id]
 
 
 def _save_live_attrs(lock_detail):

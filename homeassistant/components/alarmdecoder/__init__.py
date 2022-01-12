@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -35,7 +36,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

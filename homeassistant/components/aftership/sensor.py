@@ -1,6 +1,7 @@
 """Support for non-delivered packages recorded in AfterShip."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 from typing import Any, Final
 
@@ -11,13 +12,12 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.service import ServiceCall
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
@@ -64,7 +64,7 @@ async def async_setup_platform(
 
     await aftership.get_trackings()
 
-    if not aftership.meta or aftership.meta["code"] != HTTP_OK:
+    if not aftership.meta or aftership.meta["code"] != HTTPStatus.OK:
         _LOGGER.error(
             "No tracking data found. Check API key is correct: %s", aftership.meta
         )
@@ -109,6 +109,7 @@ async def async_setup_platform(
 class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement: str = "packages"
     _attr_icon: str = ICON
 
@@ -150,7 +151,7 @@ class AfterShipSensor(SensorEntity):
         if not self.aftership.meta:
             _LOGGER.error("Unknown errors when querying")
             return
-        if self.aftership.meta["code"] != HTTP_OK:
+        if self.aftership.meta["code"] != HTTPStatus.OK:
             _LOGGER.error(
                 "Errors when querying AfterShip. %s", str(self.aftership.meta)
             )
@@ -191,7 +192,6 @@ class AfterShipSensor(SensorEntity):
                 _LOGGER.debug("Ignoring %s as it has status: %s", name, status)
 
         self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             **status_counts,
             ATTR_TRACKINGS: trackings,
         }

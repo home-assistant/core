@@ -107,7 +107,9 @@ async def test_event_notifier(
     assert domain_data.stop_listener_remove is None
 
 
-async def test_cleanup_event_notifiers(hass: HomeAssistant) -> None:
+async def test_cleanup_event_notifiers(
+    hass: HomeAssistant, aiohttp_notify_servers_mock: Mock
+) -> None:
     """Test cleanup function clears all event notifiers."""
     domain_data = get_domain_data(hass)
     await domain_data.async_get_event_notifier(EventListenAddr(None, 0, None), hass)

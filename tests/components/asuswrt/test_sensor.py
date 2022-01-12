@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
@@ -40,6 +40,10 @@ CONFIG_DATA = {
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
+MOCK_TEMPERATURES = {"2.4GHz": 40, "5.0GHz": 0, "CPU": 71.2}
+MOCK_MAC_1 = "a1:b1:c1:d1:e1:f1"
+MOCK_MAC_2 = "a2:b2:c2:d2:e2:f2"
+MOCK_MAC_3 = "a3:b3:c3:d3:e3:f3"
 
 SENSOR_NAMES = [
     "Devices Connected",
@@ -50,6 +54,9 @@ SENSOR_NAMES = [
     "Load Avg (1m)",
     "Load Avg (5m)",
     "Load Avg (15m)",
+    "2.4GHz Temperature",
+    "5GHz Temperature",
+    "CPU Temperature",
 ]
 
 
@@ -57,13 +64,41 @@ SENSOR_NAMES = [
 def mock_devices_fixture():
     """Mock a list of devices."""
     return {
-        "a1:b1:c1:d1:e1:f1": Device("a1:b1:c1:d1:e1:f1", "192.168.1.2", "Test"),
-        "a2:b2:c2:d2:e2:f2": Device("a2:b2:c2:d2:e2:f2", "192.168.1.3", "TestTwo"),
+        MOCK_MAC_1: Device(MOCK_MAC_1, "192.168.1.2", "Test"),
+        MOCK_MAC_2: Device(MOCK_MAC_2, "192.168.1.3", "TestTwo"),
     }
 
 
+@pytest.fixture(name="mock_available_temps")
+def mock_available_temps_list():
+    """Mock a list of available temperature sensors."""
+
+    # Only length of 3 booleans is valid. First checking the exception handling.
+    return [True, False]
+
+
+@pytest.fixture(name="create_device_registry_devices")
+def create_device_registry_devices_fixture(hass):
+    """Create device registry devices so the device tracker entities are enabled."""
+    dev_reg = dr.async_get(hass)
+    config_entry = MockConfigEntry(domain="something_else")
+
+    for idx, device in enumerate(
+        (
+            MOCK_MAC_1,
+            MOCK_MAC_2,
+            MOCK_MAC_3,
+        )
+    ):
+        dev_reg.async_get_or_create(
+            name=f"Device {idx}",
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, device)},
+        )
+
+
 @pytest.fixture(name="connect")
-def mock_controller_connect(mock_devices):
+def mock_controller_connect(mock_devices, mock_available_temps):
     """Mock a successful connection."""
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
@@ -88,10 +123,22 @@ def mock_controller_connect(mock_devices):
         service_mock.return_value.async_get_loadavg = AsyncMock(
             return_value=MOCK_LOAD_AVG
         )
+        service_mock.return_value.async_get_temperature = AsyncMock(
+            return_value=MOCK_TEMPERATURES
+        )
+        service_mock.return_value.async_find_temperature_commands = AsyncMock(
+            return_value=mock_available_temps
+        )
         yield service_mock
 
 
-async def test_sensors(hass, connect, mock_devices):
+async def test_sensors(
+    hass,
+    connect,
+    mock_devices,
+    mock_available_temps,
+    create_device_registry_devices,
+):
     """Test creating an AsusWRT sensor."""
     entity_reg = er.async_get(hass)
 
@@ -137,11 +184,14 @@ async def test_sensors(hass, connect, mock_devices):
     assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
+    # assert temperature availability exception is handled correctly
+    assert not hass.states.get(f"{sensor_prefix}_2_4ghz_temperature")
+    assert not hass.states.get(f"{sensor_prefix}_5ghz_temperature")
+    assert not hass.states.get(f"{sensor_prefix}_cpu_temperature")
+
     # add one device and remove another
-    mock_devices.pop("a1:b1:c1:d1:e1:f1")
-    mock_devices["a3:b3:c3:d3:e3:f3"] = Device(
-        "a3:b3:c3:d3:e3:f3", "192.168.1.4", "TestThree"
-    )
+    mock_devices.pop(MOCK_MAC_1)
+    mock_devices[MOCK_MAC_3] = Device(MOCK_MAC_3, "192.168.1.4", "TestThree")
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
@@ -161,3 +211,15 @@ async def test_sensors(hass, connect, mock_devices):
 
     # consider home option not set, device "test" not home
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_NOT_HOME
+
+    # checking temperature sensors without exceptions
+    mock_available_temps.append(True)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
+    assert hass.states.get(f"{sensor_prefix}_2_4ghz_temperature").state == "40.0"
+    assert not hass.states.get(f"{sensor_prefix}_5ghz_temperature")
+    assert hass.states.get(f"{sensor_prefix}_cpu_temperature").state == "71.2"

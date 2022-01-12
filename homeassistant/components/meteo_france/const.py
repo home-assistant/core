@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -22,19 +26,17 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
 )
 from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     UV_INDEX,
+    Platform,
 )
 
 DOMAIN = "meteo_france"
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 COORDINATOR_FORECAST = "coordinator_forecast"
 COORDINATOR_RAIN = "coordinator_rain"
 COORDINATOR_ALERT = "coordinator_alert"
@@ -71,7 +73,8 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="pressure",
         name="Pressure",
         native_unit_of_measurement=PRESSURE_HPA,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         data_path="current_forecast:sea_level",
     ),
@@ -79,6 +82,7 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="wind_gust",
         name="Wind gust",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:weather-windy-variant",
         entity_registry_enabled_default=False,
         data_path="current_forecast:wind:gust",
@@ -87,6 +91,7 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="wind_speed",
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=False,
         data_path="current_forecast:wind:speed",
@@ -95,7 +100,8 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         data_path="current_forecast:T:value",
     ),
@@ -138,7 +144,7 @@ SENSOR_TYPES_RAIN: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="next_rain",
         name="Next rain",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         data_path="",
     ),
 )

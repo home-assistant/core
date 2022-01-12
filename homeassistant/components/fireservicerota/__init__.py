@@ -10,11 +10,8 @@ from pyfireservicerota import (
     InvalidTokenError,
 )
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARYSENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -26,7 +23,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [SENSOR_DOMAIN, BINARYSENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

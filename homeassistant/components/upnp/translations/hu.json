@@ -13,7 +13,7 @@
         "step": {
             "init": {
                 "one": "\u00dcres",
-                "other": ""
+                "other": "\u00dcres"
             },
             "ssdp_confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani ezt az UPnP/IGD eszk\u00f6zt?"

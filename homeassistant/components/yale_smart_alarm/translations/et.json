@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto on juba seadistatud"
+            "already_configured": "Konto on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_auth": "Tuvastamine nurjus"
@@ -21,6 +22,19 @@
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Koodi numbrite arv on vale"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Lukkude vaikekood kui kood on m\u00e4\u00e4ramata",
+                    "lock_code_digits": "Lukkude PIN-koodi numbrite arv"
                 }
             }
         }

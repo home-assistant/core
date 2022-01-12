@@ -1,6 +1,4 @@
 """Tests for Climacell init."""
-import logging
-
 import pytest
 
 from homeassistant.components.climacell.config_flow import (
@@ -15,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from .const import API_V3_ENTRY_DATA, MIN_CONFIG, V1_ENTRY_DATA
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_load_and_unload(

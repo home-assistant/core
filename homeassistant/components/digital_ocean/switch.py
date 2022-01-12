@@ -1,11 +1,16 @@
 """Support for interacting with Digital Ocean droplets."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_CREATED_AT,
@@ -31,20 +36,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Digital Ocean droplet switch."""
-    digital = hass.data.get(DATA_DIGITAL_OCEAN)
-    if not digital:
-        return False
+    if not (digital := hass.data.get(DATA_DIGITAL_OCEAN)):
+        return
 
     droplets = config[CONF_DROPLETS]
 
     dev = []
     for droplet in droplets:
-        droplet_id = digital.get_droplet_id(droplet)
-        if droplet_id is None:
+        if (droplet_id := digital.get_droplet_id(droplet)) is None:
             _LOGGER.error("Droplet %s is not available", droplet)
-            return False
+            return
         dev.append(DigitalOceanSwitch(digital, droplet_id))
 
     add_entities(dev, True)
@@ -53,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DigitalOceanSwitch(SwitchEntity):
     """Representation of a Digital Ocean droplet switch."""
 
-    def __init__(self, do, droplet_id):
+    def __init__(self, do, droplet_id):  # pylint: disable=invalid-name
         """Initialize a new Digital Ocean sensor."""
         self._digital_ocean = do
         self._droplet_id = droplet_id

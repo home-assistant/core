@@ -9,7 +9,7 @@ import opengarage
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -57,16 +57,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenGarage."""
 
     VERSION = 1
-
-    async def async_step_import(self, import_info):
-        """Set the config entry up from yaml."""
-        import_info[CONF_HOST] = (
-            f"{'https' if import_info[CONF_SSL] else 'http'}://"
-            f"{import_info.get(CONF_HOST)}"
-        )
-
-        del import_info[CONF_SSL]
-        return await self.async_step_user(import_info)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

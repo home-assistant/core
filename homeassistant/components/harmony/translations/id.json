@@ -7,7 +7,7 @@
             "cannot_connect": "Gagal terhubung",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "description": "Ingin menyiapkan {name} ({host})?",

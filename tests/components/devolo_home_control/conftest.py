@@ -31,3 +31,8 @@ def patch_mydevolo(request):
         return_value=["1400000000000001", "1400000000000002"],
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def devolo_home_control_mock_async_zeroconf(mock_async_zeroconf):
+    """Auto mock zeroconf."""

@@ -2,8 +2,10 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
 from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES
@@ -21,7 +23,11 @@ DEV_TYPE_TO_HA = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches."""
 
     async def async_discover(devices):
@@ -34,7 +40,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
     _async_setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities)
-    return True
 
 
 @callback
@@ -82,16 +87,6 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
             "monthly_energy_total": self.smartplug.monthly_energy_total,
             "yearly_energy_total": self.smartplug.yearly_energy_total,
         }
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self.smartplug.power
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return self.smartplug.energy_today
 
     def update(self):
         """Update outlet details and energy usage."""

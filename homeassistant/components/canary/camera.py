@@ -15,11 +15,12 @@ from homeassistant.components.camera import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     Camera,
 )
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
+from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle
@@ -93,19 +94,19 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Initialize a Canary security camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
-        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._ffmpeg: FFmpegManager = get_ffmpeg_manager(hass)
         self._ffmpeg_arguments = ffmpeg_args
         self._location_id = location_id
         self._device = device
         self._live_stream_session: LiveStreamSession | None = None
         self._attr_name = device.name
         self._attr_unique_id = str(device.device_id)
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(device.device_id))},
-            "name": device.name,
-            "model": device.device_type["name"],
-            "manufacturer": MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device.device_id))},
+            manufacturer=MANUFACTURER,
+            model=device.device_type["name"],
+            name=device.name,
+        )
 
     @property
     def location(self) -> Location:

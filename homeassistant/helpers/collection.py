@@ -16,11 +16,12 @@ from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
+
+from . import entity_registry
+from .entity import Entity
+from .entity_component import EntityComponent
+from .storage import Store
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10

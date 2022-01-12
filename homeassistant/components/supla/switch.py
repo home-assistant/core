@@ -2,13 +2,9 @@
 import logging
 from pprint import pformat
 
-from homeassistant.components.supla import (
-    DOMAIN,
-    SUPLA_COORDINATORS,
-    SUPLA_SERVERS,
-    SuplaChannel,
-)
 from homeassistant.components.switch import SwitchEntity
+
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +45,6 @@ class SuplaSwitch(SuplaChannel, SwitchEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        state = self.channel_data.get("state")
-        if state:
+        if state := self.channel_data.get("state"):
             return state["on"]
         return False

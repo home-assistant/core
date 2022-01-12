@@ -11,8 +11,11 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Kl\u00ed\u010d API"
-                }
+                    "api_key": "Kl\u00ed\u010d API",
+                    "api_token": "API Secret",
+                    "exchange_rates": "Sm\u011bnn\u00e9 kurzy"
+                },
+                "title": "Podrobnosti o API kl\u00ed\u010di Coinbase"
             }
         }
     },

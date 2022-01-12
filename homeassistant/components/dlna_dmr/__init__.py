@@ -2,38 +2,12 @@
 from __future__ import annotations
 
 from homeassistant import config_entries
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import CONF_PLATFORM, CONF_URL
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up DLNA component."""
-    if MEDIA_PLAYER_DOMAIN not in config:
-        return True
-
-    for entry_config in config[MEDIA_PLAYER_DOMAIN]:
-        if entry_config.get(CONF_PLATFORM) != DOMAIN:
-            continue
-        LOGGER.warning(
-            "Configuring dlna_dmr via yaml is deprecated; the configuration for"
-            " %s has been migrated to a config entry and can be safely removed",
-            entry_config.get(CONF_URL),
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=entry_config,
-            )
-        )
-
-    return True
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(

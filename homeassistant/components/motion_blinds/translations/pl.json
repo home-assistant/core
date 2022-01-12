@@ -6,13 +6,15 @@
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "error": {
-            "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 bramki ruchu"
+            "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 bramki ruchu",
+            "invalid_interface": "Nieprawid\u0142owy interfejs sieciowy"
         },
         "flow_title": "Rolety Motion",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "Klucz API"
+                    "api_key": "Klucz API",
+                    "interface": "Interfejs sieciowy"
                 },
                 "description": "B\u0119dziesz potrzebowa\u0142 16-znakowego klucza API, instrukcje znajdziesz na https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
                 "title": "Motion Blinds"
@@ -30,6 +32,17 @@
                     "host": "Adres IP"
                 },
                 "description": "Po\u0142\u0105cz si\u0119 z bram\u0105 ruchu. Je\u015bli adres IP nie jest ustawiony, u\u017cywane jest automatyczne wykrywanie",
+                "title": "Rolety Motion"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Poczekaj na aktualizacj\u0119 multicast push"
+                },
+                "description": "Okre\u015bl opcjonalne ustawienia",
                 "title": "Rolety Motion"
             }
         }

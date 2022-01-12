@@ -35,8 +35,7 @@ async def async_device_name(dev_registry, address):
         identifiers={(DOMAIN, str(address))}, connections=set()
     )
     if not ha_device:
-        device = devices[address]
-        if device:
+        if device := devices[address]:
             return f"{device.description} ({device.model})"
         return ""
     return compute_device_name(ha_device)
@@ -61,12 +60,10 @@ async def websocket_get_device(
 ) -> None:
     """Get an Insteon device."""
     dev_registry = await hass.helpers.device_registry.async_get_registry()
-    ha_device = dev_registry.async_get(msg[DEVICE_ID])
-    if not ha_device:
+    if not (ha_device := dev_registry.async_get(msg[DEVICE_ID])):
         notify_device_not_found(connection, msg, HA_DEVICE_NOT_FOUND)
         return
-    device = get_insteon_device_from_ha_device(ha_device)
-    if not device:
+    if not (device := get_insteon_device_from_ha_device(ha_device)):
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
     ha_name = compute_device_name(ha_device)

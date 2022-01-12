@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
+            "no_locations": "No locations are available for this user, check TotalConnect settings",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {

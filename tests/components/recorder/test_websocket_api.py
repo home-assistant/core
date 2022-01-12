@@ -1,38 +1,34 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+import threading
+from unittest.mock import patch
 
 import pytest
 from pytest import approx
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import StatisticsMeta
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import trigger_db_commit
+from .common import (
+    async_wait_recording_done_without_instance,
+    create_engine_test,
+    trigger_db_commit,
+)
 
-from tests.common import init_recorder_component
+from tests.common import (
+    async_fire_time_changed,
+    async_init_recorder_component,
+    init_recorder_component,
+)
 
-BATTERY_SENSOR_ATTRIBUTES = {
-    "device_class": "battery",
-    "state_class": "measurement",
-    "unit_of_measurement": "%",
-}
 POWER_SENSOR_ATTRIBUTES = {
     "device_class": "power",
     "state_class": "measurement",
     "unit_of_measurement": "kW",
-}
-NONE_SENSOR_ATTRIBUTES = {
-    "state_class": "measurement",
-}
-PRESSURE_SENSOR_ATTRIBUTES = {
-    "device_class": "pressure",
-    "state_class": "measurement",
-    "unit_of_measurement": "hPa",
 }
 TEMPERATURE_SENSOR_ATTRIBUTES = {
     "device_class": "temperature",
@@ -41,21 +37,8 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
 }
 
 
-@pytest.mark.parametrize(
-    "units, attributes, unit",
-    [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
-    ],
-)
-async def test_validate_statistics_supported_device_class(
-    hass, hass_ws_client, units, attributes, unit
-):
-    """Test list_statistic_ids."""
+async def test_validate_statistics(hass, hass_ws_client):
+    """Test validate_statistics can be called."""
     id = 1
 
     def next_id():
@@ -71,177 +54,9 @@ async def test_validate_statistics_supported_device_class(
         assert response["success"]
         assert response["result"] == expected_result
 
-    now = dt_util.utcnow()
-
-    hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
-    await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    client = await hass_ws_client()
-
     # No statistics, no state - empty response
-    await assert_validation_result(client, {})
-
-    # No statistics, valid state - empty response
-    hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit}}
-    )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_validation_result(client, {})
-
-    # No statistics, invalid state - expect error
-    hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
-    )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    expected = {
-        "sensor.test": [
-            {
-                "data": {
-                    "device_class": attributes["device_class"],
-                    "state_unit": "dogs",
-                    "statistic_id": "sensor.test",
-                },
-                "type": "unsupported_unit",
-            }
-        ],
-    }
-    await assert_validation_result(client, expected)
-
-    # Statistics has run, invalid state - expect error
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
-    )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_validation_result(client, expected)
-
-    # Valid state - empty response
-    hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit}}
-    )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_validation_result(client, {})
-
-    # Valid state, statistic runs again - empty response
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_validation_result(client, {})
-
-    # Remove the state - empty response
-    hass.states.async_remove("sensor.test")
-    await assert_validation_result(client, {})
-
-
-@pytest.mark.parametrize(
-    "attributes",
-    [BATTERY_SENSOR_ATTRIBUTES, NONE_SENSOR_ATTRIBUTES],
-)
-async def test_validate_statistics_unsupported_device_class(
-    hass, hass_ws_client, attributes
-):
-    """Test list_statistic_ids."""
-    id = 1
-
-    def next_id():
-        nonlocal id
-        id += 1
-        return id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
-    async def assert_statistic_ids(expected_result):
-        with session_scope(hass=hass) as session:
-            db_states = list(session.query(StatisticsMeta))
-            assert len(db_states) == len(expected_result)
-            for i in range(len(db_states)):
-                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
-                assert (
-                    db_states[i].unit_of_measurement
-                    == expected_result[i]["unit_of_measurement"]
-                )
-
-    now = dt_util.utcnow()
-
     await hass.async_add_executor_job(init_recorder_component, hass)
-    await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
     client = await hass_ws_client()
-    rec = hass.data[DATA_INSTANCE]
-
-    # No statistics, no state - empty response
-    await assert_validation_result(client, {})
-
-    # No statistics, original unit - empty response
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
-    await assert_validation_result(client, {})
-
-    # No statistics, changed unit - empty response
-    hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
-    )
-    await assert_validation_result(client, {})
-
-    # Run statistics, no statistics will be generated because of conflicting units
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    rec.do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_statistic_ids([])
-
-    # No statistics, changed unit - empty response
-    hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
-    )
-    await assert_validation_result(client, {})
-
-    # Run statistics one hour later, only the "dogs" state will be considered
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    rec.do_adhoc_statistics(start=now + timedelta(hours=1))
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_statistic_ids(
-        [{"statistic_id": "sensor.test", "unit_of_measurement": "dogs"}]
-    )
-    await assert_validation_result(client, {})
-
-    # Change back to original unit - expect error
-    hass.states.async_set("sensor.test", 13, attributes=attributes)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    expected = {
-        "sensor.test": [
-            {
-                "data": {
-                    "metadata_unit": "dogs",
-                    "state_unit": attributes.get("unit_of_measurement"),
-                    "statistic_id": "sensor.test",
-                },
-                "type": "units_changed",
-            }
-        ],
-    }
-    await assert_validation_result(client, expected)
-
-    # Changed unit - empty response
-    hass.states.async_set(
-        "sensor.test", 14, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
-    )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_validation_result(client, {})
-
-    # Valid state, statistic runs again - empty response
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_validation_result(client, {})
-
-    # Remove the state - empty response
-    hass.states.async_remove("sensor.test")
     await assert_validation_result(client, {})
 
 
@@ -402,7 +217,12 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": "W"}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "W",
+        }
     ]
 
     await client.send_json(
@@ -421,5 +241,183 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": new_unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": new_unit,
+        }
     ]
+
+
+async def test_recorder_info(hass, hass_ws_client):
+    """Test getting recorder status."""
+    client = await hass_ws_client()
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    await client.send_json({"id": 1, "type": "recorder/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "backlog": 0,
+        "max_backlog": 30000,
+        "migration_in_progress": False,
+        "recording": True,
+        "thread_running": True,
+    }
+
+
+async def test_recorder_info_no_recorder(hass, hass_ws_client):
+    """Test getting recorder status when recorder is not present."""
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/info"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_command"
+
+
+async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
+    """Test getting recorder status when recorder is not started."""
+    config = {recorder.CONF_DB_URL: "sqlite://no_file", recorder.CONF_DB_RETRY_WAIT: 0}
+
+    client = await hass_ws_client()
+
+    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+        assert not await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        )
+        assert recorder.DOMAIN not in hass.config.components
+    await hass.async_block_till_done()
+
+    # Wait for recorder to shut down
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
+
+    await client.send_json({"id": 1, "type": "recorder/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["recording"] is False
+    assert response["result"]["thread_running"] is False
+
+
+async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
+    """Test getting recorder status when recorder queue is exhausted."""
+    assert recorder.util.async_migration_in_progress(hass) is False
+
+    migration_done = threading.Event()
+
+    real_migration = recorder.migration.migrate_schema
+
+    def stalled_migration(*args):
+        """Make migration stall."""
+        nonlocal migration_done
+        migration_done.wait()
+        return real_migration(*args)
+
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics"
+    ), patch(
+        "homeassistant.components.recorder.create_engine", new=create_engine_test
+    ), patch.object(
+        recorder, "MAX_QUEUE_BACKLOG", 1
+    ), patch(
+        "homeassistant.components.recorder.migration.migrate_schema",
+        wraps=stalled_migration,
+    ):
+        await async_setup_component(
+            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+        )
+        hass.states.async_set("my.entity", "on", {})
+        await hass.async_block_till_done()
+
+        # Detect queue full
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
+        client = await hass_ws_client()
+
+        # Check the status
+        await client.send_json({"id": 1, "type": "recorder/info"})
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"]["migration_in_progress"] is True
+        assert response["result"]["recording"] is False
+        assert response["result"]["thread_running"] is True
+
+    # Let migration finish
+    migration_done.set()
+    await async_wait_recording_done_without_instance(hass)
+
+    # Check the status after migration finished
+    await client.send_json({"id": 2, "type": "recorder/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["migration_in_progress"] is False
+    assert response["result"]["recording"] is True
+    assert response["result"]["thread_running"] is True
+
+
+async def test_backup_start_no_recorder(
+    hass, hass_ws_client, hass_supervisor_access_token
+):
+    """Test getting backup start when recorder is not present."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+
+    await client.send_json({"id": 1, "type": "backup/start"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_command"
+
+
+async def test_backup_start_timeout(hass, hass_ws_client, hass_supervisor_access_token):
+    """Test getting backup start when recorder is not present."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    with patch.object(recorder, "DB_LOCK_TIMEOUT", 0):
+        try:
+            await client.send_json({"id": 1, "type": "backup/start"})
+            response = await client.receive_json()
+            assert not response["success"]
+            assert response["error"]["code"] == "timeout_error"
+        finally:
+            await client.send_json({"id": 2, "type": "backup/end"})
+
+
+async def test_backup_end(hass, hass_ws_client, hass_supervisor_access_token):
+    """Test backup start."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    await client.send_json({"id": 1, "type": "backup/start"})
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json({"id": 2, "type": "backup/end"})
+    response = await client.receive_json()
+    assert response["success"]
+
+
+async def test_backup_end_without_start(
+    hass, hass_ws_client, hass_supervisor_access_token
+):
+    """Test backup start."""
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    await client.send_json({"id": 1, "type": "backup/end"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "database_unlock_failed"

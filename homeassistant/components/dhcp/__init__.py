@@ -1,12 +1,13 @@
 """The dhcp integration."""
 
-from abc import abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
+from typing import Any, Final
 
 from aiodiscover import DiscoverHosts
 from aiodiscover.discovery import (
@@ -17,6 +18,7 @@ from aiodiscover.discovery import (
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 
+from homeassistant import config_entries
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
     ATTR_IP,
@@ -31,13 +33,17 @@ from homeassistant.const import (
     STATE_HOME,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
 from .const import DOMAIN
@@ -45,13 +51,52 @@ from .const import DOMAIN
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
 MESSAGE_TYPE = "message-type"
-HOSTNAME = "hostname"
-MAC_ADDRESS = "macaddress"
-IP_ADDRESS = "ip"
+HOSTNAME: Final = "hostname"
+MAC_ADDRESS: Final = "macaddress"
+IP_ADDRESS: Final = "ip"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class DhcpServiceInfo(BaseServiceInfo):
+    """Prepared info from dhcp entries."""
+
+    ip: str
+    hostname: str
+    macaddress: str
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
+        return getattr(self, name)
+
+    def get(self, name: str, default: Any = None) -> Any:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        report(
+            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
+        if hasattr(self, name):
+            return getattr(self, name)
+        return default
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -90,6 +135,17 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
+        return run_callback_threadsafe(
+            self.hass.loop,
+            self.async_process_client,
+            ip_address,
+            hostname,
+            mac_address,
+        ).result()
+
+    @callback
+    def async_process_client(self, ip_address, hostname, mac_address):
+        """Process a client."""
         made_ip_address = make_ip_address(ip_address)
 
         if (
@@ -101,7 +157,6 @@ class WatcherBase:
             return
 
         data = self._address_data.get(ip_address)
-
         if (
             data
             and data[MAC_ADDRESS] == mac_address
@@ -111,12 +166,9 @@ class WatcherBase:
             # to process it
             return
 
-        self._address_data[ip_address] = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
+        data = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
+        self._address_data[ip_address] = data
 
-        self.process_updated_address_data(ip_address, self._address_data[ip_address])
-
-    def process_updated_address_data(self, ip_address, data):
-        """Process the address data update."""
         lowercase_hostname = data[HOSTNAME].lower()
         uppercase_mac = data[MAC_ADDRESS].upper()
 
@@ -139,22 +191,16 @@ class WatcherBase:
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, entry)
-
-            self.create_task(
-                self.hass.config_entries.flow.async_init(
-                    entry["domain"],
-                    context={"source": DOMAIN},
-                    data={
-                        IP_ADDRESS: ip_address,
-                        HOSTNAME: lowercase_hostname,
-                        MAC_ADDRESS: data[MAC_ADDRESS],
-                    },
-                )
+            discovery_flow.async_create_flow(
+                self.hass,
+                entry["domain"],
+                {"source": config_entries.SOURCE_DHCP},
+                DhcpServiceInfo(
+                    ip=ip_address,
+                    hostname=lowercase_hostname,
+                    macaddress=data[MAC_ADDRESS],
+                ),
             )
-
-    @abstractmethod
-    def create_task(self, task):
-        """Pass a task to async_add_task based on which context we are in."""
 
 
 class NetworkWatcher(WatcherBase):
@@ -189,20 +235,16 @@ class NetworkWatcher(WatcherBase):
         """Start a new discovery task if one is not running."""
         if self._discover_task and not self._discover_task.done():
             return
-        self._discover_task = self.create_task(self.async_discover())
+        self._discover_task = self.hass.async_create_task(self.async_discover())
 
     async def async_discover(self):
         """Process discovery."""
         for host in await self._discover_hosts.async_discover():
-            self.process_client(
+            self.async_process_client(
                 host[DISCOVERY_IP_ADDRESS],
                 host[DISCOVERY_HOSTNAME],
                 _format_mac(host[DISCOVERY_MAC_ADDRESS]),
             )
-
-    def create_task(self, task):
-        """Pass a task to async_create_task since we are in async context."""
-        return self.hass.async_create_task(task)
 
 
 class DeviceTrackerWatcher(WatcherBase):
@@ -250,11 +292,7 @@ class DeviceTrackerWatcher(WatcherBase):
         if ip_address is None or mac_address is None:
             return
 
-        self.process_client(ip_address, hostname, _format_mac(mac_address))
-
-    def create_task(self, task):
-        """Pass a task to async_create_task since we are in async context."""
-        return self.hass.async_create_task(task)
+        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
 
 
 class DHCPWatcher(WatcherBase):
@@ -276,6 +314,10 @@ class DHCPWatcher(WatcherBase):
             self._sniffer.stop()
 
     async def async_start(self):
+        """Start watching for dhcp packets."""
+        await self.hass.async_add_executor_job(self._start)
+
+    def _start(self):
         """Start watching for dhcp packets."""
         # Local import because importing from scapy has side effects such as opening
         # sockets
@@ -319,7 +361,7 @@ class DHCPWatcher(WatcherBase):
         conf.sniff_promisc = 0
 
         try:
-            await self.hass.async_add_executor_job(_verify_l2socket_setup, FILTER)
+            _verify_l2socket_setup(FILTER)
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -330,7 +372,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         try:
-            await self.hass.async_add_executor_job(_verify_working_pcap, FILTER)
+            _verify_working_pcap(FILTER)
         except (Scapy_Exception, ImportError) as ex:
             _LOGGER.error(
                 "Cannot watch for dhcp packets without a functional packet filter: %s",
@@ -348,10 +390,6 @@ class DHCPWatcher(WatcherBase):
         self._sniffer.start()
         if self._sniffer.thread:
             self._sniffer.thread.name = self.__class__.__name__
-
-    def create_task(self, task):
-        """Pass a task to hass.add_job since we are in a thread."""
-        return self.hass.add_job(task)
 
 
 def _decode_dhcp_option(dhcp_options, key):

@@ -1,9 +1,8 @@
 """The songpal component."""
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -19,13 +18,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up songpal environment."""
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         return True
     for config_entry in conf:
         hass.async_create_task(

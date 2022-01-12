@@ -45,6 +45,7 @@ class DeviceMock(Zwave):
         self.name = "Test Device"
         self.uid = "Test"
         self.settings_property = {"general_device_settings": SettingsMock()}
+        self.href = "https://www.mydevolo.com"
 
 
 class BinarySensorMock(DeviceMock):
@@ -54,6 +55,16 @@ class BinarySensorMock(DeviceMock):
         """Initialize the mock."""
         super().__init__()
         self.binary_sensor_property = {"Test": BinarySensorPropertyMock()}
+
+
+class BinarySensorMockOverload(DeviceMock):
+    """devolo Home Control disabled binary sensor device mock."""
+
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.binary_sensor_property = {"Overload": BinarySensorPropertyMock()}
+        self.binary_sensor_property["Overload"].sensor_type = "overload"
 
 
 class RemoteControlMock(DeviceMock):
@@ -89,12 +100,15 @@ class HomeControlMock(HomeControl):
 
 
 class HomeControlMockBinarySensor(HomeControlMock):
-    """devolo Home Control gateway mock with binary sensor device."""
+    """devolo Home Control gateway mock with binary sensor devices."""
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the mock."""
         super().__init__()
-        self.devices = {"Test": BinarySensorMock()}
+        self.devices = {
+            "Test": BinarySensorMock(),
+            "Overload": BinarySensorMockOverload(),
+        }
         self.publisher = Publisher(self.devices.keys())
         self.publisher.unregister = MagicMock()
 

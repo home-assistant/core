@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Clau del dispositiu",
+                    "host": "Amfitri\u00f3",
+                    "port": "Port",
+                    "verify_ssl": "Verifica el certificat SSL"
+                }
+            }
+        }
+    }
+}

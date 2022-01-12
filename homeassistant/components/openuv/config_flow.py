@@ -90,9 +90,9 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a OpenUV options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize."""
-        self.config_entry = config_entry
+        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -108,7 +108,7 @@ class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_FROM_WINDOW,
                         description={
-                            "suggested_value": self.config_entry.options.get(
+                            "suggested_value": self.entry.options.get(
                                 CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW
                             )
                         },
@@ -116,7 +116,7 @@ class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_TO_WINDOW,
                         description={
-                            "suggested_value": self.config_entry.options.get(
+                            "suggested_value": self.entry.options.get(
                                 CONF_FROM_WINDOW, DEFAULT_TO_WINDOW
                             )
                         },

@@ -7,10 +7,10 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a {model} ( {host} ) szolg\u00e1ltat\u00e1st?"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a {model} ({host}) szolg\u00e1ltat\u00e1st?"
             },
             "pick_device": {
                 "data": {
@@ -19,9 +19,9 @@
             },
             "user": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
-                "description": "Ha a gazdag\u00e9pet \u00fcresen hagyja, felder\u00edt\u00e9sre ker\u00fcl automatikusan."
+                "description": "Ha nem ad meg c\u00edmet, akkor az eszk\u00f6z\u00f6k keres\u00e9se a felder\u00edt\u00e9ssel t\u00f6rt\u00e9nik."
             }
         }
     },

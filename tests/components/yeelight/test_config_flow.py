@@ -3,8 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, setup
-from homeassistant.components.yeelight import (
+from homeassistant import config_entries
+from homeassistant.components import dhcp, ssdp, zeroconf
+from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
+from homeassistant.components.yeelight.const import (
+    CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
@@ -19,7 +22,6 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
@@ -49,6 +51,13 @@ DEFAULT_CONFIG = {
     CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
     CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
 }
+
+SSDP_INFO = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    upnp={},
+    ssdp_headers=CAPABILITIES,
+)
 
 
 async def test_discovery(hass: HomeAssistant):
@@ -118,7 +127,9 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     alternate_bulb.capabilities["id"] = "0x000000000099999"
     alternate_bulb.capabilities["location"] = "yeelight://4.4.4.4"
 
-    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=alternate_bulb):
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=alternate_bulb
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -130,7 +141,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(), _patch_discovery_interval():
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -332,7 +343,8 @@ async def test_manual(hass: HomeAssistant):
 async def test_options(hass: HomeAssistant):
     """Test options flow."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: NAME, CONF_DETECTED_MODEL: MODEL},
     )
     config_entry.add_to_hass(hass)
 
@@ -344,6 +356,49 @@ async def test_options(hass: HomeAssistant):
     config = {
         CONF_NAME: NAME,
         CONF_MODEL: MODEL,
+        CONF_TRANSITION: DEFAULT_TRANSITION,
+        CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+        CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+        CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
+    }
+    assert config_entry.options == config
+    assert hass.states.get(f"light.{NAME}_nightlight") is None
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    config[CONF_NIGHTLIGHT_SWITCH] = True
+    user_input = {**config}
+    user_input.pop(CONF_NAME)
+    user_input.pop(CONF_MODEL)
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == config
+    assert result2["data"] == config_entry.options
+    assert hass.states.get(f"light.{NAME}_nightlight") is not None
+
+
+async def test_options_unknown_model(hass: HomeAssistant):
+    """Test options flow with an unknown model."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: NAME, CONF_DETECTED_MODEL: "not_in_db"},
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    config = {
+        CONF_NAME: NAME,
+        CONF_MODEL: "not_in_db",
         CONF_TRANSITION: DEFAULT_TRANSITION,
         CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
@@ -402,7 +457,6 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
 
 async def test_discovered_by_homekit_and_dhcp(hass):
     """Test we get the form with homekit and abort for dhcp source when we get both."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -411,7 +465,14 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data={"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+            data=zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
         )
         await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
@@ -423,7 +484,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
@@ -435,7 +498,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": "00:00:00:00:00:00"},
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
@@ -449,7 +514,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": "1.2.3.5", "macaddress": "00:00:00:00:00:01"},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.5", macaddress="00:00:00:00:00:01", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
@@ -461,17 +528,25 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     [
         (
             config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            {"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+            zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
         ),
     ],
 )
 async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     """Test we can setup when discovered from dhcp or homekit."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -502,23 +577,43 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect
+    ):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["reason"] == "already_configured"
+
 
 @pytest.mark.parametrize(
     "source, data",
     [
         (
             config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            {"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+            zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
         ),
     ],
 )
 async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data):
     """Test we abort if we cannot get the unique id when discovered from dhcp or homekit."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(
@@ -535,14 +630,13 @@ async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data
 
 async def test_discovered_ssdp(hass):
     """Test we can setup when discovered from ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=CAPABILITIES
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=SSDP_INFO
         )
         await hass.async_block_till_done()
 
@@ -571,7 +665,7 @@ async def test_discovered_ssdp(hass):
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=CAPABILITIES
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=SSDP_INFO
         )
         await hass.async_block_till_done()
 
@@ -581,7 +675,6 @@ async def test_discovered_ssdp(hass):
 
 async def test_discovered_zeroconf(hass):
     """Test we can setup when discovered from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -635,7 +728,7 @@ async def test_discovered_zeroconf(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=CAPABILITIES,
+            data=SSDP_INFO,
         )
         await hass.async_block_till_done()
 
