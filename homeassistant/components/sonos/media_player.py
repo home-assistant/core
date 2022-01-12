@@ -606,10 +606,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str | None,
-        media_content_id: str | None,
+        media_content_type: str,
+        media_content_id: str,
         media_image_id: str | None = None,
-    ) -> tuple[None | str, None | str]:
+    ) -> tuple[bytes | None, str | None]:
         """Fetch media browser image to serve via proxy."""
         if (
             media_content_type in [MEDIA_TYPE_ALBUM, MEDIA_TYPE_ARTIST]
