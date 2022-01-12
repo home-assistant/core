@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN
+from .const import DOMAIN, OverkizStateType
 from .entity import OverkizDescriptiveEntity
 
 
@@ -27,9 +27,9 @@ from .entity import OverkizDescriptiveEntity
 class OverkizSwitchDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
-    turn_on: Callable[[Callable], Awaitable[None]]
-    turn_off: Callable[[Callable], Awaitable[None]]
-    is_on: Callable[[Callable], bool]
+    turn_on: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
+    turn_off: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
+    is_on: Callable[[Callable[[str], OverkizStateType]], bool]
 
 
 @dataclass
@@ -92,7 +92,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz switch from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizSwitch] = []
