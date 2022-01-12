@@ -81,9 +81,9 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: IntellifireDataUpdateCoordinator,
-        entry_id,
+        entry_id: str,
         description: IntellifireBinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
