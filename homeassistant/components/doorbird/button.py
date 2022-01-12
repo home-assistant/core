@@ -1,6 +1,6 @@
 """Support for powering relays in a DoorBird video doorbell."""
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -10,6 +10,9 @@ from .entity import DoorBirdEntity
 
 IR_RELAY = "__ir_light__"
 
+RELAY_ENTITY_DESCRIPTION = ButtonEntityDescription(icon="mdi:dip-switch")
+IR_ENTITY_DESCRIPTION = ButtonEntityDescription(icon="mdi:lightbulb")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -17,7 +20,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DoorBird button platform."""
-    entities = []
     config_entry_id = config_entry.entry_id
 
     data = hass.data[DOMAIN][config_entry_id]
@@ -27,9 +29,9 @@ async def async_setup_entry(
     relays = doorstation_info["RELAYS"]
     relays.append(IR_RELAY)
 
-    for relay in relays:
-        button = DoorBirdButton(doorstation, doorstation_info, relay)
-        entities.append(button)
+    entities = [
+        DoorBirdButton(doorstation, doorstation_info, relay) for relay in relays
+    ]
 
     async_add_entities(entities)
 
@@ -44,10 +46,10 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
         self._relay = relay
         if self._relay == IR_RELAY:
             self._attr_name = f"{self._doorstation.name} IR"
-            self._attr_icon = "mdi:lightbulb"
+            self.entity_description = IR_ENTITY_DESCRIPTION
         else:
             self._attr_name = f"{self._doorstation.name} Relay {self._relay}"
-            self._attr_icon = "mdi:dip-switch"
+            self.entity_description = RELAY_ENTITY_DESCRIPTION
 
         self._attr_unique_id = f"{self._mac_addr}_{self._relay}"
 
