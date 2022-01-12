@@ -72,7 +72,9 @@ class Light(HomeAccessory):
 
         state = self.hass.states.get(self.entity_id)
         attributes = state.attributes
-        self.color_modes = color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        self.color_modes = color_modes = (
+            attributes.get(ATTR_SUPPORTED_COLOR_MODES) or []
+        )
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
         self.brightness_supported = brightness_supported(color_modes)
