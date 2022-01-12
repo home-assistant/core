@@ -222,7 +222,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
