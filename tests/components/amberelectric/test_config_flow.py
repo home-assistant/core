@@ -1,6 +1,6 @@
 """Tests for the Amber config flow."""
 
-from typing import Generator
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
