@@ -11,16 +11,17 @@ from .coordinator import YaleDataUpdateCoordinator
 class YaleEntity(CoordinatorEntity, Entity):
     """Base implementation for Yale device."""
 
+    coordinator: YaleDataUpdateCoordinator
+
     def __init__(self, coordinator: YaleDataUpdateCoordinator, data: dict) -> None:
         """Initialize an Yale device."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
-        self._attr_name = data["name"]
-        self._attr_unique_id = data["address"]
-        self._attr_device_info = DeviceInfo(
+        self._attr_name: str = data["name"]
+        self._attr_unique_id: str = data["address"]
+        self._attr_device_info: DeviceInfo = DeviceInfo(
             name=self._attr_name,
             manufacturer=MANUFACTURER,
             model=MODEL,
             identifiers={(DOMAIN, data["address"])},
-            via_device=(DOMAIN, self._coordinator.entry.data[CONF_USERNAME]),
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_USERNAME]),
         )

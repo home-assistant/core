@@ -34,11 +34,6 @@ class YaleBinarySensor(YaleEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        for contact in self.coordinator.data["door_windows"]:
-            return bool(
-                contact["address"] == self._attr_unique_id
-                and contact["_state"] == "open"
-            )
-        return None
+        return bool(self.coordinator.sensor_map[self._attr_unique_id] == "open")

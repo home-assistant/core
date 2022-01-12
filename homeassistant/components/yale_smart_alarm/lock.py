@@ -7,12 +7,10 @@ from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_USERNAME
+from homeassistant.const import ATTR_CODE, CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_LOCK_CODE_DIGITS,
@@ -20,10 +18,9 @@ from .const import (
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
-    MANUFACTURER,
-    MODEL,
 )
 from .coordinator import YaleDataUpdateCoordinator
+from .entity import YaleEntity
 
 
 async def async_setup_entry(
@@ -42,32 +39,22 @@ async def async_setup_entry(
     )
 
 
-class YaleDoorlock(CoordinatorEntity, LockEntity):
+class YaleDoorlock(YaleEntity, LockEntity):
     """Representation of a Yale doorlock."""
 
     def __init__(
         self, coordinator: YaleDataUpdateCoordinator, data: dict, code_format: int
     ) -> None:
         """Initialize the Yale Lock Device."""
-        super().__init__(coordinator)
-        self._coordinator = coordinator
-        self._attr_name = data["name"]
-        self._attr_unique_id = data["address"]
-        self._attr_device_info = DeviceInfo(
-            name=self._attr_name,
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            identifiers={(DOMAIN, data["address"])},
-            via_device=(DOMAIN, self._coordinator.entry.data[CONF_USERNAME]),
-        )
+        super().__init__(coordinator, data)
         self._attr_code_format = f"^\\d{code_format}$"
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
         if TYPE_CHECKING:
-            assert self._coordinator.yale, "Connection to API is missing"
+            assert self.coordinator.yale, "Connection to API is missing"
 
-        code = kwargs.get(ATTR_CODE, self._coordinator.entry.options.get(CONF_CODE))
+        code = kwargs.get(ATTR_CODE, self.coordinator.entry.options.get(CONF_CODE))
 
         if not code:
             raise HomeAssistantError(
@@ -76,10 +63,10 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
         try:
             get_lock = await self.hass.async_add_executor_job(
-                self._coordinator.yale.lock_api.get, self._attr_name
+                self.coordinator.yale.lock_api.get, self._attr_name
             )
             lock_state = await self.hass.async_add_executor_job(
-                self._coordinator.yale.lock_api.open_lock,
+                self.coordinator.yale.lock_api.open_lock,
                 get_lock,
                 code,
             )
@@ -106,14 +93,14 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
     async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
         if TYPE_CHECKING:
-            assert self._coordinator.yale, "Connection to API is missing"
+            assert self.coordinator.yale, "Connection to API is missing"
 
         try:
             get_lock = await self.hass.async_add_executor_job(
-                self._coordinator.yale.lock_api.get, self._attr_name
+                self.coordinator.yale.lock_api.get, self._attr_name
             )
             lock_state = await self.hass.async_add_executor_job(
-                self._coordinator.yale.lock_api.close_lock,
+                self.coordinator.yale.lock_api.close_lock,
                 get_lock,
             )
         except (
