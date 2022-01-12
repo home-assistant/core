@@ -1,7 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Union, cast
+from typing import Any, Union
 
 import greeneye
 
@@ -189,7 +189,7 @@ class CurrentSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(float, self._sensor.watts)
+        return self._sensor.watts
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -292,7 +292,7 @@ class TemperatureSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(float, self._sensor.temperature)
+        return self._sensor.temperature
 
 
 class VoltageSensor(GEMSensor):
@@ -316,4 +316,4 @@ class VoltageSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(float, self._sensor.voltage)
+        return self._sensor.voltage
