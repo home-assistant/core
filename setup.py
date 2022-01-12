@@ -55,7 +55,7 @@ REQUIRES = [
     "typing-extensions>=3.10.0.2,<5.0",
     "voluptuous==0.12.2",
     "voluptuous-serialize==2.5.0",
-    "yarl==1.6.3",
+    "yarl==1.7.2",
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))

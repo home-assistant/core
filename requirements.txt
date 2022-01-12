@@ -23,4 +23,4 @@ requests==2.27.1
 typing-extensions>=3.10.0.2,<5.0
 voluptuous==0.12.2
 voluptuous-serialize==2.5.0
-yarl==1.6.3
+yarl==1.7.2
