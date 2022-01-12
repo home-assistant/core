@@ -1,12 +1,19 @@
 """The tests for WebOS TV device triggers."""
+import pytest
+
 from homeassistant.components import automation
-from homeassistant.components.webostv.const import DOMAIN
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
+from homeassistant.components.webostv import DOMAIN, device_trigger
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
 from . import ENTITY_ID, setup_webostv
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(hass, client):
@@ -119,3 +126,49 @@ async def test_get_triggers_for_invalid_device_id(hass, caplog):
         "Invalid config for [automation]: Device invalid_device_id is not a valid webostv device"
         in caplog.text
     )
+
+
+async def test_failure_scenarios(hass, client):
+    """Test failure scenarios."""
+    await setup_webostv(hass, "fake-uuid")
+
+    # Test wrong trigger platform type
+    with pytest.raises(HomeAssistantError):
+        await device_trigger.async_attach_trigger(
+            hass, {"type": "wrong.type", "device_id": "invalid_device_id"}, None, {}
+        )
+
+    # Test invalid device id
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "type": "webostv.turn_on",
+                "device_id": "invalid_device_id",
+            },
+        )
+
+    entry = MockConfigEntry(domain="fake", state=ConfigEntryState.LOADED, data={})
+    entry.add_to_hass(hass)
+    device_reg = get_dev_reg(hass)
+
+    device = device_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("fake", "fake")}
+    )
+
+    config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": device.id,
+        "type": "webostv.turn_on",
+    }
+
+    # Test that device id from non webostv domain raises exception
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(hass, config)
+
+    # Test no exception if device is not loaded
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert await device_trigger.async_validate_trigger_config(hass, config) == config

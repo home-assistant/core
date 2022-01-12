@@ -19,7 +19,8 @@ from homeassistant.helpers.typing import ConfigType
 from . import trigger
 from .const import DOMAIN
 from .helpers import (
-    async_get_client_wrapper_by_device_id,
+    async_get_client_wrapper_by_device_entry,
+    async_get_device_entry_by_device_id,
     async_is_device_config_entry_not_loaded,
 )
 from .triggers.turn_on import PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE
@@ -47,7 +48,8 @@ async def async_validate_trigger_config(
     if config[CONF_TYPE] == TURN_ON_PLATFORM_TYPE:
         device_id = config[CONF_DEVICE_ID]
         try:
-            async_get_client_wrapper_by_device_id(hass, device_id)
+            device = async_get_device_entry_by_device_id(hass, device_id)
+            async_get_client_wrapper_by_device_entry(hass, device)
         except ValueError as err:
             raise InvalidDeviceAutomationConfig(err) from err
 

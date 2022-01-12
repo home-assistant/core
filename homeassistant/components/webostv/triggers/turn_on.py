@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from ..const import DOMAIN
 from ..helpers import (
-    async_get_client_wrapper_by_device_id,
+    async_get_client_wrapper_by_device_entry,
     async_get_device_entry_by_device_id,
     async_get_device_id_from_entity_id,
 )
@@ -72,14 +72,11 @@ async def async_attach_trigger(
             "description": f"webostv turn on trigger for {device_name}",
         }
 
-        if (
-            wrapper := async_get_client_wrapper_by_device_id(hass, device_id, device)
-        ) is None:
-            raise ValueError(
-                f"Device {device_id} is not from an existing {DOMAIN} config entry"
-            )
+        client_wrapper = async_get_client_wrapper_by_device_entry(hass, device)
 
-        unsubs.append(wrapper.turn_on.async_attach(action, {"trigger": variables}))
+        unsubs.append(
+            client_wrapper.turn_on.async_attach(action, {"trigger": variables})
+        )
 
     @callback
     def async_remove() -> None:

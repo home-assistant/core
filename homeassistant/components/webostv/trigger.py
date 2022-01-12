@@ -1,7 +1,6 @@
 """webOS Smart TV trigger dispatcher."""
 from __future__ import annotations
 
-from types import ModuleType
 from typing import cast
 
 from homeassistant.components.automation import (
@@ -12,21 +11,21 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .triggers import turn_on
+from .triggers import TriggersPlatformModule, turn_on
 
 TRIGGERS = {
     "turn_on": turn_on,
 }
 
 
-def _get_trigger_platform(config: ConfigType) -> ModuleType:
+def _get_trigger_platform(config: ConfigType) -> TriggersPlatformModule:
     """Return trigger platform."""
     platform_split = config[CONF_PLATFORM].split(".", maxsplit=1)
     if len(platform_split) < 2 or platform_split[1] not in TRIGGERS:
         raise ValueError(
             f"Unknown webOS Smart TV trigger platform {config[CONF_PLATFORM]}"
         )
-    return TRIGGERS[platform_split[1]]
+    return cast(TriggersPlatformModule, TRIGGERS[platform_split[1]])
 
 
 async def async_validate_trigger_config(
@@ -34,13 +33,7 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate config."""
     platform = _get_trigger_platform(config)
-    if hasattr(platform, "async_validate_trigger_config"):
-        return cast(
-            ConfigType,
-            await getattr(platform, "async_validate_trigger_config")(hass, config),
-        )
-    assert hasattr(platform, "TRIGGER_SCHEMA")
-    return cast(ConfigType, getattr(platform, "TRIGGER_SCHEMA")(config))
+    return platform.TRIGGER_SCHEMA(config)
 
 
 async def async_attach_trigger(
