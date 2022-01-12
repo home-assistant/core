@@ -106,7 +106,7 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
         name: str,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize a Launch Library base entity."""
+        """Initialize a Launch Library entity."""
         super().__init__(coordinator)
         self._attr_name = name
         self._attr_unique_id = f"{entry_id}_{description.key}"
