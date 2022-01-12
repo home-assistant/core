@@ -48,7 +48,7 @@ INFRARED_MODES = [
 
 CHIME_TYPES = [
     {"id": ChimeType.NONE.value, "name": "None"},
-    {"id": ChimeType.MECHINCAL.value, "name": "Mechanical"},
+    {"id": ChimeType.MECHANICAL.value, "name": "Mechanical"},
     {"id": ChimeType.DIGITAL.value, "name": "Digital"},
 ]
 
