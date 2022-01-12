@@ -30,8 +30,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
-import homeassistant.util.color as color_util
 from homeassistant.util.color import (
+    color_hsv_to_RGB,
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
 )
@@ -144,12 +144,13 @@ class Light(HomeAccessory):
                 service = SERVICE_TURN_OFF
             events.append(f"Set state to {char_values[CHAR_ON]}")
 
+        brightness_pct = None
         if CHAR_BRIGHTNESS in char_values:
             if char_values[CHAR_BRIGHTNESS] == 0:
                 events[-1] = "Set state to 0"
                 service = SERVICE_TURN_OFF
             else:
-                params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
+                brightness_pct = char_values[CHAR_BRIGHTNESS]
             events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
 
         if service == SERVICE_TURN_OFF:
@@ -162,7 +163,17 @@ class Light(HomeAccessory):
             params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
             events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
-        elif CHAR_HUE in char_values or CHAR_SATURATION in char_values:
+        elif (
+            CHAR_HUE in char_values
+            or CHAR_SATURATION in char_values
+            # If we are adjusting brightness we need to send the full RGBW/RGBWW values
+            # since HomeKit does not support RGBW/RGBWW
+            or (
+                brightness_pct
+                and COLOR_MODE_RGBWW in self.color_modes
+                or COLOR_MODE_RGBW in self.color_modes
+            )
+        ):
             hue_sat = (
                 char_values.get(CHAR_HUE, self.char_hue.value),
                 char_values.get(CHAR_SATURATION, self.char_saturation.value),
@@ -171,14 +182,16 @@ class Light(HomeAccessory):
             events.append(f"set color at {hue_sat}")
             # HomeKit doesn't support RGBW/RGBWW so we need to remove any white values
             if COLOR_MODE_RGBWW in self.color_modes:
-                params[ATTR_RGBWW_COLOR] = (*color_util.color_hs_to_RGB(*hue_sat), 0, 0)
-            if (
-                COLOR_MODE_RGBW in self.color_modes
-                or COLOR_MODE_RGBWW in self.color_modes
-            ):
-                params[ATTR_RGBW_COLOR] = (*color_util.color_hs_to_RGB(*hue_sat), 0)
+                val = brightness_pct or self.char_brightness.value
+                params[ATTR_RGBWW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0, 0)
+            elif COLOR_MODE_RGBW in self.color_modes:
+                val = brightness_pct or self.char_brightness.value
+                params[ATTR_RGBW_COLOR] = (*color_hsv_to_RGB(*hue_sat, val), 0)
             else:
                 params[ATTR_HS_COLOR] = hue_sat
+
+        if ATTR_RGBWW_COLOR not in params and ATTR_RGBW_COLOR not in params:
+            params[ATTR_BRIGHTNESS_PCT] = brightness_pct
 
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
