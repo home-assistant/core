@@ -447,7 +447,7 @@ class EntityRegistry:
                 self.async_update_entity(entity.entity_id, disabled_by=None)
             return
 
-        if device.disabled_by == dr.DeviceEntryDisabler.CONFIG_ENTRY:
+        if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
             # Handled by async_config_entry_disabled
             return
 
