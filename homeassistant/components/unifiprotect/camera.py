@@ -40,7 +40,9 @@ def get_camera_channels(
 
         is_default = True
         for channel in camera.channels:
-            if channel.is_rtsp_enabled:
+            if channel.is_package:
+                yield camera, channel, True
+            elif channel.is_rtsp_enabled:
                 yield camera, channel, is_default
                 is_default = False
 
@@ -60,6 +62,8 @@ async def async_setup_entry(
 
     entities = []
     for camera, channel, is_default in get_camera_channels(data.api):
+        # do not enable streaming for package camera
+        # 2 FPS causes a lot of buferring
         entities.append(
             ProtectCamera(
                 data,
@@ -67,11 +71,11 @@ async def async_setup_entry(
                 channel,
                 is_default,
                 True,
-                disable_stream,
+                disable_stream or channel.is_package,
             )
         )
 
-        if channel.is_rtsp_enabled:
+        if channel.is_rtsp_enabled and not channel.is_package:
             entities.append(
                 ProtectCamera(
                     data,
