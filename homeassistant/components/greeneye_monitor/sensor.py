@@ -240,7 +240,7 @@ class PulseCounter(GEMSensor):
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return cast(float, result)
+        return result
 
     @property
     def _seconds_per_time_unit(self) -> int:
