@@ -27,8 +27,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         "job_start": RepetierJobStartSensor,
     }
 
+    sensors_info: list[dict] = discovery_info["sensors"]
     entities = []
-    for info in discovery_info:
+    for info in sensors_info:
         printer_name = info["printer_name"]
         api = hass.data[REPETIER_API][printer_name]
         printer_id = info["printer_id"]
