@@ -15,6 +15,7 @@ SERVICE_SEARCH = "search"
 
 # Other
 LAUNCH_MEDIA_TYPES = (
+    "app",
     "movie",
     "episode",
     "season",
