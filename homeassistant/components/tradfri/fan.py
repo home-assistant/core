@@ -143,7 +143,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
             return
 
         if percentage is not None:
-            await self._api(self._device_control.set_mode(_from_fan_speed(percentage)))
+            await self.async_set_percentage(percentage)
             return
 
         preset_mode = preset_mode or ATTR_AUTO
