@@ -1,9 +1,9 @@
 """Support for Overkiz switches."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Awaitable
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIClass, UIWidget
