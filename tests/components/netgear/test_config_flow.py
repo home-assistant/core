@@ -6,7 +6,13 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.netgear.const import CONF_CONSIDER_HOME, DOMAIN, PORT_80
+from homeassistant.components.netgear.const import (
+    CONF_CONSIDER_HOME,
+    DOMAIN,
+    MODELS_PORT_5555,
+    PORT_5555,
+    PORT_80,
+)
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -179,6 +185,38 @@ async def test_ssdp(hass, service):
     assert result["data"].get(CONF_HOST) == HOST
     assert result["data"].get(CONF_PORT) == PORT_80
     assert result["data"].get(CONF_SSL) == SSL
+    assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+
+
+async def test_ssdp_port_5555(hass, service):
+    """Test ssdp step with port 5555."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URL,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: MODELS_PORT_5555[0],
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: PASSWORD}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+    assert result["title"] == TITLE
+    assert result["data"].get(CONF_HOST) == HOST
+    assert result["data"].get(CONF_PORT) == PORT_5555
+    assert result["data"].get(CONF_SSL) == True
     assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
