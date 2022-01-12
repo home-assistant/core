@@ -6,7 +6,7 @@ core: &core
   - homeassistant/helpers/*
   - homeassistant/package_constraints.txt
   - homeassistant/util/*
-  - pyproject.yaml
+  - pyproject.toml
   - requirements.txt
   - setup.cfg
 
