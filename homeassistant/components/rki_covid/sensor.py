@@ -153,6 +153,7 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
         self.updated = datetime.now()
         self._attr_native_unit_of_measurement = self._measurement_unit()
         self._attr_native_value = self._native_value()
+        self._attr_icon = {**SENSORS, **DISTRICT_SENSORS}[self.info_type]
 
     def _native_value(self):
         return getattr(self.coordinator.data[self.district], self.info_type)
@@ -164,11 +165,6 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
             self.coordinator.last_update_success
             and self.district in self.coordinator.data
         )
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return {**SENSORS, **DISTRICT_SENSORS}[self.info_type]
 
     def _measurement_unit(self) -> str:
         """Return unit of measurement."""
