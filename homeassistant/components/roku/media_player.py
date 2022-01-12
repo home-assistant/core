@@ -94,7 +94,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_LAUNCH,
         LAUNCH_SCHEMA,
-        "launch",
+        "async_launch",
     )
 
     platform.async_register_entity_service(
@@ -256,7 +256,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 
     @roku_exception_handler
-    async def launch(self, app_id: str, content_id: str, media_type: str) -> None:
+    async def async_launch(self, app_id: str, content_id: str, media_type: str) -> None:
         """Launch application with content deeplink."""
         params = {
             "contentID": content_id,
