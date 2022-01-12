@@ -433,21 +433,21 @@ class AmcrestCam(Camera):
 
     # Other Camera method overrides
 
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off camera."""
-        self._enable_video(False)
+        await self._enable_video(False)
 
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on camera."""
-        self._enable_video(True)
+        await self._enable_video(True)
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        self._enable_motion_detection(True)
+        await self._enable_motion_detection(True)
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._enable_motion_detection(False)
+        await self._enable_motion_detection(False)
 
     # Additional Amcrest Camera service methods
 
@@ -553,7 +553,7 @@ class AmcrestCam(Camera):
             self._enable_recording(False)
         await self._change_setting(enable, "video", "is_streaming")
         if self._control_light:
-            self._change_light()
+            await self._change_light()
 
     async def _get_recording(self) -> bool:
         return (await self._api.async_record_mode) == "Manual"
@@ -571,7 +571,7 @@ class AmcrestCam(Camera):
         # is_streaming and is_recording, we can't leave
         # video stream off if recording is being turned on.
         if not self.is_streaming and enable:
-            self._enable_video(True)
+            await self._enable_video(True)
         await self._change_setting(enable, "recording", "_is_recording")
 
     async def _get_motion_detection(self) -> bool:
@@ -597,18 +597,20 @@ class AmcrestCam(Camera):
         """Enable or disable audio stream."""
         await self._change_setting(enable, "audio", "_audio_enabled")
         if self._control_light:
-            self._change_light()
+            await self._change_light()
 
-    def _get_indicator_light(self) -> bool:
+    async def _get_indicator_light(self) -> bool:
         return (
             "true"
-            in self._api.command(
-                "configManager.cgi?action=getConfig&name=LightGlobal"
+            in (
+                await self._api.async_command(
+                    "configManager.cgi?action=getConfig&name=LightGlobal"
+                )
             ).content.decode()
         )
 
-    def _set_indicator_light(self, enable: bool) -> None:
-        self._api.command(
+    async def _set_indicator_light(self, enable: bool) -> None:
+        await self._api.async_command(
             f"configManager.cgi?action=setConfig&LightGlobal[0].Enable={str(enable).lower()}"
         )
 
@@ -630,10 +632,10 @@ class AmcrestCam(Camera):
             enable, "motion recording", "_motion_recording_enabled"
         )
 
-    def _goto_preset(self, preset: int) -> None:
+    async def _goto_preset(self, preset: int) -> None:
         """Move camera position and zoom to preset."""
         try:
-            self._api.go_to_preset(preset_point_number=preset)
+            await self._api.async_go_to_preset(preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error
@@ -649,10 +651,10 @@ class AmcrestCam(Camera):
         """Set camera color mode."""
         await self._change_setting(cbw, "color mode", "_color_bw")
 
-    def _start_tour(self, start: bool) -> None:
+    async def _start_tour(self, start: bool) -> None:
         """Start camera tour."""
         try:
-            self._api.tour(start=start)
+            await self._api.async_tour(start=start)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
