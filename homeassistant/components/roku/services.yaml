@@ -27,6 +27,7 @@ launch:
       selector:
         select:
           options:
+            - "qpp"
             - "movie"
             - "episode"
             - "season"
