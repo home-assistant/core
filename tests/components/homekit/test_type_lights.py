@@ -13,6 +13,7 @@ from homeassistant.components.homekit.type_lights import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
@@ -572,7 +573,7 @@ async def test_light_restore(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes, state_props, turn_on_props",
+    "supported_color_modes, state_props, turn_on_props, turn_on_props_with_brightness",
     [
         [
             [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBW],
@@ -581,8 +582,10 @@ async def test_light_restore(hass, hk_driver, events):
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
+                ATTR_COLOR_MODE: COLOR_MODE_RGBW,
             },
-            {ATTR_RGBW_COLOR: (63, 255, 143, 0)},
+            {ATTR_RGBW_COLOR: (31, 127, 71, 0)},
+            {ATTR_RGBW_COLOR: (15, 63, 35, 0)},
         ],
         [
             [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBWW],
@@ -591,13 +594,21 @@ async def test_light_restore(hass, hk_driver, events):
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
+                ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
             },
-            {ATTR_RGBWW_COLOR: (63, 255, 143, 0, 0)},
+            {ATTR_RGBWW_COLOR: (31, 127, 71, 0, 0)},
+            {ATTR_RGBWW_COLOR: (15, 63, 35, 0, 0)},
         ],
     ],
 )
 async def test_light_rgb_with_white(
-    hass, hk_driver, events, supported_color_modes, state_props, turn_on_props
+    hass,
+    hk_driver,
+    events,
+    supported_color_modes,
+    state_props,
+    turn_on_props,
+    turn_on_props_with_brightness,
 ):
     """Test lights with RGBW/RGBWW."""
     entity_id = "light.demo"
@@ -618,12 +629,14 @@ async def test_light_rgb_with_white(
     await hass.async_block_till_done()
     assert acc.char_hue.value == 23
     assert acc.char_saturation.value == 100
+    assert acc.char_brightness.value == 50
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
 
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
+    char_brightness_iid = acc.char_brightness.to_HAP()[HAP_REPR_IID]
 
     hk_driver.set_characteristics(
         {
@@ -644,11 +657,157 @@ async def test_light_rgb_with_white(
     )
     await _wait_for_light_coalesce(hass)
     assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[-1].data[ATTR_ENTITY_ID] == entity_id
     for k, v in turn_on_props.items():
-        assert call_turn_on[0].data[k] == v
+        assert call_turn_on[-1].data[k] == v
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
+    assert acc.char_brightness.value == 50
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_hue_iid,
+                    HAP_REPR_VALUE: 145,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_saturation_iid,
+                    HAP_REPR_VALUE: 75,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_brightness_iid,
+                    HAP_REPR_VALUE: 25,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+    assert call_turn_on
+    assert call_turn_on[-1].data[ATTR_ENTITY_ID] == entity_id
+    for k, v in turn_on_props_with_brightness.items():
+        assert call_turn_on[-1].data[k] == v
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == "brightness at 25%, set color at (145, 75)"
+    assert acc.char_brightness.value == 25
+
+
+@pytest.mark.parametrize(
+    "supported_color_modes, state_props, turn_on_props, turn_on_props_with_brightness",
+    [
+        [
+            [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBW],
+            {
+                ATTR_RGBW_COLOR: (128, 50, 0, 255),
+                ATTR_RGB_COLOR: (128, 50, 0),
+                ATTR_HS_COLOR: (23.438, 100.0),
+                ATTR_BRIGHTNESS: 255,
+                ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+            },
+            {ATTR_RGBW_COLOR: (31, 127, 71, 0)},
+            {ATTR_COLOR_TEMP: 2700},
+        ],
+        [
+            [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBWW],
+            {
+                ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
+                ATTR_RGB_COLOR: (128, 50, 0),
+                ATTR_HS_COLOR: (23.438, 100.0),
+                ATTR_BRIGHTNESS: 255,
+                ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
+            },
+            {ATTR_RGBWW_COLOR: (31, 127, 71, 0, 0)},
+            {ATTR_COLOR_TEMP: 2700},
+        ],
+    ],
+)
+async def test_light_rgb_with_white_switch_to_temp(
+    hass,
+    hk_driver,
+    events,
+    supported_color_modes,
+    state_props,
+    turn_on_props,
+    turn_on_props_with_brightness,
+):
+    """Test lights with RGBW/RGBWW that preserves brightness when switching to color temp."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, **state_props},
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    assert acc.char_hue.value == 23
+    assert acc.char_saturation.value == 100
+
+    await acc.run()
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 23
+    assert acc.char_saturation.value == 100
+    assert acc.char_brightness.value == 50
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+
+    char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
+    char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_hue_iid,
+                    HAP_REPR_VALUE: 145,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_saturation_iid,
+                    HAP_REPR_VALUE: 75,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+    assert call_turn_on
+    assert call_turn_on[-1].data[ATTR_ENTITY_ID] == entity_id
+    for k, v in turn_on_props.items():
+        assert call_turn_on[-1].data[k] == v
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
+    assert acc.char_brightness.value == 50
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 2700,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+    assert call_turn_on
+    assert call_turn_on[-1].data[ATTR_ENTITY_ID] == entity_id
+    for k, v in turn_on_props_with_brightness.items():
+        assert call_turn_on[-1].data[k] == v
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == "color temperature at 2700"
+    assert acc.char_brightness.value == 50
 
 
 async def test_light_set_brightness_and_color(hass, hk_driver, events):
