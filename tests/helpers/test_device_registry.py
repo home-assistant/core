@@ -817,7 +817,6 @@ async def test_loading_saving_data(hass, registry, area_registry):
     new_via = registry2.async_get_device({("hue", "0123")})
     new_light = registry2.async_get_device({("hue", "456")})
     new_light4 = registry2.async_get_device({("hue", "abc")})
-    new_light4 = registry2.async_get_device({("hue", "abc")})
 
     assert orig_via == new_via
     assert orig_light == new_light
