@@ -1,7 +1,8 @@
 """Make the component configurable via the UI."""
 
+from __future__ import annotations
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from rki_covid_parser.parser import RkiCovidParser
 import voluptuous as vol
@@ -20,9 +21,9 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _options: Optional[Dict[str, Any]] = None
+    _options: dict[str, Any] | None
 
-    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None):
         """Invoke when a user initiates a flow via the user interface."""
         _LOGGER.debug(
             f"User triggered configuration flow via UI. user_input: {user_input}"
@@ -30,7 +31,7 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         parser = RkiCovidParser(async_get_clientsession(self.hass))
 
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         if self._options is None:
             self._options = {}
