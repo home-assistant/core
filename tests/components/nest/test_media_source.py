@@ -1279,7 +1279,7 @@ async def test_camera_event_media_eviction(hass, auth, hass_client):
 async def test_camera_image_resize(hass, auth, hass_client):
     """Test scaling a thumbnail for an event image."""
     event_timestamp = dt_util.now()
-    await async_setup_devices(
+    subscriber = await async_setup_devices(
         hass,
         auth,
         CAMERA_DEVICE_TYPE,
@@ -1299,28 +1299,44 @@ async def test_camera_image_resize(hass, auth, hass_client):
     assert device
     assert device.name == DEVICE_NAME
 
-    browse = await media_source.async_browse_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{EVENT_SESSION_ID}"
-    )
-    assert browse.domain == DOMAIN
-    assert browse.identifier == f"{device.id}/{EVENT_SESSION_ID}"
-    assert "Person" in browse.title
-    assert not browse.can_expand
-    assert not browse.children
-    assert (
-        browse.thumbnail
-        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}/thumbnail"
-    )
+    # Capture any events published
+    received_events = async_capture_events(hass, NEST_EVENT)
 
     auth.responses = [
         aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
         aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
     ]
+    event_timestamp = dt_util.now()
+    await subscriber.async_receive_event(
+        create_event(
+            EVENT_SESSION_ID,
+            EVENT_ID,
+            PERSON_EVENT,
+            timestamp=event_timestamp,
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert len(received_events) == 1
+    received_event = received_events[0]
+    assert received_event.data["device_id"] == device.id
+    assert received_event.data["type"] == "camera_person"
+    event_identifier = received_event.data["nest_event_id"]
+
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}"
+    )
+    assert browse.domain == DOMAIN
+    assert "Person" in browse.title
+    assert not browse.can_expand
+    assert not browse.children
+    assert (
+        browse.thumbnail
+        == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
+    )
 
     client = await hass_client()
-    response = await client.get(
-        f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}/thumbnail"
-    )
+    response = await client.get(browse.thumbnail)
     assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
@@ -1333,5 +1349,5 @@ async def test_camera_image_resize(hass, auth, hass_client):
     assert browse.identifier == device.id
     assert (
         browse.thumbnail
-        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}/thumbnail"
+        == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
     )
