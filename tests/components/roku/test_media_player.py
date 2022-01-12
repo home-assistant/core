@@ -40,8 +40,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.roku.const import (
     ATTR_CONTENT_ID,
-    ATTR_MEDIA_TYPE,
     ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
     DOMAIN,
     SERVICE_LAUNCH,
     SERVICE_SEARCH,
