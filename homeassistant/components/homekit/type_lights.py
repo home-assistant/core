@@ -7,6 +7,7 @@ from pyhap.const import CATEGORY_LIGHTBULB
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
@@ -53,6 +54,9 @@ _LOGGER = logging.getLogger(__name__)
 RGB_COLOR = "rgb_color"
 
 CHANGE_COALESCE_TIME_WINDOW = 0.01
+
+
+COLOR_MODES_WITH_WHITES = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
 
 @TYPES.register("Light")
@@ -170,11 +174,8 @@ class Light(HomeAccessory):
             or CHAR_SATURATION in char_values
             # If we are adjusting brightness we need to send the full RGBW/RGBWW values
             # since HomeKit does not support RGBW/RGBWW
-            or (
-                brightness_pct
-                and COLOR_MODE_RGBWW in self.color_modes
-                or COLOR_MODE_RGBW in self.color_modes
-            )
+            or brightness_pct
+            and COLOR_MODES_WITH_WHITES.intersection(self.color_modes)
         ):
             hue_sat = (
                 char_values.get(CHAR_HUE, self.char_hue.value),
@@ -207,11 +208,16 @@ class Light(HomeAccessory):
         # Handle State
         state = new_state.state
         attributes = new_state.attributes
+        color_mode = attributes.get(ATTR_COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
 
         # Handle Brightness
         if self.brightness_supported:
-            if rgb_color := attributes.get(ATTR_RGB_COLOR):
+            if (
+                color_mode
+                and COLOR_MODES_WITH_WHITES.intersection({color_mode})
+                and (rgb_color := attributes.get(ATTR_RGB_COLOR))
+            ):
                 # HomeKit doesn't support RGBW/RGBWW so we need to
                 # give it the color brightness only
                 brightness = max(rgb_color)
