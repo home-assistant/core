@@ -763,4 +763,3 @@ async def test_integration_services(
             "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
             "movie",
         )
-
