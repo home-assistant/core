@@ -41,8 +41,13 @@ def get_camera_channels(
         is_default = True
         for channel in camera.channels:
             if channel.is_rtsp_enabled:
-                yield camera, channel, is_default
-                is_default = False
+                # G4 Doorbell Pro as a 4th camera channel for package camera,
+                # it is _always_ named "Package Camera"
+                if channel.name == "Package Camera":
+                    yield camera, channel, True
+                else:
+                    yield camera, channel, is_default
+                    is_default = False
 
         # no RTSP enabled use first channel with no stream
         if is_default:
@@ -60,6 +65,8 @@ async def async_setup_entry(
 
     entities = []
     for camera, channel, is_default in get_camera_channels(data.api):
+        # do not enable streaming for package camera
+        # 2 FPS causes a lot of buferring
         entities.append(
             ProtectCamera(
                 data,
@@ -67,11 +74,11 @@ async def async_setup_entry(
                 channel,
                 is_default,
                 True,
-                disable_stream,
+                disable_stream or channel.fps <= 2,
             )
         )
 
-        if channel.is_rtsp_enabled:
+        if channel.is_rtsp_enabled and channel.fps > 2:
             entities.append(
                 ProtectCamera(
                     data,
