@@ -258,13 +258,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def launch(self, app_id: str, content_id: str, media_type: str):
         """Launch application with content deeplink."""
-        params = {}
-
-        if content_id is not None:
-            params["contentID"] = content_id
-
-        if media_type is not None:
-            params["MediaType"] = media_type
+        params = {
+            "contentID": content_id,
+            "MediaType": media_type,
+        }
 
         await self.coordinator.roku.launch(app_id, params)
 
