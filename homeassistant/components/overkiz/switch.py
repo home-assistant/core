@@ -119,7 +119,7 @@ async def async_setup_entry(
 
 
 class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
-    """Representation an Overkiz Switch."""
+    """Representation of an Overkiz Switch."""
 
     entity_description: OverkizSwitchDescription
 
