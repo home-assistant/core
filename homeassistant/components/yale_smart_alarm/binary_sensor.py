@@ -33,13 +33,14 @@ async def async_setup_entry(
 class YaleBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a Yale binary sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.DOOR
+
     def __init__(self, coordinator: YaleDataUpdateCoordinator, data: dict) -> None:
         """Initialize the Yale Lock Device."""
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._attr_name = data["name"]
         self._attr_unique_id = data["address"]
-        self._attr_device_class = BinarySensorDeviceClass.DOOR
         self._attr_device_info = DeviceInfo(
             name=self._attr_name,
             manufacturer=MANUFACTURER,
