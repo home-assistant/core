@@ -43,7 +43,7 @@ from homeassistant.helpers.network import is_internal_request
 
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
-from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .const import ATTR_CONTENT_ID, ATTR_KEYWORD, ATTR_MEDIA_TYPE, DOMAIN, SERVICE_SEARCH
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
@@ -62,6 +62,11 @@ SUPPORT_ROKU = (
     | SUPPORT_TURN_OFF
     | SUPPORT_BROWSE_MEDIA
 )
+
+HA_ATTRS_TO_LAUNCH_PARAMS = {
+    ATTR_CONTENT_ID: "ContentID",
+    ATTR_MEDIA_TYPE: "MediaType",
+}
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
@@ -362,7 +367,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return
 
         if media_type == MEDIA_TYPE_APP:
-            await self.coordinator.roku.launch(media_id)
+            params = {
+                HA_ATTRS_TO_LAUNCH_PARAMS[kwarg]: value
+                for (kwarg, value) in kwargs
+                if kwarg in HA_ATTRS_TO_LAUNCH_PARAMS
+            }
+
+            await self.coordinator.roku.launch(media_id, params)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
 
