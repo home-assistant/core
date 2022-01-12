@@ -1,6 +1,7 @@
 """Typing Helpers for Home Assistant."""
+from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Optional, Union
 
 import homeassistant.core
 
