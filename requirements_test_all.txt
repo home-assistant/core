@@ -204,7 +204,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.2
 
 # homeassistant.components.unifi
-aiounifi==28
+aiounifi==29
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -300,7 +300,7 @@ broadlink==0.18.0
 brother==1.1.0
 
 # homeassistant.components.brunt
-brunt==1.1.0
+brunt==1.1.1
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -1240,7 +1240,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==1.5.3
+pyunifiprotect==1.6.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0
@@ -1288,7 +1288,7 @@ rflink==0.0.58
 ring_doorbell==0.7.2
 
 # homeassistant.components.roku
-rokuecp==0.9.0
+rokuecp==0.10.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5

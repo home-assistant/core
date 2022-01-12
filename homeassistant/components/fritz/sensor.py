@@ -7,13 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Literal
 
-from fritzconnection.core.exceptions import (
-    FritzActionError,
-    FritzActionFailedError,
-    FritzConnectionException,
-    FritzInternalError,
-    FritzServiceError,
-)
+from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import (
@@ -36,6 +30,7 @@ from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
+from .wrapper import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,22 +277,12 @@ async def async_setup_entry(
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_device: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = AvmWrapper(avm_device)
 
     dsl: bool = False
-    try:
-        dslinterface = await hass.async_add_executor_job(
-            avm_device.connection.call_action,
-            "WANDSLInterfaceConfig:1",
-            "GetInfo",
-        )
+    dslinterface = await avm_wrapper.get_wan_dsl_interface_config()
+    if dslinterface:
         dsl = dslinterface["NewEnable"]
-    except (
-        FritzInternalError,
-        FritzActionError,
-        FritzActionFailedError,
-        FritzServiceError,
-    ):
-        pass
 
     entities = [
         FritzBoxSensor(avm_device, entry.title, description)

@@ -259,16 +259,37 @@ async def test_basic_setup(
     camera_no_channels.channels[1].is_rtsp_enabled = False
     camera_no_channels.channels[2].is_rtsp_enabled = False
 
+    camera_package = mock_camera.copy(deep=True)
+    camera_package._api = mock_entry.api
+    camera_package.channels[0]._api = mock_entry.api
+    camera_package.channels[1]._api = mock_entry.api
+    camera_package.channels[2]._api = mock_entry.api
+    camera_package.name = "Test Camera 5"
+    camera_package.id = "test_package"
+    camera_package.channels[0].is_rtsp_enabled = True
+    camera_package.channels[0].name = "High"
+    camera_package.channels[0].rtsp_alias = "test_high_alias"
+    camera_package.channels[1].is_rtsp_enabled = False
+    camera_package.channels[2].is_rtsp_enabled = False
+    package_channel = camera_package.channels[0].copy(deep=True)
+    package_channel.is_rtsp_enabled = False
+    package_channel.name = "Package Camera"
+    package_channel.id = 3
+    package_channel.fps = 2
+    package_channel.rtsp_alias = "test_package_alias"
+    camera_package.channels.append(package_channel)
+
     mock_entry.api.bootstrap.cameras = {
         camera_high_only.id: camera_high_only,
         camera_medium_only.id: camera_medium_only,
         camera_all_channels.id: camera_all_channels,
         camera_no_channels.id: camera_no_channels,
+        camera_package.id: camera_package,
     }
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.CAMERA, 11, 4)
+    assert_entity_counts(hass, Platform.CAMERA, 14, 6)
 
     # test camera 1
     entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
@@ -314,6 +335,19 @@ async def test_basic_setup(
     entity_id = validate_default_camera_entity(hass, camera_no_channels, 0)
     await validate_no_stream_camera_state(
         hass, camera_no_channels, 0, entity_id, features=0
+    )
+
+    # test camera 5
+    entity_id = validate_default_camera_entity(hass, camera_package, 0)
+    await validate_rtsps_camera_state(hass, camera_package, 0, entity_id)
+
+    entity_id = validate_rtsp_camera_entity(hass, camera_package, 0)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsp_camera_state(hass, camera_package, 0, entity_id)
+
+    entity_id = validate_default_camera_entity(hass, camera_package, 3)
+    await validate_no_stream_camera_state(
+        hass, camera_package, 3, entity_id, features=0
     )
 
 

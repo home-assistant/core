@@ -54,7 +54,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ANDROID_DEV,
@@ -171,7 +171,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info=None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Android TV / Fire TV platform."""
 
