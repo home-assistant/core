@@ -217,7 +217,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
     assert entry.hw_version == "hw_version"
-    assert entry.entry_type == device_registry.DeviceEntryType.SERVICE
+    assert entry.entry_type is device_registry.DeviceEntryType.SERVICE
     assert entry.disabled_by == device_registry.DeviceEntryDisabler.USER
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)

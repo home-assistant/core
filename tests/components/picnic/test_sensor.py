@@ -434,7 +434,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
         assert picnic_service.name == "Picnic: Commonstreet 123a"
-        assert picnic_service.entry_type == DeviceEntryType.SERVICE
+        assert picnic_service.entry_type is DeviceEntryType.SERVICE
 
     async def test_auth_token_is_saved_on_update(self):
         """Test that auth-token changes in the session object are reflected by the config entry."""
