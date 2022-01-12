@@ -13,3 +13,15 @@ DEFAULT_PORT = 8060
 # Services
 SERVICE_LAUNCH = "launch"
 SERVICE_SEARCH = "search"
+
+# Other
+LAUNCH_MEDIA_TYPES = (
+    "movie",
+    "episode",
+    "season",
+    "series",
+    "shortFormVideo",
+    "special",
+    "live",
+)
+
