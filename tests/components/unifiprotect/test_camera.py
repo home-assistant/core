@@ -272,6 +272,7 @@ async def test_basic_setup(
     camera_package.channels[1].is_rtsp_enabled = False
     camera_package.channels[2].is_rtsp_enabled = False
     package_channel = camera_package.channels[0].copy(deep=True)
+    package_channel.is_rtsp_enabled = False
     package_channel.name = "Package Camera"
     package_channel.id = 3
     package_channel.fps = 2

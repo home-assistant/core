@@ -40,14 +40,13 @@ def get_camera_channels(
 
         is_default = True
         for channel in camera.channels:
-            if channel.is_rtsp_enabled:
-                # G4 Doorbell Pro as a 4th camera channel for package camera,
-                # it is _always_ named "Package Camera"
-                if channel.name == "Package Camera":
-                    yield camera, channel, True
-                else:
-                    yield camera, channel, is_default
-                    is_default = False
+            # G4 Doorbell Pro as a 4th camera channel for package camera,
+            # it is _always_ named "Package Camera"
+            if channel.name == "Package Camera":
+                yield camera, channel, True
+            elif channel.is_rtsp_enabled:
+                yield camera, channel, is_default
+                is_default = False
 
         # no RTSP enabled use first channel with no stream
         if is_default:
