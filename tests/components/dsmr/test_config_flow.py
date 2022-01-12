@@ -154,12 +154,14 @@ async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": port.device, "dsmr_version": "5L"}
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "5L", "is_rfxtrx": False},
         )
 
     entry_data = {
         "port": port.device,
         "dsmr_version": "5L",
+        "is_rfxtrx": False,
         "serial_id": "12345678",
         "serial_id_gas": "123456789",
     }
@@ -193,12 +195,14 @@ async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": port.device, "dsmr_version": "Q3D"}
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "Q3D", "is_rfxtrx": False},
         )
 
     entry_data = {
         "port": port.device,
         "dsmr_version": "Q3D",
+        "is_rfxtrx": False,
         "serial_id": "12345678",
         "serial_id_gas": None,
     }
