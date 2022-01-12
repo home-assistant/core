@@ -414,6 +414,7 @@ async def test_websocket_status(
             "exclude_entity_globs": [],
             "exclude_entities": [],
         },
+        "alexa_registered": False,
         "google_entities": {
             "include_domains": ["light"],
             "include_entity_globs": [],

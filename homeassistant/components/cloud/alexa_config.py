@@ -103,6 +103,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def async_initialize(self):
         """Initialize the Alexa config."""
+        await super().async_initialize()
 
         async def hass_started(hass):
             if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
