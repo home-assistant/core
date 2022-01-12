@@ -1,7 +1,7 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Mapping
 
 from aiopvpc import DEFAULT_POWER_KW, TARIFFS, PVPCData
 import voluptuous as vol
