@@ -1,10 +1,12 @@
 """Mixin class for handling harmony callback subscriptions."""
-from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
-from typing import Any, NamedTuple, Optional
+
+# pylint: disable-next=deprecated-typing-alias
+# Issue with Python 3.9.0 and 3.9.1 with collections.abc.Callable
+# https://bugs.python.org/issue42965
+from typing import Any, Callable, NamedTuple, Optional
 
 from homeassistant.core import callback
 
