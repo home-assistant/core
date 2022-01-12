@@ -18,7 +18,7 @@ from .const import DOMAIN, LOGGER
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):
     """Class to manage the polling of the fireplace API."""
 
-    def __init__(self, hass: HomeAssistant, api: IntellifireAsync, serial: str) -> None:
+    def __init__(self, hass: HomeAssistant, api: IntellifireAsync) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
@@ -37,6 +37,10 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             except Exception as exception:
                 raise UpdateFailed from exception
         return self._api.data
+
+    @property
+    def serial(self) -> str:
+        return self.api.data.serial
 
     @property
     def api(self):
