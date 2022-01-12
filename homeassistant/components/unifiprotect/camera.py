@@ -40,9 +40,7 @@ def get_camera_channels(
 
         is_default = True
         for channel in camera.channels:
-            # G4 Doorbell Pro as a 4th camera channel for package camera,
-            # it is _always_ named "Package Camera"
-            if channel.name == "Package Camera":
+            if channel.is_package:
                 yield camera, channel, True
             elif channel.is_rtsp_enabled:
                 yield camera, channel, is_default
@@ -73,11 +71,11 @@ async def async_setup_entry(
                 channel,
                 is_default,
                 True,
-                disable_stream or channel.fps <= 2,
+                disable_stream or channel.is_package,
             )
         )
 
-        if channel.is_rtsp_enabled and channel.fps > 2:
+        if channel.is_rtsp_enabled and not channel.is_package:
             entities.append(
                 ProtectCamera(
                     data,
