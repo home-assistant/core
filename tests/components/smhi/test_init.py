@@ -77,7 +77,7 @@ async def test_migrate_entities(
     ent_reg = er.async_get(hass)
 
     weather_home = ent_reg.async_get("weather.smhi_test")
-    assert weather_home.unique_id == "12345, 59.32624, 17.84197"
+    assert weather_home.unique_id == "12345"
 
 
 async def test_migrate_entities_completed(
@@ -94,7 +94,7 @@ async def test_migrate_entities_completed(
         {
             "weather.smhi_test": er.RegistryEntry(
                 entity_id="weather.smhi_test",
-                unique_id="12345, 59.32624, 17.84197",
+                unique_id="12345",
                 platform="smhi",
                 config_entry_id=entry.entry_id,
             ),
@@ -107,4 +107,4 @@ async def test_migrate_entities_completed(
     ent_reg = er.async_get(hass)
 
     weather_home = ent_reg.async_get("weather.smhi_test")
-    assert weather_home.unique_id == "12345, 59.32624, 17.84197"
+    assert weather_home.unique_id == "12345"
