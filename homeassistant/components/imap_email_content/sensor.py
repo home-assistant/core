@@ -6,6 +6,7 @@ import datetime
 import email
 import imaplib
 import logging
+import traceback
 
 import voluptuous as vol
 
@@ -29,6 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SERVER = "server"
 CONF_SENDERS = "senders"
 CONF_FOLDER = "folder"
+CONF_KEEP = "keep"
+CONF_DAYS_BACK = "daysback"
 
 ATTR_FROM = "from"
 ATTR_BODY = "body"
@@ -46,6 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
+        vol.Optional(CONF_KEEP, default=False): cv.boolean,
+        vol.Optional(CONF_DAYS_BACK, default=0): cv.positive_int,
     }
 )
 
@@ -63,15 +68,18 @@ def setup_platform(
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
         config.get(CONF_FOLDER),
+        config.get(CONF_DAYS_BACK),
     )
 
     if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
+
     sensor = EmailContentSensor(
         hass,
         reader,
         config.get(CONF_NAME) or config.get(CONF_USERNAME),
         config.get(CONF_SENDERS),
+        config.get(CONF_KEEP),
         value_template,
     )
 
@@ -82,13 +90,14 @@ def setup_platform(
 class EmailReader:
     """A class to read emails from an IMAP server."""
 
-    def __init__(self, user, password, server, port, folder):
+    def __init__(self, user, password, server, port, folder, daysback):
         """Initialize the Email Reader."""
         self._user = user
         self._password = password
         self._server = server
         self._port = port
         self._folder = folder
+        self._daysback = daysback
         self._last_id = None
         self._unread_ids = deque([])
         self.connection = None
@@ -105,12 +114,18 @@ class EmailReader:
 
     def _fetch_message(self, message_uid):
         """Get an email message from a message id."""
-        _, message_data = self.connection.uid("fetch", message_uid, "(RFC822)")
+        _LOGGER.info(f"Fetching :: {message_uid}")
+        if message_uid == "None":
+            return None
+        else:
+            _, message_data = self.connection.uid("fetch", message_uid, "(RFC822)")
+            self._last_id = int(message_uid)
 
         if message_data is None:
             return None
         if message_data[0] is None:
             return None
+
         raw_email = message_data[0][1]
         email_message = email.message_from_bytes(raw_email)
         return email_message
@@ -118,26 +133,35 @@ class EmailReader:
     def read_next(self):
         """Read the next email from the email server."""
         try:
+            msg = None
             self.connection.select(self._folder, readonly=True)
 
             if not self._unread_ids:
-                search = f"SINCE {datetime.date.today():%d-%b-%Y}"
+                search = f"SINCE {(datetime.date.today()-datetime.timedelta(days=self._daysback)):%d-%b-%Y}"
                 if self._last_id is not None:
                     search = f"UID {self._last_id}:*"
 
+                _LOGGER.info(f"IMAP search: {search}")
                 _, data = self.connection.uid("search", None, search)
                 self._unread_ids = deque(data[0].split())
 
             while self._unread_ids:
                 message_uid = self._unread_ids.popleft()
                 if self._last_id is None or int(message_uid) > self._last_id:
-                    self._last_id = int(message_uid)
-                    return self._fetch_message(message_uid)
+                    _LOGGER.info(
+                        f"decided to fetch: last={self._last_id} discovered={message_uid}"
+                    )
+                    msg = self._fetch_message(message_uid)
+                    break
 
-            return self._fetch_message(str(self._last_id))
+            return msg
 
         except imaplib.IMAP4.error:
-            _LOGGER.info("Connection to %s lost, attempting to reconnect", self._server)
+            _LOGGER.warning(
+                "Connection to %s lost, attempting to reconnect: %s",
+                self._server,
+                traceback.format_exc(),
+            )
             try:
                 self.connect()
                 _LOGGER.info(
@@ -154,12 +178,13 @@ class EmailReader:
 class EmailContentSensor(SensorEntity):
     """Representation of an EMail sensor."""
 
-    def __init__(self, hass, email_reader, name, allowed_senders, value_template):
+    def __init__(self, hass, email_reader, name, allowed_senders, keep, value_template):
         """Initialize the sensor."""
         self.hass = hass
         self._email_reader = email_reader
         self._name = name
         self._allowed_senders = [sender.upper() for sender in allowed_senders]
+        self._keep = keep
         self._value_template = value_template
         self._last_id = None
         self._message = None
@@ -181,15 +206,9 @@ class EmailContentSensor(SensorEntity):
         """Return other state attributes for the message."""
         return self._state_attributes
 
-    def render_template(self, email_message):
+    def render_template(self):
         """Render the message template."""
-        variables = {
-            ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
-            ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
-            ATTR_DATE: email_message["Date"],
-            ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
-        }
-        return self._value_template.render(variables, parse_result=False)
+        return self._value_template.render(self._state_attributes, parse_result=False)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""
@@ -249,20 +268,29 @@ class EmailContentSensor(SensorEntity):
         email_message = self._email_reader.read_next()
 
         if email_message is None:
-            self._message = None
-            self._state_attributes = {}
-            return
+            if self._keep:
+                # leave previous message/state alone
+                _LOGGER.info("Keeping previous e-mail details in tact.")
+                email_message = self._email
+            else:
+                self._message = None
+                self._state_attributes = {}
+                return
+        elif self._keep:
+            _LOGGER.info("Keeping a private handle on email.")
+            self._email = email_message
 
         if self.sender_allowed(email_message):
-            message = EmailContentSensor.get_msg_subject(email_message)
-
-            if self._value_template is not None:
-                message = self.render_template(email_message)
-
-            self._message = message
             self._state_attributes = {
                 ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
                 ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
                 ATTR_DATE: email_message["Date"],
                 ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
             }
+
+            if self._value_template is not None:
+                message = self.render_template()
+            else:
+                message = self._state_attributes[ATTR_SUBJECT]
+
+            self._message = message
