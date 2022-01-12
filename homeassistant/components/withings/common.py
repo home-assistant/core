@@ -10,7 +10,7 @@ from enum import Enum, IntEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, cast
 
 from aiohttp.web import Response
 import requests
@@ -473,7 +473,7 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
 ] = {attr.measute_type: attr for attr in WITHINGS_ATTRIBUTES}
 
 
-class ConfigEntryWithingsApi(AbstractWithingsApi):
+class ConfigEntryWithingsApi(AbstractWithingsApi):  # type: ignore
     """Withing API that uses HA resources."""
 
     def __init__(
@@ -503,7 +503,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             params=params,
             headers={"Authorization": f"Bearer {access_token}"},
         )
-        return response.json()
+        return cast(dict[str, Any], response.json())
 
 
 def json_message_response(message: str, message_code: int) -> Response:
@@ -636,7 +636,7 @@ class DataManager:
             self._cancel_subscription_update()
             self._cancel_subscription_update = None
 
-    async def _do_retry(self, func, attempts=3) -> Any:
+    async def _do_retry(self, func: Callable, attempts: int = 3) -> Any:
         """Retry a function call.
 
         Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
@@ -655,7 +655,7 @@ class DataManager:
         if exception:
             raise exception
 
-    async def async_subscribe_webhook(self) -> None:
+    async def async_subscribe_webhook(self) -> Any:
         """Subscribe the webhook to withings data updates."""
         return await self._do_retry(self._async_subscribe_webhook)
 
@@ -703,7 +703,7 @@ class DataManager:
                 self._api.notify_subscribe, self._webhook_config.url, appli
             )
 
-    async def async_unsubscribe_webhook(self) -> None:
+    async def async_unsubscribe_webhook(self) -> Any:
         """Unsubscribe webhook from withings data updates."""
         return await self._do_retry(self._async_unsubscribe_webhook)
 
@@ -726,10 +726,12 @@ class DataManager:
                 self._api.notify_revoke, profile.callbackurl, profile.appli
             )
 
-    async def async_get_all_data(self) -> dict[MeasureType, Any] | None:
+    async def async_get_all_data(self) -> dict[MeasureType, Any]:
         """Update all withings data."""
         try:
-            return await self._do_retry(self._async_get_all_data)
+            return cast(
+                dict[MeasureType, Any], await self._do_retry(self._async_get_all_data)
+            )
         except Exception as exception:
             # User is not authenticated.
             if isinstance(
@@ -748,30 +750,30 @@ class DataManager:
                         for flow in self._hass.config_entries.flow.async_progress_by_handler(
                             const.DOMAIN
                         )
-                        if flow.context == context
+                        if flow.get("context") == context
                     ),
                     None,
                 )
                 if flow:
-                    return
+                    return {}
 
                 # Start a reauth flow.
                 await self._hass.config_entries.flow.async_init(
                     const.DOMAIN,
                     context=context,
                 )
-                return
+                return {}
 
             raise exception
 
-    async def _async_get_all_data(self) -> dict[MeasureType, Any] | None:
+    async def _async_get_all_data(self) -> dict[Measurement, float] | None:
         _LOGGER.info("Updating all withings data")
         return {
             **await self.async_get_measures(),
             **await self.async_get_sleep_summary(),
         }
 
-    async def async_get_measures(self) -> dict[MeasureType, Any]:
+    async def async_get_measures(self) -> dict[Measurement, float]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
         now = dt.utcnow()
@@ -786,7 +788,7 @@ class DataManager:
             query_measure_groups(
                 response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
             ),
-            key=lambda group: group.created.datetime,
+            key=lambda group: group.created.datetime,  # type: ignore[no-any-return]
             reverse=False,
         )
 
@@ -799,7 +801,7 @@ class DataManager:
             if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
-    async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:
+    async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
         now = dt.utcnow()
@@ -933,25 +935,19 @@ async def async_get_entity_id(
 class BaseWithingsSensor(Entity):
     """Base class for withings sensors."""
 
+    _attr_should_poll = False
+
     def __init__(self, data_manager: DataManager, attribute: WithingsAttribute) -> None:
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
         self._attribute = attribute
         self._profile = self._data_manager.profile
         self._user_id = self._data_manager.user_id
-        self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
-        self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
+        self._attr_name = (
+            f"Withings {self._attribute.measurement.value} {self._profile}"
+        )
+        self._attr_unique_id = get_attribute_unique_id(self._attribute, self._user_id)
         self._state_data: Any | None = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False to indicate HA should not poll for changes."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def available(self) -> bool:
@@ -968,12 +964,7 @@ class BaseWithingsSensor(Entity):
         return True
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._unique_id
-
-    @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         return self._attribute.icon
 
@@ -1027,7 +1018,7 @@ async def async_get_data_manager(
     config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
 
     if const.DATA_MANAGER not in config_entry_data:
-        profile = config_entry.data.get(const.PROFILE)
+        profile = config_entry.data[const.PROFILE]
 
         _LOGGER.debug("Creating withings data manager for profile: %s", profile)
         config_entry_data[const.DATA_MANAGER] = DataManager(
@@ -1048,7 +1039,7 @@ async def async_get_data_manager(
             ),
         )
 
-    return config_entry_data[const.DATA_MANAGER]
+    return cast(DataManager, config_entry_data[const.DATA_MANAGER])
 
 
 def get_data_manager_by_webhook_id(

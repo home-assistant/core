@@ -30,8 +30,9 @@ class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+    _state_data: bool | None = None
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._state_data
