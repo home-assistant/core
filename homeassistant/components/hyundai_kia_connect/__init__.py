@@ -27,6 +27,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
     if unload_ok:
-        hass.data[DOMAIN][config_entry.unique_id] = None
+        del hass.data[DOMAIN][config_entry.unique_id]
 
     return unload_ok
