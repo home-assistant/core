@@ -18,9 +18,21 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
             "invalid_auth": "Login failed into Hyundai (Bluelink) / Kia (Uvo) Connect Servers. Please use official app to logout and log back in and try again!",
             "unknown": "Unexpected error"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Hyundai / Kia Connect - Configuration",
+                "data": {
+                    "scan_interval": "Scan Interval (min)",
+                    "force_refresh": "Force Refresh Interval (min)",
+                    "no_force_refresh_hour_start": "No Force Refresh Start Hour",
+                    "no_force_refresh_hour_finish": "No Force Refresh Finish Hour"
+                }
+            }
         }
     }
 }

@@ -18,5 +18,17 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "[%key:component::hyundai_kia_connect::options::step::init::data::scan_interval%]",
+          "force_refresh": "[%key:component::hyundai_kia_connect::options::step::init::data::force_refresh%]",
+          "no_force_refresh_hour_start": "[%key:component::hyundai_kia_connect::options::step::init::data::no_force_refresh_hour_start%]",
+          "no_force_refresh_hour_finish": "[%key:component::hyundai_kia_connect::options::step::init::data::no_force_refresh_hour_finish%]"
+        }
+      }
+    }
   }
 }
