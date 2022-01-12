@@ -24,7 +24,7 @@ new_task:
         text:
     assignee:
       name: Assignee
-      description: A person in a shared project. to assign this task to.
+      description: A person in a shared project to assign this task to.
       example: user.name
       selector:
         text:
