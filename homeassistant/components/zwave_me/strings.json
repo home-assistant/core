@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "token": "[%key:common::config_flow::data::token%]"
+        }
+      }
+    },
+    "error": {
+      "no_valid_uuid_set": "[%key:common::config_flow::error::no_valid_uuid_set%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
