@@ -1,4 +1,5 @@
 """Support for config validation using voluptuous and Translate Trigger."""
+from __future__ import annotations
 
 import calendar
 import locale
@@ -39,7 +40,7 @@ def wilight_trigger(value: Any) -> str:
     raise vol.Invalid(err_desc)
 
 
-def wilight_to_hass_trigger(value):
+def wilight_to_hass_trigger(value: str | None) -> str | None:
     """Convert wilight trigger to hass description."""
     if value is None:
         return value

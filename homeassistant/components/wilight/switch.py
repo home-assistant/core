@@ -1,4 +1,7 @@
 """Support for WiLight switches."""
+from __future__ import annotations
+
+from typing import Any
 
 from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE
 import voluptuous as vol
@@ -87,9 +90,9 @@ ICON_WATERING = "mdi:water"
 ICON_PAUSE = "mdi:pause-circle-outline"
 
 
-def entities_from_discovered_wilight(api_device):
+def entities_from_discovered_wilight(api_device: Any) -> tuple[Any]:
     """Parse configuration and add WiLight switch entities."""
-    entities = []
+    entities: Any = []
     for item in api_device.items:
         if item["type"] == ITEM_SWITCH:
             index = item["index"]
@@ -113,7 +116,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     # Handle services for a discovered WiLight device.
-    async def set_watering_time(service):
+    async def set_watering_time(service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for entity in entities:
@@ -122,7 +125,7 @@ async def async_setup_entry(
                     watering_time = service.data[ATTR_WATERING_TIME]
                     await entity.async_set_switch_time(watering_time=watering_time)
 
-    async def set_trigger(service):
+    async def set_trigger(service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for entity in entities:
@@ -134,7 +137,7 @@ async def async_setup_entry(
                         trigger_index=trigger_index, trigger=trigger
                     )
 
-    async def set_pause_time(service):
+    async def set_pause_time(service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for entity in entities:
@@ -165,12 +168,12 @@ async def async_setup_entry(
     )
 
 
-def wilight_to_hass_pause_time(value):
+def wilight_to_hass_pause_time(value: int) -> int:
     """Convert wilight pause_time seconds to hass hour."""
     return int(value / 3600)
 
 
-def hass_to_wilight_pause_time(value):
+def hass_to_wilight_pause_time(value: int) -> int:
     """Convert hass pause_time hours to wilight seconds."""
     return int(value * 3600)
 
@@ -179,17 +182,17 @@ class WiLightValveSwitch(WiLightDevice, ToggleEntity):
     """Representation of a WiLights Valve switch."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the switch."""
         return f"{self._name} {DESC_WATERING}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on")
 
     @property
-    def watering_time(self):
+    def watering_time(self) -> int | None:
         """Return watering time of valve switch.
 
         None is unknown, 1 is minimum, 1800 is maximum.
@@ -197,81 +200,81 @@ class WiLightValveSwitch(WiLightDevice, ToggleEntity):
         return self._status.get("timer_target")
 
     @property
-    def trigger_1(self):
+    def trigger_1(self) -> str | None:
         """Return trigger_1 of valve switch."""
         return self._status.get("trigger_1")
 
     @property
-    def trigger_2(self):
+    def trigger_2(self) -> str | None:
         """Return trigger_2 of valve switch."""
         return self._status.get("trigger_2")
 
     @property
-    def trigger_3(self):
+    def trigger_3(self) -> str | None:
         """Return trigger_3 of valve switch."""
         return self._status.get("trigger_3")
 
     @property
-    def trigger_4(self):
+    def trigger_4(self) -> str | None:
         """Return trigger_4 of valve switch."""
         return self._status.get("trigger_4")
 
     @property
-    def trigger_1_description(self):
+    def trigger_1_description(self) -> str | None:
         """Return trigger_1_description of valve switch."""
         return wilight_to_hass_trigger(self._status.get("trigger_1"))
 
     @property
-    def trigger_2_description(self):
+    def trigger_2_description(self) -> str | None:
         """Return trigger_2_description of valve switch."""
         return wilight_to_hass_trigger(self._status.get("trigger_2"))
 
     @property
-    def trigger_3_description(self):
+    def trigger_3_description(self) -> str | None:
         """Return trigger_3_description of valve switch."""
         return wilight_to_hass_trigger(self._status.get("trigger_3"))
 
     @property
-    def trigger_4_description(self):
+    def trigger_4_description(self) -> str | None:
         """Return trigger_4_description of valve switch."""
         return wilight_to_hass_trigger(self._status.get("trigger_4"))
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        data = {}
+        attr: dict[str, Any] = {}
 
         if self.watering_time is not None:
-            data[ATTR_WATERING_TIME] = self.watering_time
+            attr[ATTR_WATERING_TIME] = self.watering_time
 
         if self.trigger_1 is not None:
-            data[ATTR_TRIGGER_1] = self.trigger_1
+            attr[ATTR_TRIGGER_1] = self.trigger_1
 
         if self.trigger_2 is not None:
-            data[ATTR_TRIGGER_2] = self.trigger_2
+            attr[ATTR_TRIGGER_2] = self.trigger_2
 
         if self.trigger_3 is not None:
-            data[ATTR_TRIGGER_3] = self.trigger_3
+            attr[ATTR_TRIGGER_3] = self.trigger_3
 
         if self.trigger_4 is not None:
-            data[ATTR_TRIGGER_4] = self.trigger_4
+            attr[ATTR_TRIGGER_4] = self.trigger_4
 
         if self.trigger_1_description is not None:
-            data[ATTR_TRIGGER_1_DESC] = self.trigger_1_description
+            attr[ATTR_TRIGGER_1_DESC] = self.trigger_1_description
 
         if self.trigger_2_description is not None:
-            data[ATTR_TRIGGER_2_DESC] = self.trigger_2_description
+            attr[ATTR_TRIGGER_2_DESC] = self.trigger_2_description
 
         if self.trigger_3_description is not None:
-            data[ATTR_TRIGGER_3_DESC] = self.trigger_3_description
+            attr[ATTR_TRIGGER_3_DESC] = self.trigger_3_description
 
         if self.trigger_4_description is not None:
-            data[ATTR_TRIGGER_4_DESC] = self.trigger_4_description
+            attr[ATTR_TRIGGER_4_DESC] = self.trigger_4_description
 
-        return data
+        return attr
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
 
@@ -293,25 +296,25 @@ class WiLightValveSwitch(WiLightDevice, ToggleEntity):
         return supported_features
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend."""
         return ICON_WATERING
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)
 
-    async def async_set_switch_time(self, **kwargs):
+    async def async_set_switch_time(self, **kwargs: Any) -> None:
         """Set the watering time."""
         if ATTR_WATERING_TIME in kwargs:
             target_time = kwargs[ATTR_WATERING_TIME]
             await self._client.set_switch_time(self._index, target_time)
 
-    async def async_set_trigger(self, **kwargs):
+    async def async_set_trigger(self, **kwargs: Any) -> None:
         """Set the trigger according to index."""
         if (ATTR_TRIGGER_INDEX in kwargs) & (ATTR_TRIGGER in kwargs):
             trigger_index = kwargs[ATTR_TRIGGER_INDEX]
@@ -330,17 +333,17 @@ class WiLightValvePauseSwitch(WiLightDevice, ToggleEntity):
     """Representation of a WiLights Valve Pause switch."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the switch."""
         return f"{self._name} {DESC_PAUSE}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on")
 
     @property
-    def pause_time(self):
+    def pause_time(self) -> int | None:
         """Return pause time of valve switch.
 
         None is unknown, 1 is minimum, 24 is maximum.
@@ -351,17 +354,17 @@ class WiLightValvePauseSwitch(WiLightDevice, ToggleEntity):
         return pause_time
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        data = {}
+        attr: dict[str, Any] = {}
 
         if self.pause_time is not None:
-            data[ATTR_PAUSE_TIME] = self.pause_time
+            attr[ATTR_PAUSE_TIME] = self.pause_time
 
-        return data
+        return attr
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
 
@@ -371,19 +374,19 @@ class WiLightValvePauseSwitch(WiLightDevice, ToggleEntity):
         return supported_features
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend."""
         return ICON_PAUSE
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)
 
-    async def async_set_switch_time(self, **kwargs):
+    async def async_set_switch_time(self, **kwargs: Any) -> None:
         """Set the pause time."""
         if ATTR_PAUSE_TIME in kwargs:
             target_time = hass_to_wilight_pause_time(kwargs[ATTR_PAUSE_TIME])
