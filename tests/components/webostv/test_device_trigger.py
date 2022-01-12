@@ -19,7 +19,7 @@ async def test_get_triggers(hass, client):
     turn_on_trigger = {
         "platform": "device",
         "domain": DOMAIN,
-        "type": "turn_on",
+        "type": "webostv.turn_on",
         "device_id": device.id,
     }
 
@@ -44,7 +44,7 @@ async def test_if_fires_on_turn_on_request(hass, calls, client):
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device.id,
-                        "type": "turn_on",
+                        "type": "webostv.turn_on",
                     },
                     "action": {
                         "service": "test.automation",
@@ -53,8 +53,21 @@ async def test_if_fires_on_turn_on_request(hass, calls, client):
                             "id": "{{ trigger.id }}",
                         },
                     },
-                }
-            ]
+                },
+                {
+                    "trigger": {
+                        "platform": "webostv.turn_on",
+                        "entity_id": ENTITY_ID,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": ENTITY_ID,
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                },
+            ],
         },
     )
 
@@ -66,9 +79,11 @@ async def test_if_fires_on_turn_on_request(hass, calls, client):
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
+    assert calls[1].data["some"] == ENTITY_ID
+    assert calls[1].data["id"] == 0
 
 
 async def test_get_triggers_for_invalid_device_id(hass, caplog):
@@ -85,7 +100,7 @@ async def test_get_triggers_for_invalid_device_id(hass, caplog):
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "invalid_device_id",
-                        "type": "turn_on",
+                        "type": "webostv.turn_on",
                     },
                     "action": {
                         "service": "test.automation",
@@ -101,6 +116,6 @@ async def test_get_triggers_for_invalid_device_id(hass, caplog):
     await hass.async_block_till_done()
 
     assert (
-        "Invalid config for [automation]: Device not found: invalid_device_id"
+        "Invalid config for [automation]: Device invalid_device_id is not a valid webostv device"
         in caplog.text
     )

@@ -3,47 +3,33 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers.device_registry import (
-    DeviceRegistry,
-    async_get as get_dev_reg,
-)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 
-from . import WebOsClientWrapper
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from . import trigger
+from .const import DOMAIN
+from .helpers import (
+    async_get_client_wrapper_by_device_id,
+    async_is_device_config_entry_not_loaded,
+)
+from .triggers.turn_on import PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE
 
-TRIGGER_TYPE_TURN_ON = "turn_on"
-
-TRIGGER_TYPES = {TRIGGER_TYPE_TURN_ON}
+TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
     }
 )
-
-
-async def async_get_triggers(
-    _hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
-    """List device triggers for device."""
-    triggers = []
-    triggers.append(
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: TRIGGER_TYPE_TURN_ON,
-        }
-    )
-
-    return triggers
 
 
 async def async_validate_trigger_config(
@@ -52,40 +38,57 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    device_reg: DeviceRegistry = get_dev_reg(hass)
-    device_id = config[CONF_DEVICE_ID]
-    device = device_reg.async_get(device_id)
+    try:
+        if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
+            return config
+    except ValueError as err:
+        raise InvalidDeviceAutomationConfig(err) from err
 
-    if not device:
-        raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
+    if config[CONF_TYPE] == TURN_ON_PLATFORM_TYPE:
+        device_id = config[CONF_DEVICE_ID]
+        try:
+            async_get_client_wrapper_by_device_id(hass, device_id)
+        except ValueError as err:
+            raise InvalidDeviceAutomationConfig(err) from err
 
     return config
+
+
+async def async_get_triggers(
+    _hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
+    """List device triggers for device."""
+    triggers = []
+    base_trigger = {
+        CONF_PLATFORM: "device",
+        CONF_DEVICE_ID: device_id,
+        CONF_DOMAIN: DOMAIN,
+    }
+
+    triggers.append({**base_trigger, CONF_TYPE: TURN_ON_PLATFORM_TYPE})
+
+    return triggers
 
 
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
-    device_reg: DeviceRegistry = get_dev_reg(hass)
-    if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
-        variables = {
-            "trigger": {
-                **trigger_data,
-                "platform": "device",
-                "domain": DOMAIN,
-                "device_id": config[CONF_DEVICE_ID],
-                "description": f"webostv '{config[CONF_TYPE]}' event",
-            }
+    trigger_type = config[CONF_TYPE]
+
+    if trigger_type == TURN_ON_PLATFORM_TYPE:
+        trigger_config = {
+            CONF_PLATFORM: trigger_type,
+            CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         }
+        trigger_config = await trigger.async_validate_trigger_config(
+            hass, trigger_config
+        )
+        return await trigger.async_attach_trigger(
+            hass, trigger_config, action, automation_info
+        )
 
-        if device := device_reg.async_get(config[CONF_DEVICE_ID]):
-            wrapper: WebOsClientWrapper | None
-            for config_entry_id in device.config_entries:
-                if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
-                    return wrapper.turn_on.async_attach(action, variables)
-
-    return None
+    raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
