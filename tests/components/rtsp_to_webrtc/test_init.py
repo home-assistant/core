@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import base64
-from typing import Any, AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
