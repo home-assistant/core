@@ -12,7 +12,7 @@ launch:
       required: true
       example: "291097"
       selector:
-        text:  
+        text:
     content_id:
       name: Content ID
       description: The content ID to launch the application with.
@@ -22,7 +22,7 @@ launch:
         text:
     media_type:
       name: Media Type
-      description: "The type of media being launched."
+      description: The type of media being launched.
       required: true
       selector:
         select:
