@@ -11,7 +11,12 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
+    COLOR_MODE_RGBW,
+    COLOR_MODE_RGBWW,
     DOMAIN,
     brightness_supported,
     color_supported,
@@ -25,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
+import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
@@ -66,7 +72,7 @@ class Light(HomeAccessory):
 
         state = self.hass.states.get(self.entity_id)
         attributes = state.attributes
-        color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        self.color_modes = color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
         self.brightness_supported = brightness_supported(color_modes)
@@ -157,12 +163,22 @@ class Light(HomeAccessory):
             events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
         elif CHAR_HUE in char_values or CHAR_SATURATION in char_values:
-            color = params[ATTR_HS_COLOR] = (
+            hue_sat = (
                 char_values.get(CHAR_HUE, self.char_hue.value),
                 char_values.get(CHAR_SATURATION, self.char_saturation.value),
             )
-            _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, color)
-            events.append(f"set color at {color}")
+            _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, hue_sat)
+            events.append(f"set color at {hue_sat}")
+            # HomeKit doesn't support RGBW/RGBWW so we need to remove any white values
+            if COLOR_MODE_RGBWW in self.color_modes:
+                params[ATTR_RGBWW_COLOR] = (*color_util.color_hs_to_RGB(*hue_sat), 0, 0)
+            if (
+                COLOR_MODE_RGBW in self.color_modes
+                or COLOR_MODE_RGBWW in self.color_modes
+            ):
+                params[ATTR_RGBW_COLOR] = (*color_util.color_hs_to_RGB(*hue_sat), 0)
+            else:
+                params[ATTR_HS_COLOR] = hue_sat
 
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
@@ -176,7 +192,12 @@ class Light(HomeAccessory):
 
         # Handle Brightness
         if self.brightness_supported:
-            brightness = attributes.get(ATTR_BRIGHTNESS)
+            if rgb_color := attributes.get(ATTR_RGB_COLOR):
+                # HomeKit doesn't support RGBW/RGBWW so we need to
+                # give it the color brightness only
+                brightness = max(rgb_color)
+            else:
+                brightness = attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, (int, float)):
                 brightness = round(brightness / 255 * 100, 0)
                 # The homeassistant component might report its brightness as 0 but is
