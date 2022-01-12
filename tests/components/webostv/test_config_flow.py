@@ -7,7 +7,13 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
-from homeassistant.const import CONF_HOST, CONF_ICON, CONF_NAME, CONF_SOURCE
+from homeassistant.const import (
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_SOURCE,
+)
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -20,6 +26,7 @@ MOCK_YAML_CONFIG = {
     CONF_HOST: "1.2.3.4",
     CONF_NAME: "fake",
     CONF_ICON: "mdi:test",
+    CONF_CLIENT_SECRET: "some-secret",
 }
 
 MOCK_DISCOVERY_INFO = {
@@ -29,7 +36,7 @@ MOCK_DISCOVERY_INFO = {
 }
 
 
-async def test_form_import(hass, client):
+async def test_import(hass, client):
     """Test we can import yaml config."""
     assert client
 
@@ -42,6 +49,16 @@ async def test_form_import(hass, client):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "fake"
+
+    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: config_entries.SOURCE_IMPORT},
+            data=MOCK_YAML_CONFIG,
+        )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form(hass, client):

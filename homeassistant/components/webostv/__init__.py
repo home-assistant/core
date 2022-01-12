@@ -3,10 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
+import json
 import logging
+import os
 from typing import Any
 
 from aiowebostv import WebOsClient, WebOsTvPairError
+from sqlitedict import SqliteDict
 import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify
@@ -41,6 +44,7 @@ from .const import (
     SERVICE_BUTTON,
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
+    WEBOSTV_CONFIG_FILE,
     WEBOSTV_EXCEPTIONS,
 )
 
@@ -93,6 +97,28 @@ SERVICE_TO_METHOD = {
 _LOGGER = logging.getLogger(__name__)
 
 
+def read_client_keys(config_file):
+    """Read legacy client keys from file."""
+    if not os.path.isfile(config_file):
+        return
+
+    # Try to parse the file as being JSON
+    with open(config_file, encoding="utf8") as json_file:
+        try:
+            client_keys = json.load(json_file)
+            return client_keys
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            pass
+
+    # If the file is not JSON, read it to an Sqlite DB
+    with SqliteDict(config_file) as sql_dict:
+        client_keys = {}
+        for key, value in sql_dict.iteritems():
+            client_keys[key] = value
+
+    return client_keys
+
+
 async def async_setup(hass, config):
     """Set up the LG WebOS TV platform."""
     hass.data.setdefault(DOMAIN, {})
@@ -102,10 +128,20 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
+    config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
+    client_keys = await hass.async_add_executor_job(read_client_keys, config_file)
+
     for conf in config[DOMAIN]:
+        host = conf[CONF_HOST]
+        if (key := client_keys.get(host)) is None:
+            _LOGGER.debug("Skipping webOS Smart TV host %s without pairing key")
+            continue
+
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={**conf, CONF_CLIENT_SECRET: key},
             )
         )
 

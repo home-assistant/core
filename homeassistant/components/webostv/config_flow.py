@@ -48,7 +48,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Set the config entry up from yaml."""
         self._host = import_info[CONF_HOST]
         self._name = import_info.get(CONF_NAME) or import_info[CONF_HOST]
-        return await self.async_step_pairing()
+        client_key = import_info[CONF_CLIENT_SECRET]
+        await self.async_set_unique_id(client_key, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+        data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client_key}
+        _LOGGER.info("WebOS Smart TV host %s imported from YAML config", self._host)
+        return self.async_create_entry(title=self._name, data=data)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
