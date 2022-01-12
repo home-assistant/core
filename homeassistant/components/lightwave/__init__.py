@@ -88,8 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         proxy_port = trv[CONF_PROXY_PORT]
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
 
-        platforms = PLATFORMS
-        for platform in platforms:
+        for platform in PLATFORMS:
             hass.async_create_task(
                 async_load_platform(hass, platform, DOMAIN, trvs, config)
             )
