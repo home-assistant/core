@@ -24,4 +24,3 @@ LAUNCH_MEDIA_TYPES = (
     "special",
     "live",
 )
-
