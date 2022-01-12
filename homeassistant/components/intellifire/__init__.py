@@ -6,7 +6,6 @@ from intellifire4py import IntellifireAsync
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator

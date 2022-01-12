@@ -9,9 +9,9 @@ from async_timeout import timeout
 from intellifire4py import IntellifireAsync, IntellifirePollData
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from ...helpers.entity import DeviceInfo
 from .const import DOMAIN, LOGGER
 
 
@@ -40,6 +40,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
 
     @property
     def serial(self) -> str:
+        """Return the serial number of the device."""
         return self.api.data.serial
 
     @property
