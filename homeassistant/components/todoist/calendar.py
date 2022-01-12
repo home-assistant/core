@@ -192,7 +192,7 @@ def setup_platform(
             item.update(labels=label_ids)
 
         if ASSIGNEE in call.data:
-            task_assignee = call.data[ASSIGNEE]
+            task_assignee = call.data[ASSIGNEE].lower()
             if task_assignee in collaborator_id_lookup:
                 item.update(responsible_uid=collaborator_id_lookup[task_assignee])
             else:
