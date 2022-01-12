@@ -189,7 +189,7 @@ class WiLightValveSwitch(WiLightDevice, ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._status.get("on")
+        return self._status.get("on", False)
 
     @property
     def watering_time(self) -> int | None:
@@ -340,7 +340,7 @@ class WiLightValvePauseSwitch(WiLightDevice, ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._status.get("on")
+        return self._status.get("on", False)
 
     @property
     def pause_time(self) -> int | None:
