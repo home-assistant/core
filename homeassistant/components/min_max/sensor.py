@@ -154,10 +154,8 @@ def calc_range(sensor_values, round_digits):
         for _, sensor_value in sensor_values
         if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
     ]
-
     if not result:
         return None
-
     return round(max(result) - min(result), round_digits)
 
 
