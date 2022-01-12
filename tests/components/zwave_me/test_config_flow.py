@@ -112,7 +112,6 @@ async def test_error_handling_zeroconf(hass: HomeAssistant):
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "no_valid_uuid_set"
-        await hass.async_block_till_done()
 
 
 @patch("homeassistant.components.zwave_me.get_uuid", mock_uuid)
