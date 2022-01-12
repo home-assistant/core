@@ -321,7 +321,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=OverkizDeviceClass.PRIORITY_LOCK_ORIGINATOR,
         icon="mdi:lock",
         entity_registry_enabled_default=False,
-        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(str(value), value),
+        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
+            str(value), cast(str, value)
+        ),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_PRIORITY_LOCK_TIMER,
@@ -344,7 +346,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=OverkizDeviceClass.SENSOR_DEFECT,
-        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(str(value), value),
+        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
+            str(value), cast(str, value)
+        ),
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
