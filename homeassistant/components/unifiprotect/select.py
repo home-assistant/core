@@ -19,6 +19,7 @@ from pyunifiprotect.data import (
     RecordingMode,
     Viewer,
 )
+from pyunifiprotect.data.types import ChimeType
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -43,6 +44,12 @@ INFRARED_MODES = [
     {"id": IRLEDMode.ON.value, "name": "Always Enable"},
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "Auto (Filter Only, no LED's)"},
     {"id": IRLEDMode.OFF.value, "name": "Always Disable"},
+]
+
+CHIME_TYPES = [
+    {"id": ChimeType.NONE.value, "name": "None"},
+    {"id": ChimeType.MECHINCAL.value, "name": "Mechanical"},
+    {"id": ChimeType.DIGITAL.value, "name": "Digital"},
 ]
 
 LIGHT_MODE_MOTION = "On Motion - Always"
@@ -211,6 +218,17 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value_fn=_get_doorbell_current,
         ufp_options_callable=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
+    ),
+    ProtectSelectEntityDescription(
+        key="chime_type",
+        name="Chime Type",
+        icon="mdi:bell",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="feature_flags.has_chime",
+        ufp_options=CHIME_TYPES,
+        ufp_enum_type=ChimeType,
+        ufp_value="chime_type",
+        ufp_set_method="set_chime_type",
     ),
 )
 
