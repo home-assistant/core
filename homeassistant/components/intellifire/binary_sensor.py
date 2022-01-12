@@ -63,13 +63,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a IntelliFire On/Off Sensor."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    async_add_entities(
         IntellifireBinarySensor(
             coordinator=coordinator, entry_id=entry.entry_id, description=description
         )
         for description in INTELLIFIRE_BINARY_SENSORS
-    ]
-    async_add_entities(entities)
+    )
 
 
 class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
