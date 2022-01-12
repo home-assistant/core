@@ -500,6 +500,7 @@ async def get_controller(
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
+        aiounifi.ResponseError,
     ) as err:
         LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
         raise CannotConnect from err
