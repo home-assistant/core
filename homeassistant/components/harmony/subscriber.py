@@ -1,9 +1,8 @@
 """Mixin class for handling harmony callback subscriptions."""
 
 import asyncio
-from collections.abc import Callable
 import logging
-from typing import Any, NamedTuple, Optional
+from typing import Any, Callable, NamedTuple, Optional
 
 from homeassistant.core import callback
 
