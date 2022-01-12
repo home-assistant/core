@@ -54,6 +54,6 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
     def press(self):
         """Power the relay."""
         if self._relay == IR_RELAY:
-            self._state = self._doorstation.device.turn_light_on()
+            self._doorstation.device.turn_light_on()
         else:
-            self._state = self._doorstation.device.energize_relay(self._relay)
+            self._doorstation.device.energize_relay(self._relay)
