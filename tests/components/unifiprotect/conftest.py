@@ -2,11 +2,12 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from ipaddress import IPv4Address
 import json
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -37,6 +38,7 @@ class MockBootstrap:
     sensors: dict[str, Any]
     viewers: dict[str, Any]
     liveviews: dict[str, Any]
+    events: dict[str, Any]
 
     def reset_objects(self) -> None:
         """Reset all devices on bootstrap for tests."""
@@ -45,6 +47,7 @@ class MockBootstrap:
         self.sensors = {}
         self.viewers = {}
         self.liveviews = {}
+        self.events = {}
 
 
 @dataclass
@@ -83,7 +86,13 @@ def mock_old_nvr_fixture():
 def mock_bootstrap_fixture(mock_nvr: NVR):
     """Mock Bootstrap fixture."""
     return MockBootstrap(
-        nvr=mock_nvr, cameras={}, lights={}, sensors={}, viewers={}, liveviews={}
+        nvr=mock_nvr,
+        cameras={},
+        lights={},
+        sensors={},
+        viewers={},
+        liveviews={},
+        events={},
     )
 
 

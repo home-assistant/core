@@ -1,7 +1,6 @@
 """Base class for protect data."""
 from __future__ import annotations
 
-import collections
 from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
@@ -43,7 +42,6 @@ class ProtectData:
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
         self.last_update_success = False
-        self.access_tokens: dict[str, collections.deque] = {}
         self.api = protect
 
     @property

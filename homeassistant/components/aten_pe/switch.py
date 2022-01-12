@@ -15,6 +15,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -62,13 +64,24 @@ async def async_setup_platform(
         await hass.async_add_executor_job(dev.initialize)
         mac = await dev.deviceMAC()
         outlets = dev.outlets()
+        name = await dev.deviceName()
+        model = await dev.modelName()
+        sw_version = await dev.deviceFWversion()
     except AtenPEError as exc:
         _LOGGER.error("Failed to initialize %s:%s: %s", node, serv, str(exc))
         raise PlatformNotReady from exc
 
+    info = DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, mac)},
+        manufacturer="ATEN",
+        model=model,
+        name=name,
+        sw_version=sw_version,
+    )
+
     switches = []
     async for outlet in outlets:
-        switches.append(AtenSwitch(dev, mac, outlet.id, outlet.name))
+        switches.append(AtenSwitch(dev, info, mac, outlet.id, outlet.name))
 
     async_add_entities(switches, True)
 
@@ -78,10 +91,13 @@ class AtenSwitch(SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.OUTLET
 
-    def __init__(self, device, mac, outlet, name):
+    def __init__(
+        self, device: AtenPE, info: DeviceInfo, mac: str, outlet: str, name: str
+    ) -> None:
         """Initialize an ATEN PE switch."""
         self._device = device
         self._outlet = outlet
+        self._attr_device_info = info
         self._attr_unique_id = f"{mac}-{outlet}"
         self._attr_name = name or f"Outlet {outlet}"
 
@@ -101,6 +117,6 @@ class AtenSwitch(SwitchEntity):
         if status == "on":
             self._attr_is_on = True
             self._attr_current_power_w = await self._device.outletPower(self._outlet)
-        else:
+        elif status == "off":
             self._attr_is_on = False
             self._attr_current_power_w = 0.0

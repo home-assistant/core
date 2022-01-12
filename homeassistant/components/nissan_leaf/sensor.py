@@ -7,12 +7,11 @@ from pycarwings2.pycarwings2 import Leaf
 from voluptuous.validators import Number
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import LENGTH_KILOMETERS, LENGTH_MILES, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from . import LeafEntity
@@ -32,21 +31,21 @@ ICON_RANGE = "mdi:speedometer"
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_devices: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Sensors setup."""
     if discovery_info is None:
         return
 
-    devices: list[LeafEntity] = []
+    entities: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding sensors for vin=%s", vin)
-        devices.append(LeafBatterySensor(datastore))
-        devices.append(LeafRangeSensor(datastore, True))
-        devices.append(LeafRangeSensor(datastore, False))
+        entities.append(LeafBatterySensor(datastore))
+        entities.append(LeafRangeSensor(datastore, True))
+        entities.append(LeafRangeSensor(datastore, False))
 
-    add_devices(devices, True)
+    add_entities(entities, True)
 
 
 class LeafBatterySensor(LeafEntity, SensorEntity):

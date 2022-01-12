@@ -23,12 +23,12 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_DURATION,
     ATTR_MESSAGE,
     DEFAULT_ATTRIBUTION,
-    SERVICE_SET_DOORBELL_MESSAGE,
 )
 from homeassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
     LIGHT_SELECTS,
+    SERVICE_SET_DOORBELL_MESSAGE,
     VIEWER_SELECTS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform

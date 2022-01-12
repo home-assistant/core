@@ -297,8 +297,8 @@ homeassistant/components/flume/* @ChrisMandich @bdraco
 tests/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
 tests/components/flunearyou/* @bachya
-homeassistant/components/flux_led/* @icemanch
-tests/components/flux_led/* @icemanch
+homeassistant/components/flux_led/* @icemanch @bdraco
+tests/components/flux_led/* @icemanch @bdraco
 homeassistant/components/forecast_solar/* @klaasnicolaas @frenck
 tests/components/forecast_solar/* @klaasnicolaas @frenck
 homeassistant/components/forked_daapd/* @uvjustin
@@ -392,6 +392,8 @@ homeassistant/components/homekit_controller/* @Jc2k @bdraco
 tests/components/homekit_controller/* @Jc2k @bdraco
 homeassistant/components/homematic/* @pvizeli @danielperna84
 tests/components/homematic/* @pvizeli @danielperna84
+homeassistant/components/homewizard/* @DCSBL
+tests/components/homewizard/* @DCSBL
 homeassistant/components/honeywell/* @rdfurman
 tests/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
@@ -488,8 +490,9 @@ homeassistant/components/kraken/* @eifinger
 tests/components/kraken/* @eifinger
 homeassistant/components/kulersky/* @emlove
 tests/components/kulersky/* @emlove
-homeassistant/components/lametric/* @robbiet480
-homeassistant/components/launch_library/* @ludeeus
+homeassistant/components/lametric/* @robbiet480 @frenck
+homeassistant/components/launch_library/* @ludeeus @DurgNomis-drol
+tests/components/launch_library/* @ludeeus @DurgNomis-drol
 homeassistant/components/lcn/* @alengwenus
 tests/components/lcn/* @alengwenus
 homeassistant/components/lg_netcast/* @Drafteed
@@ -801,6 +804,8 @@ homeassistant/components/select/* @home-assistant/core
 tests/components/select/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 tests/components/sense/* @kbickar
+homeassistant/components/senseme/* @mikelawrence @bdraco
+tests/components/senseme/* @mikelawrence @bdraco
 homeassistant/components/sensibo/* @andrey-git @gjohansson-ST
 tests/components/sensibo/* @andrey-git @gjohansson-ST
 homeassistant/components/sentry/* @dcramer @frenck
@@ -958,8 +963,8 @@ tests/components/trace/* @home-assistant/core
 homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
 tests/components/tractive/* @Danielhiversen @zhulik @bieniu
 homeassistant/components/trafikverket_train/* @endor-force
-homeassistant/components/trafikverket_weatherstation/* @endor-force
-tests/components/trafikverket_weatherstation/* @endor-force
+homeassistant/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
+tests/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 tests/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli

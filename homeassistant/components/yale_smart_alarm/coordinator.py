@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-import requests
-from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
+from yalesmartalarmclient.client import YaleSmartAlarmClient
+from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -42,7 +42,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             if device["type"] == "device_type.door_lock":
                 lock_status_str = device["minigw_lock_status"]
                 lock_status = int(str(lock_status_str or 0), 16)
-                jammed = (lock_status & 48) == 48
                 closed = (lock_status & 16) == 16
                 locked = (lock_status & 1) == 1
                 if not lock_status and "device_status.lock" in state:
@@ -53,17 +52,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 if not lock_status and "device_status.unlock" in state:
                     device["_state"] = "unlocked"
                     device["_state2"] = "unknown"
-                    locks.append(device)
-                    continue
-                if (
-                    lock_status
-                    and (
-                        "device_status.lock" in state or "device_status.unlock" in state
-                    )
-                    and jammed
-                ):
-                    device["_state"] = "jammed"
-                    device["_state2"] = "closed"
                     locks.append(device)
                     continue
                 if (
@@ -135,9 +123,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 )
             except AuthenticationError as error:
                 raise ConfigEntryAuthFailed from error
-            except requests.HTTPError as error:
-                if error.response.status_code == 401:
-                    raise ConfigEntryAuthFailed from error
+            except (ConnectionError, TimeoutError, UnknownError) as error:
                 raise UpdateFailed from error
 
         try:
@@ -148,11 +134,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
-        except requests.HTTPError as error:
-            if error.response.status_code == 401:
-                raise ConfigEntryAuthFailed from error
-            raise UpdateFailed from error
-        except requests.RequestException as error:
+        except (ConnectionError, TimeoutError, UnknownError) as error:
             raise UpdateFailed from error
 
         return {

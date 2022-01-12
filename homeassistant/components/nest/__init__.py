@@ -11,6 +11,7 @@ from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
     ConfigurationException,
+    DecodeException,
     SubscriberException,
 )
 import voluptuous as vol
@@ -208,7 +209,7 @@ class SignalUpdateCallback:
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
-                "nest_event_id": image_event.event_session_id,
+                "nest_event_id": image_event.event_token,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
@@ -310,7 +311,7 @@ class NestEventMediaView(HomeAssistantView):
     depends on the specific device e.g. an image, or a movie clip preview.
     """
 
-    url = "/api/nest/event_media/{device_id}/{event_id}"
+    url = "/api/nest/event_media/{device_id}/{event_token}"
     name = "api:nest:event_media"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -318,7 +319,7 @@ class NestEventMediaView(HomeAssistantView):
         self.hass = hass
 
     async def get(
-        self, request: web.Request, device_id: str, event_id: str
+        self, request: web.Request, device_id: str, event_token: str
     ) -> web.StreamResponse:
         """Start a GET request."""
         user = request[KEY_HASS_USER]
@@ -333,17 +334,20 @@ class NestEventMediaView(HomeAssistantView):
                 f"No Nest Device found for '{device_id}'", HTTPStatus.NOT_FOUND
             )
         try:
-            event_media = await nest_device.event_media_manager.get_media(event_id)
+            media = await nest_device.event_media_manager.get_media_from_token(
+                event_token
+            )
+        except DecodeException as err:
+            raise HomeAssistantError(
+                "Even token was invalid: %s" % event_token
+            ) from err
         except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
-        if not event_media:
+        if not media:
             return self._json_error(
-                f"No event found for event_id '{event_id}'", HTTPStatus.NOT_FOUND
+                f"No event found for event_id '{event_token}'", HTTPStatus.NOT_FOUND
             )
-        media = event_media.media
-        return web.Response(
-            body=media.contents, content_type=media.event_image_type.content_type
-        )
+        return web.Response(body=media.contents, content_type=media.content_type)
 
     def _json_error(self, message: str, status: HTTPStatus) -> web.StreamResponse:
         """Return a json error message with additional logging."""

@@ -1,7 +1,7 @@
 """Provide functionality to interact with the vlc telnet interface."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
 from typing import Any, TypeVar
@@ -70,11 +70,11 @@ async def async_setup_entry(
 
 def catch_vlc_errors(
     func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Awaitable[None]]:  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self: VlcDevice, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)
