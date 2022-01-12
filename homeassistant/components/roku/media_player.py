@@ -43,7 +43,15 @@ from homeassistant.helpers.network import is_internal_request
 
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
-from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .const import (
+    ATTR_APP_ID,
+    ATTR_CONTENT_ID,
+    ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
+    DOMAIN,
+    SERVICE_LAUNCH,
+    SERVICE_SEARCH,
+)
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
@@ -63,6 +71,11 @@ SUPPORT_ROKU = (
     | SUPPORT_BROWSE_MEDIA
 )
 
+LAUNCH_SCHEMA = {
+    vol.Required(ATTR_APP_ID): str,
+    vol.Optional(ATTR_CONTENT_ID): str,
+    vol.Required(ATTR_MEDIA_TYPE): str,
+}
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 
