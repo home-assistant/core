@@ -49,6 +49,7 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         is_on=lambda select_state: (
             select_state(OverkizState.IO_FORCE_HEATING) == OverkizCommandParam.ON
         ),
+        icon="mdi:water-boiler",
     ),
     OverkizSwitchDescription(
         key=UIClass.ON_OFF,
@@ -66,6 +67,7 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         is_on=lambda select_state: (
             select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
         ),
+        icon="mdi:pool",
     ),
     OverkizSwitchDescription(
         key=UIWidget.RTD_INDOOR_SIREN,
