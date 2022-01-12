@@ -12,11 +12,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,9 +103,9 @@ SERVICE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for Envisalink devices."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
 
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_EVL_PORT)
@@ -119,7 +120,7 @@ async def async_setup(hass, config):
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect = asyncio.Future()
+    sync_connect: asyncio.Future[bool] = asyncio.Future()
 
     controller = EnvisalinkAlarmPanel(
         host,

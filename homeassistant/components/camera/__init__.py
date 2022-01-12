@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -14,7 +14,7 @@ import inspect
 import logging
 import os
 from random import SystemRandom
-from typing import Awaitable, Callable, Final, Optional, cast, final
+from typing import Final, Optional, cast, final
 
 from aiohttp import web
 import async_timeout
@@ -353,13 +353,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CAMERA_THUMBNAIL, websocket_camera_thumbnail, SCHEMA_WS_CAMERA_THUMBNAIL
+    websocket_api.async_register_command(
+        hass,
+        WS_TYPE_CAMERA_THUMBNAIL,
+        websocket_camera_thumbnail,
+        SCHEMA_WS_CAMERA_THUMBNAIL,
     )
-    hass.components.websocket_api.async_register_command(ws_camera_stream)
-    hass.components.websocket_api.async_register_command(ws_camera_web_rtc_offer)
-    hass.components.websocket_api.async_register_command(websocket_get_prefs)
-    hass.components.websocket_api.async_register_command(websocket_update_prefs)
+    websocket_api.async_register_command(hass, ws_camera_stream)
+    websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
+    websocket_api.async_register_command(hass, websocket_get_prefs)
+    websocket_api.async_register_command(hass, websocket_update_prefs)
 
     await component.async_setup(config)
 

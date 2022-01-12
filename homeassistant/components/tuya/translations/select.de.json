@@ -48,6 +48,38 @@
             "on": "An",
             "power_off": "Aus",
             "power_on": "An"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Geschlossen",
+            "high": "Hoch",
+            "low": "Niedrig",
+            "middle": "Mittel"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Gro\u00df",
+            "middle": "Mittel",
+            "small": "Klein"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Bogen",
+            "chargego": "Zur\u00fcck zur Dockingstation",
+            "left_bow": "Bogen links",
+            "left_spiral": "Spirale links",
+            "mop": "Mopp",
+            "part": "Teil",
+            "partial_bow": "Bogen Teilweise",
+            "pick_zone": "Zone ausw\u00e4hlen",
+            "point": "Punkt",
+            "pose": "Pose",
+            "random": "Zuf\u00e4llig",
+            "right_bow": "Bogen rechts",
+            "right_spiral": "Spirale rechts",
+            "single": "Einzeln",
+            "smart": "Smart",
+            "spiral": "Spirale",
+            "standby": "Standby",
+            "wall_follow": "Wand folgen",
+            "zone": "Zone"
         }
     }
 }

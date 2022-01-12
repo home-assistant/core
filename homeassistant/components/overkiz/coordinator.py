@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -37,7 +37,7 @@ DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[Any], OverkizStateType]] = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class OverkizDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Device]]):
+class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
     def __init__(

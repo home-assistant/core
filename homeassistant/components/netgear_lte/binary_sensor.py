@@ -1,12 +1,22 @@
 """Support for Netgear LTE binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_BINARY_SENSOR, CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
 from .sensor_types import BINARY_SENSOR_CLASSES
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Netgear LTE binary sensor devices."""
     if discovery_info is None:
         return

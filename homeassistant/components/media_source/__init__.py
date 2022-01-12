@@ -42,8 +42,8 @@ def generate_media_source_id(domain: str, identifier: str) -> str:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media_source component."""
     hass.data[DOMAIN] = {}
-    hass.components.websocket_api.async_register_command(websocket_browse_media)
-    hass.components.websocket_api.async_register_command(websocket_resolve_media)
+    websocket_api.async_register_command(hass, websocket_browse_media)
+    websocket_api.async_register_command(hass, websocket_resolve_media)
     hass.components.frontend.async_register_built_in_panel(
         "media-browser", "media_browser", "hass:play-box-multiple"
     )

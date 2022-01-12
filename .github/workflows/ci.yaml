@@ -12,7 +12,7 @@ on:
 env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 1
-  DEFAULT_PYTHON: 3.8
+  DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -188,6 +188,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
+          python --version
           pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt
       - name: Generate partial pre-commit restore key
@@ -467,7 +468,7 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -524,7 +525,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -579,6 +580,7 @@ jobs:
 
           python -m venv venv
           . venv/bin/activate
+          python --version
           pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
@@ -593,7 +595,7 @@ jobs:
       - prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -617,12 +619,14 @@ jobs:
         if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
+          python --version
           pylint homeassistant
       - name: Run pylint (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
           pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   mypy:
@@ -633,7 +637,7 @@ jobs:
       - prepare-tests
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -657,12 +661,14 @@ jobs:
         if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
+          python --version
           mypy homeassistant
       - name: Run mypy (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
           mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   pytest:
@@ -681,7 +687,7 @@ jobs:
       fail-fast: false
       matrix:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -718,6 +724,7 @@ jobs:
         timeout-minutes: 45
         run: |
           . venv/bin/activate
+          python --version
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -732,11 +739,12 @@ jobs:
             -p no:sugar \
             tests
       - name: Run pytest (partially)
-        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
+        if: needs.changes.outputs.test_full_suite == 'false'
         timeout-minutes: 10
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
 
           if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
             echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
@@ -757,10 +765,11 @@ jobs:
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Run pytest (partially); no coverage
-        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version == '3.8'
+        if: needs.changes.outputs.test_full_suite == 'false'
         timeout-minutes: 10
         run: |
           . venv/bin/activate
+          python --version
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \

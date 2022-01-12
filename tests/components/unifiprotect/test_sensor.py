@@ -13,7 +13,6 @@ from pyunifiprotect.data.types import EventType, SmartDetectObjectType
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,
-    ATTR_EVENT_THUMB,
     DEFAULT_ATTRIBUTION,
 )
 from homeassistant.components.unifiprotect.sensor import (
@@ -407,7 +406,6 @@ async def test_sensor_setup_camera(
     assert state.state == DETECTED_OBJECT_NONE
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 0
-    assert state.attributes[ATTR_EVENT_THUMB] is None
 
 
 async def test_sensor_update_motion(
@@ -450,6 +448,3 @@ async def test_sensor_update_motion(
     assert state.state == SmartDetectObjectType.PERSON.value
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 100
-    assert state.attributes[ATTR_EVENT_THUMB].startswith(
-        f"/api/ufp/thumbnail/test_event_id?entity_id={entity_id}&token="
-    )
