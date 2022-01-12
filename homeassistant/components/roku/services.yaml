@@ -1,3 +1,32 @@
+launch:
+  name: Launch
+  description: Launches application with content deeplink.
+  target:
+    entity:
+      integration: roku
+      domain: media_player
+  fields:
+    app_id:
+      name: App ID
+      description: The application ID to launch.
+      required: true
+      example: "291097"
+      selector:
+        text:
+    media_type:
+      name: Media Type
+      description: "The type of media being launched."
+      required: true
+      example: "movie"
+      selector:
+        
+    content_id:
+      name: Content ID
+      description: The content ID to launch the application with.
+      required: true
+      example: "8e06a8b7-d667-4e31-939d-f40a6dd78a88"
+      selector:
+        text:
 search:
   name: Search
   description: Emulates opening the search screen and entering the search keyword.
