@@ -25,6 +25,7 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
+HUB_PREFIX = "hub:"
 EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
 PLAYLISTS_BROWSE_PAYLOAD = {
     "title": "Playlists",
@@ -43,7 +44,9 @@ LIBRARY_PREFERRED_LIBTYPE = {
 ITEM_TYPE_MEDIA_CLASS = {
     "album": MEDIA_CLASS_ALBUM,
     "artist": MEDIA_CLASS_ARTIST,
+    "clip": MEDIA_CLASS_VIDEO,
     "episode": MEDIA_CLASS_EPISODE,
+    "mixed": MEDIA_CLASS_DIRECTORY,
     "movie": MEDIA_CLASS_MOVIE,
     "playlist": MEDIA_CLASS_PLAYLIST,
     "season": MEDIA_CLASS_SEASON,
@@ -89,6 +92,17 @@ def browse_media(  # noqa: C901
 
         return BrowseMedia(**payload)
 
+    def hub_payload(hub):
+        payload = {
+            "title": hub.title,
+            "media_class": MEDIA_CLASS_DIRECTORY,
+            "media_content_id": f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}",
+            "media_content_type": hub.type,
+            "can_play": False,
+            "can_expand": True,
+        }
+        return BrowseMedia(**payload)
+
     def library_payload(library_id):
         """Create response payload to describe contents of a specific library."""
         library = entity.plex_server.library.sectionByID(library_id)
@@ -97,6 +111,9 @@ def browse_media(  # noqa: C901
         library_info.children.append(special_library_payload(library_info, "On Deck"))
         library_info.children.append(
             special_library_payload(library_info, "Recently Added")
+        )
+        library_info.children.append(
+            special_library_payload(library_info, "Recommended")
         )
         for item in library.all():
             try:
@@ -136,6 +153,33 @@ def browse_media(  # noqa: C901
                 except UnknownMediaType:
                     continue
         return media_info
+
+    if media_content_id and media_content_id.startswith(HUB_PREFIX):
+        media_content_id = media_content_id[len(HUB_PREFIX) :]
+        library_section_id, hub_identifier = media_content_id.split(":")
+        library_section = entity.plex_server.library.sectionByID(
+            int(library_section_id)
+        )
+        hub = next(
+            x for x in library_section.hubs() if x.hubIdentifier == hub_identifier
+        )
+        try:
+            children_media_class = ITEM_TYPE_MEDIA_CLASS[hub.type]
+        except KeyError as err:
+            raise BrowseError(f"Unknown type received: {hub.type}") from err
+        payload = {
+            "title": hub.title,
+            "media_class": MEDIA_CLASS_DIRECTORY,
+            "media_content_id": f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}",
+            "media_content_type": hub.type,
+            "can_play": False,
+            "can_expand": True,
+            "children": [],
+            "children_media_class": children_media_class,
+        }
+        for item in hub.items:
+            payload["children"].append(item_payload(item))
+        return BrowseMedia(**payload)
 
     if media_content_id and ":" in media_content_id:
         media_content_id, special_folder = media_content_id.split(":")
@@ -198,6 +242,10 @@ def browse_media(  # noqa: C901
                     if x.type in ["album", "episode", "movie"]
                 )
                 items = list(islice(recent_iter, 30))
+        elif special_folder == "Recommended":
+            for item in library_or_section.hubs():
+                payload["children"].append(hub_payload(item))
+            return BrowseMedia(**payload)
 
         for item in items:
             try:

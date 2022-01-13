@@ -15,6 +15,7 @@ from .const import DEFAULT_DATA
 class MockPlexShow:
     """Mock a plexapi Season instance."""
 
+    TAG = "Directory"
     ratingKey = 30
     title = "TV Show"
     type = "show"
@@ -27,8 +28,10 @@ class MockPlexShow:
 class MockPlexSeason:
     """Mock a plexapi Season instance."""
 
+    TAG = "Directory"
     ratingKey = 20
     title = "Season 1"
+    parentTitle = "TV Show"
     type = "season"
     year = 2021
 
@@ -40,6 +43,7 @@ class MockPlexSeason:
 class MockPlexEpisode:
     """Mock a plexapi Episode instance."""
 
+    TAG = "Video"
     ratingKey = 10
     title = "Episode 1"
     grandparentTitle = "TV Show"
@@ -50,6 +54,7 @@ class MockPlexEpisode:
 class MockPlexArtist:
     """Mock a plexapi Artist instance."""
 
+    TAG = "Directory"
     ratingKey = 300
     title = "Artist"
     type = "artist"
@@ -62,6 +67,7 @@ class MockPlexArtist:
 class MockPlexAlbum:
     """Mock a plexapi Album instance."""
 
+    TAG = "Directory"
     ratingKey = 200
     parentTitle = "Artist"
     title = "Album"
@@ -76,6 +82,7 @@ class MockPlexAlbum:
 class MockPlexTrack:
     """Mock a plexapi Track instance."""
 
+    TAG = "Track"
     index = 1
     ratingKey = 100
     title = "Track 1"
@@ -214,10 +221,10 @@ async def test_browse_media(
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
-    # All items in section + On Deck + Recently Added
+    # All items in section + On Deck + Recently Added + Hubs
     assert (
         len(result["children"])
-        == len(mock_plex_server.library.sectionByID(result_id).all()) + 2
+        == len(mock_plex_server.library.sectionByID(result_id).all()) + 3
     )
 
     # Browse into a Plex TV show
@@ -278,7 +285,10 @@ async def test_browse_media(
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "season"
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
-    assert result["title"] == f"{mock_season.title} ({mock_season.year})"
+    assert (
+        result["title"]
+        == f"{mock_season.parentTitle} - {mock_season.title} ({mock_season.year})"
+    )
     assert (
         result["children"][0]["title"]
         == f"{mock_episode.seasonEpisode.upper()} - {mock_episode.title}"
