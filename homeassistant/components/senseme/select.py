@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiosenseme import SensemeFan
-from aiosenseme.device import AUTOCOMFORTS, SensemeDevice
+from aiosenseme.device import SensemeDevice
 
 from homeassistant import config_entries
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -14,6 +14,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import SensemeEntity
+
+SMART_MODE_TO_HASS = {
+    "OFF": "Off",
+    "COOLING": "Cooling",
+    "HEATING": "Heating",
+    "FOLLOWTSTAT": "Follow Thermostat",
+}
+HASS_TO_SMART_MODE = {v: k for k, v in SMART_MODE_TO_HASS.items()}
 
 
 @dataclass
@@ -32,14 +40,14 @@ class SenseMESelectEntityDescription(
 
 
 def _set_smart_mode(device: SensemeDevice, value: str) -> None:
-    device.fan_smartmode = value.upper()
+    device.fan_smartmode = HASS_TO_SMART_MODE[value]
 
 
 FAN_SELECTS = [
     SenseMESelectEntityDescription(
         key="smart_mode",
         name="Smart Mode",
-        value_fn=lambda device: str(device.fan_smartmode).title(),
+        value_fn=lambda device: SMART_MODE_TO_HASS[device.fan_smartmode],
         set_fn=_set_smart_mode,
     ),
 ]
@@ -62,7 +70,7 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
     """SenseME select component."""
 
     entity_description: SenseMESelectEntityDescription
-    _attr_options = [option.title() for option in AUTOCOMFORTS]
+    _attr_options = list(SMART_MODE_TO_HASS.values())
 
     def __init__(
         self, device: SensemeFan, description: SenseMESelectEntityDescription
