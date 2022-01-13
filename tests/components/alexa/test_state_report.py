@@ -55,7 +55,7 @@ async def test_report_state_retry(hass, aioclient_mock):
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
 
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
 
     hass.states.async_set(
         "binary_sensor.test_contact",
