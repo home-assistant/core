@@ -564,7 +564,7 @@ def _init_tts_cache_dir(hass, cache_dir):
     return cache_dir
 
 
-def _get_cache_files(cache_dir):
+def _get_cache_files(cache_dir: str) -> dict[str, str]:
     """Return a dict of given engine files."""
     cache = {}
 
