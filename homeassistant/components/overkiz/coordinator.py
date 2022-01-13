@@ -101,11 +101,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
-        _LOGGER.debug("Fetching all devices and state via /setup/devices")
+        _LOGGER.debug("Fetching all devices and state via /setup/devices.")
         return {d.device_url: d for d in await self.client.get_devices(refresh=True)}
 
     def _places_to_area(self, place: Place) -> dict[str, str]:
-        """Convert places with sub_places to a flat dictionary."""
+        """Convert places with sub_places to a flat dictionary [placeoid, label])."""
         areas = {}
         if isinstance(place, Place):
             areas[place.oid] = place.label
@@ -124,7 +124,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     @EVENT_HANDLERS.register((EventName.DEVICE_UNAVAILABLE, EventName.DEVICE_DISABLED))
     async def on_device_unavailable_disabled(self, event: Event) -> None:
-        """Handle device unavailable / dispabled event."""
+        """Handle device unavailable / disabled event."""
         if event.device_url:
             self.devices[event.device_url].available = False
 
