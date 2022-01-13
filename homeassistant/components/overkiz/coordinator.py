@@ -1,11 +1,8 @@
 """Helpers to help coordinate updates."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
-import json
 import logging
-from typing import Any
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -16,23 +13,13 @@ from pyoverkiz.exceptions import (
     NotAuthenticatedException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import DataType, Device, Place, State
+from pyoverkiz.models import Device, Place
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL, OverkizStateType
-
-DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[Any], OverkizStateType]] = {
-    DataType.INTEGER: int,
-    DataType.DATE: int,
-    DataType.STRING: str,
-    DataType.FLOAT: float,
-    DataType.BOOLEAN: bool,
-    DataType.JSON_ARRAY: json.loads,
-    DataType.JSON_OBJECT: json.loads,
-}
+from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +64,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
-            raise UpdateFailed("Invalid authentication") from exception
+            raise UpdateFailed("Invalid authentication.") from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
@@ -92,7 +79,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 await self.client.login()
                 self.devices = await self._get_devices()
             except BadCredentialsException as exception:
-                raise UpdateFailed("Invalid authentication") from exception
+                raise UpdateFailed("Invalid authentication.") from exception
             except TooManyRequestsException as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
@@ -137,7 +124,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                         device_state = state
                         device.states[state.name] = device_state
 
-                    device_state.value = self._get_state(state)
+                    device_state.value = state.value
 
             elif event.name == EventName.EXECUTION_REGISTERED:
                 if event.exec_id not in self.executions:
@@ -162,21 +149,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Fetch devices."""
         _LOGGER.debug("Fetching all devices and state via /setup/devices")
         return {d.device_url: d for d in await self.client.get_devices(refresh=True)}
-
-    @staticmethod
-    def _get_state(
-        state: State,
-    ) -> OverkizStateType:
-        """Cast string value to the right type."""
-        data_type = DataType(state.type)
-
-        if data_type == DataType.NONE:
-            return state.value
-
-        cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
-        value = cast_to_python(state.value)
-
-        return value
 
     def places_to_area(self, place: Place) -> dict[str, str]:
         """Convert places with sub_places to a flat dictionary."""
