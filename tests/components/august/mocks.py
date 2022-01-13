@@ -207,6 +207,7 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, 
 
     api_instance.async_unlock_async = AsyncMock()
     api_instance.async_lock_async = AsyncMock()
+    api_instance.async_status_async = AsyncMock()
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
 
     return await _mock_setup_august(hass, api_instance, pubnub)
