@@ -28,7 +28,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-        self.sensor_map: dict[str, str] = {}
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Yale."""
@@ -106,9 +105,10 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 door_windows.append(device)
                 continue
 
-        self.sensor_map = {
+        _sensor_map = {
             contact["address"]: contact["_state"] for contact in door_windows
         }
+        _lock_map = {lock["address"]: lock["_state"] for lock in locks}
 
         return {
             "alarm": updates["arm_status"],
@@ -116,6 +116,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "door_windows": door_windows,
             "status": updates["status"],
             "online": updates["online"],
+            "sensor_map": _sensor_map,
+            "lock_map": _lock_map,
         }
 
     def get_updates(self) -> dict:

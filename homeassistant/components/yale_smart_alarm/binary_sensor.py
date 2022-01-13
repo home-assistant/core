@@ -36,4 +36,4 @@ class YaleBinarySensor(YaleEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return bool(self.coordinator.sensor_map[self._attr_unique_id] == "open")
+        return self.coordinator.data["sensor_map"][self._attr_unique_id] == "open"

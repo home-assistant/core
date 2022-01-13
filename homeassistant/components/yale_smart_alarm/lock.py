@@ -82,10 +82,7 @@ class YaleDoorlock(YaleEntity, LockEntity):
 
         LOGGER.debug("Door unlock: %s", lock_state)
         if lock_state:
-            for lock in self.coordinator.data["locks"]:
-                if lock["address"] == self._attr_unique_id:
-                    lock["_state"] = "unlocked"
-                    LOGGER.debug("lock data %s", self.coordinator.data["locks"])
+            self.coordinator.data["lock_map"][self._attr_unique_id] = "unlocked"
             self.async_write_ha_state()
             return
         raise HomeAssistantError("Could not unlock, check system ready for unlocking")
@@ -115,9 +112,7 @@ class YaleDoorlock(YaleEntity, LockEntity):
 
         LOGGER.debug("Door unlock: %s", lock_state)
         if lock_state:
-            for lock in self.coordinator.data["locks"]:
-                if lock["address"] == self._attr_unique_id:
-                    lock["_state"] = "locked"
+            self.coordinator.data["lock_map"][self._attr_unique_id] = "unlocked"
             self.async_write_ha_state()
             return
         raise HomeAssistantError("Could not unlock, check system ready for unlocking")
@@ -125,8 +120,4 @@ class YaleDoorlock(YaleEntity, LockEntity):
     @property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
-        for lock in self.coordinator.data["locks"]:
-            return bool(
-                lock["address"] == self._attr_unique_id and lock["_state"] == "locked"
-            )
-        return None
+        return self.coordinator.data["lock_map"][self._attr_unique_id] == "locked"
