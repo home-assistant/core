@@ -1,10 +1,8 @@
 """The Media Source implementation for the Jellyfin integration."""
 from __future__ import annotations
 
-from doctest import debug
 import logging
 import mimetypes
-from operator import index
 from typing import Any
 import urllib.parse
 
