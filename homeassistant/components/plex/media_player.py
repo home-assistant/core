@@ -1,4 +1,6 @@
 """Support to interface with the Plex API."""
+from __future__ import annotations
+
 from functools import wraps
 import json
 import logging
@@ -571,8 +573,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Get media image from Plex server."""
         image_url = self.plex_server.thumbnail_cache.get(media_content_id)
         if image_url:

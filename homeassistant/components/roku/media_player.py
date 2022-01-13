@@ -257,7 +257,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         media_content_type: str,
         media_content_id: str,
         media_image_id: str | None = None,
-    ) -> tuple[str | None, str | None]:
+    ) -> tuple[bytes | None, str | None]:
         """Fetch media browser image to serve via proxy."""
         if media_content_type == MEDIA_TYPE_APP and media_content_id:
             image_url = self.coordinator.roku.app_icon_url(media_content_id)

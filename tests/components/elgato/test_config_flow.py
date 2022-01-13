@@ -3,7 +3,7 @@ import aiohttp
 
 from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
-from homeassistant.components.elgato.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
@@ -52,7 +52,6 @@ async def test_full_user_flow_implementation(
 
     assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["data"][CONF_PORT] == 9123
-    assert result["data"][CONF_SERIAL_NUMBER] == "CN11A1A00001"
     assert result["title"] == "CN11A1A00001"
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -83,7 +82,7 @@ async def test_full_zeroconf_flow_implementation(
         ),
     )
 
-    assert result["description_placeholders"] == {CONF_SERIAL_NUMBER: "CN11A1A00001"}
+    assert result["description_placeholders"] == {"serial_number": "CN11A1A00001"}
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -97,7 +96,6 @@ async def test_full_zeroconf_flow_implementation(
     )
     assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["data"][CONF_PORT] == 9123
-    assert result["data"][CONF_SERIAL_NUMBER] == "CN11A1A00001"
     assert result["title"] == "CN11A1A00001"
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 

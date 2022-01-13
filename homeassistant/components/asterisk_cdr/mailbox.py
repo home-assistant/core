@@ -20,7 +20,7 @@ async def async_get_handler(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> Mailbox | None:
+) -> Mailbox:
     """Set up the Asterix CDR platform."""
     return AsteriskCDR(hass, MAILBOX_NAME)
 

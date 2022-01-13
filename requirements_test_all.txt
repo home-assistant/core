@@ -382,7 +382,7 @@ dsmr_parser==0.32
 dynalite_devices==0.1.46
 
 # homeassistant.components.elgato
-elgato==2.2.0
+elgato==3.0.0
 
 # homeassistant.components.elkm1
 elkm1-lib==1.0.0
@@ -480,7 +480,7 @@ glances_api==0.2.0
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.10
+goodwe==0.2.15
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -704,7 +704,7 @@ numato-gpio==0.10.0
 numpy==1.21.4
 
 # homeassistant.components.google
-oauth2client==4.0.0
+oauth2client==4.1.3
 
 # homeassistant.components.profiler
 objgraph==3.4.1
@@ -1097,7 +1097,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.1.0
+pyoverkiz==1.1.1
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1140,7 +1140,7 @@ pysensibo==1.0.3
 
 # homeassistant.components.serial
 # homeassistant.components.zha
-pyserial-asyncio==0.5
+pyserial-asyncio==0.6
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -1433,6 +1433,9 @@ total_connect_client==2021.12
 # homeassistant.components.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.twinkly
+ttls==1.4.2
+
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
 
@@ -1441,9 +1444,6 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
-
-# homeassistant.components.twinkly
-twinkly-client==0.0.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
@@ -1462,7 +1462,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.8.1
+vallox-websocket-api==2.9.0
 
 # homeassistant.components.rdw
 vehicle==0.3.1
@@ -1505,7 +1505,7 @@ wiffi==1.1.0
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.10.1
+wled==0.11.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

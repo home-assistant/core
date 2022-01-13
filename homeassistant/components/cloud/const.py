@@ -61,7 +61,3 @@ MODE_DEV = "development"
 MODE_PROD = "production"
 
 DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
-
-
-class RequireRelink(Exception):
-    """The skill needs to be relinked."""
