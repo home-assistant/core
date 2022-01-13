@@ -103,7 +103,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="alarm_sound",
         name="Alarm Sound Detected",
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.SOUND,
         ufp_value="is_alarm_detected",
         ufp_last_trip_value="alarm_triggered_at",
         ufp_enabled="is_alarm_sensor_enabled",
@@ -111,7 +111,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="tampering",
         name="Tampering Detected",
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.TAMPER,
         ufp_value="is_tampering_detected",
         ufp_last_trip_value="tampering_detected_at",
     ),
