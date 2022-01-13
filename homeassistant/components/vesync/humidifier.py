@@ -3,8 +3,10 @@ import logging
 
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import SUPPORT_MODES
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_HUMIDIFIERS
@@ -27,7 +29,11 @@ MAX_HUMIDITY = 80
 MIN_HUMIDITY = 30
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the VeSync humidifier platform."""
 
     @callback

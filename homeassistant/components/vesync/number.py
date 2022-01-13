@@ -2,9 +2,11 @@
 import logging
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncBaseEntity
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_NUMBERS
@@ -12,7 +14,11 @@ from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_NUMBERS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up numbers."""
 
     @callback
