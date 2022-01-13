@@ -429,7 +429,7 @@ class SpeechManager:
         except OSError as err:
             _LOGGER.error("Can't write %s: %s", filename, err)
 
-    async def async_file_to_mem(self, key):
+    async def async_file_to_mem(self, key: str) -> None:
         """Load voice from file cache into memory.
 
         This method is a coroutine.
@@ -439,7 +439,7 @@ class SpeechManager:
 
         voice_file = os.path.join(self.cache_dir, filename)
 
-        def load_speech():
+        def load_speech() -> bytes:
             """Load a speech from filesystem."""
             with open(voice_file, "rb") as speech:
                 return speech.read()
