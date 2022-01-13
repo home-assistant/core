@@ -259,7 +259,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
-        group = component.get_entity(entity_id)
+        group: Group | None = cast(Group, component.get_entity(entity_id))
 
         # new group
         if service.service == SERVICE_SET and group is None:
@@ -286,7 +286,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             return
 
-        if group is None or not isinstance(group, Group):
+        if group is None:
             _LOGGER.warning("%s:Group '%s' doesn't exist!", service.service, object_id)
             return
 
