@@ -5,7 +5,7 @@ from homeassistant.components.tradfri.fan import _from_fan_percentage, _from_fan
 
 
 @pytest.mark.parametrize(
-    "percentage, expected_result",
+    "fan_speed, expected_result",
     [
         (0, 0),
         (2, 2),
