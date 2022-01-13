@@ -51,8 +51,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             serial = await validate_input(self.hass, user_input[CONF_HOST])
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected Exception")
+        except Exception as exception:  # pylint: disable=broad-except
+            LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(serial)
