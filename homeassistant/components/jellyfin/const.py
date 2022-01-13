@@ -14,6 +14,7 @@ DATA_CLIENT: Final = "client"
 
 ITEM_KEY_COLLECTION_TYPE: Final = "CollectionType"
 ITEM_KEY_ID: Final = "Id"
+ITEM_KEY_STREAM_CONTAINER: Final = "Container"
 ITEM_KEY_IMAGE_TAGS: Final = "ImageTags"
 ITEM_KEY_INDEX_NUMBER: Final = "IndexNumber"
 ITEM_KEY_MEDIA_SOURCES: Final = "MediaSources"
