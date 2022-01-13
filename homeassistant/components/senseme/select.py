@@ -37,8 +37,8 @@ def _set_smart_mode(device: SensemeDevice, value: str) -> None:
 
 FAN_SELECTS = [
     SenseMESelectEntityDescription(
-        key="auto_comfort",
-        name="Auto Comfort",
+        key="smart_mode",
+        name="Smart Mode",
         value_fn=lambda device: str(device.fan_smartmode).title(),
         set_fn=_set_smart_mode,
     ),
@@ -62,9 +62,7 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
     """SenseME select component."""
 
     entity_description: SenseMESelectEntityDescription
-    _attr_options = [
-        option.title() for option in AUTOCOMFORTS if option != "FOLLOWTSTAT"
-    ]
+    _attr_options = [option.title() for option in AUTOCOMFORTS]
 
     def __init__(
         self, device: SensemeFan, description: SenseMESelectEntityDescription
