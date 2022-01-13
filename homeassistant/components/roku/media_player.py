@@ -386,10 +386,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             }
 
             await self.coordinator.roku.launch(media_id, params)
-        elif media_type == MEDIA_TYPE_URL:
-            await self.coordinator.roku.play_video(media_id)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
+        elif media_type == MEDIA_TYPE_URL:
+            await self.coordinator.roku.play_video(media_id)
 
         await self.coordinator.async_request_refresh()
 
