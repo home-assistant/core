@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -12,6 +13,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_BROWSE_MEDIA,
@@ -43,7 +45,13 @@ from homeassistant.helpers.network import is_internal_request
 
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
-from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .const import (
+    ATTR_CONTENT_ID,
+    ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
+    DOMAIN,
+    SERVICE_SEARCH,
+)
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
@@ -62,6 +70,11 @@ SUPPORT_ROKU = (
     | SUPPORT_TURN_OFF
     | SUPPORT_BROWSE_MEDIA
 )
+
+ATTRS_TO_LAUNCH_PARAMS = {
+    ATTR_CONTENT_ID: "contentID",
+    ATTR_MEDIA_TYPE: "MediaType",
+}
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
@@ -352,6 +365,8 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
+        extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+
         if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
             _LOGGER.error(
                 "Invalid media type %s. Only %s and %s are supported",
@@ -362,7 +377,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return
 
         if media_type == MEDIA_TYPE_APP:
-            await self.coordinator.roku.launch(media_id)
+            params = {
+                param: extra[attr]
+                for (attr, param) in ATTRS_TO_LAUNCH_PARAMS.items()
+                if attr in extra
+            }
+
+            await self.coordinator.roku.launch(media_id, params)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
 

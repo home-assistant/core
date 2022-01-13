@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -38,7 +39,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from homeassistant.components.roku.const import (
+    ATTR_CONTENT_ID,
+    ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
+    DOMAIN,
+    SERVICE_SEARCH,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -448,7 +455,31 @@ async def test_services(
             blocking=True,
         )
 
-        launch_mock.assert_called_once_with("11")
+        launch_mock.assert_called_once_with("11", {})
+
+    with patch("homeassistant.components.roku.coordinator.Roku.launch") as launch_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+                ATTR_MEDIA_CONTENT_ID: "291097",
+                ATTR_MEDIA_EXTRA: {
+                    ATTR_MEDIA_TYPE: "movie",
+                    ATTR_CONTENT_ID: "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
+                },
+            },
+            blocking=True,
+        )
+
+        launch_mock.assert_called_once_with(
+            "291097",
+            {
+                "contentID": "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
+                "MediaType": "movie",
+            },
+        )
 
     with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
