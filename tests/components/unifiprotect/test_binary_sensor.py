@@ -7,8 +7,7 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Event, EventType, Light, Sensor
-from pyunifiprotect.data.types import MountType
+from pyunifiprotect.data import Camera, Event, EventType, Light, MountType, Sensor
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.unifiprotect.binary_sensor import (

@@ -5,8 +5,7 @@ from copy import copy
 from dataclasses import dataclass
 import logging
 
-from pyunifiprotect.data import NVR, Camera, Event, Light, Sensor
-from pyunifiprotect.data.types import MountType
+from pyunifiprotect.data import NVR, Camera, Event, Light, MountType, Sensor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
