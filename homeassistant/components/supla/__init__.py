@@ -8,7 +8,7 @@ import async_timeout
 from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -28,9 +28,9 @@ CONF_SERVERS = "servers"
 SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
-    "CONTROLLINGTHEROLLERSHUTTER": "cover",
-    "CONTROLLINGTHEGATE": "cover",
-    "LIGHTSWITCH": "switch",
+    "CONTROLLINGTHEROLLERSHUTTER": Platform.COVER,
+    "CONTROLLINGTHEGATE": Platform.COVER,
+    "LIGHTSWITCH": Platform.SWITCH,
 }
 SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_SERVERS = "supla_servers"
@@ -98,7 +98,7 @@ async def discover_devices(hass, hass_config):
 
     Currently it is only run at startup.
     """
-    component_configs = {}
+    component_configs: dict[Platform, list[dict]] = {}
 
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
