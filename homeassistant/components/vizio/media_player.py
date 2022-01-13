@@ -145,6 +145,7 @@ class VizioDevice(MediaPlayerEntity):
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._current_input = None
         self._current_app_config = None
+        self._app_name = None
         self._available_inputs = []
         self._available_apps = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
@@ -208,7 +209,7 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
             self._current_input = None
-            self._attr_app_name = None
+            self._app_name = None
             self._current_app_config = None
             self._attr_sound_mode = None
             return
@@ -264,13 +265,13 @@ class VizioDevice(MediaPlayerEntity):
             log_api_exception=False
         )
 
-        self._attr_app_name = find_app_name(
+        self._app_name = find_app_name(
             self._current_app_config,
             [APP_HOME, *self._all_apps, *self._additional_app_configs],
         )
 
-        if self._attr_app_name == NO_APP_RUNNING:
-            self._attr_app_name = None
+        if self._app_name == NO_APP_RUNNING:
+            self._app_name = None
 
     def _get_additional_app_names(self) -> list[dict[str, Any]]:
         """Return list of additional apps that were included in configuration.yaml."""
@@ -336,8 +337,8 @@ class VizioDevice(MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return current input of the device."""
-        if self._attr_app_name is not None and self._current_input in INPUT_APPS:
-            return self._attr_app_name
+        if self._app_name is not None and self._current_input in INPUT_APPS:
+            return self._app_name
 
         return self._current_input
 
@@ -366,8 +367,8 @@ class VizioDevice(MediaPlayerEntity):
     @property
     def app_name(self) -> str | None:
         """Return the name of the current app."""
-        if self.source == self._attr_app_name:
-            return super().app_name
+        if self.source == self._app_name:
+            return self._app_name
 
         return None
 
