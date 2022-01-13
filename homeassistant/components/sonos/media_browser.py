@@ -6,6 +6,7 @@ import urllib.parse
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_TRACK,
     MEDIA_TYPE_ALBUM,
 )
 from homeassistant.components.media_player.errors import BrowseError
@@ -120,6 +121,46 @@ def item_payload(item, get_thumbnail_url=None):
     )
 
 
+def root_payload(media_library):
+    """Return root payload for Sonos."""
+    children = [
+        BrowseMedia(
+            title="Favorites",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="favorites",
+            can_play=False,
+            can_expand=True,
+        )
+    ]
+
+    if media_library.browse_by_idstring(
+        "tracks",
+        "",
+        max_items=1,
+    ):
+        children.append(
+            BrowseMedia(
+                title="Music Library",
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_id="",
+                media_content_type="library",
+                can_play=False,
+                can_expand=True,
+            )
+        )
+
+    return BrowseMedia(
+        title="Sonos",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="library",
+        media_content_type="library",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
 def library_payload(media_library, get_thumbnail_url=None):
     """
     Create response payload to describe contents of a specific library.
@@ -143,6 +184,36 @@ def library_payload(media_library, get_thumbnail_url=None):
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
+def favorites_payload(favorites, get_thumbnail_url=None):
+    """
+    Create response payload to describe contents of a specific library.
+
+    Used by async_browse_media.
+    """
+    children = []
+    for item in favorites:
+        children.append(
+            BrowseMedia(
+                title=item.title,
+                media_class=MEDIA_CLASS_TRACK,
+                media_content_id=item.title,
+                media_content_type="favorite",
+                can_play=True,
+                can_expand=False,
+            )
+        )
+
+    return BrowseMedia(
+        title="Favorites",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="",
+        media_content_type="favorites",
         can_play=False,
         can_expand=True,
         children=children,
