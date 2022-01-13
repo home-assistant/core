@@ -9,6 +9,7 @@ from unittest.mock import Mock
 import pytest
 from pyunifiprotect.data import NVR, Camera, Event, Sensor
 from pyunifiprotect.data.base import WifiConnectionState, WiredConnectionState
+from pyunifiprotect.data.nvr import EventMetadata
 from pyunifiprotect.data.types import EventType, SmartDetectObjectType
 
 from homeassistant.components.unifiprotect.const import (
@@ -19,13 +20,18 @@ from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
-    DETECTED_OBJECT_NONE,
     MOTION_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
+    OBJECT_TYPE_NONE,
     SENSE_SENSORS,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,6 +59,10 @@ async def sensor_fixture(
     sensor_obj._api = mock_entry.api
     sensor_obj.name = "Test Sensor"
     sensor_obj.battery_status.percentage = 10.0
+    sensor_obj.light_settings.is_enabled = True
+    sensor_obj.humidity_settings.is_enabled = True
+    sensor_obj.temperature_settings.is_enabled = True
+    sensor_obj.alarm_settings.is_enabled = True
     sensor_obj.stats.light.value = 10.0
     sensor_obj.stats.humidity.value = 10.0
     sensor_obj.stats.temperature.value = 10.0
@@ -68,7 +78,46 @@ async def sensor_fixture(
     await hass.async_block_till_done()
 
     # 2 from all, 4 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 18, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 19, 14)
+
+    yield sensor_obj
+
+    Sensor.__config__.validate_assignment = True
+
+
+@pytest.fixture(name="sensor_none")
+async def sensor_none_fixture(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    mock_sensor: Sensor,
+    now: datetime,
+):
+    """Fixture for a single sensor for testing the sensor platform."""
+
+    # disable pydantic validation so mocking can happen
+    Sensor.__config__.validate_assignment = False
+
+    sensor_obj = mock_sensor.copy(deep=True)
+    sensor_obj._api = mock_entry.api
+    sensor_obj.name = "Test Sensor"
+    sensor_obj.battery_status.percentage = 10.0
+    sensor_obj.light_settings.is_enabled = False
+    sensor_obj.humidity_settings.is_enabled = False
+    sensor_obj.temperature_settings.is_enabled = False
+    sensor_obj.alarm_settings.is_enabled = False
+    sensor_obj.up_since = now
+    sensor_obj.bluetooth_connection_state.signal_strength = -50.0
+
+    mock_entry.api.bootstrap.reset_objects()
+    mock_entry.api.bootstrap.sensors = {
+        sensor_obj.id: sensor_obj,
+    }
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # 2 from all, 4 from sense, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 19, 14)
 
     yield sensor_obj
 
@@ -131,7 +180,7 @@ async def test_sensor_setup_sensor(
 
     entity_registry = er.async_get(hass)
 
-    expected_values = ("10", "10.0", "10.0", "10.0")
+    expected_values = ("10", "10.0", "10.0", "10.0", "none")
     for index, description in enumerate(SENSE_SENSORS):
         unique_id, entity_id = ids_from_device_description(
             Platform.SENSOR, sensor, description
@@ -162,6 +211,35 @@ async def test_sensor_setup_sensor(
     assert state
     assert state.state == "-50"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+
+async def test_sensor_setup_sensor_none(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, sensor_none: Sensor
+):
+    """Test sensor entity setup for sensor devices with no sensors enabled."""
+
+    entity_registry = er.async_get(hass)
+
+    expected_values = (
+        "10",
+        STATE_UNAVAILABLE,
+        STATE_UNAVAILABLE,
+        STATE_UNAVAILABLE,
+        STATE_UNAVAILABLE,
+    )
+    for index, description in enumerate(SENSE_SENSORS):
+        unique_id, entity_id = ids_from_device_description(
+            Platform.SENSOR, sensor_none, description
+        )
+
+        entity = entity_registry.async_get(entity_id)
+        assert entity
+        assert entity.unique_id == unique_id
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_values[index]
+        assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
 async def test_sensor_setup_nvr(
@@ -403,7 +481,7 @@ async def test_sensor_setup_camera(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == DETECTED_OBJECT_NONE
+    assert state.state == OBJECT_TYPE_NONE
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 0
 
@@ -426,6 +504,7 @@ async def test_sensor_update_motion(
         smart_detect_types=[SmartDetectObjectType.PERSON],
         smart_detect_event_ids=[],
         camera_id=camera.id,
+        api=mock_entry.api,
     )
 
     new_bootstrap = copy(mock_entry.api.bootstrap)
@@ -435,7 +514,7 @@ async def test_sensor_update_motion(
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
+    mock_msg.new_obj = event
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
     new_bootstrap.events = {event.id: event}
@@ -448,3 +527,45 @@ async def test_sensor_update_motion(
     assert state.state == SmartDetectObjectType.PERSON.value
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 100
+
+
+async def test_sensor_update_alarm(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, sensor: Sensor, now: datetime
+):
+    """Test sensor motion entity."""
+
+    _, entity_id = ids_from_device_description(
+        Platform.SENSOR, sensor, SENSE_SENSORS[4]
+    )
+
+    event_metadata = EventMetadata(sensor_id=sensor.id, alarm_type="smoke")
+    event = Event(
+        id="test_event_id",
+        type=EventType.SENSOR_ALARM,
+        start=now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        metadata=event_metadata,
+        api=mock_entry.api,
+    )
+
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_sensor = sensor.copy()
+    new_sensor.set_alarm_timeout()
+    new_sensor.last_alarm_event_id = event.id
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+
+    new_bootstrap.sensors = {new_sensor.id: new_sensor}
+    new_bootstrap.events = {event.id: event}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "smoke"
