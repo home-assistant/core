@@ -1,7 +1,7 @@
 """Config flow to configure the SimpliSafe component."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
@@ -61,6 +61,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._oauth_values: SimpliSafeOAuthValues | None = None
         self._reauth: bool = False
+        self._user_id: str | None = None
         self._username: str | None = None
 
     @staticmethod
@@ -75,21 +76,39 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Show the form."""
         self._oauth_values = async_get_simplisafe_oauth_values()
 
+        description_placeholders = {
+            CONF_URL: self._oauth_values.auth_url,
+            CONF_DOCS_URL: AUTH_DOCS_URL,
+        }
+
+        if self._reauth:
+            assert self._user_id
+            step_id = "reauth_confirm"
+            description_placeholders[CONF_USER_ID] = self._user_id
+        else:
+            step_id = "user"
+
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=STEP_USER_SCHEMA,
             errors=errors or {},
-            description_placeholders={
-                CONF_URL: self._oauth_values.auth_url,
-                CONF_DOCS_URL: AUTH_DOCS_URL,
-            },
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reauth(self, config: ConfigType) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._username = config.get(CONF_USERNAME)
         self._reauth = True
-        return await self.async_step_user()
+        self._user_id = str(config.get(CONF_USER_ID))
+        self._username = config.get(CONF_USERNAME)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the reauth confirmation."""
+        if user_input is None:
+            return self._async_show_form()
+        return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -98,8 +117,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._async_show_form()
 
-        if TYPE_CHECKING:
-            assert self._oauth_values
+        assert self._oauth_values
 
         errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
