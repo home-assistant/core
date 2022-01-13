@@ -126,6 +126,11 @@ def next_departuredate(departure: list[str]) -> date:
     return next_weekday(today_date, WEEKDAYS.index(departure[0]))
 
 
+def _to_iso_format(traintime: datetime) -> str:
+    """Return isoformatted utc time."""
+    return as_utc(traintime.astimezone(TIMEZONE)).isoformat()
+
+
 class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
 
@@ -148,7 +153,6 @@ class TrainSensor(SensorEntity):
         self._to_station = to_station
         self._weekday = weekday
         self._time = departuretime
-        self._attr_extra_state_attributes = {}
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
@@ -188,12 +192,12 @@ class TrainSensor(SensorEntity):
                 TIMEZONE
             )
 
-        self._attr_extra_state_attributes = await self.async_update_attributes(_state)
+        self._update_attributes(_state)
 
-    async def async_update_attributes(self, state: TrainStop) -> dict[str, Any]:
+    def _update_attributes(self, state: TrainStop) -> None:
         """Return extra state attributes."""
 
-        attributes = {
+        attributes: dict[str, Any] = {
             ATTR_DEPARTURE_STATE: state.get_state().name,
             ATTR_CANCELED: state.canceled,
             ATTR_DELAY_TIME: None,
@@ -208,19 +212,13 @@ class TrainSensor(SensorEntity):
             attributes[ATTR_DELAY_TIME] = delay_in_minutes.total_seconds() / 60
 
         if advert_time := state.advertised_time_at_location:
-            attributes[ATTR_PLANNED_TIME] = as_utc(
-                advert_time.astimezone(TIMEZONE)
-            ).isoformat()
+            attributes[ATTR_PLANNED_TIME] = _to_iso_format(advert_time)
 
         if est_time := state.estimated_time_at_location:
-            attributes[ATTR_ESTIMATED_TIME] = as_utc(
-                est_time.astimezone(TIMEZONE)
-            ).isoformat()
+            attributes[ATTR_ESTIMATED_TIME] = _to_iso_format(est_time)
 
         if time_location := state.time_at_location:
-            attributes[ATTR_ACTUAL_TIME] = as_utc(
-                time_location.astimezone(TIMEZONE)
-            ).isoformat()
+            attributes[ATTR_ACTUAL_TIME] = _to_iso_format(time_location)
 
         if other_info := state.other_information:
             attributes[ATTR_OTHER_INFORMATION] = ", ".join(other_info)
@@ -228,4 +226,4 @@ class TrainSensor(SensorEntity):
         if deviation := state.deviations:
             attributes[ATTR_DEVIATIONS] = ", ".join(deviation)
 
-        return attributes
+        self._attr_extra_state_attributes = attributes
