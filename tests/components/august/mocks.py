@@ -167,6 +167,8 @@ async def _create_august_with_devices(  # noqa: C901
     )
 
     if device_data["locks"]:
+        # Ensure we sync status when the integration is loaded if there
+        # are any locks
         assert api_instance.async_status_async.mock_calls
 
     return entry
