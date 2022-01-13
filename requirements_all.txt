@@ -1131,7 +1131,7 @@ numpy==1.21.4
 oasatelematics==0.3
 
 # homeassistant.components.google
-oauth2client==4.0.0
+oauth2client==4.1.3
 
 # homeassistant.components.profiler
 objgraph==3.4.1
