@@ -2466,7 +2466,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
-yalexs==1.1.17
+yalexs==1.1.18
 
 # homeassistant.components.yeelight
 yeelight==0.7.8
