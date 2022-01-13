@@ -60,7 +60,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self.executions: dict[str, dict[str, str]] = {}
         self.areas = self._places_to_area(places)
-        self._config_entry_id = config_entry_id
+        self.config_entry_id = config_entry_id
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
@@ -143,7 +143,7 @@ async def on_device_created_updated(
 ) -> None:
     """Handle device unavailable / disabled event."""
     coordinator.hass.async_create_task(
-        coordinator.hass.config_entries.async_reload(coordinator._config_entry_id)
+        coordinator.hass.config_entries.async_reload(coordinator.config_entry_id)
     )
 
 
