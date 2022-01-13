@@ -138,6 +138,11 @@ class AugustData(AugustSubscriberMixin):
         pubnub.subscribe(self.async_pubnub_message)
         self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
 
+        if self._locks_by_id:
+            await asyncio.gather(
+                *[self.async_status_async(lock_id) for lock_id in self._locks_by_id]
+            )
+
     @callback
     def async_pubnub_message(self, device_id, date_time, message):
         """Process a pubnub message."""
@@ -241,6 +246,15 @@ class AugustData(AugustSubscriberMixin):
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_lock_return_activities,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
+    async def async_status_async(self, device_id):
+        """Request status of the the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_status_async,
             self._august_gateway.access_token,
             device_id,
         )
