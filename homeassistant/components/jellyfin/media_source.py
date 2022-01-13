@@ -1,8 +1,10 @@
 """The Media Source implementation for the Jellyfin integration."""
 from __future__ import annotations
 
+from doctest import debug
 import logging
 import mimetypes
+from operator import index
 from typing import Any
 import urllib.parse
 
@@ -35,6 +37,7 @@ from .const import (
     ITEM_KEY_MEDIA_SOURCES,
     ITEM_KEY_MEDIA_TYPE,
     ITEM_KEY_NAME,
+    ITEM_KEY_STREAM_CONTAINER,
     ITEM_TYPE_ALBUM,
     ITEM_TYPE_ARTIST,
     ITEM_TYPE_AUDIO,
@@ -238,7 +241,13 @@ class JellyfinSource(MediaSource):
     async def _build_tracks(self, album_id: str) -> list[BrowseMediaSource]:
         """Return all tracks of a single album as browsable media sources."""
         tracks = await self._get_children(album_id, ITEM_TYPE_AUDIO)
-        tracks = sorted(tracks, key=lambda k: k[ITEM_KEY_INDEX_NUMBER])  # type: ignore[no-any-return]
+        tracks = sorted(
+            tracks,
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER, None),
+            ),
+        )
         return [self._build_track(track) for track in tracks]
 
     def _build_track(self, track: dict[str, Any]) -> BrowseMediaSource:
@@ -301,6 +310,7 @@ class JellyfinSource(MediaSource):
         user_id = self.client.config.data["auth.user_id"]
         device_id = self.client.config.data["app.device_id"]
         api_key = self.client.config.data["auth.token"]
+        container = media_item[ITEM_KEY_MEDIA_SOURCES][0][ITEM_KEY_STREAM_CONTAINER]
 
         params = urllib.parse.urlencode(
             {
@@ -308,9 +318,9 @@ class JellyfinSource(MediaSource):
                 "DeviceId": device_id,
                 "api_key": api_key,
                 "MaxStreamingBitrate": MAX_STREAMING_BITRATE,
+                "Container": container,
             }
         )
-
         return f"{self.url}Audio/{item_id}/universal?{params}"
 
 
