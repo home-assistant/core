@@ -23,7 +23,6 @@ class ProtectRequiredKeysMixin:
     ufp_value: str | None = None
     ufp_value_fn: Callable[[ProtectAdoptableDeviceModel | NVR], Any] | None = None
     ufp_enabled: str | None = None
-    ufp_enabled_fn: Callable[[ProtectAdoptableDeviceModel | NVR], bool] | None = None
 
     def get_ufp_value(self, obj: ProtectAdoptableDeviceModel | NVR) -> Any:
         """Return value from UniFi Protect device."""
