@@ -41,6 +41,34 @@ async def test_report_state(hass, aioclient_mock):
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_contact"
 
 
+async def test_report_state_retry(hass, aioclient_mock):
+    """Test proactive state retries once."""
+    aioclient_mock.post(
+        TEST_URL,
+        text='{"payload":{"code":"INVALID_ACCESS_TOKEN_EXCEPTION","description":""}}',
+        status=403,
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
+
+
 async def test_report_state_instance(hass, aioclient_mock):
     """Test proactive state reports with instance."""
     aioclient_mock.post(TEST_URL, text="", status=202)
