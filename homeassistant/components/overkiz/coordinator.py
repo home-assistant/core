@@ -126,13 +126,25 @@ async def on_device_available(
         coordinator.devices[event.device_url].available = True
 
 
-@EVENT_HANDLERS.register((EventName.DEVICE_UNAVAILABLE, EventName.DEVICE_DISABLED))
+@EVENT_HANDLERS.register(EventName.DEVICE_UNAVAILABLE)
+@EVENT_HANDLERS.register(EventName.DEVICE_DISABLED)
 async def on_device_unavailable_disabled(
     coordinator: OverkizDataUpdateCoordinator, event: Event
 ) -> None:
     """Handle device unavailable / disabled event."""
     if event.device_url:
         coordinator.devices[event.device_url].available = False
+
+
+@EVENT_HANDLERS.register(EventName.DEVICE_CREATED)
+@EVENT_HANDLERS.register(EventName.DEVICE_UPDATED)
+async def on_device_created_updated(
+    coordinator: OverkizDataUpdateCoordinator, event: Event
+) -> None:
+    """Handle device unavailable / disabled event."""
+    coordinator.hass.async_create_task(
+        coordinator.hass.config_entries.async_reload(coordinator._config_entry_id)
+    )
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_STATE_CHANGED)
