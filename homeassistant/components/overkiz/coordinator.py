@@ -136,12 +136,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         for state in event.device_states:
             device = self.devices[event.device_url]
-
-            if (device_state := device.states[state.name]) is None:
-                device_state = state
-                device.states[state.name] = device_state
-
-            device_state.value = state.value
+            device.states[state.name] = state
 
     @EVENT_HANDLERS.register(EventName.DEVICE_REMOVED)
     async def on_device_removed(self, event: Event) -> None:
