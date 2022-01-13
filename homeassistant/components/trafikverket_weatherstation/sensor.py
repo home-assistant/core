@@ -222,9 +222,10 @@ class TrafikverketWeatherStation(SensorEntity):
         self._weather_api = weather_api
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, entry_id)},
             manufacturer="Trafikverket",
-            name=self._attr_name,
+            model="v1.2",
+            name=sensor_station,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
         self._weather: WeatherStationInfo | None = None
