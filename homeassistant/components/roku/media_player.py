@@ -69,7 +69,7 @@ SUPPORT_ROKU = (
     | SUPPORT_BROWSE_MEDIA
 )
 
-HA_ATTRS_TO_LAUNCH_PARAMS = {
+ATTRS_TO_LAUNCH_PARAMS = {
     ATTR_CONTENT_ID: "ContentID",
     ATTR_MEDIA_TYPE: "MediaType",
 }
@@ -375,7 +375,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if media_type == MEDIA_TYPE_APP:
             params = {
                 param: kwargs[kwarg]
-                for (kwarg, param) in HA_ATTRS_TO_LAUNCH_PARAMS.items()
+                for (kwarg, param) in ATTRS_TO_LAUNCH_PARAMS.items()
                 if kwarg in kwargs
             }
 
