@@ -120,7 +120,7 @@ async def test_step_reauth_old_format(hass, mock_async_from_auth):
         context={"source": SOURCE_REAUTH},
         data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
@@ -152,7 +152,7 @@ async def test_step_reauth_new_format(hass, mock_async_from_auth):
         context={"source": SOURCE_REAUTH},
         data={CONF_USER_ID: "12345", CONF_TOKEN: "token123"},
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
@@ -184,7 +184,7 @@ async def test_step_reauth_wrong_account(hass, api, mock_async_from_auth):
         context={"source": SOURCE_REAUTH},
         data={CONF_USER_ID: "12345", CONF_TOKEN: "token123"},
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
 
     # Simulate the next auth call returning a different user ID than the one we've
     # identified as this entry's unique ID:
