@@ -101,10 +101,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.components.frontend.async_register_built_in_panel(
         "history", "history", "hass:chart-box"
     )
-    hass.components.websocket_api.async_register_command(
-        ws_get_statistics_during_period
-    )
-    hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
+    websocket_api.async_register_command(hass, ws_get_statistics_during_period)
+    websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
 
     return True
 

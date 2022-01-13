@@ -47,6 +47,28 @@
             "on": "w\u0142.",
             "power_off": "wy\u0142.",
             "power_on": "w\u0142."
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "zamkni\u0119ta",
+            "high": "wysoki",
+            "low": "niski",
+            "middle": "w po\u0142owie"
+        },
+        "tuya__vacuum_collection": {
+            "large": "du\u017cy",
+            "middle": "\u015bredni",
+            "small": "ma\u0142y"
+        },
+        "tuya__vacuum_mode": {
+            "chargego": "Powr\u00f3t do stacji dokuj\u0105cej",
+            "mop": "Mop",
+            "pick_zone": "Wybierz stref\u0119",
+            "point": "Punkt",
+            "random": "Losowo",
+            "smart": "Smart",
+            "standby": "Tryb czuwania",
+            "wall_follow": "Wzd\u0142u\u017c \u015bciany",
+            "zone": "Strefa"
         }
     }
 }

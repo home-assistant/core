@@ -13,6 +13,7 @@ from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import X_HASSIO, X_INGRESS_PATH
 
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_setup_ingress_view(hass: HomeAssistant, host: str):
     """Auth setup."""
-    websession = hass.helpers.aiohttp_client.async_get_clientsession()
+    websession = async_get_clientsession(hass)
 
     hassio_ingress = HassIOIngress(host, websession)
     hass.http.register_view(hassio_ingress)

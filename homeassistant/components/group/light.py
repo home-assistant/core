@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 import itertools
 import logging
-from typing import Any, Set, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -252,7 +252,7 @@ class LightGroup(GroupEntity, LightEntity):
         if all_supported_color_modes:
             # Merge all color modes.
             self._attr_supported_color_modes = cast(
-                Set[str], set().union(*all_supported_color_modes)
+                set[str], set().union(*all_supported_color_modes)
             )
 
         self._attr_supported_features = 0

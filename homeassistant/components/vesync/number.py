@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 
 from .common import VeSyncBaseEntity
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_NUMBERS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,20 +15,20 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up numbers."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(VS_NUMBERS), async_discover
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_NUMBERS), discover)
     )
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    _async_setup_entities(hass.data[DOMAIN][VS_NUMBERS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_NUMBERS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:

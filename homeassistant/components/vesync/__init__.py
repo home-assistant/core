@@ -14,7 +14,6 @@ from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
     VS_DISCOVERY,
-    VS_DISPATCHERS,
     VS_FANS,
     VS_HUMIDIFIERS,
     VS_LIGHTS,
@@ -66,8 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     sensors = hass.data[DOMAIN][VS_SENSORS] = []
     humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS] = []
     numbers = hass.data[DOMAIN][VS_NUMBERS] = []
-
-    hass.data[DOMAIN][VS_DISPATCHERS] = []
 
     if device_dict[VS_SWITCHES]:
         switches.extend(device_dict[VS_SWITCHES])

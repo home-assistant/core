@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .common import VeSyncDevice
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_HUMIDIFIERS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_HUMIDIFIERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,27 +30,32 @@ MIN_HUMIDITY = 30
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the VeSync humidifier platform."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), async_discover
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), discover)
     )
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    _async_setup_entities(hass.data[DOMAIN][VS_HUMIDIFIERS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_HUMIDIFIERS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    dev_list = []
+    entities = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
-            dev_list.append(VeSyncHumidifierHA(dev))
+            entities.append(VeSyncHumidifierHA(dev))
+        else:
+            _LOGGER.warning(
+                "%s - Unknown device type - %s", dev.device_name, dev.device_type
+            )
+            continue
 
-    async_add_entities(dev_list, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
