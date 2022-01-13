@@ -83,6 +83,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"name": self.discovered_device.info.name},
+                "configuration_url": f"http://{discovery_info.host}",
             }
         )
         return await self.async_step_zeroconf_confirm()

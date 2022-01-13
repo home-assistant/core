@@ -188,6 +188,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
+          python --version
           pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt
       - name: Generate partial pre-commit restore key
@@ -579,6 +580,7 @@ jobs:
 
           python -m venv venv
           . venv/bin/activate
+          python --version
           pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
@@ -617,12 +619,14 @@ jobs:
         if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
+          python --version
           pylint homeassistant
       - name: Run pylint (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
           pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   mypy:
@@ -657,12 +661,14 @@ jobs:
         if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
+          python --version
           mypy homeassistant
       - name: Run mypy (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
           mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   pytest:
@@ -718,6 +724,7 @@ jobs:
         timeout-minutes: 45
         run: |
           . venv/bin/activate
+          python --version
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -737,6 +744,7 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
 
           if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
             echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
@@ -761,6 +769,7 @@ jobs:
         timeout-minutes: 10
         run: |
           . venv/bin/activate
+          python --version
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \

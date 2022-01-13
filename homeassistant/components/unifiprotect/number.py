@@ -82,18 +82,6 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_value="isp_settings.zoom_position",
         ufp_set_method="set_camera_zoom",
     ),
-    ProtectNumberEntityDescription(
-        key="duration",
-        name="Chime Duration",
-        icon="mdi:camera-timer",
-        entity_category=EntityCategory.CONFIG,
-        ufp_min=0,
-        ufp_max=10000,
-        ufp_step=100,
-        ufp_required_field="feature_flags.has_chime",
-        ufp_value="chime_duration",
-        ufp_set_method="set_chime_duration",
-    ),
 )
 
 LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
