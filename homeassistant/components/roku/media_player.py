@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_BROWSE_MEDIA,
@@ -363,6 +364,8 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
+        extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+        
         if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
             _LOGGER.error(
                 "Invalid media type %s. Only %s and %s are supported",
@@ -374,9 +377,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if media_type == MEDIA_TYPE_APP:
             params = {
-                param: kwargs[kwarg]
-                for (kwarg, param) in ATTRS_TO_LAUNCH_PARAMS.items()
-                if kwarg in kwargs
+                param: attr[kwarg]
+                for (attr, param) in ATTRS_TO_LAUNCH_PARAMS.items()
+                if attr in extra
             }
 
             await self.coordinator.roku.launch(media_id, params)
