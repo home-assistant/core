@@ -39,7 +39,7 @@ class AlexaConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if we should proactively report states."""
-        return self._auth is not None
+        return self._auth is not None and self.authorized
 
     @property
     def endpoint(self):

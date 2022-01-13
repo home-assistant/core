@@ -89,6 +89,7 @@ async def test_alexa_config_report_state(hass, cloud_prefs, cloud_stub):
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
     await conf.async_initialize()
+    conf.set_authorized(True)
 
     assert cloud_prefs.alexa_report_state is False
     assert conf.should_report_state is False
@@ -257,9 +258,11 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
 async def test_alexa_update_report_state(hass, cloud_prefs, cloud_stub):
     """Test Alexa config responds to reporting state."""
-    await alexa_config.CloudAlexaConfig(
+    conf = await alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
-    ).async_initialize()
+    )
+    await conf.async_initialize()
+    conf.set_authorized(True)
 
     with patch(
         "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities",
