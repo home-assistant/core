@@ -19,7 +19,7 @@ async def async_get_handler(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> Mailbox | None:
+) -> Mailbox:
     """Set up the Demo mailbox."""
     return DemoMailbox(hass, MAILBOX_NAME)
 
