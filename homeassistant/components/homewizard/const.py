@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
 COORDINATOR = "coordinator"
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "switch"]
 
 # Platform config.
 CONF_SERIAL = "serial"
