@@ -216,8 +216,4 @@ async def test_set_cover_position(
     # Check that the state is correct.
     states = hass.states.get(f"cover.tradfri_cover_{device_id}")
     for result, value in expected_result.items():
-        if result == "state":
-            assert states.state == value
-        else:
-            # Allow some rounding error in color conversions.
-            assert states.attributes[result] == pytest.approx(value, abs=0.01)
+        assert states.state == value
