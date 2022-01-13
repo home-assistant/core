@@ -155,7 +155,8 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
             return
 
         if percentage == 0:
-            self.turn_off()
+            await self.async_turn_off()
+            return
 
         await self._api(
             self._device_control.set_fan_speed(_from_fan_percentage(percentage))
