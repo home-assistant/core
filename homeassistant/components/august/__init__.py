@@ -256,7 +256,7 @@ class AugustData(AugustSubscriberMixin):
         """Request status of the the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
-            self._api.async_lock_async,
+            self._api.async_status_async,
             self._august_gateway.access_token,
             device_id,
         )
