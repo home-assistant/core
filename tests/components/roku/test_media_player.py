@@ -481,6 +481,20 @@ async def test_services(
             },
         )
 
+    with patch("homeassistant.components.roku.coordinator.Roku.play_video") as pv_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_VIDEO,
+                ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/media.mp4",
+            },
+            blocking=True,
+        )
+
+        pv_mock.assert_called_once_with("https://awesome.tld/media.mp4")
+
     with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
