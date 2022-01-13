@@ -38,7 +38,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.roku.const import ATTR_CONTENT_ID, ATTR_KEYWORD, ATTR_MEDIA_TYPE, DOMAIN, SERVICE_SEARCH
+from homeassistant.components.roku.const import (
+    ATTR_CONTENT_ID,
+    ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
+    DOMAIN,
+    SERVICE_SEARCH,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
