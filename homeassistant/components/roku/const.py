@@ -11,4 +11,3 @@ DEFAULT_PORT = 8060
 
 # Services
 SERVICE_SEARCH = "search"
-
