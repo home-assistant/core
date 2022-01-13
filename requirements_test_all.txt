@@ -1140,7 +1140,7 @@ pysensibo==1.0.3
 
 # homeassistant.components.serial
 # homeassistant.components.zha
-pyserial-asyncio==0.5
+pyserial-asyncio==0.6
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
