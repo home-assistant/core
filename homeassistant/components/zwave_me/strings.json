@@ -4,12 +4,12 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "token": "[%key:common::config_flow::data::token%]"
+          "token": "Token"
         }
       }
     },
     "error": {
-      "no_valid_uuid_set": "[%key:common::config_flow::error::no_valid_uuid_set%]"
+      "no_valid_uuid_set": "No Valid UUID set"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

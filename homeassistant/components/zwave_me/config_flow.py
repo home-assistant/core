@@ -55,7 +55,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "no_valid_uuid_set"
 
-            if not errors:        
+            if not errors:
                 return self.async_create_entry(
                     title=self.url,
                     data={"url": self.url, "token": self.token},
