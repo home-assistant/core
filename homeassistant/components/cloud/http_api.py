@@ -374,6 +374,7 @@ async def websocket_update_prefs(hass, connection, msg):
             )
             return
 
+        alexa_config.set_authorized(True)
     await cloud.client.prefs.async_update(**changes)
 
     connection.send_message(websocket_api.result_message(msg["id"]))
