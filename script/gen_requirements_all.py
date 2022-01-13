@@ -80,6 +80,11 @@ httplib2>=0.19.0
 # want to ensure we have wheels built.
 grpcio==1.43.0
 
+# libcst >=0.4.0 requires a newer Rust than we currently have available,
+# thus our wheels builds fail. This pins it to the last working version,
+# which at this point satisfies our needs.
+libcst==0.3.23
+
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 
