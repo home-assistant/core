@@ -315,7 +315,9 @@ class SpeechManager:
         self.file_cache = {}
 
     @callback
-    def async_register_engine(self, engine, provider, config):
+    def async_register_engine(
+        self, engine: str, provider: Provider, config: ConfigType
+    ) -> None:
         """Register a TTS provider."""
         provider.hass = self.hass
         if provider.name is None:
