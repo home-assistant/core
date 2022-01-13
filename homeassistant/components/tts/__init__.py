@@ -554,7 +554,7 @@ class Provider:
         )
 
 
-def _init_tts_cache_dir(hass, cache_dir):
+def _init_tts_cache_dir(hass: HomeAssistant, cache_dir: str) -> str:
     """Init cache folder."""
     if not os.path.isabs(cache_dir):
         cache_dir = hass.config.path(cache_dir)
