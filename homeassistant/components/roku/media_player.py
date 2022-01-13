@@ -370,7 +370,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL):
             _LOGGER.error(
-                "Invalid media type %s. Only %s and %s are supported",
+                "Invalid media type %s. Only %s, %s and %s are supported",
                 media_type,
                 MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
