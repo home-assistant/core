@@ -8,6 +8,7 @@ from alpha_vantage.foreignexchange import ForeignExchange
 from alpha_vantage.timeseries import TimeSeries
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -79,7 +80,7 @@ def setup_platform(
 
     if not symbols and not conversions:
         msg = "No symbols or currencies configured."
-        hass.components.persistent_notification.create(msg, "Sensor alpha_vantage")
+        persistent_notification.create(hass, msg, "Sensor alpha_vantage")
         _LOGGER.warning(msg)
         return
 
