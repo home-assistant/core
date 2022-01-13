@@ -178,9 +178,9 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = await self._device.get_power_state(log_api_exception=False)
-
-        if is_on is None:
+        if (
+            is_on := await self._device.get_power_state(log_api_exception=False)
+        ) is None:
             if self._attr_available:
                 _LOGGER.warning(
                     "Lost connection to %s", self._config_entry.data[CONF_HOST]
@@ -215,11 +215,9 @@ class VizioDevice(MediaPlayerEntity):
 
         self._attr_state = STATE_ON
 
-        audio_settings = await self._device.get_all_settings(
+        if audio_settings := await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
-        )
-
-        if audio_settings:
+        ):
             self._attr_volume_level = (
                 float(audio_settings[VIZIO_VOLUME]) / self._max_volume
             )
@@ -243,14 +241,11 @@ class VizioDevice(MediaPlayerEntity):
                 # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
                 self._attr_supported_features &= ~SUPPORT_SELECT_SOUND_MODE
 
-        input_ = await self._device.get_current_input(log_api_exception=False)
-        if input_:
+        if input_ := await self._device.get_current_input(log_api_exception=False):
             self._current_input = input_
 
-        inputs = await self._device.get_inputs_list(log_api_exception=False)
-
         # If no inputs returned, end update
-        if not inputs:
+        if not (inputs := await self._device.get_inputs_list(log_api_exception=False)):
             return
 
         self._available_inputs = [input_.name for input_ in inputs]
@@ -288,7 +283,8 @@ class VizioDevice(MediaPlayerEntity):
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Send update event when Vizio config entry is updated."""
-        # Move this method to component level if another entity ever gets added for a single config entry.
+        # Move this method to component level if another entity ever gets added for a
+        # single config entry.
         # See here: https://github.com/home-assistant/core/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
 
@@ -368,9 +364,17 @@ class VizioDevice(MediaPlayerEntity):
         return self._available_inputs
 
     @property
+    def app_name(self) -> str | None:
+        """Return the name of the current app."""
+        if self.source == self._attr_app_name:
+            return super().app_name
+
+        return None
+
+    @property
     def app_id(self) -> str | None:
         """Return the ID of the current app if it is unknown by pyvizio."""
-        if self._current_app_config and self.app_name == UNKNOWN_APP:
+        if self._current_app_config and self.source == UNKNOWN_APP:
             return {
                 "APP_ID": self._current_app_config.APP_ID,
                 "NAME_SPACE": self._current_app_config.NAME_SPACE,
