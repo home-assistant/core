@@ -365,7 +365,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
-        
+
         if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
             _LOGGER.error(
                 "Invalid media type %s. Only %s and %s are supported",
