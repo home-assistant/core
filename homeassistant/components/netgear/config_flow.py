@@ -22,10 +22,10 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    MODELS_PORT_5555,
     MODELS_PORT_80,
-    PORT_5555,
+    MODELS_PORT_5555,
     PORT_80,
+    PORT_5555,
 )
 from .errors import CannotLoginException
 from .router import get_api

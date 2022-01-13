@@ -10,8 +10,8 @@ from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
     DOMAIN,
     MODELS_PORT_5555,
-    PORT_5555,
     PORT_80,
+    PORT_5555,
 )
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
@@ -216,7 +216,7 @@ async def test_ssdp_port_5555(hass, service):
     assert result["title"] == TITLE
     assert result["data"].get(CONF_HOST) == HOST
     assert result["data"].get(CONF_PORT) == PORT_5555
-    assert result["data"].get(CONF_SSL) == True
+    assert result["data"].get(CONF_SSL) is True
     assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
