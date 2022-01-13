@@ -116,57 +116,75 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         return areas
 
-    @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
-    async def on_device_available(self, event: Event) -> None:
-        """Handle device available event."""
-        if event.device_url:
-            self.devices[event.device_url].available = True
 
-    @EVENT_HANDLERS.register((EventName.DEVICE_UNAVAILABLE, EventName.DEVICE_DISABLED))
-    async def on_device_unavailable_disabled(self, event: Event) -> None:
-        """Handle device unavailable / disabled event."""
-        if event.device_url:
-            self.devices[event.device_url].available = False
+@EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
+async def on_device_available(
+    coordinator: OverkizDataUpdateCoordinator, event: Event
+) -> None:
+    """Handle device available event."""
+    if event.device_url:
+        coordinator.devices[event.device_url].available = True
 
-    @EVENT_HANDLERS.register(EventName.DEVICE_STATE_CHANGED)
-    async def on_device_state_changed(self, event: Event) -> None:
-        """Handle device state changed event."""
-        if not event.device_url:
-            return
 
-        for state in event.device_states:
-            device = self.devices[event.device_url]
-            device.states[state.name] = state
+@EVENT_HANDLERS.register((EventName.DEVICE_UNAVAILABLE, EventName.DEVICE_DISABLED))
+async def on_device_unavailable_disabled(
+    coordinator: OverkizDataUpdateCoordinator, event: Event
+) -> None:
+    """Handle device unavailable / disabled event."""
+    if event.device_url:
+        coordinator.devices[event.device_url].available = False
 
-    @EVENT_HANDLERS.register(EventName.DEVICE_REMOVED)
-    async def on_device_removed(self, event: Event) -> None:
-        """Handle device removed event."""
-        if not event.device_url:
-            return
 
-        base_device_url = event.device_url.split("#")[0]
-        registry = dr.async_get(self.hass)
+@EVENT_HANDLERS.register(EventName.DEVICE_STATE_CHANGED)
+async def on_device_state_changed(
+    coordinator: OverkizDataUpdateCoordinator, event: Event
+) -> None:
+    """Handle device state changed event."""
+    if not event.device_url:
+        return
 
-        if registered_device := registry.async_get_device({(DOMAIN, base_device_url)}):
-            registry.async_remove_device(registered_device.id)
+    for state in event.device_states:
+        device = coordinator.devices[event.device_url]
+        device.states[state.name] = state
 
-        if event.device_url:
-            del self.devices[event.device_url]
 
-    @EVENT_HANDLERS.register(EventName.EXECUTION_REGISTERED)
-    async def on_execution_registered(self, event: Event) -> None:
-        """Handle execution registered event."""
-        if event.exec_id and event.exec_id not in self.executions:
-            self.executions[event.exec_id] = {}
+@EVENT_HANDLERS.register(EventName.DEVICE_REMOVED)
+async def on_device_removed(
+    coordinator: OverkizDataUpdateCoordinator, event: Event
+) -> None:
+    """Handle device removed event."""
+    if not event.device_url:
+        return
 
-        if not self.is_stateless:
-            self.update_interval = timedelta(seconds=1)
+    base_device_url = event.device_url.split("#")[0]
+    registry = dr.async_get(coordinator.hass)
 
-    @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
-    async def on_execution_state_changed(self, event: Event) -> None:
-        """Handle execution changed event."""
-        if event.exec_id in self.executions and event.new_state in [
-            ExecutionState.COMPLETED,
-            ExecutionState.FAILED,
-        ]:
-            del self.executions[event.exec_id]
+    if registered_device := registry.async_get_device({(DOMAIN, base_device_url)}):
+        registry.async_remove_device(registered_device.id)
+
+    if event.device_url:
+        del coordinator.devices[event.device_url]
+
+
+@EVENT_HANDLERS.register(EventName.EXECUTION_REGISTERED)
+async def on_execution_registered(
+    coordinator: OverkizDataUpdateCoordinator, event: Event
+) -> None:
+    """Handle execution registered event."""
+    if event.exec_id and event.exec_id not in coordinator.executions:
+        coordinator.executions[event.exec_id] = {}
+
+    if not coordinator.is_stateless:
+        coordinator.update_interval = timedelta(seconds=1)
+
+
+@EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
+async def on_execution_state_changed(
+    coordinator: OverkizDataUpdateCoordinator, event: Event
+) -> None:
+    """Handle execution changed event."""
+    if event.exec_id in coordinator.executions and event.new_state in [
+        ExecutionState.COMPLETED,
+        ExecutionState.FAILED,
+    ]:
+        del coordinator.executions[event.exec_id]
