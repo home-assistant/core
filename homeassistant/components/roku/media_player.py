@@ -14,7 +14,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
-    ATTR_TITLE,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_URL,
@@ -51,6 +50,7 @@ from .const import (
     ATTR_CONTENT_ID,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
+    ATTR_TITLE,
     DOMAIN,
     SERVICE_SEARCH,
 )
