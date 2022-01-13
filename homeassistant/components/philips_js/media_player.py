@@ -457,8 +457,11 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Serve album art. Returns (content, content_type)."""
         try:
             if media_content_type == MEDIA_TYPE_APP and media_content_id:
