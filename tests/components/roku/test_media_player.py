@@ -25,6 +25,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
+    MEDIA_TYPE_URL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_BROWSE_MEDIA,
@@ -487,7 +488,7 @@ async def test_services(
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_VIDEO,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
                 ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/media.mp4",
             },
             blocking=True,
