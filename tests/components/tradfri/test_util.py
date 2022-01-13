@@ -21,7 +21,6 @@ def test_from_fan_speed(fan_speed, expected_result):
 @pytest.mark.parametrize(
     "percentage, expected_result",
     [
-        (0, 0),
         (1, 2),
         (100, 50),
         (50, 26),

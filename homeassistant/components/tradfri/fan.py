@@ -29,9 +29,6 @@ from .const import (
 
 def _from_fan_percentage(percentage: int) -> int:
     """Convert percent to a value that the Tradfri API understands."""
-    if percentage == 0:
-        return 0
-
     return round(max(2, (percentage / 100 * ATTR_MAX_FAN_STEPS) + 1))
 
 
@@ -156,6 +153,9 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         """Set the speed percentage of the fan."""
         if not self._device_control:
             return
+
+        if percentage == 0:
+            self.turn_off()
 
         await self._api(
             self._device_control.set_fan_speed(_from_fan_percentage(percentage))
