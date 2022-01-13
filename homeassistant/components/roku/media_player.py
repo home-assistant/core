@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
+    ATTR_TITLE,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_URL,
@@ -75,6 +76,10 @@ SUPPORT_ROKU = (
 ATTRS_TO_LAUNCH_PARAMS = {
     ATTR_CONTENT_ID: "contentID",
     ATTR_MEDIA_TYPE: "MediaType",
+}
+
+ATTRS_TO_PLAY_VIDEO_PARAMS = {
+    ATTR_TITLE: "videoName",
 }
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
@@ -389,7 +394,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
         elif media_type == MEDIA_TYPE_URL:
-            await self.coordinator.roku.play_video(media_id)
+            params = {
+                param: extra[attr]
+                for (attr, param) in ATTRS_TO_PLAY_VIDEO_PARAMS.items()
+                if attr in extra
+            }
+            await self.coordinator.roku.play_video(media_id, params)
 
         await self.coordinator.async_request_refresh()
 
