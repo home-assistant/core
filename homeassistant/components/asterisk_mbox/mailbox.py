@@ -23,7 +23,7 @@ async def async_get_handler(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> Mailbox | None:
+) -> Mailbox:
     """Set up the Asterix VM platform."""
     return AsteriskMailbox(hass, ASTERISK_DOMAIN)
 
