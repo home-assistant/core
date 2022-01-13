@@ -175,6 +175,7 @@ homeassistant.components.tplink.*
 homeassistant.components.tolo.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
+homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifiprotect.*
