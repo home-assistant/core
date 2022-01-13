@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant import core
 from homeassistant.components.alexa import state_report
 
-from . import DEFAULT_CONFIG, TEST_URL
+from . import TEST_URL, get_default_config
 
 
 async def test_report_state(hass, aioclient_mock):
@@ -17,7 +17,7 @@ async def test_report_state(hass, aioclient_mock):
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
 
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
 
     hass.states.async_set(
         "binary_sensor.test_contact",
@@ -58,7 +58,7 @@ async def test_report_state_instance(hass, aioclient_mock):
         },
     )
 
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
 
     hass.states.async_set(
         "fan.test_fan",
@@ -127,7 +127,9 @@ async def test_send_add_or_update_message(hass, aioclient_mock):
         "binary_sensor.non_existing",  # Supported, but does not exist
         "zwave.bla",  # Unsupported
     ]
-    await state_report.async_send_add_or_update_message(hass, DEFAULT_CONFIG, entities)
+    await state_report.async_send_add_or_update_message(
+        hass, get_default_config(), entities
+    )
 
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
@@ -153,7 +155,7 @@ async def test_send_delete_message(hass, aioclient_mock):
     )
 
     await state_report.async_send_delete_message(
-        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact", "zwave.bla"]
+        hass, get_default_config(), ["binary_sensor.test_contact", "zwave.bla"]
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -179,7 +181,7 @@ async def test_doorbell_event(hass, aioclient_mock):
         {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
     )
 
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
 
     hass.states.async_set(
         "binary_sensor.test_doorbell",
@@ -219,7 +221,8 @@ async def test_doorbell_event(hass, aioclient_mock):
 async def test_proactive_mode_filter_states(hass, aioclient_mock):
     """Test all the cases that filter states."""
     aioclient_mock.post(TEST_URL, text="", status=202)
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    config = get_default_config()
+    await state_report.async_enable_proactive_mode(hass, config)
 
     # First state should report
     hass.states.async_set(
@@ -270,7 +273,7 @@ async def test_proactive_mode_filter_states(hass, aioclient_mock):
         "off",
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
-    with patch.object(DEFAULT_CONFIG, "should_expose", return_value=False):
+    with patch.object(config, "should_expose", return_value=False):
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 0
