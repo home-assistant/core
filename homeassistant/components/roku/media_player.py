@@ -48,8 +48,8 @@ from homeassistant.helpers.network import is_internal_request
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
 from .const import (
-    ATTR_FORMAT,
     ATTR_CONTENT_ID,
+    ATTR_FORMAT,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     DOMAIN,
