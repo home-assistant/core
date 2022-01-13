@@ -170,8 +170,7 @@ async def async_send_changereport_message(
                 alexa_properties,
                 invalidate_access_token=False,
             )
-        else:
-            config.set_authorized(False)
+        config.set_authorized(False)
 
     _LOGGER.error(
         "Error when sending ChangeReport to Alexa: %s: %s",
