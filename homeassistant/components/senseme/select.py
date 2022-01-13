@@ -35,16 +35,16 @@ class SenseMESelectEntityDescription(
     """Describes SenseME select entity."""
 
 
-def _set_auto_comfort_mode(device: SensemeDevice, value: str) -> None:
-    device.fan_autocomfort = value
+def _set_smart_mode(device: SensemeDevice, value: str) -> None:
+    device.fan_smartmode = value
 
 
 FAN_SELECTS = [
     SenseMESelectEntityDescription(
-        key="auto_comfort",
-        name="Auto Comfort",
-        value_fn=lambda device: cast(str, device.fan_autocomfort),
-        set_fn=_set_auto_comfort_mode,
+        key="smart_mode",
+        name="Smart Mode",
+        value_fn=lambda device: cast(str, device.fan_smartmode),
+        set_fn=_set_smart_mode,
     ),
 ]
 
@@ -79,11 +79,6 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the current value."""
-        _LOGGER.warning(
-            "%s = CURRENT AUTO COMFORT: %s",
-            self._device.name,
-            self._device.fan_autocomfort,
-        )
         return self.entity_description.value_fn(self._device)
 
     async def async_select_option(self, option: str) -> None:
