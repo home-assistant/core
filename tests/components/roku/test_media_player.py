@@ -42,6 +42,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.roku.const import (
     ATTR_CONTENT_ID,
+    ATTR_FORMAT,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     DOMAIN,
@@ -51,6 +52,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_NAME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -490,11 +492,21 @@ async def test_services(
                 ATTR_ENTITY_ID: MAIN_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
                 ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/media.mp4",
+                ATTR_MEDIA_EXTRA: {
+                    ATTR_NAME: "Sent from HA",
+                    ATTR_FORMAT: "mp4",
+                },
             },
             blocking=True,
         )
 
-        pv_mock.assert_called_once_with("https://awesome.tld/media.mp4")
+        pv_mock.assert_called_once_with(
+            "https://awesome.tld/media.mp4",
+            {
+                "videoName": "Sent from HA",
+                "videoFormat": "mp4",
+            },
+        )
 
     with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
