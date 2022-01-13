@@ -216,20 +216,16 @@ async def async_setup_entry(
     if not await _lektrico_device.init_device():
         _LOGGER.error("Error initializing Lektrico Device. Name: 1P7K")
 
-    sensors = []
-
-    sensors.extend(
-        [
-            LektricoSensor(
-                charger,
-                sensor_desc,
-                settings,
-                _lektrico_device,
-                entry.data[CONF_FRIENDLY_NAME],
-            )
-            for sensor_desc in SENSORS
-        ]
-    )
+    sensors = [
+        LektricoSensor(
+            charger,
+            sensor_desc,
+            settings,
+            _lektrico_device,
+            entry.data[CONF_FRIENDLY_NAME],
+        )
+        for sensor_desc in SENSORS
+    ]
 
     async_add_entities(sensors, True)
 
