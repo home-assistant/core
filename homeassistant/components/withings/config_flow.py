@@ -20,6 +20,8 @@ class WithingsFlowHandler(
 ):
     """Handle a config flow."""
 
+    DOMAIN = const.DOMAIN
+
     # Temporarily holds authorization data during the profile step.
     _current_data: dict[str, None | str | int] = {}
 
