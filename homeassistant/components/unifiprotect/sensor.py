@@ -210,6 +210,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.light.value",
+        ufp_enabled="is_light_sensor_enabled",
     ),
     ProtectSensorEntityDescription(
         key="humidity_level",
@@ -218,6 +219,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.humidity.value",
+        ufp_enabled="is_humidity_sensor_enabled",
     ),
     ProtectSensorEntityDescription(
         key="temperature_level",
@@ -226,6 +228,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
+        ufp_enabled="is_temperature_sensor_enabled",
     ),
 )
 

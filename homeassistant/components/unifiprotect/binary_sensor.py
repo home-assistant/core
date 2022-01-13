@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from pyunifiprotect.data import NVR, Camera, Event, Light, Sensor
+from pyunifiprotect.data.types import MountType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,6 +31,7 @@ from .models import ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
+_KEY_DOOR = "door"
 
 
 @dataclass
@@ -77,11 +79,12 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 
 SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
-        key="door",
-        name="Door",
+        key=_KEY_DOOR,
+        name="Contact",
         device_class=BinarySensorDeviceClass.DOOR,
         ufp_value="is_opened",
         ufp_last_trip_value="open_status_changed_at",
+        ufp_enabled="is_contact_sensor_enabled",
     ),
     ProtectBinaryEntityDescription(
         key="battery_low",
@@ -96,6 +99,22 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
         ufp_last_trip_value="motion_detected_at",
+        ufp_enabled="is_motion_sensor_enabled",
+    ),
+    ProtectBinaryEntityDescription(
+        key="alarm_sound",
+        name="Alarm Sound Detected",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        ufp_value="is_alarm_detected",
+        ufp_last_trip_value="alarm_triggered_at",
+        ufp_enabled="is_alarm_sensor_enabled",
+    ),
+    ProtectBinaryEntityDescription(
+        key="tampering",
+        name="Tampering Detected",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        ufp_value="is_tampering_detected",
+        ufp_last_trip_value="tampering_detected_at",
     ),
 )
 
@@ -196,6 +215,17 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 **attrs,
                 ATTR_LAST_TRIP_TIME: last_trip,
             }
+
+        # UP Sense can be any of the 3 contact sensor device classes
+        if self.entity_description.key == _KEY_DOOR and isinstance(self.device, Sensor):
+            if self.device.mount_type == MountType.WINDOW:
+                self.entity_description.device_class = BinarySensorDeviceClass.WINDOW
+            elif self.device.mount_type == MountType.GARAGE:
+                self.entity_description.device_class = (
+                    BinarySensorDeviceClass.GARAGE_DOOR
+                )
+            else:
+                self.entity_description.device_class = BinarySensorDeviceClass.DOOR
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
