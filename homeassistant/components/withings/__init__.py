@@ -191,7 +191,7 @@ async def async_webhook_handler(
         return json_message_response("Parameter appli not provided", message_code=20)
 
     try:
-        appli = NotifyAppli(cast("str", params.getone("appli")))
+        appli = NotifyAppli(int(cast(str, params.getone("appli"))))
     except ValueError:
         return json_message_response("Invalid appli provided", message_code=21)
 
