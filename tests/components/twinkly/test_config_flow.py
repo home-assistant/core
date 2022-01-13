@@ -20,7 +20,9 @@ async def test_invalid_host(hass):
     """Test the failure when invalid host provided."""
     client = ClientMock()
     client.is_offline = True
-    with patch("twinkly_client.TwinklyClient", return_value=client):
+    with patch(
+        "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+    ):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -40,7 +42,9 @@ async def test_invalid_host(hass):
 async def test_success_flow(hass):
     """Test that an entity is created when the flow completes."""
     client = ClientMock()
-    with patch("twinkly_client.TwinklyClient", return_value=client):
+    with patch(
+        "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+    ), patch("homeassistant.components.twinkly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -67,7 +71,9 @@ async def test_success_flow(hass):
 async def test_dhcp_can_confirm(hass):
     """Test DHCP discovery flow can confirm right away."""
     client = ClientMock()
-    with patch("twinkly_client.TwinklyClient", return_value=client):
+    with patch(
+        "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+    ):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -86,7 +92,9 @@ async def test_dhcp_can_confirm(hass):
 async def test_dhcp_success(hass):
     """Test DHCP discovery flow success."""
     client = ClientMock()
-    with patch("twinkly_client.TwinklyClient", return_value=client):
+    with patch(
+        "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+    ), patch("homeassistant.components.twinkly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -129,7 +137,9 @@ async def test_dhcp_already_exists(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch("twinkly_client.TwinklyClient", return_value=client):
+    with patch(
+        "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+    ):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},

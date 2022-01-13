@@ -2375,6 +2375,9 @@ tp-connected==0.0.4
 # homeassistant.components.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.twinkly
+ttls==1.4.2
+
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
 
@@ -2383,9 +2386,6 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
-
-# homeassistant.components.twinkly
-twinkly-client==0.0.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
