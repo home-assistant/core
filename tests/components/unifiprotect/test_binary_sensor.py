@@ -8,6 +8,7 @@ from unittest.mock import Mock
 
 import pytest
 from pyunifiprotect.data import Camera, Event, EventType, Light, MountType, Sensor
+from pyunifiprotect.data.nvr import EventMetadata
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.unifiprotect.binary_sensor import (
@@ -179,7 +180,7 @@ async def sensor_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 5, 5)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
 
     yield sensor_obj
 
@@ -215,7 +216,7 @@ async def sensor_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 5, 5)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
 
     yield sensor_obj
 
@@ -362,7 +363,6 @@ async def test_binary_sensor_setup_sensor_none(
         STATE_UNAVAILABLE,
         STATE_OFF,
         STATE_UNAVAILABLE,
-        STATE_UNAVAILABLE,
         STATE_OFF,
     ]
     for index, description in enumerate(SENSE_SENSORS):
@@ -421,6 +421,48 @@ async def test_binary_sensor_update_motion(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_SCORE] == 100
+
+
+async def test_binary_sensor_update_light_motion(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, light: Light, now: datetime
+):
+    """Test binary_sensor motion entity."""
+
+    _, entity_id = ids_from_device_description(
+        Platform.BINARY_SENSOR, light, LIGHT_SENSORS[1]
+    )
+
+    event_metadata = EventMetadata(light_id=light.id)
+    event = Event(
+        id="test_event_id",
+        type=EventType.MOTION_LIGHT,
+        start=now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        metadata=event_metadata,
+        api=mock_entry.api,
+    )
+
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_light = light.copy()
+    new_light.is_pir_motion_detected = True
+    new_light.last_motion_event_id = event.id
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+
+    new_bootstrap.lights = {new_light.id: new_light}
+    new_bootstrap.events = {event.id: event}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
 
 async def test_binary_sensor_update_mount_type_window(

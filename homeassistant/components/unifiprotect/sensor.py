@@ -8,6 +8,7 @@ from typing import Any
 
 from pyunifiprotect.data import NVR, Camera, Event
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data.devices import Sensor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -42,7 +43,7 @@ from .entity import (
 from .models import ProtectRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
-DETECTED_OBJECT_NONE = "none"
+OBJECT_TYPE_NONE = "none"
 DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
@@ -86,6 +87,19 @@ def _get_nvr_memory(obj: Any) -> float | None:
     if memory.available is None or memory.total is None:
         return None
     return (1 - memory.available / memory.total) * 100
+
+
+def _get_alarm_sound(obj: ProtectAdoptableDeviceModel | NVR) -> str:
+    assert isinstance(obj, Sensor)
+
+    alarm_type = OBJECT_TYPE_NONE
+    if (
+        obj.is_alarm_detected
+        and obj.last_alarm_event is not None
+        and obj.last_alarm_event.metadata is not None
+    ):
+        alarm_type = obj.last_alarm_event.metadata.alarm_type or OBJECT_TYPE_NONE
+    return alarm_type.lower()
 
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
@@ -229,6 +243,12 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
         ufp_enabled="is_temperature_sensor_enabled",
+    ),
+    ProtectSensorEntityDescription(
+        key="alarm_sound",
+        name="Alarm Sound Detected",
+        ufp_value_fn=_get_alarm_sound,
+        ufp_enabled="is_alarm_sensor_enabled",
     ),
 )
 
@@ -482,6 +502,6 @@ class ProtectEventSensor(ProtectDeviceSensor, EventThumbnailMixin):
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventThumbnailMixin._async_update_device_from_protect(self)
         if self._event is None:
-            self._attr_native_value = DETECTED_OBJECT_NONE
+            self._attr_native_value = OBJECT_TYPE_NONE
         else:
             self._attr_native_value = self._event.smart_detect_types[0].value
