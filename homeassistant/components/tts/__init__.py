@@ -267,7 +267,7 @@ class SpeechManager:
     def __init__(self, hass):
         """Initialize a speech store."""
         self.hass = hass
-        self.providers = {}
+        self.providers: dict[str, Provider] = {}
 
         self.use_cache = DEFAULT_CACHE
         self.cache_dir = DEFAULT_CACHE_DIR
