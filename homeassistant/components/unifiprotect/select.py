@@ -19,7 +19,10 @@ from pyunifiprotect.data import (
     RecordingMode,
     Viewer,
 )
-from pyunifiprotect.data.types import ChimeType
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data.devices import Sensor
+from pyunifiprotect.data.nvr import NVR
+from pyunifiprotect.data.types import ChimeType, MountType
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -50,6 +53,14 @@ CHIME_TYPES = [
     {"id": ChimeType.NONE.value, "name": "None"},
     {"id": ChimeType.MECHANICAL.value, "name": "Mechanical"},
     {"id": ChimeType.DIGITAL.value, "name": "Digital"},
+]
+
+MOUNT_TYPES = [
+    {"id": MountType.NONE.value, "name": "None"},
+    {"id": MountType.DOOR.value, "name": "Door"},
+    {"id": MountType.WINDOW.value, "name": "Window"},
+    {"id": MountType.GARAGE.value, "name": "Garage"},
+    {"id": MountType.LEAK.value, "name": "Leak"},
 ]
 
 LIGHT_MODE_MOTION = "On Motion - Always"
@@ -161,8 +172,10 @@ async def _set_light_mode(obj: Any, mode: str) -> None:
     )
 
 
-async def _set_paired_camera(obj: Any, camera_id: str) -> None:
-    assert isinstance(obj, Light)
+async def _set_paired_camera(
+    obj: ProtectAdoptableDeviceModel | NVR, camera_id: str
+) -> None:
+    assert isinstance(obj, (Sensor, Light))
     if camera_id == TYPE_EMPTY_VALUE:
         camera: Camera | None = None
     else:
@@ -253,6 +266,28 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
 )
 
+SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
+    ProtectSelectEntityDescription(
+        key="mount_type",
+        name="Mount Type",
+        icon="mdi:screwdriver",
+        entity_category=EntityCategory.CONFIG,
+        ufp_options=MOUNT_TYPES,
+        ufp_enum_type=MountType,
+        ufp_value="mount_type",
+        ufp_set_method="set_mount_type",
+    ),
+    ProtectSelectEntityDescription(
+        key="paired_camera",
+        name="Paired Camera",
+        icon="mdi:cctv",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="camera_id",
+        ufp_options_callable=_get_paired_camera_options,
+        ufp_set_method_fn=_set_paired_camera,
+    ),
+)
+
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription(
         key="viewer",
@@ -278,6 +313,7 @@ async def async_setup_entry(
         ProtectSelects,
         camera_descs=CAMERA_SELECTS,
         light_descs=LIGHT_SELECTS,
+        sense_descs=SENSE_SELECTS,
         viewer_descs=VIEWER_SELECTS,
     )
 
