@@ -23,12 +23,13 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     Platform,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,11 +198,13 @@ async def async_configure_sabnzbd(
         async_request_configuration(hass, config, base_url, web_root)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SABnzbd component."""
 
-    async def sabnzbd_discovered(service, info):
+    async def sabnzbd_discovered(service: str, info: DiscoveryInfoType | None) -> None:
         """Handle service discovery."""
+        if not info:
+            return
         ssl = info.get("properties", {}).get("https", "0") == "1"
         await async_configure_sabnzbd(hass, info, ssl)
 
