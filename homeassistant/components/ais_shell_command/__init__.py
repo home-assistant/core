@@ -683,7 +683,10 @@ async def _start_screen_stream(hass, call):
 
 
 async def _screen_stream_command(hass, call):
-    if not ais_global.has_root():
+    gate_host = "127.0.0.1"
+    # uncomment to test on local box
+    # gate_host = "192.168.6.122"
+    if not ais_global.has_root() and gate_host == "127.0.0.1":
         return
     name = call.data["name"]
     sX = call.data["sX"]
@@ -697,7 +700,9 @@ async def _screen_stream_command(hass, call):
     comm = r""
     if name == "pan":
         comm = (
-            "http://127.0.0.1:9966/ais-pan?sX="
+            "http://"
+            + gate_host
+            + ":9966/ais-pan?sX="
             + str(sX)
             + "&sY="
             + str(sY)
@@ -707,12 +712,13 @@ async def _screen_stream_command(hass, call):
             + str(eY)
         )
     elif name == "tap":
-        comm = "http://127.0.0.1:9966/ais-click?x=" + str(sX) + "&y=" + str(sY)
+        comm = "http://" + gate_host + ":9966/ais-click?x=" + str(sX) + "&y=" + str(sY)
     elif name == "back":
-        comm = "http://127.0.0.1:9966/ais-back"
+        comm = "http://" + gate_host + ":9966/ais-back"
     web_session = aiohttp_client.async_get_clientsession(hass)
+    _LOGGER.warning("comm: " + comm)
     try:
-        async with async_timeout.timeout(1):
+        async with async_timeout.timeout(2):
             await web_session.get(comm)
     except asyncio.TimeoutError:
-        _LOGGER.debug("Timeout during screen stream command")
+        _LOGGER.warning("Timeout during screen stream command")
