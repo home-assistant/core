@@ -42,6 +42,13 @@ class ProtectBinaryEntityDescription(
     ufp_last_trip_value: str | None = None
 
 
+MOUNT_DEVICE_CLASS_MAP = {
+    MountType.GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
+    MountType.WINDOW: BinarySensorDeviceClass.WINDOW,
+    MountType.DOOR: BinarySensorDeviceClass.DOOR,
+}
+
+
 CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="doorbell",
@@ -217,14 +224,9 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
 
         # UP Sense can be any of the 3 contact sensor device classes
         if self.entity_description.key == _KEY_DOOR and isinstance(self.device, Sensor):
-            if self.device.mount_type == MountType.WINDOW:
-                self.entity_description.device_class = BinarySensorDeviceClass.WINDOW
-            elif self.device.mount_type == MountType.GARAGE:
-                self.entity_description.device_class = (
-                    BinarySensorDeviceClass.GARAGE_DOOR
-                )
-            else:
-                self.entity_description.device_class = BinarySensorDeviceClass.DOOR
+            self.entity_description.device_class = MOUNT_DEVICE_CLASS_MAP.get(
+                self.device.mount_type, BinarySensorDeviceClass.DOOR
+            )
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
