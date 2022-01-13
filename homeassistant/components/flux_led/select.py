@@ -137,6 +137,10 @@ class FluxICTypeSelect(FluxConfigSelect):
     async def async_select_option(self, option: str) -> None:
         """Change the ic type."""
         await self._device.async_set_device_config(ic_type=option)
+        # reload since we need to reinit the device
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self.coordinator.entry.entry_id)
+        )
 
 
 class FluxWiringsSelect(FluxConfigSelect):
