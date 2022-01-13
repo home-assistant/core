@@ -9,6 +9,7 @@ import aiohttp
 import async_timeout
 from hass_nabucasa import Cloud, cloud_api
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.alexa import (
     DOMAIN as ALEXA_DOMAIN,
     config as alexa_config,
@@ -158,7 +159,8 @@ class AlexaConfig(alexa_config.AbstractConfig):
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
-                    self.hass.components.persistent_notification.async_create(
+                    persistent_notification.async_create(
+                        self.hass,
                         f"There was an error reporting state to Alexa ({body['reason']}). "
                         "Please re-link your Alexa skill via the Alexa app to "
                         "continue using it.",
