@@ -82,14 +82,6 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             error = "unknown"
         return error
 
-    def get_serial_no(self) -> str:
-        """Needed to mock serial_no when running tests."""
-        return self._enasolar.get_serial_no()
-
-    def get_capability(self) -> int:
-        """Needed to mock capability when running tests."""
-        return self._enasolar.get_capability()
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
@@ -115,9 +107,9 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if error is not None:
                     _errors[CONF_HOST] = error
                 else:
-                    if self._conf_for_inverter_exists(self.get_serial_no()):
+                    if self._conf_for_inverter_exists(self._enasolar.get_serial_no()):
                         return self.async_abort(reason="already_configured")
-                    await self.async_set_unique_id(self.get_serial_no())
+                    await self.async_set_unique_id(self._enasolar.get_serial_no())
                     return await self.async_step_inverter(None)
         else:
             user_input = {}
@@ -162,7 +154,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Use the capability bits from the Inverter. This assumes it
         # had been possible to actually scrape them from the jScript
         capabilities = []
-        caps = self.get_capability()
+        caps = self._enasolar.get_capability()
         if caps & HAS_POWER_METER:
             capabilities.append("power")
         if caps & HAS_SOLAR_METER:
