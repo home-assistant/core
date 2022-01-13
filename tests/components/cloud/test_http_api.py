@@ -12,7 +12,7 @@ import pytest
 
 from homeassistant.components.alexa import errors as alexa_errors
 from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.cloud.const import DOMAIN, RequireRelink
+from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.core import State
 from homeassistant.util.location import LocationInfo
@@ -519,7 +519,7 @@ async def test_websocket_update_preferences_require_relink(
     with patch(
         "homeassistant.components.cloud.alexa_config.AlexaConfig"
         ".async_get_access_token",
-        side_effect=RequireRelink,
+        side_effect=alexa_errors.RequireRelink,
     ):
         await client.send_json(
             {"id": 5, "type": "cloud/update_prefs", "alexa_report_state": True}

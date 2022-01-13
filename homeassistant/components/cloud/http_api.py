@@ -35,7 +35,6 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
-    RequireRelink,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -366,7 +365,7 @@ async def websocket_update_prefs(hass, connection, msg):
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, RequireRelink):
+        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
             connection.send_error(
                 msg["id"],
                 "alexa_relink",

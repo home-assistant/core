@@ -9,7 +9,6 @@ import logging
 import aiohttp
 import async_timeout
 
-from homeassistant.components.cloud.const import RequireRelink
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,7 +17,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
-from .errors import NoTokenAvailable
+from .errors import NoTokenAvailable, RequireRelink
 from .messages import AlexaResponse
 
 _LOGGER = logging.getLogger(__name__)
