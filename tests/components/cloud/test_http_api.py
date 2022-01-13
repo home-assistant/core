@@ -510,6 +510,28 @@ async def test_websocket_update_preferences(
     assert setup_api.tts_default_voice == ("en-GB", "male")
 
 
+async def test_websocket_update_preferences_alexa_report_state(
+    hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
+):
+    """Test updating alexa_report_state sets alexa authorized."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.cloud.alexa_config.AlexaConfig"
+        ".async_get_access_token",
+    ), patch(
+        "homeassistant.components.cloud.alexa_config.AlexaConfig.set_authorized"
+    ) as set_authorized_mock:
+        set_authorized_mock.assert_not_called()
+        await client.send_json(
+            {"id": 5, "type": "cloud/update_prefs", "alexa_report_state": True}
+        )
+        response = await client.receive_json()
+        set_authorized_mock.assert_called_once_with(True)
+
+    assert response["success"]
+
+
 async def test_websocket_update_preferences_require_relink(
     hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
 ):
@@ -520,11 +542,15 @@ async def test_websocket_update_preferences_require_relink(
         "homeassistant.components.cloud.alexa_config.AlexaConfig"
         ".async_get_access_token",
         side_effect=alexa_errors.RequireRelink,
-    ):
+    ), patch(
+        "homeassistant.components.cloud.alexa_config.AlexaConfig.set_authorized"
+    ) as set_authorized_mock:
+        set_authorized_mock.assert_not_called()
         await client.send_json(
             {"id": 5, "type": "cloud/update_prefs", "alexa_report_state": True}
         )
         response = await client.receive_json()
+        set_authorized_mock.assert_called_once_with(False)
 
     assert not response["success"]
     assert response["error"]["code"] == "alexa_relink"
@@ -540,11 +566,15 @@ async def test_websocket_update_preferences_no_token(
         "homeassistant.components.cloud.alexa_config.AlexaConfig"
         ".async_get_access_token",
         side_effect=alexa_errors.NoTokenAvailable,
-    ):
+    ), patch(
+        "homeassistant.components.cloud.alexa_config.AlexaConfig.set_authorized"
+    ) as set_authorized_mock:
+        set_authorized_mock.assert_not_called()
         await client.send_json(
             {"id": 5, "type": "cloud/update_prefs", "alexa_report_state": True}
         )
         response = await client.receive_json()
+        set_authorized_mock.assert_called_once_with(False)
 
     assert not response["success"]
     assert response["error"]["code"] == "alexa_relink"
