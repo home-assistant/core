@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, cast
+from typing import Any, Union, cast
 
 import voluptuous as vol
 
@@ -259,7 +259,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
-        group: Group | None = cast(Group, component.get_entity(entity_id))
+        group: Group | None = cast(Union[Group, None], component.get_entity(entity_id))
 
         # new group
         if service.service == SERVICE_SET and group is None:
