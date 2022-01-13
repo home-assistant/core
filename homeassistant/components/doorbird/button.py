@@ -1,7 +1,7 @@
 """Support for powering relays in a DoorBird video doorbell."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from doorbirdpy import DoorBird
 
