@@ -121,7 +121,6 @@ class AlexaConfigStore:
         """Initialize a configuration store."""
         self._hass = hass
         self._store = Store(hass, self._STORAGE_VERSION, self._STORAGE_KEY)
-        self._data = {STORE_AUTHORIZED: False}
 
     @property
     def authorized(self):
@@ -139,3 +138,5 @@ class AlexaConfigStore:
         """Load saved configuration from disk."""
         if data := await self._store.async_load():
             self._data = data
+        else:
+            self._data = {STORE_AUTHORIZED: False}
