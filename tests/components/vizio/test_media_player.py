@@ -751,3 +751,19 @@ async def test_apps_update(
                 sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
                 apps = list(set(sources) - set(INPUT_LIST))
                 assert len(apps) == len(APP_LIST)
+
+
+async def test_vizio_update_with_apps_on_input(
+    hass: HomeAssistant, vizio_connect, vizio_update_with_apps_on_input
+) -> None:
+    """Test a vizio TV with apps that is on a TV input."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_USER_VALID_TV_CONFIG),
+        unique_id=UNIQUE_ID,
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, STATE_ON)
+    # App name and app ID should not be in the attributes
+    assert "app_name" not in attr
+    assert "app_id" not in attr
