@@ -76,14 +76,6 @@ class HASensemeFan(SensemeEntity, FanEntity):
         self._attr_preset_mode = whoosh if whoosh else None
         super()._async_update_attrs()
 
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Get the current device state attributes."""
-        return {
-            "auto_comfort": self._device.fan_autocomfort.capitalize(),
-            "smartmode": self._device.fan_smartmode.capitalize(),
-        }
-
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         self._device.fan_speed = math.ceil(
