@@ -35,7 +35,6 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
-    RequireRelink,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -366,14 +365,17 @@ async def websocket_update_prefs(hass, connection, msg):
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, RequireRelink):
+        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
                 "Please go to the Alexa app and re-link the Home Assistant "
                 "skill and then try to enable state reporting.",
             )
+            alexa_config.set_authorized(False)
             return
+
+        alexa_config.set_authorized(True)
 
     await cloud.client.prefs.async_update(**changes)
 
@@ -422,7 +424,8 @@ async def _account_data(cloud):
     client = cloud.client
     remote = cloud.remote
 
-    gconf = await client.get_google_config()
+    alexa_config = await client.get_alexa_config()
+    google_config = await client.get_google_config()
 
     # Load remote certificate
     if remote.certificate:
@@ -435,8 +438,9 @@ async def _account_data(cloud):
         "email": claims["email"],
         "cloud": cloud.iot.state,
         "prefs": client.prefs.as_dict(),
-        "google_registered": gconf.has_registered_user_agent,
+        "google_registered": google_config.has_registered_user_agent,
         "google_entities": client.google_user_config["filter"].config,
+        "alexa_registered": alexa_config.authorized,
         "alexa_entities": client.alexa_user_config["filter"].config,
         "remote_domain": remote.instance_domain,
         "remote_connected": remote.is_connected,

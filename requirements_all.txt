@@ -752,7 +752,7 @@ gntp==1.0.3
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.10
+goodwe==0.2.15
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -1740,7 +1740,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.1.0
+pyoverkiz==1.1.1
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1813,7 +1813,7 @@ pysensibo==1.0.3
 
 # homeassistant.components.serial
 # homeassistant.components.zha
-pyserial-asyncio==0.5
+pyserial-asyncio==0.6
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -2375,6 +2375,9 @@ tp-connected==0.0.4
 # homeassistant.components.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.twinkly
+ttls==1.4.2
+
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
 
@@ -2383,9 +2386,6 @@ twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
-
-# homeassistant.components.twinkly
-twinkly-client==0.0.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
@@ -2410,7 +2410,7 @@ uscisstatus==0.1.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.8.1
+vallox-websocket-api==2.9.0
 
 # homeassistant.components.rdw
 vehicle==0.3.1
@@ -2503,7 +2503,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.7
 
 # homeassistant.components.august
-yalexs==1.1.17
+yalexs==1.1.18
 
 # homeassistant.components.yeelight
 yeelight==0.7.8

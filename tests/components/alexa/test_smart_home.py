@@ -3975,3 +3975,14 @@ async def test_button(hass, domain):
     await assert_scene_controller_works(
         f"{domain}#ring_doorbell", f"{domain}.press", False, hass
     )
+
+
+async def test_api_message_sets_authorized(hass):
+    """Test an incoming API messages sets the authorized flag."""
+    msg = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
+    async_mock_service(hass, "switch", "turn_on")
+
+    config = get_default_config()
+    config._store.set_authorized.assert_not_called()
+    await smart_home.async_handle_message(hass, config, msg)
+    config._store.set_authorized.assert_called_once_with(True)

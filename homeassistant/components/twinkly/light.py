@@ -5,10 +5,15 @@ import asyncio
 import logging
 
 from aiohttp import ClientError
+from ttls.client import Twinkly
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_RGB,
+    COLOR_MODE_RGBW,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,8 +27,13 @@ from .const import (
     CONF_ENTRY_ID,
     CONF_ENTRY_MODEL,
     CONF_ENTRY_NAME,
+    DATA_CLIENT,
+    DATA_DEVICE_INFO,
+    DEV_LED_PROFILE,
     DEV_MODEL,
     DEV_NAME,
+    DEV_PROFILE_RGB,
+    DEV_PROFILE_RGBW,
     DOMAIN,
     HIDDEN_DEV_VALUES,
 )
@@ -38,7 +48,10 @@ async def async_setup_entry(
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
 
-    entity = TwinklyLight(config_entry, hass)
+    client = hass.data[DOMAIN][config_entry.data[CONF_ENTRY_ID]][DATA_CLIENT]
+    device_info = hass.data[DOMAIN][config_entry.data[CONF_ENTRY_ID]][DATA_DEVICE_INFO]
+
+    entity = TwinklyLight(config_entry, client, device_info)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -49,12 +62,24 @@ class TwinklyLight(LightEntity):
     def __init__(
         self,
         conf: ConfigEntry,
-        hass: HomeAssistant,
+        client: Twinkly,
+        device_info,
     ) -> None:
         """Initialize a TwinklyLight entity."""
         self._id = conf.data[CONF_ENTRY_ID]
-        self._hass = hass
         self._conf = conf
+
+        if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
+            self._attr_supported_color_modes = {COLOR_MODE_RGBW}
+            self._attr_color_mode = COLOR_MODE_RGBW
+            self._attr_rgbw_color = (255, 255, 255, 0)
+        elif device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGB:
+            self._attr_supported_color_modes = {COLOR_MODE_RGB}
+            self._attr_color_mode = COLOR_MODE_RGB
+            self._attr_rgb_color = (255, 255, 255)
+        else:
+            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
 
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
@@ -62,20 +87,12 @@ class TwinklyLight(LightEntity):
         self.__name = conf.data[CONF_ENTRY_NAME]
         self.__model = conf.data[CONF_ENTRY_MODEL]
 
-        self._client = hass.data.get(DOMAIN, {}).get(self._id)
-        if self._client is None:
-            raise ValueError(f"Client for {self._id} has not been configured.")
+        self._client = client
 
         # Set default state before any update
         self._is_on = False
-        self._brightness = 0
         self._is_available = False
         self._attributes = {ATTR_HOST: self._client.host}
-
-    @property
-    def supported_features(self):
-        """Get the features supported by this entity."""
-        return SUPPORT_BRIGHTNESS
 
     @property
     def should_poll(self) -> bool:
@@ -127,11 +144,6 @@ class TwinklyLight(LightEntity):
         return self._is_on
 
     @property
-    def brightness(self) -> int | None:
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
     def extra_state_attributes(self) -> dict:
         """Return device specific state attributes."""
 
@@ -139,7 +151,7 @@ class TwinklyLight(LightEntity):
 
         # Make sure to update any normalized property
         attributes[ATTR_HOST] = self._client.host
-        attributes[ATTR_BRIGHTNESS] = self._brightness
+        attributes[ATTR_BRIGHTNESS] = self._attr_brightness
 
         return attributes
 
@@ -151,31 +163,62 @@ class TwinklyLight(LightEntity):
             # If brightness is 0, the twinkly will only "disable" the brightness,
             # which means that it will be 100%.
             if brightness == 0:
-                await self._client.set_is_on(False)
+                await self._client.turn_off()
                 return
 
             await self._client.set_brightness(brightness)
 
-        await self._client.set_is_on(True)
+        if ATTR_RGBW_COLOR in kwargs:
+            if kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color:
+                self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+
+                if isinstance(self._attr_rgbw_color, tuple):
+
+                    await self._client.interview()
+                    # Reagarrange from rgbw to wrgb
+                    await self._client.set_static_colour(
+                        (
+                            self._attr_rgbw_color[3],
+                            self._attr_rgbw_color[0],
+                            self._attr_rgbw_color[1],
+                            self._attr_rgbw_color[2],
+                        )
+                    )
+
+        if ATTR_RGB_COLOR in kwargs:
+            if kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
+                self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+
+                if isinstance(self._attr_rgb_color, tuple):
+
+                    await self._client.interview()
+                    # Reagarrange from rgbw to wrgb
+                    await self._client.set_static_colour(self._attr_rgb_color)
+
+        if not self._is_on:
+            await self._client.turn_on()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
-        await self._client.set_is_on(False)
+        await self._client.turn_off()
 
     async def async_update(self) -> None:
         """Asynchronously updates the device properties."""
         _LOGGER.info("Updating '%s'", self._client.host)
 
         try:
-            self._is_on = await self._client.get_is_on()
+            self._is_on = await self._client.is_on()
 
-            self._brightness = (
-                int(round((await self._client.get_brightness()) * 2.55))
-                if self._is_on
-                else 0
+            brightness = await self._client.get_brightness()
+            brightness_value = (
+                int(brightness["value"]) if brightness["mode"] == "enabled" else 100
             )
 
-            device_info = await self._client.get_device_info()
+            self._attr_brightness = (
+                int(round(brightness_value * 2.55)) if self._is_on else 0
+            )
+
+            device_info = await self._client.get_details()
 
             if (
                 DEV_NAME in device_info
@@ -191,7 +234,7 @@ class TwinklyLight(LightEntity):
                 if self._conf is not None:
                     # If the name has changed, persist it in conf entry,
                     # so we will be able to restore this new name if hass is started while the LED string is offline.
-                    self._hass.config_entries.async_update_entry(
+                    self.hass.config_entries.async_update_entry(
                         self._conf,
                         data={
                             CONF_ENTRY_HOST: self._client.host,  # this cannot change

@@ -24,7 +24,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE, RequireRelink
+from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,6 +103,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def async_initialize(self):
         """Initialize the Alexa config."""
+        await super().async_initialize()
 
         async def hass_started(hass):
             if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
@@ -167,7 +168,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
-                raise RequireRelink
+                raise alexa_errors.RequireRelink
 
             raise alexa_errors.NoTokenAvailable
 
