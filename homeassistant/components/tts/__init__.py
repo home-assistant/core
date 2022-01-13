@@ -294,7 +294,7 @@ class SpeechManager:
         if cache_files:
             self.file_cache.update(cache_files)
 
-    async def async_clear_cache(self):
+    async def async_clear_cache(self) -> None:
         """Read file cache and delete files."""
         self.mem_cache = {}
 
