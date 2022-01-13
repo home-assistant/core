@@ -101,7 +101,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
-        _LOGGER.debug("Fetching all devices and state via /setup/devices.")
+        _LOGGER.debug("Fetching all devices and state via /setup/devices")
         return {d.device_url: d for d in await self.client.get_devices(refresh=True)}
 
     def _places_to_area(self, place: Place) -> dict[str, str]:
