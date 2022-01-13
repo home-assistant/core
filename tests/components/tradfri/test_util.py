@@ -13,7 +13,7 @@ from homeassistant.components.tradfri.fan import _from_fan_percentage, _from_fan
         (50, 100),
     ],
 )
-def test_from_fan_speed(percentage, expected_result):
+def test_from_fan_speed(fan_speed, expected_result):
     """Test that we can convert fan speed to percentage value."""
     assert _from_fan_speed(fan_speed) == expected_result
 
