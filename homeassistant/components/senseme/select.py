@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
-from typing import cast
 
 from aiosenseme import SensemeFan
 from aiosenseme.device import AUTOCOMFORTS, SensemeDevice
@@ -16,8 +14,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import SensemeEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,14 +32,14 @@ class SenseMESelectEntityDescription(
 
 
 def _set_smart_mode(device: SensemeDevice, value: str) -> None:
-    device.fan_smartmode = value
+    device.fan_smartmode = value.upper()
 
 
 FAN_SELECTS = [
     SenseMESelectEntityDescription(
-        key="smart_mode",
-        name="Smart Mode",
-        value_fn=lambda device: cast(str, device.fan_smartmode),
+        key="auto_comfort",
+        name="Auto Comfort",
+        value_fn=lambda device: str(device.fan_smartmode).title(),
         set_fn=_set_smart_mode,
     ),
 ]
@@ -63,9 +59,12 @@ async def async_setup_entry(
 
 
 class HASensemeSelect(SensemeEntity, SelectEntity):
-    """SenseME switch component."""
+    """SenseME select component."""
 
     entity_description: SenseMESelectEntityDescription
+    _attr_options = [
+        option.title() for option in AUTOCOMFORTS if option != "FOLLOWTSTAT"
+    ]
 
     def __init__(
         self, device: SensemeFan, description: SenseMESelectEntityDescription
@@ -74,7 +73,6 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
         self.entity_description = description
         super().__init__(device, f"{device.name} {description.name}")
         self._attr_unique_id = f"{self._device.uuid}-{description.key}"
-        self._attr_options = AUTOCOMFORTS
 
     @property
     def current_option(self) -> str:
