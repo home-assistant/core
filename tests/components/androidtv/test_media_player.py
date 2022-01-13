@@ -180,7 +180,6 @@ async def _test_reconnect(hass, caplog, config):
         patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        # assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
         await hass.helpers.entity_component.async_update_entity(entity_id)
@@ -838,7 +837,6 @@ async def test_adb_command_unicode_decode_error(hass):
                 blocking=True,
             )
 
-            # patch_shell.assert_called_with(command)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
