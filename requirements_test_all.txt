@@ -382,7 +382,7 @@ dsmr_parser==0.32
 dynalite_devices==0.1.46
 
 # homeassistant.components.elgato
-elgato==2.2.0
+elgato==3.0.0
 
 # homeassistant.components.elkm1
 elkm1-lib==1.0.0
