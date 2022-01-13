@@ -608,6 +608,7 @@ class ConfigEntry:
         flow_context = {
             "source": SOURCE_REAUTH,
             "entry_id": self.entry_id,
+            "title_placeholders": {"name": self.title},
             "unique_id": self.unique_id,
         }
 
