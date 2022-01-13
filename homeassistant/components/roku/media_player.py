@@ -70,7 +70,7 @@ SUPPORT_ROKU = (
 )
 
 ATTRS_TO_LAUNCH_PARAMS = {
-    ATTR_CONTENT_ID: "ContentID",
+    ATTR_CONTENT_ID: "contentID",
     ATTR_MEDIA_TYPE: "MediaType",
 }
 
