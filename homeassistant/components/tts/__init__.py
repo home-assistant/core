@@ -453,12 +453,12 @@ class SpeechManager:
         self._async_store_to_memcache(key, filename, data)
 
     @callback
-    def _async_store_to_memcache(self, key, filename, data):
+    def _async_store_to_memcache(self, key: str, filename: str, data: bytes) -> None:
         """Store data to memcache and set timer to remove it."""
         self.mem_cache[key] = {MEM_CACHE_FILENAME: filename, MEM_CACHE_VOICE: data}
 
         @callback
-        def async_remove_from_mem():
+        def async_remove_from_mem() -> None:
             """Cleanup memcache."""
             self.mem_cache.pop(key, None)
 
