@@ -55,7 +55,9 @@ class MockConfig(config.AbstractConfig):
         """Accept a grant."""
 
 
-DEFAULT_CONFIG = MockConfig(None)
+def get_default_config():
+    """Return a MockConfig instance."""
+    return MockConfig(None)
 
 
 def get_new_request(namespace, name, endpoint=None):
@@ -104,7 +106,9 @@ async def assert_request_calls_service(
     domain, service_name = service.split(".")
     calls = async_mock_service(hass, domain, service_name)
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(), request, context
+    )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -128,7 +132,7 @@ async def assert_request_fails(
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
     await hass.async_block_till_done()
 
     assert not call
@@ -187,7 +191,7 @@ async def reported_properties(hass, endpoint):
     assertions about the properties.
     """
     request = get_new_request("Alexa", "ReportState", endpoint)
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
     await hass.async_block_till_done()
     return ReportedProperties(msg["context"]["properties"])
 
