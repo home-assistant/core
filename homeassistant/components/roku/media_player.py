@@ -401,6 +401,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 for (attr, param) in ATTRS_TO_PLAY_VIDEO_PARAMS.items()
                 if attr in extra
             }
+
             await self.coordinator.roku.play_video(media_id, params)
 
         await self.coordinator.async_request_refresh()
