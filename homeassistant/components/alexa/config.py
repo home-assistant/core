@@ -119,6 +119,7 @@ class AlexaConfigStore:
 
     def __init__(self, hass):
         """Initialize a configuration store."""
+        self._data = None
         self._hass = hass
         self._store = Store(hass, self._STORAGE_VERSION, self._STORAGE_KEY)
 
