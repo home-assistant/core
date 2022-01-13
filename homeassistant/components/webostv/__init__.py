@@ -1,15 +1,17 @@
 """Support for LG webOS Smart TV."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 import json
 import logging
 import os
+from pickle import loads
 from typing import Any
 
 from aiowebostv import WebOsClient, WebOsTvPairError
-from sqlitedict import SqliteDict
+import sqlalchemy as db
 import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify
@@ -23,10 +25,12 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv, discovery, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -40,6 +44,7 @@ from .const import (
     DATA_HASS_CONFIG,
     DEFAULT_NAME,
     DOMAIN,
+    IMPORT_RECONNECT_DELAY,
     PLATFORMS,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
@@ -100,7 +105,7 @@ _LOGGER = logging.getLogger(__name__)
 def read_client_keys(config_file):
     """Read legacy client keys from file."""
     if not os.path.isfile(config_file):
-        return
+        return {}
 
     # Try to parse the file as being JSON
     with open(config_file, encoding="utf8") as json_file:
@@ -110,12 +115,11 @@ def read_client_keys(config_file):
         except (json.JSONDecodeError, UnicodeDecodeError):
             pass
 
-    # If the file is not JSON, read it to an Sqlite DB
-    with SqliteDict(config_file) as sql_dict:
-        client_keys = {}
-        for key, value in sql_dict.iteritems():
-            client_keys[key] = value
-
+    # If the file is not JSON, read it as Sqlite DB
+    engine = db.create_engine(f"sqlite:///{config_file}")
+    table = db.Table("unnamed", db.MetaData(), autoload=True, autoload_with=engine)
+    results = engine.connect().execute(db.select([table])).fetchall()
+    client_keys = {k: loads(v) for k, v in results}
     return client_keys
 
 
@@ -129,21 +133,58 @@ async def async_setup(hass, config):
         return True
 
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
-    client_keys = await hass.async_add_executor_job(read_client_keys, config_file)
+    if not (
+        client_keys := await hass.async_add_executor_job(read_client_keys, config_file)
+    ):
+        _LOGGER.debug("No pairing keys, Not importing webOS Smart TV YAML config")
+        return True
 
+    async def async_migrate_task(entity_id, conf, key):
+        _LOGGER.debug("Migrating webOS Smart TV entity %s unique_id", entity_id)
+        client = WebOsClient(conf[CONF_HOST], key)
+        while not client.is_connected():
+            try:
+                await client.connect()
+            except WEBOSTV_EXCEPTIONS:
+                await asyncio.sleep(IMPORT_RECONNECT_DELAY)
+            except WebOsTvPairError:
+                return
+            else:
+                break
+
+        uuid = client.hello_info["deviceUUID"]
+        ent_reg.async_update_entity(entity_id, new_unique_id=uuid)
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                **conf,
+                CONF_CLIENT_SECRET: key,
+                CONF_UNIQUE_ID: uuid,
+            },
+        )
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    tasks = []
     for conf in config[DOMAIN]:
         host = conf[CONF_HOST]
         if (key := client_keys.get(host)) is None:
-            _LOGGER.debug("Skipping webOS Smart TV host %s without pairing key")
+            _LOGGER.debug(
+                "Not importing webOS Smart TV host %s without pairing key", host
+            )
             continue
 
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={**conf, CONF_CLIENT_SECRET: key},
-            )
-        )
+        if entity_id := ent_reg.async_get_entity_id(Platform.MEDIA_PLAYER, DOMAIN, key):
+            tasks.append(asyncio.create_task(async_migrate_task(entity_id, conf, key)))
+
+    async def async_tasks_cancel(_event):
+        """Cancel config flow import tasks."""
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_tasks_cancel)
 
     return True
 

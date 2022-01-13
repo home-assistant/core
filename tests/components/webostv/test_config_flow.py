@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_SOURCE,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -27,6 +28,7 @@ MOCK_YAML_CONFIG = {
     CONF_NAME: "fake",
     CONF_ICON: "mdi:test",
     CONF_CLIENT_SECRET: "some-secret",
+    CONF_UNIQUE_ID: "fake-uuid",
 }
 
 MOCK_DISCOVERY_INFO = {
