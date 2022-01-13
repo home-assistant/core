@@ -1,10 +1,9 @@
 """Support for the Roku media player."""
 from __future__ import annotations
 
-from typing import Any
-
 import datetime as dt
 import logging
+from typing import Any
 
 import voluptuous as vol
 
