@@ -1,5 +1,6 @@
 """Tests for the Alexa integration."""
 import re
+from unittest.mock import Mock
 from uuid import uuid4
 
 from homeassistant.components.alexa import config, smart_home
@@ -22,6 +23,11 @@ class MockConfig(config.AbstractConfig):
         "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
         "camera.test": {"display_categories": "CAMERA"},
     }
+
+    def __init__(self, hass):
+        """Mock Alexa config."""
+        super().__init__(hass)
+        self._store = Mock(spec_set=config.AlexaConfigStore)
 
     @property
     def supports_auth(self):
@@ -46,6 +52,10 @@ class MockConfig(config.AbstractConfig):
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         return True
+
+    @callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
 
     async def async_get_access_token(self):
         """Get an access token."""
