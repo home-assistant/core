@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 SYNC_DELAY = 1
 
 
-class AlexaConfig(alexa_config.AbstractConfig):
+class CloudAlexaConfig(alexa_config.AbstractConfig):
     """Alexa Configuration."""
 
     def __init__(
