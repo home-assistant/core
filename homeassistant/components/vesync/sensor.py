@@ -187,7 +187,7 @@ class VeSyncHumiditySensor(VeSyncHumidifierSensorEntity):
 
     @property
     def native_value(self):
-        """Return the current power usage in W."""
+        """Return the current humidity in percent."""
         return self.smarthumidifier.details["humidity"]
 
     @property
