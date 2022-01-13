@@ -162,9 +162,14 @@ async def _create_august_with_devices(  # noqa: C901
             "unlock_return_activities"
         ] = unlock_return_activities_side_effect
 
-    return await _mock_setup_august_with_api_side_effects(
+    api_instance, entry = await _mock_setup_august_with_api_side_effects(
         hass, api_call_side_effects, pubnub
     )
+
+    if device_data["locks"]:
+        assert api_instance.async_status_async.mock_calls
+
+    return entry
 
 
 async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, pubnub):
@@ -210,7 +215,7 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, 
     api_instance.async_status_async = AsyncMock()
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
 
-    return await _mock_setup_august(hass, api_instance, pubnub)
+    return api_instance, await _mock_setup_august(hass, api_instance, pubnub)
 
 
 def _mock_august_authentication(token_text, token_timestamp, state):
