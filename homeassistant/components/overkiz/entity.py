@@ -59,21 +59,19 @@ class OverkizEntity(CoordinatorEntity):
         )
 
         model = (
-            str(
-                self.executor.select_state(
-                    OverkizState.CORE_MODEL,
-                    OverkizState.CORE_PRODUCT_MODEL_NAME,
-                    OverkizState.IO_MODEL,
-                ),
+            self.executor.select_state(
+                OverkizState.CORE_MODEL,
+                OverkizState.CORE_PRODUCT_MODEL_NAME,
+                OverkizState.IO_MODEL,
             )
-            or self.device.widget
+            or self.device.widget.value
         )
 
         return DeviceInfo(
             identifiers={(DOMAIN, self.executor.base_device_url)},
             name=self.device.label,
             manufacturer=str(manufacturer),
-            model=model,
+            model=str(model),
             sw_version=str(
                 self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION)
             ),
