@@ -1054,7 +1054,7 @@ class ConfigEntries:
         *,
         unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        data: dict | MappingProxyType | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
