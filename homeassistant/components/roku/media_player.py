@@ -32,6 +32,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_NAME,
     STATE_HOME,
     STATE_IDLE,
     STATE_ON,
@@ -47,10 +48,10 @@ from homeassistant.helpers.network import is_internal_request
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
 from .const import (
+    ATTR_FORMAT,
     ATTR_CONTENT_ID,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
-    ATTR_TITLE,
     DOMAIN,
     SERVICE_SEARCH,
 )
@@ -79,7 +80,8 @@ ATTRS_TO_LAUNCH_PARAMS = {
 }
 
 ATTRS_TO_PLAY_VIDEO_PARAMS = {
-    ATTR_TITLE: "videoName",
+    ATTR_NAME: "videoName",
+    ATTR_FORMAT: "videoFormat",
 }
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
