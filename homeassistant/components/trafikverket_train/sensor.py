@@ -40,7 +40,7 @@ ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
-TIMEZONE = get_time_zone("Europe/Stockholm")
+STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -128,7 +128,7 @@ def next_departuredate(departure: list[str]) -> date:
 
 def _to_iso_format(traintime: datetime) -> str:
     """Return isoformatted utc time."""
-    return as_utc(traintime.astimezone(TIMEZONE)).isoformat()
+    return as_utc(traintime.astimezone(STOCKHOLM_TIMEZONE)).isoformat()
 
 
 class TrainSensor(SensorEntity):
@@ -160,7 +160,9 @@ class TrainSensor(SensorEntity):
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time).astimezone(TIMEZONE)
+            when = datetime.combine(departure_day, self._time).astimezone(
+                STOCKHOLM_TIMEZONE
+            )
         try:
             if self._time:
                 _state = await self._train_api.async_get_train_stop(
@@ -182,14 +184,17 @@ class TrainSensor(SensorEntity):
 
         self._attr_available = True
 
+        # The original datetime doesn't provide a timezone so therefore attaching it here.
         self._attr_native_value = _state.advertised_time_at_location.astimezone(
-            TIMEZONE
+            STOCKHOLM_TIMEZONE
         )
         if _state.time_at_location:
-            self._attr_native_value = _state.time_at_location.astimezone(TIMEZONE)
+            self._attr_native_value = _state.time_at_location.astimezone(
+                STOCKHOLM_TIMEZONE
+            )
         if _state.estimated_time_at_location:
             self._attr_native_value = _state.estimated_time_at_location.astimezone(
-                TIMEZONE
+                STOCKHOLM_TIMEZONE
             )
 
         self._update_attributes(_state)
