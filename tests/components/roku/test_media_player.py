@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -464,8 +465,10 @@ async def test_services(
                 ATTR_ENTITY_ID: MAIN_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
                 ATTR_MEDIA_CONTENT_ID: "291097",
-                ATTR_MEDIA_TYPE: "movie",
-                ATTR_CONTENT_ID: "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
+                ATTR_MEDIA_EXTRA: {
+                    ATTR_MEDIA_TYPE: "movie",
+                    ATTR_CONTENT_ID: "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
+                },
             },
             blocking=True,
         )
