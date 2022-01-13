@@ -144,7 +144,7 @@ async def test_cover_available(hass, mock_gateway, mock_api_factory):
 
 
 def create_all_set_position_on_cases():
-    """Create all turn on test cases."""
+    """Create all test cases."""
     all_test_cases = [
         ["test_features", "test_data", "expected_result", "device_id"],
         [],
@@ -169,7 +169,7 @@ async def test_set_cover_position(
     expected_result,
     device_id,
 ):
-    """Test turning on a cover."""
+    """Test setting position a cover."""
     # Note pytradfri style, not hass. Values not really important.
     initial_state = {
         "current_cover_position": 0,
