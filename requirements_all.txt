@@ -752,7 +752,7 @@ gntp==1.0.3
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.10
+goodwe==0.2.15
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
