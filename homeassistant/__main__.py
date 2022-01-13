@@ -5,7 +5,6 @@ import argparse
 import faulthandler
 import os
 import platform
-import subprocess
 import sys
 import threading
 
@@ -264,19 +263,6 @@ def try_to_restart() -> None:
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
-
-    # Run a simple daemon runner process on Windows to handle restarts
-    if os.name == "nt" and "--runner" not in sys.argv:
-        nt_args = cmdline() + ["--runner"]
-        while True:
-            try:
-                subprocess.check_call(nt_args)
-                sys.exit(0)
-            except KeyboardInterrupt:
-                sys.exit(0)
-            except subprocess.CalledProcessError as exc:
-                if exc.returncode != RESTART_EXIT_CODE:
-                    sys.exit(exc.returncode)
 
     args = get_arguments()
 
