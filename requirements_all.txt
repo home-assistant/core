@@ -329,7 +329,7 @@ apns2==0.3.0
 apprise==0.9.6
 
 # homeassistant.components.aprs
-aprslib==0.6.46
+aprslib==0.7.0
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
