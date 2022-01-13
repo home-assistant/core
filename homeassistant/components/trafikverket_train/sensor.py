@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import logging
+from typing import Any
 
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.trafikverket_train import TrainStop
@@ -147,29 +148,29 @@ class TrainSensor(SensorEntity):
         self._to_station = to_station
         self._weekday = weekday
         self._time = departuretime
-        self._state: TrainStop | None = None
         self._attr_extra_state_attributes = {}
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
         when = datetime.now()
+        _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(departure_day, self._time).astimezone(TIMEZONE)
         try:
             if self._time:
-                self._state = await self._train_api.async_get_train_stop(
+                _state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
                 )
             else:
 
-                self._state = await self._train_api.async_get_next_train_stop(
+                _state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )
         except ValueError as output_error:
             _LOGGER.error("Departure %s encountered a problem: %s", when, output_error)
 
-        if not self._state:
+        if not _state:
             self._attr_available = False
             self._attr_native_value = None
             self._attr_extra_state_attributes = {}
@@ -177,50 +178,54 @@ class TrainSensor(SensorEntity):
 
         self._attr_available = True
 
-        self._attr_native_value = self._state.advertised_time_at_location.astimezone(
+        self._attr_native_value = _state.advertised_time_at_location.astimezone(
             TIMEZONE
         )
-        if self._state.time_at_location:
-            self._attr_native_value = self._state.time_at_location.astimezone(TIMEZONE)
-        if self._state.estimated_time_at_location:
-            self._attr_native_value = self._state.estimated_time_at_location.astimezone(
+        if _state.time_at_location:
+            self._attr_native_value = _state.time_at_location.astimezone(TIMEZONE)
+        if _state.estimated_time_at_location:
+            self._attr_native_value = _state.estimated_time_at_location.astimezone(
                 TIMEZONE
             )
 
-        self._attr_extra_state_attributes[ATTR_DEPARTURE_STATE] = (
-            self._state.get_state().name if self._state.get_state().name else None
-        )
-        self._attr_extra_state_attributes[ATTR_CANCELED] = (
-            self._state.canceled if self._state.canceled else None
-        )
-        delay_in_minutes = self._state.get_delay_time()
-        self._attr_extra_state_attributes[ATTR_DELAY_TIME] = (
-            delay_in_minutes.total_seconds() / 60 if delay_in_minutes else None
-        )
-        self._attr_extra_state_attributes[ATTR_PLANNED_TIME] = (
-            as_utc(
-                self._state.advertised_time_at_location.astimezone(TIMEZONE)
+        self._attr_extra_state_attributes = await self.async_update_attributes(_state)
+
+    async def async_update_attributes(self, state: TrainStop) -> dict[str, Any]:
+        """Return extra state attributes."""
+
+        attributes = {
+            ATTR_DEPARTURE_STATE: state.get_state().name,
+            ATTR_CANCELED: state.canceled,
+            ATTR_DELAY_TIME: None,
+            ATTR_PLANNED_TIME: None,
+            ATTR_ESTIMATED_TIME: None,
+            ATTR_ACTUAL_TIME: None,
+            ATTR_OTHER_INFORMATION: None,
+            ATTR_DEVIATIONS: None,
+        }
+
+        if delay_in_minutes := state.get_delay_time():
+            attributes[ATTR_DELAY_TIME] = delay_in_minutes.total_seconds() / 60
+
+        if advert_time := state.advertised_time_at_location:
+            attributes[ATTR_PLANNED_TIME] = as_utc(
+                advert_time.astimezone(TIMEZONE)
             ).isoformat()
-            if self._state.advertised_time_at_location
-            else None
-        )
-        self._attr_extra_state_attributes[ATTR_ESTIMATED_TIME] = (
-            as_utc(
-                self._state.estimated_time_at_location.astimezone(TIMEZONE)
+
+        if est_time := state.estimated_time_at_location:
+            attributes[ATTR_ESTIMATED_TIME] = as_utc(
+                est_time.astimezone(TIMEZONE)
             ).isoformat()
-            if self._state.estimated_time_at_location
-            else None
-        )
-        self._attr_extra_state_attributes[ATTR_ACTUAL_TIME] = (
-            as_utc(self._state.time_at_location.astimezone(TIMEZONE)).isoformat()
-            if self._state.time_at_location
-            else None
-        )
-        self._attr_extra_state_attributes[ATTR_OTHER_INFORMATION] = (
-            ", ".join(self._state.other_information)
-            if self._state.other_information
-            else None
-        )
-        self._attr_extra_state_attributes[ATTR_DEVIATIONS] = (
-            ", ".join(self._state.deviations) if self._state.deviations else None
-        )
+
+        if time_location := state.time_at_location:
+            attributes[ATTR_ACTUAL_TIME] = as_utc(
+                time_location.astimezone(TIMEZONE)
+            ).isoformat()
+
+        if other_info := state.other_information:
+            attributes[ATTR_OTHER_INFORMATION] = ", ".join(other_info)
+
+        if deviation := state.deviations:
+            attributes[ATTR_DEVIATIONS] = ", ".join(deviation)
+
+        return attributes
