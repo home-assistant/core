@@ -23,10 +23,7 @@ async def validate_input(hass: HomeAssistant, host: str) -> str:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     api = IntellifireAsync(host)
-    try:
-        await api.poll()
-    except ConnectionError as exception:
-        raise CannotConnect from exception
+    await api.poll()
 
     # Return the serial number which will be used to calculate a unique ID for the device/sensors
     return api.data.serial

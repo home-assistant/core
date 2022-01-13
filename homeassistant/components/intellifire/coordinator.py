@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
-import logging.handlers
 
 from async_timeout import timeout
 from intellifire4py import IntellifireAsync, IntellifirePollData
@@ -33,7 +31,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         LOGGER.debug("Calling update loop on IntelliFire")
         async with timeout(100):
             try:
-                await self._api.poll(logging_level=logging.DEBUG)
+                await self._api.poll()
             except Exception as exception:
                 raise UpdateFailed from exception
         return self._api.data
