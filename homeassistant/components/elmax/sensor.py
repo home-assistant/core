@@ -1,5 +1,5 @@
 """Elmax sensor platform."""
-from typing import Optional, Union
+from __future__ import annotations
 
 from elmax_api.model.panel import PanelStatus
 
@@ -34,14 +34,14 @@ async def async_setup_entry(
         # Otherwise, add all the entities we found
         entities = []
         for zone in panel_status.zones:
-            e = ElmaxSensor(
+            entity = ElmaxSensor(
                 panel=coordinator.panel_entry,
                 elmax_device=zone,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
             )
-            if e.unique_id not in known_devices:
-                entities.append(e)
+            if entity.unique_id not in known_devices:
+                entities.append(entity)
         async_add_entities(entities, True)
         known_devices.update([e.unique_id for e in entities])
 
@@ -56,16 +56,16 @@ class ElmaxSensor(ElmaxEntity, BinarySensorEntity):
     """Elmax Sensor entity implementation."""
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.get_zone_state(self._device.endpoint_id).opened
 
     @property
-    def device_class(self) -> Optional[Union[BinarySensorDeviceClass, str]]:
+    def device_class(self) -> BinarySensorDeviceClass | str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return BinarySensorDeviceClass.DOOR
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         return "hass:door-open" if self.is_on else "hass:door"
