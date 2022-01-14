@@ -111,7 +111,7 @@ async def test_network_key_validation(hass, mock_openzwave):
         assert result["zwave"]["network_key"] == value
 
 
-async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
+async def test_erroneous_network_key_fails_validation(hass, mock_openzwave):
     """Test failing erroneous network key validation."""
     test_values = [
         (
