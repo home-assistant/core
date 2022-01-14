@@ -145,6 +145,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
         """Init the entity."""
         super().__init__(coordinator, uuid, device, lookin_data)
         self._update_from_status(self._remote.status)
+        self._attr_name = self._remote.name
 
     @property
     def _remote(self) -> Remote:

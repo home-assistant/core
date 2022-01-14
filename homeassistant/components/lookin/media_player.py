@@ -91,11 +91,10 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         self._attr_supported_features: int = 0
         self._attr_state = None
         self._attr_is_volume_muted: bool = False
+        super().__init__(coordinator, uuid, device, lookin_data)
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:
                 self._attr_supported_features |= feature
-                self._attr_name = self._remote.name
-        super().__init__(coordinator, uuid, device, lookin_data)
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
