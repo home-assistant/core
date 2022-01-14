@@ -58,7 +58,7 @@ def setup_platform(
     """Set up the Steam platform."""
 
     steam.api.key.set(config[CONF_API_KEY])
-    # Initialize steammods app list before creating sensors
+    # Initialize steamods app list before creating sensors
     # to benefit from internal caching of the list.
     hass.data[APP_LIST_KEY] = steam.apps.app_list()
     entities = [SteamSensor(account, steam) for account in config[CONF_ACCOUNTS]]
