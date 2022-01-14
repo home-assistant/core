@@ -135,7 +135,7 @@ class QSToggleEntity(QSEntity):
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Qwiskswitch component setup."""
+    """Qwikswitch component setup."""
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
