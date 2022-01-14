@@ -23,7 +23,7 @@ async def checker_fixture(hass):
     return checker
 
 
-async def test_signicant_change(hass, checker):
+async def test_significant_change(hass, checker):
     """Test initialize helper works."""
     ent_id = "test_domain.test_entity"
     attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
@@ -55,7 +55,7 @@ async def test_significant_change_extra(hass, checker):
     assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
     assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=1)
 
-    # Reset the last significiant change to 100 to repeat test but with
+    # Reset the last significant change to 100 to repeat test but with
     # extra checker installed.
     assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
 
