@@ -1,4 +1,4 @@
-"""Support for Xiomi Gateway alarm control panels."""
+"""Support for Xiaomi Gateway alarm control panels."""
 from functools import partial
 import logging
 
