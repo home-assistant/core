@@ -1,10 +1,8 @@
 """The lookin integration light platform."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import cast
 
 from aiolookin import Remote
 from aiolookin.models import UDPCommandType, UDPEvent
@@ -22,12 +20,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_STANDBY
+from homeassistant.const import STATE_ON, STATE_STANDBY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, TYPE_TO_PLATFORM
 from .entity import LookinPowerEntity
 from .models import LookinData
 
@@ -59,32 +57,11 @@ async def async_setup_entry(
     entities = []
 
     for remote in lookin_data.devices:
-        if remote["Type"] not in _TYPE_TO_DEVICE_CLASS:
+        if TYPE_TO_PLATFORM.get(remote["Type"]) != Platform.MEDIA_PLAYER:
             continue
         uuid = remote["UUID"]
-
-        def _wrap_async_update(
-            uuid: str,
-        ) -> Callable[[], Coroutine[None, Any, Remote]]:
-            """Create a function to capture the uuid cell variable."""
-
-            async def _async_update() -> Remote:
-                return await lookin_data.lookin_protocol.get_remote(uuid)
-
-            return _async_update
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name=f"{config_entry.title} {uuid}",
-            update_method=_wrap_async_update(uuid),
-            update_interval=timedelta(
-                seconds=60
-            ),  # Updates are pushed (fallback is polling)
-        )
-        await coordinator.async_refresh()
+        coordinator = lookin_data.device_coordinators[uuid]
         device: Remote = coordinator.data
-
         entities.append(
             LookinMedia(
                 uuid=uuid,
@@ -183,7 +160,6 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
         self._update_from_status(event.value)
         self.coordinator.async_set_updated_data(self._remote)
-        self.async_write_ha_state()
 
     async def _async_push_update_device(self, event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
