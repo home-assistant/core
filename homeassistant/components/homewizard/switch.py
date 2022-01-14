@@ -30,7 +30,7 @@ async def async_setup_entry(
         COORDINATOR
     ]
 
-    if coordinator.api.state is not None:
+    if coordinator.api.state:
         async_add_entities(
             [
                 HWEnergyMainSwitchEntity(coordinator, entry),
