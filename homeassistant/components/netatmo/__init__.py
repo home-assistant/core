@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import cloud
 from homeassistant.components.webhook import (
+    async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
@@ -192,9 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             else:
                 webhook_url = entry.data[CONF_CLOUDHOOK_URL]
         else:
-            webhook_url = hass.components.webhook.async_generate_url(
-                entry.data[CONF_WEBHOOK_ID]
-            )
+            webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
         if entry.data[
             "auth_implementation"
