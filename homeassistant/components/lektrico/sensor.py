@@ -25,6 +25,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_KILO_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
@@ -129,7 +130,9 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="led_max_brightness",
         name="Led_Brightness",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
+        unit_fn=PERCENTAGE,
         value_fn=lambda x: x.led_max_brightness,
     ),
     LektricoSensorEntityDescription(
