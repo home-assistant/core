@@ -74,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("config_flow async_step_zeroconf")
 
-        # Validate doscovery entry
+        # Validate discovery entry
         if (
             "api_enabled" not in discovery_info.properties
             or "path" not in discovery_info.properties

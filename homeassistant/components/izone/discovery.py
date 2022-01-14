@@ -27,7 +27,7 @@ class DiscoveryService(pizone.Listener):
 
     # Listener interface
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
-        """Handle new controller discoverery."""
+        """Handle new controller discovery."""
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_DISCOVERED, ctrl)
 
     def controller_disconnected(self, ctrl: pizone.Controller, ex: Exception) -> None:
