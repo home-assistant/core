@@ -59,12 +59,12 @@ class LektricoSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="charger_state",
-        name="Charger_State",
+        name="Charger State",
         value_fn=lambda x: x.charger_state,
     ),
     LektricoSensorEntityDescription(
         key="charging_time",
-        name="Charging_Time",
+        name="Charging Time",
         unit_fn=TIME_SECONDS,
         value_fn=lambda x: x.charging_time,
     ),
@@ -78,14 +78,14 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     LektricoSensorEntityDescription(
         key="instant_power",
-        name="Instant_Power",
+        name="Instant Power",
         device_class=SensorDeviceClass.POWER,
         unit_fn=POWER_KILO_WATT,
         value_fn=lambda x: x.instant_power,
     ),
     LektricoSensorEntityDescription(
         key="session_energy",
-        name="Session_Energy",
+        name="Session Energy",
         device_class=SensorDeviceClass.ENERGY,
         unit_fn=ENERGY_KILO_WATT_HOUR,
         value_fn=lambda x: x.session_energy,
@@ -100,7 +100,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     LektricoSensorEntityDescription(
         key="total_charged_energy",
-        name="Total_Charged_Energy",
+        name="Total Charged Energy",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         unit_fn=ENERGY_KILO_WATT_HOUR,
@@ -115,21 +115,21 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     LektricoSensorEntityDescription(
         key="install_current",
-        name="Install_Current",
+        name="Install Current",
         device_class=SensorDeviceClass.CURRENT,
         unit_fn=ELECTRIC_CURRENT_AMPERE,
         value_fn=lambda x: x.install_current,
     ),
     LektricoSensorEntityDescription(
         key="dynamic_current",
-        name="Dynamic_Current",
+        name="Dynamic Current",
         device_class=SensorDeviceClass.CURRENT,
         unit_fn=ELECTRIC_CURRENT_AMPERE,
         value_fn=lambda x: x.dynamic_current,
     ),
     LektricoSensorEntityDescription(
         key="led_max_brightness",
-        name="Led_Brightness",
+        name="Led Brightness",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
         unit_fn=PERCENTAGE,
@@ -137,7 +137,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     LektricoSensorEntityDescription(
         key="headless",
-        name="No_Authentication",
+        name="No Authentication",
         value_fn=lambda x: x.headless,
     ),
 )
