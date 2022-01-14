@@ -472,7 +472,7 @@ class PrometheusMetrics:
         return None
 
     def _sensor_override_component_metric(self, state, unit):
-        """Get metric from override in component confioguration."""
+        """Get metric from override in component configuration."""
         return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
 
     @staticmethod
