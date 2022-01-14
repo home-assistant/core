@@ -84,6 +84,7 @@ async def test_light_update(
     new_light.light_device_settings.led_level = 3
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_light
 
     new_bootstrap.lights = {new_light.id: new_light}

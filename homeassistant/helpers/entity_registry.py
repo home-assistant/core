@@ -165,7 +165,7 @@ class EntityRegistryStore(storage.Store):
         return await _async_migrate(old_major_version, old_minor_version, old_data)
 
 
-class EntityRegistryItems(UserDict):
+class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
     """Container for entity registry items, maps entity_id -> entry.
 
     Maintains two additional indexes:
@@ -196,10 +196,6 @@ class EntityRegistryItems(UserDict):
         self._index.__delitem__((entry.domain, entry.platform, entry.unique_id))
         super().__delitem__(key)
 
-    def __getitem__(self, key: str) -> RegistryEntry:
-        """Get an item."""
-        return cast(RegistryEntry, super().__getitem__(key))
-
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
         """Get entity_id from (domain, platform, unique_id)."""
         return self._index.get(key)
@@ -212,10 +208,11 @@ class EntityRegistryItems(UserDict):
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
+    entities: EntityRegistryItems
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
-        self.entities: EntityRegistryItems
         self._store = EntityRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -230,13 +227,13 @@ class EntityRegistry:
     @callback
     def async_get_device_class_lookup(
         self, domain_device_classes: set[tuple[str, str | None]]
-    ) -> dict:
+    ) -> dict[str, dict[tuple[str, str | None], str]]:
         """Return a lookup of entity ids for devices which have matching entities.
 
         Entities must match a set of (domain, device_class) tuples.
         The result is indexed by device_id, then by the matching (domain, device_class)
         """
-        lookup: dict[str, dict[tuple[Any, Any], str]] = {}
+        lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         for entity in self.entities.values():
             if not entity.device_id:
                 continue
@@ -335,7 +332,7 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self._async_update_entity(
+            return self.async_update_entity(
                 entity_id,
                 area_id=area_id or UNDEFINED,
                 capabilities=capabilities or UNDEFINED,
@@ -464,43 +461,6 @@ class EntityRegistry:
         entity_id: str,
         *,
         area_id: str | None | UndefinedType = UNDEFINED,
-        config_entry_id: str | None | UndefinedType = UNDEFINED,
-        device_class: str | None | UndefinedType = UNDEFINED,
-        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
-        entity_category: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
-        new_entity_id: str | UndefinedType = UNDEFINED,
-        new_unique_id: str | UndefinedType = UNDEFINED,
-        original_device_class: str | None | UndefinedType = UNDEFINED,
-        original_icon: str | None | UndefinedType = UNDEFINED,
-        original_name: str | None | UndefinedType = UNDEFINED,
-        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
-    ) -> RegistryEntry:
-        """Update properties of an entity."""
-        return self._async_update_entity(
-            entity_id,
-            area_id=area_id,
-            config_entry_id=config_entry_id,
-            device_class=device_class,
-            disabled_by=disabled_by,
-            entity_category=entity_category,
-            icon=icon,
-            name=name,
-            new_entity_id=new_entity_id,
-            new_unique_id=new_unique_id,
-            original_device_class=original_device_class,
-            original_icon=original_icon,
-            original_name=original_name,
-            unit_of_measurement=unit_of_measurement,
-        )
-
-    @callback
-    def _async_update_entity(
-        self,
-        entity_id: str,
-        *,
-        area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
@@ -520,8 +480,8 @@ class EntityRegistry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
-        new_values = {}  # Dict with new key/value pairs
-        old_values = {}  # Dict with old key/value pairs
+        new_values: dict[str, Any] = {}  # Dict with new key/value pairs
+        old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, RegistryEntryDisabler
@@ -587,7 +547,11 @@ class EntityRegistry:
 
         self.async_schedule_save()
 
-        data = {"action": "update", "entity_id": entity_id, "changes": old_values}
+        data: dict[str, str | dict[str, Any]] = {
+            "action": "update",
+            "entity_id": entity_id,
+            "changes": old_values,
+        }
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
@@ -650,7 +614,7 @@ class EntityRegistry:
     @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
-        data = {}
+        data: dict[str, Any] = {}
 
         data["entities"] = [
             {
@@ -693,7 +657,7 @@ class EntityRegistry:
         """Clear area id from registry entries."""
         for entity_id, entry in self.entities.items():
             if area_id == entry.area_id:
-                self._async_update_entity(entity_id, area_id=None)
+                self.async_update_entity(entity_id, area_id=None)
 
 
 @callback
@@ -878,7 +842,7 @@ def async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) ->
 async def async_migrate_entries(
     hass: HomeAssistant,
     config_entry_id: str,
-    entry_callback: Callable[[RegistryEntry], dict | None],
+    entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
     """Migrator of unique IDs."""
     ent_reg = await async_get_registry(hass)

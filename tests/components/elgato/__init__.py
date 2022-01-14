@@ -1,6 +1,6 @@
 """Tests for the Elgato Key Light integration."""
 
-from homeassistant.components.elgato.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
@@ -60,7 +60,6 @@ async def init_integration(
         data={
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 9123,
-            CONF_SERIAL_NUMBER: "CN11A1A00001",
         },
     )
 

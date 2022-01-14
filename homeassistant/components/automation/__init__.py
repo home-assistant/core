@@ -1,8 +1,9 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -40,8 +41,9 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
+    TemplateError,
 )
-from homeassistant.helpers import condition, extract_domain_configs, template
+from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -457,7 +459,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if self._variables:
                 try:
                     variables = self._variables.async_render(self.hass, variables)
-                except template.TemplateError as err:
+                except TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
                     return
@@ -589,7 +591,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     variables,
                     limited=True,
                 )
-            except template.TemplateError as err:
+            except TemplateError as err:
                 self._logger.error("Error rendering trigger variables: %s", err)
                 return None
 
@@ -631,7 +633,7 @@ async def _async_process_config(
                 try:
                     raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
-                        Dict[str, Any],
+                        dict[str, Any],
                         await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:

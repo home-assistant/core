@@ -96,6 +96,7 @@ class SonosData:
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
+        self.entity_id_mappings: dict[str, SonosSpeaker] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

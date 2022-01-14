@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL, CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -44,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     auth_token = conf.get(CONF_ACCESS_TOKEN)
     update_interval = conf[CONF_SCAN_INTERVAL]
 
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     result = await _update_freedns(hass, session, url, auth_token)
 

@@ -9,7 +9,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Dict, TypedDict, Union, cast
+from typing import Any, TypedDict, Union, cast
 
 import async_timeout
 import voluptuous as vol
@@ -915,7 +915,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[Dict[str, Any], MappingProxyType]
+_VarsType = Union[dict[str, Any], MappingProxyType]
 
 
 def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> None:
@@ -1216,7 +1216,7 @@ class Script:
                         self._hass,
                         run_variables,
                     )
-                except template.TemplateError as err:
+                except exceptions.TemplateError as err:
                     self._log("Error rendering variables: %s", err, level=logging.ERROR)
                     raise
             elif run_variables:

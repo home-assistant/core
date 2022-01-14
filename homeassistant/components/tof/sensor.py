@@ -1,4 +1,6 @@
 """Platform for Time of Flight sensor VL53L1X from STMicroelectronics."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
@@ -9,7 +11,10 @@ import voluptuous as vol
 from homeassistant.components import rpi_gpio
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, LENGTH_MILLIMETERS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_I2C_ADDRESS = "i2c_address"
 CONF_I2C_BUS = "i2c_bus"
@@ -46,7 +51,12 @@ def init_tof_1(xshut):
     rpi_gpio.write_output(xshut, 1)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Reset and initialize the VL53L1X ToF Sensor from STMicroelectronics."""
     _LOGGER.warning(
         "The Time of Flight integration is deprecated and will be removed "

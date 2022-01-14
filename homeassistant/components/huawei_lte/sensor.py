@@ -28,7 +28,7 @@ from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HuaweiLteBaseEntity
+from . import HuaweiLteBaseEntityWithDevice
 from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
@@ -523,7 +523,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
 
 
 @dataclass
-class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
+class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     """Huawei LTE sensor entity."""
 
     key: str

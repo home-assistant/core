@@ -18,10 +18,9 @@ from .const import (
     GROUP_ID_READ_ONLY,
     GROUP_ID_USER,
 )
-from .permissions import PermissionLookup, system_policies
+from .permissions import system_policies
+from .permissions.models import PermissionLookup
 from .permissions.types import PolicyType
-
-# mypy: disallow-any-generics
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth"

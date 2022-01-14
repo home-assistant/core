@@ -1,9 +1,12 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
+from enum import unique
+
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -56,10 +59,12 @@ class OverkizEntity(CoordinatorEntity):
         )
 
         model = (
-            self.executor.select_state(
-                OverkizState.CORE_MODEL,
-                OverkizState.CORE_PRODUCT_MODEL_NAME,
-                OverkizState.IO_MODEL,
+            str(
+                self.executor.select_state(
+                    OverkizState.CORE_MODEL,
+                    OverkizState.CORE_PRODUCT_MODEL_NAME,
+                    OverkizState.IO_MODEL,
+                ),
             )
             or self.device.widget
         )
@@ -67,10 +72,10 @@ class OverkizEntity(CoordinatorEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.executor.base_device_url)},
             name=self.device.label,
-            manufacturer=manufacturer,
+            manufacturer=str(manufacturer),
             model=model,
-            sw_version=self.executor.select_attribute(
-                OverkizAttribute.CORE_FIRMWARE_REVISION
+            sw_version=str(
+                self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION)
             ),
             hw_version=self.device.controllable_name,
             suggested_area=self.coordinator.areas[self.device.place_oid],
@@ -93,3 +98,12 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self.entity_description = description
         self._attr_name = f"{super().name} {self.entity_description.name}"
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
+
+
+# Used by translations of state and select sensors
+@unique
+class OverkizDeviceClass(StrEnum):
+    """Device class for Overkiz specific devices."""
+
+    OPEN_CLOSED_PEDESTRIAN = "overkiz__open_closed_pedestrian"
+    MEMORIZED_SIMPLE_VOLUME = "overkiz__memorized_simple_volume"

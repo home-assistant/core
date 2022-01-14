@@ -14,6 +14,7 @@
         },
         "trigger_type": {
             "target_humidity_changed": "{entity_name} umidit\u00e0 target modificata",
+            "toggled": "{entity_name} attiva o disattiva",
             "turned_off": "{entity_name} disattivato",
             "turned_on": "{entity_name} attivato"
         }

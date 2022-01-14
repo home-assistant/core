@@ -6,7 +6,6 @@ from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -14,6 +13,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
+from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
@@ -22,6 +22,63 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
+
+
+async def test_fire_event(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+            "event_data": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {"hello": "world"}
+
+
+async def test_fire_event_without_data(hass, websocket_client):
+    """Test fire event command."""
+    runs = []
+
+    async def event_handler(event):
+        runs.append(event)
+
+    hass.bus.async_listen_once("event_type_test", event_handler)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "fire_event",
+            "event_type": "event_type_test",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(runs) == 1
+
+    assert runs[0].event_type == "event_type_test"
+    assert runs[0].data == {}
 
 
 async def test_call_service(hass, websocket_client):

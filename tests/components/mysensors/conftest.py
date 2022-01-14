@@ -1,9 +1,9 @@
 """Provide common mysensors fixtures."""
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 import json
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from mysensors.persistence import MySensorsJSONDecoder

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -154,7 +155,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    websession = async_get_clientsession(hass)
+    if CONF_VERIFY_SSL not in entry.data:
+        data = {**entry.data, CONF_VERIFY_SSL: True}
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
+    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = OctoprintClient(
         entry.data[CONF_HOST],
         websession,
@@ -225,7 +231,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             printer = await self._octoprint.get_printer_info()
         except PrinterOffline:
             if not self._printer_offline:
-                _LOGGER.error("Unable to retrieve printer information: Printer offline")
+                _LOGGER.debug("Unable to retrieve printer information: Printer offline")
                 self._printer_offline = True
         except ApiError as err:
             raise UpdateFailed(err) from err

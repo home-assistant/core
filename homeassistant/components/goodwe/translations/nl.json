@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Verbinden met omvormer",
+                "title": "GoodWe-omvormer"
+            }
+        }
+    }
+}

@@ -14,8 +14,14 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_TIME_CHANGED,
 )
-from homeassistant.core import Event, ServiceCall, callback as async_callback
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    callback as async_callback,
+)
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -123,7 +129,7 @@ def request_done(hass, request_id):
     ).result()
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the configurator component."""
     return True
 

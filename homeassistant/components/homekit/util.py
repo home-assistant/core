@@ -12,7 +12,12 @@ import socket
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components import (
+    binary_sensor,
+    media_player,
+    persistent_notification,
+    sensor,
+)
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
@@ -91,6 +96,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
+VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+
 
 MAX_PORT = 65535
 VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
@@ -337,14 +347,12 @@ def async_show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.async_create(
-        message, "HomeKit Pairing", entry_id
-    )
+    persistent_notification.async_create(hass, message, "HomeKit Pairing", entry_id)
 
 
 def async_dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.async_dismiss(entry_id)
+    persistent_notification.async_dismiss(hass, entry_id)
 
 
 def convert_to_float(state):
@@ -412,9 +420,11 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
-def format_sw_version(version):
+def format_version(version):
     """Extract the version string in a format homekit can consume."""
-    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
+    split_ver = str(version).replace("-", ".")
+    num_only = NUMBERS_ONLY_RE.sub("", split_ver)
+    match = VERSION_RE.search(num_only)
     if match:
         return match.group(0)
     return None

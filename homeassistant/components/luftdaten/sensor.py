@@ -27,8 +27,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import DOMAIN
-from .const import ATTR_SENSOR_ID, CONF_SENSOR_ID
+from .const import ATTR_SENSOR_ID, CONF_SENSOR_ID, DOMAIN
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
