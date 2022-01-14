@@ -248,7 +248,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Temperature",
         native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,  # core:MeasuredValueType = core:TemperatureInCelcius
+        native_unit_of_measurement=TEMP_CELSIUS,  # core:MeasuredValueType = core:TemperatureInCelsius
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # WeatherSensor/WeatherForecastSensor
