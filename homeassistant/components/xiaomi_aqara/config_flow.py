@@ -168,7 +168,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="not_xiaomi_aqara")
 
-        # format mac (include semicolns and make lowercase)
+        # format mac (include semicolons and make lowercase)
         mac_address = format_mac(mac_address)
 
         # format sid from mac_address
