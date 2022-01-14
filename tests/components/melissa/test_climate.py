@@ -329,7 +329,7 @@ async def test_melissa_fan_to_hass(hass):
 
 
 async def test_hass_mode_to_melissa(hass):
-    """Test for hass operations to melssa."""
+    """Test for hass operations to melissa."""
     with patch(
         "homeassistant.components.melissa.climate._LOGGER.warning"
     ) as mocked_warning, patch("homeassistant.components.melissa"):
