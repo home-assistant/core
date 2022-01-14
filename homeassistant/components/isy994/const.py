@@ -471,7 +471,7 @@ UOM_TO_STATES = {
         3: CURRENT_HVAC_FAN,
         4: CURRENT_HVAC_HEAT,  # Pending Heat
         5: CURRENT_HVAC_COOL,  # Pending Cool
-        # >6 defined in ISY but not implemented, leaving for future expanision.
+        # >6 defined in ISY but not implemented, leaving for future expansion.
         6: CURRENT_HVAC_IDLE,
         7: CURRENT_HVAC_HEAT,
         8: CURRENT_HVAC_HEAT,
