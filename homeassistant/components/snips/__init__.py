@@ -115,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if request["intent"]["confidenceScore"] < config[DOMAIN].get(CONF_PROBABILITY):
             _LOGGER.warning(
-                "Intent below probaility threshold %s < %s",
+                "Intent below probability threshold %s < %s",
                 request["intent"]["confidenceScore"],
                 config[DOMAIN].get(CONF_PROBABILITY),
             )

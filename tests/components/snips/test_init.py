@@ -355,7 +355,7 @@ async def test_snips_low_probability(hass, caplog, mqtt_mock):
     async_mock_intent(hass, "LightsMaybe")
     async_fire_mqtt_message(hass, "hermes/intent/LightsMaybe", payload)
     await hass.async_block_till_done()
-    assert "Intent below probaility threshold 0.49 < 0.5" in caplog.text
+    assert "Intent below probability threshold 0.49 < 0.5" in caplog.text
 
 
 async def test_intent_special_slots(hass, mqtt_mock):
