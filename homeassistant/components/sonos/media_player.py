@@ -517,10 +517,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type == "favorite":
-            self._play_favorite_by_name(media_id)
-            return
-
         if media_type == "favorite_item_id":
             favorite = self.speaker.favorites.lookup_by_item_id(media_id)
             self._play_favorite(favorite)
