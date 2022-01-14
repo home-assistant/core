@@ -286,7 +286,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-        self._attr_opions: list[str] = []
+        self._attr_options: list[str] = []
         if status_range := device.status_range.get(description.key):
             self._status_range = cast(TuyaDeviceStatusRange, status_range)
 
