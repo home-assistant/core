@@ -1,6 +1,5 @@
 """Tradfri cover (recognised as blinds in the IKEA ecosystem) platform tests."""
 
-from copy import deepcopy
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
@@ -9,13 +8,6 @@ from pytradfri.device.blind import Blind
 from pytradfri.device.blind_control import BlindControl
 
 from .common import setup_integration
-
-SET_POSITION_TEST_CASES = [
-    # Open cover
-    [{}, {"position": 100}, {"state": "open"}],
-    # Close cover
-    [{}, {"position": 0}, {"state": "closed"}],
-]
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -116,31 +108,16 @@ async def test_cover_available(hass, mock_gateway, mock_api_factory):
     assert hass.states.get("cover.tradfri_cover_2").state == "unavailable"
 
 
-def create_all_set_position_on_cases():
-    """Create all test cases."""
-    all_test_cases = [
-        ["test_features", "test_data", "expected_result", "device_id"],
-        [],
-    ]
-    index = 1
-    for test_case in SET_POSITION_TEST_CASES:
-        case = deepcopy(test_case)
-        case.append(index)
-        index += 1
-        all_test_cases[1].append(case)
-
-    return all_test_cases
-
-
-@pytest.mark.parametrize(*create_all_set_position_on_cases())
+@pytest.mark.parametrize(
+    "test_data, expected_result",
+    [({"position": 100}, "open"), ({"position": 0}, "closed")],
+)
 async def test_set_cover_position(
     hass,
     mock_gateway,
     mock_api_factory,
-    test_features,
     test_data,
     expected_result,
-    device_id,
 ):
     """Test setting position of a cover."""
     # Note pytradfri style, not hass. Values not really important.
@@ -149,9 +126,7 @@ async def test_set_cover_position(
     }
 
     # Setup the gateway with a mock cover.
-    cover = mock_cover(
-        test_features=test_features, test_state=initial_state, device_number=device_id
-    )
+    cover = mock_cover(test_state=initial_state, device_number=0)
     mock_gateway.mock_devices.append(cover)
     await setup_integration(hass)
 
@@ -159,7 +134,7 @@ async def test_set_cover_position(
     await hass.services.async_call(
         "cover",
         "set_cover_position",
-        {"entity_id": f"cover.tradfri_cover_{device_id}", **test_data},
+        {"entity_id": "cover.tradfri_cover_0", **test_data},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -187,6 +162,5 @@ async def test_set_cover_position(
     await hass.async_block_till_done()
 
     # Check that the state is correct.
-    state = hass.states.get(f"cover.tradfri_cover_{device_id}")
-    for result, value in expected_result.items():
-        assert state.state == value
+    state = hass.states.get("cover.tradfri_cover_0")
+    assert state.state == expected_result
