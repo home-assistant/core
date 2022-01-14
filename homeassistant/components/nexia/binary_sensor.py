@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 
 class NexiaBinarySensor(NexiaThermostatEntity, BinarySensorEntity):
-    """Provices Nexia BinarySensor support."""
+    """Provides Nexia BinarySensor support."""
 
     def __init__(self, coordinator, thermostat, sensor_call, sensor_name):
         """Initialize the nexia sensor."""
