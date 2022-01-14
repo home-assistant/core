@@ -6,7 +6,6 @@ import urllib.parse
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_TRACK,
     MEDIA_TYPE_ALBUM,
 )
 from homeassistant.components.media_player.errors import BrowseError
@@ -190,27 +189,64 @@ def library_payload(media_library, get_thumbnail_url=None):
     )
 
 
-def favorites_payload(favorites, get_thumbnail_url=None):
+def favorites_payload(favorites):
     """
     Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
     children = []
-    for item in favorites:
+
+    group_types = {fav.reference.item_class for fav in favorites}
+    for group_type in group_types:
+        media_content_type = SONOS_TYPES_MAPPING[group_type]
         children.append(
             BrowseMedia(
-                title=item.title,
-                media_class=MEDIA_CLASS_TRACK,
-                media_content_id=item.title,
-                media_content_type="favorite",
-                can_play=True,
-                can_expand=False,
+                title=media_content_type.title(),
+                media_class=SONOS_TO_MEDIA_CLASSES[group_type],
+                media_content_id=group_type,
+                media_content_type="favorites_folder",
+                can_play=False,
+                can_expand=True,
             )
         )
 
     return BrowseMedia(
         title="Favorites",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="",
+        media_content_type="favorites",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
+def favorites_folder_payload(favorites, media_content_id):
+    """Create response payload to describe all items of a type of favorite.
+
+    Used by async_browse_media.
+    """
+    children = []
+    content_type = SONOS_TYPES_MAPPING[media_content_id]
+
+    for favorite in favorites:
+        if favorite.reference.item_class != media_content_id:
+            continue
+        children.append(
+            BrowseMedia(
+                title=favorite.title,
+                media_class=SONOS_TO_MEDIA_CLASSES[favorite.reference.item_class],
+                media_content_id=favorite.item_id,
+                media_content_type="favorite_item_id",
+                can_play=True,
+                can_expand=False,
+                thumbnail=getattr(favorite, "album_art_uri", None),
+            )
+        )
+
+    return BrowseMedia(
+        title=content_type.title(),
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="",
         media_content_type="favorites",
