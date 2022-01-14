@@ -1,4 +1,4 @@
-"""Test init of Logitch Harmony Hub integration."""
+"""Test init of Logitech Harmony Hub integration."""
 from homeassistant.components.harmony.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import entity_registry as er

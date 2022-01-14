@@ -1,4 +1,4 @@
-"""Constants for Logitch Harmony Hub tests."""
+"""Constants for Logitech Harmony Hub tests."""
 
 HUB_NAME = "Guest Room"
 ENTITY_REMOTE = "remote.guest_room"
