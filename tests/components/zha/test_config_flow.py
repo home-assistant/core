@@ -563,7 +563,7 @@ async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, znp_probe,
     """Test detect radios."""
     app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
-    app_ctrl_cls.probe = AsyncMock(side_efferct=(True, False))
+    app_ctrl_cls.probe = AsyncMock(side_effect=(True, False))
 
     p1 = patch(
         "bellows.zigbee.application.ControllerApplication.probe",
