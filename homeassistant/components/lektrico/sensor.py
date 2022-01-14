@@ -52,7 +52,6 @@ SCAN_INTERVAL = timedelta(seconds=10)
 class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
-    unit_fn: str | None = None
     value_fn: Any | None = None
 
 
@@ -65,7 +64,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="charging_time",
         name="Charging Time",
-        unit_fn=TIME_SECONDS,
+        native_unit_of_measurement=TIME_SECONDS,
         value_fn=lambda x: x.charging_time,
     ),
     LektricoSensorEntityDescription(
@@ -73,21 +72,21 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Current",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
-        unit_fn=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         value_fn=lambda x: x.current,
     ),
     LektricoSensorEntityDescription(
         key="instant_power",
         name="Instant Power",
         device_class=SensorDeviceClass.POWER,
-        unit_fn=POWER_KILO_WATT,
+        native_unit_of_measurement=POWER_KILO_WATT,
         value_fn=lambda x: x.instant_power,
     ),
     LektricoSensorEntityDescription(
         key="session_energy",
         name="Session Energy",
         device_class=SensorDeviceClass.ENERGY,
-        unit_fn=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_fn=lambda x: x.session_energy,
     ),
     LektricoSensorEntityDescription(
@@ -95,7 +94,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        unit_fn=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value_fn=lambda x: x.temperature,
     ),
     LektricoSensorEntityDescription(
@@ -103,28 +102,28 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Total Charged Energy",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
-        unit_fn=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_fn=lambda x: x.total_charged_energy,
     ),
     LektricoSensorEntityDescription(
         key="voltage",
         name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        unit_fn=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         value_fn=lambda x: x.voltage,
     ),
     LektricoSensorEntityDescription(
         key="install_current",
         name="Install Current",
         device_class=SensorDeviceClass.CURRENT,
-        unit_fn=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         value_fn=lambda x: x.install_current,
     ),
     LektricoSensorEntityDescription(
         key="dynamic_current",
         name="Dynamic Current",
         device_class=SensorDeviceClass.CURRENT,
-        unit_fn=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         value_fn=lambda x: x.dynamic_current,
     ),
     LektricoSensorEntityDescription(
@@ -132,7 +131,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Led Brightness",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
-        unit_fn=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda x: x.led_max_brightness,
     ),
     LektricoSensorEntityDescription(
@@ -271,8 +270,8 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
-        if self.entity_description.unit_fn is not None:
-            return self.entity_description.unit_fn
+        if self.entity_description.native_unit_of_measurement is not None:
+            return self.entity_description.native_unit_of_measurement
         return super().native_unit_of_measurement
 
     @property
