@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class SmartMeterTexasData:
-    """Manages coordinatation of API data updates."""
+    """Manages coordination of API data updates."""
 
     def __init__(
         self,
