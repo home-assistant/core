@@ -214,6 +214,6 @@ async def test_set_cover_position(
     await hass.async_block_till_done()
 
     # Check that the state is correct.
-    states = hass.states.get(f"cover.tradfri_cover_{device_id}")
+    state = hass.states.get(f"cover.tradfri_cover_{device_id}")
     for result, value in expected_result.items():
         assert states.state == value
