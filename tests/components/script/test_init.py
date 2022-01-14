@@ -726,7 +726,7 @@ async def test_script_variables(hass, caplog):
 
 
 async def test_script_this_var_always(hass, caplog):
-    """Test script always has reference to this, even with no variabls are configured."""
+    """Test script always has reference to this, even with no variables are configured."""
 
     assert await async_setup_component(
         hass,
