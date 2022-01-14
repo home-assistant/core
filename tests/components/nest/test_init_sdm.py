@@ -63,7 +63,7 @@ async def test_setup_configuration_failure(hass, caplog):
     assert "Subscription misconfigured. Expected subscriber_id" in caplog.text
 
 
-async def test_setup_susbcriber_failure(hass, caplog):
+async def test_setup_subscriber_failure(hass, caplog):
     """Test configuration error."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
@@ -117,7 +117,7 @@ async def test_subscriber_auth_failure(hass, caplog):
 
 
 async def test_setup_missing_subscriber_id(hass, caplog):
-    """Test missing susbcriber id from config and config entry."""
+    """Test missing subscriber id from config and config entry."""
     config = copy.deepcopy(CONFIG)
     del config[DOMAIN]["subscriber_id"]
 
