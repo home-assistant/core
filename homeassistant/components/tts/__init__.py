@@ -562,7 +562,7 @@ class Provider:
 
     @property
     def supported_options(self):
-        """Return a list of supported options like voice, emotionen."""
+        """Return a list of supported options like voice, emotions."""
         return None
 
     @property
