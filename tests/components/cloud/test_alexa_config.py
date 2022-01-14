@@ -257,7 +257,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
 async def test_alexa_update_report_state(hass, cloud_prefs, cloud_stub):
     """Test Alexa config responds to reporting state."""
-    await alexa_config.AlexaConfig(
+    await alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     ).async_initialize()
 
