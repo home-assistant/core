@@ -99,7 +99,7 @@ async def test_periodic_write(hass):
 
 
 async def test_save_persistent_states(hass):
-    """Test that we cancel the currently running job, save the data, and verify the perdiodic job continues."""
+    """Test that we cancel the currently running job, save the data, and verify the periodic job continues."""
     data = await RestoreStateData.async_get_instance(hass)
     await hass.async_block_till_done()
     await data.store.async_save([])

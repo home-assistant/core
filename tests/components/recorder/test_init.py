@@ -622,37 +622,37 @@ def test_auto_purge(hass_recorder):
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.perodic_db_cleanups"
-    ) as perodic_db_cleanups:
+        "homeassistant.components.recorder.periodic_db_cleanups"
+    ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
         purge_old_data.reset_mock()
-        perodic_db_cleanups.reset_mock()
+        periodic_db_cleanups.reset_mock()
 
         # Advance one day, and the purge task should run again
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
         purge_old_data.reset_mock()
-        perodic_db_cleanups.reset_mock()
+        periodic_db_cleanups.reset_mock()
 
         # Advance less than one full day.  The alarm should not yet fire.
         test_time = test_time + timedelta(hours=23)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 0
-        assert len(perodic_db_cleanups.mock_calls) == 0
+        assert len(periodic_db_cleanups.mock_calls) == 0
 
         # Advance to the next day and fire the alarm again
         test_time = test_time + timedelta(hours=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
 
@@ -667,7 +667,7 @@ def test_auto_purge_disabled(hass_recorder):
     dt_util.set_default_time_zone(tz)
 
     # Purging is scheduled to happen at 4:12am every day. We want
-    # to verify that when auto purge is disabled perodic db cleanups
+    # to verify that when auto purge is disabled periodic db cleanups
     # are still scheduled
     #
     # The clock is started at 4:15am then advanced forward below
@@ -678,16 +678,16 @@ def test_auto_purge_disabled(hass_recorder):
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.perodic_db_cleanups"
-    ) as perodic_db_cleanups:
+        "homeassistant.components.recorder.periodic_db_cleanups"
+    ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 0
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
         purge_old_data.reset_mock()
-        perodic_db_cleanups.reset_mock()
+        periodic_db_cleanups.reset_mock()
 
     dt_util.set_default_time_zone(original_tz)
 
