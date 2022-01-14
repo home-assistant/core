@@ -83,7 +83,7 @@ async def async_turn_on(
 
 
 async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL) -> None:
-    """Turn all or specified humidier off."""
+    """Turn all or specified humidifier off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
