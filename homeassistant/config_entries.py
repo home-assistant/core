@@ -1054,7 +1054,7 @@ class ConfigEntries:
         *,
         unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        data: dict | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
@@ -1081,7 +1081,7 @@ class ConfigEntries:
             setattr(entry, attr, value)
             changed = True
 
-        if data is not UNDEFINED and entry.data != data:  # type: ignore
+        if data is not UNDEFINED and entry.data != data:
             changed = True
             entry.data = MappingProxyType(data)
 
