@@ -122,7 +122,7 @@ class SmhiWeather(WeatherEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{self._latitude}, {self._longitude}")},
             manufacturer="SMHI",
-            model="2",
+            model="v2",
             name=self._name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
