@@ -122,7 +122,7 @@ class PacketSequence:
     """Creates packets in a sequence for exercising stream worker behavior.
 
     A test can create a PacketSequence(N) that will raise a StopIteration after
-    N packets.  Each packet has an arbitrary monotomically increasing dts/pts value
+    N packets.  Each packet has an arbitrary monotonically increasing dts/pts value
     that is parseable by the worker, but a test can manipulate the values to
     exercise corner cases.
     """
