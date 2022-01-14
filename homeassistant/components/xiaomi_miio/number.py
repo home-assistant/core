@@ -255,7 +255,7 @@ async def async_setup_entry(
 
     for feature, description in NUMBER_TYPES.items():
         if feature == FEATURE_SET_LED_BRIGHTNESS and model != MODEL_FAN_ZA5:
-            # Delete LED bightness entity created by mistake if it exists
+            # Delete LED brightness entity created by mistake if it exists
             entity_reg = er.async_get(hass)
             entity_id = entity_reg.async_get_entity_id(
                 PLATFORM_DOMAIN, DOMAIN, f"{description.key}_{config_entry.unique_id}"
