@@ -212,7 +212,7 @@ def state(new_state):
 
 
 class LimitlessLEDGroup(LightEntity, RestoreEntity):
-    """Representation of a LimitessLED group."""
+    """Representation of a LimitlessLED group."""
 
     def __init__(self, group, config):
         """Initialize a group."""
