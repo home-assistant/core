@@ -323,7 +323,7 @@ async def test_groups_get_unique_names(hass):
 
 
 async def test_expand_entity_ids_expands_nested_groups(hass):
-    """Test if entity ids epands to nested groups."""
+    """Test if entity ids expands to nested groups."""
 
     assert await async_setup_component(hass, "group", {})
 
