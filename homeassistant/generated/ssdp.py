@@ -246,6 +246,11 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
         }
     ],
+    "webostv": [
+        {
+            "st": "urn:lge-com:service:webos-second-screen:1"
+        }
+    ],
     "wemo": [
         {
             "manufacturer": "Belkin International Inc."
