@@ -23,7 +23,7 @@ DISCOVERY_INFO = usb.UsbServiceInfo(
     vid="0572",
     serial_number="1234",
     description="modem",
-    manufacturer="Connexant",
+    manufacturer="Conexant",
 )
 
 
