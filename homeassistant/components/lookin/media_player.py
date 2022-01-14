@@ -133,7 +133,7 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
 
         00F0
         0 - 0/1 on/off
-        0 - sourse
+        0 - source
         F - volume, 0 - muted, 1 - volume up, F - volume down
         0 - not used
         """
