@@ -107,6 +107,6 @@ async def test_template_vars_run_args_no_default(hass):
 
 async def test_template_vars_error(hass):
     """Test template vars."""
-    var = cv.SCRIPT_VARIABLES_SCHEMA({"hello": "{{ canont.work }}"})
+    var = cv.SCRIPT_VARIABLES_SCHEMA({"hello": "{{ cannot.work }}"})
     with pytest.raises(template.TemplateError):
         var.async_render(hass, None)
