@@ -427,7 +427,7 @@ def load_fixture(filename, integration=None):
 
 
 def mock_state_change_event(hass, new_state, old_state=None):
-    """Mock state change envent."""
+    """Mock state change event."""
     event_data = {"entity_id": new_state.entity_id, "new_state": new_state}
 
     if old_state:
