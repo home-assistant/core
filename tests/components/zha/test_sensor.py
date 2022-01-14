@@ -140,7 +140,7 @@ async def async_test_metering(hass, cluster, entity_id):
 
 
 async def async_test_smart_energy_summation(hass, cluster, entity_id):
-    """Test SmartEnergy Summation delivered sensro."""
+    """Test SmartEnergy Summation delivered sensor."""
 
     await send_attributes_report(
         hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
