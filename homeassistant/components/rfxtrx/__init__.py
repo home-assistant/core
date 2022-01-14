@@ -504,7 +504,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         signal_repetitions: int = 1,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
-        """Initialzie a switch or light device."""
+        """Initialize a switch or light device."""
         super().__init__(device, device_id, event=event)
         self.signal_repetitions = signal_repetitions
         self._state: bool | None = None

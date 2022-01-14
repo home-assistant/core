@@ -81,7 +81,7 @@ class PjLinkDevice(MediaPlayerEntity):
     """Representation of a PJLink device."""
 
     def __init__(self, host, port, name, encoding, password):
-        """Iinitialize the PJLink device."""
+        """Initialize the PJLink device."""
         self._host = host
         self._port = port
         self._name = name
