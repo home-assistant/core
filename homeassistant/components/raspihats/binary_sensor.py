@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -107,6 +108,11 @@ class I2CHatBinarySensor(BinarySensorEntity):
         self._invert_logic = invert_logic
         self._device_class = device_class
         self._state = self.I2C_HATS_MANAGER.read_di(self._address, self._channel)
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        if TYPE_CHECKING:
+            assert self.I2C_HATS_MANAGER
 
         def online_callback():
             """Call fired when board is online."""
