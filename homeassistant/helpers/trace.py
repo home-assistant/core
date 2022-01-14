@@ -227,7 +227,7 @@ def script_execution_get() -> str | None:
 def trace_path(suffix: str | list[str]) -> Generator:
     """Go deeper in the config tree.
 
-    Can not be used as a decorator on couroutine functions.
+    Can not be used as a decorator on coroutine functions.
     """
     count = trace_path_push(suffix)
     try:
