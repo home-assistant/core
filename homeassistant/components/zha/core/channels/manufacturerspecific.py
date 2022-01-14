@@ -35,9 +35,9 @@ class OsramButton(ZigbeeChannel):
     REPORT_CONFIG = []
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.PHILLIPS_REMOTE_CLUSTER)
-class PhillipsRemote(ZigbeeChannel):
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILIPS_REMOTE_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.PHILIPS_REMOTE_CLUSTER)
+class PhilipsRemote(ZigbeeChannel):
     """Phillips remote channel."""
 
     REPORT_CONFIG = []
