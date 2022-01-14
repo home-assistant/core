@@ -1,16 +1,12 @@
 """Make the component configurable via the UI."""
-
 from __future__ import annotations
 import logging
 from typing import Any
-
-from rki_covid_parser.parser import RkiCovidParser
 import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
 
-from . import get_coordinator
+
 from .const import ATTR_COUNTY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,15 +23,17 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Invoke when a user initiates a flow via the user interface."""
         _LOGGER.debug(f"User triggered configuration flow: {user_input}")
 
-        parser = RkiCovidParser(async_get_clientsession(self.hass))
-
         errors: dict[str, str] = {}
 
         if self._options is None:
             self._options = {}
 
             # add items from coordinator
-            coordinator = await get_coordinator(self.hass, parser)
+            coordinator = RkiCovidDataUpdateCoordinator(self.hass)
+            await coordinator.async_config_entry_first_refresh()
+
+            _LOGGER.debug(f"Coordinator: {coordinator}")
+
             for case in sorted(coordinator.data.values(), key=lambda case: case.name):
                 if case.county:
                     self._options[case.county] = case.county

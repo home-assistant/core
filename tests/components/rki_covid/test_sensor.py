@@ -15,7 +15,10 @@ from tests.common import MockConfigEntry, mock_registry
 async def test_sensor_without_data_coordinator(hass: HomeAssistant) -> None:
     """Test sensor when data coordinator could not be initialized."""
     async_mock = AsyncMock(return_value=None)
-    with patch("custom_components.rki_covid.get_coordinator", side_effect=async_mock):
+    with patch(
+        "homeassistant.components.rki_covid.coordinator.RkiCovidDataUpdateCoordinator",
+        side_effect=async_mock,
+    ):
         entry = MockConfigEntry(domain=DOMAIN, data={"county": "SK Amberg"})
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
