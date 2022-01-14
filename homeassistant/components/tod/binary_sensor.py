@@ -119,7 +119,7 @@ class TodSensor(BinarySensorEntity):
         # calculate utc datetime corresponding to local time
         return dt_util.as_utc(datetime.combine(current_local_date, naive_time))
 
-    def _calculate_boudary_time(self):
+    def _calculate_boundary_time(self):
         """Calculate internal absolute time boundaries."""
         nowutc = dt_util.utcnow()
         # If after value is a sun event instead of absolute time
@@ -187,7 +187,7 @@ class TodSensor(BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
-        self._calculate_boudary_time()
+        self._calculate_boundary_time()
         self._calculate_next_update()
 
         @callback
