@@ -216,4 +216,4 @@ async def test_set_cover_position(
     # Check that the state is correct.
     state = hass.states.get(f"cover.tradfri_cover_{device_id}")
     for result, value in expected_result.items():
-        assert states.state == value
+        assert state.state == value
