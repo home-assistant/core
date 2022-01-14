@@ -654,8 +654,6 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
     ]
     api.data.total_power_import_t1_kwh = 1234.123
 
-    utcnow = dt_util.utcnow()
-
     with patch(
         "aiohwenergy.HomeWizardEnergy",
         return_value=api,
@@ -665,6 +663,7 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
         entry = mock_config_entry
         entry.data = mock_config_entry_data
         entry.add_to_hass(hass)
+        utcnow = dt_util.utcnow()
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -706,8 +705,6 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
     ]
     api.data.total_power_import_t1_kwh = 1234.123
 
-    utcnow = dt_util.utcnow()
-
     with patch(
         "aiohwenergy.HomeWizardEnergy",
         return_value=api,
@@ -720,6 +717,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        utcnow = dt_util.utcnow()
 
         assert (
             hass.states.get(
