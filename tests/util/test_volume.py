@@ -62,8 +62,8 @@ def test_convert_from_cubic_meters():
 
 def test_convert_from_cubic_feet():
     """Test conversion from cubic feet to cubic meters to other units."""
-    cubic_feets = 500
+    cubic_feet = 500
     assert (
-        volume_util.convert(cubic_feets, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS)
+        volume_util.convert(cubic_feet, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS)
         == 14.1584233
     )
