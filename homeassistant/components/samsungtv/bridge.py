@@ -130,7 +130,7 @@ class SamsungTVBridge(ABC):
             # We got a response so it's working.
             return True
         except OSError:
-            # Different reasons, e.g. hostname not resolveable
+            # Different reasons, e.g. hostname not resolvable
             return False
 
     def send_key(self, key: str) -> None:
@@ -154,7 +154,7 @@ class SamsungTVBridge(ABC):
             # We got a response so it's on.
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
         except OSError:
-            # Different reasons, e.g. hostname not resolveable
+            # Different reasons, e.g. hostname not resolvable
             pass
 
     @abstractmethod
