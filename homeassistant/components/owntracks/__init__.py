@@ -8,7 +8,7 @@ from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -101,9 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_when_setup(hass, "mqtt", async_connect_mqtt)
 
-    hass.components.webhook.async_register(
-        DOMAIN, "OwnTracks", webhook_id, handle_webhook
-    )
+    webhook.async_register(hass, DOMAIN, "OwnTracks", webhook_id, handle_webhook)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -116,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OwnTracks config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN]["unsub"]()
 
