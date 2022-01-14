@@ -205,7 +205,7 @@ class Router:
             if not isinstance(
                 exc, ResponseErrorNotSupportedException
             ) and exc.code not in (
-                # additional codes treated as unusupported
+                # additional codes treated as unsupported
                 -1,
                 100006,
             ):
