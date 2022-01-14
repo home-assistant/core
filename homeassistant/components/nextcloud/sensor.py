@@ -1,4 +1,4 @@
-"""Summary data from Nextcoud."""
+"""Summary data from Nextcloud."""
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
