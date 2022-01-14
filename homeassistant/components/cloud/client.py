@@ -10,7 +10,7 @@ from typing import Any
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
-from homeassistant.components import persistent_notification
+from homeassistant.components import persistent_notification, webhook
 from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_sh,
@@ -220,8 +220,8 @@ class CloudClient(Interface):
             mock_source=DOMAIN,
         )
 
-        response = await self._hass.components.webhook.async_handle_webhook(
-            found["webhook_id"], request
+        response = await webhook.async_handle_webhook(
+            self._hass, found["webhook_id"], request
         )
 
         response_dict = serialize_response(response)
