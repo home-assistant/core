@@ -20,11 +20,11 @@ def mock_disco():
 def _mock_start_discovery(hass, mock_disco):
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    def do_disovered(*args):
+    def do_discovered(*args):
         async_dispatcher_send(hass, DISPATCH_CONTROLLER_DISCOVERED, True)
         return mock_disco
 
-    return do_disovered
+    return do_discovered
 
 
 async def test_not_found(hass, mock_disco):

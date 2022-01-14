@@ -184,7 +184,7 @@ async def test_device_tracker_discovery_update(hass, mqtt_mock, caplog):
 
 
 async def test_cleanup_device_tracker(hass, device_reg, entity_reg, mqtt_mock):
-    """Test discvered device is cleaned up when removed from registry."""
+    """Test discovered device is cleaned up when removed from registry."""
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
