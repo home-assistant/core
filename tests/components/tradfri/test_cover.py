@@ -149,7 +149,7 @@ async def test_set_cover_position(
 
     responses = mock_gateway.mock_responses
     # State on command data.
-    data = {"15015": [{"5536": 50.0}]}
+    data = {"15015": [{"5536": 50}]}
     # Add data for all sent commands.
     for resp in responses:
         data["15015"][0] = {**data["15015"][0], **resp["15015"][0]}
