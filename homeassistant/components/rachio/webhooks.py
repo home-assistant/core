@@ -1,7 +1,7 @@
 """Webhooks used by rachio."""
 from aiohttp import web
 
-from homeassistant.components import webhook
+from homeassistant.components import cloud, webhook
 from homeassistant.const import URL_API
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -115,11 +115,9 @@ async def async_get_or_create_registered_webhook_id_and_url(hass, entry):
         config[CONF_WEBHOOK_ID] = webhook_id
         updated_config = True
 
-    if hass.components.cloud.async_active_subscription():
+    if cloud.async_active_subscription(hass):
         if not (cloudhook_url := config.get(CONF_CLOUDHOOK_URL)):
-            cloudhook_url = await hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
+            cloudhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
             config[CONF_CLOUDHOOK_URL] = cloudhook_url
             updated_config = True
         webhook_url = cloudhook_url
