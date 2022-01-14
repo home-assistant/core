@@ -23,7 +23,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
 
 from .generator import get_mock_device
 
@@ -654,8 +654,6 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
     ]
     api.data.total_power_import_t1_kwh = 1234.123
 
-    utcnow = dt_util.utcnow()
-
     with patch(
         "aiohwenergy.HomeWizardEnergy",
         return_value=api,
@@ -677,7 +675,7 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
         )
 
         api.update = AsyncMock(return_value=False)
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
             hass.states.get(
@@ -687,7 +685,7 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
         )
 
         api.update = AsyncMock(return_value=True)
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
             hass.states.get(
@@ -705,8 +703,6 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
         "total_power_import_t1_kwh",
     ]
     api.data.total_power_import_t1_kwh = 1234.123
-
-    utcnow = dt_util.utcnow()
 
     with patch(
         "aiohwenergy.HomeWizardEnergy",
@@ -729,7 +725,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
         )
 
         api.update = AsyncMock(side_effect=DisabledError)
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
             hass.states.get(
@@ -739,7 +735,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
         )
 
         api.update = AsyncMock(return_value=True)
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
             hass.states.get(
