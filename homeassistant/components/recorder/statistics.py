@@ -637,7 +637,7 @@ def get_metadata_with_session(
     If statistic_type is given, fetch metadata only for statistic_ids supporting it.
     """
 
-    # Fetch metatadata from the database
+    # Fetch metadata from the database
     baked_query = hass.data[STATISTICS_META_BAKERY](
         lambda session: session.query(*QUERY_STATISTIC_META)
     )
