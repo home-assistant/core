@@ -120,7 +120,7 @@ MEDIA_TYPES = {
     "episode": MEDIA_TYPE_TVSHOW,
     # Type 'channel' is used for radio or tv streams from pvr
     "channel": MEDIA_TYPE_CHANNEL,
-    # Type 'audio' is used for audio media, that Kodi couldn't scroblle
+    # Type 'audio' is used for audio media, that Kodi couldn't scrobble
     "audio": MEDIA_TYPE_MUSIC,
 }
 
