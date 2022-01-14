@@ -61,7 +61,7 @@ async def test_significant_change():
         None, "on", {ATTR_HS_COLOR: [120, 20]}, "on", {ATTR_HS_COLOR: [125, 20]}
     )
 
-    # Satursation
+    # Saturation
     assert not async_check_significant_change(
         None, "on", {ATTR_HS_COLOR: [120, 20]}, "on", {ATTR_HS_COLOR: [120, 22]}
     )
