@@ -1203,7 +1203,7 @@ python-izone==1.2.3
 python-juicenet==1.0.2
 
 # homeassistant.components.tplink
-python-kasa==0.4.0
+python-kasa==0.4.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.9.2
