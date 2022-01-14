@@ -31,7 +31,7 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
                 "Alexa API not enabled in Home Assistant configuration"
             )
 
-        config.set_authorized(True)
+        await config.set_authorized(True)
 
         if directive.has_endpoint:
             directive.load_entity(hass, config)

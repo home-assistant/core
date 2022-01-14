@@ -372,10 +372,10 @@ async def websocket_update_prefs(hass, connection, msg):
                 "Please go to the Alexa app and re-link the Home Assistant "
                 "skill and then try to enable state reporting.",
             )
-            alexa_config.set_authorized(False)
+            await alexa_config.set_authorized(False)
             return
 
-        alexa_config.set_authorized(True)
+        await alexa_config.set_authorized(True)
 
     await cloud.client.prefs.async_update(**changes)
 
