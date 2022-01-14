@@ -48,7 +48,7 @@ async def test_setup_platform_invalid_config(hass, mock_socket):
         assert await async_setup_component(
             hass,
             "binary_sensor",
-            {"binary_sensor": {"platform": "tcp", "porrt": 1234}},
+            {"binary_sensor": {"platform": "tcp", "port_": 1234}},
         )
         await hass.async_block_till_done()
 

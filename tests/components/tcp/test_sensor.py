@@ -80,7 +80,7 @@ async def test_setup_platform_invalid_config(hass, mock_socket):
     """Check an invalid configuration."""
     with assert_setup_component(0):
         assert await async_setup_component(
-            hass, "sensor", {"sensor": {"platform": "tcp", "porrt": 1234}}
+            hass, "sensor", {"sensor": {"platform": "tcp", "port_": 1234}}
         )
         await hass.async_block_till_done()
 
