@@ -78,7 +78,7 @@ async def test_enabled_statistics(hass, client):
 
 
 async def test_disabled_statistics(hass, client):
-    """Test that we diisabled statistics if the entry is opted out."""
+    """Test that we disabled statistics if the entry is opted out."""
     entry = MockConfigEntry(
         domain="zwave_js",
         data={"url": "ws://test.org", "data_collection_opted_in": False},
