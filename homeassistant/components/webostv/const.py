@@ -33,3 +33,5 @@ WEBOSTV_EXCEPTIONS = (
     asyncio.TimeoutError,
     asyncio.CancelledError,
 )
+
+WEBOSTV_CONFIG_FILE = "webostv.conf"
