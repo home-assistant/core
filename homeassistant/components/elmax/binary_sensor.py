@@ -64,8 +64,3 @@ class ElmaxSensor(ElmaxEntity, BinarySensorEntity):
     def device_class(self) -> BinarySensorDeviceClass | str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return BinarySensorDeviceClass.DOOR
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        return "hass:door-open" if self.is_on else "hass:door"
