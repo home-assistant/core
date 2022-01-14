@@ -39,7 +39,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return site_id in solaredge_entries(self.hass)
 
     def _check_site(self, site_id: str, api_key: str) -> bool:
-        """Check if we can connect to the soleredge api service."""
+        """Check if we can connect to the solaredge api service."""
         api = solaredge.Solaredge(api_key)
         try:
             response = api.get_details(site_id)
