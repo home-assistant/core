@@ -24,7 +24,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_CLASSES,
-    STATE_CLASSES as SENSOSR_STATE_CLASSES,
+    STATE_CLASSES as SENSORS_STATE_CLASSES,
 )
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
@@ -425,7 +425,7 @@ def _validate_state_class_sensor(value: dict):
             ),
             vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
+            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSORS_STATE_CLASSES),
         },
         _validate_state_class_sensor,
     )

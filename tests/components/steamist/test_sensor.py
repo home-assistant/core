@@ -1,4 +1,4 @@
-"""Tests for the steamist sensos."""
+"""Tests for the steamist sensors."""
 from __future__ import annotations
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TIME_MINUTES
