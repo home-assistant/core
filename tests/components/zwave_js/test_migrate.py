@@ -721,7 +721,7 @@ async def test_skip_old_entity_migration_for_multiple(
     SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
     entity_name = SENSOR_NAME.split(".")[1]
 
-    # Create two entity entrrys using different endpoints
+    # Create two entity entries using different endpoints
     old_unique_id_1 = f"{client.driver.controller.home_id}.32-50-1-value-66049"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
@@ -735,7 +735,7 @@ async def test_skip_old_entity_migration_for_multiple(
     assert entity_entry.entity_id == f"{SENSOR_NAME}_1"
     assert entity_entry.unique_id == old_unique_id_1
 
-    # Create two entity entrrys using different endpoints
+    # Create two entity entries using different endpoints
     old_unique_id_2 = f"{client.driver.controller.home_id}.32-50-2-value-66049"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
