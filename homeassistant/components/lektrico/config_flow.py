@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from lektricowifi import lektricowifi
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -58,13 +56,3 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             title=self.friendly_name,
             data={CONF_HOST: self.host, CONF_FRIENDLY_NAME: self.friendly_name},
         )
-
-    async def _get_lektrico_serial_number(self, raise_on_progress: bool = True) -> None:
-        """Get device information from a Lektrico device."""
-        session = async_get_clientsession(self.hass)
-        charger = lektricowifi.Charger(
-            host=self.host,
-            session=session,
-        )
-        await charger.charger_info()
-        # self.serial_number = "Lektrico"
