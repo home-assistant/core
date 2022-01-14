@@ -164,7 +164,7 @@ async def test_wrong_template_config(hass, start_ha):
     ],
 )
 async def test_templates_with_entities(hass, start_ha):
-    """Test tempalates with values from other entities."""
+    """Test templates with values from other entities."""
     _verify(hass, STATE_OFF, None, 0, None, None, None)
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, True)
@@ -271,7 +271,7 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
     ],
 )
 async def test_availability_template_with_entities(hass, start_ha):
-    """Test availability tempalates with values from other entities."""
+    """Test availability templates with values from other entities."""
     for state, test_assert in [(STATE_ON, True), (STATE_OFF, False)]:
         hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, state)
         await hass.async_block_till_done()

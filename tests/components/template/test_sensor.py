@@ -362,7 +362,7 @@ async def test_creating_sensor_loads_group(hass):
     ],
 )
 async def test_available_template_with_entities(hass, start_ha):
-    """Test availability tempalates with values from other entities."""
+    """Test availability templates with values from other entities."""
     hass.states.async_set("sensor.availability_sensor", STATE_OFF)
 
     # When template returns true..
