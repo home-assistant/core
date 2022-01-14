@@ -304,7 +304,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
                 "summa_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x01,
             },
-            {"instaneneous_demand"},
+            {"instantaneous_demand"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -791,7 +791,7 @@ async def test_se_summation_uom(
     zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
 
     cluster = zigpy_device.endpoints[1].in_clusters[smartenergy.Metering.cluster_id]
-    for attr in ("instanteneous_demand",):
+    for attr in ("instantaneous_demand",):
         cluster.add_unsupported_attribute(attr)
     cluster.PLUGGED_ATTR_READS = {
         "current_summ_delivered": raw_value,

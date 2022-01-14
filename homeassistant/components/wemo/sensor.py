@@ -67,7 +67,7 @@ class InsightSensor(WemoEntity, SensorEntity):
 
 
 class InsightCurrentPower(InsightSensor):
-    """Current instantaineous power consumption."""
+    """Current instantaneous power consumption."""
 
     entity_description = SensorEntityDescription(
         key="currentpower",
