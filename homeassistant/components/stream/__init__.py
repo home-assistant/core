@@ -74,7 +74,7 @@ def create_stream(
     options: dict[str, str],
     stream_label: str | None = None,
 ) -> Stream:
-    """Create a stream with the specified identfier based on the source url.
+    """Create a stream with the specified identifier based on the source url.
 
     The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
     options are passed into pyav / ffmpeg as options.

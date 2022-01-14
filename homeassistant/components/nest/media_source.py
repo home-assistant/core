@@ -385,7 +385,7 @@ class NestMediaSource(MediaSource):
         # Browse either a device or events within a device
         if not (device := devices.get(media_id.device_id)):
             raise BrowseError(
-                "Unable to find device with identiifer: %s" % item.identifier
+                "Unable to find device with identifier: %s" % item.identifier
             )
         # Clip previews are a session with multiple possible event types (e.g.
         # person, motion, etc) and a single mp4
@@ -409,7 +409,7 @@ class NestMediaSource(MediaSource):
             # Browse a specific event
             if not (single_clip := clips.get(media_id.event_token)):
                 raise BrowseError(
-                    "Unable to find event with identiifer: %s" % item.identifier
+                    "Unable to find event with identifier: %s" % item.identifier
                 )
             return _browse_clip_preview(media_id, device, single_clip)
 
@@ -431,7 +431,7 @@ class NestMediaSource(MediaSource):
         # Browse a specific event
         if not (single_image := images.get(media_id.event_token)):
             raise BrowseError(
-                "Unable to find event with identiifer: %s" % item.identifier
+                "Unable to find event with identifier: %s" % item.identifier
             )
         return _browse_image_event(media_id, device, single_image)
 
