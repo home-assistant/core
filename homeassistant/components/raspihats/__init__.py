@@ -40,15 +40,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
     )
 
-    hass.data[I2C_HATS_MANAGER] = I2CHatsManager()
+    hass.data[DOMAIN][I2C_HATS_MANAGER] = I2CHatsManager()
 
     def start_i2c_hats_keep_alive(event):
         """Start I2C-HATs keep alive."""
-        hass.data[I2C_HATS_MANAGER].start_keep_alive()
+        hass.data[DOMAIN][I2C_HATS_MANAGER].start_keep_alive()
 
     def stop_i2c_hats_keep_alive(event):
         """Stop I2C-HATs keep alive."""
-        hass.data[I2C_HATS_MANAGER].stop_keep_alive()
+        hass.data[DOMAIN][I2C_HATS_MANAGER].stop_keep_alive()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_i2c_hats_keep_alive)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_i2c_hats_keep_alive)
