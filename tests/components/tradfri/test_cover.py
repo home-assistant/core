@@ -148,14 +148,9 @@ async def test_set_cover_position(
     callback = callkwargs["callback"]
 
     responses = mock_gateway.mock_responses
-    # State on command data.
-    data = {"15015": [{"5536": 50}]}
-    # Add data for all sent commands.
-    for resp in responses:
-        data["15015"][0] = {**data["15015"][0], **resp["15015"][0]}
 
     # Use the callback function to update the cover state.
-    dev = Device(data)
+    dev = Device(responses[0])
     cover_data = Blind(dev, 0)
     cover.blind_control.blinds[0] = cover_data
     callback(cover)
