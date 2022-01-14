@@ -130,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_link(self, user_input=None):
-        """Handle linking and authenticting with the roon server."""
+        """Handle linking and authenticating with the roon server."""
 
         errors = {}
         if user_input is not None:
