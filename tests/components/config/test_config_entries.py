@@ -771,7 +771,7 @@ async def test_options_flow_with_invalid_data(hass, client):
         }
 
 
-async def test_update_prefrences(hass, hass_ws_client):
+async def test_update_preferences(hass, hass_ws_client):
     """Test that we can update system options."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
