@@ -37,7 +37,7 @@ class FakeAuth(AbstractAuth):
         return ""
 
     async def request(self, method, url, **kwargs):
-        """Capure the request arguments for tests to assert on."""
+        """Capture the request arguments for tests to assert on."""
         self.method = method
         self.url = url
         self.json = kwargs.get("json")
