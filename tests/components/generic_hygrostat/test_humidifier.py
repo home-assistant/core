@@ -1211,7 +1211,7 @@ async def test_float_tolerance_values(hass):
 
 
 async def test_float_tolerance_values_2(hass):
-    """Test if dehumidifier turns off when oudside of floating point tolerance values."""
+    """Test if dehumidifier turns off when outside of floating point tolerance values."""
     assert await async_setup_component(
         hass,
         DOMAIN,
