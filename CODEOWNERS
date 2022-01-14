@@ -310,8 +310,8 @@ homeassistant/components/freebox/* @hacf-fr @Quentame
 tests/components/freebox/* @hacf-fr @Quentame
 homeassistant/components/freedompro/* @stefano055415
 tests/components/freedompro/* @stefano055415
-homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
-tests/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
+homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74 @mib1185
+tests/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74 @mib1185
 homeassistant/components/fritzbox/* @mib1185 @flabbamann
 tests/components/fritzbox/* @mib1185 @flabbamann
 homeassistant/components/fronius/* @nielstron @farmio
