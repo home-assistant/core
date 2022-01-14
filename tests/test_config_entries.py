@@ -2166,7 +2166,7 @@ async def test_unignore_create_entry(hass, manager):
 
 
 async def test_unignore_default_impl(hass, manager):
-    """Test that resdicovery is a no-op by default."""
+    """Test that rediscovery is a no-op by default."""
     async_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
