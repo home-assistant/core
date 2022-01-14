@@ -116,7 +116,7 @@ class AnalogValue(ZigbeeChannel):
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.ApplianceControl.cluster_id)
-class ApplianceContorl(ZigbeeChannel):
+class ApplianceControl(ZigbeeChannel):
     """Appliance Control channel."""
 
 
