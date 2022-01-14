@@ -60,7 +60,7 @@ class AuthPhase:
         cancel_ws: CALLBACK_TYPE,
         request: Request,
     ) -> None:
-        """Initialize the authentiated connection."""
+        """Initialize the authenticated connection."""
         self._hass = hass
         self._send_message = send_message
         self._cancel_ws = cancel_ws
