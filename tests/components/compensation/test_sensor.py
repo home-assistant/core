@@ -45,8 +45,8 @@ async def test_linear_state(hass):
 
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "a"
 
-    coefs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
-    assert coefs == [1.0, 1.0]
+    coeffs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
+    assert coeffs == [1.0, 1.0]
 
     hass.states.async_set(entity_id, "foo", {})
     await hass.async_block_till_done()
@@ -89,8 +89,8 @@ async def test_linear_state_from_attribute(hass):
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
-    coefs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
-    assert coefs == [1.0, 1.0]
+    coeffs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
+    assert coeffs == [1.0, 1.0]
 
     hass.states.async_set(entity_id, 3, {"value": "bar"})
     await hass.async_block_till_done()
