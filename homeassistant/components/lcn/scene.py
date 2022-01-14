@@ -68,7 +68,7 @@ class LcnScene(LcnEntity, Scene):
         for port in config[CONF_DOMAIN_DATA][CONF_OUTPUTS]:
             if port in OUTPUT_PORTS:
                 self.output_ports.append(pypck.lcn_defs.OutputPort[port])
-            else:  # in RELEAY_PORTS
+            else:  # in RELAY_PORTS
                 self.relay_ports.append(pypck.lcn_defs.RelayPort[port])
 
         if config[CONF_DOMAIN_DATA][CONF_TRANSITION] is None:
