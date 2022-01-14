@@ -364,7 +364,7 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
-    "Healty Home Coach": "netatmo",
+    "Healthy Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
