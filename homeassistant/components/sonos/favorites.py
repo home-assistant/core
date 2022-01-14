@@ -33,7 +33,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
         favorites = self._favorites.copy()
         return iter(favorites)
 
-    def lookup_by_item_id(self, item_id: str) -> DidlFavorite:
+    def lookup_by_item_id(self, item_id: str) -> DidlFavorite | None:
         """Return the favorite object with the provided item_id."""
         return next((fav for fav in self._favorites if fav.item_id == item_id), None)
 

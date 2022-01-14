@@ -519,6 +519,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """
         if media_type == "favorite_item_id":
             favorite = self.speaker.favorites.lookup_by_item_id(media_id)
+            if favorite is None:
+                raise ValueError(f"Missing favorite for media_id: {media_id}")
             self._play_favorite(favorite)
             return
 
