@@ -63,7 +63,7 @@ async def async_setup_entry(
     entities = []
     for camera, channel, is_default in get_camera_channels(data.api):
         # do not enable streaming for package camera
-        # 2 FPS causes a lot of buferring
+        # 2 FPS causes a lot of buffering
         entities.append(
             ProtectCamera(
                 data,
