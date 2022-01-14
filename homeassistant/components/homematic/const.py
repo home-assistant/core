@@ -179,7 +179,7 @@ HM_DEVICE_TYPES = {
         "IPContact",
         "IPRemoteMotionV2",
         "IPWInputDevice",
-        "IPWMotionDection",
+        "IPWMotionDetection",
         "IPAlarmSensor",
         "IPRainSensor",
         "IPLanRouter",
