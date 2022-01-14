@@ -24,13 +24,13 @@ send_command:
         object:
     cmd:
       name: Command
-      description: 'Command itself. Could be decimal number or string with hexadeximal notation: "0x10".'
+      description: 'Command itself. Could be decimal number or string with hexadecimal notation: "0x10".'
       example: 144 or "0x90"
       selector:
         text:
     dst:
       name: Destination
-      description: 'Destination for command. Could be decimal number or string with hexadeximal notation: "0x10".'
+      description: 'Destination for command. Could be decimal number or string with hexadecimal notation: "0x10".'
       example: 5 or "0x5"
       selector:
         text:
@@ -45,7 +45,7 @@ send_command:
         text:
     src:
       name: Source
-      description: 'Source of command. Could be decimal number or string with hexadeximal notation: "0x10".'
+      description: 'Source of command. Could be decimal number or string with hexadecimal notation: "0x10".'
       example: 12 or "0xc"
       selector:
         text:
