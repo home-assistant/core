@@ -34,3 +34,26 @@ def _flux_color_mode_to_hass(
 def _effect_brightness(brightness: int) -> int:
     """Convert hass brightness to effect brightness."""
     return round(brightness / 255 * 100)
+
+
+def _min_rgb_brightness(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Ensure the RGB value will not turn off the device from a turn on command."""
+    if all(byte == 0 for byte in rgb):
+        return (1, 1, 1)
+    return rgb
+
+
+def _min_rgbw_brightness(rgbw: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    """Ensure the RGBW value will not turn off the device from a turn on command."""
+    if all(byte == 0 for byte in rgbw):
+        return (1, 1, 1, 0)
+    return rgbw
+
+
+def _min_rgbwc_brightness(
+    rgbwc: tuple[int, int, int, int, int]
+) -> tuple[int, int, int, int, int]:
+    """Ensure the RGBWC value will not turn off the device from a turn on command."""
+    if all(byte == 0 for byte in rgbwc):
+        return (1, 1, 1, 0, 0)
+    return rgbwc
