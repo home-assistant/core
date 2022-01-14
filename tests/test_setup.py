@@ -145,7 +145,7 @@ class TestSetup:
         self.hass.data.pop(setup.DATA_SETUP)
         self.hass.config.components.remove("platform_conf")
 
-        # Any falsey platform config will be ignored (None, {}, etc)
+        # Any falsy platform config will be ignored (None, {}, etc)
         with assert_setup_component(0) as config:
             assert setup.setup_component(
                 self.hass, "platform_conf", {"platform_conf": None}
