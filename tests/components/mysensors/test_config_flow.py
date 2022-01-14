@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry
 
 
 async def get_form(
-    hass: HomeAssistant, gatway_type: ConfGatewayType, expected_step_id: str
+    hass: HomeAssistant, gateway_type: ConfGatewayType, expected_step_id: str
 ) -> FlowResult:
     """Get a form for the given gateway type."""
 
@@ -43,7 +43,7 @@ async def get_form(
 
     result = await hass.config_entries.flow.async_configure(
         stepuser["flow_id"],
-        {CONF_GATEWAY_TYPE: gatway_type},
+        {CONF_GATEWAY_TYPE: gateway_type},
     )
     await hass.async_block_till_done()
     assert result["type"] == "form"
