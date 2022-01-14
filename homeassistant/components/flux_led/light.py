@@ -249,6 +249,10 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
         if self._device.requires_turn_on or not kwargs:
+            if not self.brightness:
+                await self._device.async_set_brightness(
+                    self._async_brightness(**kwargs)
+                )
             if not self.is_on:
                 await self._device.async_turn_on()
             if not kwargs:
@@ -281,13 +285,11 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         """Determine brightness from kwargs or current value."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
-        if not brightness:
-            # If the brightness was previously 0, the light
-            # will not turn on unless brightness is at least 1
-            # If the device was on and brightness was not
-            # set, it means it was masked by an effect
-            brightness = 255 if self.is_on else 1
-        return brightness
+        # If the brightness was previously 0, the light
+        # will not turn on unless brightness is at least 1
+        # If the device was on and brightness was not
+        # set, it means it was masked by an effect
+        return min(1, brightness)
 
     async def _async_set_mode(self, **kwargs: Any) -> None:
         """Set an effect or color mode."""
