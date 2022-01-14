@@ -76,7 +76,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             CharacteristicsTypes.TARGET_MEDIA_STATE,
             CharacteristicsTypes.REMOTE_KEY,
             CharacteristicsTypes.ACTIVE_IDENTIFIER,
-            # Characterics that are on the linked INPUT_SOURCE services
+            # Characteristics that are on the linked INPUT_SOURCE services
             CharacteristicsTypes.CONFIGURED_NAME,
             CharacteristicsTypes.IDENTIFIER,
         ]
