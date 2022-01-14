@@ -30,7 +30,7 @@ def calls(hass):
 
 
 async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> None:
-    """Test we get the expected onditions from a zwave_js."""
+    """Test we get the expected conditions from a zwave_js."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
