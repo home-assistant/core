@@ -1,4 +1,4 @@
-# Describes the format for available services for KEBA charging staitons
+# Describes the format for available services for KEBA charging stations
 
 request_data:
   name: Request data
