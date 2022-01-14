@@ -55,7 +55,7 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
         parts = entity_entry.unique_id.split("_")
         # Check if the unique_id starts with the serial_numbers of the powerwalls
         if parts[0 : len(serial_numbers)] != serial_numbers:
-            # The old unique_id ended with the nomianal_system_energy_kWh so we can use that
+            # The old unique_id ended with the nominal_system_energy_kWh so we can use that
             # to find the old base unique_id and extract the device_suffix.
             normalized_energy_index = (
                 len(parts) - 1 - parts[::-1].index(str(site_info.nominal_system_energy))
