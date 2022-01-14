@@ -97,7 +97,7 @@ class HassIO:
 
     @api_data
     def get_core_info(self):
-        """Return data for Home Asssistant Core.
+        """Return data for Home Assistant Core.
 
         This method returns a coroutine.
         """
