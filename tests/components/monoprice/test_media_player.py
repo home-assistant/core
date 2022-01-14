@@ -270,7 +270,7 @@ async def test_service_calls_without_relevant_entities(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
-async def test_restore_without_snapshort(hass):
+async def test_restore_without_snapshot(hass):
     """Test restore when snapshot wasn't called."""
     await _setup_monoprice(hass, MockMonoprice())
 
