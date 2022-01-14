@@ -169,7 +169,7 @@ async def test_save_timestamped_image(hass, mock_image, mock_detections, mock_no
     """Save a processed image."""
     valid_config_save_ts_file = deepcopy(VALID_CONFIG)
     valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
-    valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_TIMESTAMPTED_FILE: True})
+    valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_TIMESTAMPED_FILE: True})
     await async_setup_component(hass, ip.DOMAIN, valid_config_save_ts_file)
     await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)

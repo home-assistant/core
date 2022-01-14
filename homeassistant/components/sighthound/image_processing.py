@@ -35,7 +35,7 @@ ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_PEOPLE = "people"
 CONF_ACCOUNT_TYPE = "account_type"
 CONF_SAVE_FILE_FOLDER = "save_file_folder"
-CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
+CONF_SAVE_TIMESTAMPED_FILE = "save_timestamped_file"
 DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 DEV = "dev"
 PROD = "prod"
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
         vol.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
-        vol.Optional(CONF_SAVE_TIMESTAMPTED_FILE, default=False): cv.boolean,
+        vol.Optional(CONF_SAVE_TIMESTAMPED_FILE, default=False): cv.boolean,
     }
 )
 
@@ -77,7 +77,7 @@ def setup_platform(
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME),
             save_file_folder,
-            config[CONF_SAVE_TIMESTAMPTED_FILE],
+            config[CONF_SAVE_TIMESTAMPED_FILE],
         )
         entities.append(sighthound)
     add_entities(entities)
