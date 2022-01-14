@@ -290,7 +290,7 @@ async def test_simple_zone_timeout_freeze_without_timeout_cleanup2(hass):
             await asyncio.sleep(0.3)
 
 
-async def test_simple_zone_timeout_freeze_without_timeout_exeption():
+async def test_simple_zone_timeout_freeze_without_timeout_exception():
     """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
     timeout = TimeoutManager()
 
@@ -303,7 +303,7 @@ async def test_simple_zone_timeout_freeze_without_timeout_exeption():
             await asyncio.sleep(0.4)
 
 
-async def test_simple_zone_timeout_zone_with_timeout_exeption():
+async def test_simple_zone_timeout_zone_with_timeout_exception():
     """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
     timeout = TimeoutManager()
 

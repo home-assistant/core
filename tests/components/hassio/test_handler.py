@@ -22,7 +22,7 @@ async def test_api_ping_error(hassio_handler, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_api_ping_exeption(hassio_handler, aioclient_mock):
+async def test_api_ping_exception(hassio_handler, aioclient_mock):
     """Test setup with API ping exception."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", exc=aiohttp.ClientError())
 

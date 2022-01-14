@@ -156,7 +156,7 @@ async def test_form_invalid_auth(hass: HomeAssistant):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_unknown_exeption(hass: HomeAssistant):
+async def test_form_unknown_exception(hass: HomeAssistant):
     """Test we handle generic exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

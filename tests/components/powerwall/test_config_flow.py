@@ -92,7 +92,7 @@ async def test_invalid_auth(hass):
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
-async def test_form_unknown_exeption(hass):
+async def test_form_unknown_exception(hass):
     """Test we handle an unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
