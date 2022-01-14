@@ -23,7 +23,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up mysq covers."""
+    """Set up myq covers."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     myq = data[MYQ_GATEWAY]
     coordinator = data[MYQ_COORDINATOR]
