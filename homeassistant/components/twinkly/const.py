@@ -3,10 +3,10 @@
 DOMAIN = "twinkly"
 
 # Keys of the config entry
-CONF_ENTRY_ID = "id"
-CONF_ENTRY_HOST = "host"
-CONF_ENTRY_NAME = "name"
-CONF_ENTRY_MODEL = "model"
+ENTRY_DATA_ID = "id"
+ENTRY_DATA_HOST = "host"
+ENTRY_DATA_NAME = "name"
+ENTRY_DATA_MODEL = "model"
 
 # Strongly named HA attributes keys
 ATTR_HOST = "host"
