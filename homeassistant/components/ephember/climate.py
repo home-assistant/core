@@ -1,4 +1,4 @@
-"""Support for the EPH Controls Ember themostats."""
+"""Support for the EPH Controls Ember thermostats."""
 from __future__ import annotations
 
 from datetime import timedelta

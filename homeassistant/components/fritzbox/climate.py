@@ -66,7 +66,7 @@ async def async_setup_entry(
 
 
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
-    """The thermostat class for FRITZ!SmartHome thermostates."""
+    """The thermostat class for FRITZ!SmartHome thermostats."""
 
     @property
     def supported_features(self) -> int:
