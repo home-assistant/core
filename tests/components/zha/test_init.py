@@ -76,7 +76,7 @@ async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
 
 @pytest.mark.skipif(
     MAJOR_VERSION != 0 or (MAJOR_VERSION == 0 and MINOR_VERSION >= 112),
-    reason="Not applicaable for this version",
+    reason="Not applicable for this version",
 )
 @pytest.mark.parametrize(
     "zha_config",
