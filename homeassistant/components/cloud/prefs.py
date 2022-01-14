@@ -306,7 +306,8 @@ class CloudPreferences:
             self._hass.async_create_task(async_create_catching_coro(listener(self)))
 
     @callback
-    def _empty_config(self, username):
+    @staticmethod
+    def _empty_config(username):
         """Return an empty config."""
         return {
             PREF_ALEXA_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
