@@ -11,7 +11,7 @@ class LaunchLibraryFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None) -> FlowResult:
         """Handle a flow initialized by the user."""
         # Check if already configured
         if self._async_current_entries():
