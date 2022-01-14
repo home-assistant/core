@@ -158,7 +158,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         logger: logging.Logger,
         name: str,
-        update_inverval: timedelta,
+        update_interval: timedelta,
         plenticore: Plenticore,
     ) -> None:
         """Create a new update coordinator for plenticore data."""
@@ -166,7 +166,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=logger,
             name=name,
-            update_interval=update_inverval,
+            update_interval=update_interval,
         )
         # data ids to poll
         self._fetch = defaultdict(list)
@@ -234,7 +234,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         logger: logging.Logger,
         name: str,
-        update_inverval: timedelta,
+        update_interval: timedelta,
         plenticore: Plenticore,
     ) -> None:
         """Create a new update coordinator for plenticore data."""
@@ -242,7 +242,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=logger,
             name=name,
-            update_interval=update_inverval,
+            update_interval=update_interval,
         )
         # data ids to poll
         self._fetch = defaultdict(list)
