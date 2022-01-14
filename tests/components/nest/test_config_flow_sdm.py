@@ -117,7 +117,7 @@ class OAuthFixture:
         await self.async_mock_refresh(result, {"code": "abcd"})
 
     async def async_reauth(self, old_data: dict) -> dict:
-        """Initiate a reuath flow."""
+        """Initiate a reauth flow."""
         result = await self.hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_data
         )
