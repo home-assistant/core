@@ -1,5 +1,5 @@
 """
-Regression tests for Netamo Doorbell.
+Regression tests for Netatmo Doorbell.
 
 https://github.com/home-assistant/core/issues/44596
 """
@@ -15,9 +15,9 @@ from tests.components.homekit_controller.common import (
 )
 
 
-async def test_netamo_doorbell_setup(hass):
-    """Test that a Netamo Doorbell can be correctly setup in HA."""
-    accessories = await setup_accessories_from_file(hass, "netamo_doorbell.json")
+async def test_netatmo_doorbell_setup(hass):
+    """Test that a Netatmo Doorbell can be correctly setup in HA."""
+    accessories = await setup_accessories_from_file(hass, "netatmo_doorbell.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = er.async_get(hass)
