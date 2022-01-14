@@ -4,7 +4,7 @@
       "owner": "check-executables-have-shebangs",
       "pattern": [
         {
-          "regexp": "^(.+):\\s(.+)$",
+          "regexp": "^(.+):\\s(has a shebang.+)$",
           "file": 1,
           "message": 2
         }
