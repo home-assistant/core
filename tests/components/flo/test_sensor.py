@@ -32,7 +32,7 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
 async def test_manual_update_entity(
     hass, config_entry, aioclient_mock_fixture, aioclient_mock
 ):
-    """Test manual update entity via service homeasasistant/update_entity."""
+    """Test manual update entity via service homeassistant/update_entity."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}

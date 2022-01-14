@@ -47,7 +47,7 @@ async def test_attributes(hass, config_entry, aioclient_mock):
 
 
 async def test_generic_entity_update_service(hass, config_entry, aioclient_mock):
-    """Test generic update entity service homeasasistant/update_entity."""
+    """Test generic update entity service homeassistant/update_entity."""
     await setup_integration(hass, config_entry, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
     with patch("smart_meter_texas.Meter.read_meter") as updater:
