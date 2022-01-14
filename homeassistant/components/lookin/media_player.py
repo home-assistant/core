@@ -142,5 +142,5 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         state = status[0]
         mute = status[2]
 
-        self._attr_state = STATE_STANDBY if state == "1" else STATE_ON
+        self._attr_state = STATE_ON if state == "1" else STATE_STANDBY
         self._attr_is_volume_muted = mute == "0"
