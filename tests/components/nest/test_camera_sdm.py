@@ -553,7 +553,7 @@ async def test_camera_image_from_last_event(hass, auth):
 
 async def test_camera_image_from_event_not_supported(hass, auth):
     """Test fallback to stream image when event images are not supported."""
-    # Create a device that does not support the CameraEventImgae trait
+    # Create a device that does not support the CameraEventImage trait
     traits = DEVICE_TRAITS.copy()
     del traits["sdm.devices.traits.CameraEventImage"]
     subscriber = await async_setup_camera(hass, traits, auth=auth)
