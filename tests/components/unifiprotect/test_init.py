@@ -127,7 +127,7 @@ async def test_setup_failed_update(hass: HomeAssistant, mock_entry: MockEntityFi
 async def test_setup_failed_update_reauth(
     hass: HomeAssistant, mock_entry: MockEntityFixture
 ):
-    """Test setup of unifiprotect entry with update that gives unauthroized error."""
+    """Test setup of unifiprotect entry with update that gives unauthorized error."""
 
     mock_entry.api.update = AsyncMock(side_effect=NotAuthorized)
 
