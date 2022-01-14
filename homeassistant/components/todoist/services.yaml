@@ -19,7 +19,7 @@ new_task:
     labels:
       name: Labels
       description: Any labels that you want to apply to this task, separated by a comma.
-      example: Chores,Delivieries
+      example: Chores,Deliveries
       selector:
         text:
     priority:
