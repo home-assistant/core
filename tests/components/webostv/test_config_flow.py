@@ -51,6 +51,9 @@ async def test_import(hass, client):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "fake"
+    assert result["data"][CONF_HOST] == MOCK_YAML_CONFIG[CONF_HOST]
+    assert result["data"][CONF_CLIENT_SECRET] == MOCK_YAML_CONFIG[CONF_CLIENT_SECRET]
+    assert result["result"].unique_id == MOCK_YAML_CONFIG[CONF_UNIQUE_ID]
 
     with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
