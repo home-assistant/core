@@ -44,7 +44,6 @@ from .const import (
     DATA_HASS_CONFIG,
     DEFAULT_NAME,
     DOMAIN,
-    IMPORT_RECONNECT_DELAY,
     PLATFORMS,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
@@ -142,11 +141,14 @@ async def async_setup(hass, config):
     async def async_migrate_task(entity_id, conf, key):
         _LOGGER.debug("Migrating webOS Smart TV entity %s unique_id", entity_id)
         client = WebOsClient(conf[CONF_HOST], key)
+        tries = 0
         while not client.is_connected():
             try:
                 await client.connect()
             except WEBOSTV_EXCEPTIONS:
-                await asyncio.sleep(IMPORT_RECONNECT_DELAY)
+                wait_time = 2 ** min(tries, 4) * 5
+                tries += 1
+                await asyncio.sleep(wait_time)
             except WebOsTvPairError:
                 return
             else:
@@ -164,7 +166,7 @@ async def async_setup(hass, config):
             },
         )
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
 
     tasks = []
     for conf in config[DOMAIN]:
