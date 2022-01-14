@@ -716,7 +716,6 @@ async def _screen_stream_command(hass, call):
     elif name == "back":
         comm = "http://" + gate_host + ":9966/ais-back"
     web_session = aiohttp_client.async_get_clientsession(hass)
-    _LOGGER.warning("comm: " + comm)
     try:
         async with async_timeout.timeout(2):
             await web_session.get(comm)
