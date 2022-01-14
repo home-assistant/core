@@ -2711,7 +2711,7 @@ def test_async_render_to_info_with_complex_branching(hass):
 {%         elif     states('light.b') == "on" %}
   {{ states[otherdomain] | map(attribute='entity_id') | list }}
 {% elif states.light.a == "on" %}
-  {{ states["nonexist"] | list }}
+  {{ states["nonexistent"] | list }}
 {% else %}
   else
 {% endif %}

@@ -386,7 +386,7 @@ async def test_options_flow_devices(
         domain=DOMAIN,
         data={CONF_NAME: "mock_name", CONF_PORT: 12345},
         options={
-            "devices": ["notexist"],
+            "devices": ["nonexistent"],
             "filter": {
                 "include_domains": [
                     "fan",
