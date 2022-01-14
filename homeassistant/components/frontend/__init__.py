@@ -15,7 +15,7 @@ import jinja2
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import websocket_api
+from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
@@ -583,7 +583,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Serve the index page for panel pages."""
         hass = request.app["hass"]
 
-        if not hass.components.onboarding.async_is_onboarded():
+        if not onboarding.async_is_onboarded(hass):
             return web.Response(status=302, headers={"location": "/onboarding.html"})
 
         template = self._template_cache or await hass.async_add_executor_job(
