@@ -556,7 +556,7 @@ async def test_pubsub_subscriber_config_entry_reauth(hass, oauth, subscriber):
     result = await oauth.async_reauth(old_entry.data)
     await oauth.async_oauth_app_flow(result)
 
-    # Entering an updated access token refreshs the config entry.
+    # Entering an updated access token refreshes the config entry.
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     entry.data["token"].pop("expires_at")
     assert entry.unique_id == DOMAIN
