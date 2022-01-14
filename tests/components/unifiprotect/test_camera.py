@@ -183,7 +183,7 @@ def validate_common_camera_state(
     entity_id: str,
     features: int = SUPPORT_STREAM,
 ):
-    """Validate state that is common to all camera entity, regradless of type."""
+    """Validate state that is common to all camera entity, regardless of type."""
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
