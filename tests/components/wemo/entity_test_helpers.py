@@ -112,7 +112,7 @@ async def test_async_update_locked_multiple_callbacks(hass, pywemo_device, wemo_
     await _async_multiple_call_helper(hass, pywemo_device, callback, callback)
 
 
-async def test_avaliable_after_update(
+async def test_available_after_update(
     hass, pywemo_registry, pywemo_device, wemo_entity, domain
 ):
     """Test the availability when an On call fails and after an update.

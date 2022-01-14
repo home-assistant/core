@@ -241,7 +241,7 @@ async def test_form_bad_account_currency(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "currency_unavaliable"}
+    assert result2["errors"] == {"base": "currency_unavailable"}
 
 
 async def test_form_bad_exchange_rate(hass):
@@ -266,7 +266,7 @@ async def test_form_bad_exchange_rate(hass):
             },
         )
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "exchange_rate_unavaliable"}
+    assert result2["errors"] == {"base": "exchange_rate_unavailable"}
 
 
 async def test_option_catch_all_exception(hass):

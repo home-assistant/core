@@ -75,7 +75,7 @@ async def test_available_after_update(
     """Test the availability when an On call fails and after an update."""
     pywemo_bridge_light.turn_on.side_effect = pywemo.exceptions.ActionException
     pywemo_bridge_light.state["onoff"] = 1
-    await entity_test_helpers.test_avaliable_after_update(
+    await entity_test_helpers.test_available_after_update(
         hass, pywemo_registry, pywemo_device, wemo_entity, Platform.LIGHT
     )
 

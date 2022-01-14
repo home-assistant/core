@@ -98,7 +98,7 @@ def valid_humidity_range_configuration(config):
 
 _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
-        # CONF_AVAIALABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
+        # CONF_AVAILABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
         vol.Inclusive(
             CONF_AVAILABLE_MODES_LIST, "available_modes", default=[]
         ): cv.ensure_list,
