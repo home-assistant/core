@@ -142,7 +142,7 @@ class MetWeatherData:
         self._coordinates: dict[str, str] | None = None
 
     def set_coordinates(self) -> bool:
-        """Weather data inialization - set the coordinates."""
+        """Weather data initialization - set the coordinates."""
         if self._config.get(CONF_TRACK_HOME, False):
             latitude = self.hass.config.latitude
             longitude = self.hass.config.longitude

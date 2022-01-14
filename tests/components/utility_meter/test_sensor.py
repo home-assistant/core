@@ -194,7 +194,7 @@ async def test_state(hass):
 
 
 async def test_init(hass):
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     config = {
         "utility_meter": {
             "energy_bill": {
