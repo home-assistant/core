@@ -238,7 +238,7 @@ async def test_setup_user_notify_service(hass):
     async_mock_service(hass, "notify", "test2", NOTIFY_SERVICE_SCHEMA)
     notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
 
-    services = notify_auth_module.aync_get_available_notify_services()
+    services = notify_auth_module.async_get_available_notify_services()
     assert services == ["test1", "test2"]
 
     flow = await notify_auth_module.async_setup_flow("test-user")
@@ -298,13 +298,13 @@ async def test_include_exclude_config(hass):
     notify_auth_module = await auth_mfa_module_from_config(
         hass, {"type": "notify", "exclude": ["exclude1", "exclude2", "exclude3"]}
     )
-    services = notify_auth_module.aync_get_available_notify_services()
+    services = notify_auth_module.async_get_available_notify_services()
     assert services == ["include1", "include2"]
 
     notify_auth_module = await auth_mfa_module_from_config(
         hass, {"type": "notify", "include": ["include1", "include2", "include3"]}
     )
-    services = notify_auth_module.aync_get_available_notify_services()
+    services = notify_auth_module.async_get_available_notify_services()
     assert services == ["include1", "include2"]
 
     # exclude has high priority than include
@@ -316,7 +316,7 @@ async def test_include_exclude_config(hass):
             "exclude": ["exclude1", "exclude2", "include2"],
         },
     )
-    services = notify_auth_module.aync_get_available_notify_services()
+    services = notify_auth_module.async_get_available_notify_services()
     assert services == ["include1"]
 
 
@@ -327,7 +327,7 @@ async def test_setup_user_no_notify_service(hass):
         hass, {"type": "notify", "exclude": "test1"}
     )
 
-    services = notify_auth_module.aync_get_available_notify_services()
+    services = notify_auth_module.async_get_available_notify_services()
     assert services == []
 
     flow = await notify_auth_module.async_setup_flow("test-user")

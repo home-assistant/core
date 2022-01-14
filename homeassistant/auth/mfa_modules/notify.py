@@ -147,7 +147,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         )
 
     @callback
-    def aync_get_available_notify_services(self) -> list[str]:
+    def async_get_available_notify_services(self) -> list[str]:
         """Return list of notify services."""
         unordered_services = set()
 
@@ -166,7 +166,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         Mfa module should extend SetupFlow
         """
         return NotifySetupFlow(
-            self, self.input_schema, user_id, self.aync_get_available_notify_services()
+            self, self.input_schema, user_id, self.async_get_available_notify_services()
         )
 
     async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
