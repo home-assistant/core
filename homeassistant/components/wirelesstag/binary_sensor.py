@@ -138,7 +138,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         return STATE_ON if self.event.is_state_on else STATE_OFF
 
     def updated_state_value(self):
-        """Use raw princial value."""
+        """Use raw principal value."""
         return self.principal_value
 
     @callback
