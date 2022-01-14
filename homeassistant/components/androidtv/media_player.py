@@ -125,37 +125,31 @@ SERVICE_UPLOAD = "upload"
 DEFAULT_NAME = "Android TV"
 
 # Deprecated in Home Assistant 2022.2
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA=PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
-                    DEVICE_CLASSES
-                ),
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_ADBKEY): cv.isfile,
-                vol.Optional(CONF_ADB_SERVER_IP): cv.string,
-                vol.Optional(
-                    CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
-                ): cv.port,
-                vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-                vol.Optional(CONF_APPS, default={}): vol.Schema(
-                    {cv.string: vol.Any(cv.string, None)}
-                ),
-                vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
-                vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
-                vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
-                    {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
-                ),
-                vol.Optional(
-                    CONF_EXCLUDE_UNNAMED_APPS, default=DEFAULT_EXCLUDE_UNNAMED_APPS
-                ): cv.boolean,
-                vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
-            }
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
+            DEVICE_CLASSES
         ),
-    )
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_ADBKEY): cv.isfile,
+        vol.Optional(CONF_ADB_SERVER_IP): cv.string,
+        vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
+        vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
+        vol.Optional(CONF_APPS, default={}): vol.Schema(
+            {cv.string: vol.Any(cv.string, None)}
+        ),
+        vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
+        vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
+        vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
+            {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
+        ),
+        vol.Optional(
+            CONF_EXCLUDE_UNNAMED_APPS, default=DEFAULT_EXCLUDE_UNNAMED_APPS
+        ): cv.boolean,
+        vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
+    }
 )
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
