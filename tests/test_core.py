@@ -687,8 +687,8 @@ async def test_statemachine_remove(hass):
     assert len(events) == 1
 
 
-async def test_statemachine_case_insensitivty(hass):
-    """Test insensitivty."""
+async def test_statemachine_case_insensitivity(hass):
+    """Test insensitivity."""
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     hass.states.async_set("light.BOWL", "off")
