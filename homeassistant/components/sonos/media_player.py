@@ -13,6 +13,7 @@ from soco.core import (
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
 )
+from soco.data_structures import DidlFavorite
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -54,6 +55,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
+from . import media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -67,7 +69,6 @@ from .const import (
 )
 from .entity import SonosEntity
 from .helpers import soco_error
-from .media_browser import build_item_response, get_media, library_payload
 from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -419,22 +420,37 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         soco = self.coordinator.soco
         if source == SOURCE_LINEIN:
             soco.switch_to_line_in()
-        elif source == SOURCE_TV:
+            return
+
+        if source == SOURCE_TV:
             soco.switch_to_tv()
+            return
+
+        self._play_favorite_by_name(source)
+
+    def _play_favorite_by_name(self, name: str) -> None:
+        """Play a favorite by name."""
+        fav = [fav for fav in self.speaker.favorites if fav.title == name]
+
+        if len(fav) != 1:
+            return
+
+        src = fav.pop()
+        self._play_favorite(src)
+
+    def _play_favorite(self, favorite: DidlFavorite) -> None:
+        """Play a favorite."""
+        uri = favorite.reference.get_uri()
+        soco = self.coordinator.soco
+        if soco.music_source_from_uri(uri) in [
+            MUSIC_SRC_RADIO,
+            MUSIC_SRC_LINE_IN,
+        ]:
+            soco.play_uri(uri, title=favorite.title)
         else:
-            fav = [fav for fav in self.speaker.favorites if fav.title == source]
-            if len(fav) == 1:
-                src = fav.pop()
-                uri = src.reference.get_uri()
-                if soco.music_source_from_uri(uri) in [
-                    MUSIC_SRC_RADIO,
-                    MUSIC_SRC_LINE_IN,
-                ]:
-                    soco.play_uri(uri, title=source)
-                else:
-                    soco.clear_queue()
-                    soco.add_to_queue(src.reference)
-                    soco.play_from_queue(0)
+            soco.clear_queue()
+            soco.add_to_queue(favorite.reference)
+            soco.play_from_queue(0)
 
     @property  # type: ignore[misc]
     def source_list(self) -> list[str]:
@@ -501,6 +517,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
+        if media_type == "favorite_item_id":
+            favorite = self.speaker.favorites.lookup_by_item_id(media_id)
+            if favorite is None:
+                raise ValueError(f"Missing favorite for media_id: {media_id}")
+            self._play_favorite(favorite)
+            return
+
         soco = self.coordinator.soco
         if media_id and media_id.startswith(PLEX_URI_SCHEME):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
@@ -522,7 +545,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
-                item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
+                item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
                 soco.play_uri(item.get_uri())
                 return
             try:
@@ -535,7 +558,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.add_to_queue(playlist)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
+            item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
 
             if not item:
                 _LOGGER.error('Could not find "%s" in the library', media_id)
@@ -616,7 +639,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             and media_content_id
         ):
             item = await self.hass.async_add_executor_job(
-                get_media,
+                media_browser.get_media,
                 self.media.library,
                 media_content_id,
                 MEDIA_TYPES_TO_SONOS[media_content_type],
@@ -639,7 +662,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_image_id: str | None = None,
         ) -> str | None:
             if is_internal:
-                item = get_media(  # type: ignore[no-untyped-call]
+                item = media_browser.get_media(  # type: ignore[no-untyped-call]
                     self.media.library,
                     media_content_id,
                     media_content_type,
@@ -652,9 +675,30 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_image_id,
             )
 
-        if media_content_type in [None, "library"]:
+        if media_content_type in [None, "root"]:
             return await self.hass.async_add_executor_job(
-                library_payload, self.media.library, _get_thumbnail_url
+                media_browser.root_payload,
+                self.media.library,
+                self.speaker.favorites,
+                _get_thumbnail_url,
+            )
+
+        if media_content_type == "library":
+            return await self.hass.async_add_executor_job(
+                media_browser.library_payload, self.media.library, _get_thumbnail_url
+            )
+
+        if media_content_type == "favorites":
+            return await self.hass.async_add_executor_job(
+                media_browser.favorites_payload,
+                self.speaker.favorites,
+            )
+
+        if media_content_type == "favorites_folder":
+            return await self.hass.async_add_executor_job(
+                media_browser.favorites_folder_payload,
+                self.speaker.favorites,
+                media_content_id,
             )
 
         payload = {
@@ -662,7 +706,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             "idstring": media_content_id,
         }
         response = await self.hass.async_add_executor_job(
-            build_item_response, self.media.library, payload, _get_thumbnail_url
+            media_browser.build_item_response,
+            self.media.library,
+            payload,
+            _get_thumbnail_url,
         )
         if response is None:
             raise BrowseError(
