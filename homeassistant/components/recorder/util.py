@@ -449,7 +449,7 @@ def retryable_database_job(description: str) -> Callable:
 
 
 def periodic_db_cleanups(instance: Recorder):
-    """Run any database cleanups that need to happen perodiclly.
+    """Run any database cleanups that need to happen periodically.
 
     These cleanups will happen nightly or after any purge.
     """

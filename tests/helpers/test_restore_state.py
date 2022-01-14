@@ -53,7 +53,7 @@ async def test_caching_data(hass):
 
 
 async def test_periodic_write(hass):
-    """Test that we write periodiclly but not after stop."""
+    """Test that we write periodically but not after stop."""
     data = await RestoreStateData.async_get_instance(hass)
     await hass.async_block_till_done()
     await data.store.async_save([])
