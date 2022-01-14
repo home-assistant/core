@@ -166,10 +166,10 @@ async def async_setup_entry(
     )
 
     if len(hass.data[DOMAIN][GATEWAYS_KEY]) == 1:
-        # start listining for local pushes (only once)
+        # start listening for local pushes (only once)
         await hass.async_add_executor_job(gateway_discovery.listen)
 
-        # register stop callback to shutdown listining for local pushes
+        # register stop callback to shutdown listening for local pushes
         def stop_xiaomi(event):
             """Stop Xiaomi Socket."""
             _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
