@@ -87,4 +87,4 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
-        return self.entity_description.set_fn(self._device, option)
+        self.entity_description.set_fn(self._device, option)
