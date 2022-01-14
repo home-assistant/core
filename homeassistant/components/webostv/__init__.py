@@ -283,11 +283,10 @@ async def async_control_connect(host: str, key: str | None) -> WebOsClient:
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+        client = hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
         await hass_notify.async_reload(hass, DOMAIN)
         await client.shutdown()
 
