@@ -973,8 +973,8 @@ homeassistant/components/tuya/* @Tuya @zlinoliver @METISU @frenck
 tests/components/tuya/* @Tuya @zlinoliver @METISU @frenck
 homeassistant/components/twentemilieu/* @frenck
 tests/components/twentemilieu/* @frenck
-homeassistant/components/twinkly/* @dr1rrb
-tests/components/twinkly/* @dr1rrb
+homeassistant/components/twinkly/* @dr1rrb @Robbie1221
+tests/components/twinkly/* @dr1rrb @Robbie1221
 homeassistant/components/ubus/* @noltari
 homeassistant/components/unifi/* @Kane610
 tests/components/unifi/* @Kane610
