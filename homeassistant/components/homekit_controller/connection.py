@@ -492,7 +492,7 @@ class HKDevice:
         results = await self.pairing.put_characteristics(characteristics)
 
         # Feed characteristics back into HA and update the current state
-        # results will only contain failures, so anythin in characteristics
+        # results will only contain failures, so anything in characteristics
         # but not in results was applied successfully - we can just have HA
         # reflect the change immediately.
 
