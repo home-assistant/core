@@ -2054,7 +2054,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             or defer_init is not False
         ):
             # If there are any non-default keywords args, we do
-            # not cache.  In prodution we currently do not have
+            # not cache.  In production we currently do not have
             # any instance of this.
             return super().compile(source, name, filename, raw, defer_init)
 
