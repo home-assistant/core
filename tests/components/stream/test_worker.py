@@ -629,7 +629,7 @@ async def test_pts_out_of_order(hass):
 
 
 async def test_stream_stopped_while_decoding(hass):
-    """Tests that worker quits when stop() is called while decodign."""
+    """Tests that worker quits when stop() is called while decoding."""
     # Add some synchronization so that the test can pause the background
     # worker. When the worker is stopped, the test invokes stop() which
     # will cause the worker thread to exit once it enters the decode
