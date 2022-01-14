@@ -13,21 +13,15 @@ from .common import setup_integration
 @pytest.fixture(autouse=True, scope="module")
 def setup(request):
     """Set up patches for pytradfri methods."""
-    p_1 = patch(
+    with patch(
         "pytradfri.device.BlindControl.raw",
         new_callable=PropertyMock,
         return_value=[{"mock": "mock"}],
-    )
-    p_2 = patch("pytradfri.device.BlindControl.blinds")
-    p_1.start()
-    p_2.start()
-
-    def teardown():
-        """Remove patches for pytradfri methods."""
-        p_1.stop()
-        p_2.stop()
-
-    request.addfinalizer(teardown)
+    ):
+        with patch(
+            "pytradfri.device.BlindControl.blinds",
+        ):
+            yield
 
 
 def mock_cover(test_features=None, test_state=None, device_number=0):
