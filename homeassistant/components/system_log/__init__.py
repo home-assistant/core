@@ -123,11 +123,11 @@ class LogEntry:
         }
 
 
-class DedupStore(OrderedDict):
+class DedupeStore(OrderedDict):
     """Data store to hold max amount of deduped entries."""
 
     def __init__(self, maxlen=50):
-        """Initialize a new DedupStore."""
+        """Initialize a new DedupeStore."""
         super().__init__()
         self.maxlen = maxlen
 
@@ -175,7 +175,7 @@ class LogErrorHandler(logging.Handler):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
-        self.records = DedupStore(maxlen=maxlen)
+        self.records = DedupeStore(maxlen=maxlen)
         self.fire_event = fire_event
 
     def emit(self, record):
