@@ -1,6 +1,5 @@
 """Configuration for iAqualink tests."""
 import random
-import string
 from unittest.mock import AsyncMock
 
 from iaqualink.client import AqualinkClient
@@ -55,9 +54,6 @@ def get_aqualink_device(system, cls=None, data=None):
 
     if data is None:
         data = {}
-
-    name = "".join(random.choice(string.ascii_lowercase) for _ in range(8))
-    data["name"] = name
 
     return cls(system=system, data=data)
 
