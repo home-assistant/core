@@ -54,7 +54,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         try:
             return Event(
                 self.event_type,

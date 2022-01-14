@@ -113,7 +113,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self, validate_entity_id=True):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
             user_id=self.context_user_id,
