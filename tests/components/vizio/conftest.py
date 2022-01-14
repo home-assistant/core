@@ -71,7 +71,7 @@ def vizio_data_coordinator_update_failure_fixture():
 
 @pytest.fixture(name="vizio_no_unique_id")
 def vizio_no_unique_id_fixture():
-    """Mock no vizio unique ID returrned."""
+    """Mock no vizio unique ID returned."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
         return_value=None,
