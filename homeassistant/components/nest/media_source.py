@@ -64,6 +64,7 @@ MEDIA_SOURCE_TITLE = "Nest"
 DEVICE_TITLE_FORMAT = "{device_name}: Recent Events"
 CLIP_TITLE_FORMAT = "{event_name} @ {event_time}"
 EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}"
+EVENT_THUMBNAIL_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}/thumbnail"
 
 STORAGE_KEY = "nest.event_media"
 STORAGE_VERSION = 1
@@ -400,9 +401,11 @@ class NestMediaSource(MediaSource):
             browse_device.children = []
             for image in images.values():
                 event_id = MediaId(media_id.device_id, image.event_token)
-                browse_device.children.append(
-                    _browse_image_event(event_id, device, image)
-                )
+                browse_event = _browse_image_event(event_id, device, image)
+                browse_device.children.append(browse_event)
+                # Use thumbnail for first event in the list as the device thumbnail
+                if browse_device.thumbnail is None:
+                    browse_device.thumbnail = browse_event.thumbnail
             return browse_device
 
         # Browse a specific event
@@ -502,6 +505,8 @@ def _browse_image_event(
         ),
         can_play=False,
         can_expand=False,
-        thumbnail=None,
+        thumbnail=EVENT_THUMBNAIL_URL_FORMAT.format(
+            device_id=event_id.device_id, event_token=event_id.event_token
+        ),
         children=[],
     )
