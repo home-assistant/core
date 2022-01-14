@@ -122,7 +122,6 @@ async def test_handle_error_user(hass: HomeAssistant):
         "homeassistant.components.zwave_me.async_setup_entry",
         return_value=True,
     ):
-        mock_uuid.return_value = None
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -135,5 +134,4 @@ async def test_handle_error_user(hass: HomeAssistant):
                 "token": "test-token",
             },
         )
-        assert result2["type"] == RESULT_TYPE_ABORT
-        assert result2["reason"] == "no_valid_uuid_set"
+        assert result2["errors"] == {'base': 'no_valid_uuid_set'}
