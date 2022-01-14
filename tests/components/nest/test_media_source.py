@@ -1240,7 +1240,7 @@ async def test_media_store_load_filesystem_error(hass, auth, hass_client):
 
     client = await hass_client()
 
-    # Fetch the media from the server, and simluate a failure reading from disk
+    # Fetch the media from the server, and simulate a failure reading from disk
     client = await hass_client()
     with patch("homeassistant.components.nest.media_source.open", side_effect=OSError):
         response = await client.get(
