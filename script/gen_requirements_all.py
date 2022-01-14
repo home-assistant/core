@@ -111,6 +111,12 @@ anyio>=3.3.1
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
+
+# Prevent dependency conflicts between sisyphus-control and aioambient
+# until upper bounds for sisyphus-control have been updated
+# https://github.com/jkeljo/sisyphus-control/issues/6
+python-engineio>=3.13.1,<4.0
+python-socketio>=4.6.0,<5.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

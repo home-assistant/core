@@ -254,9 +254,12 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     # If the bulb is on and we are using existing brightness
-    # and brightness was 0 it means we could not read it because
-    # an effect is in progress so we use 255
-    bulb.async_set_levels.assert_called_with(10, 10, 30, brightness=255)
+    # and brightness was 0 older devices will not be able to turn on
+    # so we need to make sure its at least 1 and that we
+    # call it before the turn on command since the device
+    # does not support auto on
+    bulb.async_set_brightness.assert_called_with(1)
+    bulb.async_set_levels.assert_called_with(10, 10, 30, brightness=1)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -364,10 +367,11 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
         blocking=True,
     )
     # If the bulb is on and we are using existing brightness
-    # and brightness was 0 it means we could not read it because
-    # an effect is in progress so we use 255
+    # and brightness was 0 we need to set it to at least 1
+    # or the device may not turn on
     bulb.async_turn_on.assert_not_called()
-    bulb.async_set_levels.assert_called_with(10, 10, 30, brightness=255)
+    bulb.async_set_brightness.assert_not_called()
+    bulb.async_set_levels.assert_called_with(10, 10, 30, brightness=1)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128

@@ -98,7 +98,7 @@ async def discover_devices(hass, hass_config):
 
     Currently it is only run at startup.
     """
-    component_configs: dict[Platform, list[dict]] = {}
+    component_configs: dict[Platform, dict[str, dict]] = {}
 
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
@@ -146,13 +146,12 @@ async def discover_devices(hass, hass_config):
                 continue
 
             channel["server_name"] = server_name
-            component_configs.setdefault(component_name, []).append(
-                {
-                    "channel_id": channel_id,
-                    "server_name": server_name,
-                    "function_name": channel["function"]["name"],
-                }
-            )
+            component_config = component_configs.setdefault(component_name, {})
+            component_config[f"{server_name}_{channel_id}"] = {
+                "channel_id": channel_id,
+                "server_name": server_name,
+                "function_name": channel["function"]["name"],
+            }
 
     # Load discovered devices
     for component_name, config in component_configs.items():
