@@ -17,11 +17,10 @@ def setup(request):
         "pytradfri.device.BlindControl.raw",
         new_callable=PropertyMock,
         return_value=[{"mock": "mock"}],
+    ), patch(
+        "pytradfri.device.BlindControl.blinds",
     ):
-        with patch(
-            "pytradfri.device.BlindControl.blinds",
-        ):
-            yield
+        yield
 
 
 def mock_cover(test_features=None, test_state=None, device_number=0):
