@@ -1,4 +1,4 @@
-"""Tradfri cover (recognised as blinds in the IKEA echosystem) platform tests."""
+"""Tradfri cover (recognised as blinds in the IKEA ecosystem) platform tests."""
 
 from copy import deepcopy
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
@@ -169,7 +169,7 @@ async def test_set_cover_position(
     expected_result,
     device_id,
 ):
-    """Test setting position a cover."""
+    """Test setting position of a cover."""
     # Note pytradfri style, not hass. Values not really important.
     initial_state = {
         "current_cover_position": 0,
