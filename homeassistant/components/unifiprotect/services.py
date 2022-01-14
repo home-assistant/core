@@ -24,7 +24,7 @@ SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_DEFAULT_DOORBELL_TEXT = "set_default_doorbell_text"
 
-ALL_GLOBAL_SERIVCES = [
+ALL_GLOBAL_SERVICES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
@@ -169,5 +169,5 @@ def async_cleanup_services(hass: HomeAssistant) -> None:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        for name in ALL_GLOBAL_SERIVCES:
+        for name in ALL_GLOBAL_SERVICES:
             hass.services.async_remove(DOMAIN, name)
