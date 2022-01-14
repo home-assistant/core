@@ -1,4 +1,4 @@
-"""Common fixutres with default mocks as well as common test helper methods."""
+"""Common fixtures with default mocks as well as common test helper methods."""
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
