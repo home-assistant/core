@@ -90,7 +90,7 @@ exposure_register:
         entity:
     attribute:
       name: "Entity attribute"
-      description: "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
+      description: "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is either “on” or “off” - with attribute you can expose its “brightness”."
       example: "brightness"
       selector:
         text:
