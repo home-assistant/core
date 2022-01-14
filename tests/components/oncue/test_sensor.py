@@ -92,3 +92,36 @@ async def test_sensors(hass: HomeAssistant) -> None:
         hass.states.get("sensor.my_generator_connected_server_ip_address").state
         == "40.117.195.28"
     )
+
+    assert hass.states.get("sensor.my_generator_engine_target_speed").state == "0"
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_total_run_time_loaded").state
+        == "5.5"
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_source1_voltage_average_line_to_line"
+        ).state
+        == "253.5"
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_source2_voltage_average_line_to_line"
+        ).state
+        == "0.0"
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_genset_total_energy").state
+        == "1.2022309E7"
+    )
+    assert (
+        hass.states.get("sensor.my_generator_engine_total_number_of_starts").state
+        == "101"
+    )
+    assert (
+        hass.states.get("sensor.my_generator_generator_current_average").state == "0.0"
+    )

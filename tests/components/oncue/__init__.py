@@ -197,8 +197,8 @@ MOCK_ASYNC_FETCH_ALL = {
             "GensetTotalEnergy": OncueSensor(
                 name="GensetTotalEnergy",
                 display_name="Genset Total Energy",
-                value="34.5",
-                display_value="34.5 kWh",
+                value="1.2022309E7",
+                display_value="1.2022309E7 kWh",
                 unit="kWh",
             ),
             "AtsContactorPosition": OncueSensor(
