@@ -280,7 +280,7 @@ async def test_ingress_websocket(hassio_client, build_type, aioclient_mock):
 
 
 async def test_ingress_missing_peername(hassio_client, aioclient_mock, caplog):
-    """Test hadnling of missing peername."""
+    """Test handling of missing peername."""
     aioclient_mock.get(
         "http://127.0.0.1/ingress/lorem/ipsum",
         text="test",
