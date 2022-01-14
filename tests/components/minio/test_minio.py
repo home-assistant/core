@@ -113,7 +113,7 @@ async def test_minio_listen(hass, caplog, minio_client_event):
 
     @callback
     def event_callback(event):
-        """Handle event callbback."""
+        """Handle event callback."""
         events.append(event)
 
     hass.bus.async_listen("minio", event_callback)
