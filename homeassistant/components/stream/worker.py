@@ -41,7 +41,7 @@ class StreamEndedError(StreamWorkerError):
 
 
 class StreamState:
-    """Responsible for trakcing output and playback state for a stream.
+    """Responsible for tracking output and playback state for a stream.
 
     Holds state used for playback to interpret a decoded stream. A source stream
     may be reset (e.g. reconnecting to an rtsp stream) and this object tracks
