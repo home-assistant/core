@@ -137,7 +137,7 @@ async def test_hmip_remove_group(hass, default_mock_hap_factory):
 async def test_all_devices_unavailable_when_hap_not_connected(
     hass, default_mock_hap_factory
 ):
-    """Test make all devices unavaulable when hap is not connected."""
+    """Test make all devices unavailable when hap is not connected."""
     entity_id = "light.treppe_ch"
     entity_name = "Treppe CH"
     device_model = "HmIP-BSL"
