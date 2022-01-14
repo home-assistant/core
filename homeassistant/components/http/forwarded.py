@@ -102,7 +102,7 @@ def async_setup_forwarded(
             request.transport is None
             or request.transport.get_extra_info("peername") is None
         ):
-            # Connected IP isn't retrieveable from the request transport, continue
+            # Connected IP isn't retrievable from the request transport, continue
             return await handler(request)
 
         connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
