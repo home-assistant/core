@@ -31,6 +31,30 @@ from .models import LookinData
 LOGGER = logging.getLogger(__name__)
 
 
+def _async_climate_updater(
+    lookin_protocol: LookInHttpProtocol,
+    uuid: str,
+) -> Callable[[], Coroutine[None, Any, Remote]]:
+    """Create a function to capture the cell variable."""
+
+    async def _async_update() -> Climate:
+        return await lookin_protocol.get_conditioner(uuid)
+
+    return _async_update
+
+
+def _async_remote_updater(
+    lookin_protocol: LookInHttpProtocol,
+    uuid: str,
+) -> Callable[[], Coroutine[None, Any, Remote]]:
+    """Create a function to capture the cell variable."""
+
+    async def _async_update() -> Remote:
+        return await lookin_protocol.get_remote(uuid)
+
+    return _async_update
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up lookin from a config entry."""
 
@@ -61,28 +85,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if (platform := TYPE_TO_PLATFORM.get(remote["Type"])) is None:
             continue
         uuid = remote["UUID"]
-
-        def _wrap_async_update(
-            uuid: str,
-        ) -> Callable[[], Coroutine[None, Any, Remote]]:
-            """Create a function to capture the uuid cell variable."""
-            if platform == Platform.CLIMATE:
-
-                async def _async_update() -> Climate:
-                    return await lookin_protocol.get_conditioner(uuid)
-
-            else:
-
-                async def _async_update() -> Remote:
-                    return await lookin_protocol.get_remote(uuid)
-
-            return _async_update
-
+        if platform == Platform.CLIMATE:
+            updater = _async_climate_updater(lookin_protocol, uuid)
+        else:
+            updater = _async_remote_updater(lookin_protocol, uuid)
         coordinator = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f"{entry.title} {uuid}",
-            update_method=_wrap_async_update(uuid),
+            update_method=updater,
             update_interval=timedelta(
                 seconds=60
             ),  # Updates are pushed (fallback is polling)
