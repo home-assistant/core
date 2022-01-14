@@ -9,6 +9,7 @@ from typing import Any
 
 import aiohttp
 from aiolookin import (
+    Climate,
     LookInHttpProtocol,
     LookinUDPSubscriptions,
     MeteoSensor,
@@ -18,7 +19,7 @@ from aiolookin import (
 from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -57,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_coordinators: dict[str, DataUpdateCoordinator] = {}
     for remote in devices:
-        if remote["Type"] not in TYPE_TO_PLATFORM:
+        if (platform := TYPE_TO_PLATFORM.get(remote["Type"])) is None:
             continue
         uuid = remote["UUID"]
 
@@ -65,9 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             uuid: str,
         ) -> Callable[[], Coroutine[None, Any, Remote]]:
             """Create a function to capture the uuid cell variable."""
+            if platform == Platform.CLIMATE:
 
-            async def _async_update() -> Remote:
-                return await lookin_protocol.get_remote(uuid)
+                async def _async_update() -> Climate:
+                    return await lookin_protocol.get_conditioner(uuid)
+
+            else:
+
+                async def _async_update() -> Remote:
+                    return await lookin_protocol.get_remote(uuid)
 
             return _async_update
 
