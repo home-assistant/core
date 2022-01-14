@@ -8,7 +8,7 @@ from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import mqtt, webhook
+from homeassistant.components import cloud, mqtt, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -126,7 +126,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not entry.data.get("cloudhook"):
         return
 
-    await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
+    await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_connect_mqtt(hass, component):

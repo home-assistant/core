@@ -3,7 +3,7 @@ from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import webhook
+from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -141,10 +141,8 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _get_webhook_id(self):
         """Generate webhook ID."""
         webhook_id = webhook.async_generate_id()
-        if self.hass.components.cloud.async_active_subscription():
-            webhook_url = await self.hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
+        if cloud.async_active_subscription(self.hass):
+            webhook_url = await cloud.async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True
         else:
             webhook_url = webhook.async_generate_url(self.hass, webhook_id)

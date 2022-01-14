@@ -5,6 +5,7 @@ import secrets
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
 
+from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
@@ -36,7 +37,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a rachio config entry."""
     if CONF_CLOUDHOOK_URL in entry.data:
-        await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
+        await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
