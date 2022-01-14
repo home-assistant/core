@@ -1230,7 +1230,7 @@ pytile==2021.12.0
 pytraccar==0.10.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.2.1
+pytradfri[async]==8.0.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
