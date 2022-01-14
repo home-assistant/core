@@ -35,7 +35,6 @@ from .const import (
     ITEM_KEY_MEDIA_SOURCES,
     ITEM_KEY_MEDIA_TYPE,
     ITEM_KEY_NAME,
-    ITEM_KEY_STREAM_CONTAINER,
     ITEM_TYPE_ALBUM,
     ITEM_TYPE_ARTIST,
     ITEM_TYPE_AUDIO,
@@ -308,7 +307,6 @@ class JellyfinSource(MediaSource):
         user_id = self.client.config.data["auth.user_id"]
         device_id = self.client.config.data["app.device_id"]
         api_key = self.client.config.data["auth.token"]
-        container = media_item[ITEM_KEY_MEDIA_SOURCES][0][ITEM_KEY_STREAM_CONTAINER]
 
         params = urllib.parse.urlencode(
             {
@@ -316,7 +314,6 @@ class JellyfinSource(MediaSource):
                 "DeviceId": device_id,
                 "api_key": api_key,
                 "MaxStreamingBitrate": MAX_STREAMING_BITRATE,
-                "Container": container,
             }
         )
         return f"{self.url}Audio/{item_id}/universal?{params}"
