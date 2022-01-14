@@ -158,8 +158,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @property
     def precision(self) -> float:
         """Return the precision of the climate device."""
-        precicions = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
-        for prec in precicions:
+        precisions = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
+        for prec in precisions:
             if self._static_info.visual_temperature_step >= prec:
                 return prec
         # Fall back to highest precision, tenths
