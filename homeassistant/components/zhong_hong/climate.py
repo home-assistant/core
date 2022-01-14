@@ -36,10 +36,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GATEWAY_ADDRRESS = "gateway_address"
+CONF_GATEWAY_ADDRESS = "gateway_address"
 
 DEFAULT_PORT = 9999
-DEFAULT_GATEWAY_ADDRRESS = 1
+DEFAULT_GATEWAY_ADDRESS = 1
 
 SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
 SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(
-            CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS
+            CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,
     }
 )
@@ -86,7 +86,7 @@ def setup_platform(
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
+    gw_addr = config.get(CONF_GATEWAY_ADDRESS)
     hub = ZhongHongGateway(host, port, gw_addr)
     devices = [
         ZhongHongClimate(hub, addr_out, addr_in)

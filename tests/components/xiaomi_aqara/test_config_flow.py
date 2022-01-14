@@ -56,7 +56,7 @@ def get_mock_discovery(
     for host in host_list:
         gateway = Mock()
 
-        gateway.ip_adress = host
+        gateway.ip_address = host
         gateway.port = TEST_PORT
         gateway.sid = TEST_SID
         gateway.proto = TEST_PROTOCOL
