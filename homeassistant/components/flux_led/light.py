@@ -287,6 +287,10 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             brightness = self.brightness
         # If the brightness was previously 0, the light
         # will not turn on unless brightness is at least 1
+        #
+        # We previously had a problem with the brightness
+        # sometimes reporting as 0 when an effect was in progress,
+        # however this has since been resolved in the upstream library
         return max(1, brightness)
 
     async def _async_set_mode(self, **kwargs: Any) -> None:
