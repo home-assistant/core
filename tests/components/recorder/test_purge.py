@@ -91,7 +91,7 @@ async def test_purge_old_states(
         assert "test.recorder2" in instance._old_states
 
 
-async def test_purge_old_states_encouters_database_corruption(
+async def test_purge_old_states_encounters_database_corruption(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test database image image is malformed while deleting old states."""
