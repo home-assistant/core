@@ -109,19 +109,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     def swap_key_value(dict_to_sort: dict[str, str]) -> dict[str, str]:
         """Swap keys and values in dict."""
-        all_region_codes_swaped: dict[str, str] = {}
+        all_region_codes_swapped: dict[str, str] = {}
 
         for key, value in dict_to_sort.items():
-            if value not in all_region_codes_swaped:
-                all_region_codes_swaped[value] = key
+            if value not in all_region_codes_swapped:
+                all_region_codes_swapped[value] = key
             else:
                 for i in range(len(dict_to_sort)):
                     tmp_value: str = f"{value}_{i}"
-                    if tmp_value not in all_region_codes_swaped:
-                        all_region_codes_swaped[tmp_value] = key
+                    if tmp_value not in all_region_codes_swapped:
+                        all_region_codes_swapped[tmp_value] = key
                         break
 
-        return dict(sorted(all_region_codes_swaped.items(), key=lambda ele: ele[1]))
+        return dict(sorted(all_region_codes_swapped.items(), key=lambda ele: ele[1]))
 
     def split_regions(self) -> None:
         """Split regions alphabetical."""
