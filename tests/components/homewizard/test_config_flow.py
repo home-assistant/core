@@ -278,7 +278,7 @@ async def test_check_detects_invalid_api(hass, aioclient_mock):
     assert result["reason"] == "unsupported_api_version"
 
 
-async def test_check_detects_unsuported_device(hass, aioclient_mock):
+async def test_check_detects_unsupported_device(hass, aioclient_mock):
     """Test check detecting device endpoint failed fetching data."""
 
     device = get_mock_device(product_type="not_an_energy_device")
