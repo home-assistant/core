@@ -179,7 +179,7 @@ async def test_check_available_unsuccessful(
         time.time() - zha_device.consider_unavailable_time - 2
     )
 
-    # unsuccessfuly ping zigpy device, but zha_device is still available
+    # unsuccessfully ping zigpy device, but zha_device is still available
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 1
