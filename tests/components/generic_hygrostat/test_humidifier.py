@@ -1440,7 +1440,7 @@ async def test_no_restore_state(hass):
     assert state.state == STATE_OFF
 
 
-async def test_restore_state_uncoherence_case(hass):
+async def test_restore_state_incoherence_case(hass):
     """
     Test restore from a strange state.
 

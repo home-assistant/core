@@ -1452,7 +1452,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass):
     assert call.data["entity_id"] == "input_boolean.test"
 
 
-async def test_restore_state_uncoherence_case(hass):
+async def test_restore_state_incoherence_case(hass):
     """
     Test restore from a strange state.
 
