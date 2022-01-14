@@ -244,9 +244,6 @@ aiopvapi==1.6.19
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
 
-# homeassistant.components.webostv
-aiopylgtv==0.4.0
-
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
 
@@ -279,6 +276,9 @@ aiovlc==0.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
+
+# homeassistant.components.webostv
+aiowebostv==0.1.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -2259,6 +2259,7 @@ spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
+# homeassistant.components.webostv
 sqlalchemy==1.4.27
 
 # homeassistant.components.srp_energy
