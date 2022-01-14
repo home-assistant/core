@@ -287,9 +287,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             brightness = self.brightness
         # If the brightness was previously 0, the light
         # will not turn on unless brightness is at least 1
-        # If the device was on and brightness was not
-        # set, it means it was masked by an effect
-        return min(1, brightness)
+        return max(1, brightness)
 
     async def _async_set_mode(self, **kwargs: Any) -> None:
         """Set an effect or color mode."""
