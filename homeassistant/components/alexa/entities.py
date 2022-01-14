@@ -16,6 +16,7 @@ from homeassistant.components import (
     group,
     image_processing,
     input_boolean,
+    input_button,
     input_number,
     light,
     lock,
@@ -426,6 +427,7 @@ class SwitchCapabilities(AlexaEntity):
 
 
 @ENTITY_ADAPTERS.register(button.DOMAIN)
+@ENTITY_ADAPTERS.register(input_button.DOMAIN)
 class ButtonCapabilities(AlexaEntity):
     """Class to represent Button capabilities."""
 

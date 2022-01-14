@@ -35,7 +35,7 @@
                     "interface": "L'interfaccia di rete da utilizzare",
                     "mac": "Indirizzo Mac (opzionale)"
                 },
-                "description": "Connettiti al tuo Xiaomi Aqara Gateway, se gli indirizzi IP e MAC sono lasciati vuoti, verr\u00e0 utilizzato il rilevamento automatico",
+                "description": "Connettiti al tuo Xiaomi Aqara Gateway, se gli indirizzi IP e MAC sono lasciati vuoti, sar\u00e0 utilizzato il rilevamento automatico",
                 "title": "Xiaomi Aqara Gateway"
             }
         }

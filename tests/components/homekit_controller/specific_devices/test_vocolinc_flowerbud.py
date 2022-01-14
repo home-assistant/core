@@ -31,8 +31,7 @@ async def test_vocolinc_flowerbud_setup(hass):
     )
     state = await helper.poll_and_get_state()
     assert (
-        state.attributes["friendly_name"]
-        == "VOCOlinc-Flowerbud-0d324b - Spray Quantity"
+        state.attributes["friendly_name"] == "VOCOlinc-Flowerbud-0d324b Spray Quantity"
     )
 
     device = device_registry.async_get(entry.device_id)

@@ -1,4 +1,6 @@
 """Sensor platform for Advantage Air integration."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -6,9 +8,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
@@ -20,12 +25,16 @@ ADVANTAGE_AIR_SERVICE_SET_TIME_TO = "set_time_to"
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AdvantageAir sensor platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[SensorEntity] = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         entities.append(AdvantageAirTimeTo(instance, ac_key, "On"))
         entities.append(AdvantageAirTimeTo(instance, ac_key, "Off"))

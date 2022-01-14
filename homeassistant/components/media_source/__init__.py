@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_ID
 from homeassistant.components.media_player.errors import BrowseError
@@ -42,10 +42,10 @@ def generate_media_source_id(domain: str, identifier: str) -> str:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media_source component."""
     hass.data[DOMAIN] = {}
-    hass.components.websocket_api.async_register_command(websocket_browse_media)
-    hass.components.websocket_api.async_register_command(websocket_resolve_media)
-    hass.components.frontend.async_register_built_in_panel(
-        "media-browser", "media_browser", "hass:play-box-multiple"
+    websocket_api.async_register_command(hass, websocket_browse_media)
+    websocket_api.async_register_command(hass, websocket_resolve_media)
+    frontend.async_register_built_in_panel(
+        hass, "media-browser", "media_browser", "hass:play-box-multiple"
     )
     local_source.async_setup(hass)
     await async_process_integration_platforms(

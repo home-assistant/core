@@ -48,6 +48,9 @@
             "on": "Aan",
             "power_off": "Uit",
             "power_on": "Aan"
+        },
+        "tuya__vacuum_mode": {
+            "zone": "Zone"
         }
     }
 }

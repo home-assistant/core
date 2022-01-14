@@ -9,8 +9,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
-from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED,
+    MATCH_ALL,
+    SIGNAL_BOOTSTRAP_INTEGRATONS,
+)
 from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -44,6 +48,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
+    async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
@@ -353,7 +358,9 @@ async def handle_render_template(
             return
 
     @callback
-    def _template_listener(event: Event, updates: list[TrackTemplateResult]) -> None:
+    def _template_listener(
+        event: Event | None, updates: list[TrackTemplateResult]
+    ) -> None:
         nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
@@ -526,3 +533,22 @@ async def handle_execute_script(
     script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
     await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_message(messages.result_message(msg["id"], {"context": context}))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "fire_event",
+        vol.Required("event_type"): str,
+        vol.Optional("event_data"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_fire_event(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle fire event command."""
+    context = connection.context(msg)
+
+    hass.bus.async_fire(msg["event_type"], msg.get("event_data"), context=context)
+    connection.send_result(msg["id"], {"context": context})

@@ -29,9 +29,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Context, HassJob, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_BUTTON,
@@ -122,7 +123,7 @@ def read_client_keys(config_file):
     return client_keys
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG WebOS TV platform."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
@@ -218,8 +219,8 @@ async def async_setup_entry(hass, config_entry):
     wrapper = WebOsClientWrapper(host, client_key=key)
     await wrapper.connect()
 
-    async def async_service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
+    async def async_service_handler(service: ServiceCall) -> None:
+        method = SERVICE_TO_METHOD[service.service]
         data = service.data.copy()
         data["method"] = method["method"]
         async_dispatcher_send(hass, DOMAIN, data)

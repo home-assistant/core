@@ -46,6 +46,8 @@ class DSMRConnection:
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
+        if dsmr_version == "Q3D":
+            self._equipment_identifier = obis_ref.Q3D_EQUIPMENT_IDENTIFIER
 
     def equipment_identifier(self) -> str | None:
         """Equipment identifier."""

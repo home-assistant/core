@@ -3,17 +3,17 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.backports.enum import StrEnum
+from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
 MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -458,11 +458,16 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 
 # #### UNITS OF MEASUREMENT ####
+# Apparent power units
+POWER_VOLT_AMPERE: Final = "VA"
+
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
-POWER_VOLT_AMPERE: Final = "VA"
 POWER_BTU_PER_HOUR: Final = "BTU/h"
+
+# Reactive power units
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
@@ -760,3 +765,5 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
+
+SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"

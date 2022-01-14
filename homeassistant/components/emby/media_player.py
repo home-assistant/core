@@ -1,4 +1,6 @@
 """Support to interface with the Emby API."""
+from __future__ import annotations
+
 import logging
 
 from pyemby import EmbyServer
@@ -30,8 +32,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +67,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Emby platform."""
 
     host = config.get(CONF_HOST)
@@ -78,8 +87,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     emby = EmbyServer(host, key, port, ssl, hass.loop)
 
-    active_emby_devices = {}
-    inactive_emby_devices = {}
+    active_emby_devices: dict[str, EmbyDevice] = {}
+    inactive_emby_devices: dict[str, EmbyDevice] = {}
 
     @callback
     def device_update_callback(data):

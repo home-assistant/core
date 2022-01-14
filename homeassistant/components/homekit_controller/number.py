@@ -9,8 +9,10 @@ from __future__ import annotations
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, CharacteristicEntity
 
@@ -42,7 +44,11 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit numbers."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
@@ -75,10 +81,9 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        prefix = ""
-        if name := super().name:
-            prefix = f"{name} -"
-        return f"{prefix} {self.entity_description.name}"
+        if prefix := super().name:
+            return f"{prefix} {self.entity_description.name}"
+        return self.entity_description.name
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""

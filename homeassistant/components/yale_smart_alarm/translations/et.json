@@ -25,5 +25,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Koodi numbrite arv on vale"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Lukkude vaikekood kui kood on m\u00e4\u00e4ramata",
+                    "lock_code_digits": "Lukkude PIN-koodi numbrite arv"
+                }
+            }
+        }
     }
 }

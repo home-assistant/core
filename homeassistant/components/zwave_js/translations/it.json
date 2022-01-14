@@ -9,7 +9,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi",
-            "discovery_requires_supervisor": "Il rilevamento richiede il Supervisor.",
+            "discovery_requires_supervisor": "Il rilevamento richiede il supervisore.",
             "not_zwave_device": "Il dispositivo rilevato non \u00e8 un dispositivo Z-Wave."
         },
         "error": {
@@ -49,9 +49,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS Supervisor"
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS del supervisore"
                 },
-                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS Supervisor?",
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS del supervisore?",
                 "title": "Seleziona il metodo di connessione"
             },
             "start_addon": {
@@ -133,9 +133,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS di Supervisor"
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS del supervisore"
                 },
-                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS di Supervisor?",
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS del supervisore?",
                 "title": "Seleziona il metodo di connessione"
             },
             "start_addon": {

@@ -362,16 +362,16 @@ class StreamView(HomeAssistantView):
 
 class KeyFrameConverter:
     """
-    Generate and hold the keyframe as a jpeg.
+    Enables generating and getting an image from the last keyframe seen in the stream.
 
     An overview of the thread and state interaction:
         the worker thread sets a packet
-        at any time, main loop can run a get_image call
+        get_image is called from the main asyncio loop
+        get_image schedules _generate_image in an executor thread
         _generate_image will try to create an image from the packet
-            Running _generate_image will clear the packet, so there will only
-                be one attempt per packet
-            If successful, _image will be updated and returned by get_image
-            If unsuccessful, get_image will return the previous image
+        _generate_image will clear the packet, so there will only be one attempt per packet
+    If successful, self._image will be updated and returned by get_image
+    If unsuccessful, get_image will return the previous image
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -430,7 +430,7 @@ class KeyFrameConverter:
             bgr_array = frame.to_ndarray(format="bgr24")
             self._image = bytes(self._turbojpeg.encode(bgr_array))
 
-    async def get_image(
+    async def async_get_image(
         self,
         width: int | None = None,
         height: int | None = None,

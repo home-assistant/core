@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine juba k\u00e4ib",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "no_devices_found": "V\u00f5rgust seadmeid ei leitud",
+            "not_steamist_device": "Pole steamisti seade"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "flow_title": "{name} ({ipaddress})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Kas soovid seadistada {name}({ipaddress})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Seade"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Kui j\u00e4tad hosti t\u00fchjaks kasutatakse seadmete leidmiseks avastamist."
+            }
+        }
+    }
+}

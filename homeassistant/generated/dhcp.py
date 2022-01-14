@@ -89,7 +89,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "ACCF23*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -99,7 +99,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "F0FE6B*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -200,6 +200,11 @@ DHCP = [
     {
         "domain": "nuki",
         "hostname": "nuki_bridge_*"
+    },
+    {
+        "domain": "overkiz",
+        "hostname": "gateway*",
+        "macaddress": "F8811A*"
     },
     {
         "domain": "powerwall",
@@ -329,6 +334,11 @@ DHCP = [
         "domain": "squeezebox",
         "hostname": "squeezebox*",
         "macaddress": "000420*"
+    },
+    {
+        "domain": "steamist",
+        "macaddress": "001E0C*",
+        "hostname": "my[45]50*"
     },
     {
         "domain": "tado",

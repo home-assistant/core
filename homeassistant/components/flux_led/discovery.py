@@ -12,6 +12,8 @@ from flux_led.const import (
     ATTR_IPADDR,
     ATTR_MODEL,
     ATTR_MODEL_DESCRIPTION,
+    ATTR_MODEL_INFO,
+    ATTR_MODEL_NUM,
     ATTR_REMOTE_ACCESS_ENABLED,
     ATTR_REMOTE_ACCESS_HOST,
     ATTR_REMOTE_ACCESS_PORT,
@@ -21,6 +23,7 @@ from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
 from homeassistant.components import network
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -29,6 +32,9 @@ from homeassistant.util.network import is_ip_address
 from .const import (
     CONF_MINOR_VERSION,
     CONF_MODEL,
+    CONF_MODEL_DESCRIPTION,
+    CONF_MODEL_INFO,
+    CONF_MODEL_NUM,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -36,6 +42,7 @@ from .const import (
     DOMAIN,
     FLUX_LED_DISCOVERY,
 )
+from .util import format_as_flux_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +54,29 @@ CONF_TO_DISCOVERY: Final = {
     CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
     CONF_MINOR_VERSION: ATTR_VERSION_NUM,
     CONF_MODEL: ATTR_MODEL,
+    CONF_MODEL_NUM: ATTR_MODEL_NUM,
+    CONF_MODEL_INFO: ATTR_MODEL_INFO,
+    CONF_MODEL_DESCRIPTION: ATTR_MODEL_DESCRIPTION,
 }
+
+
+@callback
+def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
+    """When discovery is unavailable, load it from the config entry."""
+    data = entry.data
+    return FluxLEDDiscovery(
+        ipaddr=data[CONF_HOST],
+        model=data.get(CONF_MODEL),
+        id=format_as_flux_mac(entry.unique_id),
+        model_num=data.get(CONF_MODEL_NUM),
+        version_num=data.get(CONF_MINOR_VERSION),
+        firmware_date=None,
+        model_info=data.get(CONF_MODEL_INFO),
+        model_description=data.get(CONF_MODEL_DESCRIPTION),
+        remote_access_enabled=data.get(CONF_REMOTE_ACCESS_ENABLED),
+        remote_access_host=data.get(CONF_REMOTE_ACCESS_HOST),
+        remote_access_port=data.get(CONF_REMOTE_ACCESS_PORT),
+    )
 
 
 @callback
@@ -72,6 +101,8 @@ def async_populate_data_from_discovery(
     for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
         if (
             device.get(discovery_key) is not None
+            and conf_key
+            not in data_updates  # Prefer the model num from TCP instead of UDP
             and current_data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
         ):
             data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
@@ -79,7 +110,10 @@ def async_populate_data_from_discovery(
 
 @callback
 def async_update_entry_from_discovery(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    device: FluxLEDDiscovery,
+    model_num: int | None,
 ) -> bool:
     """Update a config entry from a flux_led discovery."""
     data_updates: dict[str, Any] = {}
@@ -88,6 +122,8 @@ def async_update_entry_from_discovery(
     updates: dict[str, Any] = {}
     if not entry.unique_id:
         updates["unique_id"] = dr.format_mac(mac_address)
+    if model_num and entry.data.get(CONF_MODEL_NUM) != model_num:
+        data_updates[CONF_MODEL_NUM] = model_num
     async_populate_data_from_discovery(entry.data, data_updates, device)
     if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
         updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)

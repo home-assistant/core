@@ -17,7 +17,7 @@
                 "title": "Seleziona il tuo contratto"
             },
             "pick_implementation": {
-                "title": "Scegliere il tenant con cui eseguire l'autenticazione"
+                "title": "Scegli il tenant con cui eseguire l'autenticazione"
             }
         }
     }

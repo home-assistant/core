@@ -679,6 +679,11 @@ async def test_homekit_unpair(hass, device_reg, mock_async_zeroconf):
 
         state = homekit.driver.state
         state.add_paired_client("client1", "any", b"1")
+        state.add_paired_client("client2", "any", b"0")
+        state.add_paired_client("client3", "any", b"1")
+        state.add_paired_client("client4", "any", b"0")
+        state.add_paired_client("client5", "any", b"0")
+
         formatted_mac = device_registry.format_mac(state.mac)
         hk_bridge_dev = device_reg.async_get_device(
             {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
@@ -1104,6 +1109,7 @@ async def test_homekit_finds_linked_batteries(
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
+        hw_version="2.34",
         model="Powerwall 2",
         manufacturer="Tesla",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -1152,6 +1158,7 @@ async def test_homekit_finds_linked_batteries(
             "manufacturer": "Tesla",
             "model": "Powerwall 2",
             "sw_version": "0.16.0",
+            "hw_version": "2.34",
             "platform": "test",
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
@@ -1299,8 +1306,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_async_zeroconf
 
 def _write_data(path: str, data: dict) -> None:
     """Write the data."""
-    if not os.path.isdir(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     json_util.save_json(path, data)
 
 

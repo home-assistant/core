@@ -272,6 +272,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
         ("Switch", "automation.test", "on", {}, {}),
         ("Switch", "button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "input_boolean.test", "on", {}, {}),
+        ("Switch", "input_button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "remote.test", "on", {}, {}),
         ("Switch", "scene.test", "on", {}, {}),
         ("Switch", "script.test", "on", {}, {}),

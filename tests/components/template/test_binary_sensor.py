@@ -909,11 +909,11 @@ async def test_trigger_entity(hass, start_ha):
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.hello_name")
     assert state is not None
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("binary_sensor.bare_minimum")
     assert state is not None
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     context = Context()
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)
@@ -976,7 +976,7 @@ async def test_trigger_entity(hass, start_ha):
 async def test_template_with_trigger_templated_delay_on(hass, start_ha):
     """Test binary sensor template with template delay on."""
     state = hass.states.get("binary_sensor.test")
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     context = Context()
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)

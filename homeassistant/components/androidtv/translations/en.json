@@ -43,12 +43,12 @@
             "init": {
                 "data": {
                     "apps": "Configure applications list",
-                    "exclude_unnamed_apps": "Exclude app with unknown name",
-                    "get_sources": "Whether or not to retrieve the running apps as the list of sources",
-                    "screencap": "Determines if album art should be pulled from what is shown on screen",
+                    "exclude_unnamed_apps": "Exclude apps with unknown name from the sources list",
+                    "get_sources": "Retrieve the running apps as the list of sources",
+                    "screencap": "Use screen capture for album art",
                     "state_detection_rules": "Configure state detection rules",
-                    "turn_off_command": "ADB shell command to override default turn_off command",
-                    "turn_on_command": "ADB shell command to override default turn_on command"
+                    "turn_off_command": "ADB shell turn off command (leave empty for default)",
+                    "turn_on_command": "ADB shell turn on command (leave empty for default)"
                 },
                 "title": "Android TV Options"
             },

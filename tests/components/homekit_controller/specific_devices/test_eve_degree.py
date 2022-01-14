@@ -41,7 +41,7 @@ async def test_eve_degree_setup(hass):
         (
             "number.eve_degree_aa11_elevation",
             "homekit-AA00A0A00000-aid:1-sid:30-cid:33",
-            "Eve Degree AA11 - Elevation",
+            "Eve Degree AA11 Elevation",
         ),
     ]
 
