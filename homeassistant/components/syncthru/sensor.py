@@ -99,7 +99,7 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_unit_of_measurement(self):
-        """Return the unit of measuremnt."""
+        """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
