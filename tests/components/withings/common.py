@@ -122,7 +122,7 @@ class ComponentFactory:
         client_secret: str = "my_client_secret",
         profile_configs: tuple[ProfileConfig, ...] = (),
     ) -> None:
-        """Configure the wihings component."""
+        """Configure the withings component."""
         self._client_id = client_id
         self._client_secret = client_secret
         self._profile_configs = profile_configs
