@@ -1,4 +1,4 @@
-"""Support for guages from flood monitoring API."""
+"""Support for gauges from flood monitoring API."""
 from datetime import timedelta
 import logging
 
