@@ -696,7 +696,7 @@
           "type": "number",
           "readable": true,
           "writeable": true,
-          "description": "RGBW/HSB Wall Switch Mode. Choose how switches connected to the input terminals control your LED strip. In the default RGBW mode, each switch connected to each input terminal controls the RGBW chnnels separately (so IN1 for red, IN2 for green, etc.) with a single click for ON/OFF, double click to full brightness, and press-and-hold to dim (momentary switches only). In the HSB, IN1 controls hue, IN2 - saturation, IN3 - brightness, IN4 - white with single click for last set value or value 0, double click to max value, and press-and-hold to set custom value. Default: RGBW mode",
+          "description": "RGBW/HSB Wall Switch Mode. Choose how switches connected to the input terminals control your LED strip. In the default RGBW mode, each switch connected to each input terminal controls the RGBW channels separately (so IN1 for red, IN2 for green, etc.) with a single click for ON/OFF, double click to full brightness, and press-and-hold to dim (momentary switches only). In the HSB, IN1 controls hue, IN2 - saturation, IN3 - brightness, IN4 - white with single click for last set value or value 0, double click to max value, and press-and-hold to set custom value. Default: RGBW mode",
           "label": "RGBW/HSB Wall Switch Mode",
           "default": 0,
           "min": 0,
