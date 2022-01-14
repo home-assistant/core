@@ -42,11 +42,6 @@ def setup(request):
     request.addfinalizer(teardown)
 
 
-async def generate_psk(self, code):
-    """Mock psk."""
-    return "mock"
-
-
 async def setup_integration(hass):
     """Load the Tradfri platform with a mock gateway."""
     entry = MockConfigEntry(
