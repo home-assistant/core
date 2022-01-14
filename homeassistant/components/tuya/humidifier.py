@@ -37,7 +37,7 @@ HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
     "cs": TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
-        humidity=DPCode.DEHUMIDITY_SET_VALUE,
+        humidity=DPCode.DEHUMIDIFY_SET_VALUE,
         device_class=HumidifierDeviceClass.DEHUMIDIFIER,
     ),
     # Humidifier
