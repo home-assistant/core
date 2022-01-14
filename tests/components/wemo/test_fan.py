@@ -80,7 +80,7 @@ async def test_fan_update_entity(hass, pywemo_registry, pywemo_device, wemo_enti
 async def test_available_after_update(
     hass, pywemo_registry, pywemo_device, wemo_entity
 ):
-    """Test the avaliability when an On call fails and after an update."""
+    """Test the availability when an On call fails and after an update."""
     pywemo_device.set_state.side_effect = ActionException
     pywemo_device.get_state.return_value = 1
     await entity_test_helpers.test_avaliable_after_update(
