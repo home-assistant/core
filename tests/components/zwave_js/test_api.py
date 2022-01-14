@@ -3824,7 +3824,7 @@ async def test_subscribe_controller_statistics(
         "nak": 0,
         "can": 0,
         "timeout_ack": 0,
-        "timout_response": 0,
+        "timeout_response": 0,
         "timeout_callback": 0,
     }
 
@@ -3859,7 +3859,7 @@ async def test_subscribe_controller_statistics(
         "nak": 1,
         "can": 1,
         "timeout_ack": 1,
-        "timout_response": 1,
+        "timeout_response": 1,
         "timeout_callback": 1,
     }
 

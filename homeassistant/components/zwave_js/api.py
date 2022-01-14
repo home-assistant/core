@@ -2040,7 +2040,7 @@ def _get_controller_statistics_dict(
         "nak": statistics.nak,
         "can": statistics.can,
         "timeout_ack": statistics.timeout_ack,
-        "timout_response": statistics.timeout_response,
+        "timeout_response": statistics.timeout_response,
         "timeout_callback": statistics.timeout_callback,
     }
 

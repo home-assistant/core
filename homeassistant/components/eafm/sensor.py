@@ -48,7 +48,7 @@ async def async_setup_entry(
     measurements = set()
 
     async def async_update_data():
-        # DataUpdateCoordinator will handle aiohttp ClientErrors and timouts
+        # DataUpdateCoordinator will handle aiohttp ClientErrors and timeouts
         async with async_timeout.timeout(30):
             data = await get_station(session, station_key)
 
