@@ -24,19 +24,19 @@ async def async_setup_entry(
 
     for capability in coordinator.data.capabilities:
         if isinstance(capability, OptionSetter):
-            select_entities.append(SelectableCapapility(coordinator, capability))
+            select_entities.append(SelectableCapability(coordinator, capability))
 
     for zone, data in coordinator.data.zones.items():
         for capability in data.capabilities:
             if isinstance(capability, OptionSetter):
                 select_entities.append(
-                    SelectableCapapility(coordinator, capability, zone)
+                    SelectableCapability(coordinator, capability, zone)
                 )
 
     async_add_entities(select_entities)
 
 
-class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
+class SelectableCapability(MusicCastCapabilityEntity, SelectEntity):
     """Representation of a MusicCast Select entity."""
 
     capability: OptionSetter
