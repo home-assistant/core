@@ -247,7 +247,7 @@ send_sticker:
 
 send_animation:
   name: Send animation
-  description: Send an anmiation.
+  description: Send an animation.
   fields:
     url:
       name: URL
