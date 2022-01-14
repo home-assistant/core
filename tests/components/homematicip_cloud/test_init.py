@@ -32,7 +32,7 @@ async def test_config_with_accesspoint_passed_to_config_entry(
     }
     # no config_entry exists
     assert len(hass.config_entries.async_entries(HMIPC_DOMAIN)) == 0
-    # no acccesspoint exists
+    # no accesspoint exists
     assert not hass.data.get(HMIPC_DOMAIN)
 
     with patch(
