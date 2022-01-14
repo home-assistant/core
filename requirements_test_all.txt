@@ -424,7 +424,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.2
+flux_led==0.28.3
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1227,7 +1227,7 @@ pytile==2021.12.0
 pytraccar==0.10.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.2.1
+pytradfri[async]==8.0.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
