@@ -1,6 +1,8 @@
 """The sensor tests for the Mazda Connected Services integration."""
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -130,3 +132,41 @@ async def test_sensors_imperial_units(hass):
     assert state
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILES
     assert state.state == "1737"
+
+
+async def test_electric_vehicle_sensors(hass):
+    """Test sensors which are specific to electric vehicles."""
+
+    await init_integration(hass, electric_vehicle=True)
+
+    entity_registry = er.async_get(hass)
+
+    # Fuel Remaining Percentage should not exist for an electric vehicle
+    entry = entity_registry.async_get("sensor.my_mazda3_fuel_remaining_percentage")
+    assert entry is None
+
+    # Fuel Distance Remaining should not exist for an electric vehicle
+    entry = entity_registry.async_get("sensor.my_mazda3_fuel_distance_remaining")
+    assert entry is None
+
+    # Charge Level
+    state = hass.states.get("sensor.my_mazda3_charge_level")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Charge Level"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.BATTERY
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.state == "80"
+    entry = entity_registry.async_get("sensor.my_mazda3_charge_level")
+    assert entry
+    assert entry.unique_id == "JM000000000000000_ev_charge_level"
+
+    # Remaining Range
+    state = hass.states.get("sensor.my_mazda3_remaining_range")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Remaining Range"
+    assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
+    assert state.state == "218"
+    entry = entity_registry.async_get("sensor.my_mazda3_remaining_range")
+    assert entry
+    assert entry.unique_id == "JM000000000000000_ev_remaining_range"
