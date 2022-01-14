@@ -32,7 +32,7 @@ def mock_setup_entry_fixture():
 
 @fixture
 async def mock_tv_pairable(mock_tv):
-    """Return a mock tv that is pariable."""
+    """Return a mock tv that is pairable."""
     mock_tv.system = MOCK_SYSTEM_UNPAIRED
     mock_tv.pairing_type = "digest_auth_pairing"
     mock_tv.api_version = 6
