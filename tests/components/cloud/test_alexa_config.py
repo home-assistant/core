@@ -89,7 +89,7 @@ async def test_alexa_config_report_state(hass, cloud_prefs, cloud_stub):
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
     await conf.async_initialize()
-    conf.set_authorized(True)
+    await conf.set_authorized(True)
 
     assert cloud_prefs.alexa_report_state is False
     assert conf.should_report_state is False
@@ -262,7 +262,7 @@ async def test_alexa_update_report_state(hass, cloud_prefs, cloud_stub):
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
     await conf.async_initialize()
-    conf.set_authorized(True)
+    await conf.set_authorized(True)
 
     with patch(
         "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities",
