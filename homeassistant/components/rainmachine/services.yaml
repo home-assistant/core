@@ -113,7 +113,7 @@ push_weather_data:
     Push Weather Data from Home Assistant to the RainMachine device.
 
     Local Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent.
-    Units must be sent in metric; no conversions are performed by the integraion.
+    Units must be sent in metric; no conversions are performed by the integration.
 
     See details of RainMachine API Here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post
   fields:
