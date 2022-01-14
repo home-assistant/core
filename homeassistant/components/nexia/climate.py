@@ -377,14 +377,14 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         )
 
         if self._has_dehumidify_support:
-            dehumdify_setpoint = percent_conv(
+            dehumidify_setpoint = percent_conv(
                 self._thermostat.get_dehumidify_setpoint()
             )
-            data[ATTR_DEHUMIDIFY_SETPOINT] = dehumdify_setpoint
+            data[ATTR_DEHUMIDIFY_SETPOINT] = dehumidify_setpoint
 
         if self._has_humidify_support:
-            humdify_setpoint = percent_conv(self._thermostat.get_humidify_setpoint())
-            data[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
+            humidify_setpoint = percent_conv(self._thermostat.get_humidify_setpoint())
+            data[ATTR_HUMIDIFY_SETPOINT] = humidify_setpoint
 
         return data
 
