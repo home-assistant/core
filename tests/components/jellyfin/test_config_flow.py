@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from .const import (
     MOCK_SUCCESFUL_CONNECTION_STATE,
     MOCK_SUCCESFUL_LOGIN_RESPONSE,
-    MOCK_UNSUCCESFUL_CONNECTION_STATE,
-    MOCK_UNSUCCESFUL_LOGIN_RESPONSE,
+    MOCK_UNSUCCESSFUL_CONNECTION_STATE,
+    MOCK_UNSUCCESSFUL_LOGIN_RESPONSE,
     MOCK_USER_SETTINGS,
     TEST_PASSWORD,
     TEST_URL,
@@ -86,7 +86,7 @@ async def test_form_cannot_connect(hass: HomeAssistant):
 
     with patch(
         "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.connect_to_address",
-        return_value=MOCK_UNSUCCESFUL_CONNECTION_STATE,
+        return_value=MOCK_UNSUCCESSFUL_CONNECTION_STATE,
     ) as mock_connect:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -117,7 +117,7 @@ async def test_form_invalid_auth(hass: HomeAssistant):
         return_value=MOCK_SUCCESFUL_CONNECTION_STATE,
     ) as mock_connect, patch(
         "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.login",
-        return_value=MOCK_UNSUCCESFUL_LOGIN_RESPONSE,
+        return_value=MOCK_UNSUCCESSFUL_LOGIN_RESPONSE,
     ) as mock_login:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
