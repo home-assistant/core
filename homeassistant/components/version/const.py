@@ -30,7 +30,7 @@ ATTR_CHANNEL: Final = CONF_CHANNEL
 ATTR_VERSION_SOURCE: Final = CONF_VERSION_SOURCE
 ATTR_SOURCE: Final = CONF_SOURCE
 
-SOURCE_DOKCER: Final = "docker"  # Kept to not break existing configurations
+SOURCE_DOCKER: Final = "docker"  # Kept to not break existing configurations
 SOURCE_HASSIO: Final = "hassio"  # Kept to not break existing configurations
 
 VERSION_SOURCE_DOCKER_HUB: Final = "Docker Hub"
@@ -96,7 +96,7 @@ VERSION_SOURCE_MAP_INVERTED: Final[dict[HaVersionSource, str]] = {
 
 VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
     SOURCE_HASSIO,  # Kept to not break existing configurations
-    SOURCE_DOKCER,  # Kept to not break existing configurations
+    SOURCE_DOCKER,  # Kept to not break existing configurations
 ]
 
 VALID_IMAGES: Final = [
