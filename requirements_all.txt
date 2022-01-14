@@ -620,7 +620,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.entur_public_transport
-enturclient==0.2.2
+enturclient==0.2.3
 
 # homeassistant.components.environment_canada
 env_canada==0.5.20
