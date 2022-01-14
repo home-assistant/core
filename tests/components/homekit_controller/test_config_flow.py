@@ -697,7 +697,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
 
 
 async def test_user_works(hass, controller):
-    """Test user initiated disovers devices."""
+    """Test user initiated discovers devices."""
     setup_mock_accessory(controller)
 
     # Device is discovered
@@ -731,7 +731,7 @@ async def test_user_works(hass, controller):
 
 
 async def test_user_pairing_with_insecure_setup_code(hass, controller):
-    """Test user initiated disovers devices."""
+    """Test user initiated discovers devices."""
     device = setup_mock_accessory(controller)
     device.pairing_code = "123-45-678"
 
@@ -800,7 +800,7 @@ async def test_user_no_unpaired_devices(hass, controller):
 
 
 async def test_unignore_works(hass, controller):
-    """Test rediscovery triggered disovers work."""
+    """Test rediscovery triggered discovers work."""
     device = setup_mock_accessory(controller)
 
     # Device is unignored
@@ -831,7 +831,7 @@ async def test_unignore_works(hass, controller):
 
 
 async def test_unignore_ignores_missing_devices(hass, controller):
-    """Test rediscovery triggered disovers handle devices that have gone away."""
+    """Test rediscovery triggered discovers handle devices that have gone away."""
     setup_mock_accessory(controller)
 
     # Device is unignored
