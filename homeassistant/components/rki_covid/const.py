@@ -2,6 +2,7 @@
 DOMAIN = "rki_covid"
 
 ATTRIBUTION = "Data provided by Robert Koch-Institut"
+DEFAULT_SCAN_INTERVAL = 3  # hours
 
 # configuration.yaml keywords
 CONF_DISTRICTS = "districts"

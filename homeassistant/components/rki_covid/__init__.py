@@ -3,36 +3,45 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import aiohttp
-import async_timeout
-from rki_covid_parser.parser import RkiCovidParser
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
 
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.const import Platform
-from homeassistant.helpers import update_coordinator
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 
-from .const import DOMAIN
-from .data import DistrictData, StateData
+from .const import DOMAIN, DEFAULT_SCAN_INTERVAL
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Initialize the data coordinator during component setup."""
-    session = async_get_clientsession(hass)
-
-    parser = RkiCovidParser(session)
-    await get_coordinator(hass, parser)
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up component from a config entry."""
-    _LOGGER.debug(f"Setup item from config entry: {entry.data}.")
-    # Forward the setup to the sensor platform.
+    """Setup the RKI covid numbers integration from a config entry."""
+    _LOGGER.debug("async_setup_entry from a config entry")
+
+    # create coordinator instance
+    coordinator = RkiCovidDataUpdateCoordinator(hass)
+
+    # trigger initial refresh
+    await coordinator.async_config_entry_first_refresh()
+
+    # put data into
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "coordinator": coordinator,
+    }
+
+    # set default options if not already set
+    if not entry.options:
+        options = {
+            CONF_SCAN_INTERVAL: entry.data.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            ),
+        }
+        hass.config_entries.async_update_entry(entry, options=options)
+
+    # setup platform
     hass.config_entries.async_setup_platforms(entry, [Platform.SENSOR])
 
     return True
@@ -40,115 +49,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    _LOGGER.debug("async_unload_entry %s", entry.data)
     return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
-
-
-async def get_coordinator(hass: HomeAssistant, parser: RkiCovidParser):
-    """Get the data update coordinator."""
-    _LOGGER.debug("initialize the data coordinator")
-    if DOMAIN in hass.data:
-        return hass.data[DOMAIN]
-
-    async def async_get_districts():
-        """Fetch data for each district from rki-covid-parser library."""
-        _LOGGER.debug("Fetch data from rki-covid-parser")
-        try:
-            with async_timeout.timeout(30):
-                await parser.load_data()
-                _LOGGER.debug("Fetch data from rki-covid-parser finished successfully")
-
-                items = {}
-
-                # districts
-                for d in parser.districts:
-                    district = parser.districts[d]
-
-                    items[district.county] = DistrictData(
-                        district.name,
-                        district.county,
-                        district.state,
-                        district.population,
-                        district.cases,
-                        district.deaths,
-                        district.casesPerWeek,
-                        district.recovered,
-                        district.weekIncidence,
-                        district.casesPer100k,
-                        district.newCases,
-                        district.newDeaths,
-                        district.newRecovered,
-                        district.lastUpdate,
-                    )
-
-                # states
-                for s in parser.states:
-                    state = parser.states[s]
-                    name = "BL " + state.name
-                    items[name] = StateData(
-                        name,
-                        name,
-                        None,
-                        state.population,
-                        state.cases,
-                        state.deaths,
-                        state.casesPerWeek,
-                        state.recovered,
-                        state.weekIncidence,
-                        state.casesPer100k,
-                        state.newCases,
-                        state.newDeaths,
-                        state.newRecovered,
-                        state.lastUpdate,
-                        state.hospitalizationCasesBaby,
-                        state.hospitalizationIncidenceBaby,
-                        state.hospitalizationCasesChildren,
-                        state.hospitalizationIncidenceChildren,
-                        state.hospitalizationCasesTeen,
-                        state.hospitalizationIncidenceTeen,
-                        state.hospitalizationCasesGrown,
-                        state.hospitalizationIncidenceGrown,
-                        state.hospitalizationCasesSenior,
-                        state.hospitalizationIncidenceSenior,
-                        state.hospitalizationCasesOld,
-                        state.hospitalizationIncidenceOld,
-                    )
-
-                # country
-                items["Deutschland"] = DistrictData(
-                    "Deutschland",
-                    "Deutschland",
-                    None,
-                    parser.country.population,
-                    parser.country.cases,
-                    parser.country.deaths,
-                    parser.country.casesPerWeek,
-                    parser.country.recovered,
-                    parser.country.weekIncidence,
-                    parser.country.casesPer100k,
-                    parser.country.newCases,
-                    parser.country.newDeaths,
-                    parser.country.newRecovered,
-                    parser.country.lastUpdate,
-                )
-
-                _LOGGER.debug("Parsing data finished")
-                return items
-
-        except asyncio.TimeoutError as err:
-            raise update_coordinator.UpdateFailed(
-                f"Error reading data from rki-covid-parser timed-out: {err}"
-            )
-        except aiohttp.ClientError as err:
-            raise update_coordinator.UpdateFailed(
-                f"Error reading data from rki-covid-parser by client: {err}"
-            )
-
-    hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
-        hass,
-        logging.getLogger(__name__),
-        name=DOMAIN,
-        update_method=async_get_districts,
-        update_interval=timedelta(hours=3),
-    )
-    await hass.data[DOMAIN].async_refresh()
-    return hass.data[DOMAIN]

@@ -5,8 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from rki_covid_parser.parser import RkiCovidParser
-
+from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
 from homeassistant import config_entries, core
 from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
 from homeassistant.exceptions import PlatformNotReady
@@ -22,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
 
-from . import get_coordinator
+
 from .const import (
     ATTR_COUNTY,
     ATTRIBUTION,
@@ -66,10 +65,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
-    session = async_get_clientsession(hass)
-
-    parser = RkiCovidParser(session)
-    coordinator = await get_coordinator(hass, parser)
+    coordinator = RkiCovidDataUpdateCoordinator(hass)
+    await coordinator.async_config_entry_first_refresh()
 
     if coordinator is None or coordinator.data is None:
         raise PlatformNotReady("Data coordinator could not be initialized!")
@@ -101,9 +98,8 @@ async def async_setup_entry(
 ):
     """Create sensors from a config entry in the integrations UI."""
     _LOGGER.debug(f"create sensor from config entry {config_entry.data}")
-    session = async_get_clientsession(hass)
-    parser = RkiCovidParser(session)
-    coordinator = await get_coordinator(hass, parser)
+    coordinator = RkiCovidDataUpdateCoordinator(hass)
+    await coordinator.async_config_entry_first_refresh()
 
     if coordinator is None or coordinator.data is None:
         raise PlatformNotReady("Data coordinator could not be initialized!")
