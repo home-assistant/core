@@ -32,7 +32,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -56,8 +56,10 @@ class FreeboxRouter:
         self._entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
+        self.home_enabled = entry.data.get("enable_home_devices")
+        self.device_tracker_enabled = entry.data.get("enable_device_trackers")
 
-        self._api: Freepybox = None
+        self.api: Freepybox = None
         self.name = None
         self.mac = None
         self._sw_v = None
@@ -65,6 +67,7 @@ class FreeboxRouter:
 
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
+        self.home_nodes: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
@@ -74,16 +77,16 @@ class FreeboxRouter:
 
     async def setup(self) -> None:
         """Set up a Freebox router."""
-        self._api = await get_api(self.hass, self._host)
+        self.api = await get_api(self.hass, self._host)
 
         try:
-            await self._api.open(self._host, self._port)
+            await self.api.open(self._host, self._port)
         except HttpRequestError:
             _LOGGER.exception("Failed to connect to Freebox")
             return ConfigEntryNotReady
 
         # System
-        fbx_config = await self._api.system.get_config()
+        fbx_config = await self.api.system.get_config()
         self.mac = fbx_config["mac"]
         self.name = fbx_config["model_info"]["pretty_name"]
         self._sw_v = fbx_config["firmware_version"]
@@ -96,13 +99,16 @@ class FreeboxRouter:
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
+
         await self.update_device_trackers()
         await self.update_sensors()
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
+        if not self.device_tracker_enabled:
+            return
         new_device = False
-        fbx_devices: [dict[str, Any]] = await self._api.lan.get_hosts_list()
+        fbx_devices: list[dict[str, Any]] = await self.api.lan.get_hosts_list()
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -132,7 +138,7 @@ class FreeboxRouter:
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
         # System sensors
-        syst_datas: dict[str, Any] = await self._api.system.get_config()
+        syst_datas: dict[str, Any] = await self.api.system.get_config()
 
         # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
@@ -140,7 +146,7 @@ class FreeboxRouter:
             self.sensors_temperature[sensor["name"]] = sensor["value"]
 
         # Connection sensors
-        connection_datas: dict[str, Any] = await self._api.connection.get_status()
+        connection_datas: dict[str, Any] = await self.api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
@@ -155,30 +161,43 @@ class FreeboxRouter:
             "serial": syst_datas["serial"],
         }
 
-        self.call_list = await self._api.call.get_calls_log()
+        self.call_list = await self.api.call.get_calls_log()
 
         await self._update_disks_sensors()
+
+        if self.home_enabled:
+            await self._update_home_nodes_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
         # None at first request
-        fbx_disks: [dict[str, Any]] = await self._api.storage.get_disks() or []
+        fbx_disks: list[dict[str, Any]] = await self.api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
 
+    async def _update_home_nodes_sensors(self) -> None:
+        """Update Freebox home nodes."""
+        # None at first request
+        fbx_home_nodes: list[dict[str, Any]] = (
+            await self.api.home.get_home_nodes() or []
+        )
+
+        for fbx_home_node in fbx_home_nodes:
+            self.home_nodes[fbx_home_node["id"]] = fbx_home_node
+
     async def reboot(self) -> None:
         """Reboot the Freebox."""
-        await self._api.system.reboot()
+        await self.api.system.reboot()
 
     async def close(self) -> None:
         """Close the connection."""
-        if self._api is not None:
-            await self._api.close()
+        if self.api is not None:
+            await self.api.close()
             self._unsub_dispatcher()
-        self._api = None
+        self.api = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -188,6 +207,7 @@ class FreeboxRouter:
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Freebox SAS",
+            model=self.name,
             name=self.name,
             sw_version=self._sw_v,
         )
@@ -215,4 +235,4 @@ class FreeboxRouter:
     @property
     def wifi(self) -> Wifi:
         """Return the wifi."""
-        return self._api.wifi
+        return self.api.wifi

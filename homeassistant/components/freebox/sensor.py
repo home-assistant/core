@@ -17,7 +17,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import CALL_SENSORS, CONNECTION_SENSORS, DISK_PARTITION_SENSORS, DOMAIN
+from .const import (
+    CALL_SENSORS,
+    CONNECTION_SENSORS,
+    DISK_PARTITION_SENSORS,
+    DOMAIN,
+    HOME_NODES_ALARM_REMOTE_KEY,
+    HOME_NODES_SENSORS,
+)
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,12 +52,16 @@ async def async_setup_entry(
                 native_unit_of_measurement=TEMP_CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
             ),
+            router.mac,
         )
         for sensor_name in router.sensors_temperature
     ]
 
     entities.extend(
-        [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
+        [
+            FreeboxSensor(router, description, router.mac)
+            for description in CONNECTION_SENSORS
+        ]
     )
     entities.extend(
         [FreeboxCallSensor(router, description) for description in CALL_SENSORS]
@@ -64,6 +75,25 @@ async def async_setup_entry(
         for description in DISK_PARTITION_SENSORS
     )
 
+    _LOGGER.debug(
+        "%s - %s - %s home node(s)", router.name, router.mac, len(router.home_nodes)
+    )
+
+    for home_node in router.home_nodes.values():
+        for endpoint in home_node.get("show_endpoints"):
+            if (
+                endpoint["ep_type"] == "signal"
+                and endpoint["name"] in HOME_NODES_SENSORS.keys()
+            ):
+                entities.append(
+                    FreeboxHomeNodeSensor(
+                        router,
+                        home_node,
+                        endpoint,
+                        HOME_NODES_SENSORS[endpoint["name"]],
+                    )
+                )
+
     async_add_entities(entities, True)
 
 
@@ -73,12 +103,13 @@ class FreeboxSensor(SensorEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, router: FreeboxRouter, description: SensorEntityDescription
+        self, router: FreeboxRouter, description: SensorEntityDescription, unik: Any
     ) -> None:
         """Initialize a Freebox sensor."""
         self.entity_description = description
         self._router = router
-        self._attr_unique_id = f"{router.mac} {description.name}"
+        self._unik = unik
+        self._attr_unique_id = f"{router.mac} {description.name} {unik}"
 
     @callback
     def async_update_state(self) -> None:
@@ -119,7 +150,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self, router: FreeboxRouter, description: SensorEntityDescription
     ) -> None:
         """Initialize a Freebox call sensor."""
-        super().__init__(router, description)
+        super().__init__(router, description, router.mac)
         self._call_list_for_type = []
 
     @callback
@@ -155,7 +186,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a Freebox disk sensor."""
-        super().__init__(router, description)
+        super().__init__(router, description, f"{disk['id']} {partition['id']}")
         self._disk = disk
         self._partition = partition
         self._attr_name = f"{partition['label']} {description.name}"
@@ -173,14 +204,78 @@ class FreeboxDiskSensor(FreeboxSensor):
                 DOMAIN,
                 self._router.mac,
             ),
+            vendor_name="Freebox SAS",
+            manufacturer="Freebox SAS",
         )
 
     @callback
     def async_update_state(self) -> None:
         """Update the Freebox disk sensor."""
         value = None
-        if self._partition.get("total_bytes"):
-            value = round(
-                self._partition["free_bytes"] * 100 / self._partition["total_bytes"], 2
-            )
+        current_disk = self._router.disks.get(self._disk.get("id"))
+        for partition in current_disk["partitions"]:
+            if self._partition["id"] == partition["id"]:
+                value = round(
+                    partition["free_bytes"] * 100 / partition["total_bytes"], 2
+                )
+        self._attr_native_value = value
+
+
+class FreeboxHomeNodeSensor(FreeboxSensor):
+    """Representation of a Freebox Home node sensor."""
+
+    def __init__(
+        self,
+        router: FreeboxRouter,
+        home_node: dict[str, Any],
+        endpoint: dict[str, Any],
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize a Freebox Home node sensor."""
+        super().__init__(router, description, f"{home_node['id']} {endpoint['id']}")
+        self._home_node = home_node
+        self._endpoint = endpoint
+        self._attr_name = f"{home_node['label']} {description.name}"
+        self._unique_id = f"{self._router.mac} {description.key} {self._home_node['id']} {endpoint['id']}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        fw_version = None
+        if "props" in self._home_node:
+            props = self._home_node["props"]
+            if "FwVersion" in props:
+                fw_version = props["FwVersion"]
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._home_node["id"])},
+            model=f'{self._home_node["category"]}',
+            name=f"{self._home_node['label']}",
+            sw_version=fw_version,
+            via_device=(
+                DOMAIN,
+                self._router.mac,
+            ),
+            vendor_name="Freebox SAS",
+            manufacturer="Freebox SAS",
+        )
+
+    @callback
+    def async_update_state(self) -> None:
+        """Update the Freebox Home node sensor."""
+        value = None
+
+        current_home_node = self._router.home_nodes.get(self._home_node.get("id"))
+        if current_home_node.get("show_endpoints"):
+            for end_point in current_home_node["show_endpoints"]:
+                if self._endpoint["id"] == end_point["id"]:
+                    if self._endpoint["name"] == "pushed":
+                        if len(end_point.get("history")) > 0:
+                            # Get the latest button pushed as pool mode is a mess
+                            value = end_point.get("history")[-1].get("value")
+                            value = HOME_NODES_ALARM_REMOTE_KEY[int(value) - 1]
+                    else:
+                        value = end_point["value"]
+                    break
+
         self._attr_native_value = value
