@@ -2061,7 +2061,7 @@ async def websocket_subscribe_controller_statistics(
     entry: ConfigEntry,
     client: Client,
 ) -> None:
-    """Subsribe to the statistics updates for a controller."""
+    """Subscribe to the statistics updates for a controller."""
 
     @callback
     def async_cleanup() -> None:
@@ -2122,7 +2122,7 @@ async def websocket_subscribe_node_statistics(
     msg: dict,
     node: Node,
 ) -> None:
-    """Subsribe to the statistics updates for a node."""
+    """Subscribe to the statistics updates for a node."""
 
     @callback
     def async_cleanup() -> None:
