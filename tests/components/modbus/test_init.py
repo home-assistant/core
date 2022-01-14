@@ -671,7 +671,7 @@ async def test_delay(hass, mock_pymodbus):
     """Run test for startup delay."""
 
     # the purpose of this test is to test startup delay
-    # We "hijiack" a binary_sensor to make a proper blackbox test.
+    # We "hijack" a binary_sensor to make a proper blackbox test.
     set_delay = 15
     set_scan_interval = 5
     entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
