@@ -57,7 +57,7 @@ MDI_ICONS = {
     "garage": "garage",
     "grill": "stove",
     "heat": "fire",
-    "heater": "radiatior",
+    "heater": "radiator",
     "humidifier": "water",
     "kettle": "kettle",
     "leafblower": "leaf",
