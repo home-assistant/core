@@ -124,7 +124,7 @@ def next_departuredate(departure):
 
 
 class TrainSensor(SensorEntity):
-    """Contains data about a train depature."""
+    """Contains data about a train departure."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
