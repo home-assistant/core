@@ -55,6 +55,7 @@ from .util import (
     _effect_brightness,
     _flux_color_mode_to_hass,
     _hass_color_modes,
+    _min_rgb_brightness,
     _min_rgbw_brightness,
     _min_rgbwc_brightness,
     _str_to_multi_color_effect,
@@ -312,6 +313,8 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             return
         # Handle switch to RGB Color Mode
         if rgb := kwargs.get(ATTR_RGB_COLOR):
+            if not self._device.requires_turn_on:
+                rgb = _min_rgb_brightness(rgb)
             red, green, blue = rgb
             await self._device.async_set_levels(red, green, blue, brightness=brightness)
             return
@@ -321,16 +324,16 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
                 rgbw = rgbw_brightness(rgbw, brightness)
             if not self._device.requires_turn_on:
                 rgbw = _min_rgbw_brightness(rgbw)
-            _LOGGER.warning("RGBW: %s", rgbw)
             await self._device.async_set_levels(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
         if rgbcw := kwargs.get(ATTR_RGBWW_COLOR):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
+            rgbwc = rgbcw_to_rgbwc(rgbcw)
             if not self._device.requires_turn_on:
-                rgbcw = _min_rgbwc_brightness(rgbcw_to_rgbwc(rgbcw))
-            await self._device.async_set_levels(*rgbcw)
+                rgbwc = _min_rgbwc_brightness(rgbwc)
+            await self._device.async_set_levels(*rgbwc)
             return
         if (white := kwargs.get(ATTR_WHITE)) is not None:
             await self._device.async_set_levels(w=white)

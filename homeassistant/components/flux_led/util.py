@@ -54,6 +54,13 @@ def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
     assert False  # pragma: no cover
 
 
+def _min_rgb_brightness(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Ensure the RGB value will not turn off the device from a turn on command."""
+    if all(byte == 0 for byte in rgb):
+        return (1, 1, 1)
+    return rgb
+
+
 def _min_rgbw_brightness(rgbw: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
     """Ensure the RGBW value will not turn off the device from a turn on command."""
     if all(byte == 0 for byte in rgbw):
