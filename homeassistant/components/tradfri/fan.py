@@ -67,6 +67,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         """Initialize a switch."""
         super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
+        self._refresh(device, write_ha=False)
 
     @property
     def supported_features(self) -> int:
@@ -171,6 +172,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
     def _refresh(self, device: Command, write_ha: bool = True) -> None:
         """Refresh the purifier data."""
         # Caching of air purifier control and purifier object
+        self._device = device
         self._device_control = device.air_purifier_control
         self._device_data = device.air_purifier_control.air_purifiers[0]
         super()._refresh(device, write_ha=write_ha)
