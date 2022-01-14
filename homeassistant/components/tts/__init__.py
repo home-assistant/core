@@ -480,7 +480,7 @@ class SpeechManager:
 
         self.hass.loop.call_later(self.time_memory, async_remove_from_mem)
 
-    async def async_read_tts(self, filename: str) -> TtsAudioType:
+    async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
         """Read a voice file and return binary.
 
         This method is a coroutine.
