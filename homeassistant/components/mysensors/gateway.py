@@ -309,7 +309,7 @@ async def _gw_start(
     )
 
     if entry.data[CONF_DEVICE] == MQTT_COMPONENT:
-        # Gatways connected via mqtt doesn't send gateway ready message.
+        # Gateways connected via mqtt doesn't send gateway ready message.
         return
     try:
         async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
