@@ -850,7 +850,7 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixt
     client,
     climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state,
 ):
-    """Mock a climate device with mode and setpoint on differenet endpoints node."""
+    """Mock a climate device with mode and setpoint on different endpoints node."""
     node = Node(
         client,
         copy.deepcopy(
