@@ -341,7 +341,7 @@
         "commandClass": 112,
         "endpoint": 0,
         "property": 12,
-        "propertyName": "Callibrate",
+        "propertyName": "Calibrate",
         "metadata": {
           "type": "number",
           "readable": true,
@@ -352,7 +352,7 @@
           "default": 1,
           "format": 0,
           "allowManualEntry": true,
-          "label": "Callibrate",
+          "label": "Calibrate",
           "description": "This parameter on/off callibration function",
           "isFromConfig": true
         }
