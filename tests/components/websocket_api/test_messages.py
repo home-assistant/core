@@ -48,7 +48,7 @@ async def test_cached_event_message(hass):
 
 
 async def test_cached_event_message_with_different_idens(hass):
-    """Test that we cache event messages when the subscrition idens differ."""
+    """Test that we cache event messages when the subscription idens differ."""
 
     events = []
 
