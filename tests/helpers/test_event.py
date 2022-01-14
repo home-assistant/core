@@ -4046,7 +4046,7 @@ async def test_async_call_later_timedelta(hass):
     assert remove is mock()
 
 
-async def test_track_state_change_event_chain_multple_entity(hass):
+async def test_track_state_change_event_chain_multiple_entity(hass):
     """Test that adding a new state tracker inside a tracker does not fire right away."""
     tracker_called = []
     chained_tracker_called = []
