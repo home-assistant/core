@@ -675,9 +675,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_image_id,
             )
 
-        if media_content_type is None:
+        if media_content_type in [None, "root"]:
             return await self.hass.async_add_executor_job(
-                media_browser.root_payload, self.media.library
+                media_browser.root_payload,
+                self.media.library,
+                self.speaker.favorites,
+                _get_thumbnail_url,
             )
 
         if media_content_type == "library":

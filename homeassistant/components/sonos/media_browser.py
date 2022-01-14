@@ -120,8 +120,24 @@ def item_payload(item, get_thumbnail_url=None):
     )
 
 
-def root_payload(media_library):
+def root_payload(media_library, favorites, get_thumbnail_url):
     """Return root payload for Sonos."""
+    has_local_library = bool(
+        media_library.browse_by_idstring(
+            "tracks",
+            "",
+            max_items=1,
+        )
+    )
+
+    if not (favorites or has_local_library):
+        raise BrowseError("No media available")
+
+    if not has_local_library:
+        return favorites_payload(favorites)
+    if not favorites:
+        return library_payload(media_library, get_thumbnail_url)
+
     children = [
         BrowseMedia(
             title="Favorites",
@@ -130,30 +146,22 @@ def root_payload(media_library):
             media_content_type="favorites",
             can_play=False,
             can_expand=True,
-        )
+        ),
+        BrowseMedia(
+            title="Music Library",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="library",
+            can_play=False,
+            can_expand=True,
+        ),
     ]
-
-    if media_library.browse_by_idstring(
-        "tracks",
-        "",
-        max_items=1,
-    ):
-        children.append(
-            BrowseMedia(
-                title="Music Library",
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_id="",
-                media_content_type="library",
-                can_play=False,
-                can_expand=True,
-            )
-        )
 
     return BrowseMedia(
         title="Sonos",
         media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id="library",
-        media_content_type="library",
+        media_content_id="",
+        media_content_type="root",
         can_play=False,
         can_expand=True,
         children=children,
@@ -166,13 +174,6 @@ def library_payload(media_library, get_thumbnail_url=None):
 
     Used by async_browse_media.
     """
-    if not media_library.browse_by_idstring(
-        "tracks",
-        "",
-        max_items=1,
-    ):
-        raise BrowseError("Local library not found")
-
     children = []
     for item in media_library.browse():
         with suppress(UnknownMediaType):
