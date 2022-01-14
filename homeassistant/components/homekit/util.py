@@ -404,7 +404,7 @@ def get_persist_filename_for_entry_id(entry_id: str):
 
 
 def get_aid_storage_filename_for_entry_id(entry_id: str):
-    """Determine the ilename of homekit aid storage file."""
+    """Determine the filename of homekit aid storage file."""
     return f"{DOMAIN}.{entry_id}.aids"
 
 
