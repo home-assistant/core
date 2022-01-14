@@ -7,6 +7,7 @@ from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -118,8 +119,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry, session):
     """Set up a webhook to handle binary sensor events."""
     if CONF_WEBHOOK_ID not in entry.data:
-        webhook_id = hass.components.webhook.async_generate_id()
-        webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+        webhook_id = webhook.async_generate_id()
+        webhook_url = webhook.async_generate_url(hass, webhook_id)
         _LOGGER.info("Registering new webhook at: %s", webhook_url)
 
         hass.config_entries.async_update_entry(
@@ -136,14 +137,14 @@ async def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry, session):
         ["*"],
     )
 
-    hass.components.webhook.async_register(
-        DOMAIN, "Point", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, "Point", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     session = hass.data[DOMAIN].pop(entry.entry_id)
     await session.remove_webhook()
 

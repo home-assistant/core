@@ -10,7 +10,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import notify as hass_notify, tag
+from homeassistant.components import cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -593,7 +593,7 @@ async def webhook_get_config(hass, config_entry, data):
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
     with suppress(hass.components.cloud.CloudNotAvailable):
-        resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
+        resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     return webhook_response(resp, registration=config_entry.data)
 

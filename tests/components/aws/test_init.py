@@ -29,10 +29,14 @@ class MockAioSession:
             __aexit__=AsyncMock(),
         )
 
+    async def get_available_regions(self, *args, **kwargs):
+        """Return list of available regions."""
+        return ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
+
 
 async def test_empty_config(hass):
     """Test a default config will be create for empty config."""
-    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+    with async_patch("aiobotocore.session.AioSession", new=MockAioSession):
         await async_setup_component(hass, "aws", {"aws": {}})
         await hass.async_block_till_done()
 
@@ -47,7 +51,7 @@ async def test_empty_config(hass):
 
 async def test_empty_credential(hass):
     """Test a default config will be create for empty credential section."""
-    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+    with async_patch("aiobotocore.session.AioSession", new=MockAioSession):
         await async_setup_component(
             hass,
             "aws",
@@ -80,7 +84,7 @@ async def test_empty_credential(hass):
 
 async def test_profile_credential(hass):
     """Test credentials with profile name."""
-    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+    with async_patch("aiobotocore.session.AioSession", new=MockAioSession):
         await async_setup_component(
             hass,
             "aws",
@@ -118,7 +122,7 @@ async def test_profile_credential(hass):
 
 async def test_access_key_credential(hass):
     """Test credentials with access key."""
-    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+    with async_patch("aiobotocore.session.AioSession", new=MockAioSession):
         await async_setup_component(
             hass,
             "aws",
@@ -163,7 +167,7 @@ async def test_access_key_credential(hass):
 
 async def test_notify_credential(hass):
     """Test notify service can use access key directly."""
-    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+    with async_patch("aiobotocore.session.AioSession", new=MockAioSession):
         await async_setup_component(
             hass,
             "aws",
@@ -197,7 +201,7 @@ async def test_notify_credential(hass):
 
 async def test_notify_credential_profile(hass):
     """Test notify service can use profile directly."""
-    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+    with async_patch("aiobotocore.session.AioSession", new=MockAioSession):
         await async_setup_component(
             hass,
             "aws",
@@ -229,7 +233,7 @@ async def test_notify_credential_profile(hass):
 
 async def test_credential_skip_validate(hass):
     """Test credential can skip validate."""
-    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+    with async_patch("aiobotocore.session.AioSession", new=MockAioSession):
         await async_setup_component(
             hass,
             "aws",
