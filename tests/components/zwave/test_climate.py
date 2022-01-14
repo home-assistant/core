@@ -577,9 +577,9 @@ def test_operation_value_set(device):
     device.set_preset_mode(PRESET_NONE)
     assert device.values.primary.data == HVAC_MODE_HEAT_COOL
     device.values.primary = None
-    device.set_hvac_mode("test_set_failes")
+    device.set_hvac_mode("test_set_fails")
     assert device.values.primary is None
-    device.set_preset_mode("test_set_failes")
+    device.set_preset_mode("test_set_fails")
     assert device.values.primary is None
 
 
@@ -627,7 +627,7 @@ def test_fan_mode_value_set(device):
     device.set_fan_mode("test_fan_set")
     assert device.values.fan_mode.data == "test_fan_set"
     device.values.fan_mode = None
-    device.set_fan_mode("test_fan_set_failes")
+    device.set_fan_mode("test_fan_set_fails")
     assert device.values.fan_mode is None
 
 
