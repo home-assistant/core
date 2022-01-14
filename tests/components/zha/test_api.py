@@ -475,7 +475,7 @@ IC_FAIL_PARAMS = (
             "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024052"
         )
     },
-    # good consciot regex match, but bad code
+    # good conscious regex match, but bad code
     {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024052"},
 )
 
