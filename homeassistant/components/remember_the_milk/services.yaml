@@ -23,7 +23,7 @@ create_task:
 
 complete_task:
   name: Complete task
-  description: Complete a tasks that was privously created.
+  description: Complete a tasks that was previously created.
   fields:
     id:
       name: ID
