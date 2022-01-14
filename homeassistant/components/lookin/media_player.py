@@ -18,7 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_STANDBY, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -119,7 +119,7 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
-        self._attr_state = STATE_STANDBY
+        self._attr_state = STATE_OFF
         self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
@@ -132,8 +132,8 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         """Update media property from status.
 
         00F0
-        0 - 0/1 on/off
-        0 - sourse
+        0 - 1/0 on/off
+        0 - source
         F - volume, 0 - muted, 1 - volume up, F - volume down
         0 - not used
         """
@@ -142,5 +142,5 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         state = status[0]
         mute = status[2]
 
-        self._attr_state = STATE_ON if state == "1" else STATE_STANDBY
+        self._attr_state = STATE_ON if state == "1" else STATE_OFF
         self._attr_is_volume_muted = mute == "0"
