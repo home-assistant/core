@@ -2029,7 +2029,7 @@
       "configuration_schema": {
         "$ref": "coming_home_config.json#"
       },
-      "description": "Automatically turn your lights to choosen light states, when you arrive at home.",
+      "description": "Automatically turn your lights to chosen light states, when you arrive at home.",
       "id": "fd60fcd1-4809-4813-b510-4a18856a595c",
       "metadata": {
         "name": "Coming home"
