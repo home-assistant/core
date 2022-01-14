@@ -314,7 +314,7 @@ async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     assert mock_entry.identifiers == {(DOMAIN, MOCK_HOST_ID)}
 
 
-async def test_device_info_is_assummed(hass):
+async def test_device_info_is_assumed(hass):
     """Test that device info is assumed if device is unavailable."""
     # Create a device registry entry with device info.
     mock_d_registry = mock_device_registry(hass)
@@ -350,7 +350,7 @@ async def test_device_info_is_assummed(hass):
     assert mock_entities[0] == mock_entity_id
 
 
-async def test_device_info_assummed_works(hass):
+async def test_device_info_assumed_works(hass):
     """Reverse test that device info assumption works."""
     mock_d_registry = mock_device_registry(hass)
     mock_entity_id = await setup_mock_component(hass)
