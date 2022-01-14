@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_setup_legacy(hass, config)
 
     async def persistent_notification(service: ServiceCall) -> None:
-        """Send notification via the built-in persistsent_notify integration."""
+        """Send notification via the built-in persistent_notify integration."""
         message = service.data[ATTR_MESSAGE]
         message.hass = hass
         check_templates_warn(hass, message)
