@@ -114,7 +114,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
         # Specific case for probability forecast
         if path[0] == "probability_forecast":
             if len(path) == 3:
-                # This is a fix compared to other entitty as first index is always null in API result for unknown reason
+                # This is a fix compared to other entity as first index is always null in API result for unknown reason
                 value = _find_first_probability_forecast_not_null(data, path)
             else:
                 value = data[0][path[1]]

@@ -108,7 +108,7 @@ class AccessoryAidStorage:
             if aid in INVALID_AIDS:
                 continue
             if aid not in self.allocated_aids:
-                # Prefer the unique_id over the entitiy_id
+                # Prefer the unique_id over the entity_id
                 storage_key = unique_id or entity_id
                 self.allocations[storage_key] = aid
                 self.allocated_aids.add(aid)

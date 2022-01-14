@@ -39,7 +39,7 @@ ATTRIB_TO_CLASS = {
     Attribute.valve: BinarySensorDeviceClass.OPENING,
     Attribute.water: BinarySensorDeviceClass.MOISTURE,
 }
-ATTRIB_TO_ENTTIY_CATEGORY = {
+ATTRIB_TO_ENTITY_CATEGORY = {
     Attribute.tamper: EntityCategory.DIAGNOSTIC,
 }
 
@@ -97,4 +97,4 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     @property
     def entity_category(self):
         """Return the entity category of this device."""
-        return ATTRIB_TO_ENTTIY_CATEGORY.get(self._attribute)
+        return ATTRIB_TO_ENTITY_CATEGORY.get(self._attribute)

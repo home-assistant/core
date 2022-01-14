@@ -937,7 +937,7 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
                 "set_position_topic": "set-position-topic",
                 "set_position_template": "{{position-1}}",
                 "tilt_command_template": "{"
-                '"enitity_id": "{{ entity_id }}",'
+                '"entity_id": "{{ entity_id }}",'
                 '"value": {{ value }},'
                 '"tilt_position": {{ tilt_position }}'
                 "}",
@@ -958,7 +958,7 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 45,"tilt_position": 45}',
+        '{"entity_id": "cover.test","value": 45,"tilt_position": 45}',
         0,
         False,
     )
@@ -972,7 +972,7 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        '{"entity_id": "cover.test","value": 100,"tilt_position": 100}',
         0,
         False,
     )
@@ -986,7 +986,7 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 0,"tilt_position": 0}',
+        '{"entity_id": "cover.test","value": 0,"tilt_position": 0}',
         0,
         False,
     )
@@ -1000,7 +1000,7 @@ async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        '{"entity_id": "cover.test","value": 100,"tilt_position": 100}',
         0,
         False,
     )

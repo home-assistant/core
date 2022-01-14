@@ -132,11 +132,11 @@ async def find_entity_ids(domain, zha_device, hass):
     ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
     head = f"{domain}.{slugify(f'{zha_device.name} {ieeetail}')}"
 
-    enitiy_ids = hass.states.async_entity_ids(domain)
+    entity_ids = hass.states.async_entity_ids(domain)
     await hass.async_block_till_done()
 
     res = []
-    for entity_id in enitiy_ids:
+    for entity_id in entity_ids:
         if entity_id.startswith(head):
             res.append(entity_id)
     return res
