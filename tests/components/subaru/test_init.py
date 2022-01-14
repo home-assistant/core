@@ -43,7 +43,7 @@ async def test_setup_ev(hass, ev_entry):
 
 
 async def test_setup_g2(hass):
-    """Test setup with a G2 vehcile ."""
+    """Test setup with a G2 vehicle ."""
     entry = await setup_subaru_integration(
         hass,
         vehicle_list=[TEST_VIN_3_G2],
