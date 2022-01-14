@@ -193,7 +193,7 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
     assert stop_calls[-1] == "async_block_till_done"
 
 
-async def test_pending_sheduler(hass):
+async def test_pending_scheduler(hass):
     """Add a coro to pending tasks."""
     call_count = []
 
