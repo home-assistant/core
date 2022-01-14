@@ -26,7 +26,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    assert len(hass.states.async_all("sensor")) == 18
+    assert len(hass.states.async_all("sensor")) == 25
     assert hass.states.get("sensor.my_generator_latest_firmware").state == "2.0.6"
 
     assert hass.states.get("sensor.my_generator_engine_speed").state == "0"
@@ -37,18 +37,18 @@ async def test_sensors(hass: HomeAssistant) -> None:
         hass.states.get("sensor.my_generator_engine_coolant_temperature").state == "0"
     )
 
-    assert hass.states.get("sensor.my_generator_battery_voltage").state == "13.5"
+    assert hass.states.get("sensor.my_generator_battery_voltage").state == "13.4"
 
     assert hass.states.get("sensor.my_generator_lube_oil_temperature").state == "0"
 
     assert (
         hass.states.get("sensor.my_generator_generator_controller_temperature").state
-        == "38.0"
+        == "29.0"
     )
 
     assert (
         hass.states.get("sensor.my_generator_engine_compartment_temperature").state
-        == "29.0"
+        == "17.0"
     )
 
     assert (
@@ -77,7 +77,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         hass.states.get(
             "sensor.my_generator_generator_controller_total_operation_time"
         ).state
-        == "16482.0"
+        == "16770.8"
     )
 
     assert hass.states.get("sensor.my_generator_engine_total_run_time").state == "28.1"
