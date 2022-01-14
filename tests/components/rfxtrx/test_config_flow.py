@@ -945,7 +945,7 @@ async def test_options_add_and_configure_device(hass):
 
 
 async def test_options_configure_rfy_cover_device(hass):
-    """Test we can configure the venetion blind mode of an Rfy cover."""
+    """Test we can configure the venetian blind mode of an Rfy cover."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
