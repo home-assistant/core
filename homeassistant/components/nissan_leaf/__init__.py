@@ -311,7 +311,7 @@ class LeafDataStore:
             if server_response.answer["status"] == HTTPStatus.OK:
                 self.data[DATA_BATTERY] = server_response.battery_percent
 
-                # pycarwings2 library doesn't always provide cruising rnages
+                # pycarwings2 library doesn't always provide cruising ranges
                 # so we have to check if they exist before we can use them.
                 # Root cause: the nissan servers don't always send the data.
                 if hasattr(server_response, "cruising_range_ac_on_km"):
