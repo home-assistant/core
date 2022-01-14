@@ -98,7 +98,7 @@ CONST_OVERLAY_TIMER = "TIMER"  # the temperature will be reset after a timespan
 
 
 # Heat always comes first since we get the
-# min and max tempatures for the zone from
+# min and max temperatures for the zone from
 # it.
 # Heat is preferred as it generally has a lower minimum temperature
 ORDERED_KNOWN_TADO_MODES = [

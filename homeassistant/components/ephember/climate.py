@@ -183,7 +183,7 @@ class EphEmberThermostat(ClimateEntity):
         if temperature > self.max_temp or temperature < self.min_temp:
             return
 
-        self._ember.set_target_temperture_by_name(self._zone_name, temperature)
+        self._ember.set_target_temperature_by_name(self._zone_name, temperature)
 
     @property
     def min_temp(self):

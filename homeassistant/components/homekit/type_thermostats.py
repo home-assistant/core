@@ -340,7 +340,7 @@ class Thermostat(HomeAccessory):
                     f"{CHAR_COOLING_THRESHOLD_TEMPERATURE} to {char_values[CHAR_COOLING_THRESHOLD_TEMPERATURE]}°C"
                 )
                 high = char_values[CHAR_COOLING_THRESHOLD_TEMPERATURE]
-                # If the device doesn't support TARGET_TEMPATURE
+                # If the device doesn't support TARGET_TEMPERATURE
                 # this can happen
                 if high < low:
                     low = high - HEAT_COOL_DEADBAND
@@ -349,7 +349,7 @@ class Thermostat(HomeAccessory):
                     f"{CHAR_HEATING_THRESHOLD_TEMPERATURE} to {char_values[CHAR_HEATING_THRESHOLD_TEMPERATURE]}°C"
                 )
                 low = char_values[CHAR_HEATING_THRESHOLD_TEMPERATURE]
-                # If the device doesn't support TARGET_TEMPATURE
+                # If the device doesn't support TARGET_TEMPERATURE
                 # this can happen
                 if low > high:
                     high = low + HEAT_COOL_DEADBAND

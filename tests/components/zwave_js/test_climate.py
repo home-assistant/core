@@ -726,7 +726,7 @@ async def test_temp_unit_fix(
     climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints,
     integration,
 ):
-    """Test temperaturee unit fix."""
+    """Test temperature unit fix."""
     state = hass.states.get("climate.thermostat")
     assert state
     assert state.attributes["current_temperature"] == 18.3

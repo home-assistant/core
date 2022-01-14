@@ -1966,7 +1966,7 @@ async def test_thermostat_with_no_off_after_recheck(hass, hk_driver, events):
 
 
 async def test_thermostat_with_temp_clamps(hass, hk_driver, events):
-    """Test that tempatures are clamped to valid values to prevent homekit crash."""
+    """Test that temperatures are clamped to valid values to prevent homekit crash."""
     entity_id = "climate.test"
 
     hass.states.async_set(
