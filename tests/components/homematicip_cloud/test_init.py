@@ -70,7 +70,7 @@ async def test_config_already_registered_not_passed_to_config_entry(
         "hapid": "ABC123",
         "name": "name",
     }
-    # config_enty has no unique_id
+    # config_entry has no unique_id
     assert not config_entries[0].unique_id
 
     entry_config = {
@@ -94,7 +94,7 @@ async def test_config_already_registered_not_passed_to_config_entry(
         "hapid": "ABC123",
         "name": "name",
     }
-    # config_enty updated with unique_id
+    # config_entry updated with unique_id
     assert config_entries[0].unique_id == "ABC123"
 
 
