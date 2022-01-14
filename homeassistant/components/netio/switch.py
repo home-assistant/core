@@ -191,7 +191,7 @@ class NetioSwitch(SwitchEntity):
 
     @property
     def cumulated_consumption_kwh(self):
-        """Return the total enerygy consumption since start_date."""
+        """Return the total energy consumption since start_date."""
         return self.netio.cumulated_consumptions[int(self.outlet) - 1]
 
     @property
