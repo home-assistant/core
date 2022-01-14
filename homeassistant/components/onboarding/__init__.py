@@ -35,7 +35,7 @@ class OnboadingStorage(Store):
 
 @bind_hass
 @callback
-def async_is_onboarded(hass):
+def async_is_onboarded(hass: HomeAssistant) -> bool:
     """Return if Home Assistant has been onboarded."""
     data = hass.data.get(DOMAIN)
     return data is None or data is True
@@ -43,7 +43,7 @@ def async_is_onboarded(hass):
 
 @bind_hass
 @callback
-def async_is_user_onboarded(hass):
+def async_is_user_onboarded(hass: HomeAssistant) -> bool:
     """Return if a user has been created as part of onboarding."""
     return async_is_onboarded(hass) or STEP_USER in hass.data[DOMAIN]["done"]
 
