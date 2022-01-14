@@ -678,7 +678,7 @@ SENSOR_PROCESS_DATA = [
 SENSOR_SETTINGS_DATA = [
     (
         "devices:local",
-        "Battery:MinHomeComsumption",
+        "Battery:MinHomeConsumption",
         "Battery min Home Consumption",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
