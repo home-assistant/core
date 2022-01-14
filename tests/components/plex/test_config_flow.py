@@ -497,7 +497,7 @@ async def test_callback_view(hass, hass_client_no_auth, current_request_with_hos
 async def test_manual_config(hass, mock_plex_calls, current_request_with_host):
     """Test creating via manual configuration."""
 
-    class WrongCertValidaitionException(requests.exceptions.SSLError):
+    class WrongCertValidationException(requests.exceptions.SSLError):
         """Mock the exception showing an unmatched error."""
 
         def __init__(self):
@@ -586,7 +586,7 @@ async def test_manual_config(hass, mock_plex_calls, current_request_with_host):
 
     with patch(
         "plexapi.server.PlexServer",
-        side_effect=WrongCertValidaitionException,
+        side_effect=WrongCertValidationException,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER

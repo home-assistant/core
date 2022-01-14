@@ -726,7 +726,7 @@ async def test_discovery_expansion_3(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     assert hass.states.get("switch.DiscoveryExpansionTest1") is None
     # Make sure the malformed availability data does not trip up discovery by asserting
-    # there are schema valdiation errors in the log
+    # there are schema validation errors in the log
     assert (
         "voluptuous.error.MultipleInvalid: expected a dictionary @ data['availability'][0]"
         in caplog.text
