@@ -38,7 +38,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle Tansmission config flow."""
+    """Handle Transmission config flow."""
 
     VERSION = 1
 
