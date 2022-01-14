@@ -198,7 +198,7 @@ def favorites_payload(favorites):
     children = []
 
     group_types = {fav.reference.item_class for fav in favorites}
-    for group_type in group_types:
+    for group_type in sorted(group_types):
         media_content_type = SONOS_TYPES_MAPPING[group_type]
         children.append(
             BrowseMedia(
