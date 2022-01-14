@@ -134,7 +134,7 @@ async def test_disabled_notification_sensor(hass, multisensor_6, integration):
     assert state.attributes["value"] == 8
 
 
-async def test_disabled_indcator_sensor(
+async def test_disabled_indicator_sensor(
     hass, climate_radio_thermostat_ct100_plus, integration
 ):
     """Test sensor is created from Indicator CC and is disabled."""
