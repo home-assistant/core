@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+from typing import Any
 
 import aiohttp
 from aiolookin import (
     LookInHttpProtocol,
     LookinUDPSubscriptions,
     MeteoSensor,
+    Remote,
     start_lookin_udp,
 )
 from aiolookin.models import UDPCommandType, UDPEvent
@@ -21,7 +24,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, TYPE_TO_PLATFORM
 from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
@@ -52,6 +55,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await meteo_coordinator.async_config_entry_first_refresh()
 
+    device_coordinators: dict[str, DataUpdateCoordinator] = {}
+    for remote in devices:
+        if remote["Type"] not in TYPE_TO_PLATFORM:
+            continue
+        uuid = remote["UUID"]
+
+        def _wrap_async_update(
+            uuid: str,
+        ) -> Callable[[], Coroutine[None, Any, Remote]]:
+            """Create a function to capture the uuid cell variable."""
+
+            async def _async_update() -> Remote:
+                return await lookin_protocol.get_remote(uuid)
+
+            return _async_update
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name=f"{entry.title} {uuid}",
+            update_method=_wrap_async_update(uuid),
+            update_interval=timedelta(
+                seconds=60
+            ),  # Updates are pushed (fallback is polling)
+        )
+        await coordinator.async_config_entry_first_refresh()
+        device_coordinators[uuid] = coordinator
+
     @callback
     def _async_meteo_push_update(event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
@@ -66,6 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             lookin_device.id, UDPCommandType.meteo, None, _async_meteo_push_update
         )
     )
+
     entry.async_on_unload(await start_lookin_udp(lookin_udp_subs, lookin_device.id))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LookinData(
@@ -74,6 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         meteo_coordinator=meteo_coordinator,
         devices=devices,
         lookin_protocol=lookin_protocol,
+        device_coordinators=device_coordinators,
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
