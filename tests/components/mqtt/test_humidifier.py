@@ -786,7 +786,7 @@ async def test_invalid_configurations(hass, mqtt_mock, caplog):
                     "name": "test_invalid_device_class",
                     "command_topic": "command-topic",
                     "target_humidity_command_topic": "humidity-command-topic",
-                    "device_class": "notsupporedSpeci@l",
+                    "device_class": "notsupportedSpeci@l",
                 },
                 {
                     "platform": "mqtt",
