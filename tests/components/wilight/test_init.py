@@ -21,7 +21,7 @@ from tests.components.wilight import (
 
 @pytest.fixture(name="dummy_device_from_host")
 def mock_dummy_device_from_host():
-    """Mock a valid api_devce."""
+    """Mock a valid api_device."""
 
     device = pywilight.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",

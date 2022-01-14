@@ -483,7 +483,7 @@ async def test_structure_update_event(hass):
     device_manager = await subscriber.async_get_device_manager()
     device_manager.add_device(new_device)
 
-    # Entity for new devie has not yet been loaded
+    # Entity for new device has not yet been loaded
     assert not registry.async_get("camera.back")
 
     # Send a message that triggers the device to be loaded
