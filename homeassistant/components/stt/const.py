@@ -1,4 +1,4 @@
-"""STT constante."""
+"""STT constants."""
 from enum import Enum
 
 DOMAIN = "stt"
