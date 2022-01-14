@@ -8,7 +8,7 @@ from homeassistant.components.fritzbox_callmonitor.config_flow import (
     RESULT_INSUFFICIENT_PERMISSIONS,
     RESULT_INVALID_AUTH,
     RESULT_MALFORMED_PREFIXES,
-    RESULT_NO_DEVIES_FOUND,
+    RESULT_NO_DEVICES_FOUND,
 )
 from homeassistant.components.fritzbox_callmonitor.const import (
     CONF_PHONEBOOK,
@@ -230,7 +230,7 @@ async def test_setup_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_NO_DEVIES_FOUND
+    assert result["reason"] == RESULT_NO_DEVICES_FOUND
 
 
 async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:

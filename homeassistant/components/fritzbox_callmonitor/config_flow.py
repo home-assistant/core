@@ -43,7 +43,7 @@ DATA_SCHEMA_USER = vol.Schema(
 RESULT_INVALID_AUTH = "invalid_auth"
 RESULT_INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
 RESULT_MALFORMED_PREFIXES = "malformed_prefixes"
-RESULT_NO_DEVIES_FOUND = "no_devices_found"
+RESULT_NO_DEVICES_FOUND = "no_devices_found"
 RESULT_SUCCESS = "success"
 
 
@@ -105,7 +105,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return RESULT_SUCCESS
         except RequestsConnectionError:
-            return RESULT_NO_DEVIES_FOUND
+            return RESULT_NO_DEVICES_FOUND
         except FritzSecurityError:
             return RESULT_INSUFFICIENT_PERMISSIONS
         except FritzConnectionException:
