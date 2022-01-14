@@ -8,6 +8,7 @@ on:
 jobs:
   lock:
     runs-on: ubuntu-latest
+    if: github.repository.owner == 'home-assistant'
     steps:
       - uses: dessant/lock-threads@v3
         with:

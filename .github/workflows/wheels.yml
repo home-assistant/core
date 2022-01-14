@@ -61,9 +61,21 @@ jobs:
           name: requirements_diff
           path: ./requirements_diff.txt
 
+  secrets:
+    name: Check for secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for secrets.WHEELS_KEY
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.WHEELS_KEY }}" ]; then
+            echo "::set-output name=wheel::1"
+          fi
+
   core:
     name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for core
-    needs: init
+    needs: [init, secrets]
+    if: needs.secrets.outputs.wheel
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -103,7 +115,8 @@ jobs:
 
   integrations:
     name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for integrations
-    needs: init
+    if: needs.secrets.outputs.wheel
+    needs: [init, secrets]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

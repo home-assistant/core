@@ -16,8 +16,21 @@ env:
   DEFAULT_PYTHON: 3.9
 
 jobs:
+  secrets:
+    name: Check for secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for secrets.LOKALISE_TOKEN
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.LOKALISE_TOKEN }}" ]; then
+            echo "::set-output name=lokalise::1"
+          fi
+
   upload:
     name: Upload
+    needs: secrets
+    if: needs.secrets.outputs.lokalise
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -36,7 +49,7 @@ jobs:
   download:
     name: Download
     needs: upload
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: (needs.secrets.outputs.lokalise) && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
