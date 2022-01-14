@@ -18,7 +18,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 4
 
 
-class OnboadingStorage(Store):
+class OnboardingStorage(Store):
     """Store onboarding data."""
 
     async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
@@ -50,7 +50,7 @@ def async_is_user_onboarded(hass: HomeAssistant) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the onboarding component."""
-    store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    store = OnboardingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     if (data := await store.async_load()) is None:
         data = {"done": []}
 
