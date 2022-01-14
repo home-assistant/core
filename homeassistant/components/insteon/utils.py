@@ -251,14 +251,14 @@ def async_register_services(hass):
         async_dispatcher_send(hass, signal)
 
     async def async_add_device_override(override):
-        """Remove an Insten device and associated entities."""
+        """Remove an Insteon device and associated entities."""
         address = Address(override[CONF_ADDRESS])
         await async_remove_device(address)
         devices.set_id(address, override[CONF_CAT], override[CONF_SUBCAT], 0)
         await async_srv_save_devices()
 
     async def async_remove_device_override(address):
-        """Remove an Insten device and associated entities."""
+        """Remove an Insteon device and associated entities."""
         address = Address(address)
         await async_remove_device(address)
         devices.set_id(address, None, None, None)
