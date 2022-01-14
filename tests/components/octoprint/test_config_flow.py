@@ -167,7 +167,7 @@ async def test_form_unknown_exception(hass):
     assert result["errors"]["base"] == "unknown"
 
 
-async def test_show_zerconf_form(hass: HomeAssistant) -> None:
+async def test_show_zeroconf_form(hass: HomeAssistant) -> None:
     """Test that the zeroconf confirmation form is served."""
 
     result = await hass.config_entries.flow.async_init(
@@ -482,7 +482,7 @@ async def test_user_duplicate_entry(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
+async def test_duplicate_zeroconf_ignored(hass: HomeAssistant) -> None:
     """Test that the duplicate zeroconf isn't shown."""
     MockConfigEntry(
         domain=DOMAIN,

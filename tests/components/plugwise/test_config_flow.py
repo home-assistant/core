@@ -206,7 +206,7 @@ async def test_zeroconf_stretch_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zercoconf_discovery_update_configuration(hass):
+async def test_zeroconf_discovery_update_configuration(hass):
     """Test if a discovered device is configured and updated with new host."""
     entry = MockConfigEntry(
         domain=DOMAIN,
