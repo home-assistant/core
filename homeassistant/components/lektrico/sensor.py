@@ -78,6 +78,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="instant_power",
         name="Instant Power",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
         value_fn=lambda x: x.instant_power,
