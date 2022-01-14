@@ -7,7 +7,7 @@ from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass):
-    """Load the Tradfri platform with a mock gateway."""
+    """Load the Tradfri integration with a mock gateway."""
     entry = MockConfigEntry(
         domain=tradfri.DOMAIN,
         data={
