@@ -23,7 +23,7 @@ from tests.common import async_fire_time_changed
 
 
 async def test_presentation(hass: HomeAssistant) -> None:
-    """Test the presenstation of UptimeRobot binary_sensors."""
+    """Test the presentation of UptimeRobot binary_sensors."""
     await setup_uptimerobot_integration(hass)
 
     entity = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
