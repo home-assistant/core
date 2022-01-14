@@ -73,7 +73,7 @@ def generate_filter(
     include_domains,
     include_entities,
     exclude_domains,
-    exclude_entites,
+    exclude_entities,
     include_globs=None,
     exclude_globs=None,
 ):
@@ -83,7 +83,7 @@ def generate_filter(
             CONF_INCLUDE_DOMAINS: include_domains,
             CONF_INCLUDE_ENTITIES: include_entities,
             CONF_EXCLUDE_DOMAINS: exclude_domains,
-            CONF_EXCLUDE_ENTITIES: exclude_entites,
+            CONF_EXCLUDE_ENTITIES: exclude_entities,
             CONF_INCLUDE_ENTITY_GLOBS: include_globs or [],
             CONF_EXCLUDE_ENTITY_GLOBS: exclude_globs or [],
         }
