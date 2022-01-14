@@ -5,11 +5,11 @@ from unittest.mock import patch
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.twinkly.const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
     DOMAIN as TWINKLY_DOMAIN,
-    ENTRY_DATA_HOST,
-    ENTRY_DATA_ID,
-    ENTRY_DATA_MODEL,
-    ENTRY_DATA_NAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -177,7 +177,7 @@ async def test_update_name(hass: HomeAssistant):
 
     state = hass.states.get(entity.entity_id)
 
-    assert config_entry.data[ENTRY_DATA_NAME] == "new_device_name"
+    assert config_entry.data[CONF_NAME] == "new_device_name"
     assert state.attributes["friendly_name"] == "new_device_name"
 
 
@@ -199,10 +199,10 @@ async def _create_entries(
         config_entry = MockConfigEntry(
             domain=TWINKLY_DOMAIN,
             data={
-                ENTRY_DATA_HOST: client,
-                ENTRY_DATA_ID: client.id,
-                ENTRY_DATA_NAME: TEST_NAME_ORIGINAL,
-                ENTRY_DATA_MODEL: TEST_MODEL,
+                CONF_HOST: client,
+                CONF_ID: client.id,
+                CONF_NAME: TEST_NAME_ORIGINAL,
+                CONF_MODEL: TEST_MODEL,
             },
             entry_id=client.id,
         )

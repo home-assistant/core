@@ -23,6 +23,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
     DATA_CLIENT,
     DATA_DEVICE_INFO,
     DEV_LED_PROFILE,
@@ -31,10 +35,6 @@ from .const import (
     DEV_PROFILE_RGB,
     DEV_PROFILE_RGBW,
     DOMAIN,
-    ENTRY_DATA_HOST,
-    ENTRY_DATA_ID,
-    ENTRY_DATA_MODEL,
-    ENTRY_DATA_NAME,
     HIDDEN_DEV_VALUES,
 )
 
@@ -66,7 +66,7 @@ class TwinklyLight(LightEntity):
         device_info,
     ) -> None:
         """Initialize a TwinklyLight entity."""
-        self._id = conf.data[ENTRY_DATA_ID]
+        self._id = conf.data[CONF_ID]
         self._conf = conf
 
         if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
@@ -84,8 +84,8 @@ class TwinklyLight(LightEntity):
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
         # They are expected to be updated using the device_info.
-        self._name = conf.data[ENTRY_DATA_NAME]
-        self._model = conf.data[ENTRY_DATA_MODEL]
+        self._name = conf.data[CONF_NAME]
+        self._model = conf.data[CONF_MODEL]
 
         self._client = client
 
@@ -223,10 +223,10 @@ class TwinklyLight(LightEntity):
                 self.hass.config_entries.async_update_entry(
                     self._conf,
                     data={
-                        ENTRY_DATA_HOST: self._client.host,  # this cannot change
-                        ENTRY_DATA_ID: self._id,  # this cannot change
-                        ENTRY_DATA_NAME: self._name,
-                        ENTRY_DATA_MODEL: self._model,
+                        CONF_HOST: self._client.host,  # this cannot change
+                        CONF_ID: self._id,  # this cannot change
+                        CONF_NAME: self._name,
+                        CONF_MODEL: self._model,
                     },
                 )
 

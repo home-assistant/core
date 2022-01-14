@@ -4,11 +4,11 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from homeassistant.components.twinkly.const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
     DOMAIN as TWINKLY_DOMAIN,
-    ENTRY_DATA_HOST,
-    ENTRY_DATA_ID,
-    ENTRY_DATA_MODEL,
-    ENTRY_DATA_NAME,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -30,10 +30,10 @@ async def test_load_unload_entry(hass: HomeAssistant):
     config_entry = MockConfigEntry(
         domain=TWINKLY_DOMAIN,
         data={
-            ENTRY_DATA_HOST: TEST_HOST,
-            ENTRY_DATA_ID: id,
-            ENTRY_DATA_NAME: TEST_NAME_ORIGINAL,
-            ENTRY_DATA_MODEL: TEST_MODEL,
+            CONF_HOST: TEST_HOST,
+            CONF_ID: id,
+            CONF_NAME: TEST_NAME_ORIGINAL,
+            CONF_MODEL: TEST_MODEL,
         },
         entry_id=id,
     )
@@ -58,10 +58,10 @@ async def test_config_entry_not_ready(hass: HomeAssistant):
     config_entry = MockConfigEntry(
         domain=TWINKLY_DOMAIN,
         data={
-            ENTRY_DATA_HOST: TEST_HOST,
-            ENTRY_DATA_ID: id,
-            ENTRY_DATA_NAME: TEST_NAME_ORIGINAL,
-            ENTRY_DATA_MODEL: TEST_MODEL,
+            CONF_HOST: TEST_HOST,
+            CONF_ID: id,
+            CONF_NAME: TEST_NAME_ORIGINAL,
+            CONF_MODEL: TEST_MODEL,
         },
     )
 

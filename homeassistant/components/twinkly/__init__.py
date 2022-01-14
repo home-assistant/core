@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_CLIENT, DATA_DEVICE_INFO, DOMAIN, ENTRY_DATA_HOST
+from .const import CONF_HOST, DATA_CLIENT, DATA_DEVICE_INFO, DOMAIN
 
 PLATFORMS = [Platform.LIGHT]
 
@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # We setup the client here so if at some point we add any other entity for this device,
     # we will be able to properly share the connection.
-    host = entry.data[ENTRY_DATA_HOST]
+    host = entry.data[CONF_HOST]
 
     hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
