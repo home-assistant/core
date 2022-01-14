@@ -33,6 +33,13 @@ I2C_HATS_MANAGER = "I2CH_MNG"
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the raspihats component."""
+    _LOGGER.warning(
+        "The Raspihats pHAT integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     hass.data[I2C_HATS_MANAGER] = I2CHatsManager()
 
     def start_i2c_hats_keep_alive(event):
