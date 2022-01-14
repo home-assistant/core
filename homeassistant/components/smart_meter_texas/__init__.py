@@ -95,7 +95,7 @@ class SmartMeterTexasData:
         account: Account,
         ssl_context: ssl.SSLContext,
     ) -> None:
-        """Initialize the data coordintator."""
+        """Initialize the data coordinator."""
         self._entry = entry
         self.account = account
         websession = aiohttp_client.async_get_clientsession(hass)
