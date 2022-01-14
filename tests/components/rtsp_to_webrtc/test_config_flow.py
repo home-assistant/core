@@ -167,7 +167,7 @@ async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
 
 
 async def test_hassio_ignored(hass: HomeAssistant) -> None:
-    """Test ignoring superversor add-on discovery."""
+    """Test ignoring supervisor add-on discovery."""
     old_entry = MockConfigEntry(domain=DOMAIN, source=config_entries.SOURCE_IGNORE)
     old_entry.add_to_hass(hass)
 
@@ -187,7 +187,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
 
 async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
-    """Test server failure during supvervisor add-on discovery shows an error."""
+    """Test server failure during supervisor add-on discovery shows an error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=HassioServiceInfo(
