@@ -142,7 +142,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
         device: Remote,
         lookin_data: LookinData,
     ) -> None:
-        """Init the light."""
+        """Init the entity."""
         super().__init__(coordinator, uuid, device, lookin_data)
         self._update_from_status(self._remote.status)
 
