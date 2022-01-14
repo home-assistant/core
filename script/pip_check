@@ -1,0 +1,24 @@
+#!/bin/bash
+PIP_CACHE=$1
+DEPENDENCY_CONFLICTS=$2
+
+PIP_CHECK=$(pip check --cache-dir=$PIP_CACHE)
+LINE_COUNT=$(echo "$PIP_CHECK" | wc -l)
+echo "$PIP_CHECK"
+
+if [[ $((LINE_COUNT)) -gt 15 ]]
+then
+    echo "------"
+    echo "Requirements change added another dependency conflict."
+    echo "Make sure to check the 'pip check' output above!"
+    exit 1
+elif [[ $((LINE_COUNT)) -lt 15 ]]
+then
+    echo "------"
+    echo "It seems like this PR resolves $((
+        15 - LINE_COUNT)) dependency conflicts."
+    echo "Please update the 'DEPENDENCY_CONFLICTS' environment variable "
+    echo "in '.github/workflows/ci.yaml' to help prevent regressions."
+    echo "Update it to: $((LINE_COUNT))"
+    exit 1
+fi
