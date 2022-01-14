@@ -45,7 +45,7 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the swiches devices."""
+    """Set up the switches devices."""
     _LOGGER.warning(
         "The pi4ioe5v9xxxx IO Expander integration is deprecated and will be removed "
         "in Home Assistant Core 2022.4; this integration is removed under "
