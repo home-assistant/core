@@ -551,7 +551,7 @@ class Recorder(threading.Thread):
     def _async_check_queue(self, *_):
         """Periodic check of the queue size to ensure we do not exhaust memory.
 
-        The queue grows during migraton or if something really goes wrong.
+        The queue grows during migration or if something really goes wrong.
         """
         size = self.queue.qsize()
         _LOGGER.debug("Recorder queue size is: %s", size)
