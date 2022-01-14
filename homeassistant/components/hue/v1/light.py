@@ -391,7 +391,7 @@ class HueLight(CoordinatorEntity, LightEntity):
 
         min_mireds = self.light.controlcapabilities.get("ct", {}).get("min")
 
-        # We filter out '0' too, which can be incorrectly reported by 3rd party buls
+        # We filter out '0' too, which can be incorrectly reported by 3rd party bulbs
         if not min_mireds:
             return super().min_mireds
 
