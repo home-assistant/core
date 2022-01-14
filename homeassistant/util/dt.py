@@ -64,17 +64,17 @@ def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
-def as_utc(dattim: dt.datetime) -> dt.datetime:
+def as_utc(dt_value: dt.datetime) -> dt.datetime:
     """Return a datetime as UTC time.
 
     Assumes datetime without tzinfo to be in the DEFAULT_TIME_ZONE.
     """
-    if dattim.tzinfo == UTC:
-        return dattim
-    if dattim.tzinfo is None:
-        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
+    if dt_value.tzinfo == UTC:
+        return dt_value
+    if dt_value.tzinfo is None:
+        dt_value = dt_value.replace(tzinfo=DEFAULT_TIME_ZONE)
 
-    return dattim.astimezone(UTC)
+    return dt_value.astimezone(UTC)
 
 
 def as_timestamp(dt_value: dt.datetime | str) -> float:
@@ -89,14 +89,14 @@ def as_timestamp(dt_value: dt.datetime | str) -> float:
     return parsed_dt.timestamp()
 
 
-def as_local(dattim: dt.datetime) -> dt.datetime:
+def as_local(dt_value: dt.datetime) -> dt.datetime:
     """Convert a UTC datetime object to local time zone."""
-    if dattim.tzinfo == DEFAULT_TIME_ZONE:
-        return dattim
-    if dattim.tzinfo is None:
-        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
+    if dt_value.tzinfo == DEFAULT_TIME_ZONE:
+        return dt_value
+    if dt_value.tzinfo is None:
+        dt_value = dt_value.replace(tzinfo=DEFAULT_TIME_ZONE)
 
-    return dattim.astimezone(DEFAULT_TIME_ZONE)
+    return dt_value.astimezone(DEFAULT_TIME_ZONE)
 
 
 def utc_from_timestamp(timestamp: float) -> dt.datetime:
@@ -237,10 +237,10 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     return res
 
 
-def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
+def _dst_offset_diff(dt_value: dt.datetime) -> dt.timedelta:
     """Return the offset when crossing the DST barrier."""
     delta = dt.timedelta(hours=24)
-    return (dattim + delta).utcoffset() - (dattim - delta).utcoffset()  # type: ignore[operator]
+    return (dt_value + delta).utcoffset() - (dt_value - delta).utcoffset()  # type: ignore[operator]
 
 
 def _lower_bound(arr: list[int], cmp: int) -> int | None:
@@ -365,16 +365,18 @@ def find_next_time_expression_time(
         return result
 
 
-def _datetime_exists(dattim: dt.datetime) -> bool:
+def _datetime_exists(dt_value: dt.datetime) -> bool:
     """Check if a datetime exists."""
-    assert dattim.tzinfo is not None
-    original_tzinfo = dattim.tzinfo
+    assert dt_value.tzinfo is not None
+    original_tzinfo = dt_value.tzinfo
     # Check if we can round trip to UTC
-    return dattim == dattim.astimezone(UTC).astimezone(original_tzinfo)
+    return dt_value == dt_value.astimezone(UTC).astimezone(original_tzinfo)
 
 
-def _datetime_ambiguous(dattim: dt.datetime) -> bool:
+def _datetime_ambiguous(dt_value: dt.datetime) -> bool:
     """Check whether a datetime is ambiguous."""
-    assert dattim.tzinfo is not None
-    opposite_fold = dattim.replace(fold=not dattim.fold)
-    return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
+    assert dt_value.tzinfo is not None
+    opposite_fold = dt_value.replace(fold=not dt_value.fold)
+    return (
+        _datetime_exists(dt_value) and dt_value.utcoffset() != opposite_fold.utcoffset()
+    )
