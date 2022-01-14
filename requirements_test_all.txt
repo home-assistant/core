@@ -100,7 +100,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.aws
-aiobotocore==1.2.2
+aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.4.5
@@ -243,7 +243,7 @@ apns2==0.3.0
 apprise==0.9.6
 
 # homeassistant.components.aprs
-aprslib==0.6.46
+aprslib==0.7.0
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.12.0
