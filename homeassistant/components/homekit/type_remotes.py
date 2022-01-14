@@ -52,9 +52,7 @@ from .const import (
 )
 from .util import cleanup_name_for_homekit
 
-MAXIMUM_SOURCES = (
-    90  # Maximum services per accessory is 100. The base acccessory uses 9
-)
+MAXIMUM_SOURCES = 90  # Maximum services per accessory is 100. The base accessory uses 9
 
 _LOGGER = logging.getLogger(__name__)
 
