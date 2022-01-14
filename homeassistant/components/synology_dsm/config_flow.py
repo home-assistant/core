@@ -315,7 +315,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_2sa(
         self, user_input: dict[str, Any], errors: dict[str, str] | None = None
     ) -> FlowResult:
-        """Enter 2SA code to anthenticate."""
+        """Enter 2SA code to authenticate."""
         if not self.saved_user_input:
             self.saved_user_input = user_input
 
