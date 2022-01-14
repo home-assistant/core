@@ -225,8 +225,8 @@ push_weather_data:
       selector:
         text:
     pressure:
-      name: Barametric Pressure
-      description: Barametric Pressure (kPa)
+      name: Barometric Pressure
+      description: Barometric Pressure (kPa)
       selector:
         number:
           min: 60
