@@ -123,7 +123,7 @@ async def test_request_refresh(crd):
     assert crd.data == 1
     assert crd.last_update_success is True
 
-    # Second time we hit the debonuce
+    # Second time we hit the debounce
     await crd.async_request_refresh()
     assert crd.data == 1
     assert crd.last_update_success is True
@@ -137,7 +137,7 @@ async def test_request_refresh_no_auto_update(crd_without_update_interval):
     assert crd.data == 1
     assert crd.last_update_success is True
 
-    # Second time we hit the debonuce
+    # Second time we hit the debounce
     await crd.async_request_refresh()
     assert crd.data == 1
     assert crd.last_update_success is True
