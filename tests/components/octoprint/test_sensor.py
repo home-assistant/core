@@ -1,4 +1,4 @@
-"""The tests for Octoptint binary sensor module."""
+"""The tests for Octoprint binary sensor module."""
 from datetime import datetime, timezone
 from unittest.mock import patch
 

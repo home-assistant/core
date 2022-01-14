@@ -1,4 +1,4 @@
-"""The tests for Octoptint binary sensor module."""
+"""The tests for Octoprint binary sensor module."""
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
