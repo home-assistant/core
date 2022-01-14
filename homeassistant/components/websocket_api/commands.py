@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     MATCH_ALL,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -135,7 +135,7 @@ def handle_subscribe_bootstrap_integrations(
         connection.send_message(messages.event_message(msg["id"], message))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
+        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, forward_bootstrap_integrations
     )
 
     connection.send_message(messages.result_message(msg["id"]))

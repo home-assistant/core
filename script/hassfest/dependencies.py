@@ -166,7 +166,7 @@ def find_non_referenced_integrations(
     integration: Integration,
     references: dict[Path, set[str]],
 ):
-    """Find intergrations that are not allowed to be referenced."""
+    """Find integrations that are not allowed to be referenced."""
     allowed_references = calc_allowed_references(integration)
     referenced = set()
     for path, refs in references.items():

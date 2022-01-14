@@ -282,7 +282,7 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
 
                 if (
                     integration.domain not in ALLOW_NAME_TRANSLATION
-                    # Only enforce for core because custom integratinos can't be
+                    # Only enforce for core because custom integrations can't be
                     # added to allow list.
                     and integration.core
                     and strings.get("title") == integration.name

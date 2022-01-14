@@ -289,7 +289,7 @@ async def async_get_translations(
     """Return all backend translations.
 
     If integration specified, load it for that one.
-    Otherwise default to loaded intgrations combined with config flow
+    Otherwise default to loaded integrations combined with config flow
     integrations if config_flow is true.
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
