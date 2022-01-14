@@ -39,7 +39,7 @@ def create_valve_service(accessory):
 
 
 def create_char_switch_service(accessory):
-    """Define swtch characteristics."""
+    """Define switch characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
     on_char = service.add_char(CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE)

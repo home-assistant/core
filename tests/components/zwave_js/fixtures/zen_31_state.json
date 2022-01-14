@@ -514,7 +514,7 @@
             "0": "analog sensor w/no pullup",
             "1": "analog sensor with pull-up",
             "2": "momentary switch",
-            "3": "toggle switch (on when swithc is on)",
+            "3": "toggle switch (on when switch is on)",
             "4": "toggle switch (toggles with switch toggle)"
           },
           "valueSize": 1,
@@ -544,7 +544,7 @@
             "0": "analog sensor w/no pullup",
             "1": "analog sensor with pull-up",
             "2": "momentary switch",
-            "3": "toggle switch (on when swithc is on)",
+            "3": "toggle switch (on when switch is on)",
             "4": "toggle switch (toggles with switch toggle)"
           },
           "valueSize": 1,
@@ -574,7 +574,7 @@
             "0": "analog sensor w/no pullup",
             "1": "analog sensor with pull-up",
             "2": "momentary switch",
-            "3": "toggle switch (on when swithc is on)",
+            "3": "toggle switch (on when switch is on)",
             "4": "toggle switch (toggles with switch toggle)"
           },
           "valueSize": 1,
@@ -604,7 +604,7 @@
             "0": "analog sensor w/no pullup",
             "1": "analog sensor with pull-up",
             "2": "momentary switch",
-            "3": "toggle switch (on when swithc is on)",
+            "3": "toggle switch (on when switch is on)",
             "4": "toggle switch (toggles with switch toggle)"
           },
           "valueSize": 1,
