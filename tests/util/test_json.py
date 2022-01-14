@@ -114,7 +114,7 @@ def test_custom_encoder():
 
 
 def test_find_unserializable_data():
-    """Find unserializeable data."""
+    """Find unserializable data."""
     assert find_paths_unserializable_data(1) == {}
     assert find_paths_unserializable_data([1, 2]) == {}
     assert find_paths_unserializable_data({"something": "yo"}) == {}

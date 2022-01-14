@@ -70,7 +70,7 @@ class TagStorageCollection(collection.StorageCollection):
         data = self.CREATE_SCHEMA(data)
         if not data[TAG_ID]:
             data[TAG_ID] = str(uuid.uuid4())
-        # make last_scanned JSON serializeable
+        # make last_scanned JSON serializable
         if LAST_SCANNED in data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data
@@ -83,7 +83,7 @@ class TagStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
-        # make last_scanned JSON serializeable
+        # make last_scanned JSON serializable
         if LAST_SCANNED in update_data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data

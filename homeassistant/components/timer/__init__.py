@@ -168,7 +168,7 @@ class TimerStorageCollection(collection.StorageCollection):
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
-        # make duration JSON serializeable
+        # make duration JSON serializable
         data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
         return data
 
@@ -180,7 +180,7 @@ class TimerStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
-        # make duration JSON serializeable
+        # make duration JSON serializable
         if CONF_DURATION in update_data:
             data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
         return data
