@@ -117,7 +117,7 @@ async def test_websocket_core_update_not_admin(hass, hass_ws_client, hass_admin_
 
 async def test_websocket_bad_core_update(hass, client):
     """Test core config update fails with bad parameters."""
-    await client.send_json({"id": 7, "type": "config/core/update", "latituude": 23})
+    await client.send_json({"id": 7, "type": "config/core/update", "latitude_": 23})
 
     msg = await client.receive_json()
 
