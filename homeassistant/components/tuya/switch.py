@@ -85,7 +85,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Plug",
         ),
     ),
-    # Cirquit Breaker
+    # Circuit Breaker
     "dlq": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
