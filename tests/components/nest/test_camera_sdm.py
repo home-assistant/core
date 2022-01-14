@@ -520,7 +520,7 @@ async def test_refresh_expired_stream_failure(hass, auth):
 async def test_camera_image_from_last_event(hass, auth):
     """Test an image generated from an event."""
     # The subscriber receives a message related to an image event. The camera
-    # holds on to the event message. When the test asks for a capera snapshot
+    # holds on to the event message. When the test asks for a camera snapshot
     # it exchanges the event id for an image url and fetches the image.
     subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
     assert len(hass.states.async_all()) == 1
