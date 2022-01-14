@@ -172,7 +172,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ].data.position.get("dept")
         hass.data[DOMAIN][department] = False
         _LOGGER.debug(
-            "Weather alert for depatment %s unloaded and released. It can be added now by another city",
+            "Weather alert for department %s unloaded and released. It can be added now by another city",
             department,
         )
 
