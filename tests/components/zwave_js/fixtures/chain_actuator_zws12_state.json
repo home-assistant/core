@@ -353,7 +353,7 @@
           "format": 0,
           "allowManualEntry": true,
           "label": "Calibrate",
-          "description": "This parameter on/off callibration function",
+          "description": "This parameter on/off calibration function",
           "isFromConfig": true
         }
       },
