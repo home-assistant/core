@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aiocoap.error import NetworkError
 import async_timeout
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -81,10 +80,5 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
             return self.device
 
-        except NetworkError as err:
-            raise UpdateFailed(
-                f"Error communicating with API: {err}. Try unplugging and replugging your "
-                f"IKEA gateway."
-            ) from err
         except Exception as exc:
             raise UpdateFailed(f"Error communicating with API: {exc}") from exc
