@@ -23,7 +23,6 @@ PyMicroBot==0.0.8
 PyNaCl==1.5.0
 
 # homeassistant.auth.mfa_modules.totp
-# homeassistant.components.fritz
 # homeassistant.components.homekit
 PyQRCode==1.2.1
 
@@ -544,7 +543,6 @@ forecast_solar==2.2.0
 # homeassistant.components.freebox
 freebox-api==1.0.1
 
-# homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection==1.10.3
 

@@ -5,10 +5,7 @@ Currently only used to display QR codes.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import io
 import logging
-
-import pyqrcode
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
@@ -18,11 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import (
-    DEFAULT_GUEST_WIFI_ENCRYPTION,
-    DEFAULT_GUEST_WIFI_QR_REFRESH_SEC,
-    DOMAIN,
-)
+from .const import DEFAULT_GUEST_WIFI_QR_REFRESH_SEC, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,14 +93,9 @@ class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
     def _generate_guest_wifi_qr(self) -> bytes:
         """Generate a QR code for the guest wifi."""
         _LOGGER.debug("start generating guest wifi qr code")
-
-        wifi = f"WIFI:S:{self._ssid};T:{DEFAULT_GUEST_WIFI_ENCRYPTION};P:{self._fritzbox_tools.fritz_guest_wifi.get_password()};;"
-        _LOGGER.debug("wifi string: %s", wifi)
-        buffer = io.BytesIO()
-        img = pyqrcode.create(wifi)
-        _LOGGER.debug("qr code created")
-        img.svg(buffer, scale=1, module_color="#000", background="#FFF")
-        return buffer.getvalue()
+        return bytes(
+            self._avm_device.fritz_guest_wifi.get_wifi_qr_code("svg").getvalue()
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
