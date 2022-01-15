@@ -1,13 +1,28 @@
 {
   "config": {
+    "flow_title": "Flashforge 3D Printer: {serial_number}",
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "ip_addr": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Enter IP and port-number for your Flashforge 3d Printer. Leave empty to auto discover printer."
+      },
+      "auto_confirm": {
+        "title": "Discovered Flashforge device.",
+        "description": "Found printer {machine_name} on {ip_addr}. Do you want to add this printer to Home Assistant?"
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }
