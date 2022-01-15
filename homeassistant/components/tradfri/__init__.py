@@ -115,6 +115,11 @@ async def async_setup_entry(
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
+        devices_commands: Command = await api(
+            gateway.get_devices(), timeout=TIMEOUT_API
+        )
+        devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
+
     except PytradfriError as exc:
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
@@ -133,10 +138,8 @@ async def async_setup_entry(
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    # Setup the device coordinators
     coordinator_data = {CONF_GATEWAY_ID: gateway, KEY_API: api, COORDINATOR_LIST: []}
-
-    devices_commands: Command = await api(gateway.get_devices(), timeout=TIMEOUT_API)
-    devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
 
     for device in devices:
         coordinator = TradfriDeviceDataUpdateCoordinator(
