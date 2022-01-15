@@ -214,8 +214,8 @@ homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/dlna_dmr/* @StevenLooman @chishm
 tests/components/dlna_dmr/* @StevenLooman @chishm
-homeassistant/components/doorbird/* @oblogic7 @bdraco
-tests/components/doorbird/* @oblogic7 @bdraco
+homeassistant/components/doorbird/* @oblogic7 @bdraco @flacjacket
+tests/components/doorbird/* @oblogic7 @bdraco @flacjacket
 homeassistant/components/dsmr/* @Robbie1221 @frenck
 tests/components/dsmr/* @Robbie1221 @frenck
 homeassistant/components/dsmr_reader/* @depl0y
