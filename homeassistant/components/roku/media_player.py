@@ -403,17 +403,17 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             await self.coordinator.roku.launch(media_id, params)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
-        elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
-            params = {
-                "MediaType": "hls",
-            }
-
-            await self.coordinator.roku.play_video(media_id, params)
         elif media_type == MEDIA_TYPE_URL:
             params = {
                 param: extra[attr]
                 for (attr, param) in ATTRS_TO_PLAY_VIDEO_PARAMS.items()
                 if attr in extra
+            }
+
+            await self.coordinator.roku.play_video(media_id, params)
+        elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
+            params = {
+                "MediaType": "hls",
             }
 
             await self.coordinator.roku.play_video(media_id, params)
