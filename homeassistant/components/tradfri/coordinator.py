@@ -10,7 +10,7 @@ from aiocoap.error import NetworkError
 import async_timeout
 from pytradfri.command import Command
 from pytradfri.device import Device
-from pytradfri.error import PytradfriError
+from pytradfri.error import RequestError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -51,7 +51,9 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.api(cmd)
         except RequestError as err:
-            _LOGGER.debug("Observation failed for %s, trying again", device, exc_info=err)
+            _LOGGER.debug(
+                "Observation failed for %s, trying again", device, exc_info=err
+            )
             self._async_start_observe(device=device)
 
     @callback
