@@ -88,6 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(info["serial"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -97,7 +98,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

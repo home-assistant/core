@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Das Gerät ist bereits konfiguriert. Aktuell ist lediglich eine Konfiguration unterstützt."
+            "already_configured": "Ein Gerät mit dieser Seriennummer ist bereits konfiguriert."
         },
         "error": {
             "cannot_connect": "Es konnte keine Verbindung hergestellt werden. Bitte prüfe die Konfiguration.",
