@@ -11,6 +11,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from . import async_control_connect
@@ -116,12 +117,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="pairing", errors=errors)
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        self._host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        self._name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        self._host = urlparse(discovery_info.ssdp_location).hostname
+        self._name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
-        uuid = discovery_info[ssdp.ATTR_UPNP_UDN]
+        uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         if uuid.startswith("uuid:"):
             uuid = uuid[5:]
         await self.async_set_unique_id(uuid)

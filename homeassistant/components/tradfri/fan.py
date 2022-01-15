@@ -67,6 +67,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         """Initialize a switch."""
         super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
+        self._refresh(device, write_ha=False)
 
     @property
     def supported_features(self) -> int:

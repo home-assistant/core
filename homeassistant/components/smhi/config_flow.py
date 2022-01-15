@@ -48,6 +48,10 @@ class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if is_ok:
                 name = slugify(user_input[CONF_NAME])
                 if not self._name_in_configuration_exists(name):
+                    latitude = user_input[CONF_LATITUDE]
+                    longitude = user_input[CONF_LONGITUDE]
+                    await self.async_set_unique_id(f"{latitude}-{longitude}")
+                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=user_input[CONF_NAME], data=user_input
                     )

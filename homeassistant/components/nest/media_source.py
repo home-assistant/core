@@ -32,7 +32,9 @@ from google_nest_sdm.event_media import (
     ImageSession,
 )
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
+from google_nest_sdm.transcoder import Transcoder
 
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_IMAGE,
@@ -89,6 +91,13 @@ async def async_get_media_event_store(
     await hass.async_add_executor_job(mkdir)
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     return NestEventMediaStore(hass, subscriber, store, media_path)
+
+
+async def async_get_transcoder(hass: HomeAssistant) -> Transcoder:
+    """Get a nest clip transcoder."""
+    media_path = hass.config.path(MEDIA_PATH)
+    ffmpeg_manager = get_ffmpeg_manager(hass)
+    return Transcoder(ffmpeg_manager.binary, media_path)
 
 
 class NestEventMediaStore(EventMediaStore):
@@ -175,6 +184,15 @@ class NestEventMediaStore(EventMediaStore):
         time_str = str(int(event.timestamp.timestamp()))
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
         return f"{device_id_str}/{time_str}-{event_type_str}.mp4"
+
+    def get_clip_preview_thumbnail_media_key(
+        self, device_id: str, event: ImageEventBase
+    ) -> str:
+        """Return the filename for clip preview thumbnail media for an event session."""
+        device_id_str = self._map_device_id(device_id)
+        time_str = str(int(event.timestamp.timestamp()))
+        event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
+        return f"{device_id_str}/{time_str}-{event_type_str}_thumb.gif"
 
     def get_media_filename(self, media_key: str) -> str:
         """Return the filename in storage for a media key."""
@@ -381,9 +399,11 @@ class NestMediaSource(MediaSource):
                 browse_device.children = []
                 for clip in clips.values():
                     event_id = MediaId(media_id.device_id, clip.event_token)
-                    browse_device.children.append(
-                        _browse_clip_preview(event_id, device, clip)
-                    )
+                    browse_event = _browse_clip_preview(event_id, device, clip)
+                    browse_device.children.append(browse_event)
+                    # Use thumbnail for first event in the list as the device thumbnail
+                    if browse_device.thumbnail is None:
+                        browse_device.thumbnail = browse_event.thumbnail
                 return browse_device
 
             # Browse a specific event
@@ -485,7 +505,9 @@ def _browse_clip_preview(
         ),
         can_play=True,
         can_expand=False,
-        thumbnail=None,
+        thumbnail=EVENT_THUMBNAIL_URL_FORMAT.format(
+            device_id=event_id.device_id, event_token=event_id.event_token
+        ),
         children=[],
     )
 
