@@ -56,7 +56,7 @@ def mock_switch(test_features=None, test_state=None, device_number=0):
 
 
 async def test_switch(hass, mock_gateway, mock_api_factory):
-    """Test that fans are correctly added."""
+    """Test that switches are correctly added."""
     state = {
         "state": True,
     }
@@ -64,9 +64,9 @@ async def test_switch(hass, mock_gateway, mock_api_factory):
     mock_gateway.mock_devices.append(mock_switch(test_state=state))
     await setup_integration(hass)
 
-    fan_1 = hass.states.get("switch.tradfri_switch_0")
-    assert fan_1 is not None
-    assert fan_1.state == "on"
+    switch_1 = hass.states.get("switch.tradfri_switch_0")
+    assert switch_1 is not None
+    assert switch_1.state == "on"
 
 
 async def test_switch_observed(hass, mock_gateway, mock_api_factory):
@@ -126,7 +126,7 @@ async def test_turn_on_off(
     mock_gateway.mock_devices.append(switch)
     await setup_integration(hass)
 
-    # Use the turn_on service call to change the fan state.
+    # Use the turn_on/turn_off service call to change the switch state.
     await hass.services.async_call(
         "switch",
         test_data,
@@ -137,18 +137,18 @@ async def test_turn_on_off(
     )
     await hass.async_block_till_done()
 
-    # Check that the fan is observed.
+    # Check that the switch is observed.
     mock_func = switch.observe
     assert len(mock_func.mock_calls) > 0
     _, callkwargs = mock_func.call_args
     assert "callback" in callkwargs
-    # Callback function to refresh fan state.
+    # Callback function to refresh switch state.
     callback = callkwargs["callback"]
 
     responses = mock_gateway.mock_responses
     mock_gateway_response = responses[0]
 
-    # Use the callback function to update the fan state.
+    # Use the callback function to update the switch state.
     dev = Device(mock_gateway_response)
     switch_data = Socket(dev, 0)
     switch.socket_control.sockets[0] = switch_data
