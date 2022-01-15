@@ -80,6 +80,12 @@ ATTRS_TO_LAUNCH_PARAMS = {
     ATTR_MEDIA_TYPE: "MediaType",
 }
 
+PLAY_MEDIA_SUPPORTED_TYPES = (
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_CHANNEL,
+    FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+)
+
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 
@@ -371,9 +377,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Tune to channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
 
-        if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
+        if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(
-                "Invalid media type %s. Only %s and %s are supported",
+                "Invalid media type %s. Only %s, %s, and camera HLS streams are supported",
                 media_type,
                 MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
