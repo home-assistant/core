@@ -137,7 +137,11 @@ async def async_setup_entry(
     )
 
     # Setup the device coordinators
-    coordinator_data = {CONF_GATEWAY_ID: gateway, KEY_API: api, COORDINATOR_LIST: []}
+    coordinator_data = {
+        CONF_GATEWAY_ID: gateway,
+        KEY_API: api,
+        COORDINATOR_LIST: [],
+    }
 
     for device in devices:
         coordinator = TradfriDeviceDataUpdateCoordinator(
