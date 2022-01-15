@@ -99,13 +99,16 @@ class FlashForgeStatusSensor(FlashForgeSensorBase):
     @property
     def native_value(self):
         """Return sensor state."""
-        status: str = self.coordinator.printer.status
+        status: str = self.coordinator.printer.machine_status
         return status
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.printer.status
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.printer.machine_status
+        )
 
 
 class FlashForgeJobPercentageSensor(FlashForgeSensorBase):
