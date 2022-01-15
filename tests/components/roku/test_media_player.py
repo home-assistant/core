@@ -46,10 +46,7 @@ from homeassistant.components.roku.const import (
     DOMAIN,
     SERVICE_SEARCH,
 )
-from homeassistant.components.stream.const import (
-    HLS_PROVIDER,
-    FORMAT_CONTENT_TYPE,
-)
+from homeassistant.components.stream.const import HLS_PROVIDER, FORMAT_CONTENT_TYPE
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
