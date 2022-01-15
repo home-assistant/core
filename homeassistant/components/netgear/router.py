@@ -52,7 +52,7 @@ def get_api(
     """Get the Netgear API and login to it."""
     api: Netgear = Netgear(password, host, username, port, ssl)
 
-    if not api.login():
+    if not api.login_try_port():
         raise CannotLoginException
 
     return api

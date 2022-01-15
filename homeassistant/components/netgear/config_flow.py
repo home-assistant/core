@@ -196,8 +196,8 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_HOST: host,
-            CONF_PORT: port,
-            CONF_SSL: ssl,
+            CONF_PORT: api.port,
+            CONF_SSL: api.ssl,
         }
 
         if info.get("ModelName") is not None and info.get("DeviceName") is not None:
