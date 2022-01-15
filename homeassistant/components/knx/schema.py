@@ -14,10 +14,12 @@ from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
-from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
+from homeassistant.components.cover import (
+    DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
 from homeassistant.const import (
@@ -316,7 +318,7 @@ class BinarySensorSchema(KNXPlatformSchema):
                 vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
-                vol.Optional(CONF_DEVICE_CLASS): vol.In(BINARY_SENSOR_DEVICE_CLASSES),
+                vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_float,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
@@ -552,7 +554,7 @@ class CoverSchema(KNXPlatformSchema):
                 ): cv.positive_float,
                 vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-                vol.Optional(CONF_DEVICE_CLASS): vol.In(COVER_DEVICE_CLASSES),
+                vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),

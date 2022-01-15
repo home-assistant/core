@@ -1,17 +1,18 @@
 """The Nina integration."""
 from __future__ import annotations
 
-from datetime import timedelta
+import datetime as dt
 from typing import Any
 
 from async_timeout import timeout
-from pynina import ApiError, Nina, Warning as NinaWarning
+from pynina import ApiError, Nina
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -59,33 +60,26 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
         self.warnings: dict[str, Any] = {}
         self.corona_filter: bool = corona_filter
 
-        for region in regions.keys():
+        for region in regions:
             self._nina.addRegion(region)
 
-        update_interval: timedelta = SCAN_INTERVAL
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data."""
-
-        try:
-            async with timeout(10):
+        async with timeout(10):
+            try:
                 await self._nina.update()
-                return self._parse_data()
-        except ApiError as err:
-            raise UpdateFailed(err) from err
+            except ApiError as err:
+                raise UpdateFailed(err) from err
+            return self._parse_data()
 
     def _parse_data(self) -> dict[str, Any]:
         """Parse warning data."""
 
         return_data: dict[str, Any] = {}
 
-        for (
-            region_id
-        ) in self._nina.warnings:  # pylint: disable=consider-using-dict-items
-            raw_warnings: list[NinaWarning] = self._nina.warnings[region_id]
-
+        for region_id, raw_warnings in self._nina.warnings.items():
             warnings_for_regions: list[Any] = []
 
             for raw_warn in raw_warnings:
@@ -95,12 +89,22 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
                 warn_obj: dict[str, Any] = {
                     ATTR_ID: raw_warn.id,
                     ATTR_HEADLINE: raw_warn.headline,
-                    ATTR_SENT: raw_warn.sent or "",
-                    ATTR_START: raw_warn.start or "",
-                    ATTR_EXPIRES: raw_warn.expires or "",
+                    ATTR_SENT: self._to_utc(raw_warn.sent),
+                    ATTR_START: self._to_utc(raw_warn.start),
+                    ATTR_EXPIRES: self._to_utc(raw_warn.expires),
                 }
                 warnings_for_regions.append(warn_obj)
 
             return_data[region_id] = warnings_for_regions
 
         return return_data
+
+    @staticmethod
+    def _to_utc(input_time: str) -> str | None:
+        if input_time:
+            return (
+                dt.datetime.fromisoformat(input_time)
+                .astimezone(dt_util.UTC)
+                .isoformat()
+            )
+        return None

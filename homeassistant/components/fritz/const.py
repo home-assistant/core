@@ -2,11 +2,22 @@
 
 from typing import Literal
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
+
+
+class MeshRoles(StrEnum):
+    """Available Mesh roles."""
+
+    NONE = "none"
+    MASTER = "master"
+    SLAVE = "slave"
+
 
 DOMAIN = "fritz"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
@@ -34,7 +45,5 @@ SERVICE_CLEANUP = "cleanup"
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"
 SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
-
-TRACKER_SCAN_INTERVAL = 30
 
 UPTIME_DEVIATION = 5

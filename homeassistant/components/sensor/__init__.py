@@ -59,7 +59,7 @@ from .const import CONF_STATE_CLASS  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
+ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -71,6 +71,9 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
+
+    # apparent power (VA)
+    APPARENT_POWER = "apparent_power"
 
     # Air Quality Index
     AQI = "aqi"
@@ -90,7 +93,7 @@ class SensorDeviceClass(StrEnum):
     # date (ISO8601)
     DATE = "date"
 
-    # energy (kWh, Wh)
+    # energy (Wh, kWh, MWh)
     ENERGY = "energy"
 
     # frequency (Hz, kHz, MHz, GHz)
@@ -137,6 +140,9 @@ class SensorDeviceClass(StrEnum):
 
     # pressure (hPa/mbar)
     PRESSURE = "pressure"
+
+    # reactive power (var)
+    REACTIVE_POWER = "reactive_power"
 
     # signal strength (dB/dBm)
     SIGNAL_STRENGTH = "signal_strength"
@@ -215,7 +221,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | str | None = None
-    last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
+    last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
@@ -247,7 +253,7 @@ class SensorEntity(Entity):
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | str | None
-    _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
+    _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime = None
     _attr_state_class: SensorStateClass | str | None
@@ -280,7 +286,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def last_reset(self) -> datetime | None:  # Deprecated, to be removed in 2021.11
+    def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
             return self._attr_last_reset
@@ -302,15 +308,16 @@ class SensorEntity(Entity):
         """Return state attributes."""
         if last_reset := self.last_reset:
             if (
-                self.state_class == SensorStateClass.MEASUREMENT
+                self.state_class != SensorStateClass.TOTAL
                 and not self._last_reset_reported
             ):
                 self._last_reset_reported = True
                 report_issue = self._suggest_report_issue()
+                # This should raise in Home Assistant Core 2022.5
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
                     "last_reset for entities with state_class other than 'total' is "
-                    "deprecated and will be removed from Home Assistant Core 2021.11. "
+                    "not supported. "
                     "Please update your configuration if state_class is manually "
                     "configured, otherwise %s",
                     self.entity_id,
@@ -319,7 +326,8 @@ class SensorEntity(Entity):
                     report_issue,
                 )
 
-            return {ATTR_LAST_RESET: last_reset.isoformat()}
+            if self.state_class == SensorStateClass.TOTAL:
+                return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
 

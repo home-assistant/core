@@ -8,11 +8,11 @@ from homeassistant.components.advantage_air.const import (
 )
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    CoverDeviceClass,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
 from homeassistant.helpers import entity_registry as er
@@ -49,7 +49,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
-    assert state.attributes.get("device_class") == DEVICE_CLASS_DAMPER
+    assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
     assert state.attributes.get("current_position") == 100
 
     entry = registry.async_get(entity_id)

@@ -9,8 +9,6 @@ import attr
 if TYPE_CHECKING:
     from .core import Context
 
-# mypy: disallow-any-generics
-
 
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""

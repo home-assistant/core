@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN
+from .const import DOMAIN
 
 
 class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -89,7 +89,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
-                CONF_SERIAL_NUMBER: self.serial_number,
             },
         )
 

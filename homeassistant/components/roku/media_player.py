@@ -3,16 +3,17 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_RECEIVER,
-    DEVICE_CLASS_TV,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_BROWSE_MEDIA,
@@ -28,6 +29,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
@@ -36,12 +38,20 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
-from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .const import (
+    ATTR_CONTENT_ID,
+    ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
+    DOMAIN,
+    SERVICE_SEARCH,
+)
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
@@ -61,10 +71,17 @@ SUPPORT_ROKU = (
     | SUPPORT_BROWSE_MEDIA
 )
 
+ATTRS_TO_LAUNCH_PARAMS = {
+    ATTR_CONTENT_ID: "contentID",
+    ATTR_MEDIA_TYPE: "MediaType",
+}
+
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Roku config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
@@ -104,9 +121,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def device_class(self) -> str | None:
         """Return the class of this device."""
         if self.coordinator.data.info.device_type == "tv":
-            return DEVICE_CLASS_TV
+            return MediaPlayerDeviceClass.TV
 
-        return DEVICE_CLASS_RECEIVER
+        return MediaPlayerDeviceClass.RECEIVER
 
     @property
     def state(self) -> str | None:
@@ -240,7 +257,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         media_content_type: str,
         media_content_id: str,
         media_image_id: str | None = None,
-    ) -> tuple[str | None, str | None]:
+    ) -> tuple[bytes | None, str | None]:
         """Fetch media browser image to serve via proxy."""
         if media_content_type == MEDIA_TYPE_APP and media_content_id:
             image_url = self.coordinator.roku.app_icon_url(media_content_id)
@@ -348,6 +365,8 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
+        extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+
         if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
             _LOGGER.error(
                 "Invalid media type %s. Only %s and %s are supported",
@@ -358,7 +377,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return
 
         if media_type == MEDIA_TYPE_APP:
-            await self.coordinator.roku.launch(media_id)
+            params = {
+                param: extra[attr]
+                for (attr, param) in ATTRS_TO_LAUNCH_PARAMS.items()
+                if attr in extra
+            }
+
+            await self.coordinator.roku.launch(media_id, params)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
 

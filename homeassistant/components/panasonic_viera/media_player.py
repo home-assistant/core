@@ -5,7 +5,10 @@ import logging
 
 from panasonic_viera import Keys
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -20,8 +23,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -51,7 +57,11 @@ SUPPORT_VIERATV = (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Panasonic Viera TV from a config entry."""
 
     config = config_entry.data
@@ -95,7 +105,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     @property
     def device_class(self):
         """Return the device class of the device."""
-        return DEVICE_CLASS_TV
+        return MediaPlayerDeviceClass.TV
 
     @property
     def name(self):

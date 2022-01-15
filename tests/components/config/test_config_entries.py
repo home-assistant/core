@@ -79,7 +79,7 @@ async def test_get_entries(hass, client):
             domain="comp3",
             title="Test 3",
             source="bla3",
-            disabled_by=core_ce.DISABLED_USER,
+            disabled_by=core_ce.ConfigEntryDisabler.USER,
         ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
@@ -121,7 +121,7 @@ async def test_get_entries(hass, client):
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
-                "disabled_by": core_ce.DISABLED_USER,
+                "disabled_by": core_ce.ConfigEntryDisabler.USER,
                 "reason": None,
             },
         ]
@@ -877,14 +877,14 @@ async def test_disable_entry(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": entry.entry_id,
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()
 
     assert response["success"]
     assert response["result"] == {"require_restart": True}
-    assert entry.disabled_by == core_ce.DISABLED_USER
+    assert entry.disabled_by is core_ce.ConfigEntryDisabler.USER
     assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
@@ -930,7 +930,7 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": "non_existing",
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()

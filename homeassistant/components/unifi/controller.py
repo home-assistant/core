@@ -26,7 +26,6 @@ from aiounifi.events import (
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
-from homeassistant.components.unifi.switch import BLOCK_SWITCH, POE_SWITCH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -70,6 +69,7 @@ from .const import (
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
+from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
@@ -246,11 +246,7 @@ class UniFiController:
                 )
 
             elif DATA_DPI_GROUP in data:
-                for key in data[DATA_DPI_GROUP]:
-                    if self.api.dpi_groups[key].dpiapp_ids:
-                        async_dispatcher_send(self.hass, self.signal_update)
-                    else:
-                        async_dispatcher_send(self.hass, self.signal_remove, {key})
+                async_dispatcher_send(self.hass, self.signal_update)
 
             elif DATA_DPI_GROUP_REMOVED in data:
                 async_dispatcher_send(
@@ -504,6 +500,7 @@ async def get_controller(
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
+        aiounifi.ResponseError,
     ) as err:
         LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
         raise CannotConnect from err

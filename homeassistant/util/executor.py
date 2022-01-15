@@ -10,7 +10,7 @@ from threading import Thread
 import time
 import traceback
 
-from homeassistant.util.thread import async_raise
+from .thread import async_raise
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
 
     def shutdown(self, *args, **kwargs) -> None:  # type: ignore
         """Shutdown backport from cpython 3.9 with interrupt support added."""
-        with self._shutdown_lock:  # type: ignore[attr-defined]
+        with self._shutdown_lock:
             self._shutdown = True
             # Drain all work items from the queue, and then cancel their
             # associated futures.
@@ -77,7 +77,7 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
                     work_item.future.cancel()
             # Send a wake-up to prevent threads calling
             # _work_queue.get(block=True) from permanently blocking.
-            self._work_queue.put(None)
+            self._work_queue.put(None)  # type: ignore[arg-type]
 
         # The above code is backported from python 3.9
         #
@@ -89,7 +89,7 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
 
     def join_threads_or_timeout(self) -> None:
         """Join threads or timeout."""
-        remaining_threads = set(self._threads)  # type: ignore[attr-defined]
+        remaining_threads = set(self._threads)
         start_time = time.monotonic()
         timeout_remaining: float = EXECUTOR_SHUTDOWN_TIMEOUT
         attempt = 0

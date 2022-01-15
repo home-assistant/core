@@ -16,7 +16,7 @@
             "unknown_device": "Le mod\u00e8le d'appareil n'est pas connu, impossible de configurer l'appareil \u00e0 l'aide du flux de configuration.",
             "wrong_token": "Erreur de somme de contr\u00f4le, jeton incorrect"
         },
-        "flow_title": "Xiaomi Miio: {name}",
+        "flow_title": "{name}",
         "step": {
             "cloud": {
                 "data": {

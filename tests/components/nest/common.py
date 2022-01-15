@@ -1,7 +1,7 @@
 """Common libraries for test setup."""
 
+from collections.abc import Awaitable, Callable
 import time
-from typing import Awaitable, Callable
 from unittest.mock import patch
 
 from google_nest_sdm.device_manager import DeviceManager
@@ -62,7 +62,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     def set_update_callback(self, callback: Callable[[EventMessage], Awaitable[None]]):
         """Capture the callback set by Home Assistant."""
-        self._callback = callback
+        self._device_manager.set_update_callback(callback)
 
     async def create_subscription(self):
         """Create the subscription."""
@@ -93,7 +93,6 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Simulate a received pubsub message, invoked by tests."""
         # Update device state, then invoke HomeAssistant to refresh
         await self._device_manager.async_handle_event(event_message)
-        await self._callback(event_message)
 
 
 async def async_setup_sdm_platform(
@@ -118,7 +117,4 @@ async def async_setup_sdm_platform(
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
-    # Disabled to reduce setup burden, and enabled manually by tests that
-    # need to exercise this
-    subscriber.cache_policy.fetch = False
     return subscriber

@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from itertools import groupby
 import logging
-from typing import Any, Awaitable, Callable, Iterable, Optional, cast
+from typing import Any, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -16,11 +16,12 @@ from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
+
+from . import entity_registry
+from .entity import Entity
+from .entity_component import EntityComponent
+from .storage import Store
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10

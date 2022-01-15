@@ -4,6 +4,7 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
     STATE_JAMMED,
@@ -93,7 +94,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -107,11 +110,13 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == {
             "extra_fields": [

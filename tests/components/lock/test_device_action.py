@@ -2,6 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.lock import DOMAIN, SUPPORT_OPEN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -85,7 +86,9 @@ async def test_get_actions(
         }
         for action in expected_action_types
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 

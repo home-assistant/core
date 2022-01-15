@@ -1,18 +1,15 @@
 """Support for Supla cover - curtains, rollershutters, entry gate etc."""
+from __future__ import annotations
+
 import logging
 from pprint import pformat
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DEVICE_CLASS_GARAGE,
-    CoverEntity,
-)
-from homeassistant.components.supla import (
-    DOMAIN,
-    SUPLA_COORDINATORS,
-    SUPLA_SERVERS,
-    SuplaChannel,
-)
+from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,15 +17,20 @@ SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
 SUPLA_GATE = "CONTROLLINGTHEGATE"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Supla covers."""
     if discovery_info is None:
         return
 
     _LOGGER.debug("Discovery: %s", pformat(discovery_info))
 
-    entities = []
-    for device in discovery_info:
+    entities: list[CoverEntity] = []
+    for device in discovery_info.values():
         device_name = device["function_name"]
         server_name = device["server_name"]
 
@@ -119,4 +121,4 @@ class SuplaGateDoor(SuplaChannel, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
+        return CoverDeviceClass.GARAGE

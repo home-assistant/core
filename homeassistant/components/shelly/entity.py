@@ -19,7 +19,7 @@ from homeassistant.helpers import (
     entity_registry,
     update_coordinator,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -237,7 +237,7 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     extra_state_attributes: Callable[[Block], dict | None] | None = None
-    entity_category: str | None = None
+    entity_category: EntityCategory | None = None
 
 
 @dataclass
@@ -256,7 +256,7 @@ class RpcAttributeDescription:
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
-    entity_category: str | None = None
+    entity_category: EntityCategory | None = None
 
 
 @dataclass
@@ -271,7 +271,7 @@ class RestAttributeDescription:
     state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
-    entity_category: str | None = None
+    entity_category: EntityCategory | None = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -471,7 +471,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.extra_state_attributes(self.block)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return category of entity."""
         return self.description.entity_category
 
@@ -548,7 +548,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return self.description.extra_state_attributes(self.wrapper.device.status)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return category of entity."""
         return self.description.entity_category
 
@@ -614,7 +614,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         )
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return category of entity."""
         return self.description.entity_category
 

@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import _LOGGER, DOMAIN
 
@@ -23,7 +24,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     ayla_api = get_ayla_api(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
-        websession=hass.helpers.aiohttp_client.async_get_clientsession(hass),
+        websession=async_get_clientsession(hass),
     )
 
     try:

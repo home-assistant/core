@@ -42,14 +42,14 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.COVER)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.COVER)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation cover from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.COVER]
 
@@ -63,7 +63,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_COVER)
+@MULTI_MATCH(channel_names=CHANNEL_COVER)
 class ZhaCover(ZhaEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
@@ -182,7 +182,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
                 self._state = None
 
 
-@STRICT_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
+@MULTI_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
 class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
@@ -289,7 +289,7 @@ class Shade(ZhaEntity, CoverEntity):
             return
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF}, manufacturers="Keen Home Inc"
 )
 class KeenVent(Shade):

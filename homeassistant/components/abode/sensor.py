@@ -1,15 +1,20 @@
 """Support for Abode Security System sensors."""
 from __future__ import annotations
 
-import abodepy.helpers.constants as CONST
+from typing import cast
+
+from abodepy.devices.sensor import CONST, AbodeSensor as AbodeSense
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice
+from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -31,9 +36,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Abode sensor devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
     entities = []
 
@@ -53,7 +60,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AbodeSensor(AbodeDevice, SensorEntity):
     """A sensor implementation for Abode devices."""
 
-    def __init__(self, data, device, description: SensorEntityDescription):
+    _device: AbodeSense
+
+    def __init__(
+        self,
+        data: AbodeSystem,
+        device: AbodeSense,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self.entity_description = description
@@ -67,11 +81,12 @@ class AbodeSensor(AbodeDevice, SensorEntity):
             self._attr_native_unit_of_measurement = device.lux_unit
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CONST.TEMP_STATUS_KEY:
-            return self._device.temp
+            return cast(float, self._device.temp)
         if self.entity_description.key == CONST.HUMI_STATUS_KEY:
-            return self._device.humidity
+            return cast(float, self._device.humidity)
         if self.entity_description.key == CONST.LUX_STATUS_KEY:
-            return self._device.lux
+            return cast(float, self._device.lux)
+        return None

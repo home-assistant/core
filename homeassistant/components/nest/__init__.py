@@ -1,19 +1,25 @@
 """Support for Nest devices."""
 from __future__ import annotations
 
+from abc import ABC
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
 from aiohttp import web
 from google_nest_sdm.event import EventMessage
+from google_nest_sdm.event_media import Media
 from google_nest_sdm.exceptions import (
+    ApiException,
     AuthException,
     ConfigurationException,
-    GoogleNestException,
+    DecodeException,
+    SubscriberException,
 )
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.components.camera import Image, img_util
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +57,7 @@ from .const import (
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
-from .media_source import get_media_source_devices
+from .media_source import async_get_media_event_store, get_media_source_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,10 +93,13 @@ PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
-# Fetch media for events with an in memory cache. The largest media items
-# are mp4 clips at ~90kb each, so this totals a few MB per camera.
-# Note: Media for events can only be published within 30 seconds of the event
-EVENT_MEDIA_CACHE_SIZE = 64
+# Fetch media events with a disk backed cache, with a limit for each camera
+# device. The largest media items are mp4 clips at ~120kb each, and we target
+# ~125MB of storage per camera to try to balance a reasonable user experience
+# for event history not not filling the disk.
+EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
+
+THUMBNAIL_SIZE_PX = 175
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -139,17 +148,16 @@ class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_NEST_CONFIG] = config.get(DOMAIN)
 
     if DOMAIN not in config:
         return True
 
-    if CONF_PROJECT_ID not in config[DOMAIN]:
+    config_mode = config_flow.get_config_mode(hass)
+    if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
 
-    # For setup of ConfigEntry below
-    hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
-    config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
         InstalledAppAuth(
@@ -169,18 +177,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
     )
 
+    hass.http.register_view(NestEventMediaView(hass))
+    hass.http.register_view(NestEventMediaThumbnailView(hass))
+
     return True
 
 
 class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_reload_cb: Callable[[], Awaitable[None]]
+    ) -> None:
         """Initialize EventCallback."""
         self._hass = hass
+        self._config_reload_cb = config_reload_cb
 
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
+        if event_message.relation_update:
+            _LOGGER.info("Devices or homes have changed; Need reload to take effect")
+            return
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
@@ -198,7 +215,7 @@ class SignalUpdateCallback:
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
-                "nest_event_id": image_event.event_session_id,
+                "nest_event_id": image_event.event_token,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
@@ -215,8 +232,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
+    # Use disk backed event media store
+    subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
 
-    callback = SignalUpdateCallback(hass)
+    async def async_config_reload() -> None:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    callback = SignalUpdateCallback(hass, async_config_reload)
     subscriber.set_update_callback(callback.async_handle_event)
     try:
         await subscriber.start_async()
@@ -227,7 +249,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
         return False
-    except GoogleNestException as err:
+    except SubscriberException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Subscriber error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -236,7 +258,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -247,8 +269,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    hass.http.register_view(NestEventMediaView(hass))
 
     return True
 
@@ -280,7 +300,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
     try:
         await subscriber.delete_subscription()
-    except GoogleNestException as err:
+    except (AuthException, SubscriberException) as err:
         _LOGGER.warning(
             "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
             subscriber.subscriber_id,
@@ -290,22 +310,15 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         subscriber.stop_async()
 
 
-class NestEventMediaView(HomeAssistantView):
-    """Returns media for related to events for a specific device.
-
-    This is primarily used to render media for events for MediaSource. The media type
-    depends on the specific device e.g. an image, or a movie clip preview.
-    """
-
-    url = "/api/nest/event_media/{device_id}/{event_id}"
-    name = "api:nest:event_media"
+class NestEventViewBase(HomeAssistantView, ABC):
+    """Base class for media event APIs."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize NestEventMediaView."""
+        """Initialize NestEventViewBase."""
         self.hass = hass
 
     async def get(
-        self, request: web.Request, device_id: str, event_id: str
+        self, request: web.Request, device_id: str, event_token: str
     ) -> web.StreamResponse:
         """Start a GET request."""
         user = request[KEY_HASS_USER]
@@ -320,19 +333,59 @@ class NestEventMediaView(HomeAssistantView):
                 f"No Nest Device found for '{device_id}'", HTTPStatus.NOT_FOUND
             )
         try:
-            event_media = await nest_device.event_media_manager.get_media(event_id)
-        except GoogleNestException as err:
-            raise HomeAssistantError("Unable to fetch media for event") from err
-        if not event_media:
-            return self._json_error(
-                f"No event found for event_id '{event_id}'", HTTPStatus.NOT_FOUND
+            media = await nest_device.event_media_manager.get_media_from_token(
+                event_token
             )
-        media = event_media.media
-        return web.Response(
-            body=media.contents, content_type=media.event_image_type.content_type
-        )
+        except DecodeException as err:
+            raise HomeAssistantError(
+                "Even token was invalid: %s" % event_token
+            ) from err
+        except ApiException as err:
+            raise HomeAssistantError("Unable to fetch media for event") from err
+        if not media:
+            return self._json_error(
+                f"No event found for event_id '{event_token}'", HTTPStatus.NOT_FOUND
+            )
+        return await self.handle_media(media)
+
+    async def handle_media(self, media: Media) -> web.StreamResponse:
+        """Load the specified media."""
 
     def _json_error(self, message: str, status: HTTPStatus) -> web.StreamResponse:
         """Return a json error message with additional logging."""
         _LOGGER.debug(message)
         return self.json_message(message, status)
+
+
+class NestEventMediaView(NestEventViewBase):
+    """Returns media for related to events for a specific device.
+
+    This is primarily used to render media for events for MediaSource. The media type
+    depends on the specific device e.g. an image, or a movie clip preview.
+    """
+
+    url = "/api/nest/event_media/{device_id}/{event_token}"
+    name = "api:nest:event_media"
+
+    async def handle_media(self, media: Media) -> web.StreamResponse:
+        """Start a GET request."""
+        return web.Response(body=media.contents, content_type=media.content_type)
+
+
+class NestEventMediaThumbnailView(NestEventViewBase):
+    """Returns media for related to events for a specific device.
+
+    This is primarily used to render media for events for MediaSource. The media type
+    depends on the specific device e.g. an image, or a movie clip preview.
+    """
+
+    url = "/api/nest/event_media/{device_id}/{event_token}/thumbnail"
+    name = "api:nest:event_media"
+
+    async def handle_media(self, media: Media) -> web.StreamResponse:
+        """Start a GET request."""
+        image = Image(media.event_image_type.content_type, media.contents)
+        contents = img_util.scale_jpeg_camera_image(
+            image, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX
+        )
+        return web.Response(body=contents, content_type=media.content_type)

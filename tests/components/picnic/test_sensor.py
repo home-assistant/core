@@ -10,11 +10,12 @@ import requests
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
 from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CURRENCY_EURO,
-    DEVICE_CLASS_TIMESTAMP,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt
@@ -103,6 +104,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Patch the api client
         self.picnic_patcher = patch("homeassistant.components.picnic.PicnicAPI")
         self.picnic_mock = self.picnic_patcher.start()
+        self.picnic_mock().session.auth_token = "3q29fpwhulzes"
 
         # Add a config entry and setup the integration
         config_data = {
@@ -212,44 +214,49 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self._assert_sensor(
             "sensor.picnic_selected_slot_start",
             "2021-03-03T13:45:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_end",
             "2021-03-03T14:45:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_max_order_time",
             "2021-03-02T21:00:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_selected_slot_min_order_value", "35.0")
         self._assert_sensor(
             "sensor.picnic_last_order_slot_start",
             "2021-02-26T19:15:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_slot_end",
             "2021-02-26T20:15:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start",
             "2021-02-26T19:54:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_eta_end",
             "2021-02-26T20:14:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
+        )
+        self._assert_sensor(
+            "sensor.picnic_last_order_max_order_time",
+            "2021-02-25T21:00:00+00:00",
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_delivery_time",
             "2021-02-26T19:54:05+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_total_price", "41.33", unit=CURRENCY_EURO
@@ -281,13 +288,11 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert sensors are unknown
-        self._assert_sensor("sensor.picnic_selected_slot_start", STATE_UNAVAILABLE)
-        self._assert_sensor("sensor.picnic_selected_slot_end", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_selected_slot_start", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_selected_slot_end", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_selected_slot_max_order_time", STATE_UNKNOWN)
         self._assert_sensor(
-            "sensor.picnic_selected_slot_max_order_time", STATE_UNAVAILABLE
-        )
-        self._assert_sensor(
-            "sensor.picnic_selected_slot_min_order_value", STATE_UNAVAILABLE
+            "sensor.picnic_selected_slot_min_order_value", STATE_UNKNOWN
         )
 
     async def test_sensors_last_order_in_future(self):
@@ -304,13 +309,32 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert delivery time is not available, but eta is
-        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start", "2021-02-26T19:54:00+00:00"
         )
         self._assert_sensor(
             "sensor.picnic_last_order_eta_end", "2021-02-26T20:14:00+00:00"
         )
+
+    async def test_sensors_eta_date_malformed(self):
+        """Test sensor states when last order eta dates are malformed."""
+        # Set-up platform with default mock responses
+        await self._setup_platform(use_default_responses=True)
+
+        # Set non-datetime strings as eta
+        eta_dates: dict[str, str] = {
+            "start": "wrong-time",
+            "end": "other-malformed-datetime",
+        }
+        delivery_response = copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
+        delivery_response["eta2"] = eta_dates
+        self.picnic_mock().get_deliveries.return_value = [delivery_response]
+        await self._coordinator.async_refresh()
+
+        # Assert eta times are not available due to malformed date strings
+        self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNKNOWN)
 
     async def test_sensors_use_detailed_eta_if_available(self):
         """Test sensor states when last order is not yet delivered."""
@@ -365,7 +389,26 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNAVAILABLE)
         self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
+        self._assert_sensor(
+            "sensor.picnic_last_order_max_order_time", STATE_UNAVAILABLE
+        )
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
+
+    async def test_sensors_malformed_delivery_data(self):
+        """Test sensor states when the delivery api returns not a list."""
+        # Setup platform with default responses
+        await self._setup_platform(use_default_responses=True)
+
+        # Change mock responses to empty data and refresh the coordinator
+        self.picnic_mock().get_deliveries.return_value = {"error": "message"}
+        await self._coordinator.async_refresh()
+
+        # Assert all last-order sensors have STATE_UNAVAILABLE because the delivery info fetch failed
+        assert self._coordinator.last_update_success is True
+        self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_max_order_time", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
 
     async def test_sensors_malformed_response(self):
         """Test coordinator update fails when API yields ValueError."""

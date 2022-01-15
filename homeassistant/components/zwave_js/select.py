@@ -1,7 +1,7 @@
 """Support for Z-Wave controls using the select platform."""
 from __future__ import annotations
 
-from typing import Dict, cast
+from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
@@ -9,9 +9,9 @@ from zwave_js_server.const.command_class.sound_switch import ToneID
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
@@ -53,7 +53,7 @@ async def async_setup_entry(
 class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
     """Representation of a Z-Wave select entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
@@ -89,7 +89,7 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
 class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
     """Representation of a Z-Wave default tone select entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
@@ -150,7 +150,7 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         assert self.info.platform_data_template
         self._lookup_map = cast(
-            Dict[int, str], self.info.platform_data_template.static_data
+            dict[int, str], self.info.platform_data_template.static_data
         )
 
         # Entity class attributes

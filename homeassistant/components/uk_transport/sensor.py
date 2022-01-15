@@ -1,4 +1,6 @@
 """Support for UK public transport data provided by transportapi.com."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
@@ -9,7 +11,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MODE, TIME_MINUTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -47,20 +52,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Get the uk_transport sensor."""
-    sensors = []
-    number_sensors = len(config.get(CONF_QUERIES))
+    sensors: list[UkTransportSensor] = []
+    number_sensors = len(queries := config[CONF_QUERIES])
     interval = timedelta(seconds=87 * number_sensors)
 
-    for query in config.get(CONF_QUERIES):
+    api_app_id = config[CONF_API_APP_ID]
+    api_app_key = config[CONF_API_APP_KEY]
+
+    for query in queries:
         if "bus" in query.get(CONF_MODE):
             stop_atcocode = query.get(CONF_ORIGIN)
             bus_direction = query.get(CONF_DESTINATION)
             sensors.append(
                 UkTransportLiveBusTimeSensor(
-                    config.get(CONF_API_APP_ID),
-                    config.get(CONF_API_APP_KEY),
+                    api_app_id,
+                    api_app_key,
                     stop_atcocode,
                     bus_direction,
                     interval,
@@ -72,8 +85,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             calling_at = query.get(CONF_DESTINATION)
             sensors.append(
                 UkTransportLiveTrainTimeSensor(
-                    config.get(CONF_API_APP_ID),
-                    config.get(CONF_API_APP_KEY),
+                    api_app_id,
+                    api_app_key,
                     station_code,
                     calling_at,
                     interval,

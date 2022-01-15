@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import setup
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -129,7 +130,9 @@ class TestHelpersDiscovery:
 
         def component_setup(hass, config):
             """Set up mock component."""
-            discovery.load_platform(hass, "switch", "test_circular", "disc", config)
+            discovery.load_platform(
+                hass, Platform.SWITCH, "test_circular", {"key": "value"}, config
+            )
             component_calls.append(1)
             return True
 

@@ -36,13 +36,14 @@ CLASS_MAPPING = {
 }
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation binary sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.BINARY_SENSOR]
 
@@ -103,7 +104,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
             self._state = attr_value
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ACCELEROMETER)
+@MULTI_MATCH(channel_names=CHANNEL_ACCELEROMETER)
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
@@ -111,7 +112,7 @@ class Accelerometer(BinarySensor):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOVING
 
 
-@STRICT_MATCH(channel_names=CHANNEL_OCCUPANCY)
+@MULTI_MATCH(channel_names=CHANNEL_OCCUPANCY)
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
@@ -127,7 +128,7 @@ class Opening(BinarySensor):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
 
 
-@STRICT_MATCH(channel_names=CHANNEL_BINARY_INPUT)
+@MULTI_MATCH(channel_names=CHANNEL_BINARY_INPUT)
 class BinaryInput(BinarySensor):
     """ZHA BinarySensor."""
 
@@ -153,7 +154,7 @@ class Motion(BinarySensor):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ZONE)
+@MULTI_MATCH(channel_names=CHANNEL_ZONE)
 class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 
