@@ -188,6 +188,8 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Set fan speed."""
         self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
 
-    def send_command(self, command: Any, params: Any = None, **kwargs: Any) -> None:
+    def send_command(
+        self, command: list[dict[str, Any]], params: str = None, **kwargs: Any
+    ) -> None:
         """Send raw command."""
         self._send_command(command)
