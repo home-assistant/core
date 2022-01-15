@@ -80,5 +80,8 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
             return self.device
 
-        except Exception as exc:
-            raise UpdateFailed(f"Error communicating with API: {exc}") from exc
+        except RequestError as err:
+            raise UpdateFailed(
+                f"Error communicating with API: {err}. Try unplugging and replugging your "
+                f"IKEA gateway."
+            ) from err
