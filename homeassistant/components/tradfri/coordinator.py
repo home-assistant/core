@@ -39,7 +39,6 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"Update coordinator for {device}",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
-            update_method=self._update_data,
         )
 
     @callback
@@ -51,8 +50,8 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Run observe in a coroutine."""
         try:
             await self.api(cmd)
-        except PytradfriError as err:
-            _LOGGER.warning("Observation failed, trying again", exc_info=err)
+        except RequestError as err:
+            _LOGGER.debug("Observation failed for %s, trying again", device, exc_info=err)
             self._async_start_observe(device=device)
 
     @callback
@@ -61,14 +60,14 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> Command:
         """Start observation of device."""
         if exc:
-            _LOGGER.warning("Observation failed for %s", device, exc_info=exc)
+            _LOGGER.debug("Observation failed for %s", device, exc_info=exc)
         return device.observe(
             callback=self._observe_update,
             err_callback=self._async_start_observe,
             duration=0,
         )
 
-    async def _update_data(self) -> Device:
+    async def _async_update_data(self) -> Device:
         """Fetch data from the gateway for a specific device."""
         try:
             async with async_timeout.timeout(TIMEOUT_API):
