@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -32,6 +33,7 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.stream.const import HLS_PROVIDER, FORMAT_CONTENT_TYPE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_NAME,
     STATE_HOME,
     STATE_IDLE,
     STATE_ON,
@@ -48,6 +50,7 @@ from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
 from .const import (
     ATTR_CONTENT_ID,
+    ATTR_FORMAT,
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     DOMAIN,
@@ -80,8 +83,14 @@ ATTRS_TO_LAUNCH_PARAMS = {
 PLAY_MEDIA_SUPPORTED_TYPES = (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPR_URL,
     FORMAT_CONTENT_TYPE[HLS_PROVIDER],
 )
+
+ATTRS_TO_PLAY_VIDEO_PARAMS = {
+    ATTR_NAME: "videoName",
+    ATTR_FORMAT: "videoFormat",
+}
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
@@ -380,13 +389,14 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 media_type,
                 MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
+                MEDIA_TYPE_URL,
             )
             return
 
         if media_type == MEDIA_TYPE_APP:
             params = {
                 param: extra[attr]
-                for (attr, param) in ATTRS_TO_LAUNCH_PARAMS.items()
+                for attr, param in ATTRS_TO_LAUNCH_PARAMS.items()
                 if attr in extra
             }
 
@@ -396,6 +406,14 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
             params = {
                 "MediaType": "hls",
+            }
+
+            await self.coordinator.roku.play_video(media_id, params)
+        elif media_type == MEDIA_TYPE_URL:
+            params = {
+                param: extra[attr]
+                for (attr, param) in ATTRS_TO_PLAY_VIDEO_PARAMS.items()
+                if attr in extra
             }
 
             await self.coordinator.roku.play_video(media_id, params)
