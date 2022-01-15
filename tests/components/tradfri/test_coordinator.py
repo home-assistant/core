@@ -2,13 +2,7 @@
 from homeassistant.components import tradfri
 
 from .common import setup_integration
-
-# from .test_cover import mock_cover
 from .test_fan import mock_fan
-
-# from .test_light import mock_light
-# from .test_sensor import mock_sensor
-# from .test_switch import mock_switch
 
 
 async def test_coordinator_data(hass, mock_gateway, mock_api_factory):
