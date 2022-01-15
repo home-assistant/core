@@ -277,6 +277,8 @@ class Dryer(
         {"name": "LaundryCare.Dryer.Program.Shirts15"},
         {"name": "LaundryCare.Dryer.Program.Pillow"},
         {"name": "LaundryCare.Dryer.Program.AntiShrink"},
+        {"name": "LaundryCare.Dryer.Program.TimeCold"},
+        {"name": "LaundryCare.Dryer.Program.TimeWarm"},
     ]
 
     def get_entity_info(self):
