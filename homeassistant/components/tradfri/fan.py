@@ -13,7 +13,6 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -64,8 +63,6 @@ async def async_setup_entry(
 class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
     """The platform class required by Home Assistant."""
 
-    _platform_type = Platform.FAN
-
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
@@ -75,7 +72,6 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         """Initialize a switch."""
         super().__init__(
             device_coordinator=device_coordinator,
-            platform_type=self._platform_type,
             api=api,
             gateway_id=gateway_id,
         )

@@ -43,14 +43,11 @@ class TradfriBaseDevice(CoordinatorEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        platform_type: str,
         gateway_id: str,
         api: Callable[[Command | list[Command]], Any],
     ) -> None:
         """Initialize a device."""
         super().__init__(device_coordinator)
-
-        self._platform_type = platform_type
 
         self._gateway_id = gateway_id
 
