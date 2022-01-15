@@ -245,6 +245,17 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             name="Night Light",
         ),
     ),
+    # Diffuser
+    # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
+    "xxj": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name="Light",
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_data=DPCode.COLOUR_DATA_HSV,
+        ),
+    ),
     # Remote Control
     # https://developer.tuya.com/en/docs/iot/ykq?id=Kaof8ljn81aov
     "ykq": (
@@ -432,9 +443,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if self._color_data_dpcode:
             self._attr_supported_color_modes.add(COLOR_MODE_HS)
             # Fetch color data type information
-            if function_data := json.loads(
+            function_data = json.loads(
                 self.device.function[self._color_data_dpcode].values
-            ):
+            )
+            if hasattr(function_data, "h"):
                 self._color_data_type = ColorTypeData(
                     h_type=IntegerTypeData(**function_data["h"]),
                     s_type=IntegerTypeData(**function_data["s"]),
@@ -443,7 +455,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             else:
                 # If no type is found, use a default one
                 self._color_data_type = self.entity_description.default_color_type
-                if self._color_data_dpcode == DPCode.COLOUR_DATA_V2 or (
+                if self._color_data_dpcode == DPCode.COLOUR_DATA_HSV:
+                    self._color_data_type = DEFAULT_COLOR_TYPE_DATA
+                elif self._color_data_dpcode == DPCode.COLOUR_DATA_V2 or (
                     self._brightness_type and self._brightness_type.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
