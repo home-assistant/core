@@ -43,6 +43,3 @@ SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
 COORDINATOR = "coordinator"
 COORDINATOR_LIST = "coordinator_list"
-ATTR_SIGNAL_REPEATER = "signal_repeater"
-ATTR_CONTROLLER_NAME = "controller_name"
-ATTR_DEVICE_NAME = "device_name"

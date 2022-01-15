@@ -80,6 +80,9 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
             gateway_id=gateway_id,
         )
 
+        self._device_control = self._device.air_purifier_control
+        self._device_data = self._device_control.air_purifiers[0]
+
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
