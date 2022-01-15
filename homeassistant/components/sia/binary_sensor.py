@@ -172,7 +172,7 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
 
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the binary sensor."""
-        new_state = self.entity_description.code_consequences.get(sia_event.code, None)
+        new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False
         _LOGGER.debug("New state will be %s", new_state)
