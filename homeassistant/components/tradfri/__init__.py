@@ -7,6 +7,8 @@ from typing import Any
 
 from pytradfri import Gateway, PytradfriError, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
+from pytradfri.command import Command
+from pytradfri.device import Device
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -28,15 +30,16 @@ from .const import (
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,
+    COORDINATOR,
+    COORDINATOR_LIST,
     DEFAULT_ALLOW_TRADFRI_GROUPS,
-    DEVICES,
     DOMAIN,
-    GROUPS,
     KEY_API,
     PLATFORMS,
     SIGNAL_GW,
     TIMEOUT_API,
 )
+from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,9 +87,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Create a gateway."""
-    # host, identity, key, allow_tradfri_groups
     tradfri_data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
     listeners = tradfri_data[LISTENERS] = []
@@ -96,11 +101,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         psk_id=entry.data[CONF_IDENTITY],
         psk=entry.data[CONF_KEY],
     )
+    tradfri_data[FACTORY] = factory  # Used for async_unload_entry
 
     async def on_hass_stop(event: Event) -> None:
         """Close connection when hass stops."""
         await factory.shutdown()
 
+    # Setup listeners
     listeners.append(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop))
 
     api = factory.request
@@ -108,18 +115,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
-        devices_commands = await api(gateway.get_devices(), timeout=TIMEOUT_API)
-        devices = await api(devices_commands, timeout=TIMEOUT_API)
-        groups_commands = await api(gateway.get_groups(), timeout=TIMEOUT_API)
-        groups = await api(groups_commands, timeout=TIMEOUT_API)
     except PytradfriError as exc:
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
-
-    tradfri_data[KEY_API] = api
-    tradfri_data[FACTORY] = factory
-    tradfri_data[DEVICES] = devices
-    tradfri_data[GROUPS] = groups
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     dev_reg.async_get_or_create(
@@ -134,6 +132,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    coordinator_data = {CONF_GATEWAY_ID: gateway, KEY_API: api, COORDINATOR_LIST: []}
+
+    devices_commands: Command = await api(gateway.get_devices(), timeout=TIMEOUT_API)
+    devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
+
+    for device in devices:
+        coordinator = TradfriDeviceDataUpdateCoordinator(
+            hass=hass, api=api, device=device
+        )
+        await coordinator.async_config_entry_first_refresh()
+
+        coordinator_data[COORDINATOR_LIST].append(coordinator)
+
+    tradfri_data[COORDINATOR] = coordinator_data
 
     async def async_keep_alive(now: datetime) -> None:
         if hass.is_stopping:
