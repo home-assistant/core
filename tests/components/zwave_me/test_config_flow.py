@@ -28,7 +28,7 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 
 
 async def mock_uuid(url, _):
-    """Mock getting uuid."""
+    """Mock getting uuid with proper UUID on 192.168.1.14 and None on others."""
     if "192.168.1.14" in url:
         return "12345678"
     else:
