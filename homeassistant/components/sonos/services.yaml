@@ -10,7 +10,7 @@ join:
       selector:
         entity:
           integration: sonos
-          domain: media_player
+          domain: sonos
     entity_id:
       name: Entity
       description: Name of entity that will join the master.
@@ -18,7 +18,7 @@ join:
       selector:
         entity:
           integration: sonos
-          domain: media_player
+          domain: sonos
 
 unjoin:
   name: Unjoin group
@@ -26,7 +26,7 @@ unjoin:
   target:
     entity:
       integration: sonos
-      domain: media_player
+      domain: sonos
 
 snapshot:
   name: Snapshot
@@ -38,7 +38,7 @@ snapshot:
       selector:
         entity:
           integration: sonos
-          domain: media_player
+          domain: sonos
     with_group:
       name: With group
       description: True or False. Also snapshot the group layout.
@@ -56,7 +56,7 @@ restore:
       selector:
         entity:
           integration: sonos
-          domain: media_player
+          domain: sonos
     with_group:
       name: With group
       description: True or False. Also restore the group layout.
