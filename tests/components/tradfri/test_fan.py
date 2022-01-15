@@ -12,7 +12,7 @@ from .common import setup_integration
 
 @pytest.fixture(autouse=True, scope="module")
 def setup(request):
-    """Set up patches for pytradfri methods for the fan."""
+    """Set up patches for pytradfri methods."""
     with patch(
         "pytradfri.device.AirPurifierControl.raw",
         new_callable=PropertyMock,
