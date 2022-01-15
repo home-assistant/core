@@ -136,8 +136,6 @@ async def async_setup_entry(
         sw_version=gateway_info.firmware_version,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
     # Setup the device coordinators
     coordinator_data = {CONF_GATEWAY_ID: gateway, KEY_API: api, COORDINATOR_LIST: []}
 
@@ -167,6 +165,8 @@ async def async_setup_entry(
     listeners.append(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))
     )
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
