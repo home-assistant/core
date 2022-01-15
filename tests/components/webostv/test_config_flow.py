@@ -1,4 +1,5 @@
 """Test the WebOS Tv config flow."""
+import dataclasses
 from unittest.mock import Mock, patch
 
 from aiowebostv import WebOsTvPairError
@@ -31,11 +32,15 @@ MOCK_YAML_CONFIG = {
     CONF_UNIQUE_ID: "fake-uuid",
 }
 
-MOCK_DISCOVERY_INFO = {
-    ssdp.ATTR_SSDP_LOCATION: "http://1.2.3.4",
-    ssdp.ATTR_UPNP_FRIENDLY_NAME: "LG Webostv",
-    ssdp.ATTR_UPNP_UDN: "uuid:some-fake-uuid",
-}
+MOCK_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location="http://1.2.3.4",
+    upnp={
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: "LG Webostv",
+        ssdp.ATTR_UPNP_UDN: "uuid:some-fake-uuid",
+    },
+)
 
 
 async def test_import(hass, client):
@@ -250,8 +255,8 @@ async def test_ssdp_not_update_uuid(hass, client):
     assert client
     assert entry.unique_id is None
 
-    discovery_info = MOCK_DISCOVERY_INFO.copy()
-    discovery_info.update({ssdp.ATTR_SSDP_LOCATION: "http://1.2.3.5"})
+    discovery_info = dataclasses.replace(MOCK_DISCOVERY_INFO)
+    discovery_info.ssdp_location = "http://1.2.3.5"
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
