@@ -22,6 +22,7 @@ class ProtectRequiredKeysMixin:
     ufp_required_field: str | None = None
     ufp_value: str | None = None
     ufp_value_fn: Callable[[ProtectAdoptableDeviceModel | NVR], Any] | None = None
+    ufp_enabled: str | None = None
 
     def get_ufp_value(self, obj: ProtectAdoptableDeviceModel | NVR) -> Any:
         """Return value from UniFi Protect device."""
@@ -34,6 +35,12 @@ class ProtectRequiredKeysMixin:
         raise RuntimeError(  # pragma: no cover
             "`ufp_value` or `ufp_value_fn` is required"
         )
+
+    def get_ufp_enabled(self, obj: ProtectAdoptableDeviceModel | NVR) -> bool:
+        """Return value from UniFi Protect device."""
+        if self.ufp_enabled is not None:
+            return bool(get_nested_attr(obj, self.ufp_enabled))
+        return True
 
 
 @dataclass

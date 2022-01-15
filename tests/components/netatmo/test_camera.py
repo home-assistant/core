@@ -345,7 +345,7 @@ async def test_camera_reconnect_webhook(hass, config_entry):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook:
         mock_auth.return_value.async_post_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -437,7 +437,7 @@ async def test_setup_component_no_devices(hass, config_entry):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = fake_post_no_data
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -475,7 +475,7 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = fake_post
         mock_auth.return_value.async_get_image.side_effect = fake_post

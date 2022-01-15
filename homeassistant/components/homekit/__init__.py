@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import ipaddress
 import logging
 import os
@@ -348,8 +349,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 @callback
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
-    options = dict(entry.options)
-    data = dict(entry.data)
+    options = deepcopy(dict(entry.options))
+    data = deepcopy(dict(entry.data))
     modified = False
     for importable_option in CONFIG_OPTIONS:
         if importable_option not in entry.options and importable_option in entry.data:

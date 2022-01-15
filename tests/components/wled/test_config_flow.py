@@ -62,6 +62,9 @@ async def test_full_zeroconf_flow_implementation(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
+    assert (
+        flows[0].get("context", {}).get("configuration_url") == "http://192.168.1.123"
+    )
     assert result.get("description_placeholders") == {CONF_NAME: "WLED RGB Light"}
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") == RESULT_TYPE_FORM

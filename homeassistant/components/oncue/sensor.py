@@ -11,7 +11,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_WATT,
@@ -35,6 +37,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="EngineSpeed",
+        icon="mdi:speedometer",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="EngineTargetSpeed",
         icon="mdi:speedometer",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -113,6 +120,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:hours-24",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    SensorEntityDescription(
+        key="EngineTotalRunTimeLoaded",
+        icon="mdi:hours-24",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     SensorEntityDescription(key="AtsContactorPosition", icon="mdi:electric-switch"),
     SensorEntityDescription(
         key="IPAddress",
@@ -122,6 +134,38 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ConnectedServerIPAddress",
         icon="mdi:server-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="Source1VoltageAverageLineToLine",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="Source2VoltageAverageLineToLine",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="GensetTotalEnergy",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="EngineTotalNumberOfStarts",
+        icon="mdi:engine",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="GeneratorCurrentAverage",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

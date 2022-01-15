@@ -50,11 +50,6 @@ class HWEnergyDeviceUpdateCoordinator(
                     "API disabled, API must be enabled in the app"
                 ) from ex
 
-            except Exception as ex:
-                raise UpdateFailed(
-                    f"Error connecting with Energy Device at {self.api.host}"
-                ) from ex
-
             data: DeviceResponseEntry = {
                 "device": self.api.device,
                 "data": {},

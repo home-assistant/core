@@ -246,11 +246,7 @@ class UniFiController:
                 )
 
             elif DATA_DPI_GROUP in data:
-                for key in data[DATA_DPI_GROUP]:
-                    if self.api.dpi_groups[key].dpiapp_ids:
-                        async_dispatcher_send(self.hass, self.signal_update)
-                    else:
-                        async_dispatcher_send(self.hass, self.signal_remove, {key})
+                async_dispatcher_send(self.hass, self.signal_update)
 
             elif DATA_DPI_GROUP_REMOVED in data:
                 async_dispatcher_send(
@@ -504,6 +500,7 @@ async def get_controller(
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
+        aiounifi.ResponseError,
     ) as err:
         LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
         raise CannotConnect from err

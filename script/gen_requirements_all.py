@@ -61,10 +61,6 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
-# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
-# https://github.com/home-assistant/core/issues/61756
-pillow==8.2.0
-
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
@@ -83,6 +79,11 @@ httplib2>=0.19.0
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
 grpcio==1.43.0
+
+# libcst >=0.4.0 requires a newer Rust than we currently have available,
+# thus our wheels builds fail. This pins it to the last working version,
+# which at this point satisfies our needs.
+libcst==0.3.23
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -110,6 +111,12 @@ anyio>=3.3.1
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
+
+# Prevent dependency conflicts between sisyphus-control and aioambient
+# until upper bounds for sisyphus-control have been updated
+# https://github.com/jkeljo/sisyphus-control/issues/6
+python-engineio>=3.13.1,<4.0
+python-socketio>=4.6.0,<5.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

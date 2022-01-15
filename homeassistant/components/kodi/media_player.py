@@ -913,8 +913,11 @@ class KodiEntity(MediaPlayerEntity):
         return response
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Get media image from kodi server."""
         try:
             image_url, _, _ = await get_media_info(

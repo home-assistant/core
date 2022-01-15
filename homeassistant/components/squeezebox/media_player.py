@@ -1,4 +1,6 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -562,8 +564,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return await build_item_response(self, self._player, payload)
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Get album art from Squeezebox server."""
         if media_image_id:
             image_url = self._player.generate_image_url_from_track_id(media_image_id)
