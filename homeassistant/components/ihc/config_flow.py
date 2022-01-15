@@ -5,7 +5,6 @@ from ihcsdk.ihccontroller import IHCController
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.ihc.util import get_controller_serial
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
