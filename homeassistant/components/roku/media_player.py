@@ -29,6 +29,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.stream.const import (
+    HLS_PROVIDER,
+    FORMAT_CONTENT_TYPE
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_HOME,
@@ -386,6 +390,8 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             await self.coordinator.roku.launch(media_id, params)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
+        elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
+            await self.coordinator.roku.play_video(media_id)
 
         await self.coordinator.async_request_refresh()
 
