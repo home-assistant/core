@@ -1,9 +1,11 @@
 """Common tradfri test fixtures."""
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from . import GATEWAY_ID, TRADFRI_PATH
+
+from tests.components.tradfri.test_light import mock_group
 
 # pylint: disable=protected-access
 
@@ -35,7 +37,7 @@ def mock_gateway_fixture():
         """Return mock groups."""
         return gateway.mock_groups
 
-    gateway_info = Mock(id=GATEWAY_ID, firmware_version="1.2.1234")
+    gateway_info = mock_group(id=GATEWAY_ID, firmware_version="1.2.1234")
 
     def get_gateway_info():
         """Return mock gateway info."""
@@ -76,16 +78,3 @@ def mock_api_factory(mock_api):
         factory.init.return_value = factory.return_value
         factory.return_value.request = mock_api
         yield factory.return_value
-
-
-@pytest.fixture(autouse=True, scope="module")
-def setup(request):
-    """Set up patches for pytradfri methods for the fan."""
-    with patch(
-        "pytradfri.device.AirPurifierControl.raw",
-        new_callable=PropertyMock,
-        return_value=[{"mock": "mock"}],
-    ), patch(
-        "pytradfri.device.AirPurifierControl.air_purifiers",
-    ):
-        yield

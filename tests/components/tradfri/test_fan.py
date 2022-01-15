@@ -1,6 +1,6 @@
 """Tradfri fan (recognised as air purifiers in the IKEA ecosystem) platform tests."""
 
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from pytradfri.device import Device
@@ -8,6 +8,19 @@ from pytradfri.device.air_purifier import AirPurifier
 from pytradfri.device.air_purifier_control import AirPurifierControl
 
 from .common import setup_integration
+
+
+@pytest.fixture(autouse=True, scope="module")
+def setup(request):
+    """Set up patches for pytradfri methods for the fan."""
+    with patch(
+        "pytradfri.device.AirPurifierControl.raw",
+        new_callable=PropertyMock,
+        return_value=[{"mock": "mock"}],
+    ), patch(
+        "pytradfri.device.AirPurifierControl.air_purifiers",
+    ):
+        yield
 
 
 def mock_fan(test_features=None, test_state=None, device_number=0):
