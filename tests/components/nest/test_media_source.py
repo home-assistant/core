@@ -8,7 +8,6 @@ from collections.abc import Generator
 import datetime
 from http import HTTPStatus
 import io
-from typing import Generator
 from unittest.mock import patch
 
 import aiohttp
