@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
+from dataclasses import dataclass
 
 from pydeconz.sensor import (
     AirQuality,
@@ -69,6 +70,17 @@ ATTR_POWER = "power"
 ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
 
+
+@dataclass
+class DeconzSensorDescription:
+    """Required values when describing secondary sensor attributes."""
+
+    device_property: str
+    suffix: str
+    update_key: str
+    entity_description: SensorEntityDescription
+
+
 ENTITY_DESCRIPTIONS = {
     Battery: SensorEntityDescription(
         key="battery",
@@ -119,6 +131,15 @@ ENTITY_DESCRIPTIONS = {
     ),
 }
 
+SENSOR_DESCRIPTIONS = [
+    DeconzSensorDescription(
+        device_property="secondary_temperature",
+        suffix="Temperature",
+        update_key="temperature",
+        entity_description=ENTITY_DESCRIPTIONS[Temperature],
+    )
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -141,7 +162,7 @@ async def async_setup_entry(
         Create DeconzBattery if sensor has a battery attribute.
         Create DeconzSensor if not a battery, switch or thermostat and not a binary sensor.
         """
-        entities: list[DeconzBattery | DeconzSensor | DeconzTemperature] = []
+        entities: list[DeconzBattery | DeconzSensor | DeconzPropertySensor] = []
 
         for sensor in sensors:
 
@@ -166,11 +187,15 @@ async def async_setup_entry(
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
-            if sensor.secondary_temperature:
-                known_temperature_sensors = set(gateway.entities[DOMAIN])
-                new_temperature_sensor = DeconzTemperature(sensor, gateway)
-                if new_temperature_sensor.unique_id not in known_temperature_sensors:
-                    entities.append(new_temperature_sensor)
+            for sensor_description in SENSOR_DESCRIPTIONS:
+
+                if getattr(sensor, sensor_description.device_property):
+                    known_sensors = set(gateway.entities[DOMAIN])
+                    new_sensor = DeconzPropertySensor(
+                        sensor, gateway, sensor_description
+                    )
+                    if new_sensor.unique_id not in known_sensors:
+                        entities.append(new_sensor)
 
         if entities:
             async_add_entities(entities)
@@ -245,38 +270,41 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         return attr
 
 
-class DeconzTemperature(DeconzDevice, SensorEntity):
-    """Representation of a deCONZ temperature sensor.
-
-    Extra temperature sensor on certain Xiaomi devices.
-    """
+class DeconzPropertySensor(DeconzDevice, SensorEntity):
+    """Representation of a deCONZ secondary attribute sensor."""
 
     TYPE = DOMAIN
     _device: PydeconzSensor
 
-    def __init__(self, device: PydeconzSensor, gateway: DeconzGateway) -> None:
-        """Initialize deCONZ temperature sensor."""
+    def __init__(
+        self,
+        device: PydeconzSensor,
+        gateway: DeconzGateway,
+        sensor_description: DeconzSensorDescription,
+    ) -> None:
+        """Initialize deCONZ sensor."""
+        self.sensor_description = sensor_description
+        self.entity_description = sensor_description.entity_description
         super().__init__(device, gateway)
 
-        self.entity_description = ENTITY_DESCRIPTIONS[Temperature]
-        self._attr_name = f"{self._device.name} Temperature"
+        self._attr_name = f"{self._device.name} {sensor_description.suffix}"
+        self._update_keys = {sensor_description.update_key, "reachable"}
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.serial}-temperature"
+        return f"{self.serial}-{self.sensor_description.suffix.lower()}"
 
     @callback
     def async_update_callback(self) -> None:
         """Update the sensor's state."""
-        keys = {"temperature", "reachable"}
-        if self._device.changed_keys.intersection(keys):
+        if self._device.changed_keys.intersection(self._update_keys):
             super().async_update_callback()
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._device.secondary_temperature  # type: ignore[no-any-return]
+        return getattr(self._device, self.sensor_description.device_property)  # type: ignore[no-any-return]
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):
