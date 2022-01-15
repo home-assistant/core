@@ -40,7 +40,7 @@ async def test_form(hass, picnic_api):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "authenticate"
+    assert result["step_id"] == "user"
     assert result["errors"] is None
 
     with patch(
@@ -178,7 +178,7 @@ async def test_step_reauth(hass, picnic_api):
         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
     )
     assert result_init["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result_init["step_id"] == "authenticate"
+    assert result_init["step_id"] == "user"
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
@@ -218,7 +218,7 @@ async def test_step_reauth_failed(hass):
         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
     )
     assert result_init["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result_init["step_id"] == "authenticate"
+    assert result_init["step_id"] == "user"
 
     with patch(
         "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
