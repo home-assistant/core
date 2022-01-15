@@ -73,6 +73,44 @@ async def camera_fixture(
     return (camera_obj, "camera.test_camera_high")
 
 
+@pytest.fixture(name="camera_package")
+async def camera_package_fixture(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
+):
+    """Fixture for a single camera for testing the camera platform."""
+
+    camera_obj = mock_camera.copy(deep=True)
+    camera_obj._api = mock_entry.api
+    camera_obj.channels[0]._api = mock_entry.api
+    camera_obj.channels[1]._api = mock_entry.api
+    camera_obj.channels[2]._api = mock_entry.api
+    camera_obj.name = "Test Camera"
+    camera_obj.feature_flags.has_package_camera = True
+    camera_obj.channels[0].is_rtsp_enabled = True
+    camera_obj.channels[0].name = "High"
+    camera_obj.channels[0].rtsp_alias = "test_high_alias"
+    camera_obj.channels[1].is_rtsp_enabled = False
+    camera_obj.channels[2].is_rtsp_enabled = False
+    package_channel = camera_obj.channels[0].copy(deep=True)
+    package_channel.is_rtsp_enabled = False
+    package_channel.name = "Package Camera"
+    package_channel.id = 3
+    package_channel.fps = 2
+    package_channel.rtsp_alias = "test_package_alias"
+    camera_obj.channels.append(package_channel)
+
+    mock_entry.api.bootstrap.cameras = {
+        camera_obj.id: camera_obj,
+    }
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.CAMERA, 3, 2)
+
+    return (camera_obj, "camera.test_camera_package_camera")
+
+
 def validate_default_camera_entity(
     hass: HomeAssistant,
     camera_obj: ProtectCamera,
@@ -381,6 +419,19 @@ async def test_camera_image(
 
     await async_get_image(hass, camera[1])
     mock_entry.api.get_camera_snapshot.assert_called_once()
+
+
+async def test_package_camera_image(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    camera_package: tuple[Camera, str],
+):
+    """Test retrieving package camera image."""
+
+    mock_entry.api.get_package_camera_snapshot = AsyncMock()
+
+    await async_get_image(hass, camera_package[1])
+    mock_entry.api.get_package_camera_snapshot.assert_called_once()
 
 
 async def test_camera_generic_update(

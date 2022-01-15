@@ -162,7 +162,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return the Camera Image."""
-        last_image = await self.device.get_snapshot(width, height)
+        if self.channel.is_package:
+            last_image = await self.device.get_package_snapshot(width, height)
+        else:
+            last_image = await self.device.get_snapshot(width, height)
         self._last_image = last_image
         return self._last_image
 
