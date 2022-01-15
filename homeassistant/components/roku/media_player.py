@@ -388,7 +388,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if media_type == MEDIA_TYPE_APP:
             params = {
                 param: extra[attr]
-                for (attr, param) in ATTRS_TO_LAUNCH_PARAMS.items()
+                for attr, param in ATTRS_TO_LAUNCH_PARAMS.items()
                 if attr in extra
             }
 
