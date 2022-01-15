@@ -385,7 +385,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(
-                "Invalid media type %s. Only %s, %s, and camera HLS streams are supported",
+                "Invalid media type %s. Only %s, %s, %s, and camera HLS streams are supported",
                 media_type,
                 MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
