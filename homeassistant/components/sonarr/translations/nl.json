@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "reauth_confirm": {
+                "description": "De Sonarr-integratie moet handmatig opnieuw worden geverifieerd met de Sonarr-API die wordt gehost op: {host}",
+                "title": "Verifieer de integratie opnieuw"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "base_path": "Pad naar API",
+                    "host": "Host",
+                    "port": "Poort",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Aantal komende dagen om weer te geven",
+                    "wanted_max_items": "Maximaal aantal gewenste items dat moet worden weergegeven"
+                }
+            }
+        }
+    }
+}

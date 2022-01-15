@@ -1,0 +1,6 @@
+camera:
+  - platform: generic
+    name: reload
+    still_image_url: "http://example.com"
+    username: user
+    password: pass

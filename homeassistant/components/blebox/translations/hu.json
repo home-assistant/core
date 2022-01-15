@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Egy BleBox-eszk\u00f6z m\u00e1r konfigur\u00e1lva van a {address} c\u00edmen.",
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
+            "unsupported_version": "A BleBox eszk\u00f6z elavult firmware-rel rendelkezik. K\u00e9rem, friss\u00edtse el\u0151bb."
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "port": "Port"
+                },
+                "description": "\u00c1ll\u00edtsa be a BleBox k\u00e9sz\u00fcl\u00e9ket a Homeassistantba val\u00f3 integr\u00e1ci\u00f3hoz.",
+                "title": "\u00c1ll\u00edtsa be a BleBox eszk\u00f6zt"
+            }
+        }
+    }
+}

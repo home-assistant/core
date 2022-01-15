@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_zip_code": "\u90ae\u653f\u7f16\u7801\u65e0\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "\u90ae\u653f\u7f16\u7801"
+                },
+                "description": "\u586b\u5199\u60a8\u7684\u7f8e\u56fd\u6216\u52a0\u62ff\u5927\u90ae\u653f\u7f16\u7801\u3002",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

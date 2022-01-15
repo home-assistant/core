@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_path": "No s'ha trobat el directori."
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Defineix els detalls d'owserver"
+            },
+            "user": {
+                "data": {
+                    "type": "Tipus de connexi\u00f3"
+                },
+                "title": "Configuraci\u00f3 d'1-Wire"
+            }
+        }
+    }
+}

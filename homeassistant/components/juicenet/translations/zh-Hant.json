@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API \u6b0a\u6756"
+                },
+                "description": "\u5c07\u9700\u8981\u7531 https://home.juice.net/Manage \u53d6\u5f97 API \u6b0a\u6756\u3002",
+                "title": "\u9023\u7dda\u81f3 JuiceNet"
+            }
+        }
+    }
+}

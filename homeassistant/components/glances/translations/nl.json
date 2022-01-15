@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "wrong_version": "Versie niet ondersteund (alleen 2 of 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "ssl": "Gebruik een SSL-certificaat",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren",
+                    "version": "Glances API-versie (2 of 3)"
+                },
+                "title": "Glances instellen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequentie"
+                },
+                "description": "Configureer opties voor Glances"
+            }
+        }
+    }
+}

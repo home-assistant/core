@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Nem siker\u00fclt csatlakozni"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Orsz\u00e1g"
+                },
+                "title": "V\u00e1lassz egy orsz\u00e1got a megfigyel\u00e9shez"
+            }
+        }
+    }
+}

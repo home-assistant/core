@@ -1,0 +1,70 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Netatmo-integrasjonen m\u00e5 autentisere kontoen din p\u00e5 nytt",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "borte",
+            "hg": "frostvakt",
+            "schedule": "Tidsplan"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} oppdaget en alarm",
+            "animal": "{entity_name} oppdaget et dyr",
+            "cancel_set_point": "{entity_name} har gjenopptatt tidsplanen",
+            "human": "{entity_name} oppdaget et menneske",
+            "movement": "{entity_name} oppdaget bevegelse",
+            "outdoor": "{entity_name} oppdaget en utend\u00f8rs hendelse",
+            "person": "{entity_name} oppdaget en person",
+            "person_away": "{entity_name} oppdaget at en person har forlatt",
+            "set_point": "M\u00e5ltemperatur {entity_name} angis manuelt",
+            "therm_mode": "{entity_name} byttet til \"{subtype}\"",
+            "turned_off": "{entity_name} sl\u00e5tt av",
+            "turned_on": "{entity_name} sl\u00e5tt p\u00e5",
+            "vehicle": "{entity_name} oppdaget et kj\u00f8ret\u00f8y"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Navn p\u00e5 omr\u00e5det",
+                    "lat_ne": "Breddegrad Nord-\u00d8st hj\u00f8rne",
+                    "lat_sw": "Breddegrad S\u00f8r-Vest hj\u00f8rne",
+                    "lon_ne": "Lengdegrad Nord-\u00d8st hj\u00f8rne",
+                    "lon_sw": "Lengdegrad S\u00f8r-Vest hj\u00f8rne",
+                    "mode": "Beregning",
+                    "show_on_map": "Vis p\u00e5 kart"
+                },
+                "description": "Konfigurer en offentlig v\u00e6rsensor for et omr\u00e5de.",
+                "title": "Netatmo offentlig v\u00e6rsensor"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Omr\u00e5denavn",
+                    "weather_areas": "V\u00e6romr\u00e5der"
+                },
+                "description": "Konfigurer offentlige v\u00e6rsensorer.",
+                "title": "Netatmo offentlig v\u00e6rsensor"
+            }
+        }
+    }
+}

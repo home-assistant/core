@@ -1,0 +1,24 @@
+{
+  "title": "Certificate Expiry",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Define the certificate to test",
+        "data": {
+          "name": "The name of the certificate",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "resolve_failed": "This host can not be resolved",
+      "connection_timeout": "Timeout when connecting to this host",
+      "connection_refused": "Connection refused when connecting to host"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "import_failed": "Import from config failed"
+    }
+  }
+}

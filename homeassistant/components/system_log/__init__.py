@@ -1,146 +1,258 @@
-"""
-Support for system log.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/system_log/
-"""
-import re
-import asyncio
+"""Support for system log."""
+from collections import OrderedDict, deque
 import logging
+import queue
+import re
 import traceback
-from io import StringIO
-from collections import deque
 
 import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = 'system_log'
-DEPENDENCIES = ['http']
-SERVICE_CLEAR = 'clear'
+CONF_MAX_ENTRIES = "max_entries"
+CONF_FIRE_EVENT = "fire_event"
+CONF_MESSAGE = "message"
+CONF_LEVEL = "level"
+CONF_LOGGER = "logger"
 
-CONF_MAX_ENTRIES = 'max_entries'
-
+DATA_SYSTEM_LOG = "system_log"
 DEFAULT_MAX_ENTRIES = 50
+DEFAULT_FIRE_EVENT = False
+DOMAIN = "system_log"
 
-DATA_SYSTEM_LOG = 'system_log'
+EVENT_SYSTEM_LOG = "system_log_event"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_MAX_ENTRIES,
-                     default=DEFAULT_MAX_ENTRIES): cv.positive_int,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+SERVICE_CLEAR = "clear"
+SERVICE_WRITE = "write"
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES
+                ): cv.positive_int,
+                vol.Optional(CONF_FIRE_EVENT, default=DEFAULT_FIRE_EVENT): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 SERVICE_CLEAR_SCHEMA = vol.Schema({})
+SERVICE_WRITE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_MESSAGE): cv.string,
+        vol.Optional(CONF_LEVEL, default="error"): vol.In(
+            ["debug", "info", "warning", "error", "critical"]
+        ),
+        vol.Optional(CONF_LOGGER): cv.string,
+    }
+)
+
+
+def _figure_out_source(record, call_stack, hass):
+    paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
+
+    # If a stack trace exists, extract file names from the entire call stack.
+    # The other case is when a regular "log" is made (without an attached
+    # exception). In that case, just use the file where the log was made from.
+    if record.exc_info:
+        stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
+    else:
+        index = -1
+        for i, frame in enumerate(call_stack):
+            if frame[0] == record.pathname:
+                index = i
+                break
+        if index == -1:
+            # For some reason we couldn't find pathname in the stack.
+            stack = [(record.pathname, record.lineno)]
+        else:
+            stack = call_stack[0 : index + 1]
+
+    # Iterate through the stack call (in reverse) and find the last call from
+    # a file in Home Assistant. Try to figure out where error happened.
+    paths_re = r"(?:{})/(.*)".format("|".join([re.escape(x) for x in paths]))
+    for pathname in reversed(stack):
+
+        # Try to match with a file within Home Assistant
+        if match := re.match(paths_re, pathname[0]):
+            return [match.group(1), pathname[1]]
+    # Ok, we don't know what this is
+    return (record.pathname, record.lineno)
+
+
+class LogEntry:
+    """Store HA log entries."""
+
+    def __init__(self, record, stack, source):
+        """Initialize a log entry."""
+        self.first_occurred = self.timestamp = record.created
+        self.name = record.name
+        self.level = record.levelname
+        self.message = deque([record.getMessage()], maxlen=5)
+        self.exception = ""
+        self.root_cause = None
+        if record.exc_info:
+            self.exception = "".join(traceback.format_exception(*record.exc_info))
+            _, _, tb = record.exc_info  # pylint: disable=invalid-name
+            # Last line of traceback contains the root cause of the exception
+            if traceback.extract_tb(tb):
+                self.root_cause = str(traceback.extract_tb(tb)[-1])
+        self.source = source
+        self.count = 1
+        self.hash = str([self.name, *self.source, self.root_cause])
+
+    def to_dict(self):
+        """Convert object into dict to maintain backward compatibility."""
+        return {
+            "name": self.name,
+            "message": list(self.message),
+            "level": self.level,
+            "source": self.source,
+            "timestamp": self.timestamp,
+            "exception": self.exception,
+            "count": self.count,
+            "first_occurred": self.first_occurred,
+        }
+
+
+class DedupStore(OrderedDict):
+    """Data store to hold max amount of deduped entries."""
+
+    def __init__(self, maxlen=50):
+        """Initialize a new DedupStore."""
+        super().__init__()
+        self.maxlen = maxlen
+
+    def add_entry(self, entry):
+        """Add a new entry."""
+        key = entry.hash
+
+        if key in self:
+            # Update stored entry
+            existing = self[key]
+            existing.count += 1
+            existing.timestamp = entry.timestamp
+
+            if entry.message[0] not in existing.message:
+                existing.message.append(entry.message[0])
+
+            self.move_to_end(key)
+        else:
+            self[key] = entry
+
+        if len(self) > self.maxlen:
+            # Removes the first record which should also be the oldest
+            self.popitem(last=False)
+
+    def to_list(self):
+        """Return reversed list of log entries - LIFO."""
+        return [value.to_dict() for value in reversed(self.values())]
+
+
+class LogErrorQueueHandler(logging.handlers.QueueHandler):
+    """Process the log in another thread."""
+
+    def emit(self, record):
+        """Emit a log record."""
+        try:
+            self.enqueue(record)
+        except Exception:  # pylint: disable=broad-except
+            self.handleError(record)
 
 
 class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
-    def __init__(self, maxlen):
+    def __init__(self, hass, maxlen, fire_event):
         """Initialize a new LogErrorHandler."""
         super().__init__()
-        self.records = deque(maxlen=maxlen)
+        self.hass = hass
+        self.records = DedupStore(maxlen=maxlen)
+        self.fire_event = fire_event
 
     def emit(self, record):
         """Save error and warning logs.
 
-        Everyhing logged with error or warning is saved in local buffer. A
+        Everything logged with error or warning is saved in local buffer. A
         default upper limit is set to 50 (older entries are discarded) but can
-        be changed if neeeded.
+        be changed if needed.
         """
-        if record.levelno >= logging.WARN:
-            stack = []
-            if not record.exc_info:
-                try:
-                    stack = [f for f, _, _, _ in traceback.extract_stack()]
-                except ValueError:
-                    # On Python 3.4 under py.test getting the stack might fail.
-                    pass
-            self.records.appendleft([record, stack])
+        stack = []
+        if not record.exc_info:
+            stack = [(f[0], f[1]) for f in traceback.extract_stack()]
+
+        entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
+        self.records.add_entry(entry)
+        if self.fire_event:
+            self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    handler = LogErrorHandler(conf.get(CONF_MAX_ENTRIES))
-    logging.getLogger().addHandler(handler)
+    simple_queue = queue.SimpleQueue()
+    queue_handler = LogErrorQueueHandler(simple_queue)
+    queue_handler.setLevel(logging.WARN)
+    logging.root.addHandler(queue_handler)
+
+    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
+
+    hass.data[DOMAIN] = handler
+
+    listener = logging.handlers.QueueListener(
+        simple_queue, handler, respect_handler_level=True
+    )
+
+    listener.start()
+
+    @callback
+    def _async_stop_queue_handler(_) -> None:
+        """Cleanup handler."""
+        logging.root.removeHandler(queue_handler)
+        listener.stop()
+        del hass.data[DOMAIN]
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
     hass.http.register_view(AllErrorsView(handler))
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
-        # Only one service so far
-        handler.records.clear()
+        if service.service == "clear":
+            handler.records.clear()
+            return
+        if service.service == "write":
+            logger = logging.getLogger(
+                service.data.get(CONF_LOGGER, f"{__name__}.external")
+            )
+            level = service.data[CONF_LEVEL]
+            getattr(logger, level)(service.data[CONF_MESSAGE])
+
+    async def async_shutdown_handler(event):
+        """Remove logging handler when Home Assistant is shutdown."""
+        # This is needed as older logger instances will remain
+        logging.getLogger().removeHandler(handler)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown_handler)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR, async_service_handler,
-        schema=SERVICE_CLEAR_SCHEMA)
+        DOMAIN, SERVICE_CLEAR, async_service_handler, schema=SERVICE_CLEAR_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_WRITE, async_service_handler, schema=SERVICE_WRITE_SCHEMA
+    )
 
     return True
-
-
-def _figure_out_source(record, call_stack, hass):
-    paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
-    try:
-        # If netdisco is installed check its path too.
-        from netdisco import __path__ as netdisco_path
-        paths.append(netdisco_path[0])
-    except ImportError:
-        pass
-    # If a stack trace exists, extract filenames from the entire call stack.
-    # The other case is when a regular "log" is made (without an attached
-    # exception). In that case, just use the file where the log was made from.
-    if record.exc_info:
-        stack = [x[0] for x in traceback.extract_tb(record.exc_info[2])]
-    else:
-        index = -1
-        for i, frame in enumerate(call_stack):
-            if frame == record.pathname:
-                index = i
-                break
-        if index == -1:
-            # For some reason we couldn't find pathname in the stack.
-            stack = [record.pathname]
-        else:
-            stack = call_stack[0:index+1]
-
-    # Iterate through the stack call (in reverse) and find the last call from
-    # a file in HA. Try to figure out where error happened.
-    for pathname in reversed(stack):
-
-        # Try to match with a file within HA
-        match = re.match(r'(?:{})/(.*)'.format('|'.join(paths)), pathname)
-        if match:
-            return match.group(1)
-    # Ok, we don't know what this is
-    return record.pathname
-
-
-def _exception_as_string(exc_info):
-    buf = StringIO()
-    if exc_info:
-        traceback.print_exception(*exc_info, file=buf)
-    return buf.getvalue()
-
-
-def _convert(record, call_stack, hass):
-    return {
-        'timestamp': record.created,
-        'level': record.levelname,
-        'message': record.getMessage(),
-        'exception': _exception_as_string(record.exc_info),
-        'source': _figure_out_source(record, call_stack, hass),
-        }
 
 
 class AllErrorsView(HomeAssistantView):
@@ -153,8 +265,6 @@ class AllErrorsView(HomeAssistantView):
         """Initialize a new AllErrorsView."""
         self.handler = handler
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Get all errors and warnings."""
-        return self.json([_convert(x[0], x[1], request.app['hass'])
-                          for x in self.handler.records])
+        return self.json(self.handler.records.to_list())

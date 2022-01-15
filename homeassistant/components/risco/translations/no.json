@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "pin": "PIN kode",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Sikret Borte",
+                    "armed_custom_bypass": "Sikret tilpasset bypass",
+                    "armed_home": "Sikret Hjemme",
+                    "armed_night": "Sikret Natt"
+                },
+                "description": "Velg hvilken tilstand du vil stille Risco-alarmen til n\u00e5r du aktiverer Home Assistant-alarmen",
+                "title": "Koble Home Assistant statuser til Risco statuser"
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "Krev PIN kode for \u00e5 tilkoble",
+                    "code_disarm_required": "Krev PIN kode for \u00e5 frakoble",
+                    "scan_interval": "Hvor ofte skal man unders\u00f8ke Risco (i l\u00f8pet av sekunder)"
+                },
+                "title": "Konfigurer alternativer"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Gruppe A",
+                    "B": "Gruppe B",
+                    "C": "Gruppe C",
+                    "D": "Gruppe D",
+                    "arm": "Sikret (BORTE)",
+                    "partial_arm": "Delvis Sikret (OPPHOLD)"
+                },
+                "description": "Velg hvilken tilstand Home Assistant-alarmen skal rapportere for hver delstat som er rapportert av Risco",
+                "title": "Koble Risco statuser til Home Assistant statuser"
+            }
+        }
+    }
+}

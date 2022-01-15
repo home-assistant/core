@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'emplacement est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_sensors_data": "Donn\u00e9es des capteurs non valides pour cette station de mesure.",
+            "wrong_station_id": "L'identifiant de la station de mesure n'est pas correct."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nom",
+                    "station_id": "Identifiant de la station de mesure"
+                },
+                "description": "Mettre en place l'int\u00e9gration de la qualit\u00e9 de l'air GIO\u015a (Inspection g\u00e9n\u00e9rale polonaise de la protection de l'environnement). Si vous avez besoin d'aide pour la configuration, regardez ici: https://www.home-assistant.io/integrations/gios",
+                "title": "GIO\u015a (Inspection g\u00e9n\u00e9rale polonaise de la protection de l'environnement)"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Acc\u00e9der au serveur GIO\u015a"
+        }
+    }
+}

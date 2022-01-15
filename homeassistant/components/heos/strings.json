@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Heos",
+        "description": "Please enter the host name or IP address of a Heos device (preferably one connected via wire to the network).",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  }
+}

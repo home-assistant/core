@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Locatie is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Straal"
+                },
+                "title": "Vul uw filtergegevens in."
+            }
+        }
+    }
+}

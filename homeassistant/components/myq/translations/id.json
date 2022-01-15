@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Kata sandi untuk {username} tidak lagi berlaku.",
+                "title": "Autentikasi ulang Akun MyQ Anda"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Hubungkan ke MyQ Gateway"
+            }
+        }
+    }
+}

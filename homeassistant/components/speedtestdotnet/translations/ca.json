@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "wrong_server_id": "L'identificador del servidor no \u00e9s v\u00e0lid"
+        },
+        "step": {
+            "user": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Desactiva l'actualitzaci\u00f3 autom\u00e0tica",
+                    "scan_interval": "Freq\u00fc\u00e8ncia d'actualitzaci\u00f3 (minuts)",
+                    "server_name": "Seleccion el servidor de proves"
+                }
+            }
+        }
+    }
+}

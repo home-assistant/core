@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Pa\u00eds"
+                },
+                "title": "Elige un pa\u00eds para monitorizar"
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "Laisser {entity_name} vide",
+            "dock": "Laisser {entity_name} retourner \u00e0 la base"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} nettoie",
+            "is_docked": "{entity_name} est connect\u00e9"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} commence \u00e0 nettoyer",
+            "docked": "{entity_name} connect\u00e9"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "Nettoyage",
+            "docked": "Sur la base",
+            "error": "Erreur",
+            "idle": "En veille",
+            "off": "Inactif",
+            "on": "Actif",
+            "paused": "En pause",
+            "returning": "Retourne \u00e0 la base"
+        }
+    },
+    "title": "Aspirateur"
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Client ID",
+                    "client_secret": "Client Schl\u00ebssel",
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "description": "Fir k\u00ebnnen op Flume Personal API z'acc\u00e9d\u00e9ieren muss du eng 'Client ID' an eng 'Client Secret' op https://portal.flumetech.com/settings#token ufroen.",
+                "title": "Verbann dech mat dengem Flume Kont."
+            }
+        }
+    }
+}

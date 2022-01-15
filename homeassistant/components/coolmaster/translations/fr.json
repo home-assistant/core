@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "no_units": "Impossible de trouver des unit\u00e9s HVAC dans l'h\u00f4te CoolMasterNet."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Prise en charge du mode refroidissement",
+                    "dry": "Prise en charge du mode d\u00e9shumidification",
+                    "fan_only": "Prise en charge du mode ventilateur uniquement",
+                    "heat": "Prise en charge du mode chauffage",
+                    "heat_cool": "Prise en charge du mode chauffage / refroidissement automatique",
+                    "host": "H\u00f4te",
+                    "off": "Peut \u00eatre \u00e9teint"
+                },
+                "title": "Configurez les d\u00e9tails de votre connexion CoolMasterNet."
+            }
+        }
+    }
+}

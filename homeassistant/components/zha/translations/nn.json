@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "port_config": {
+                "title": "Innstillinger"
+            },
+            "user": {
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Squawk"
+        }
+    }
+}

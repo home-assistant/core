@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "Nightscout",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "url": "URL"
+                },
+                "description": "- URL: l'adre\u00e7a de la teva inst\u00e0ncia de Nightscout. Per exemple: https://myhomeassistant.duckdns.org:5423 \n- Clau API (opcional): utilitza-la nom\u00e9s si la teva inst\u00e0ncia est\u00e0 protegida (auth_default_roles != readable).",
+                "title": "Introdueix la informaci\u00f3 del teu servidor Nightscout."
+            }
+        }
+    }
+}

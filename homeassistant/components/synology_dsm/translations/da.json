@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Kode"
+                }
+            },
+            "link": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn"
+                }
+            }
+        }
+    }
+}

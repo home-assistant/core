@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Twente Milieu",
+        "description": "Set up Twente Milieu providing waste collection information on your address.",
+        "data": {
+          "post_code": "Postal code",
+          "house_number": "House number",
+          "house_letter": "House letter/additional"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_address": "Address not found in Twente Milieu service area."
+    },
+    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_location%]" }
+  }
+}

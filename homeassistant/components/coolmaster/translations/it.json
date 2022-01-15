@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "no_units": "Impossibile trovare alcuna unit\u00e0 HVAC nell'host CoolMasterNet."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Supporta la modalit\u00e0 fresco",
+                    "dry": "Supporta la modalit\u00e0 asciutto",
+                    "fan_only": "Supporta la modalit\u00e0 solo ventilatore",
+                    "heat": "Supporta la modalit\u00e0 di riscaldamento",
+                    "heat_cool": "Supporta la modalit\u00e0 di riscaldamento/raffreddamento automatica",
+                    "host": "Host",
+                    "off": "Pu\u00f2 essere spento"
+                },
+                "title": "Imposta i dettagli della connessione CoolMasterNet."
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "Lascia pulire {entity_name}",
+            "dock": "Lascia che {entity_name} ritorni alla base"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} sta pulendo",
+            "is_docked": "{entity_name} \u00e8 agganciato alla base"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} ha iniziato la pulizia",
+            "docked": "{entity_name} agganciato"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "Pulendo",
+            "docked": "Agganciato",
+            "error": "Errore",
+            "idle": "Inattivo",
+            "off": "Spento",
+            "on": "Acceso",
+            "paused": "In pausa",
+            "returning": "Ritorno alla base"
+        }
+    },
+    "title": "Aspirapolvere"
+}

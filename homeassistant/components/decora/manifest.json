@@ -1,0 +1,8 @@
+{
+  "domain": "decora",
+  "name": "Leviton Decora",
+  "documentation": "https://www.home-assistant.io/integrations/decora",
+  "requirements": ["bluepy==1.3.0", "decora==0.6"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Confirm Callback URL",
+        "description": "SmartThings will be configured to send push updates to Home Assistant at:\n> {webhook_url}\n\nIf this is not correct, please update your configuration, restart Home Assistant, and try again."
+      },
+      "pat": {
+        "title": "Enter Personal Access Token",
+        "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}).  This will be used to create the Home Assistant integration within your SmartThings account.",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
+      "select_location": {
+        "title": "Select Location",
+        "description": "Please select the SmartThings Location you wish to add to Home Assistant.  We will then open a new window and ask you to login and authorize installation of the Home Assistant integration into the selected location.",
+        "data": { "location_id": "[%key:common::config_flow::data::location%]" }
+      },
+      "authorize": { "title": "Authorize Home Assistant" }
+    },
+    "abort": {
+      "invalid_webhook_url": "Home Assistant is not configured correctly to receive updates from SmartThings. The webhook URL is invalid:\n> {webhook_url}\n\nPlease update your configuration per the [instructions]({component_url}), restart Home Assistant, and try again.",
+      "no_available_locations": "There are no available SmartThings Locations to setup in Home Assistant."
+    },
+    "error": {
+      "token_invalid_format": "The token must be in the UID/GUID format",
+      "token_unauthorized": "The token is invalid or no longer authorized.",
+      "token_forbidden": "The token does not have the required OAuth scopes.",
+      "app_setup_error": "Unable to setup the SmartApp.  Please try again.",
+      "webhook_error": "SmartThings could not validate the webhook URL. Please ensure the webhook URL is reachable from the internet and try again."
+    }
+  }
+}

@@ -1,34 +1,35 @@
-"""
-Component to interface with various switches that can be controlled remotely.
+"""Component to interface with switches that can be controlled remotely."""
+from __future__ import annotations
 
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch/
-"""
-import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-import homeassistant.helpers.config_validation as cv
+from homeassistant.backports.enum import StrEnum
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
-from homeassistant.components import group
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
 
-DOMAIN = 'switch'
-DEPENDENCIES = ['group']
+DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-GROUP_NAME_ALL_SWITCHES = 'all switches'
-ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
-
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"
@@ -36,131 +37,106 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PROP_TO_ATTR = {
-    'current_power_w': ATTR_CURRENT_POWER_W,
-    'today_energy_kwh': ATTR_TODAY_ENERGY_KWH,
+    "current_power_w": ATTR_CURRENT_POWER_W,
+    "today_energy_kwh": ATTR_TODAY_ENERGY_KWH,
 }
-
-SWITCH_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class SwitchDeviceClass(StrEnum):
+    """Device class for switches."""
+
+    OUTLET = "outlet"
+    SWITCH = "switch"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(SwitchDeviceClass))
+
+# DEVICE_CLASS* below are deprecated as of 2021.12
+# use the SwitchDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
+DEVICE_CLASS_OUTLET = SwitchDeviceClass.OUTLET.value
+DEVICE_CLASS_SWITCH = SwitchDeviceClass.SWITCH.value
+
+
 @bind_hass
-def is_on(hass, entity_id=None):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the switch is on based on the statemachine.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID_ALL_SWITCHES
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn all or specified switch on."""
-    hass.add_job(async_turn_on, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_turn_on(hass, entity_id=None):
-    """Turn all or specified switch on."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
-
-
-@bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn all or specified switch off."""
-    hass.add_job(async_turn_off, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_turn_off(hass, entity_id=None):
-    """Turn all or specified switch off."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(
-        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
-
-
-@bind_hass
-def toggle(hass, entity_id=None):
-    """Toggle all or specified switch."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for switches."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
-    yield from component.async_setup(config)
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_switch_service(service):
-        """Handle calls to the switch services."""
-        target_switches = component.async_extract_from_service(service)
-
-        update_tasks = []
-        for switch in target_switches:
-            if service.service == SERVICE_TURN_ON:
-                yield from switch.async_turn_on()
-            elif service.service == SERVICE_TOGGLE:
-                yield from switch.async_toggle()
-            else:
-                yield from switch.async_turn_off()
-
-            if not switch.should_poll:
-                continue
-            update_tasks.append(switch.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_switch_service,
-        schema=SWITCH_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_switch_service,
-        schema=SWITCH_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_switch_service,
-        schema=SWITCH_SERVICE_SCHEMA)
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
     return True
 
 
-class SwitchDevice(ToggleEntity):
-    """Representation of a switch."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
-    # pylint: disable=no-self-use
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class SwitchEntityDescription(ToggleEntityDescription):
+    """A class that describes switch entities."""
+
+    device_class: SwitchDeviceClass | str | None = None
+
+
+class SwitchEntity(ToggleEntity):
+    """Base class for switch entities."""
+
+    entity_description: SwitchEntityDescription
+    _attr_current_power_w: float | None = None
+    _attr_device_class: SwitchDeviceClass | str | None
+    _attr_today_energy_kwh: float | None = None
+
     @property
-    def current_power_w(self):
+    def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
+        return self._attr_current_power_w
+
+    @property
+    def device_class(self) -> SwitchDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
         return None
 
     @property
-    def today_energy_kwh(self):
+    def today_energy_kwh(self) -> float | None:
         """Return the today total energy usage in kWh."""
-        return None
+        return self._attr_today_energy_kwh
 
+    @final
     @property
-    def is_standby(self):
-        """Return true if device is in standby."""
-        return None
-
-    @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         data = {}
 
         for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value:
+            if (value := getattr(self, prop)) is not None:
                 data[attr] = value
 
         return data

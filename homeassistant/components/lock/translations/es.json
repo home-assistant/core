@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "Bloquear {entity_name}",
+            "open": "Abrir {entity_name}",
+            "unlock": "Desbloquear {entity_name}"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name} est\u00e1 bloqueado",
+            "is_unlocked": "{entity_name} est\u00e1 desbloqueado"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} bloqueado",
+            "unlocked": "{entity_name} desbloqueado"
+        }
+    },
+    "state": {
+        "_": {
+            "locked": "Bloqueado",
+            "unlocked": "Desbloqueado"
+        }
+    },
+    "title": "Cerradura"
+}

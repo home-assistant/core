@@ -1,0 +1,9 @@
+{
+  "domain": "test",
+  "name": "Test Components",
+  "documentation": "http://example.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "version": "1.2.3"
+}

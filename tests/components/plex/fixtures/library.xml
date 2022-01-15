@@ -1,0 +1,5 @@
+<MediaContainer size="3" allowSync="0" art="/:/resources/library-art.png" content="" identifier="com.plexapp.plugins.library" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1603922053" title1="Plex Library" title2="">
+<Directory key="sections" title="Library Sections" />
+<Directory key="recentlyAdded" title="Recently Added Content" />
+<Directory key="onDeck" title="On Deck Content" />
+</MediaContainer>

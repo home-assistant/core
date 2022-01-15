@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "no_homes": "Er zijn geen huizen gekoppeld aan dit tado-account.",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Maak verbinding met je Tado-account"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Schakel de terugvalmodus in."
+                },
+                "description": "De fallback-modus schakelt over naar Smart Schedule bij de volgende schemaschakeling na het handmatig aanpassen van een zone.",
+                "title": "Pas Tado-opties aan."
+            }
+        }
+    }
+}

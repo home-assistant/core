@@ -1,0 +1,10 @@
+{
+    "config": {
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Voc\u00ea quer configurar o {name}?"
+            }
+        }
+    }
+}

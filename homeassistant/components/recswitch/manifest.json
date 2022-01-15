@@ -1,0 +1,8 @@
+{
+  "domain": "recswitch",
+  "name": "Ankuoo REC Switch",
+  "documentation": "https://www.home-assistant.io/integrations/recswitch",
+  "requirements": ["pyrecswitch==1.0.2"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

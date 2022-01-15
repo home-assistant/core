@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide"
+        },
+        "flow_title": "{device} ({ip_address})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adresse IP",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Fournissez les informations requises ci-dessous.",
+                "title": "Configurer GogoGate2 ou iSmartGate"
+            }
+        }
+    }
+}

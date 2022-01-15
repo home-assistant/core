@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_configured_local_device": "Yerel ayg\u0131t (lar) zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. L\u00fctfen bir bulut cihaz\u0131n\u0131 yap\u0131land\u0131rmadan \u00f6nce bunlar\u0131 kald\u0131r\u0131n.",
+            "authorize_url_timeout": "Yetkilendirme URL'si olu\u015ftururken zaman a\u015f\u0131m\u0131.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_mdns": "Smappee entegrasyonu i\u00e7in desteklenmeyen cihaz.",
+            "missing_configuration": "Bile\u015fen yap\u0131land\u0131r\u0131lmam\u0131\u015f. L\u00fctfen belgeleri takip edin.",
+            "no_url_available": "Kullan\u0131labilir URL yok. Bu hata hakk\u0131nda bilgi i\u00e7in [yard\u0131m b\u00f6l\u00fcm\u00fcne bak\u0131n]({docs_url})"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "\u00c7evre"
+                },
+                "description": "Smappee'nizi Home Assistant ile entegre olacak \u015fekilde ayarlay\u0131n."
+            },
+            "local": {
+                "data": {
+                    "host": "Sunucu"
+                },
+                "description": "Smappee yerel entegrasyonunu ba\u015flatmak i\u00e7in ana bilgisayar\u0131 girin"
+            },
+            "pick_implementation": {
+                "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7"
+            },
+            "zeroconf_confirm": {
+                "description": "Seri numaras\u0131 ` {serialnumber} ` olan Smappee cihaz\u0131n\u0131 Home Assistant'a eklemek istiyor musunuz?",
+                "title": "Smappee cihaz\u0131 bulundu"
+            }
+        }
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Attiva {entity_name} fuori casa",
+            "arm_home": "Attiva {entity_name} casa",
+            "arm_night": "Attiva {entity_name} notte",
+            "arm_vacation": "Attiva {entity_name} vacanza",
+            "disarm": "Disattiva {entity_name}",
+            "trigger": "Attivazione {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} \u00e8 attivo in modalit\u00e0 fuori casa",
+            "is_armed_home": "{entity_name} \u00e8 attivo in modalit\u00e0 a casa",
+            "is_armed_night": "{entity_name} \u00e8 attivo in modalit\u00e0 notte",
+            "is_armed_vacation": "{entity_name} \u00e8 attivo in modalit\u00e0 vacanza",
+            "is_disarmed": "{entity_name} \u00e8 disattivo",
+            "is_triggered": "{entity_name} \u00e8 attivato"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} attivato in modalit\u00e0 fuori casa",
+            "armed_home": "{entity_name} attivato in modalit\u00e0 a casa",
+            "armed_night": "{entity_name} attivato in modalit\u00e0 notte",
+            "armed_vacation": "{entity_name} attivato in modalit\u00e0 vacanza",
+            "disarmed": "{entity_name} disattivato",
+            "triggered": "{entity_name} attivato"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Attivo",
+            "armed_away": "Attivo fuori casa",
+            "armed_custom_bypass": "Attivo con bypass personalizzato",
+            "armed_home": "Attivo in casa",
+            "armed_night": "Attivo Notte",
+            "armed_vacation": "Attivo in vacanza",
+            "arming": "In attivazione",
+            "disarmed": "Disattivo",
+            "disarming": "In disattivazione",
+            "pending": "In sospeso",
+            "triggered": "Attivato"
+        }
+    },
+    "title": "Pannello di controllo degli allarmi"
+}

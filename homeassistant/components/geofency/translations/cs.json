@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "webhook_not_internet_accessible": "V\u00e1\u0161 Home Assistant mus\u00ed b\u00fdt p\u0159\u00edstupn\u00fd z internetu, aby mohl p\u0159ij\u00edmat zpr\u00e1vy webhook."
+        },
+        "create_entry": {
+            "default": "Chcete-li odes\u00edlat ud\u00e1losti do Home Assistant, mus\u00edte v aplikaci Geofency nastavit funkci webhook. \n\nVypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}` \n - Metoda: POST \n\nDal\u0161\u00ed informace viz [dokumentace]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "Opravdu chcete nastavit Geofency Webhook?",
+                "title": "Nastavit Geofency Webhook"
+            }
+        }
+    }
+}

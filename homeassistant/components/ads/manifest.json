@@ -1,0 +1,8 @@
+{
+  "domain": "ads",
+  "name": "ADS",
+  "documentation": "https://www.home-assistant.io/integrations/ads",
+  "requirements": ["pyads==3.2.2"],
+  "codeowners": [],
+  "iot_class": "local_push"
+}

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "flow_title": "{device} ({ip_address})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Proporciona, a continuaci\u00f3, la informaci\u00f3 necess\u00e0ria.",
+                "title": "Configuraci\u00f3 de Gogogate2 o ismartgate"
+            }
+        }
+    }
+}

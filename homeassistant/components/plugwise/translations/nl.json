@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "De service is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "Verbindingstype"
+                },
+                "description": "Product:",
+                "title": "Plugwise type"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP-adres",
+                    "password": "Smile-ID",
+                    "port": "Poort",
+                    "username": "Smile Gebruikersnaam"
+                },
+                "description": "Voer in",
+                "title": "Maak verbinding met de Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scaninterval (seconden)"
+                },
+                "description": "Plugwise opties aanpassen"
+            }
+        }
+    }
+}

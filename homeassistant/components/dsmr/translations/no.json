@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_communicate": "Kunne ikke kommunisere",
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_communicate": "Kunne ikke kommunisere",
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "Velg DSMR-versjon",
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "title": "Velg tilkoblingsadresse"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "Velg DSMR-versjon",
+                    "port": "Velg enhet"
+                },
+                "title": "Enhet"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "port": "USB enhetsbane"
+                },
+                "title": "Bane"
+            },
+            "user": {
+                "data": {
+                    "type": "Tilkoblingstype"
+                },
+                "title": "Velg tilkoblingstype"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimum tid mellom entitetsoppdateringer [s]"
+                },
+                "title": "DSMR alternativer"
+            }
+        }
+    }
+}

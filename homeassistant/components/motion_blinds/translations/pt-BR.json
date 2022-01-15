@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "step": {
+            "connect": {
+                "data": {
+                    "interface": "A interface de rede a ser utilizada"
+                }
+            },
+            "select": {
+                "data": {
+                    "select_ip": "Endere\u00e7o de IP"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Especifique as configura\u00e7\u00f5es opcionais"
+            }
+        }
+    }
+}

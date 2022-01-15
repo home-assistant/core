@@ -1,0 +1,8 @@
+{
+  "domain": "microsoft_face",
+  "name": "Microsoft Face",
+  "documentation": "https://www.home-assistant.io/integrations/microsoft_face",
+  "dependencies": ["camera"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
+}

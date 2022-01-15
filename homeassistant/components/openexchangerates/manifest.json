@@ -1,0 +1,7 @@
+{
+  "domain": "openexchangerates",
+  "name": "Open Exchange Rates",
+  "documentation": "https://www.home-assistant.io/integrations/openexchangerates",
+  "codeowners": [],
+  "iot_class": "cloud_polling"
+}

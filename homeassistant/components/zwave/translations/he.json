@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4",
+            "single_instance_allowed": "\u05ea\u05e6\u05d5\u05e8\u05ea\u05d5 \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4. \u05e8\u05e7 \u05ea\u05e6\u05d5\u05e8\u05d4 \u05d0\u05d7\u05ea \u05d0\u05e4\u05e9\u05e8\u05d9\u05ea."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "usb_path": "\u05e0\u05ea\u05d9\u05d1 \u05d4\u05ea\u05e7\u05df USB"
+                }
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "\u05de\u05ea",
+            "initializing": "\u05d0\u05ea\u05d7\u05d5\u05dc",
+            "ready": "\u05de\u05d5\u05db\u05df",
+            "sleeping": "\u05d9\u05e9\u05df"
+        },
+        "query_stage": {
+            "dead": "\u05de\u05ea",
+            "initializing": "\u05d0\u05ea\u05d7\u05d5\u05dc"
+        }
+    }
+}

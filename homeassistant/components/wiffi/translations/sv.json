@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Serverporten \u00e4r upptagen."
+        }
+    }
+}

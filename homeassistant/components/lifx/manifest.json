@@ -1,0 +1,12 @@
+{
+  "domain": "lifx",
+  "name": "LIFX",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lifx",
+  "requirements": ["aiolifx==0.7.0", "aiolifx_effects==0.2.2"],
+  "homekit": {
+    "models": ["LIFX"]
+  },
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

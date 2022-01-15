@@ -1,0 +1,35 @@
+set_auto_off:
+  name: Set auto off
+  description: "Update Switcher device auto off setting."
+  target:
+    entity:
+      integration: switcher_kis
+      domain: switch
+      device_class: switch
+  fields:
+    auto_off:
+      name: Auto off
+      description: "Time period string containing hours and minutes."
+      required: true
+      example: '"02:30"'
+      selector:
+        text:
+
+turn_on_with_timer:
+  name: Turn on with timer
+  description: 'Turn on the Switcher device with timer.'
+  target:
+    entity:
+      integration: switcher_kis
+      domain: switch
+      device_class: switch
+  fields:
+    timer_minutes:
+      name: Timer
+      description: 'Time to turn on.'
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 150
+          unit_of_measurement: minutes

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "reauth_failed": "Utilizza lo stesso utente mydevolo di prima."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mydevolo_url": "URL di mydevolo",
+                    "password": "Password",
+                    "username": "Email / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "URL mydevolo",
+                    "password": "Password",
+                    "username": "Email / ID devolo"
+                }
+            }
+        }
+    }
+}

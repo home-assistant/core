@@ -1,306 +1,268 @@
 """Component to integrate the Home Assistant cloud."""
 import asyncio
-from datetime import datetime
-import json
-import logging
-import os
 
-import aiohttp
-import async_timeout
+from hass_nabucasa import Cloud
 import voluptuous as vol
 
+from homeassistant.components.alexa import const as alexa_const
+from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME, CONF_TYPE)
-from homeassistant.helpers import entityfilter
-from homeassistant.helpers import config_validation as cv
+    CONF_DESCRIPTION,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_REGION,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import dt as dt_util
-from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import smart_home as ga_sh
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
+from homeassistant.util.aiohttp import MockRequest
 
-from . import http_api, iot
-from .const import CONFIG_DIR, DOMAIN, SERVERS
+from . import account_link, http_api
+from .client import CloudClient
+from .const import (
+    CONF_ACCOUNT_LINK_URL,
+    CONF_ACME_DIRECTORY_SERVER,
+    CONF_ALEXA,
+    CONF_ALEXA_ACCESS_TOKEN_URL,
+    CONF_ALIASES,
+    CONF_CLOUDHOOK_CREATE_URL,
+    CONF_COGNITO_CLIENT_ID,
+    CONF_ENTITY_CONFIG,
+    CONF_FILTER,
+    CONF_GOOGLE_ACTIONS,
+    CONF_GOOGLE_ACTIONS_REPORT_STATE_URL,
+    CONF_RELAYER,
+    CONF_REMOTE_API_URL,
+    CONF_SUBSCRIPTION_INFO_URL,
+    CONF_USER_POOL_ID,
+    CONF_VOICE_API_URL,
+    DOMAIN,
+    MODE_DEV,
+    MODE_PROD,
+)
+from .prefs import CloudPreferences
 
-REQUIREMENTS = ['warrant==0.6.1']
+DEFAULT_MODE = MODE_PROD
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_ALEXA = 'alexa'
-CONF_GOOGLE_ACTIONS = 'google_actions'
-CONF_FILTER = 'filter'
-CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
-CONF_RELAYER = 'relayer'
-CONF_USER_POOL_ID = 'user_pool_id'
-CONF_ALIASES = 'aliases'
-
-MODE_DEV = 'development'
-DEFAULT_MODE = 'production'
-DEPENDENCIES = ['http']
-
-CONF_ENTITY_CONFIG = 'entity_config'
-
-ALEXA_ENTITY_SCHEMA = vol.Schema({
-    vol.Optional(alexa_sh.CONF_DESCRIPTION): cv.string,
-    vol.Optional(alexa_sh.CONF_DISPLAY_CATEGORIES): cv.string,
-    vol.Optional(alexa_sh.CONF_NAME): cv.string,
-})
-
-GOOGLE_ENTITY_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TYPE): vol.In(ga_sh.MAPPING_COMPONENT),
-    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
-})
-
-ASSISTANT_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
-})
-
-ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}
-})
-
-GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}
-})
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-            vol.In([MODE_DEV] + list(SERVERS)),
-        # Change to optional when we include real servers
-        vol.Optional(CONF_COGNITO_CLIENT_ID): str,
-        vol.Optional(CONF_USER_POOL_ID): str,
-        vol.Optional(CONF_REGION): str,
-        vol.Optional(CONF_RELAYER): str,
-        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
-        vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+SERVICE_REMOTE_CONNECT = "remote_connect"
+SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+ALEXA_ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DESCRIPTION): cv.string,
+        vol.Optional(alexa_const.CONF_DISPLAY_CATEGORIES): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
+
+GOOGLE_ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ga_c.CONF_ROOM_HINT): cv.string,
+    }
+)
+
+ASSISTANT_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_FILTER, default=dict): entityfilter.FILTER_SCHEMA}
+)
+
+ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend(
+    {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}}
+)
+
+GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend(
+    {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
+)
+
+# pylint: disable=no-value-for-parameter
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(
+                    [MODE_DEV, MODE_PROD]
+                ),
+                vol.Optional(CONF_COGNITO_CLIENT_ID): str,
+                vol.Optional(CONF_USER_POOL_ID): str,
+                vol.Optional(CONF_REGION): str,
+                vol.Optional(CONF_RELAYER): str,
+                vol.Optional(CONF_SUBSCRIPTION_INFO_URL): vol.Url(),
+                vol.Optional(CONF_CLOUDHOOK_CREATE_URL): vol.Url(),
+                vol.Optional(CONF_REMOTE_API_URL): vol.Url(),
+                vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
+                vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
+                vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
+                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): vol.Url(),
+                vol.Optional(CONF_GOOGLE_ACTIONS_REPORT_STATE_URL): vol.Url(),
+                vol.Optional(CONF_ACCOUNT_LINK_URL): vol.Url(),
+                vol.Optional(CONF_VOICE_API_URL): vol.Url(),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+class CloudNotAvailable(HomeAssistantError):
+    """Raised when an action requires the cloud but it's not available."""
+
+
+@bind_hass
+@callback
+def async_is_logged_in(hass: HomeAssistant) -> bool:
+    """Test if user is logged in."""
+    return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
+
+
+@bind_hass
+@callback
+def async_active_subscription(hass: HomeAssistant) -> bool:
+    """Test if user has an active subscription."""
+    return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
+
+
+@bind_hass
+async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
+    """Create a cloudhook."""
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    hook = await hass.data[DOMAIN].cloudhooks.async_create(webhook_id, True)
+    return hook["cloudhook_url"]
+
+
+@bind_hass
+async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
+    """Delete a cloudhook."""
+    if DOMAIN not in hass.data:
+        raise CloudNotAvailable
+
+    await hass.data[DOMAIN].cloudhooks.async_delete(webhook_id)
+
+
+@bind_hass
+@callback
+def async_remote_ui_url(hass: HomeAssistant) -> str:
+    """Get the remote UI URL."""
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    if not hass.data[DOMAIN].client.prefs.remote_enabled:
+        raise CloudNotAvailable
+
+    if not hass.data[DOMAIN].remote.instance_domain:
+        raise CloudNotAvailable
+
+    return f"https://{hass.data[DOMAIN].remote.instance_domain}"
+
+
+def is_cloudhook_request(request):
+    """Test if a request came from a cloudhook.
+
+    Async friendly.
+    """
+    return isinstance(request, MockRequest)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
+    # Process configs
     if DOMAIN in config:
         kwargs = dict(config[DOMAIN])
     else:
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
+    # Alexa/Google custom config
     alexa_conf = kwargs.pop(CONF_ALEXA, None) or ALEXA_SCHEMA({})
+    google_conf = kwargs.pop(CONF_GOOGLE_ACTIONS, None) or GACTIONS_SCHEMA({})
 
-    if CONF_GOOGLE_ACTIONS not in kwargs:
-        kwargs[CONF_GOOGLE_ACTIONS] = GACTIONS_SCHEMA({})
+    # Cloud settings
+    prefs = CloudPreferences(hass)
+    await prefs.async_initialize()
 
-    kwargs[CONF_ALEXA] = alexa_sh.Config(
-        should_expose=alexa_conf[CONF_FILTER],
-        entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
+    # Initialize Cloud
+    websession = async_get_clientsession(hass)
+    client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
+    cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
+
+    async def _shutdown(event):
+        """Shutdown event."""
+        await cloud.stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+
+    _remote_handle_prefs_updated(cloud)
+
+    async def _service_handler(service: ServiceCall) -> None:
+        """Handle service for cloud."""
+        if service.service == SERVICE_REMOTE_CONNECT:
+            await prefs.async_update(remote_enabled=True)
+        elif service.service == SERVICE_REMOTE_DISCONNECT:
+            await prefs.async_update(remote_enabled=False)
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler
+    )
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
+    loaded = False
 
-    success = yield from cloud.initialize()
+    async def _on_connect():
+        """Discover RemoteUI binary sensor."""
+        nonlocal loaded
 
-    if not success:
-        return False
+        # Prevent multiple discovery
+        if loaded:
+            return
+        loaded = True
 
-    yield from http_api.async_setup(hass)
+        await hass.helpers.discovery.async_load_platform(
+            Platform.BINARY_SENSOR, DOMAIN, {}, config
+        )
+        await hass.helpers.discovery.async_load_platform(
+            Platform.STT, DOMAIN, {}, config
+        )
+        await hass.helpers.discovery.async_load_platform(
+            Platform.TTS, DOMAIN, {}, config
+        )
+
+    cloud.iot.register_on_connect(_on_connect)
+
+    await cloud.initialize()
+    await http_api.async_setup(hass)
+
+    account_link.async_setup(hass)
+
     return True
 
 
-class Cloud:
-    """Store the configuration of the cloud connection."""
+@callback
+def _remote_handle_prefs_updated(cloud: Cloud) -> None:
+    """Handle remote preferences updated."""
+    cur_pref = cloud.client.prefs.remote_enabled
+    lock = asyncio.Lock()
 
-    def __init__(self, hass, mode, alexa, google_actions,
-                 cognito_client_id=None, user_pool_id=None, region=None,
-                 relayer=None):
-        """Create an instance of Cloud."""
-        self.hass = hass
-        self.mode = mode
-        self.alexa_config = alexa
-        self._google_actions = google_actions
-        self._gactions_config = None
-        self.jwt_keyset = None
-        self.id_token = None
-        self.access_token = None
-        self.refresh_token = None
-        self.iot = iot.CloudIoT(self)
+    # Sync remote connection with prefs
+    async def remote_prefs_updated(prefs: CloudPreferences) -> None:
+        """Update remote status."""
+        nonlocal cur_pref
 
-        if mode == MODE_DEV:
-            self.cognito_client_id = cognito_client_id
-            self.user_pool_id = user_pool_id
-            self.region = region
-            self.relayer = relayer
+        async with lock:
+            if prefs.remote_enabled == cur_pref:
+                return
 
-        else:
-            info = SERVERS[mode]
+            if cur_pref := prefs.remote_enabled:
+                await cloud.remote.connect()
+            else:
+                await cloud.remote.disconnect()
 
-            self.cognito_client_id = info['cognito_client_id']
-            self.user_pool_id = info['user_pool_id']
-            self.region = info['region']
-            self.relayer = info['relayer']
-
-    @property
-    def is_logged_in(self):
-        """Get if cloud is logged in."""
-        return self.id_token is not None
-
-    @property
-    def subscription_expired(self):
-        """Return a boolen if the subscription has expired."""
-        return dt_util.utcnow() > self.expiration_date
-
-    @property
-    def expiration_date(self):
-        """Return the subscription expiration as a UTC datetime object."""
-        return datetime.combine(
-            dt_util.parse_date(self.claims['custom:sub-exp']),
-            datetime.min.time()).replace(tzinfo=dt_util.UTC)
-
-    @property
-    def claims(self):
-        """Return the claims from the id token."""
-        return self._decode_claims(self.id_token)
-
-    @property
-    def user_info_path(self):
-        """Get path to the stored auth."""
-        return self.path('{}_auth.json'.format(self.mode))
-
-    @property
-    def gactions_config(self):
-        """Return the Google Assistant config."""
-        if self._gactions_config is None:
-            conf = self._google_actions
-
-            def should_expose(entity):
-                """If an entity should be exposed."""
-                return conf['filter'](entity.entity_id)
-
-            self._gactions_config = ga_sh.Config(
-                should_expose=should_expose,
-                agent_user_id=self.claims['cognito:username'],
-                entity_config=conf.get(CONF_ENTITY_CONFIG),
-            )
-
-        return self._gactions_config
-
-    @asyncio.coroutine
-    def initialize(self):
-        """Initialize and load cloud info."""
-        jwt_success = yield from self._fetch_jwt_keyset()
-
-        if not jwt_success:
-            return False
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                        self._start_cloud)
-
-        return True
-
-    def path(self, *parts):
-        """Get config path inside cloud dir.
-
-        Async friendly.
-        """
-        return self.hass.config.path(CONFIG_DIR, *parts)
-
-    @asyncio.coroutine
-    def logout(self):
-        """Close connection and remove all credentials."""
-        yield from self.iot.disconnect()
-
-        self.id_token = None
-        self.access_token = None
-        self.refresh_token = None
-        self._gactions_config = None
-
-        yield from self.hass.async_add_job(
-            lambda: os.remove(self.user_info_path))
-
-    def write_user_info(self):
-        """Write user info to a file."""
-        with open(self.user_info_path, 'wt') as file:
-            file.write(json.dumps({
-                'id_token': self.id_token,
-                'access_token': self.access_token,
-                'refresh_token': self.refresh_token,
-            }, indent=4))
-
-    def _start_cloud(self, event):
-        """Start the cloud component."""
-        # Ensure config dir exists
-        path = self.hass.config.path(CONFIG_DIR)
-        if not os.path.isdir(path):
-            os.mkdir(path)
-
-        user_info = self.user_info_path
-        if not os.path.isfile(user_info):
-            return
-
-        with open(user_info, 'rt') as file:
-            info = json.loads(file.read())
-
-        # Validate tokens
-        try:
-            for token in 'id_token', 'access_token':
-                self._decode_claims(info[token])
-        except ValueError as err:  # Raised when token is invalid
-            _LOGGER.warning('Found invalid token %s: %s', token, err)
-            return
-
-        self.id_token = info['id_token']
-        self.access_token = info['access_token']
-        self.refresh_token = info['refresh_token']
-
-        self.hass.add_job(self.iot.connect())
-
-    @asyncio.coroutine
-    def _fetch_jwt_keyset(self):
-        """Fetch the JWT keyset for the Cognito instance."""
-        session = async_get_clientsession(self.hass)
-        url = ("https://cognito-idp.us-east-1.amazonaws.com/"
-               "{}/.well-known/jwks.json".format(self.user_pool_id))
-
-        try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                req = yield from session.get(url)
-                self.jwt_keyset = yield from req.json()
-
-            return True
-
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            _LOGGER.error("Error fetching Cognito keyset: %s", err)
-            return False
-
-    def _decode_claims(self, token):
-        """Decode the claims in a token."""
-        from jose import jwt, exceptions as jose_exceptions
-        try:
-            header = jwt.get_unverified_header(token)
-        except jose_exceptions.JWTError as err:
-            raise ValueError(str(err)) from None
-        kid = header.get("kid")
-
-        if kid is None:
-            raise ValueError('No kid in header')
-
-        # Locate the key for this kid
-        key = None
-        for key_dict in self.jwt_keyset["keys"]:
-            if key_dict["kid"] == kid:
-                key = key_dict
-                break
-        if not key:
-            raise ValueError(
-                "Unable to locate kid ({}) in keyset".format(kid))
-
-        try:
-            return jwt.decode(
-                token, key, audience=self.cognito_client_id, options={
-                    'verify_exp': False,
-                })
-        except jose_exceptions.JWTError as err:
-            raise ValueError(str(err)) from None
+    cloud.client.prefs.async_listen_updates(remote_prefs_updated)

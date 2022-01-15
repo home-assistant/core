@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "action_type": {
+            "flash": "\u0641\u0644\u0627\u0634 {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u0642\u064a\u062f \u0627\u0644\u0627\u064a\u0642\u0627\u0641",
+            "is_on": "{entity_name} \u0642\u064a\u062f \u0627\u0644\u062a\u0634\u063a\u064a\u0644"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} \u062a\u0645 \u0625\u064a\u0642\u0627\u0641 \u062a\u0634\u063a\u064a\u0644\u0647",
+            "turned_on": "{entity_name} \u062a\u0645 \u062a\u0634\u063a\u064a\u0644\u0647"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u0625\u064a\u0642\u0627\u0641",
+            "on": "\u0642\u064a\u062f \u0627\u0644\u062a\u0634\u063a\u064a\u0644"
+        }
+    },
+    "title": "\u0627\u0644\u0636\u0648\u0621"
+}

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fill in your information",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure OpenUV",
+        "data": {
+          "from_window": "Starting UV index for the protection window",
+          "to_window": "Ending UV index for the protection window"
+        }
+      }
+    }
+  }
+}

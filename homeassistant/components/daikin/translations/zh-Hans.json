@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u914d\u7f6e\u5b8c\u6210",
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
+        },
+        "error": {
+            "api_password": "\u9a8c\u8bc1\u65e0\u6548\uff0c\u8bf7\u4f7f\u7528\u5176\u5b83\u7684 API \u5bc6\u94a5\u6216\u5bc6\u7801\u91cd\u8bd5",
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u9a8c\u8bc1\u9519\u8bef",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u94a5",
+                    "host": "\u4e3b\u673a\u5730\u5740",
+                    "password": "\u5bc6\u7801"
+                },
+                "description": "\u8f93\u5165\u60a8\u7684\u5927\u91d1\u7a7a\u8c03\u7684 IP \u5730\u5740\u3002\n\n\u6ce8\u610f\uff1aBRP072Cxx \u6216 SKYFi \u578b\u53f7\u8bbe\u5907\u9700\u8981\u63d0\u4f9b API \u5bc6\u94a5\u548c\u5bc6\u7801",
+                "title": "\u914d\u7f6e\u5927\u91d1\u7a7a\u8c03"
+            }
+        }
+    }
+}

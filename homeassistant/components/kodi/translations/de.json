@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_uuid": "Die Kodi-Instanz hat keine eindeutige ID. Dies ist h\u00f6chstwahrscheinlich auf eine alte Kodi-Version (17.x oder niedriger) zur\u00fcckzuf\u00fchren. Du kannst die Integration manuell konfigurieren oder auf eine neuere Kodi-Version aktualisieren.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte gib deinen Kodi-Benutzernamen und Passwort ein. Diese findest du unter System/Einstellungen/Netzwerk/Dienste."
+            },
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du Kodi (` {name} `) zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Gefundene Kodi-Installation"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Verwendet ein SSL-Zertifikat"
+                },
+                "description": "Kodi-Verbindungsinformationen. Bitte stelle sicher, dass du \"Steuerung von Kodi \u00fcber HTTP zulassen\" in System/Einstellungen/Netzwerk/Dienste aktiviert hast."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "Der WebSocket-Port (in Kodi manchmal TCP-Port genannt). Um eine Verbindung \u00fcber WebSocket herzustellen, musst du unter System/Einstellungen/Netzwerk/Dienste \"Programme ... zur Steuerung von Kodi zulassen\" aktivieren. Wenn WebSocket nicht aktiviert ist, entferne den Port und lasse ihn leer."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} wurde zum Ausschalten aufgefordert",
+            "turn_on": "{entity_name} wurde zum Einschalten aufgefordert"
+        }
+    }
+}

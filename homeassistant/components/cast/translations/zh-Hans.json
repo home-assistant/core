@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Google Cast \u53ea\u9700\u8981\u914d\u7f6e\u4e00\u6b21\u3002"
+        },
+        "step": {
+            "config": {
+                "description": "\u8bf7\u786e\u8ba4Goole Cast\u7684\u914d\u7f6e",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "\u60a8\u60f3\u8981\u914d\u7f6e Google Cast \u5417\uff1f"
+            }
+        }
+    }
+}

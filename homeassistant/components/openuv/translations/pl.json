@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
+        },
+        "error": {
+            "invalid_api_key": "Nieprawid\u0142owy klucz API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "elevation": "Wysoko\u015b\u0107",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                },
+                "title": "Wprowad\u017a dane"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Pocz\u0105tkowy indeks UV",
+                    "to_window": "Ko\u0144cowy indeks UV"
+                },
+                "title": "Konfiguracja OpenUV"
+            }
+        }
+    }
+}

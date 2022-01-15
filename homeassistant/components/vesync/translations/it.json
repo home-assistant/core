@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Immettere nome utente e password"
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "no_devices": "Ingen enheter funnet i kontoen",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Skriv inn passordet for {username} p\u00e5 nytt.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Fyll ut informasjonen din"
+            }
+        }
+    }
+}

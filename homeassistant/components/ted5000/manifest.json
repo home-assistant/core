@@ -1,0 +1,8 @@
+{
+  "domain": "ted5000",
+  "name": "The Energy Detective TED5000",
+  "documentation": "https://www.home-assistant.io/integrations/ted5000",
+  "requirements": ["xmltodict==0.12.0"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

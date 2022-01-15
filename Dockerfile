@@ -1,35 +1,46 @@
-# Notice:
-# When updating this file, please also update virtualization/Docker/Dockerfile.dev
-# This way, the development image and the production image are kept in sync.
+ARG BUILD_FROM
+FROM ${BUILD_FROM}
 
-FROM python:3.6
-LABEL maintainer="Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
+# Synchronize with homeassistant/core.py:async_stop
+ENV \
+    S6_SERVICES_GRACETIME=220000
 
-# Uncomment any of the following lines to disable the installation.
-#ENV INSTALL_TELLSTICK no
-#ENV INSTALL_OPENALPR no
-#ENV INSTALL_FFMPEG no
-#ENV INSTALL_LIBCEC no
-#ENV INSTALL_PHANTOMJS no
-#ENV INSTALL_SSOCR no
+WORKDIR /usr/src
 
-VOLUME /config
+## Setup Home Assistant Core dependencies
+COPY requirements.txt homeassistant/
+COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
+RUN \
+    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    -r homeassistant/requirements.txt
+COPY requirements_all.txt homeassistant/
+RUN \
+    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    -r homeassistant/requirements_all.txt
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+## Setup Home Assistant Core
+COPY . homeassistant/
+RUN \
+    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    -e ./homeassistant \
+    && python3 -m compileall homeassistant/homeassistant
 
-# Copy build scripts
-COPY virtualization/Docker/ virtualization/Docker/
-RUN virtualization/Docker/setup_docker_prereqs
+# Fix Bug with Alpine 3.14 and sqlite 3.35
+# https://gitlab.alpinelinux.org/alpine/aports/-/issues/12524
+ARG BUILD_ARCH
+RUN \
+    if [ "${BUILD_ARCH}" = "amd64" ]; then \
+        export APK_ARCH=x86_64; \
+    elif [ "${BUILD_ARCH}" = "i386" ]; then \
+        export APK_ARCH=x86; \
+    else \
+        export APK_ARCH=${BUILD_ARCH}; \
+    fi \
+    && curl -O http://dl-cdn.alpinelinux.org/alpine/v3.13/main/${APK_ARCH}/sqlite-libs-3.34.1-r0.apk \
+    && apk add --no-cache sqlite-libs-3.34.1-r0.apk \
+    && rm -f sqlite-libs-3.34.1-r0.apk
 
-# Install hass component dependencies
-COPY requirements_all.txt requirements_all.txt
-# Uninstall enum34 because some dependencies install it but breaks Python 3.4+.
-# See PR #8103 for more info.
-RUN pip3 install --no-cache-dir -r requirements_all.txt && \
-    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet cython
+# Home Assistant S6-Overlay
+COPY rootfs /
 
-# Copy source
-COPY . .
-
-CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
+WORKDIR /config

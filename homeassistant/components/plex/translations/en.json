@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All linked servers already configured",
+            "already_configured": "This Plex server is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "reauth_successful": "Re-authentication was successful",
+            "token_request_timeout": "Timed out obtaining token",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "faulty_credentials": "Authorization failed, verify Token",
+            "host_or_token": "Must provide at least one of Host or Token",
+            "no_servers": "No servers linked to Plex account",
+            "not_found": "Plex server not found",
+            "ssl_error": "SSL certificate issue"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "token": "Token (optional)",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "title": "Manual Plex Configuration"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Multiple servers available, select one:",
+                "title": "Select Plex server"
+            },
+            "user": {
+                "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Setup method"
+                },
+                "title": "Plex Media Server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignore new managed/shared users",
+                    "ignore_plex_web_clients": "Ignore Plex Web clients",
+                    "monitored_users": "Monitored users",
+                    "use_episode_art": "Use episode art"
+                },
+                "description": "Options for Plex Media Players"
+            }
+        }
+    }
+}

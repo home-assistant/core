@@ -1,0 +1,33 @@
+restart:
+  name: Restart
+  description: Send a restart command to a ffmpeg based sensor.
+  fields:
+    entity_id:
+      name: Entity
+      description: Name of entity that will restart. Platform dependent.
+      selector:
+        entity:
+          integration: ffmpeg
+          domain: binary_sensor
+start:
+  name: Start
+  description: Send a start command to a ffmpeg based sensor.
+  fields:
+    entity_id:
+      name: Entity
+      description: Name of entity that will start. Platform dependent.
+      selector:
+        entity:
+          integration: ffmpeg
+          domain: binary_sensor
+stop:
+  name: Stop
+  description: Send a stop command to a ffmpeg based sensor.
+  fields:
+    entity_id:
+      name: Entity
+      description: Name of entity that will stop. Platform dependent.
+      selector:
+        entity:
+          integration: ffmpeg
+          domain: binary_sensor

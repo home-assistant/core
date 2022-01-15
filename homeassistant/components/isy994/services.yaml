@@ -1,0 +1,297 @@
+# Describes the ISY994-specific services available
+
+# Note: controlling many entity_ids with one call is not recommended since it may result in
+# flooding the ISY with requests. To control multiple devices with a service call
+# the recommendation is to add a scene in the ISY and control that scene.
+send_raw_node_command:
+  name: Send raw node command
+  description: Send a "raw" ISY REST Device Command to a Node using its Home Assistant Entity ID.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    command:
+      name: Command
+      description: The ISY REST Command to be sent to the device
+      required: true
+      example: "DON"
+      selector:
+        text:
+    value:
+      name: Value
+      description: The integer value to be sent with the command.
+      selector:
+        number:
+          min: 0
+          max: 255
+    parameters:
+      name: Parameters
+      description: A dict of parameters to be sent in the query string (e.g. for controlling colored bulbs).
+      example: { GV2: 0, GV3: 0, GV4: 255 }
+      default: {}
+      selector:
+        object:
+    unit_of_measurement:
+      name: Unit of measurement
+      description: The ISY Unit of Measurement (UOM) to send with the command, if required.
+      selector:
+        number:
+          min: 0
+          max: 120
+send_node_command:
+  name: Send node command
+  description: >-
+    Send a command to an ISY Device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable,
+    enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    command:
+      name: Command
+      description: The command to be sent to the device.
+      required: true
+      selector:
+        select:
+          options:
+            - "beep"
+            - "brighten"
+            - "dim"
+            - "disable"
+            - "enable"
+            - "fade_down"
+            - "fade_stop"
+            - "fade_up"
+            - "fast_off"
+            - "fast_on"
+            - "query"
+get_zwave_parameter:
+  name: Get Z-Wave Parameter
+  description: >-
+    Request a Z-Wave Device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name "ZW_#"
+    where "#" is the parameter number.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      name: Parameter
+      description: The parameter number to retrieve from the device.
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+set_zwave_parameter:
+  name: Set Z-Wave Parameter
+  description: >-
+    Update a Z-Wave Device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name "ZW_#"
+    where "#" is the parameter number.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      name: Parameter
+      description: The parameter number to set on the end device.
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+    value:
+      name: Value
+      description: The value to set for the parameter. May be an integer or byte string (e.g. "0xFFFF").
+      required: true
+      example: 33491663
+      selector:
+        text:
+    size:
+      name: Size
+      description: The size of the parameter, either 1, 2, or 4 bytes.
+      required: true
+      example: 4
+      selector:
+        select:
+          options:
+            - "1"
+            - "2"
+            - "4"
+rename_node:
+  name: Rename Node on ISY994
+  description: >-
+    Rename a node or group (scene) on the ISY994. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match.
+    The entity name and ID will only be updated after calling `isy994.reload` or restarting Home Assistant, and ONLY IF you have not already customized the
+    name within Home Assistant.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    name:
+      name: New Name
+      description: The new name to use within the ISY994.
+      required: true
+      example: "Front Door Light"
+      selector:
+        text:
+set_on_level:
+  name: Set On Level
+  description: Send a ISY set_on_level command to a Node.
+  target:
+    entity:
+      integration: isy994
+      domain: light
+  fields:
+    value:
+      name: Value
+      description: integer value to set.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+set_ramp_rate:
+  name: Set ramp rate
+  description: Send a ISY set_ramp_rate command to a Node.
+  target:
+    entity:
+      integration: isy994
+      domain: light
+  fields:
+    value:
+      name: Value
+      description: Integer value to set, see PyISY/ISY documentation for values to actual ramp times.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 31
+system_query:
+  name: System query
+  description: Request the ISY Query the connected devices.
+  fields:
+    address:
+      name: Address
+      description: ISY Address to Query. Omitting this requests a system-wide scan (typically scheduled once per day).
+      example: "1A 2B 3C 1"
+      selector:
+        text:
+    isy:
+      name: ISY
+      description: If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console). Omitting this will cause all ISYs to be queried.
+      example: "ISY"
+      selector:
+        text:
+set_variable:
+  name: Set variable
+  description: Set an ISY variable's current or initial value. Variables can be set by either type/address or by name.
+  fields:
+    address:
+      name: Address
+      description: The address of the variable for which to set the value.
+      selector:
+        number:
+          min: 0
+          max: 255
+    type:
+      name: Type
+      description: The variable type, 1 = Integer, 2 = State.
+      selector:
+        number:
+          min: 1
+          max: 2
+    name:
+      name: Name
+      description: The name of the variable to set (use instead of type/address).
+      example: "my_variable_name"
+      selector:
+        text:
+    init:
+      name: Init
+      description: If True, the initial (init) value will be updated instead of the current value.
+      default: false
+      selector:
+        boolean:
+    value:
+      name: Value
+      description: The integer value to be sent.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    isy:
+      name: ISY
+      description: If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same variable name or address on multiple ISYs, omitting this will run the command on them all.
+      example: "ISY"
+      selector:
+        text:
+send_program_command:
+  name: Send program command
+  description: >-
+    Send a command to control an ISY program or folder. Valid commands are run, run_then, run_else, stop, enable, disable,
+    enable_run_at_startup, and disable_run_at_startup.
+  fields:
+    address:
+      name: Address
+      description: The address of the program to control (use either address or name).
+      example: "04B1"
+      selector:
+        text:
+    name:
+      name: Name
+      description: The name of the program to control (use either address or name).
+      example: "My Program"
+      selector:
+        text:
+    command:
+      name: Command
+      description: The ISY Program Command to be sent.
+      required: true
+      selector:
+        select:
+          options:
+            - "disable"
+            - "disable_run_at_startup"
+            - "enable"
+            - "enable_run_at_startup"
+            - "run"
+            - "run_else"
+            - "run_then"
+            - "stop"
+    isy:
+      name: ISY
+      description: If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.
+      example: "ISY"
+      selector:
+        text:
+run_network_resource:
+  name: Run network resource
+  description: Run a network resource on the ISY.
+  fields:
+    address:
+      name: Address
+      description: The address of the network resource to execute (use either address or name).
+      selector:
+        number:
+          min: 0
+          max: 255
+    name:
+      name: Name
+      description: The name of the network resource to execute (use either address or name).
+      example: "Network Resource 1"
+      selector:
+        text:
+    isy:
+      name: ISY
+      description: If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same resource name or address on multiple ISYs, omitting this will run the command on them all.
+      example: "ISY"
+      selector:
+        text:
+reload:
+  name: Reload
+  description: Reload the ISY994 connection(s) without restarting Home Assistant. Use to pick up new devices that have been added or changed on the ISY.
+cleanup_entities:
+  name: Cleanup entities
+  description: Cleanup old entities and devices no longer used by the ISY994 integrations. Useful if you've removed devices from the ISY or changed the options in the configuration to exclude additional items.

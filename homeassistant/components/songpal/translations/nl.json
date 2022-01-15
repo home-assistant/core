@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "not_songpal_device": "Geen Songpal-apparaat"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "description": "Wilt u {name} ( {host} ) instellen?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Eindpunt"
+                }
+            }
+        }
+    }
+}

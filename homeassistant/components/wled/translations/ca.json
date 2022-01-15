@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Configura la integraci\u00f3 de WLED amb Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Vols afegir el WLED `{name}` a Home Assistant?",
+                "title": "Dispositiu WLED descobert"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Mant\u00e9 el llum principal, fins i tot amb 1 segment LED."
+                }
+            }
+        }
+    }
+}

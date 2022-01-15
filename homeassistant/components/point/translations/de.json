@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "external_setup": "Pointt erfolgreich von einem anderen Flow konfiguriert.",
+            "no_flows": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert"
+        },
+        "error": {
+            "follow_link": "Bitte folgen dem Link und authentifiziere dich, bevor du auf Senden klickst",
+            "no_token": "Ung\u00fcltiger Zugriffs-Token"
+        },
+        "step": {
+            "auth": {
+                "description": "Folge dem Link unten und **Best\u00e4tige** den Zugriff auf dein Minut-Konto. Kehre dann zur\u00fcck und dr\u00fccke unten auf **Senden**. \n\n [Link]({authorization_url})",
+                "title": "Point authentifizieren"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Anbieter"
+                },
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?",
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            }
+        }
+    }
+}

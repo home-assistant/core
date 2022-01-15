@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "invalid_api_key": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \ud0a4",
+                    "elevation": "\uace0\ub3c4",
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4"
+                },
+                "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4 \uc785\ub825\ud558\uae30"
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "\u79bb\u5f00",
+            "schedule": "\u65e5\u7a0b"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} \u68c0\u6d4b\u5230\u4e00\u4e2a\u95f9\u949f",
+            "animal": "{entity_name} \u68c0\u6d4b\u5230\u4e00\u4e2a\u52a8\u7269",
+            "human": "{entity_name} \u68c0\u6d4b\u5230\u4e00\u4e2a\u4eba",
+            "outdoor": "{entity_name} \u68c0\u6d4b\u5230\u4e00\u4e2a\u51fa\u95e8\u4e8b\u4ef6",
+            "person": "{entity_name} \u68c0\u6d4b\u5230\u4e00\u4e2a\u4eba",
+            "person_away": "{entity_name} \u68c0\u6d4b\u5230\u4e00\u4e2a\u4eba\u79bb\u5f00\u4e86"
+        }
+    }
+}

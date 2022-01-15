@@ -1,41 +1,49 @@
-"""
-Support for Alexa skill service end point.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/alexa/
-"""
+"""Support for Alexa skill service end point."""
 import copy
+import hmac
+from http import HTTPStatus
 import logging
-from datetime import datetime
 import uuid
 
+from homeassistant.components import http
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import template
-from homeassistant.components import http
+import homeassistant.util.dt as dt_util
 
 from .const import (
-    CONF_UID, CONF_TITLE, CONF_AUDIO, CONF_TEXT, CONF_DISPLAY_URL, ATTR_UID,
-    ATTR_UPDATE_DATE, ATTR_TITLE_TEXT, ATTR_STREAM_URL, ATTR_MAIN_TEXT,
-    ATTR_REDIRECTION_URL, DATE_FORMAT)
-
+    API_PASSWORD,
+    ATTR_MAIN_TEXT,
+    ATTR_REDIRECTION_URL,
+    ATTR_STREAM_URL,
+    ATTR_TITLE_TEXT,
+    ATTR_UID,
+    ATTR_UPDATE_DATE,
+    CONF_AUDIO,
+    CONF_DISPLAY_URL,
+    CONF_TEXT,
+    CONF_TITLE,
+    CONF_UID,
+    DATE_FORMAT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-FLASH_BRIEFINGS_API_ENDPOINT = '/api/alexa/flash_briefings/{briefing_id}'
+FLASH_BRIEFINGS_API_ENDPOINT = "/api/alexa/flash_briefings/{briefing_id}"
 
 
 @callback
 def async_setup(hass, flash_briefing_config):
     """Activate Alexa component."""
-    hass.http.register_view(
-        AlexaFlashBriefingView(hass, flash_briefing_config))
+    hass.http.register_view(AlexaFlashBriefingView(hass, flash_briefing_config))
 
 
 class AlexaFlashBriefingView(http.HomeAssistantView):
     """Handle Alexa Flash Briefing skill requests."""
 
     url = FLASH_BRIEFINGS_API_ENDPOINT
-    name = 'api:alexa:flash_briefings'
+    requires_auth = False
+    name = "api:alexa:flash_briefings"
 
     def __init__(self, hass, flash_briefings):
         """Initialize Alexa view."""
@@ -46,13 +54,25 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
     @callback
     def get(self, request, briefing_id):
         """Handle Alexa Flash Briefing request."""
-        _LOGGER.debug('Received Alexa flash briefing request for: %s',
-                      briefing_id)
+        _LOGGER.debug("Received Alexa flash briefing request for: %s", briefing_id)
 
-        if self.flash_briefings.get(briefing_id) is None:
-            err = 'No configured Alexa flash briefing was found for: %s'
+        if request.query.get(API_PASSWORD) is None:
+            err = "No password provided for Alexa flash briefing: %s"
             _LOGGER.error(err, briefing_id)
-            return b'', 404
+            return b"", HTTPStatus.UNAUTHORIZED
+
+        if not hmac.compare_digest(
+            request.query[API_PASSWORD].encode("utf-8"),
+            self.flash_briefings[CONF_PASSWORD].encode("utf-8"),
+        ):
+            err = "Wrong password for Alexa flash briefing: %s"
+            _LOGGER.error(err, briefing_id)
+            return b"", HTTPStatus.UNAUTHORIZED
+
+        if not isinstance(self.flash_briefings.get(briefing_id), list):
+            err = "No configured Alexa flash briefing was found for: %s"
+            _LOGGER.error(err, briefing_id)
+            return b"", HTTPStatus.NOT_FOUND
 
         briefing = []
 
@@ -60,36 +80,41 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
             output = {}
             if item.get(CONF_TITLE) is not None:
                 if isinstance(item.get(CONF_TITLE), template.Template):
-                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render()
+                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
 
             if item.get(CONF_TEXT) is not None:
                 if isinstance(item.get(CONF_TEXT), template.Template):
-                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render()
+                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
 
-            uid = item.get(CONF_UID)
-            if uid is None:
+            if (uid := item.get(CONF_UID)) is None:
                 uid = str(uuid.uuid4())
             output[ATTR_UID] = uid
 
             if item.get(CONF_AUDIO) is not None:
                 if isinstance(item.get(CONF_AUDIO), template.Template):
-                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render()
+                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
 
             if item.get(CONF_DISPLAY_URL) is not None:
-                if isinstance(item.get(CONF_DISPLAY_URL),
-                              template.Template):
-                    output[ATTR_REDIRECTION_URL] = \
-                        item[CONF_DISPLAY_URL].async_render()
+                if isinstance(item.get(CONF_DISPLAY_URL), template.Template):
+                    output[ATTR_REDIRECTION_URL] = item[CONF_DISPLAY_URL].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
 
-            output[ATTR_UPDATE_DATE] = datetime.now().strftime(DATE_FORMAT)
+            output[ATTR_UPDATE_DATE] = dt_util.utcnow().strftime(DATE_FORMAT)
 
             briefing.append(output)
 

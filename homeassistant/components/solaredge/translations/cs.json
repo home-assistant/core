@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "could_not_connect": "Nelze se p\u0159ipojit k API SolarEdge",
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API",
+            "site_not_active": "Str\u00e1nka nen\u00ed aktivn\u00ed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "name": "Jm\u00e9no t\u00e9to instalace",
+                    "site_id": "Identifik\u00e1tor SolarEdge"
+                },
+                "title": "Nastavte parametry API t\u00e9to instalace"
+            }
+        }
+    }
+}

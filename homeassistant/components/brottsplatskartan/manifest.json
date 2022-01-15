@@ -1,0 +1,8 @@
+{
+  "domain": "brottsplatskartan",
+  "name": "Brottsplatskartan",
+  "documentation": "https://www.home-assistant.io/integrations/brottsplatskartan",
+  "requirements": ["brottsplatskartan==0.0.1"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
+}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4",
+            "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
+        },
+        "error": {
+            "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "\u05dc\u05d0 \u05d4\u05d9\u05ea\u05d4 \u05d0\u05e4\u05e9\u05e8\u05d5\u05ea \u05dc\u05d4\u05d2\u05d3\u05d9\u05e8 \u05d2\u05e9\u05e8 (\u05de\u05d0\u05e8\u05d7: {host}) \u05d4\u05de\u05d9\u05d5\u05d1\u05d0 \u05de-configuration.yaml."
+            },
+            "link": {
+                "description": "\u05db\u05d3\u05d9 \u05dc\u05d6\u05d5\u05d5\u05d2 \u05e2\u05dd {name} ({host}), \u05dc\u05d0\u05d7\u05e8 \u05e9\u05dc\u05d9\u05d7\u05ea \u05d8\u05d5\u05e4\u05e1 \u05d6\u05d4, \u05dc\u05d7\u05e5 \u05e2\u05dc \u05d4\u05dc\u05d7\u05e6\u05df \u05d4\u05e9\u05d7\u05d5\u05e8 \u05d1\u05d2\u05d1 \u05d4\u05d2\u05e9\u05e8."
+            },
+            "user": {
+                "data": {
+                    "host": "\u05de\u05d0\u05e8\u05d7"
+                },
+                "description": "\u05d4\u05d6\u05df \u05d0\u05ea \u05db\u05ea\u05d5\u05d1\u05ea \u05d4- IP \u05e9\u05dc \u05d4\u05de\u05db\u05e9\u05d9\u05e8."
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_pin_code": "El Codi PIN introdu\u00eft no \u00e9s v\u00e0lid"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "Codi PIN"
+                },
+                "description": "Introdueix el Codi PIN que apareix al televisor",
+                "title": "Vinculaci\u00f3"
+            },
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP",
+                    "name": "Nom"
+                },
+                "description": "Introdueix l'Adre\u00e7a IP del televisor Panasonic Viera",
+                "title": "Configuraci\u00f3 del televisor"
+            }
+        }
+    }
+}

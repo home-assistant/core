@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Otev\u0159ete mobiln\u00ed aplikaci pro nastaven\u00ed integrace s aplikac\u00ed Home Assistant. Seznam kompatibiln\u00edch aplikac\u00ed naleznete v [dokumentaci]({apps_url})."
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavit komponentu Mobiln\u00ed aplikace?"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Odeslat ozn\u00e1men\u00ed"
+        }
+    }
+}

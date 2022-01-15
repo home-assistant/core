@@ -1,0 +1,71 @@
+set_climate_timer:
+  name: Set climate timer
+  description: Turn on climate entities for a set time.
+  target:
+    entity:
+      integration: tado
+      domain: climate
+  fields:
+    time_period:
+      name: Time period
+      description: Set the time period for the boost.
+      required: true
+      example: "01:30:00"
+      default: "01:00:00"
+      selector:
+        text:
+    temperature:
+      name: Temperature
+      description: Temperature to set climate entity to
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.5
+          unit_of_measurement: '°'
+
+set_water_heater_timer:
+  name: Set water heater timer
+  description: Turn on water heater for a set time.
+  target:
+    entity:
+      integration: tado
+      domain: climate
+  fields:
+    time_period:
+      name: Time period
+      description: Set the time period for the boost.
+      required: true
+      example: "01:30:00"
+      default: "01:00:00"
+      selector:
+        text:
+    temperature:
+      name: Temperature
+      description: Temperature to set heater to
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.5
+          unit_of_measurement: '°'
+
+set_climate_temperature_offset:
+  name: Set climate temperature offset
+  description: Set the temperature offset of climate entities
+  target:
+    entity:
+      integration: tado
+      domain: climate
+  fields:
+    offset:
+      name: Offset
+      description: Offset you would like (depending on your device).
+      default: 0
+      selector:
+        number:
+          min: -10
+          max: 10
+          step: 0.01
+          unit_of_measurement: '°'

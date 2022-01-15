@@ -1,0 +1,17 @@
+{
+    "system_health": {
+        "info": {
+            "disk_total": "Skupaj na disku",
+            "disk_used": "Uporabljen disk",
+            "docker_version": "Razli\u010dica Dockerja",
+            "healthy": "Zdravo",
+            "host_os": "Gostiteljski operacijski sistem",
+            "installed_addons": "Name\u0161\u010deni dodatki",
+            "supervisor_api": "API nadzornika",
+            "supervisor_version": "Razli\u010dica nadzornika",
+            "supported": "Podprto",
+            "update_channel": "Posodobi kanal",
+            "version_api": "API razli\u010dica"
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "Terskel (%)"
+                }
+            }
+        }
+    },
+    "title": "NOAA Aurora-sensor"
+}

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "link_local_address": "Propojen\u00ed m\u00edstn\u00edch adres nen\u00ed podporov\u00e1no",
+            "not_doorbird_device": "Toto za\u0159\u00edzen\u00ed nen\u00ed DoorBird"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "flow_title": "DoorBird {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "name": "Jm\u00e9no za\u0159\u00edzen\u00ed",
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "title": "P\u0159ipojen\u00ed k DoorBird"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Seznam ud\u00e1lost\u00ed odd\u011blen\u00fdch \u010d\u00e1rkami."
+                },
+                "description": "Zadejte n\u00e1zvy ud\u00e1lost\u00ed odd\u011blen\u00e9 \u010d\u00e1rkou, kter\u00e9 chcete sledovat. Po jejich zad\u00e1n\u00ed je pomoc\u00ed aplikace DoorBird p\u0159i\u0159a\u010fte ke konkr\u00e9tn\u00ed ud\u00e1losti. Viz dokumentace na https://www.home-assistant.io/integrations/doorbird/#events. P\u0159\u00edklad: nekdo_stiskl_tlacitko, pohyb"
+            }
+        }
+    }
+}

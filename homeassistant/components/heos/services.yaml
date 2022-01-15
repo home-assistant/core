@@ -1,0 +1,22 @@
+sign_in:
+  name: Sign in
+  description: Sign the controller in to a HEOS account.
+  fields:
+    username:
+      name: Username
+      description: The username or email of the HEOS account.
+      required: true
+      example: "example@example.com"
+      selector:
+        text:
+    password:
+      name: Password
+      description: The password of the HEOS account.
+      required: true
+      example: "password"
+      selector:
+        text:
+
+sign_out:
+  name: Sign out
+  description: Sign the controller out of the HEOS account.

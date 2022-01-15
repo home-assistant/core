@@ -1,0 +1,16 @@
+{
+  "domain": "modern_forms",
+  "name": "Modern Forms",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/modern_forms",
+  "requirements": [
+    "aiomodernforms==0.1.8"
+  ],
+  "zeroconf": [
+    {"type":"_easylink._tcp.local.", "name":"wac*"}
+  ],
+  "codeowners": [
+    "@wonderslug"
+  ],
+  "iot_class": "local_polling"
+}

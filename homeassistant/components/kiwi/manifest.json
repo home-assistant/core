@@ -1,0 +1,8 @@
+{
+  "domain": "kiwi",
+  "name": "KIWI",
+  "documentation": "https://www.home-assistant.io/integrations/kiwi",
+  "requirements": ["kiwiki-client==0.1.1"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
+}

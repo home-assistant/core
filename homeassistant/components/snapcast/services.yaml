@@ -1,0 +1,62 @@
+join:
+  name: Join
+  description: Group players together.
+  fields:
+    master:
+      name: Master
+      description: Entity ID of the player to synchronize to.
+      required: true
+      selector:
+        entity:
+          integration: snapcast
+          domain: media_player
+    entity_id:
+      name: Entity
+      description: The players to join to the "master".
+      selector:
+        target:
+          entity:
+            integration: snapcast
+            domain: media_player
+
+unjoin:
+  name: Unjoin
+  description: Unjoin the player from a group.
+  target:
+    entity:
+      integration: snapcast
+      domain: media_player
+
+snapshot:
+  name: Snapshot
+  description: Take a snapshot of the media player.
+  target:
+    entity:
+      integration: snapcast
+      domain: media_player
+
+restore:
+  name: Restore
+  description: Restore a snapshot of the media player.
+  target:
+    entity:
+      integration: snapcast
+      domain: media_player
+
+set_latency:
+  name: Set latency
+  description: Set client set_latency
+  target:
+    entity:
+      integration: snapcast
+      domain: media_player
+  fields:
+    latency:
+      name: Latency
+      description: Latency in master
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1000
+          unit_of_measurement: "ms"

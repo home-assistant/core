@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Tilgangstoken",
+                    "host": "Vert"
+                },
+                "description": "Sett opp Vilfo Router-integrasjonen. Du trenger ditt Vilfo Router vertsnavn/IP og et API-tilgangstoken. For ytterligere informasjon om denne integrasjonen og hvordan du f\u00e5r disse detaljene, bes\u00f8k [https://www.home-assistant.io/integrations/vilfo](https://www.home-assistant.io/integrations/vilfo)",
+                "title": "Koble til Vilfo Ruteren"
+            }
+        }
+    }
+}

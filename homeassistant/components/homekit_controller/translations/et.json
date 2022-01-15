@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Sidumist ei saa lisada kuna seadet ei ole enam leitav.",
+            "already_configured": "Lisaseade on selle kontrolleriga juba seadistatud.",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "already_paired": "See lisaseade on juba teise seadmega seotud. L\u00e4htesta lisaseade ja proovi uuesti.",
+            "ignored_model": "Selle mudeli HomeKiti tugi on blokeeritud, kuna saadaval on t\u00e4iuslikum t\u00e4ielik sidumine.",
+            "invalid_config_entry": "See seade on valmis sidumiseks kuid Home Assistant-is on juba vastuoluline seadeikirje mis tuleb esmalt eemaldada.",
+            "invalid_properties": "Seade tagastas vigase oleku.",
+            "no_devices": "Sidumata seadmeid ei leitud"
+        },
+        "error": {
+            "authentication_error": "Vale HomeKiti kood. Kontrolli seda ja proovi uuesti.",
+            "insecure_setup_code": "Taotletud salas\u00f5na on ebaturvaline, sest see on liiga lihtne ning ei vasta p\u00f5hilistele turvan\u00f5uetele.",
+            "max_peers_error": "Seade keeldus sidumist lisamast kuna puudub piisav salvestusruum.",
+            "pairing_failed": "Selle seadmega sidumise katsel ilmnes tundmatu t\u00f5rge. See v\u00f5ib olla ajutine t\u00f5rge v\u00f5i seadet ei toetata praegu.",
+            "unable_to_pair": "Ei saa siduda, proovi uuesti.",
+            "unknown_error": "Seade teatas tundmatust t\u00f5rkest. Sidumine nurjus."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "busy_error": {
+                "description": "Katkesta sidumine k\u00f5igis kontrollerites v\u00f5i proovi seade taask\u00e4ivitada ja j\u00e4tka sidumist.",
+                "title": "Seade \u00fchendub juba teise kontrolleriga"
+            },
+            "max_tries_error": {
+                "description": "Seade on saanud \u00fcle 100 eba\u00f5nnestunud autentimise katset. Proovi seade taask\u00e4ivitada ja j\u00e4tka sidumist.",
+                "title": "Autentimiskatsete piirarv on \u00fcletatud"
+            },
+            "pair": {
+                "data": {
+                    "allow_insecure_setup_codes": "Luba sidumist ebaturvalise salas\u00f5naga.",
+                    "pairing_code": "Sidumiskood"
+                },
+                "description": "HomeKiti kontroller suhtleb seadmega {name} kohtv\u00f5rgu kaudu, kasutades turvalist kr\u00fcpteeritud \u00fchendust ilma eraldi HomeKiti kontrolleri v\u00f5i iCloudita. Selle lisaseadme kasutamiseks sisesta oma HomeKiti sidumiskood (vormingus XXX-XX-XXX). See kood on tavaliselt seadmel v\u00f5i pakendil.",
+                "title": "Seadme sidumine HomeKiti tarvikuprotokolli kaudu"
+            },
+            "protocol_error": {
+                "description": "Seade ei pruugi olla sidumisre\u017eiimis ja v\u00f5ib vajada f\u00fc\u00fcsilist v\u00f5i virtuaalset nupuvajutust. Veendu, et seade oleks sidumisre\u017eiimis v\u00f5i proovi seade taask\u00e4ivitada, seej\u00e4rel j\u00e4tka sidumist.",
+                "title": "Viga lisaseadmega suhtlemisel"
+            },
+            "user": {
+                "data": {
+                    "device": "Seade"
+                },
+                "description": "HomeKiti kontroller suhtleb kohtv\u00f5rgu kaudu turvalise kr\u00fcpteeritud \u00fchenduse abil ilma eraldi HomeKiti kontrolleri v\u00f5i iCloudita. Vali seade, millega soovid siduda:",
+                "title": "Seadme valik"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Nupp 1",
+            "button10": "Nupp 10",
+            "button2": "Nupp 2",
+            "button3": "Nupp 3",
+            "button4": "Nupp 4",
+            "button5": "Nupp 5",
+            "button6": "Nupp 6",
+            "button7": "Nupp 7",
+            "button8": "Nupp 8",
+            "button9": "Nupp 9",
+            "doorbell": "Uksekell"
+        },
+        "trigger_type": {
+            "double_press": "\" {subtype} \" tehtud topeltkl\u00f5ps",
+            "long_press": "\" {subtype} \" on pikalt alla vajutatud",
+            "single_press": "\" {subtype} \" on vajutatud"
+        }
+    },
+    "title": "HomeKit kontroller"
+}

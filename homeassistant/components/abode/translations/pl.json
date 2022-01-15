@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_mfa_code": "Nieprawid\u0142owy kod uwierzytelniania wielosk\u0142adnikowego"
+        },
+        "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "6-cyfrowy kod uwierzytelniania wielosk\u0142adnikowego"
+                },
+                "title": "Wprowad\u017a kod uwierzytelniania wielosk\u0142adnikowego dla Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "title": "Wprowad\u017a informacje logowania Abode"
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "title": "Wprowad\u017a informacje logowania Abode"
+            }
+        }
+    }
+}

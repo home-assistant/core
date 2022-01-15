@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Et konnt keng Verbindung mam Kontroller mat der URL {base_url} hiergestallt ginn"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "IDs vu Vera Apparater d\u00e9i vun Home Assistant ausgeschloss solle ginn.",
+                    "lights": "IDs vun Apparater vu Vera Schalter d\u00e9i als Luuchten am Home Assistant trait\u00e9iert ginn.",
+                    "vera_controller_url": "Kontroller URL"
+                },
+                "description": "Vera Kontroller URL uginn: D\u00e9i sollt sou ausgesinn:\nhttp://192.168.1.161:3480.",
+                "title": "Vera Kontroller ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "IDs vu Vera Apparater d\u00e9i vun Home Assistant ausgeschloss solle ginn.",
+                    "lights": "IDs vun Apparater vu Vera Schalter d\u00e9i als Luuchten am Home Assistant trait\u00e9iert ginn."
+                },
+                "description": "Kuck Vera Dokumentatioun fir Detailer zu den optionellle Parameter: https://www.home-assistant.io/integrations/vera/. Hiweis: All \u00c4nnerunge ginn er\u00e9ischt no engem Neistart vum Home Assistant aktiv. Fir W\u00e4rter ze l\u00e4schen, einfach een \"Leerzeichen\" am Feld uginn.",
+                "title": "Vera Kontroller Optiounen"
+            }
+        }
+    }
+}

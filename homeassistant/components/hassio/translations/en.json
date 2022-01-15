@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Board",
+            "disk_total": "Disk Total",
+            "disk_used": "Disk Used",
+            "docker_version": "Docker Version",
+            "healthy": "Healthy",
+            "host_os": "Host Operating System",
+            "installed_addons": "Installed Add-ons",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor Version",
+            "supported": "Supported",
+            "update_channel": "Update Channel",
+            "version_api": "Version API"
+        }
+    }
+}

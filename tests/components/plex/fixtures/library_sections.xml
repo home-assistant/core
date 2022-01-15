@@ -1,0 +1,11 @@
+<MediaContainer size="3" allowSync="0" identifier="com.plexapp.plugins.library" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1603922053" title1="Plex Library">
+<Directory allowSync="1" art="/:/resources/movie-fanart.jpg" composite="/library/sections/1/composite/1605409122" filters="1" refreshing="0" thumb="/:/resources/movie.png" key="1" type="movie" title="Movies" agent="com.plexapp.agents.imdb" scanner="Plex Movie Scanner" language="en" uuid="41a28495-035e-46b0-ac84-878f096614da" updatedAt="1602461679" createdAt="1429510140" scannedAt="1605409122" content="1" directory="1" contentChangedAt="116893155" hidden="0">
+<Location id="1" path="/storage/movies" />
+</Directory>
+<Directory allowSync="1" art="/:/resources/show-fanart.jpg" composite="/library/sections/2/composite/1605461424" filters="1" refreshing="0" thumb="/:/resources/show.png" key="2" type="show" title="TV Shows" agent="com.plexapp.agents.thetvdb" scanner="Plex Series Scanner" language="en" uuid="80208576-f7d1-406d-b6d8-aa96a5362131" updatedAt="1602523323" createdAt="1429510140" scannedAt="1605461424" content="1" directory="1" contentChangedAt="117133678" hidden="0">
+<Location id="2" path="/storage/tvshows" />
+</Directory>
+<Directory allowSync="1" art="/:/resources/artist-fanart.jpg" composite="/library/sections/3/composite/1605413685" filters="1" refreshing="0" thumb="/:/resources/artist.png" key="3" type="artist" title="Music" agent="tv.plex.agents.music" scanner="Plex Music" language="en" uuid="1eeace5d-4839-45e8-90b0-8d03b3375744" updatedAt="1602211102" createdAt="1430432959" scannedAt="1605413685" content="1" directory="1" contentChangedAt="116260421" hidden="1">
+<Location id="3" path="/storage/music" />
+</Directory>
+</MediaContainer>

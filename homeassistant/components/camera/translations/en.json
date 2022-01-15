@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Idle",
+            "recording": "Recording",
+            "streaming": "Streaming"
+        }
+    },
+    "title": "Camera"
+}

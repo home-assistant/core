@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parole",
+                    "port": "Ports",
+                    "username": "Lietot\u0101jv\u0101rds",
+                    "verify_ssl": "Izmantot SSL"
+                },
+                "title": "Iestat\u012bt Mikrotik mar\u0161rut\u0113t\u0101ju"
+            }
+        }
+    }
+}

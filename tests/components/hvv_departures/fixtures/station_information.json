@@ -1,0 +1,32 @@
+{
+    "returnCode": "OK",
+    "partialStations": [
+        {
+            "stationOutline": "http://www.geofox.de/images/mobi/stationDescriptions/U_Wartenau.ZM3.jpg",
+            "elevators": [
+                {
+                    "label": "A",
+                    "cabinWidth": 124,
+                    "cabinLength": 147,
+                    "doorWidth": 110,
+                    "description": "Zugang Landwehr <-> Schalterhalle",
+                    "elevatorType": "Durchlader",
+                    "buttonType": "BRAILLE",
+                    "state": "READY"
+                },
+                {
+                    "lines": ["U1"],
+                    "label": "B",
+                    "cabinWidth": 123,
+                    "cabinLength": 145,
+                    "doorWidth": 90,
+                    "description": "Schalterhalle <-> U1",
+                    "elevatorType": "Durchlader",
+                    "buttonType": "COMBI",
+                    "state": "READY"
+                }
+            ]
+        }
+    ],
+    "lastUpdate": {"date": "26.01.2020", "time": "22:49"}
+}

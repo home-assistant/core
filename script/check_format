@@ -1,0 +1,10 @@
+#!/bin/sh
+# Format code with black.
+
+cd "$(dirname "$0")/.."
+
+black \
+  --check \
+  --fast \
+  --quiet \
+  homeassistant tests script *.py

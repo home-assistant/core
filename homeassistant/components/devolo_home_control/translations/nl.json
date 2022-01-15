@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "reauth_failed": "Gelieve dezelfde mydevolo-gebruiker te gebruiken als voorheen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Wachtwoord",
+                    "username": "E-mail adres / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Wachtwoord",
+                    "username": "E-mail / devolo ID"
+                }
+            }
+        }
+    }
+}

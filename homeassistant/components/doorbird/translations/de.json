@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "link_local_address": "Lokale Linkadressen werden nicht unterst\u00fctzt",
+            "not_doorbird_device": "Dieses Ger\u00e4t ist kein DoorBird"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Ger\u00e4tename",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Stelle eine Verbindung zu DoorBird her"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Durch Kommas getrennte Liste von Ereignissen."
+                },
+                "description": "F\u00fcge f\u00fcr jedes Ereignis, das du verfolgen m\u00f6chtest, einen durch Kommas getrennten Ereignisnamen hinzu. Nachdem du sie hier eingegeben hast, verwende die DoorBird-App, um sie einem bestimmten Ereignis zuzuweisen. Weitere Informationen findest du in der Dokumentation unter https://www.home-assistant.io/integrations/doorbird/#events. Beispiel: jemand_hat_den_knopf_gedr\u00fcckt, bewegung"
+            }
+        }
+    }
+}

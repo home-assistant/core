@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "V\u00e4rden \u00e4r redan konfigurerad."
+        },
+        "error": {
+            "cannot_connect": "Misslyckades med att ansluta till servern. Kontrollera v\u00e4rden och porten och f\u00f6rs\u00f6k igen. Se ocks\u00e5 till att du k\u00f6r minst Minecraft version 1.7 p\u00e5 din server.",
+            "invalid_ip": "IP-adressen \u00e4r ogiltig (MAC-adressen kunde inte fastst\u00e4llas). Korrigera det och f\u00f6rs\u00f6k igen.",
+            "invalid_port": "Porten m\u00e5ste ligga inom intervallet 1024 till 65535. Korrigera den och f\u00f6rs\u00f6k igen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "name": "Namn"
+                },
+                "description": "St\u00e4ll in din Minecraft Server-instans f\u00f6r att till\u00e5ta \u00f6vervakning.",
+                "title": "L\u00e4nka din Minecraft-server"
+            }
+        }
+    }
+}

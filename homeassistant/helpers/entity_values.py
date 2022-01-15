@@ -1,22 +1,30 @@
 """A class to hold entity values."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import fnmatch
 import re
+from typing import Any
 
 from homeassistant.core import split_entity_id
 
 
-class EntityValues(object):
+class EntityValues:
     """Class to store entity id based values."""
 
-    def __init__(self, exact=None, domain=None, glob=None):
+    def __init__(
+        self,
+        exact: dict[str, dict[str, str]] | None = None,
+        domain: dict[str, dict[str, str]] | None = None,
+        glob: dict[str, dict[str, str]] | None = None,
+    ) -> None:
         """Initialize an EntityConfigDict."""
-        self._cache = {}
+        self._cache: dict[str, dict[str, str]] = {}
         self._exact = exact
         self._domain = domain
 
         if glob is None:
-            compiled = None
+            compiled: dict[re.Pattern[str], Any] | None = None
         else:
             compiled = OrderedDict()
             for key, value in glob.items():
@@ -24,7 +32,7 @@ class EntityValues(object):
 
         self._glob = compiled
 
-    def get(self, entity_id):
+    def get(self, entity_id: str) -> dict[str, str]:
         """Get config for an entity id."""
         if entity_id in self._cache:
             return self._cache[entity_id]

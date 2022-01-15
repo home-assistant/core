@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "auto": "Automaatilla",
+            "cool": "J\u00e4\u00e4hdytys",
+            "dry": "Kuivaus",
+            "fan_only": "Tuuletus",
+            "heat": "L\u00e4mmitys",
+            "heat_cool": "L\u00e4mmitys/j\u00e4\u00e4hdytys",
+            "off": "Pois"
+        }
+    },
+    "title": "Ilmasto"
+}

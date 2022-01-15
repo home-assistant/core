@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "\u0647\u0644 \u062a\u0631\u064a\u062f \u0625\u0636\u0627\u0641\u0629 Hyperion Ambilight \u0625\u0644\u0649 Home Assistant\u061f \n\n ** \u0627\u0644\u0645\u0636\u064a\u0641: ** {host}\n ** \u0627\u0644\u0645\u0646\u0641\u0630: ** {port}\n ** \u0627\u0644\u0645\u0639\u0631\u0641 **: {id}",
+                "title": "\u062a\u0623\u0643\u064a\u062f \u0625\u0636\u0627\u0641\u0629 \u062e\u062f\u0645\u0629 Hyperion Ambilight"
+            }
+        }
+    }
+}

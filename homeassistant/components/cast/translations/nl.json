@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+        },
+        "error": {
+            "invalid_known_hosts": "Bekende hosts moet een door komma's gescheiden lijst van hosts zijn."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Bekende hosts"
+                },
+                "description": "Bekende hosts - Een door komma's gescheiden lijst van hostnamen of IP-adressen van cast-apparaten, te gebruiken als mDNS-ontdekking niet werkt.",
+                "title": "Google Cast configuratie"
+            },
+            "confirm": {
+                "description": "Wilt u beginnen met instellen?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Bekende hosts moet een door komma's gescheiden lijst van hosts zijn."
+        },
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "Negeer CEC",
+                    "uuid": "Toegestane UUID's"
+                },
+                "description": "Toegestane UUID's - Een door komma's gescheiden lijst met UUID's van Cast-apparaten om toe te voegen aan Home Assistant. Gebruik dit alleen als u niet alle beschikbare cast-apparaten wilt toevoegen.\n CEC negeren - Een door komma's gescheiden lijst met Chromecasts die CEC-gegevens moeten negeren om de actieve invoer te bepalen. Dit wordt doorgegeven aan pychromecast.IGNORE_CEC.",
+                "title": "Geavanceerde Google Cast configuratie"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Bekende hosts"
+                },
+                "description": "Bekende hosts - Een door komma's gescheiden lijst met hostnamen of IP-adressen van cast-apparaten, te gebruiken als mDNS-detectie niet werkt.",
+                "title": "Google Cast configuratie"
+            }
+        }
+    }
+}

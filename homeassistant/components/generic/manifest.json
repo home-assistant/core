@@ -1,0 +1,7 @@
+{
+  "domain": "generic",
+  "name": "Generic Camera",
+  "documentation": "https://www.home-assistant.io/integrations/generic",
+  "codeowners": [],
+  "iot_class": "local_push"
+}

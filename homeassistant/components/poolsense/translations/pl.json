@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Adres e-mail",
+                    "password": "Has\u0142o"
+                },
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
+                "title": "PoolSense"
+            }
+        }
+    }
+}

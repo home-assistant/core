@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta usmerjevalnik Vilfo je \u017ee konfiguriran."
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela. Prosimo, preverite informacije, ki ste jih vnesli in poskusite znova.",
+            "invalid_auth": "Neveljavna avtentikacija. Preverite dostopni \u017eeton in poskusite znova.",
+            "unknown": "Med nastavitvijo integracije je pri\u0161lo do nepri\u010dakovane napake."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Dostopni \u017eeton za API Vilfo Router",
+                    "host": "Ime gostitelja usmerjevalnika ali IP"
+                },
+                "description": "Nastavite integracijo Vilfo Router. Potrebujete ime gostitelja ali IP Vilfo usmerjevalnika in dostopni \u017eeton API. Za dodatne informacije o tej integraciji in kako do teh podrobnosti obi\u0161\u010dite: https://www.home-assistant.io/integrations/vilfo",
+                "title": "Pove\u017eite se z usmerjevalnikom Vilfo"
+            }
+        }
+    }
+}

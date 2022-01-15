@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Token autentikasi menjadi tidak valid, masuk untuk membuat token lagi."
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "url": "Situs Web",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    }
+}

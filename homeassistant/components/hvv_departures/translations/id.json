@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "no_results": "Tidak ada hasil. Coba stasiun/alamat lainnya"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Stasiun/Alamat"
+                },
+                "title": "Masukkan Stasiun/Alamat"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Stasiun/Alamat"
+                },
+                "title": "Pilih Stasiun/Alamat"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Hubungkan ke API HVV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Pilih jalur",
+                    "offset": "Tenggang (menit)",
+                    "real_time": "Gunakan data waktu nyata"
+                },
+                "description": "Ubah opsi untuk sensor keberangkatan ini",
+                "title": "Opsi"
+            }
+        }
+    }
+}

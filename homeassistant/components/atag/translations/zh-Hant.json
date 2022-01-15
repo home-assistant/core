@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unauthorized": "\u914d\u5c0d\u906d\u62d2\uff0c\u8acb\u6aa2\u67e5\u88dd\u7f6e\u8a8d\u8b49\u8acb\u6c42"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "\u9023\u7dda\u81f3\u88dd\u7f6e"
+            }
+        }
+    }
+}

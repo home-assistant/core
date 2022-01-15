@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "no_device": "Nessuno dei tuoi dispositivi ha attivato \"Trova il mio iPhone\"",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "send_verification_code": "Impossibile inviare il codice di verifica",
+            "validate_verification_code": "Impossibile verificare il codice di verifica, riprova"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "La password inserita in precedenza per {username} non funziona pi\u00f9. Aggiorna la tua password per continuare a utilizzare questa integrazione.",
+                "title": "Autentica nuovamente l'integrazione"
+            },
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Dispositivo attendibile"
+                },
+                "description": "Seleziona il dispositivo attendibile",
+                "title": "Dispositivo attendibile iCloud"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email",
+                    "with_family": "Con la famiglia"
+                },
+                "description": "Inserisci le tue credenziali",
+                "title": "Credenziali iCloud"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Codice di verifica"
+                },
+                "description": "Inserisci il codice di verifica che hai appena ricevuto da iCloud",
+                "title": "Codice di verifica iCloud"
+            }
+        }
+    }
+}

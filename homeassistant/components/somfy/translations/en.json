@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            }
+        }
+    }
+}

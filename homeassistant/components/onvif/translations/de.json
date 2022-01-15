@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "no_h264": "Es waren keine H264-Streams verf\u00fcgbar. \u00dcberpr\u00fcfe die Profilkonfiguration auf deinem Ger\u00e4t.",
+            "no_mac": "Die eindeutige ID f\u00fcr das ONVIF-Ger\u00e4t konnte nicht konfiguriert werden.",
+            "onvif_error": "Fehler beim Einrichten des ONVIF-Ger\u00e4ts. \u00dcberpr\u00fcfe die Protokolle auf weitere Informationen."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Konfiguriere die Authentifizierung"
+            },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "title": "Konfiguriere das ONVIF-Ger\u00e4t"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Kameraentit\u00e4t erstellen"
+                },
+                "description": "Kameraentit\u00e4t f\u00fcr {profile} mit {resolution} Aufl\u00f6sung erstellen?",
+                "title": "Profile konfigurieren"
+            },
+            "device": {
+                "data": {
+                    "host": "W\u00e4hle das erkannte ONVIF-Ger\u00e4t aus"
+                },
+                "title": "W\u00e4hle ein ONVIF-Ger\u00e4t"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "title": "Konfiguriere das ONVIF-Ger\u00e4t"
+            },
+            "user": {
+                "data": {
+                    "auto": "Automatisch suchen"
+                },
+                "description": "Wenn du auf Senden klickst, durchsuchen wir dein Netzwerk nach ONVIF-Ger\u00e4ten, die Profil S unterst\u00fctzen. \n\nEinige Hersteller haben begonnen, ONVIF standardm\u00e4\u00dfig zu deaktivieren. Stelle sicher, dass ONVIF in der Konfiguration deiner Kamera aktiviert ist.",
+                "title": "ONVIF-Ger\u00e4tekonfiguration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Zus\u00e4tzliche FFMPEG-Argumente",
+                    "rtsp_transport": "RTSP-Transportmechanismus"
+                },
+                "title": "ONVIF-Ger\u00e4teoptionen"
+            }
+        }
+    }
+}

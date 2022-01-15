@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "step": {
+            "confirm": {
+                "description": "Ingin menyiapkan Hisense AEH-W4A1?"
+            }
+        }
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
+            "not_supported": "Dispositivo no compatible",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "{name} ( {model} en {host} )",
+        "step": {
+            "auth": {
+                "title": "Autenticarse en el dispositivo"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nombre"
+                },
+                "title": "Elija un nombre para el dispositivo"
+            },
+            "reset": {
+                "description": "Su dispositivo est\u00e1 bloqueado para la autenticaci\u00f3n. Siga las instrucciones para desbloquearlo:\n1. Reinicie el dispositivo de f\u00e1brica.\n2. Use la aplicaci\u00f3n oficial para agregar el dispositivo a su red local.\n3. Pare. No termine la configuraci\u00f3n. Cierre la aplicaci\u00f3n.\n4. Haga clic en Enviar.",
+                "title": "Desbloquear el dispositivo"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "S\u00ed, hazlo."
+                },
+                "description": "Tu dispositivo est\u00e1 bloqueado. Esto puede provocar problemas de autenticaci\u00f3n en Home Assistant. \u00bfQuieres desbloquearlo?",
+                "title": "Desbloquear el dispositivo (opcional)"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "timeout": "L\u00edmite de tiempo"
+                },
+                "title": "Conectarse al dispositivo"
+            }
+        }
+    }
+}

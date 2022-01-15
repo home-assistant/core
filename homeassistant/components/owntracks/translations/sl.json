@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "\n\nV Androidu odprite aplikacijo OwnTracks ({android_url}) in pojdite na {android_url} nastavitve - > povezave. Spremenite naslednje nastavitve: \n - Na\u010din: zasebni HTTP \n - gostitelj: {webhook_url} \n - Identifikacija: \n    - Uporabni\u0161ko ime: `'<Your name>'` \n    - ID naprave: `'<Your device name>'` \n\n V iOS-ju odprite aplikacijo OwnTracks ({ios_url}), tapnite ikono (i) v zgornjem levem kotu - > nastavitve. Spremenite naslednje nastavitve: \n - na\u010din: HTTP \n - URL: {webhook_url} \n - Vklopite preverjanje pristnosti \n - UserID: `'<Your name>'` \n\n {secret} \n \n Za ve\u010d informacij si oglejte [dokumentacijo] ({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti Owntracks?",
+                "title": "Nastavite OwnTracks"
+            }
+        }
+    }
+}

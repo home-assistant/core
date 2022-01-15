@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "invalid_hosts": "Host non validi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Indirizzi di rete (separati da virgole) da escludere dalla scansione",
+                    "home_interval": "Numero minimo di minuti tra le scansioni dei dispositivi attivi (preserva la batteria)",
+                    "hosts": "Indirizzi di rete (separati da virgole) da scansionare",
+                    "scan_options": "Opzioni di scansione configurabili non elaborate per Nmap"
+                },
+                "description": "Configura gli host da scansionare con Nmap. L'indirizzo di rete e le esclusioni possono essere indirizzi IP (192.168.1.1), reti IP (192.168.0.0/24) o intervalli IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Host non validi"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Secondi di attesa per contrassegnare un localizzatore di dispositivi come non in casa dopo non essere stato visto.",
+                    "exclude": "Indirizzi di rete (separati da virgole) da escludere dalla scansione",
+                    "home_interval": "Numero minimo di minuti tra le scansioni dei dispositivi attivi (preserva la batteria)",
+                    "hosts": "Indirizzi di rete (separati da virgole) da scansionare",
+                    "interval_seconds": "Intervallo di scansione",
+                    "scan_options": "Opzioni di scansione configurabili non elaborate per Nmap",
+                    "track_new_devices": "Traccia nuovi dispositivi"
+                },
+                "description": "Configura gli host da scansionare con Nmap. L'indirizzo di rete e le esclusioni possono essere indirizzi IP (192.168.1.1), reti IP (192.168.0.0/24) o intervalli IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

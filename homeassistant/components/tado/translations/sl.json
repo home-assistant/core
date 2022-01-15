@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "no_homes": "Ni domov, povezanih s tem Tado ra\u010dunom.",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "title": "Pove\u017eite se s svojim ra\u010dunom Tado"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Omogo\u010di rezervni na\u010din."
+                },
+                "description": "Rezervni na\u010din bo preklopili na pametni urnik ob naslednjem preklopnem stikalu po ro\u010dni prilagoditvi obmo\u010dja.",
+                "title": "Prilagodite Tado mo\u017enosti."
+            }
+        }
+    }
+}

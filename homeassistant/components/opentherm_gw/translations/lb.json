@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
+            "id_exists": "Gateway ID g\u00ebtt et schonn"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Pfad oder URL",
+                    "id": "ID",
+                    "name": "Numm"
+                },
+                "title": "OpenTherm Gateway"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Buedem Temperatur"
+                },
+                "description": "Optioune fir OpenTherm Gateway"
+            }
+        }
+    }
+}

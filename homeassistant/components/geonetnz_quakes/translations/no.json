@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "",
+                    "radius": ""
+                },
+                "title": "Fyll ut filterdetaljene."
+            }
+        }
+    }
+}

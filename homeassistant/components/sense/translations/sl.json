@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-po\u0161tni naslov",
+                    "password": "Geslo",
+                    "timeout": "Timeout"
+                },
+                "title": "Pove\u017eite se s svojim Sense Energy monitor-jem"
+            }
+        }
+    }
+}

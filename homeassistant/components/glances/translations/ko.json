@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "wrong_version": "\ud574\ub2f9 \ubc84\uc804\uc740 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4 (2 \ub610\ub294 3\ub9cc \uc9c0\uc6d0)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "\uc774\ub984",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778",
+                    "version": "Glances API \ubc84\uc804 (2 \ub610\ub294 3)"
+                },
+                "title": "Glances \uc124\uce58\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\uc5c5\ub370\uc774\ud2b8 \ube48\ub3c4"
+                },
+                "description": "Glances\uc5d0 \ub300\ud55c \uc635\uc158 \uad6c\uc131\ud558\uae30"
+            }
+        }
+    }
+}

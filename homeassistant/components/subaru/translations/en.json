@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "bad_pin_format": "PIN should be 4 digits",
+            "cannot_connect": "Failed to connect",
+            "incorrect_pin": "Incorrect PIN",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
+                "title": "Subaru Starlink Configuration"
+            },
+            "user": {
+                "data": {
+                    "country": "Select country",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
+                "title": "Subaru Starlink Configuration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Enable vehicle polling"
+                },
+                "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
+                "title": "Subaru Starlink Options"
+            }
+        }
+    }
+}

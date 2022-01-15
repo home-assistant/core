@@ -1,0 +1,29 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "ssdp_confirm": {
+        "description": "Do you want to set up this UPnP/IGD device?"
+      },
+      "user": {
+        "data": {
+          "unique_id": "Device"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "incomplete_discovery": "Incomplete discovery"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update interval (seconds, minimal 30)"
+        }
+      }
+    }
+}
+}

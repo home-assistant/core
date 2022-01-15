@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Define your Solar-Log connection",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "The prefix to be used for your Solar-Log sensors"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

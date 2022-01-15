@@ -1,0 +1,7 @@
+{
+  "domain": "kankun",
+  "name": "Kankun",
+  "documentation": "https://www.home-assistant.io/integrations/kankun",
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

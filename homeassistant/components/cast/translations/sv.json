@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Endast en enda konfiguration av Google Cast \u00e4r n\u00f6dv\u00e4ndig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vill du konfigurera Google Cast?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "Ignorera CEC"
+                }
+            }
+        }
+    }
+}

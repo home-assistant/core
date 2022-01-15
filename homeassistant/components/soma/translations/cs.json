@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit",
+            "missing_configuration": "Integrace Soma nen\u00ed nastavena. Postupujte podle dokumentace.",
+            "result_error": "SOMA Connect odpov\u011bd\u011blo chybov\u00fdm stavem."
+        },
+        "create_entry": {
+            "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                },
+                "description": "Zadejte pros\u00edm nastaven\u00ed p\u0159ipojen\u00ed va\u0161eho SOMA Connect.",
+                "title": "SOMA Connect"
+            }
+        }
+    }
+}

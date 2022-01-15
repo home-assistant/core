@@ -1,0 +1,6 @@
+<MediaContainer size="4" identifier="com.plexapp.system.accounts">
+<Account id="0" key="/accounts/0" name="" defaultAudioLanguage="en" autoSelectAudio="1" defaultSubtitleLanguage="en" subtitleMode="1" thumb="" />
+<Account id="1" key="/accounts/1" name="User 1" defaultAudioLanguage="en" autoSelectAudio="1" defaultSubtitleLanguage="en" subtitleMode="1" thumb="" />
+<Account id="1000" key="/accounts/1000" name="User 1000" defaultAudioLanguage="en" autoSelectAudio="1" defaultSubtitleLanguage="en" subtitleMode="1" thumb="" />
+<Account id="1001" key="/accounts/1001" name="User 1001" defaultAudioLanguage="en" autoSelectAudio="1" defaultSubtitleLanguage="en" subtitleMode="1" thumb="" />
+</MediaContainer>

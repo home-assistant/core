@@ -1,0 +1,8 @@
+{
+  "domain": "nmbs",
+  "name": "NMBS",
+  "documentation": "https://www.home-assistant.io/integrations/nmbs",
+  "requirements": ["pyrail==0.0.3"],
+  "codeowners": ["@thibmaek"],
+  "iot_class": "cloud_polling"
+}

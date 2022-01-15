@@ -1,0 +1,67 @@
+delete_sms:
+  name: Delete SMS
+  description: Delete messages from the modem inbox.
+  fields:
+    host:
+      name: Host
+      description: The modem that should have a message deleted.
+      example: 192.168.5.1
+      selector:
+        text:
+    sms_id:
+      name: SMS ID
+      description: Integer or list of integers with inbox IDs of messages to delete.
+      required: true
+      example: 7
+      selector:
+        object:
+
+set_option:
+  name: Set option
+  description: Set options on the modem.
+  fields:
+    host:
+      name: Host
+      description: The modem to set options on.
+      example: 192.168.5.1
+      selector:
+        text:
+    failover:
+      name: Failover
+      description: Failover mode.
+      selector:
+        select:
+          options:
+            - 'auto'
+            - 'mobile'
+            - 'wire'
+    autoconnect:
+      name: Auto-connect
+      description: Auto-connect mode.
+      selector:
+        select:
+          options:
+            - 'always'
+            - 'home'
+            - 'never'
+
+connect_lte:
+  name: Connect LTE
+  description: Ask the modem to establish the LTE connection.
+  fields:
+    host:
+      name: Host
+      description: The modem that should connect.
+      example: 192.168.5.1
+      selector:
+        text:
+
+disconnect_lte:
+  name: Disconnect LTE
+  description: Ask the modem to close the LTE connection.
+  fields:
+    host:
+      description: The modem that should disconnect.
+      example: 192.168.5.1
+      selector:
+        text:

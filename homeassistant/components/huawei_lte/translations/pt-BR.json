@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este dispositivo j\u00e1 foi configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    }
+}

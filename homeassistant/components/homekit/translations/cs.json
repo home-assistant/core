@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "P\u0159\u00edslu\u0161enstv\u00ed nebo p\u0159emost\u011bn\u00ed se stejn\u00fdm n\u00e1zvem nebo portem je ji\u017e nastaveno."
+        },
+        "step": {
+            "pairing": {
+                "title": "P\u00e1rov\u00e1n\u00ed s HomeKit"
+            },
+            "user": {
+                "data": {
+                    "include_domains": "Dom\u00e9ny, kter\u00e9 maj\u00ed b\u00fdt zahrnuty"
+                },
+                "title": "Vyberte dom\u00e9ny, kter\u00e9 chcete zahrnout"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "description": "Tato nastaven\u00ed je t\u0159eba upravit pouze v p\u0159\u00edpad\u011b, \u017ee HomeKit nen\u00ed funk\u010dn\u00ed.",
+                "title": "Pokro\u010dil\u00e9 nastaven\u00ed"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kamery, kter\u00e9 podporuj\u00ed nativn\u00ed streamy H.264"
+                },
+                "description": "Zkontrolujte v\u0161echny kamery, kter\u00e9 podporuj\u00ed nativn\u00ed streamy H.264. Pokud kamera nepodporuje stream H.264, syst\u00e9m video p\u0159ek\u00f3duje pro HomeKit na H.264. P\u0159ek\u00f3dov\u00e1n\u00ed vy\u017eaduje v\u00fdkonn\u00fd procesor a je pravd\u011bpodobn\u00e9, \u017ee nebude fungovat na po\u010d\u00edta\u010d\u00edch s jednou z\u00e1kladn\u00ed deskou.",
+                "title": "Vyberte videokodek kamery."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entity",
+                    "mode": "Re\u017eim"
+                },
+                "description": "Vyberte entity, kter\u00e9 maj\u00ed b\u00fdt vystaveny. V re\u017eimu P\u0159\u00edslu\u0161enstv\u00ed je vystavena pouze jedna entita. V re\u017eimu Zahrnut\u00ed p\u0159emost\u011bn\u00ed budou vystaveny v\u0161echny entity v dom\u00e9n\u011b, pokud nebudou vybr\u00e1ny konkr\u00e9tn\u00ed entity. V re\u017eimu Vylou\u010den\u00ed p\u0159emost\u011bn\u00ed budou vystaveny v\u0161echny entity v dom\u00e9n\u011b krom\u011b vylou\u010den\u00fdch entit.",
+                "title": "Vyberte entity, kter\u00e9 chcete vystavit"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Dom\u00e9ny, kter\u00e9 maj\u00ed b\u00fdt zahrnuty",
+                    "mode": "Re\u017eim"
+                },
+                "title": "Vyberte dom\u00e9ny, kter\u00e9 chcete vystavit."
+            },
+            "yaml": {
+                "description": "Tento z\u00e1znam je \u0159\u00edzen pomoc\u00ed YAML",
+                "title": "Upravte mo\u017enosti HomeKit"
+            }
+        }
+    }
+}

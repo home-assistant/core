@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_thermostat": "Die Seriennummer des Thermostats ist ung\u00fcltig.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "serial_number": "Seriennummer des Thermostats.",
+                    "username": "Benutzername"
+                },
+                "description": "Du musst die numerische Seriennummer oder ID deines Thermostats erhalten, indem du dich bei https://MyNuHeat.com anmeldest und dein(e) Thermostat(e) ausw\u00e4hlst.",
+                "title": "Stelle eine Verbindung zu NuHeat her"
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "state": {
+    "moon__phase": {
+      "new_moon": "New moon",
+      "waxing_crescent": "Waxing crescent",
+      "first_quarter": "First quarter",
+      "waxing_gibbous": "Waxing gibbous",
+      "full_moon": "Full moon",
+      "waning_gibbous": "Waning gibbous",
+      "last_quarter": "Last quarter",
+      "waning_crescent": "Waning crescent"
+    }
+  }
+}

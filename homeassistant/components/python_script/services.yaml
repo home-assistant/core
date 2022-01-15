@@ -1,0 +1,5 @@
+# Describes the format for available python_script services
+
+reload:
+  name: Reload
+  description: Reload all available python_scripts

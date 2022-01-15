@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata o Node/Pro ID sono gi\u00e0 registrati.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "general_error": "Errore imprevisto",
+            "invalid_api_key": "Chiave API non valida",
+            "location_not_found": "Posizione non trovata"
+        },
+        "step": {
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                },
+                "description": "Usa l'API cloud di AirVisual per monitorare una latitudine/longitudine.",
+                "title": "Configura un'area geografica"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "city": "Citt\u00e0",
+                    "country": "Nazione",
+                    "state": "Stato"
+                },
+                "description": "Usa l'API cloud di AirVisual per monitorare una citt\u00e0/stato/paese.",
+                "title": "Configura un'area geografica"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Host",
+                    "password": "Password"
+                },
+                "description": "Monitora un'unit\u00e0 AirVisual personale. La password pu\u00f2 essere recuperata dall'interfaccia utente dell'unit\u00e0.",
+                "title": "Configura un AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "title": "Autentica nuovamente AirVisual"
+            },
+            "user": {
+                "description": "Scegli il tipo di dati AirVisual che desideri monitorare.",
+                "title": "Configura AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra l'area geografica monitorata sulla mappa"
+                },
+                "title": "Configura AirVisual"
+            }
+        }
+    }
+}

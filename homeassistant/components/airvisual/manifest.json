@@ -1,0 +1,9 @@
+{
+  "domain": "airvisual",
+  "name": "AirVisual",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airvisual",
+  "requirements": ["pyairvisual==5.0.9"],
+  "codeowners": ["@bachya"],
+  "iot_class": "cloud_polling"
+}

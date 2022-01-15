@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "[%key:common::config_flow::data::location%]",
+        "description": "Meteorologisk institutt",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "abort": {
+      "no_home": "No home coordinates are set in the Home Assistant configuration"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+add_torrent:
+  name: Add torrent
+  description: Add a new torrent to download (URL, magnet link or Base64 encoded).
+  fields:
+    name:
+      name: Name
+      description: Instance name as entered during entry config
+      required: true
+      example: Transmission
+      selector:
+        text:
+    torrent:
+      name: Torrent
+      description: URL, magnet link or Base64 encoded file.
+      required: true
+      example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent
+      selector:
+        text:
+
+remove_torrent:
+  name: Remove torrent
+  description: Remove a torrent
+  fields:
+    name:
+      name: Name
+      description: Instance name as entered during entry config
+      required: true
+      example: Transmission
+      selector:
+        text:
+    id:
+      name: ID
+      description: ID of a torrent
+      required: true
+      example: 123
+      selector:
+        text:
+    delete_data:
+      name: Delete data
+      description: Delete torrent data
+      default: false
+      selector:
+        boolean:
+
+start_torrent:
+  name: Start torrent
+  description: Start a torrent
+  fields:
+    name:
+      name: Name
+      description: Instance name as entered during entry config
+      example: Transmission
+      selector:
+        text:
+    id:
+      name: ID
+      description: ID of a torrent
+      example: 123
+      selector:
+        text:
+
+stop_torrent:
+  name: Stop torrent
+  description: Stop a torrent
+  fields:
+    name:
+      name: Name
+      description: Instance name as entered during entry config
+      required: true
+      example: Transmission
+      selector:
+        text:
+    id:
+      name: ID
+      description: ID of a torrent
+      required: true
+      example: 123
+      selector:
+        text:

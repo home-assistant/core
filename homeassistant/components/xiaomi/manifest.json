@@ -1,0 +1,8 @@
+{
+  "domain": "xiaomi",
+  "name": "Xiaomi",
+  "documentation": "https://www.home-assistant.io/integrations/xiaomi",
+  "dependencies": ["ffmpeg"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

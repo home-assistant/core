@@ -1,0 +1,18 @@
+send_command:
+  name: Send command
+  description: Send device command through RFLink.
+  fields:
+    command:
+      name: Command
+      description: The command to be sent.
+      required: true
+      example: "on"
+      selector:
+        text:
+    device_id:
+      name: Device ID
+      description: RFLink device ID.
+      required: true
+      example: newkaku_0000c6c2_1
+      selector:
+        text:

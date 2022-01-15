@@ -1,0 +1,75 @@
+select_next:
+  name: Next
+  description: Select the next options of an input select entity.
+  target:
+    entity:
+      domain: input_select
+  fields:
+    cycle:
+      name: Cycle
+      description: If the option should cycle from the last to the first.
+      default: true
+      selector:
+        boolean:
+
+select_option:
+  name: Select
+  description: Select an option of an input select entity.
+  target:
+    entity:
+      domain: input_select
+  fields:
+    option:
+      name: Option
+      description: Option to be selected.
+      required: true
+      example: '"Item A"'
+      selector:
+        text:
+
+select_previous:
+  name: Previous
+  description: Select the previous options of an input select entity.
+  target:
+    entity:
+      domain: input_select
+  fields:
+    cycle:
+      name: Cycle
+      description: If the option should cycle from the first to the last.
+      default: true
+      selector:
+        boolean:
+
+select_first:
+  name: First
+  description: Select the first option of an input select entity.
+  target:
+    entity:
+      domain: input_select
+
+select_last:
+  name: Last
+  description: Select the last option of an input select entity.
+  target:
+    entity:
+      domain: input_select
+
+set_options:
+  name: Set options
+  description: Set the options of an input select entity.
+  target:
+    entity:
+      domain: input_select
+  fields:
+    options:
+      name: Options
+      description: Options for the input select entity.
+      required: true
+      example: '["Item A", "Item B", "Item C"]'
+      selector:
+        object:
+
+reload:
+  name: Reload
+  description: Reload the input_select configuration.

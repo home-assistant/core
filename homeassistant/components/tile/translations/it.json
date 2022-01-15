@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "title": "Autentica nuovamente il riquadro"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Mostra Tile inattive"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    }
+}

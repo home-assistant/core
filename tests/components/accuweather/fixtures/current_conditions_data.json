@@ -1,0 +1,290 @@
+{
+	"WeatherIcon": 1,
+	"HasPrecipitation": false,
+	"PrecipitationType": null,
+	"Temperature": {
+		"Metric": {
+			"Value": 22.6,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 73.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"RealFeelTemperature": {
+		"Metric": {
+			"Value": 25.1,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 77.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"RealFeelTemperatureShade": {
+		"Metric": {
+			"Value": 21.1,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 70.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"RelativeHumidity": 67,
+	"IndoorRelativeHumidity": 67,
+	"DewPoint": {
+		"Metric": {
+			"Value": 16.2,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 61.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"Wind": {
+		"Direction": {
+			"Degrees": 180,
+			"Localized": "S",
+			"English": "S"
+		},
+		"Speed": {
+			"Metric": {
+				"Value": 14.5,
+				"Unit": "km/h",
+				"UnitType": 7
+			},
+			"Imperial": {
+				"Value": 9.0,
+				"Unit": "mi/h",
+				"UnitType": 9
+			}
+		}
+	},
+	"WindGust": {
+		"Speed": {
+			"Metric": {
+				"Value": 20.3,
+				"Unit": "km/h",
+				"UnitType": 7
+			},
+			"Imperial": {
+				"Value": 12.6,
+				"Unit": "mi/h",
+				"UnitType": 9
+			}
+		}
+	},
+	"UVIndex": 6,
+	"UVIndexText": "High",
+	"Visibility": {
+		"Metric": {
+			"Value": 16.1,
+			"Unit": "km",
+			"UnitType": 6
+		},
+		"Imperial": {
+			"Value": 10.0,
+			"Unit": "mi",
+			"UnitType": 2
+		}
+	},
+	"ObstructionsToVisibility": "",
+	"CloudCover": 10,
+	"Ceiling": {
+		"Metric": {
+			"Value": 3200.0,
+			"Unit": "m",
+			"UnitType": 5
+		},
+		"Imperial": {
+			"Value": 10500.0,
+			"Unit": "ft",
+			"UnitType": 0
+		}
+	},
+	"Pressure": {
+		"Metric": {
+			"Value": 1012.0,
+			"Unit": "mb",
+			"UnitType": 14
+		},
+		"Imperial": {
+			"Value": 29.88,
+			"Unit": "inHg",
+			"UnitType": 12
+		}
+	},
+	"PressureTendency": {
+		"LocalizedText": "Falling",
+		"Code": "F"
+	},
+	"Past24HourTemperatureDeparture": {
+		"Metric": {
+			"Value": 0.3,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 0.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"ApparentTemperature": {
+		"Metric": {
+			"Value": 22.8,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 73.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"WindChillTemperature": {
+		"Metric": {
+			"Value": 22.8,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 73.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"WetBulbTemperature": {
+		"Metric": {
+			"Value": 18.6,
+			"Unit": "C",
+			"UnitType": 17
+		},
+		"Imperial": {
+			"Value": 65.0,
+			"Unit": "F",
+			"UnitType": 18
+		}
+	},
+	"Precip1hr": {
+		"Metric": {
+			"Value": 0.0,
+			"Unit": "mm",
+			"UnitType": 3
+		},
+		"Imperial": {
+			"Value": 0.0,
+			"Unit": "in",
+			"UnitType": 1
+		}
+	},
+	"PrecipitationSummary": {
+		"Precipitation": {
+			"Metric": {
+				"Value": 0.0,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.0,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		},
+		"PastHour": {
+			"Metric": {
+				"Value": 0.0,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.0,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		},
+		"Past3Hours": {
+			"Metric": {
+				"Value": 1.3,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.05,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		},
+		"Past6Hours": {
+			"Metric": {
+				"Value": 1.3,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.05,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		},
+		"Past9Hours": {
+			"Metric": {
+				"Value": 2.5,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.1,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		},
+		"Past12Hours": {
+			"Metric": {
+				"Value": 3.8,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.15,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		},
+		"Past18Hours": {
+			"Metric": {
+				"Value": 5.1,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.2,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		},
+		"Past24Hours": {
+			"Metric": {
+				"Value": 7.6,
+				"Unit": "mm",
+				"UnitType": 3
+			},
+			"Imperial": {
+				"Value": 0.3,
+				"Unit": "in",
+				"UnitType": 1
+			}
+		}
+	}
+}

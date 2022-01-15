@@ -1,0 +1,84 @@
+{
+  "url": "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344",
+  "forks_url": "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344/forks",
+  "commits_url": "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344/commits",
+  "id": "e717ce85dd0d2f1bdcdfc884ea25a344",
+  "node_id": "MDQ6R2lzdGU3MTdjZTg1ZGQwZDJmMWJkY2RmYzg4NGVhMjVhMzQ0",
+  "git_pull_url": "https://gist.github.com/e717ce85dd0d2f1bdcdfc884ea25a344.git",
+  "git_push_url": "https://gist.github.com/e717ce85dd0d2f1bdcdfc884ea25a344.git",
+  "html_url": "https://gist.github.com/e717ce85dd0d2f1bdcdfc884ea25a344",
+  "files": {
+    "motion_light.yaml": {
+      "filename": "motion_light.yaml",
+      "type": "text/x-yaml",
+      "language": "YAML",
+      "raw_url": "https://gist.githubusercontent.com/balloob/e717ce85dd0d2f1bdcdfc884ea25a344/raw/d3cede19ffed75443934325177cd78d26b1700ad/motion_light.yaml",
+      "size": 803,
+      "truncated": false,
+      "content": "blueprint:\n  name: Motion-activated Light\n  domain: automation\n  input:\n    motion_entity:\n      name: Motion Sensor\n      selector:\n        entity:\n          domain: binary_sensor\n          device_class: motion\n    light_entity:\n      name: Light\n      selector:\n        entity:\n          domain: light\n\n# If motion is detected within the 120s delay,\n# we restart the script.\nmode: restart\nmax_exceeded: silent\n\ntrigger:\n  platform: state\n  entity_id: !input motion_entity\n  from: \"off\"\n  to: \"on\"\n\naction:\n  - service: homeassistant.turn_on\n    entity_id: !input light_entity\n  - wait_for_trigger:\n      platform: state\n      entity_id: !input motion_entity\n      from: \"on\"\n      to: \"off\"\n  - delay: 120\n  - service: homeassistant.turn_off\n    entity_id: !input light_entity\n"
+    }
+  },
+  "public": false,
+  "created_at": "2020-11-25T22:49:50Z",
+  "updated_at": "2020-11-25T22:49:51Z",
+  "description": "Example gist",
+  "comments": 0,
+  "user": null,
+  "comments_url": "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344/comments",
+  "owner": {
+    "login": "balloob",
+    "id": 1444314,
+    "node_id": "MDQ6VXNlcjE0NDQzMTQ=",
+    "avatar_url": "https://avatars3.githubusercontent.com/u/1444314?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/balloob",
+    "html_url": "https://github.com/balloob",
+    "followers_url": "https://api.github.com/users/balloob/followers",
+    "following_url": "https://api.github.com/users/balloob/following{/other_user}",
+    "gists_url": "https://api.github.com/users/balloob/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/balloob/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/balloob/subscriptions",
+    "organizations_url": "https://api.github.com/users/balloob/orgs",
+    "repos_url": "https://api.github.com/users/balloob/repos",
+    "events_url": "https://api.github.com/users/balloob/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/balloob/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "forks": [
+
+  ],
+  "history": [
+    {
+      "user": {
+        "login": "balloob",
+        "id": 1444314,
+        "node_id": "MDQ6VXNlcjE0NDQzMTQ=",
+        "avatar_url": "https://avatars3.githubusercontent.com/u/1444314?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/balloob",
+        "html_url": "https://github.com/balloob",
+        "followers_url": "https://api.github.com/users/balloob/followers",
+        "following_url": "https://api.github.com/users/balloob/following{/other_user}",
+        "gists_url": "https://api.github.com/users/balloob/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/balloob/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/balloob/subscriptions",
+        "organizations_url": "https://api.github.com/users/balloob/orgs",
+        "repos_url": "https://api.github.com/users/balloob/repos",
+        "events_url": "https://api.github.com/users/balloob/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/balloob/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "version": "0b1028d04209ad0cc7942d3dcf02f9b036cea21f",
+      "committed_at": "2020-11-25T22:49:50Z",
+      "change_status": {
+        "total": 38,
+        "additions": 38,
+        "deletions": 0
+      },
+      "url": "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344/0b1028d04209ad0cc7942d3dcf02f9b036cea21f"
+    }
+  ],
+  "truncated": false
+}

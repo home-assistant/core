@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Con\u00e9ctese a la API de su tableta de pared Advantage Air.",
+                "title": "Conectar"
+            }
+        }
+    }
+}

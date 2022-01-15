@@ -1,0 +1,11 @@
+{
+  "domain": "co2signal",
+  "name": "CO2 Signal",
+  "documentation": "https://www.home-assistant.io/integrations/co2signal",
+  "requirements": [
+    "co2signal==0.4.2"
+  ],
+  "codeowners": [],
+  "iot_class": "cloud_polling",
+  "config_flow": true
+}

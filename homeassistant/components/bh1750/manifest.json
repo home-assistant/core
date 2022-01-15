@@ -1,0 +1,8 @@
+{
+  "domain": "bh1750",
+  "name": "BH1750",
+  "documentation": "https://www.home-assistant.io/integrations/bh1750",
+  "requirements": ["i2csense==0.0.4", "smbus-cffi==0.5.1"],
+  "codeowners": [],
+  "iot_class": "local_push"
+}

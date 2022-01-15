@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "link_local_address": "Propojen\u00ed m\u00edstn\u00edch adres nen\u00ed podporov\u00e1no",
+            "not_axis_device": "Objeven\u00e9 za\u0159\u00edzen\u00ed nen\u00ed za\u0159\u00edzen\u00ed Axis"
+        },
+        "error": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "title": "Nastaven\u00ed za\u0159\u00edzen\u00ed Axis"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Vyberte profil streamu, kter\u00fd chcete pou\u017e\u00edt"
+                },
+                "title": "Mo\u017enosti video streamu za\u0159\u00edzen\u00ed Axis"
+            }
+        }
+    }
+}

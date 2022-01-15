@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "{entity_name} \u00f6\u011fesini temizle",
+            "dock": "{entity_name} dock'a d\u00f6ns\u00fcn"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} temizleniyor",
+            "is_docked": "{entity_name} yerle\u015ftirildi"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} temizlemeye ba\u015flad\u0131",
+            "docked": "{entity_name} yerle\u015ftirildi"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "Temizleniyor",
+            "docked": "Dock'da",
+            "error": "Hata",
+            "idle": "Bo\u015fta",
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k",
+            "paused": "Durduruldu",
+            "returning": "Dock'a geri d\u00f6n\u00fc\u015f"
+        }
+    },
+    "title": "Elektrikli s\u00fcp\u00fcrge"
+}

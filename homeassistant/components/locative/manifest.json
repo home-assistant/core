@@ -1,0 +1,9 @@
+{
+  "domain": "locative",
+  "name": "Locative",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/locative",
+  "dependencies": ["webhook"],
+  "codeowners": [],
+  "iot_class": "local_push"
+}

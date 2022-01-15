@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Daikin AC",
+        "description": "Enter [%key:common::config_flow::data::ip%] of your Daikin AC.\n\nNote that [%key:common::config_flow::data::api_key%] and [%key:common::config_flow::data::password%] only are used by BRP072Cxx and SKYFi devices respectively.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "api_password": "[%key:common::config_flow::error::invalid_auth%], use either API Key or Password.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}

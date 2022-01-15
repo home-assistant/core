@@ -1,0 +1,155 @@
+set_state:
+  name: Set State
+  description: Set a color/brightness and possibly turn the light on/off.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    infrared:
+      name: infrared
+      description: Automatic infrared level when light brightness is low.
+      selector:
+        number:
+          min: 0
+          max: 255
+    zones:
+      name: Zones
+      description: List of zone numbers to affect (8 per LIFX Z, starts at 0).
+      example: "[0,5]"
+      selector:
+        object:
+    transition:
+      name: Transition
+      description: Duration it takes to get to the final state.
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    power:
+      name: Power
+      description: Turn the light on or off. Leave out to keep the power as it is.
+      selector:
+        boolean:
+
+effect_pulse:
+  name: Pulse effect
+  description: Run a flash effect by changing to a color and back.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    mode:
+      name: Mode
+      description: "Decides how colors are changed."
+      selector:
+        select:
+          options:
+            - 'blink'
+            - 'breathe'
+            - 'ping'
+            - 'strobe'
+            - 'solid'
+    brightness:
+      name: Brightness
+      description: Number indicating brightness of the temporary color.
+      selector:
+        number:
+          min: 0
+          max: 255
+    color_name:
+      name: Color name
+      description: A human readable color name.
+      example: "red"
+      selector:
+        text:
+    rgb_color:
+      name: RGB color
+      description: The temporary color in RGB-format.
+      example: "[255, 100, 100]"
+      selector:
+        object:
+    period:
+      name: Period
+      description: Duration of the effect.
+      default: 1.0
+      selector:
+        number:
+          min: 0.05
+          max: 60.00
+          step: 0.05
+          unit_of_measurement: seconds
+    cycles:
+      name: Cycles
+      description: Number of times the effect should run.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 10000
+    power_on:
+      name: Power on
+      description: Powered off lights are temporarily turned on during the effect.
+      default: true
+      selector:
+        boolean:
+
+effect_colorloop:
+  name: Color loop effect
+  description: Run an effect with looping colors.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    brightness:
+      name: Brightness
+      description: Number indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light.
+      selector:
+        number:
+          min: 0
+          max: 255
+    period:
+      name: Period
+      description: Duration between color changes.
+      default: 60
+      selector:
+        number:
+          min: 0.05
+          max: 3600.00
+          step: 0.05
+          unit_of_measurement: seconds
+    change:
+      name: Change
+      description: Hue movement per period, in degrees on a color wheel.
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: '°'
+    spread:
+      name: Spread
+      description: Maximum hue difference between participating lights, in degrees on a color wheel.
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: '°'
+    power_on:
+      name: Power on
+      description: Powered off lights are temporarily turned on during the effect.
+      default: true
+      selector:
+        boolean:
+
+effect_stop:
+  name: Stop effect
+  description: Stop a running effect.
+  target:
+    entity:
+      integration: lifx
+      domain: light

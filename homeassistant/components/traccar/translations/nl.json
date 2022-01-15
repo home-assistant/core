@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
+            "webhook_not_internet_accessible": "Uw Home Assistant-instantie moet toegankelijk zijn via internet om webhook-berichten te ontvangen."
+        },
+        "create_entry": {
+            "default": "Voor het verzenden van gebeurtenissen naar Home Assistant, moet u de webhook-functie in Traccar instellen.\n\nGebruik de volgende URL: ' {webhook_url} '\n\nZie [de documentatie] ({docs_url}) voor meer informatie."
+        },
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u Traccar wilt instellen?",
+                "title": "Traccar instellen"
+            }
+        }
+    }
+}

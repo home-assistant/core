@@ -1,0 +1,9 @@
+{
+  "domain": "dialogflow",
+  "name": "Dialogflow",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dialogflow",
+  "dependencies": ["webhook"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
+}

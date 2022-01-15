@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Klare Nacht",
+            "cloudy": "Bew\u00f6lkt",
+            "exceptional": "Au\u00dfergew\u00f6hnlich",
+            "fog": "Nebel",
+            "hail": "Hagel",
+            "lightning": "Gewitter",
+            "lightning-rainy": "Gewitter, regnerisch",
+            "partlycloudy": "Teilweise bew\u00f6lkt",
+            "pouring": "Platzregen",
+            "rainy": "Regnerisch",
+            "snowy": "Verschneit",
+            "snowy-rainy": "Verschneit, regnerisch",
+            "sunny": "Sonnig",
+            "windy": "Windig",
+            "windy-variant": "Windig"
+        }
+    }
+}

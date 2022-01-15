@@ -1,10 +1,10 @@
 """Test Home Assistant location util methods."""
-from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-import requests
-import requests_mock
+import aiohttp
+import pytest
 
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.location as location_util
 
 from tests.common import load_fixture
@@ -25,124 +25,88 @@ DISTANCE_KM = 5846.39
 DISTANCE_MILES = 3632.78
 
 
-class TestLocationUtil(TestCase):
-    """Test util location methods."""
+@pytest.fixture
+async def session(hass):
+    """Return aioclient session."""
+    return async_get_clientsession(hass)
 
-    def test_get_distance_to_same_place(self):
-        """Test getting the distance."""
-        meters = location_util.distance(COORDINATES_PARIS[0],
-                                        COORDINATES_PARIS[1],
-                                        COORDINATES_PARIS[0],
-                                        COORDINATES_PARIS[1])
 
-        assert meters == 0
+@pytest.fixture
+async def raising_session(loop):
+    """Return an aioclient session that only fails."""
+    return Mock(get=Mock(side_effect=aiohttp.ClientError))
 
-    def test_get_distance(self):
-        """Test getting the distance."""
-        meters = location_util.distance(COORDINATES_PARIS[0],
-                                        COORDINATES_PARIS[1],
-                                        COORDINATES_NEW_YORK[0],
-                                        COORDINATES_NEW_YORK[1])
 
-        assert meters/1000 - DISTANCE_KM < 0.01
+def test_get_distance_to_same_place():
+    """Test getting the distance."""
+    meters = location_util.distance(
+        COORDINATES_PARIS[0],
+        COORDINATES_PARIS[1],
+        COORDINATES_PARIS[0],
+        COORDINATES_PARIS[1],
+    )
 
-    def test_get_kilometers(self):
-        """Test getting the distance between given coordinates in km."""
-        kilometers = location_util.vincenty(COORDINATES_PARIS,
-                                            COORDINATES_NEW_YORK)
-        assert round(kilometers, 2) == DISTANCE_KM
+    assert meters == 0
 
-    def test_get_miles(self):
-        """Test getting the distance between given coordinates in miles."""
-        miles = location_util.vincenty(COORDINATES_PARIS,
-                                       COORDINATES_NEW_YORK,
-                                       miles=True)
-        assert round(miles, 2) == DISTANCE_MILES
 
-    @requests_mock.Mocker()
-    def test_detect_location_info_freegeoip(self, m):
-        """Test detect location info using freegeoip."""
-        m.get(location_util.FREEGEO_API,
-              text=load_fixture('freegeoip.io.json'))
+def test_get_distance():
+    """Test getting the distance."""
+    meters = location_util.distance(
+        COORDINATES_PARIS[0],
+        COORDINATES_PARIS[1],
+        COORDINATES_NEW_YORK[0],
+        COORDINATES_NEW_YORK[1],
+    )
 
-        info = location_util.detect_location_info(_test_real=True)
+    assert meters / 1000 - DISTANCE_KM < 0.01
 
-        assert info is not None
-        assert info.ip == '1.2.3.4'
-        assert info.country_code == 'US'
-        assert info.country_name == 'United States'
-        assert info.region_code == 'CA'
-        assert info.region_name == 'California'
-        assert info.city == 'San Diego'
-        assert info.zip_code == '92122'
-        assert info.time_zone == 'America/Los_Angeles'
-        assert info.latitude == 32.8594
-        assert info.longitude == -117.2073
-        assert not info.use_metric
 
-    @requests_mock.Mocker()
-    @patch('homeassistant.util.location._get_freegeoip', return_value=None)
-    def test_detect_location_info_ipapi(self, mock_req, mock_freegeoip):
-        """Test detect location info using freegeoip."""
-        mock_req.get(location_util.IP_API,
-                     text=load_fixture('ip-api.com.json'))
+def test_get_kilometers():
+    """Test getting the distance between given coordinates in km."""
+    kilometers = location_util.vincenty(COORDINATES_PARIS, COORDINATES_NEW_YORK)
+    assert round(kilometers, 2) == DISTANCE_KM
 
-        info = location_util.detect_location_info(_test_real=True)
 
-        assert info is not None
-        assert info.ip == '1.2.3.4'
-        assert info.country_code == 'US'
-        assert info.country_name == 'United States'
-        assert info.region_code == 'CA'
-        assert info.region_name == 'California'
-        assert info.city == 'San Diego'
-        assert info.zip_code == '92122'
-        assert info.time_zone == 'America/Los_Angeles'
-        assert info.latitude == 32.8594
-        assert info.longitude == -117.2073
-        assert not info.use_metric
+def test_get_miles():
+    """Test getting the distance between given coordinates in miles."""
+    miles = location_util.vincenty(COORDINATES_PARIS, COORDINATES_NEW_YORK, miles=True)
+    assert round(miles, 2) == DISTANCE_MILES
 
-    @patch('homeassistant.util.location.elevation', return_value=0)
-    @patch('homeassistant.util.location._get_freegeoip', return_value=None)
-    @patch('homeassistant.util.location._get_ip_api', return_value=None)
-    def test_detect_location_info_both_queries_fail(self, mock_ipapi,
-                                                    mock_freegeoip,
-                                                    mock_elevation):
-        """Ensure we return None if both queries fail."""
-        info = location_util.detect_location_info(_test_real=True)
-        assert info is None
 
-    @patch('homeassistant.util.location.requests.get',
-           side_effect=requests.RequestException)
-    def test_freegeoip_query_raises(self, mock_get):
-        """Test freegeoip query when the request to API fails."""
-        info = location_util._get_freegeoip()
-        assert info is None
+async def test_detect_location_info_whoami(aioclient_mock, session):
+    """Test detect location info using whoami.home-assistant.io."""
+    aioclient_mock.get(location_util.WHOAMI_URL, text=load_fixture("whoami.json"))
 
-    @patch('homeassistant.util.location.requests.get',
-           side_effect=requests.RequestException)
-    def test_ip_api_query_raises(self, mock_get):
-        """Test ip api query when the request to API fails."""
-        info = location_util._get_ip_api()
-        assert info is None
+    with patch("homeassistant.util.location.HA_VERSION", "1.0"):
+        info = await location_util.async_detect_location_info(session, _test_real=True)
 
-    @patch('homeassistant.util.location.requests.get',
-           side_effect=requests.RequestException)
-    def test_elevation_query_raises(self, mock_get):
-        """Test elevation when the request to API fails."""
-        elevation = location_util.elevation(10, 10, _test_real=True)
-        assert elevation == 0
+    assert str(aioclient_mock.mock_calls[-1][1]) == location_util.WHOAMI_URL
 
-    @requests_mock.Mocker()
-    def test_elevation_query_fails(self, mock_req):
-        """Test elevation when the request to API fails."""
-        mock_req.get(location_util.ELEVATION_URL, text='{}', status_code=401)
-        elevation = location_util.elevation(10, 10, _test_real=True)
-        assert elevation == 0
+    assert info is not None
+    assert info.ip == "1.2.3.4"
+    assert info.country_code == "XX"
+    assert info.currency == "XXX"
+    assert info.region_code == "00"
+    assert info.city == "Gotham"
+    assert info.zip_code == "12345"
+    assert info.time_zone == "Earth/Gotham"
+    assert info.latitude == 12.34567
+    assert info.longitude == 12.34567
+    assert info.use_metric
 
-    @requests_mock.Mocker()
-    def test_elevation_query_nonjson(self, mock_req):
-        """Test if elevation API returns a non JSON value."""
-        mock_req.get(location_util.ELEVATION_URL, text='{ I am not JSON }')
-        elevation = location_util.elevation(10, 10, _test_real=True)
-        assert elevation == 0
+
+async def test_dev_url(aioclient_mock, session):
+    """Test usage of dev URL."""
+    aioclient_mock.get(location_util.WHOAMI_URL_DEV, text=load_fixture("whoami.json"))
+    with patch("homeassistant.util.location.HA_VERSION", "1.0.dev0"):
+        info = await location_util.async_detect_location_info(session, _test_real=True)
+
+    assert str(aioclient_mock.mock_calls[-1][1]) == location_util.WHOAMI_URL_DEV
+
+    assert info.currency == "XXX"
+
+
+async def test_whoami_query_raises(raising_session):
+    """Test whoami query when the request to API fails."""
+    info = await location_util._get_whoami(raising_session)
+    assert info is None

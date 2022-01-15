@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Le nom pour cette connexion velbus",
+                    "port": "Cha\u00eene de connexion"
+                },
+                "title": "D\u00e9finir le type de connexion velbus"
+            }
+        }
+    }
+}

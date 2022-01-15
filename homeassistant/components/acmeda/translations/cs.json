@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "ID hostitele"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "closed": "Zatvoren",
+            "closing": "Zatvoreno",
+            "open": "Otvoren",
+            "opening": "Otvoreno",
+            "stopped": "Zaustavljen"
+        }
+    },
+    "title": "Poklopac"
+}

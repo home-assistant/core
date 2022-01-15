@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Pa\u00eds"
+                },
+                "title": "Tria un pa\u00eds a monitoritzar"
+            }
+        }
+    }
+}

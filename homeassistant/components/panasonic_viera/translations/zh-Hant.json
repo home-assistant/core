@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_pin_code": "\u6240\u8f38\u5165\u7684 PIN \u78bc\u7121\u6548"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN \u78bc"
+                },
+                "description": "\u8f38\u5165\u96fb\u8996\u986f\u793a\u4e4b PIN \u78bc",
+                "title": "\u914d\u5c0d\u4e2d"
+            },
+            "user": {
+                "data": {
+                    "host": "IP \u4f4d\u5740",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u8f38\u5165 Panasonic Viera \u96fb\u8996  IP \u4f4d\u5740",
+                "title": "\u8a2d\u5b9a\u96fb\u8996"
+            }
+        }
+    }
+}

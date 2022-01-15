@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Ali \u017eelite nastaviti Islamski \u010das molitve?",
+                "title": "Nastavite islamske molitvene \u010dase"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Na\u010din izra\u010duna molitve"
+                }
+            }
+        }
+    },
+    "title": "Islamski molitveni \u010dasi"
+}

@@ -1,0 +1,29 @@
+{
+  "title": "Media player",
+  "device_automation": {
+    "condition_type": {
+      "is_on": "{entity_name} is on",
+      "is_off": "{entity_name} is off",
+      "is_idle": "{entity_name} is idle",
+      "is_paused": "{entity_name} is paused",
+      "is_playing": "{entity_name} is playing"
+    },
+    "trigger_type": {
+      "turned_on": "{entity_name} turned on",
+      "turned_off": "{entity_name} turned off",
+      "idle": "{entity_name} becomes idle",
+      "paused": "{entity_name} is paused",
+      "playing": "{entity_name} starts playing"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]",
+      "playing": "Playing",
+      "paused": "[%key:common::state::paused%]",
+      "idle": "[%key:common::state::idle%]",
+      "standby": "[%key:common::state::standby%]"
+    }
+  }
+}

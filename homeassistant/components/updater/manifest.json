@@ -1,0 +1,8 @@
+{
+  "domain": "updater",
+  "name": "Updater",
+  "documentation": "https://www.home-assistant.io/integrations/updater",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal",
+  "iot_class": "cloud_polling"
+}

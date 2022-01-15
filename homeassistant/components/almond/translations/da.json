@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Kan ikke oprette forbindelse til Almond-serveren.",
+            "missing_configuration": "Tjek venligst dokumentationen om, hvordan man indstiller Almond."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til Almond leveret af Supervisor-tilf\u00f8jelsen: {addon}?",
+                "title": "Almond via Supervisor-tilf\u00f8jelse"
+            },
+            "pick_implementation": {
+                "title": "V\u00e6lg godkendelsesmetode"
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukarnamn"
+                }
+            }
+        }
+    }
+}

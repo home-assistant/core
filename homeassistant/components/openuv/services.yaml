@@ -1,0 +1,12 @@
+# Describes the format for available OpenUV services
+update_data:
+  name: Update data
+  description: Request new data from OpenUV. Consumes two API calls.
+
+update_uv_index_data:
+  name: Update UV index data
+  description: Request new UV index data from OpenUV.
+
+update_protection_data:
+  name: Update protection data
+  description: Request new protection window data from OpenUV.

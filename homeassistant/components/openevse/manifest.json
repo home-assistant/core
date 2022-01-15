@@ -1,0 +1,8 @@
+{
+  "domain": "openevse",
+  "name": "OpenEVSE",
+  "documentation": "https://www.home-assistant.io/integrations/openevse",
+  "requirements": ["openevsewifi==1.1.0"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "P\u0159\u00edstupov\u00fd token",
+                    "host": "Hostitel"
+                },
+                "description": "Nastaven\u00ed integrace routeru Vilfo. Pot\u0159ebujete n\u00e1zev hostitele/IP adresu routeru Vilfo a p\u0159\u00edstupov\u00fd API token. Dal\u0161\u00ed informace o t\u00e9to integraci a o tom, jak tyto podrobnosti z\u00edskat, najdete na adrese: https://www.home-assistant.io/integrations/vilfo",
+                "title": "P\u0159ipojen\u00ed k routeru Vilfo"
+            }
+        }
+    }
+}

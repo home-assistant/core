@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "SimpliSafe authenticates with Home Assistant via the SimpliSafe web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({docs_url}) before starting.\n\n1. Click [here]({url}) to open the SimpliSafe web app and input your credentials.\n\n2. When the login process is complete, return here and input the authorization code below.",
+        "data": {
+          "auth_code": "Authorization Code"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Account already registered",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "still_awaiting_mfa": "Still awaiting MFA email click",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "This SimpliSafe account is already in use.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The user credentials provided do not match this SimpliSafe account."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure SimpliSafe",
+        "data": {
+          "code": "Code (used in Home Assistant UI)"
+        }
+      }
+    }
+  }
+}

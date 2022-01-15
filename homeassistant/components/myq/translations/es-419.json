@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MyQ ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, intente nuevamente",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                },
+                "title": "Con\u00e9ctese a MyQ Gateway"
+            }
+        }
+    }
+}

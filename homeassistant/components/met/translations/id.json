@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "no_home": "Tidak ada koordinat rumah yang disetel dalam konfigurasi Home Assistant"
+        },
+        "error": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Ketinggian",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
+                    "name": "Nama"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "Lokasi"
+            }
+        }
+    }
+}

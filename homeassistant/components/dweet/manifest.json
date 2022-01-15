@@ -1,0 +1,8 @@
+{
+  "domain": "dweet",
+  "name": "dweet.io",
+  "documentation": "https://www.home-assistant.io/integrations/dweet",
+  "requirements": ["dweepy==0.3.0"],
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
+}

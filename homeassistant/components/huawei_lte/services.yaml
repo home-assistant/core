@@ -1,0 +1,46 @@
+clear_traffic_statistics:
+  name: Clear traffic statistics
+  description: Clear traffic statistics.
+  fields:
+    url:
+      name: URL
+      description: URL of router to clear; optional when only one is configured.
+      example: http://192.168.100.1/
+      selector:
+        text:
+
+reboot:
+  name: Reboot
+  description: Reboot router.
+  fields:
+    url:
+      name: URL
+      description: URL of router to reboot; optional when only one is configured.
+      example: http://192.168.100.1/
+      selector:
+        text:
+
+resume_integration:
+  name: Resume integration
+  description: Resume suspended integration.
+  fields:
+    url:
+      name: URL
+      description: URL of router to resume integration for; optional when only one is configured.
+      example: http://192.168.100.1/
+      selector:
+        text:
+
+suspend_integration:
+  name: Suspend integration
+  description: >
+    Suspend integration. Suspending logs the integration out from the router, and stops accessing it.
+    Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required.
+    Invoke the resume_integration service to resume.
+  fields:
+    url:
+      name: URL
+      description: URL of router to resume integration for; optional when only one is configured.
+      example: http://192.168.100.1/
+      selector:
+        text:

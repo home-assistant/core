@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "F\u00f6r att skicka h\u00e4ndelser till Home Assistant m\u00e5ste du st\u00e4lla in webhook-funktionen i Traccar.\n\nAnv\u00e4nd f\u00f6ljande url: `{webhook_url}`\n\nMer information finns i [dokumentationen]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "\u00c4r du s\u00e4ker p\u00e5 att du vill st\u00e4lla in Traccar?",
+                "title": "St\u00e4ll in Traccar"
+            }
+        }
+    }
+}

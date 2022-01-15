@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du Wemo einrichten?"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo-Taste wurde 2 Sekunden lang gedr\u00fcckt"
+        }
+    }
+}

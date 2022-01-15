@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung zum Server fehlgeschlagen. Bitte \u00fcberpr\u00fcfe den Host und den Port und versuche es erneut. Stelle au\u00dferdem sicher, dass Du mindestens Minecraft Version 1.7 auf Deinem Server ausf\u00fchrst.",
+            "invalid_ip": "IP-Adresse ist ung\u00fcltig (MAC-Adresse konnte nicht ermittelt werden). Bitte korrigieren und erneut versuchen.",
+            "invalid_port": "Der Port muss im Bereich von 1024 bis 65535 liegen. Bitte korrigieren und erneut versuchen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "description": "Richte deine Minecraft Server-Instanz ein, um es \u00fcberwachen zu k\u00f6nnen.",
+                "title": "Verkn\u00fcpfe deinen Minecraft Server"
+            }
+        }
+    }
+}

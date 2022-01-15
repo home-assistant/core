@@ -1,0 +1,16 @@
+{
+  "codeowners": ["@dermotduffy"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hyperion",
+  "domain": "hyperion",
+  "name": "Hyperion",
+  "quality_scale": "platinum",
+  "requirements": ["hyperion-py==0.7.4"],
+  "ssdp": [
+    {
+      "manufacturer": "Hyperion Open Source Ambient Lighting",
+      "st": "urn:hyperion-project.org:device:basic:1"
+    }
+  ],
+  "iot_class": "local_push"
+}

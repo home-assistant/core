@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "title": "Seadista Agent DVR"
+            }
+        }
+    }
+}

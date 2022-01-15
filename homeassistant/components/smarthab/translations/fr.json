@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "service": "Erreur de connexion \u00e0 SmartHab. V\u00e9rifiez votre connexion. Le service peut \u00eatre indisponible.",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Mot de passe"
+                },
+                "description": "Pour des raisons techniques, utilisez un compte sp\u00e9cifique \u00e0 Home Assistant. Vous pouvez cr\u00e9er un compte secondaire depuis l'application SmartHab.",
+                "title": "Configurer SmartHab"
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Spremeni na\u010din HVAC na {entity_name}",
+            "set_preset_mode": "Spremenite prednastavitev na {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} je nastavljen na dolo\u010den na\u010din HVAC",
+            "is_preset_mode": "{entity_name} je nastavljen na dolo\u010den prednastavljeni na\u010din"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} spremenjena izmerjena vla\u017enost",
+            "current_temperature_changed": "{entity_name} izmerjena temperaturna sprememba",
+            "hvac_mode_changed": "{entity_name} HVAC na\u010din spremenjen"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "Samodejno",
+            "cool": "Mrzlo",
+            "dry": "Suho",
+            "fan_only": "Samo ventilator",
+            "heat": "Toplo",
+            "heat_cool": "Gretje/Hlajenje",
+            "off": "Izklju\u010den"
+        }
+    },
+    "title": "Klimat"
+}

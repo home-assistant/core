@@ -1,0 +1,202 @@
+"""Support for Google Calendar Search binary sensors."""
+from __future__ import annotations
+
+import copy
+from datetime import timedelta
+import logging
+
+from httplib2 import ServerNotFoundError
+
+from homeassistant.components.calendar import (
+    ENTITY_ID_FORMAT,
+    CalendarEventDevice,
+    calculate_offset,
+    is_offset_reached,
+)
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import Throttle, dt
+
+from . import (
+    CONF_CAL_ID,
+    CONF_IGNORE_AVAILABILITY,
+    CONF_SEARCH,
+    CONF_TRACK,
+    DEFAULT_CONF_OFFSET,
+    TOKEN_FILE,
+    GoogleCalendarService,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_GOOGLE_SEARCH_PARAMS = {
+    "orderBy": "startTime",
+    "singleEvents": True,
+}
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    disc_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the calendar platform for event devices."""
+    if disc_info is None:
+        return
+
+    if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
+        return
+
+    calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
+    entities = []
+    for data in disc_info[CONF_ENTITIES]:
+        if not data[CONF_TRACK]:
+            continue
+        entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
+        )
+        entity = GoogleCalendarEventDevice(
+            calendar_service, disc_info[CONF_CAL_ID], data, entity_id
+        )
+        entities.append(entity)
+
+    add_entities(entities, True)
+
+
+class GoogleCalendarEventDevice(CalendarEventDevice):
+    """A calendar event device."""
+
+    def __init__(self, calendar_service, calendar, data, entity_id):
+        """Create the Calendar event device."""
+        self.data = GoogleCalendarData(
+            calendar_service,
+            calendar,
+            data.get(CONF_SEARCH),
+            data.get(CONF_IGNORE_AVAILABILITY),
+        )
+        self._event = None
+        self._name = data[CONF_NAME]
+        self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
+        self._offset_reached = False
+        self.entity_id = entity_id
+
+    @property
+    def extra_state_attributes(self):
+        """Return the device state attributes."""
+        return {"offset_reached": self._offset_reached}
+
+    @property
+    def event(self):
+        """Return the next upcoming event."""
+        return self._event
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
+
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all events in a specific time frame."""
+        return await self.data.async_get_events(hass, start_date, end_date)
+
+    def update(self):
+        """Update event data."""
+        self.data.update()
+        event = copy.deepcopy(self.data.event)
+        if event is None:
+            self._event = event
+            return
+        event = calculate_offset(event, self._offset)
+        self._offset_reached = is_offset_reached(event)
+        self._event = event
+
+
+class GoogleCalendarData:
+    """Class to utilize calendar service object to get next event."""
+
+    def __init__(self, calendar_service, calendar_id, search, ignore_availability):
+        """Set up how we are going to search the google calendar."""
+        self.calendar_service = calendar_service
+        self.calendar_id = calendar_id
+        self.search = search
+        self.ignore_availability = ignore_availability
+        self.event = None
+
+    def _prepare_query(self):
+        try:
+            service = self.calendar_service.get()
+        except ServerNotFoundError as err:
+            _LOGGER.error("Unable to connect to Google: %s", err)
+            return None, None
+        params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
+        params["calendarId"] = self.calendar_id
+        params["maxResults"] = 100  # Page size
+
+        if self.search:
+            params["q"] = self.search
+
+        return service, params
+
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all events in a specific time frame."""
+        service, params = await hass.async_add_executor_job(self._prepare_query)
+        if service is None:
+            return []
+        params["timeMin"] = start_date.isoformat("T")
+        params["timeMax"] = end_date.isoformat("T")
+
+        event_list = []
+        events = await hass.async_add_executor_job(service.events)
+        page_token = None
+        while True:
+            page_token = await self.async_get_events_page(
+                hass, events, params, page_token, event_list
+            )
+            if not page_token:
+                break
+        return event_list
+
+    async def async_get_events_page(self, hass, events, params, page_token, event_list):
+        """Get a page of events in a specific time frame."""
+        params["pageToken"] = page_token
+        result = await hass.async_add_executor_job(events.list(**params).execute)
+
+        items = result.get("items", [])
+        for item in items:
+            if not self.ignore_availability and "transparency" in item:
+                if item["transparency"] == "opaque":
+                    event_list.append(item)
+            else:
+                event_list.append(item)
+        return result.get("nextPageToken")
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data."""
+        service, params = self._prepare_query()
+        if service is None:
+            return
+        params["timeMin"] = dt.now().isoformat("T")
+
+        events = service.events()
+        result = events.list(**params).execute()
+
+        items = result.get("items", [])
+
+        new_event = None
+        for item in items:
+            if not self.ignore_availability and "transparency" in item:
+                if item["transparency"] == "opaque":
+                    new_event = item
+                    break
+            else:
+                new_event = item
+                break
+
+        self.event = new_event

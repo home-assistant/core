@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g"
+                },
+                "description": "Figyelje a felhaszn\u00e1l\u00f3alap\u00fa \u00e9s a CDC jelent\u00e9seket egy p\u00e1r koordin\u00e1t\u00e1ra.",
+                "title": "Flu Near You weboldal konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

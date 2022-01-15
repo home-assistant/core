@@ -1,0 +1,71 @@
+add_device:
+  name: Add device
+  description:
+    Enables the join permission of the Xiaomi Aqara Gateway for 30 seconds.
+    A new device can be added afterwards by pressing the pairing button once.
+  fields:
+    gw_mac:
+      name: Gateway MAC
+      description: MAC address of the Xiaomi Aqara Gateway.
+      required: true
+      example: 34ce00880088
+      selector:
+        text:
+play_ringtone:
+  name: play ringtone
+  description:
+    Play a specific ringtone. The version of the gateway firmware must
+    be 1.4.1_145 at least.
+  fields:
+    gw_mac:
+      name: Gateway MAC
+      description: MAC address of the Xiaomi Aqara Gateway.
+      required: true
+      example: 34ce00880088
+      selector:
+        text:
+    ringtone_id:
+      name: Ringtone ID
+      description: One of the allowed ringtone ids.
+      required: true
+      example: 8
+      selector:
+        text:
+    ringtone_vol:
+      name: Ringtone volume
+      description: The volume in percent.
+      selector:
+        number:
+          min: 0
+          max: 100
+remove_device:
+  name: Remove device
+  description:
+    Removes a specific device. The removal is required if a device shall
+    be paired with another gateway.
+  fields:
+    device_id:
+      name: Device ID
+      description: Hardware address of the device to remove.
+      required: true
+      example: 158d0000000000
+      selector:
+        text:
+    gw_mac:
+      name: Gateway MAC
+      description: MAC address of the Xiaomi Aqara Gateway.
+      required: true
+      example: 34ce00880088
+      selector:
+        text:
+stop_ringtone:
+  name: Stop ringtone
+  description: Stops a playing ringtone immediately.
+  fields:
+    gw_mac:
+      name: Gateway MAC
+      description: MAC address of the Xiaomi Aqara Gateway.
+      required: true
+      example: 34ce00880088
+      selector:
+        text:

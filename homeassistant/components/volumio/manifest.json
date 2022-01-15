@@ -1,0 +1,10 @@
+{
+  "domain": "volumio",
+  "name": "Volumio",
+  "documentation": "https://www.home-assistant.io/integrations/volumio",
+  "codeowners": ["@OnFreund"],
+  "config_flow": true,
+  "zeroconf": ["_Volumio._tcp.local."],
+  "requirements": ["pyvolumio==0.1.3"],
+  "iot_class": "local_polling"
+}

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "link": {
+                "description": "Enged\u00e9lyeznie kell az Home Assistantot a Roonban. Miut\u00e1n r\u00e1kattintott a K\u00fcld\u00e9s gombra, nyissa meg a Roon Core alkalmaz\u00e1st, nyissa meg a Be\u00e1ll\u00edt\u00e1sokat, \u00e9s enged\u00e9lyezze a Home Assistant funkci\u00f3t a B\u0151v\u00edtm\u00e9nyek lapon.",
+                "title": "Enged\u00e9lyezze a Home Assistant alkalmaz\u00e1st Roon-ban"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "A Roon szerver nem tal\u00e1lhat\u00f3, adja meg a hosztnev\u00e9t vagy c\u00edm\u00e9t"
+            }
+        }
+    }
+}

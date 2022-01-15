@@ -1,0 +1,90 @@
+write_coil:
+  name: Write coil
+  description: Write to a modbus coil.
+  fields:
+    address:
+      name: Address
+      description: Address of the register to write to.
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255
+    state:
+      name: State
+      description: State to write.
+      required: true
+      example: false
+      selector:
+        object:
+    unit:
+      name: Unit
+      description: Address of the modbus unit.
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+write_register:
+  name: Write register
+  description: Write to a modbus holding register.
+  fields:
+    address:
+      name: Address
+      description: Address of the holding register to write to.
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255
+    unit:
+      name: Unit
+      description: Address of the modbus unit.
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255
+    value:
+      name: Value
+      description: Value (single value or array) to write.
+      required: true
+      example: "0 or [4,0]"
+      selector:
+        object:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+stop:
+  name: Stop
+  description: Stop modbus hub.
+  fields:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+restart:
+  name: Restart
+  description: Restart modbus hub (if running stop then start).
+  fields:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:

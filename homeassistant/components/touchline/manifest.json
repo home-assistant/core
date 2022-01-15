@@ -1,0 +1,8 @@
+{
+  "domain": "touchline",
+  "name": "Roth Touchline",
+  "documentation": "https://www.home-assistant.io/integrations/touchline",
+  "requirements": ["pytouchline==0.7"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

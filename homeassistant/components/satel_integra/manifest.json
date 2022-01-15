@@ -1,0 +1,8 @@
+{
+  "domain": "satel_integra",
+  "name": "Satel Integra",
+  "documentation": "https://www.home-assistant.io/integrations/satel_integra",
+  "requirements": ["satel_integra==0.3.4"],
+  "codeowners": [],
+  "iot_class": "local_push"
+}

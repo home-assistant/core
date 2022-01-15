@@ -1,0 +1,8 @@
+{
+  "domain": "watson_tts",
+  "name": "IBM Watson TTS",
+  "documentation": "https://www.home-assistant.io/integrations/watson_tts",
+  "requirements": ["ibm-watson==5.2.2"],
+  "codeowners": ["@rutkai"],
+  "iot_class": "cloud_push"
+}

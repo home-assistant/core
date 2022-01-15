@@ -1,221 +1,261 @@
-"""
-This module provides WSGI application to serve the Home Assistant API.
+"""Support to serve the Home Assistant API as WSGI application."""
+from __future__ import annotations
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/http/
-"""
-import asyncio
-from functools import wraps
 from ipaddress import ip_network
-import json
 import logging
 import os
 import ssl
+from typing import Any, Final, Optional, TypedDict, cast
 
 from aiohttp import web
-from aiohttp.hdrs import ACCEPT, ORIGIN, CONTENT_TYPE
-from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
+from aiohttp.typedefs import StrOrURL
+from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 import voluptuous as vol
 
-from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON, HTTP_HEADER_HA_AUTH,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    HTTP_HEADER_X_REQUESTED_WITH)
-from homeassistant.core import is_callback
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
-import homeassistant.remote as rem
-import homeassistant.util as hass_util
-from homeassistant.util.logging import HideSensitiveDataFilter
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
+from homeassistant.setup import async_start_setup, async_when_setup_or_start
+from homeassistant.util import ssl as ssl_util
 
-from .auth import auth_middleware
-from .ban import ban_middleware
-from .const import (
-    KEY_BANS_ENABLED, KEY_AUTHENTICATED, KEY_LOGIN_THRESHOLD,
-    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR)
-from .static import (
-    CachingFileResponse, CachingStaticResource, staticresource_middleware)
-from .util import get_real_ip
+from .auth import setup_auth
+from .ban import setup_bans
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
+from .cors import setup_cors
+from .forwarded import async_setup_forwarded
+from .request_context import current_request, setup_request_context
+from .security_filter import setup_security_filter
+from .static import CACHE_HEADERS, CachingStaticResource
+from .view import HomeAssistantView
+from .web_runner import HomeAssistantTCPSite
 
-REQUIREMENTS = ['aiohttp_cors==0.6.0']
+DOMAIN: Final = "http"
 
-ALLOWED_CORS_HEADERS = [
-    ORIGIN, ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, CONTENT_TYPE,
-    HTTP_HEADER_HA_AUTH]
+CONF_SERVER_HOST: Final = "server_host"
+CONF_SERVER_PORT: Final = "server_port"
+CONF_BASE_URL: Final = "base_url"
+CONF_SSL_CERTIFICATE: Final = "ssl_certificate"
+CONF_SSL_PEER_CERTIFICATE: Final = "ssl_peer_certificate"
+CONF_SSL_KEY: Final = "ssl_key"
+CONF_CORS_ORIGINS: Final = "cors_allowed_origins"
+CONF_USE_X_FORWARDED_FOR: Final = "use_x_forwarded_for"
+CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
+CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
+CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
+CONF_SSL_PROFILE: Final = "ssl_profile"
 
-DOMAIN = 'http'
+SSL_MODERN: Final = "modern"
+SSL_INTERMEDIATE: Final = "intermediate"
 
-CONF_API_PASSWORD = 'api_password'
-CONF_SERVER_HOST = 'server_host'
-CONF_SERVER_PORT = 'server_port'
-CONF_BASE_URL = 'base_url'
-CONF_SSL_CERTIFICATE = 'ssl_certificate'
-CONF_SSL_KEY = 'ssl_key'
-CONF_CORS_ORIGINS = 'cors_allowed_origins'
-CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
-CONF_TRUSTED_NETWORKS = 'trusted_networks'
-CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
-CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
+_LOGGER: Final = logging.getLogger(__name__)
 
-# TLS configuration follows the best-practice guidelines specified here:
-# https://wiki.mozilla.org/Security/Server_Side_TLS
-# Intermediate guidelines are followed.
-SSL_VERSION = ssl.PROTOCOL_SSLv23
-SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3
-if hasattr(ssl, 'OP_NO_COMPRESSION'):
-    SSL_OPTS |= ssl.OP_NO_COMPRESSION
-CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
-          "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
-          "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
-          "DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:" \
-          "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:" \
-          "ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:" \
-          "ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:" \
-          "ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:" \
-          "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:" \
-          "DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:" \
-          "ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:" \
-          "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:" \
-          "AES256-SHA:DES-CBC3-SHA:!DSS"
+DEFAULT_DEVELOPMENT: Final = "0"
+# Cast to be able to load custom cards.
+# My to be able to check url and version info.
+DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
+NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
-_LOGGER = logging.getLogger(__name__)
+MAX_CLIENT_SIZE: Final = 1024 ** 2 * 16
 
-DEFAULT_SERVER_HOST = '0.0.0.0'
-DEFAULT_DEVELOPMENT = '0'
-DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
+STORAGE_KEY: Final = DOMAIN
+STORAGE_VERSION: Final = 1
+SAVE_DELAY: Final = 180
 
-HTTP_SCHEMA = vol.Schema({
-    vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
-    vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
-    vol.Optional(CONF_BASE_URL): cv.string,
-    vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
-    vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
-    vol.Optional(CONF_CORS_ORIGINS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
-    vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
-        vol.All(cv.ensure_list, [ip_network]),
-    vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
-                 default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD): cv.positive_int,
-    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
-})
+HTTP_SCHEMA: Final = vol.All(
+    cv.deprecated(CONF_BASE_URL),
+    vol.Schema(
+        {
+            vol.Optional(CONF_SERVER_HOST): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
+            vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+            vol.Optional(CONF_BASE_URL): cv.string,
+            vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_KEY): cv.isfile,
+            vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
+            vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
+                cv.ensure_list, [ip_network]
+            ),
+            vol.Optional(
+                CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
+            ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
+            vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
+                [SSL_INTERMEDIATE, SSL_MODERN]
+            ),
+        }
+    ),
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: HTTP_SCHEMA,
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+class ConfData(TypedDict, total=False):
+    """Typed dict for config data."""
+
+    server_host: list[str]
+    server_port: int
+    base_url: str
+    ssl_certificate: str
+    ssl_peer_certificate: str
+    ssl_key: str
+    cors_allowed_origins: list[str]
+    use_x_forwarded_for: bool
+    trusted_proxies: list[str]
+    login_attempts_threshold: int
+    ip_ban_enabled: bool
+    ssl_profile: str
+
+
+@bind_hass
+async def async_get_last_config(hass: HomeAssistant) -> dict | None:
+    """Return the last known working config."""
+    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    return cast(Optional[dict], await store.async_load())
+
+
+class ApiConfig:
+    """Configuration settings for API server."""
+
+    def __init__(
+        self,
+        local_ip: str,
+        host: str,
+        port: int,
+        use_ssl: bool,
+    ) -> None:
+        """Initialize a new API config object."""
+        self.local_ip = local_ip
+        self.host = host
+        self.port = port
+        self.use_ssl = use_ssl
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
-    conf = config.get(DOMAIN)
+    conf: ConfData | None = config.get(DOMAIN)
 
     if conf is None:
-        conf = HTTP_SCHEMA({})
+        conf = cast(ConfData, HTTP_SCHEMA({}))
 
-    api_password = conf[CONF_API_PASSWORD]
-    server_host = conf[CONF_SERVER_HOST]
+    server_host = conf.get(CONF_SERVER_HOST)
     server_port = conf[CONF_SERVER_PORT]
-    ssl_certificate = conf[CONF_SSL_CERTIFICATE]
-    ssl_key = conf[CONF_SSL_KEY]
+    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
+    ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
+    ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
-    use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
-    trusted_networks = conf[CONF_TRUSTED_NETWORKS]
+    use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
+    trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
+    ssl_profile = conf[CONF_SSL_PROFILE]
 
-    if api_password is not None:
-        logging.getLogger('aiohttp.access').addFilter(
-            HideSensitiveDataFilter(api_password))
-
-    server = HomeAssistantWSGI(
+    server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
         server_port=server_port,
-        api_password=api_password,
         ssl_certificate=ssl_certificate,
+        ssl_peer_certificate=ssl_peer_certificate,
         ssl_key=ssl_key,
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
-        trusted_networks=trusted_networks,
+        trusted_proxies=trusted_proxies,
         login_threshold=login_threshold,
-        is_ban_enabled=is_ban_enabled
+        is_ban_enabled=is_ban_enabled,
+        ssl_profile=ssl_profile,
     )
 
-    @asyncio.coroutine
-    def stop_server(event):
+    async def stop_server(event: Event) -> None:
         """Stop the server."""
-        yield from server.stop()
+        await server.stop()
 
-    @asyncio.coroutine
-    def start_server(event):
+    async def start_server(*_: Any) -> None:
         """Start the server."""
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
-        yield from server.start()
+        with async_start_setup(hass, ["http"]):
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+            # We already checked it's not None.
+            assert conf is not None
+            await start_http_server_and_save_config(hass, dict(conf), server)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
+    async_when_setup_or_start(hass, "frontend", start_server)
 
     hass.http = server
 
-    host = conf.get(CONF_BASE_URL)
+    local_ip = await async_get_source_ip(hass)
 
-    if host:
-        port = None
-    elif server_host != DEFAULT_SERVER_HOST:
-        host = server_host
-        port = server_port
-    else:
-        host = hass_util.get_local_ip()
-        port = server_port
+    host = local_ip
+    if server_host is not None:
+        # Assume the first server host name provided as API host
+        host = server_host[0]
 
-    hass.config.api = rem.API(host, api_password, port,
-                              ssl_certificate is not None)
+    hass.config.api = ApiConfig(
+        local_ip, host, server_port, ssl_certificate is not None
+    )
 
     return True
 
 
-class HomeAssistantWSGI(object):
-    """WSGI server for Home Assistant."""
+class HomeAssistantHTTP:
+    """HTTP server for Home Assistant."""
 
-    def __init__(self, hass, api_password, ssl_certificate,
-                 ssl_key, server_host, server_port, cors_origins,
-                 use_x_forwarded_for, trusted_networks,
-                 login_threshold, is_ban_enabled):
-        """Initialize the WSGI Home Assistant server."""
-        middlewares = [auth_middleware, staticresource_middleware]
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        ssl_certificate: str | None,
+        ssl_peer_certificate: str | None,
+        ssl_key: str | None,
+        server_host: list[str] | None,
+        server_port: int,
+        cors_origins: list[str],
+        use_x_forwarded_for: bool,
+        trusted_proxies: list[str],
+        login_threshold: int,
+        is_ban_enabled: bool,
+        ssl_profile: str,
+    ) -> None:
+        """Initialize the HTTP Home Assistant server."""
+        app = self.app = web.Application(
+            middlewares=[], client_max_size=MAX_CLIENT_SIZE
+        )
+        app[KEY_HASS] = hass
+
+        # Order matters, security filters middle ware needs to go first,
+        # forwarded middleware needs to go second.
+        setup_security_filter(app)
+
+        async_setup_forwarded(app, use_x_forwarded_for, trusted_proxies)
+
+        setup_request_context(app, current_request)
 
         if is_ban_enabled:
-            middlewares.insert(0, ban_middleware)
+            setup_bans(hass, app, login_threshold)
 
-        self.app = web.Application(middlewares=middlewares)
-        self.app['hass'] = hass
-        self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
-        self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
-        self.app[KEY_BANS_ENABLED] = is_ban_enabled
-        self.app[KEY_LOGIN_THRESHOLD] = login_threshold
+        setup_auth(hass, app)
+
+        setup_cors(app, cors_origins)
 
         self.hass = hass
-        self.api_password = api_password
         self.ssl_certificate = ssl_certificate
+        self.ssl_peer_certificate = ssl_peer_certificate
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.trusted_proxies = trusted_proxies
+        self.is_ban_enabled = is_ban_enabled
+        self.ssl_profile = ssl_profile
         self._handler = None
-        self.server = None
+        self.runner: web.AppRunner | None = None
+        self.site: HomeAssistantTCPSite | None = None
 
-        if cors_origins:
-            import aiohttp_cors
-
-            self.cors = aiohttp_cors.setup(self.app, defaults={
-                host: aiohttp_cors.ResourceOptions(
-                    allow_headers=ALLOWED_CORS_HEADERS,
-                    allow_methods='*',
-                ) for host in cors_origins
-            })
-        else:
-            self.cors = None
-
-    def register_view(self, view):
+    def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
 
         The view argument must be a class that inherits from HomeAssistantView.
@@ -226,21 +266,23 @@ class HomeAssistantWSGI(object):
             # Instantiate the view, if needed
             view = view()
 
-        if not hasattr(view, 'url'):
+        if not hasattr(view, "url"):
             class_name = view.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "url"'.format(class_name)
-            )
+            raise AttributeError(f'{class_name} missing required attribute "url"')
 
-        if not hasattr(view, 'name'):
+        if not hasattr(view, "name"):
             class_name = view.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "name"'.format(class_name)
-            )
+            raise AttributeError(f'{class_name} missing required attribute "name"')
 
-        view.register(self.app.router)
+        view.register(self.app, self.app.router)
 
-    def register_redirect(self, url, redirect_to):
+    def register_redirect(
+        self,
+        url: str,
+        redirect_to: StrOrURL,
+        *,
+        redirect_exc: type[HTTPRedirection] = HTTPMovedPermanently,
+    ) -> None:
         """Register a redirect with the server.
 
         If given this must be either a string or callable. In case of a
@@ -249,241 +291,112 @@ class HomeAssistantWSGI(object):
         for the redirect, otherwise it has to be a string with placeholders in
         rule syntax.
         """
-        def redirect(request):
+
+        async def redirect(request: web.Request) -> web.StreamResponse:
             """Redirect to location."""
-            raise HTTPMovedPermanently(redirect_to)
+            # Should be instance of aiohttp.web_exceptions._HTTPMove.
+            raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app.router.add_route('GET', url, redirect)
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url, redirect)
+        )
 
-    def register_static_path(self, url_path, path, cache_headers=True):
+    def register_static_path(
+        self, url_path: str, path: str, cache_headers: bool = True
+    ) -> None:
         """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
             if cache_headers:
-                resource = CachingStaticResource
+                resource: CachingStaticResource | web.StaticResource = (
+                    CachingStaticResource(url_path, path)
+                )
             else:
-                resource = web.StaticResource
-            self.app.router.register_resource(resource(url_path, path))
+                resource = web.StaticResource(url_path, path)
+            self.app.router.register_resource(resource)
+            self.app["allow_configured_cors"](resource)
             return
 
-        if cache_headers:
-            @asyncio.coroutine
-            def serve_file(request):
-                """Serve file from disk."""
-                return CachingFileResponse(path)
-        else:
-            @asyncio.coroutine
-            def serve_file(request):
-                """Serve file from disk."""
-                return web.FileResponse(path)
+        async def serve_file(request: web.Request) -> web.FileResponse:
+            """Serve file from disk."""
+            if cache_headers:
+                return web.FileResponse(path, headers=CACHE_HEADERS)
+            return web.FileResponse(path)
 
-        # aiohttp supports regex matching for variables. Using that as temp
-        # to work around cache busting MD5.
-        # Turns something like /static/dev-panel.html into
-        # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
-        base, ext = os.path.splitext(url_path)
-        if ext:
-            base, file = base.rsplit('/', 1)
-            regex = r"{}(-[a-z0-9]{{32}}|){}".format(file, ext)
-            url_pattern = "{}/{{filename:{}}}".format(base, regex)
-        else:
-            url_pattern = url_path
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url_path, serve_file)
+        )
 
-        self.app.router.add_route('GET', url_pattern, serve_file)
-
-    @asyncio.coroutine
-    def start(self):
-        """Start the WSGI server."""
-        cors_added = set()
-        if self.cors is not None:
-            for route in list(self.app.router.routes()):
-                if hasattr(route, 'resource'):
-                    route = route.resource
-                if route in cors_added:
-                    continue
-                self.cors.add(route)
-                cors_added.add(route)
-
+    async def start(self) -> None:
+        """Start the aiohttp server."""
+        context: ssl.SSLContext | None
         if self.ssl_certificate:
             try:
-                context = ssl.SSLContext(SSL_VERSION)
-                context.options |= SSL_OPTS
-                context.set_ciphers(CIPHERS)
-                context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+                if self.ssl_profile == SSL_INTERMEDIATE:
+                    context = ssl_util.server_context_intermediate()
+                else:
+                    context = ssl_util.server_context_modern()
+                await self.hass.async_add_executor_job(
+                    context.load_cert_chain, self.ssl_certificate, self.ssl_key
+                )
             except OSError as error:
-                _LOGGER.error("Could not read SSL certificate from %s: %s",
-                              self.ssl_certificate, error)
-                context = None
+                _LOGGER.error(
+                    "Could not read SSL certificate from %s: %s",
+                    self.ssl_certificate,
+                    error,
+                )
                 return
+
+            if self.ssl_peer_certificate:
+                context.verify_mode = ssl.CERT_REQUIRED
+                await self.hass.async_add_executor_job(
+                    context.load_verify_locations, self.ssl_peer_certificate
+                )
+
         else:
             context = None
 
         # Aiohttp freezes apps after start so that no changes can be made.
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
-        # To work around this we now fake that we are frozen.
-        # A more appropriate fix would be to create a new app and
-        # re-register all redirects, views, static paths.
-        self.app._frozen = True  # pylint: disable=protected-access
-
-        self._handler = self.app.make_handler(loop=self.hass.loop)
-
-        try:
-            self.server = yield from self.hass.loop.create_server(
-                self._handler, self.server_host, self.server_port, ssl=context)
-        except OSError as error:
-            _LOGGER.error("Failed to create HTTP server at port %d: %s",
-                          self.server_port, error)
-
+        # To work around this we now prevent the router from getting frozen
         # pylint: disable=protected-access
-        self.app._middlewares = tuple(self.app._prepare_middleware())
-        self.app._frozen = False
+        self.app._router.freeze = lambda: None  # type: ignore[assignment]
 
-    @asyncio.coroutine
-    def stop(self):
-        """Stop the WSGI server."""
-        if self.server:
-            self.server.close()
-            yield from self.server.wait_closed()
-        yield from self.app.shutdown()
-        if self._handler:
-            yield from self._handler.shutdown(10)
-        yield from self.app.cleanup()
+        self.runner = web.AppRunner(self.app)
+        await self.runner.setup()
 
+        self.site = HomeAssistantTCPSite(
+            self.runner, self.server_host, self.server_port, ssl_context=context
+        )
+        try:
+            await self.site.start()
+        except OSError as error:
+            _LOGGER.error(
+                "Failed to create HTTP server at port %d: %s", self.server_port, error
+            )
 
-class HomeAssistantView(object):
-    """Base view for all views."""
+        _LOGGER.info("Now listening on port %d", self.server_port)
 
-    url = None
-    extra_urls = []
-    requires_auth = True  # Views inheriting from this class can override this
-
-    # pylint: disable=no-self-use
-    def json(self, result, status_code=200, headers=None):
-        """Return a JSON response."""
-        msg = json.dumps(
-            result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
-        return web.Response(
-            body=msg, content_type=CONTENT_TYPE_JSON, status=status_code,
-            headers=headers)
-
-    def json_message(self, message, status_code=200, message_code=None,
-                     headers=None):
-        """Return a JSON message response."""
-        data = {'message': message}
-        if message_code is not None:
-            data['code'] = message_code
-        return self.json(data, status_code, headers=headers)
-
-    @asyncio.coroutine
-    # pylint: disable=no-self-use
-    def file(self, request, fil):
-        """Return a file."""
-        assert isinstance(fil, str), 'only string paths allowed'
-        return web.FileResponse(fil)
-
-    def register(self, router):
-        """Register the view with a router."""
-        assert self.url is not None, 'No url set for view'
-        urls = [self.url] + self.extra_urls
-
-        for method in ('get', 'post', 'delete', 'put'):
-            handler = getattr(self, method, None)
-
-            if not handler:
-                continue
-
-            handler = request_handler_factory(self, handler)
-
-            for url in urls:
-                router.add_route(method, url, handler)
-
-        # aiohttp_cors does not work with class based views
-        # self.app.router.add_route('*', self.url, self, name=self.name)
-
-        # for url in self.extra_urls:
-        #     self.app.router.add_route('*', url, self)
+    async def stop(self) -> None:
+        """Stop the aiohttp server."""
+        if self.site is not None:
+            await self.site.stop()
+        if self.runner is not None:
+            await self.runner.cleanup()
 
 
-def request_handler_factory(view, handler):
-    """Wrap the handler classes."""
-    assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
-        "Handler should be a coroutine or a callback."
+async def start_http_server_and_save_config(
+    hass: HomeAssistant, conf: dict, server: HomeAssistantHTTP
+) -> None:
+    """Startup the http server and save the config."""
+    await server.start()
 
-    @asyncio.coroutine
-    def handle(request):
-        """Handle incoming request."""
-        if not request.app['hass'].is_running:
-            return web.Response(status=503)
+    # If we are set up successful, we store the HTTP settings for safe mode.
+    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
-        remote_addr = get_real_ip(request)
-        authenticated = request.get(KEY_AUTHENTICATED, False)
+    if CONF_TRUSTED_PROXIES in conf:
+        conf[CONF_TRUSTED_PROXIES] = [
+            str(ip.network_address) for ip in conf[CONF_TRUSTED_PROXIES]
+        ]
 
-        if view.requires_auth and not authenticated:
-            raise HTTPUnauthorized()
-
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, remote_addr, authenticated)
-
-        result = handler(request, **request.match_info)
-
-        if asyncio.iscoroutine(result):
-            result = yield from result
-
-        if isinstance(result, web.StreamResponse):
-            # The method handler returned a ready-made Response, how nice of it
-            return result
-
-        status_code = 200
-
-        if isinstance(result, tuple):
-            result, status_code = result
-
-        if isinstance(result, str):
-            result = result.encode('utf-8')
-        elif result is None:
-            result = b''
-        elif not isinstance(result, bytes):
-            assert False, ('Result should be None, string, bytes or Response. '
-                           'Got: {}').format(result)
-
-        return web.Response(body=result, status=status_code)
-
-    return handle
-
-
-class RequestDataValidator:
-    """Decorator that will validate the incoming data.
-
-    Takes in a voluptuous schema and adds 'post_data' as
-    keyword argument to the function call.
-
-    Will return a 400 if no JSON provided or doesn't match schema.
-    """
-
-    def __init__(self, schema):
-        """Initialize the decorator."""
-        self._schema = schema
-
-    def __call__(self, method):
-        """Decorate a function."""
-        @asyncio.coroutine
-        @wraps(method)
-        def wrapper(view, request, *args, **kwargs):
-            """Wrap a request handler with data validation."""
-            try:
-                data = yield from request.json()
-            except ValueError:
-                _LOGGER.error('Invalid JSON received.')
-                return view.json_message('Invalid JSON.', 400)
-
-            try:
-                kwargs['data'] = self._schema(data)
-            except vol.Invalid as err:
-                _LOGGER.error('Data does not match schema: %s', err)
-                return view.json_message(
-                    'Message format incorrect: {}'.format(err), 400)
-
-            result = yield from method(view, request, *args, **kwargs)
-            return result
-
-        return wrapper
+    store.async_delay_save(lambda: conf, SAVE_DELAY)

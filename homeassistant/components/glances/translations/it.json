@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "wrong_version": "Versione non supportata (solo 2 o 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome",
+                    "password": "Password",
+                    "port": "Porta",
+                    "ssl": "Utilizza un certificato SSL",
+                    "username": "Nome utente",
+                    "verify_ssl": "Verifica il certificato SSL",
+                    "version": "Glances API Version (2 o 3)"
+                },
+                "title": "Configura Glances"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Frequenza di aggiornamento"
+                },
+                "description": "Configura le opzioni per Glances"
+            }
+        }
+    }
+}

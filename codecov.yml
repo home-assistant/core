@@ -1,0 +1,33 @@
+codecov:
+  branch: dev
+coverage:
+  status:
+    project:
+      default:
+        target: 90
+        threshold: 0.09
+      config-flows:
+        target: auto
+        threshold: 1
+        paths:
+          - homeassistant/components/*/config_flow.py
+    patch:
+      default:
+        target: auto
+      config-flows:
+        target: 100
+        threshold: 0
+        paths:
+          - homeassistant/components/*/config_flow.py
+comment: false
+
+# To make partial tests possible,
+# we need to carry forward.
+flag_management:
+  default_rules:
+    carryforward: false
+  individual_flags:
+    - name: full-suite
+      paths:
+        - ".*"
+      carryforward: true

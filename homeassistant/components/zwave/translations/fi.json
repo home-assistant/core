@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "usb_path": "USB-polku"
+                }
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Kuollut",
+            "initializing": "Alustaa",
+            "ready": "Valmis",
+            "sleeping": "Lepotilassa"
+        },
+        "query_stage": {
+            "dead": "Kuollut ({query_stage})",
+            "initializing": "Alustaa ( {query_stage} )"
+        }
+    }
+}

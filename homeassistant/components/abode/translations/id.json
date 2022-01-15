@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_mfa_code": "Kode MFA tidak valid"
+        },
+        "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "Kode MFA (6 digit)"
+                },
+                "title": "Masukkan kode MFA Anda untuk Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "title": "Masukkan informasi masuk Abode Anda"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "title": "Masukkan informasi masuk Abode Anda"
+            }
+        }
+    }
+}

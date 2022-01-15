@@ -1,0 +1,8 @@
+{
+  "domain": "rainbird",
+  "name": "Rain Bird",
+  "documentation": "https://www.home-assistant.io/integrations/rainbird",
+  "requirements": ["pyrainbird==0.4.3"],
+  "codeowners": ["@konikvranik"],
+  "iot_class": "local_polling"
+}

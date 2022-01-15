@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "api_version": "Verze API",
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka",
+                    "name": "Jm\u00e9no"
+                }
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

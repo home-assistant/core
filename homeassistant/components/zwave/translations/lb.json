@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
+        },
+        "error": {
+            "option_error": "Z-Wave Validatioun net g\u00eblteg. Ass de Pad zum USB Stick richteg?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Netzwierk Schl\u00ebssel (eidel loossen fir een automatesch z'erstellen)",
+                    "usb_path": "Pad zum USB Apparat"
+                },
+                "description": "Lies op https://www.home-assistant.io/docs/z-wave/installation/ fir weider Informatiounen iwwert d'Konfiguratioun vun den Variabelen"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Doud",
+            "initializing": "Initialis\u00e9iert",
+            "ready": "Bereet",
+            "sleeping": "Schl\u00e9ift"
+        },
+        "query_stage": {
+            "dead": "Doud",
+            "initializing": "Initialis\u00e9iert"
+        }
+    }
+}

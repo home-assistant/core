@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "one": "\u00dcres",
+            "other": "\u00dcres"
+        }
+    }
+}

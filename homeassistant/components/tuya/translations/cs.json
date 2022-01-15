@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "flow_title": "Konfigurace Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Zem\u011b",
+                    "password": "Heslo",
+                    "platform": "Aplikace, ve kter\u00e9 m\u00e1te zaregistrovan\u00fd \u00fa\u010det",
+                    "region": "Region",
+                    "username": "\u00da\u010det"
+                },
+                "description": "Zadejte sv\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje k Tuya.",
+                "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "error": {
+            "dev_multi_type": "V\u00edce vybran\u00fdch za\u0159\u00edzen\u00ed k nastaven\u00ed mus\u00ed b\u00fdt stejn\u00e9ho typu",
+            "dev_not_config": "Typ za\u0159\u00edzen\u00ed nelze nastavit",
+            "dev_not_found": "Za\u0159\u00edzen\u00ed nenalezeno"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Rozsah jasu pou\u017e\u00edvan\u00fd za\u0159\u00edzen\u00edm",
+                    "max_kelvin": "Maxim\u00e1ln\u00ed podporovan\u00e1 teplota barev v kelvinech",
+                    "max_temp": "Maxim\u00e1ln\u00ed c\u00edlov\u00e1 teplota (pou\u017eijte min a max = 0 jako v\u00fdchoz\u00ed)",
+                    "min_kelvin": "Maxim\u00e1ln\u00ed podporovan\u00e1 teplota barev v kelvinech",
+                    "min_temp": "Minim\u00e1ln\u00ed c\u00edlov\u00e1 teplota (pou\u017eijte min a max = 0 jako v\u00fdchoz\u00ed)",
+                    "support_color": "Vynutit podporu barev",
+                    "tuya_max_coltemp": "Maxim\u00e1ln\u00ed teplota barev nahl\u00e1\u0161en\u00e1 za\u0159\u00edzen\u00edm",
+                    "unit_of_measurement": "Jednotka teploty pou\u017e\u00edvan\u00e1 za\u0159\u00edzen\u00edm"
+                },
+                "title": "Nastavte za\u0159\u00edzen\u00ed Tuya"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Interval objevov\u00e1n\u00ed za\u0159\u00edzen\u00ed v sekund\u00e1ch",
+                    "list_devices": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e1 chcete nastavit, nebo ponechte pr\u00e1zdn\u00e9, abyste konfiguraci ulo\u017eili",
+                    "query_device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 bude pou\u017e\u00edvat metodu dotaz\u016f pro rychlej\u0161\u00ed aktualizaci stavu",
+                    "query_interval": "Interval dotazov\u00e1n\u00ed za\u0159\u00edzen\u00ed v sekund\u00e1ch"
+                },
+                "description": "Nenastavujte intervalu dotazov\u00e1n\u00ed p\u0159\u00edli\u0161 n\u00edzk\u00e9 hodnoty, jinak se dotazov\u00e1n\u00ed nezda\u0159\u00ed a bude generovat chybov\u00e9 zpr\u00e1vy do logu",
+                "title": "Nastavte mo\u017enosti Tuya"
+            }
+        }
+    }
+}

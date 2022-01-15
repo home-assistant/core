@@ -1,0 +1,4 @@
+sensor:
+  - platform: filesize
+    file_paths:
+      - "/dev/null"

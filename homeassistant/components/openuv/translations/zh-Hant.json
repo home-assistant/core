@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "invalid_api_key": "API \u91d1\u9470\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u91d1\u9470",
+                    "elevation": "\u6d77\u62d4",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6"
+                },
+                "title": "\u586b\u5beb\u8cc7\u8a0a"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "\u958b\u59cb\u4fdd\u8b77\u7a97\u53e3\u4e4b\u7d2b\u5916\u7dda\u6307\u6578",
+                    "to_window": "\u7d50\u675f\u4fdd\u8b77\u7a97\u53e3\u4e4b\u7d2b\u5916\u7dda\u6307\u6578"
+                },
+                "title": "\u8a2d\u5b9a OpenUV"
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "skybeacon",
+  "name": "Skybeacon",
+  "documentation": "https://www.home-assistant.io/integrations/skybeacon",
+  "requirements": ["pygatt[GATTTOOL]==4.0.5"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

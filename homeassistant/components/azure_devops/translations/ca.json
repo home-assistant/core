@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "project_error": "No s'ha pogut obtenir la informaci\u00f3 del projecte."
+        },
+        "flow_title": "{project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Token d'Acc\u00e9s Personal (PAT)"
+                },
+                "description": "L'autenticaci\u00f3 de {project_url} ha fallat. Si us plau, introdueix les teves credencials actuals.",
+                "title": "Reautenticaci\u00f3"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organitzaci\u00f3",
+                    "personal_access_token": "Token d'Acc\u00e9s Personal (PAT)",
+                    "project": "Projecte"
+                },
+                "description": "Configura una inst\u00e0ncia d'Azure DevOps per accedir al teu projecte. El token d'acc\u00e9s personal nom\u00e9s \u00e9s necessari per a projectes privats.",
+                "title": "Afegeix un projecte Azure DevOps"
+            }
+        }
+    }
+}

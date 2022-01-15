@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "error": {
+            "invalid_zip_code": "Postleitzahl ist ung\u00fcltig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Postleitzahl"
+                },
+                "description": "Trage eine US-amerikanische oder kanadische Postleitzahl ein.",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

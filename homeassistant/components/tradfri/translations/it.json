@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso"
+        },
+        "error": {
+            "cannot_authenticate": "Impossibile eseguire l'autenticazione, il gateway \u00e8 associato a un altro server come ad esempio Homekit?",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_key": "Impossibile registrarsi con la chiave fornita. Se questo continua a succedere, prova a riavviare il gateway.",
+            "timeout": "Tempo scaduto per la validazione del codice."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Host",
+                    "security_code": "Codice di sicurezza"
+                },
+                "description": "Puoi trovare il codice di sicurezza sul retro del tuo gateway.",
+                "title": "Inserisci il codice di sicurezza"
+            }
+        }
+    }
+}

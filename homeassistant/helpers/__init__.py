@@ -1,35 +1,33 @@
 """Helper methods for components within Home Assistant."""
-import re
+from __future__ import annotations
 
-from typing import Any, Iterable, Tuple, Sequence, Dict
+from collections.abc import Iterable, Sequence
+import re
+from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_PLATFORM
 
-# Typing Imports and TypeAlias
-# pylint: disable=using-constant-test,unused-import,wrong-import-order
-if False:
-    from logging import Logger  # NOQA
-
-# pylint: disable=invalid-name
-ConfigType = Dict[str, Any]
+if TYPE_CHECKING:
+    from .typing import ConfigType
 
 
-# pylint: disable=invalid-sequence-index
-def config_per_platform(config: ConfigType,
-                        domain: str) -> Iterable[Tuple[Any, Any]]:
+def config_per_platform(
+    config: ConfigType, domain: str
+) -> Iterable[tuple[str | None, ConfigType]]:
     """Break a component config into different platforms.
 
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
     Async friendly.
     """
     for config_key in extract_domain_configs(config, domain):
-        platform_config = config[config_key]
-
-        if not platform_config:
+        if not (platform_config := config[config_key]):
             continue
-        elif not isinstance(platform_config, list):
+
+        if not isinstance(platform_config, list):
             platform_config = [platform_config]
 
+        item: ConfigType
+        platform: str | None
         for item in platform_config:
             try:
                 platform = item.get(CONF_PLATFORM)
@@ -44,5 +42,5 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 
     Async friendly.
     """
-    pattern = re.compile(r'^{}(| .+)$'.format(domain))
+    pattern = re.compile(fr"^{domain}(| .+)$")
     return [key for key in config.keys() if pattern.match(key)]

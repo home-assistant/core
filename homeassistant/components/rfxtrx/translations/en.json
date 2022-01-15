@@ -1,0 +1,84 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Already configured. Only a single configuration possible.",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Select connection address"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Select device"
+                },
+                "title": "Device"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB Device Path"
+                },
+                "title": "Path"
+            },
+            "user": {
+                "data": {
+                    "type": "Connection type"
+                },
+                "title": "Select connection type"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Send command: {subtype}",
+            "send_status": "Send status update: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Received command: {subtype}",
+            "status": "Received status: {subtype}"
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "Device is already configured",
+            "invalid_event_code": "Invalid event code",
+            "invalid_input_2262_off": "Invalid input for command off",
+            "invalid_input_2262_on": "Invalid input for command on",
+            "invalid_input_off_delay": "Invalid input for off delay",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Enable automatic add",
+                    "debug": "Enable debugging",
+                    "device": "Select device to configure",
+                    "event_code": "Enter event code to add",
+                    "remove_device": "Select device to delete"
+                },
+                "title": "Rfxtrx Options"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Data bits value for command off",
+                    "command_on": "Data bits value for command on",
+                    "data_bit": "Number of data bits",
+                    "fire_event": "Enable device event",
+                    "off_delay": "Off delay",
+                    "off_delay_enabled": "Enable off delay",
+                    "replace_device": "Select device to replace",
+                    "signal_repetitions": "Number of signal repetitions",
+                    "venetian_blind_mode": "Venetian blind mode"
+                },
+                "title": "Configure device options"
+            }
+        }
+    }
+}

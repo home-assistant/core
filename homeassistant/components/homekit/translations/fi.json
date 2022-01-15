@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "pairing": {
+                "title": "Parita HomeKit-silta"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "title": "Lis\u00e4asetukset"
+            }
+        }
+    }
+}

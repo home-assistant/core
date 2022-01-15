@@ -1,0 +1,37 @@
+{
+    "lastUpdatedTimestamp": "20210123143809",
+    "latitude": 1.234567,
+    "longitude": -2.345678,
+    "positionTimestamp": "20210123143808",
+    "fuelRemainingPercent": 87.0,
+    "fuelDistanceRemainingKm": 380.8,
+    "odometerKm": 2795.8,
+    "doors": {
+        "driverDoorOpen": false,
+        "passengerDoorOpen": false,
+        "rearLeftDoorOpen": false,
+        "rearRightDoorOpen": false,
+        "trunkOpen": false,
+        "hoodOpen": false,
+        "fuelLidOpen": false
+    },
+    "doorLocks": {
+        "driverDoorUnlocked": false,
+        "passengerDoorUnlocked": false,
+        "rearLeftDoorUnlocked": false,
+        "rearRightDoorUnlocked": false
+    },
+    "windows": {
+        "driverWindowOpen": false,
+        "passengerWindowOpen": false,
+        "rearLeftWindowOpen": false,
+        "rearRightWindowOpen": false
+    },
+    "hazardLightsOn": false,
+    "tirePressure": {
+        "frontLeftTirePressurePsi": 35.0,
+        "frontRightTirePressurePsi": 35.0,
+        "rearLeftTirePressurePsi": 33.0,
+        "rearRightTirePressurePsi": 33.0
+    }
+}

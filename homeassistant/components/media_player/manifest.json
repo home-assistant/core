@@ -1,0 +1,8 @@
+{
+  "domain": "media_player",
+  "name": "Media Player",
+  "documentation": "https://www.home-assistant.io/integrations/media_player",
+  "dependencies": ["http"],
+  "codeowners": [],
+  "quality_scale": "internal"
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "rss_feed_template",
+  "name": "RSS Feed Template",
+  "documentation": "https://www.home-assistant.io/integrations/rss_feed_template",
+  "dependencies": ["http"],
+  "codeowners": [],
+  "quality_scale": "internal",
+  "iot_class": "local_push"
+}

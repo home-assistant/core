@@ -1,0 +1,9 @@
+{
+  "domain": "geofency",
+  "name": "Geofency",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/geofency",
+  "dependencies": ["webhook"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
+}

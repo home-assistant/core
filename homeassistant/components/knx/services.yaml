@@ -1,0 +1,108 @@
+send:
+  name: "Send to KNX bus"
+  description: "Send arbitrary data directly to the KNX bus."
+  fields:
+    address:
+      name: "Group address"
+      description: "Group address(es) to write to. Lists will send to multiple group addresses successively."
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+    payload:
+      name: "Payload"
+      description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
+      required: true
+      example: "[0, 4]"
+      selector:
+        object:
+    type:
+      name: "Value type"
+      description: "If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      required: false
+      example: "temperature"
+      selector:
+        text:
+    response:
+      name: "Send as Response"
+      description: "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+      default: false
+      selector:
+        boolean:
+read:
+  name: "Read from KNX bus"
+  description: "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities."
+  fields:
+    address:
+      name: "Group address"
+      description: "Group address(es) to send read request to. Lists will read multiple group addresses."
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+event_register:
+  name: "Register knx_event"
+  description: "Add or remove group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
+  fields:
+    address:
+      name: "Group address"
+      description: "Group address(es) that shall be added or removed. Lists are allowed."
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+    type:
+      name: "Value type"
+      description: "If set, the payload will be decoded as given DPT in the event data `value` key. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      required: false
+      example: "2byte_float"
+      selector:
+        text:
+    remove:
+      name: "Remove event registration"
+      description: "If `True` the group address(es) will be removed."
+      default: false
+      selector:
+        boolean:
+exposure_register:
+  name: "Expose to KNX bus"
+  description: "Add or remove exposures to KNX bus. Only exposures added with this service can be removed."
+  fields:
+    address:
+      name: "Group address"
+      description: "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered."
+      required: true
+      example: "1/1/0"
+      selector:
+        text:
+    type:
+      name: "Value type"
+      description: "Telegrams will be encoded as given DPT. 'binary' and all Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)"
+      required: true
+      example: "percentU8"
+      selector:
+        text:
+    entity_id:
+      name: "Entity"
+      description: "Entity id whose state or attribute shall be exposed."
+      required: true
+      selector:
+        entity:
+    attribute:
+      name: "Entity attribute"
+      description: "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
+      example: "brightness"
+      selector:
+        text:
+    default:
+      name: "Default value"
+      description: "Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
+      example: "0"
+      selector:
+        object:
+    remove:
+      name: "Remove exposure"
+      description: "If `True` the exposure will be removed. Only `address` is required for removal."
+      default: false
+      selector:
+        boolean:

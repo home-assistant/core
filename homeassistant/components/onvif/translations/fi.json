@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Salasana",
+                    "username": "K\u00e4ytt\u00e4j\u00e4tunnus"
+                },
+                "title": "M\u00e4\u00e4rit\u00e4 todennus"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Luo kamerakohde"
+                },
+                "title": "M\u00e4\u00e4rit\u00e4 profiilit"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Palvelin",
+                    "port": "Portti"
+                }
+            }
+        }
+    }
+}

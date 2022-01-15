@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Allerede konfigureret"
+        },
+        "create_entry": {
+            "default": "Se [Neato-dokumentation]({docs_url})."
+        }
+    }
+}

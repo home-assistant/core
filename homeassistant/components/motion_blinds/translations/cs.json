@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "flow_title": "Motion Blinds",
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API"
+                }
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP adresa"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "host": "IP adresa"
+                },
+                "title": "Motion Blinds"
+            }
+        }
+    }
+}

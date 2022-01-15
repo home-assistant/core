@@ -1,0 +1,85 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Aus",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatisch",
+            "1": "Aus",
+            "2": "An"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Geringe Empfindlichkeit",
+            "1": "Hohe Empfindlichkeit"
+        },
+        "tuya__fingerbot_mode": {
+            "click": "Dr\u00fccken",
+            "switch": "Schalter"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Energiesparmodus",
+            "1": "Kontinuierlicher Arbeitsmodus"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Gl\u00fchlampe",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Aus",
+            "pos": "Schalterposition anzeigen",
+            "relay": "Ein-/Ausschaltzustand anzeigen"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Geringe Empfindlichkeit",
+            "1": "Mittlere Empfindlichkeit",
+            "2": "Hohe Empfindlichkeit"
+        },
+        "tuya__record_mode": {
+            "1": "Nur Ereignisse aufzeichnen",
+            "2": "Kontinuierliche Aufnahme"
+        },
+        "tuya__relay_status": {
+            "last": "Letzten Zustand merken",
+            "memory": "Letzten Zustand merken",
+            "off": "Aus",
+            "on": "An",
+            "power_off": "Aus",
+            "power_on": "An"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Geschlossen",
+            "high": "Hoch",
+            "low": "Niedrig",
+            "middle": "Mittel"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Gro\u00df",
+            "middle": "Mittel",
+            "small": "Klein"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Bogen",
+            "chargego": "Zur\u00fcck zur Dockingstation",
+            "left_bow": "Bogen links",
+            "left_spiral": "Spirale links",
+            "mop": "Mopp",
+            "part": "Teil",
+            "partial_bow": "Bogen Teilweise",
+            "pick_zone": "Zone ausw\u00e4hlen",
+            "point": "Punkt",
+            "pose": "Pose",
+            "random": "Zuf\u00e4llig",
+            "right_bow": "Bogen rechts",
+            "right_spiral": "Spirale rechts",
+            "single": "Einzeln",
+            "smart": "Smart",
+            "spiral": "Spirale",
+            "standby": "Standby",
+            "wall_follow": "Wand folgen",
+            "zone": "Zone"
+        }
+    }
+}

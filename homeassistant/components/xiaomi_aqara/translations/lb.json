@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen.",
+            "not_xiaomi_aqara": "Keng Xiaomi Aqara Gateway, entdeckten Apparat passt net zu bekannte Gateways"
+        },
+        "error": {
+            "discovery_error": "Feeler beim entdecken vun enger Xiaomi Aqara Gateway, prob\u00e9ier d'IP vum Apparat op deem Home Assistant leeft als Interface ze benotzen",
+            "invalid_host": "Ong\u00ebltege Numm oder IP Adress, kuck https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Ong\u00ebltege Netzwierk Interface",
+            "invalid_key": "Ong\u00ebltegen Gateway Schl\u00ebssel",
+            "invalid_mac": "Ong\u00eblteg Mac Adresse"
+        },
+        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP Adresse"
+                },
+                "description": "Setup nach emol ausf\u00e9ieren fir eng zous\u00e4tzlech Gateway dob\u00e4i ze setzen",
+                "title": "Xiaomi Aqara Gateway auswielen mat der sech soll verbonne ginn"
+            },
+            "settings": {
+                "data": {
+                    "key": "Schl\u00ebssel vun denger Gateway",
+                    "name": "Numm vum Gateway"
+                },
+                "description": "De Schl\u00ebssel (Passwuert) kann iwwert de folgenden Tutorial ausgelies ginn:  https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Falls kee Schl\u00ebssel uginn ass sinn n\u00ebmmen Sensoren accessibel.",
+                "title": "Xiaomi Aqara Gateway, optionell Astellungen"
+            },
+            "user": {
+                "data": {
+                    "host": "IP Adress (Optionell)",
+                    "interface": "Netzwierk Interface dee soll benotzt ginn",
+                    "mac": "Mac Adress (Optionell)"
+                },
+                "description": "Mat denger Xiaomi Aqara Gateway verbannen,  falls keng IP oder MAC Adress  uginn ass g\u00ebtt auto-discovery benotzt",
+                "title": "Xiaomi Aqara Gateway"
+            }
+        }
+    }
+}

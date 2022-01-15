@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ra\u010dun je \u017ee nastavljen"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "validation": {
+                "data": {
+                    "code": "Koda za preverjanje"
+                },
+                "description": "Preverite svoj {login_method} ({username}) in spodaj vnesite verifikacijsko kodo",
+                "title": "Dvofaktorska avtentikacija"
+            }
+        }
+    }
+}

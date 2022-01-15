@@ -1,0 +1,10 @@
+{
+    "state": {
+        "ambee__risk": {
+            "high": "Alt",
+            "low": "Baix",
+            "moderate": "Moderat",
+            "very high": "Molt alt"
+        }
+    }
+}

@@ -1,0 +1,83 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "login_error": "P\u00e5loggingsfeil ( {code} ): {msg}"
+        },
+        "flow_title": "Tuya konfigurasjon",
+        "step": {
+            "login": {
+                "data": {
+                    "access_id": "Tilgangs -ID",
+                    "access_secret": "Tilgangshemmelighet",
+                    "country_code": "Landskode",
+                    "endpoint": "Tilgjengelighetssone",
+                    "password": "Passord",
+                    "tuya_app_type": "Mobilapp",
+                    "username": "Konto"
+                },
+                "description": "Skriv inn Tuya-legitimasjonen din",
+                "title": "Tuya"
+            },
+            "user": {
+                "data": {
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Land",
+                    "password": "Passord",
+                    "platform": "Appen der kontoen din er registrert",
+                    "region": "Region",
+                    "tuya_project_type": "Tuya -skyprosjekttype",
+                    "username": "Account"
+                },
+                "description": "Skriv inn Tuya -legitimasjonen din",
+                "title": "Tuya Integrasjon"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "error": {
+            "dev_multi_type": "Flere valgte enheter som skal konfigureres, m\u00e5 v\u00e6re av samme type",
+            "dev_not_config": "Enhetstype kan ikke konfigureres",
+            "dev_not_found": "Finner ikke enheten"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Lysstyrkeomr\u00e5de som brukes av enheten",
+                    "curr_temp_divider": "N\u00e5v\u00e6rende temperaturverdi (0 = bruk standard)",
+                    "max_kelvin": "Maks fargetemperatur st\u00f8ttet i kelvin",
+                    "max_temp": "Maks m\u00e5ltemperatur (bruk min og maks = 0 for standard)",
+                    "min_kelvin": "Min fargetemperatur st\u00f8ttet i kelvin",
+                    "min_temp": "Min m\u00e5ltemperatur (bruk min og maks = 0 for standard)",
+                    "set_temp_divided": "Bruk delt temperaturverdi for innstilt temperaturkommando",
+                    "support_color": "Tving fargest\u00f8tte",
+                    "temp_divider": "Deler temperaturverdier (0 = bruk standard)",
+                    "temp_step_override": "Trinn for m\u00e5ltemperatur",
+                    "tuya_max_coltemp": "Maks fargetemperatur rapportert av enheten",
+                    "unit_of_measurement": "Temperaturenhet som brukes av enheten"
+                },
+                "description": "Konfigurer alternativer for \u00e5 justere vist informasjon for {device_type} device ` {device_name} `",
+                "title": "Konfigurere Tuya-enhet"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Avsp\u00f8rringsintervall for discovery-enheten i l\u00f8pet av sekunder",
+                    "list_devices": "Velg enhetene du vil konfigurere, eller la de v\u00e6re tomme for \u00e5 lagre konfigurasjonen",
+                    "query_device": "Velg enhet som skal bruke sp\u00f8rringsmetode for raskere statusoppdatering",
+                    "query_interval": "Sp\u00f8rringsintervall for intervall i sekunder"
+                },
+                "description": "Ikke angi pollingsintervallverdiene for lave, ellers vil ikke anropene generere feilmelding i loggen",
+                "title": "Konfigurer Tuya-alternativer"
+            }
+        }
+    }
+}

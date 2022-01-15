@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "auth": {
+        "description": "To link your TelldusLive account:\n 1. Click the link below\n 2. Login to Telldus Live\n 3. Authorize **{app_name}** (click **Yes**).\n 4. Come back here and click **SUBMIT**.\n\n [Link TelldusLive account]({auth_url})",
+        "title": "Authenticate against TelldusLive"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "title": "Pick endpoint."
+      }
+    }
+  }
+}

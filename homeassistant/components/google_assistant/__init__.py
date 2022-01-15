@@ -1,107 +1,126 @@
-"""
-Support for Actions on Google Assistant Smart Home Control.
+"""Support for Actions on Google Assistant Smart Home Control."""
+from __future__ import annotations
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/google_assistant/
-"""
-import asyncio
 import logging
-
-import aiohttp
-import async_timeout
 
 import voluptuous as vol
 
-# Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
-from homeassistant.core import HomeAssistant  # NOQA
-from typing import Dict, Any  # NOQA
-
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.loader import bind_hass
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    DOMAIN, CONF_PROJECT_ID, CONF_CLIENT_ID, CONF_ACCESS_TOKEN,
-    CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS,
-    DEFAULT_EXPOSED_DOMAINS, CONF_AGENT_USER_ID, CONF_API_KEY,
-    SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL, CONF_ENTITY_CONFIG,
-    CONF_EXPOSE, CONF_ALIASES
+    CONF_ALIASES,
+    CONF_CLIENT_EMAIL,
+    CONF_ENTITY_CONFIG,
+    CONF_EXPOSE,
+    CONF_EXPOSE_BY_DEFAULT,
+    CONF_EXPOSED_DOMAINS,
+    CONF_PRIVATE_KEY,
+    CONF_PROJECT_ID,
+    CONF_REPORT_STATE,
+    CONF_ROOM_HINT,
+    CONF_SECURE_DEVICES_PIN,
+    CONF_SERVICE_ACCOUNT,
+    DEFAULT_EXPOSE_BY_DEFAULT,
+    DEFAULT_EXPOSED_DOMAINS,
+    DOMAIN,
+    SERVICE_REQUEST_SYNC,
 )
-from .auth import GoogleAssistantAuthView
-from .http import async_register_http
-from .smart_home import MAPPING_COMPONENT
+from .const import EVENT_QUERY_RECEIVED  # noqa: F401
+from .http import GoogleAssistantView, GoogleConfig
+
+from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
+CONF_ALLOW_UNLOCK = "allow_unlock"
 
-DEFAULT_AGENT_USER_ID = 'home-assistant'
+ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
+        vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ROOM_HINT): cv.string,
+    }
+)
 
-ENTITY_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TYPE): vol.In(MAPPING_COMPONENT),
-    vol.Optional(CONF_EXPOSE): cv.boolean,
-    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
-})
+GOOGLE_SERVICE_ACCOUNT = vol.Schema(
+    {
+        vol.Required(CONF_PRIVATE_KEY): cv.string,
+        vol.Required(CONF_CLIENT_EMAIL): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+def _check_report_state(data):
+    if data[CONF_REPORT_STATE] and CONF_SERVICE_ACCOUNT not in data:
+        raise vol.Invalid("If report state is enabled, a service account must exist")
+    return data
+
+
+GOOGLE_ASSISTANT_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_PROJECT_ID): cv.string,
+            vol.Optional(
+                CONF_EXPOSE_BY_DEFAULT, default=DEFAULT_EXPOSE_BY_DEFAULT
+            ): cv.boolean,
+            vol.Optional(
+                CONF_EXPOSED_DOMAINS, default=DEFAULT_EXPOSED_DOMAINS
+            ): cv.ensure_list,
+            vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
+            # str on purpose, makes sure it is configured correctly.
+            vol.Optional(CONF_SECURE_DEVICES_PIN): str,
+            vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
+            vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
+            # deprecated configuration options
+            vol.Remove(CONF_ALLOW_UNLOCK): cv.boolean,
+            vol.Remove(CONF_API_KEY): cv.string,
+        },
+        extra=vol.PREVENT_EXTRA,
+    ),
+    _check_report_state,
+)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: {
-            vol.Required(CONF_PROJECT_ID): cv.string,
-            vol.Required(CONF_CLIENT_ID): cv.string,
-            vol.Required(CONF_ACCESS_TOKEN): cv.string,
-            vol.Optional(CONF_EXPOSE_BY_DEFAULT,
-                         default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
-            vol.Optional(CONF_EXPOSED_DOMAINS,
-                         default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
-            vol.Optional(CONF_AGENT_USER_ID,
-                         default=DEFAULT_AGENT_USER_ID): cv.string,
-            vol.Optional(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA}
-        }
-    },
-    extra=vol.ALLOW_EXTRA)
+    {vol.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA
+)
 
 
-@bind_hass
-def request_sync(hass):
-    """Request sync."""
-    hass.services.call(DOMAIN, SERVICE_REQUEST_SYNC)
-
-
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     """Activate Google Actions component."""
-    config = yaml_config.get(DOMAIN, {})
-    agent_user_id = config.get(CONF_AGENT_USER_ID)
-    api_key = config.get(CONF_API_KEY)
-    hass.http.register_view(GoogleAssistantAuthView(hass, config))
-    async_register_http(hass, config)
+    if DOMAIN not in yaml_config:
+        return True
 
-    @asyncio.coroutine
-    def request_sync_service_handler(call):
+    config = yaml_config[DOMAIN]
+
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    hass.http.register_view(GoogleAssistantView(google_config))
+
+    if google_config.should_report_state:
+        google_config.async_enable_report_state()
+
+    async def request_sync_service_handler(call: ServiceCall) -> None:
         """Handle request sync service calls."""
-        websession = async_get_clientsession(hass)
-        try:
-            with async_timeout.timeout(5, loop=hass.loop):
-                res = yield from websession.post(
-                    REQUEST_SYNC_BASE_URL,
-                    params={'key': api_key},
-                    json={'agent_user_id': agent_user_id})
-                _LOGGER.info("Submitted request_sync request to Google")
-                res.raise_for_status()
-        except aiohttp.ClientResponseError:
-            body = yield from res.read()
-            _LOGGER.error(
-                'request_sync request failed: %d %s', res.status, body)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Could not contact Google for request_sync")
+        agent_user_id = call.data.get("agent_user_id") or call.context.user_id
 
-    # Register service only if api key is provided
-    if api_key is not None:
+        if agent_user_id is None:
+            _LOGGER.warning(
+                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id"
+            )
+            return
+
+        await google_config.async_sync_entities(agent_user_id)
+
+    # Register service only if key is provided
+    if CONF_SERVICE_ACCOUNT in config:
         hass.services.async_register(
-            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler)
+            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
+        )
 
     return True

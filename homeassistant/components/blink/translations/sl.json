@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "2fa": {
+                "description": "Vnesite pin, poslan na va\u0161 e-po\u0161tni naslov"
+            }
+        }
+    }
+}

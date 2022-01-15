@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_failed": "Please use the same mydevolo user as before."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::email%] / devolo ID",
+          "password": "[%key:common::config_flow::data::password%]",
+          "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::email%] / devolo ID",
+          "password": "[%key:common::config_flow::data::password%]",
+          "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]"
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "token": "Token",
+                    "url": "URL",
+                    "verify_ssl": "Verifiera SSL-certifikat"
+                }
+            }
+        }
+    },
+    "title": "Synkronisering"
+}

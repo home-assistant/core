@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Konfiguracja integracji odtwarzacza Dune HD. Je\u015bli masz problemy z konfiguracj\u0105, przejd\u017a do strony: https://www.home-assistant.io/integrations/dunehd\n\nUpewnij si\u0119, \u017ce odtwarzacz jest w\u0142\u0105czony.",
+                "title": "Dune HD"
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "discord",
+  "name": "Discord",
+  "documentation": "https://www.home-assistant.io/integrations/discord",
+  "requirements": ["discord.py==1.7.3"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
+}

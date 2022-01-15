@@ -1,0 +1,29 @@
+{
+  "domain": "nanoleaf",
+  "name": "Nanoleaf",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
+  "requirements": ["aionanoleaf==0.1.1"],
+  "zeroconf": ["_nanoleafms._tcp.local.", "_nanoleafapi._tcp.local."],
+  "homekit" : {
+    "models": [
+      "NL*"
+    ]
+  },
+  "ssdp": [
+    {
+      "st": "Nanoleaf_aurora:light"
+    },
+    {
+      "st": "nanoleaf:nl29"
+    },
+    {
+      "st": "nanoleaf:nl42"
+    },
+    {
+      "st": "nanoleaf:nl52"
+    }
+  ],
+  "codeowners": ["@milanmeu"],
+  "iot_class": "local_push"
+}

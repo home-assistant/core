@@ -1,0 +1,7 @@
+{
+  "domain": "pioneer",
+  "name": "Pioneer",
+  "documentation": "https://www.home-assistant.io/integrations/pioneer",
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

@@ -1,0 +1,69 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_apparent_power": "Current {entity_name} apparent power",
+            "is_battery_level": "Current {entity_name} battery level",
+            "is_carbon_dioxide": "Current {entity_name} carbon dioxide concentration level",
+            "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
+            "is_current": "Current {entity_name} current",
+            "is_energy": "Current {entity_name} energy",
+            "is_frequency": "Current {entity_name} frequency",
+            "is_gas": "Current {entity_name} gas",
+            "is_humidity": "Current {entity_name} humidity",
+            "is_illuminance": "Current {entity_name} illuminance",
+            "is_nitrogen_dioxide": "Current {entity_name} nitrogen dioxide concentration level",
+            "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
+            "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
+            "is_ozone": "Current {entity_name} ozone concentration level",
+            "is_pm1": "Current {entity_name} PM1 concentration level",
+            "is_pm10": "Current {entity_name} PM10 concentration level",
+            "is_pm25": "Current {entity_name} PM2.5 concentration level",
+            "is_power": "Current {entity_name} power",
+            "is_power_factor": "Current {entity_name} power factor",
+            "is_pressure": "Current {entity_name} pressure",
+            "is_reactive_power": "Current {entity_name} reactive power",
+            "is_signal_strength": "Current {entity_name} signal strength",
+            "is_sulphur_dioxide": "Current {entity_name} sulphur dioxide concentration level",
+            "is_temperature": "Current {entity_name} temperature",
+            "is_value": "Current {entity_name} value",
+            "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
+            "is_voltage": "Current {entity_name} voltage"
+        },
+        "trigger_type": {
+            "apparent_power": "{entity_name} apparent power changes",
+            "battery_level": "{entity_name} battery level changes",
+            "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
+            "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
+            "current": "{entity_name} current changes",
+            "energy": "{entity_name} energy changes",
+            "frequency": "{entity_name} frequency changes",
+            "gas": "{entity_name} gas changes",
+            "humidity": "{entity_name} humidity changes",
+            "illuminance": "{entity_name} illuminance changes",
+            "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
+            "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
+            "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
+            "ozone": "{entity_name} ozone concentration changes",
+            "pm1": "{entity_name} PM1 concentration changes",
+            "pm10": "{entity_name} PM10 concentration changes",
+            "pm25": "{entity_name} PM2.5 concentration changes",
+            "power": "{entity_name} power changes",
+            "power_factor": "{entity_name} power factor changes",
+            "pressure": "{entity_name} pressure changes",
+            "reactive_power": "{entity_name} reactive power changes",
+            "signal_strength": "{entity_name} signal strength changes",
+            "sulphur_dioxide": "{entity_name} sulphur dioxide concentration changes",
+            "temperature": "{entity_name} temperature changes",
+            "value": "{entity_name} value changes",
+            "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
+            "voltage": "{entity_name} voltage changes"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Off",
+            "on": "On"
+        }
+    },
+    "title": "Sensor"
+}

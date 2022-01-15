@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Ressurser"
+                },
+                "title": "Velg ressurser som skal overv\u00e5kes"
+            },
+            "ups": {
+                "data": {
+                    "alias": "",
+                    "resources": "Ressurser"
+                },
+                "title": "Velg UPS som skal overv\u00e5kes"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                },
+                "title": "Koble til NUT-serveren"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Ressurser",
+                    "scan_interval": "Skanneintervall (sekunder)"
+                },
+                "description": "Velg Sensor Ressurser."
+            }
+        }
+    }
+}

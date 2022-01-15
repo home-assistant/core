@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Nem jelentkezik",
+            "operational": "\u00dczemk\u00e9pes",
+            "system_shutdown_user": "Rendszerle\u00e1ll\u00edt\u00e1s felhaszn\u00e1l\u00f3ja",
+            "system_startup": "Rendszerind\u00edt\u00e1s"
+        }
+    }
+}

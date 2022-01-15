@@ -1,0 +1,42 @@
+{
+  "name": "Home Assistant Dev",
+  "context": "..",
+  "dockerFile": "../Dockerfile.dev",
+  "postCreateCommand": "script/setup",
+  "postStartCommand": "script/bootstrap",
+  "containerEnv": { "DEVCONTAINER": "1" },
+  "appPort": 8123,
+  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "extensions": [
+    "ms-python.vscode-pylance",
+    "visualstudioexptteam.vscodeintellicode",
+    "redhat.vscode-yaml",
+    "esbenp.prettier-vscode"
+  ],
+  // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
+  "settings": {
+    "python.pythonPath": "/usr/local/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.formatting.provider": "black",
+    "python.testing.pytestArgs": ["--no-cov"],
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "files.trimTrailingWhitespace": true,
+    "terminal.integrated.profiles.linux": {
+      "zsh": {
+        "path": "/usr/bin/zsh"
+      }
+    },
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "yaml.customTags": [
+      "!input scalar",
+      "!secret scalar",
+      "!include_dir_named scalar",
+      "!include_dir_list scalar",
+      "!include_dir_merge_list scalar",
+      "!include_dir_merge_named scalar"
+    ]
+  }
+}

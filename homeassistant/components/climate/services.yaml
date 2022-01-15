@@ -1,154 +1,162 @@
 # Describes the format for available climate services
 
 set_aux_heat:
+  name: Turn on/off auxiliary heater
   description: Turn auxiliary heater on/off for climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
     aux_heat:
-      description: New value of axillary heater.
-      example: true
-set_away_mode:
-  description: Turn away mode on/off for climate device.
+      name: Auxiliary heating
+      description: New value of auxiliary heater.
+      required: true
+      selector:
+        boolean:
+
+set_preset_mode:
+  name: Set preset mode
+  description: Set preset mode for climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    away_mode:
-      description: New value of away mode.
-      example: true
-set_hold_mode:
-  description: Turn hold mode for climate device.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    hold_mode:
-      description: New value of hold mode
-      example: 'away'
+    preset_mode:
+      name: Preset mode
+      description: New value of preset mode.
+      required: true
+      example: "away"
+      selector:
+        text:
+
 set_temperature:
+  name: Set temperature
   description: Set target temperature of climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
     temperature:
+      name: Temperature
       description: New target temperature for HVAC.
-      example: 25
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     target_temp_high:
-      description: New target high tempereature for HVAC.
-      example: 26
+      name: Target temperature high
+      description: New target high temperature for HVAC.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     target_temp_low:
+      name: Target temperature low
       description: New target low temperature for HVAC.
-      example: 20
-    operation_mode:
-      description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
-      example: 'Heat'
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
+    hvac_mode:
+      name: HVAC mode
+      description: HVAC operation mode to set temperature to.
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
+
 set_humidity:
+  name: Set target humidity
   description: Set target humidity of climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
     humidity:
+      name: Humidity
       description: New target humidity for climate device.
-      example: 60
+      required: true
+      selector:
+        number:
+          min: 30
+          max: 99
+          unit_of_measurement: "%"
+
 set_fan_mode:
+  name: Set fan mode
   description: Set fan operation for climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.nest'
     fan_mode:
+      name: Fan mode
       description: New value of fan mode.
-      example: On Low
-set_operation_mode:
-  description: Set operation mode for climate device.
+      required: true
+      example: "low"
+      selector:
+        text:
+
+set_hvac_mode:
+  name: Set HVAC mode
+  description: Set HVAC operation mode for climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.nest'
-    operation_mode:
+    hvac_mode:
+      name: HVAC mode
       description: New value of operation mode.
-      example: Heat
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
+
 set_swing_mode:
+  name: Set swing mode
   description: Set swing operation for climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.nest'
     swing_mode:
+      name: Swing mode
       description: New value of swing mode.
-      example:
+      required: true
+      example: "horizontal"
+      selector:
+        text:
 
 turn_on:
+  name: Turn on
   description: Turn climate device on.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
+  target:
+    entity:
+      domain: climate
 
 turn_off:
+  name: Turn off
   description: Turn climate device off.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-
-ecobee_set_fan_min_on_time:
-  description: Set the minimum fan on time.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    fan_min_on_time:
-      description: New value of fan min on time.
-      example: 5
-
-ecobee_resume_program:
-  description: Resume the programmed schedule.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    resume_all:
-      description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
-      example: true
-
-nuheat_resume_program:
-  description: Resume the programmed schedule.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-
-econet_add_vacation:
-  description: Add a vacation to your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.water_heater'
-    start_date:
-      description: The timestamp of when the vacation should start. (Optional, defaults to now)
-      example: 1513186320
-    end_date:
-      description: The timestamp of when the vacation should end.
-      example: 1513445520
-
-econet_delete_vacation:
-  description: Delete your existing vacation from your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.water_heater'
-
-sensibo_assume_state:
-  description: Set Sensibo device to external state.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    state:
-      description: State to set.
-      example: 'idle'
+  target:
+    entity:
+      domain: climate

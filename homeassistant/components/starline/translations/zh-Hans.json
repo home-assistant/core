@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "error_auth_user": "\u7528\u6237\u540d\u6216\u5bc6\u7801\u9519\u8bef"
+        },
+        "step": {
+            "auth_user": {
+                "data": {
+                    "username": "\u7528\u6237\u540d"
+                }
+            }
+        }
+    }
+}

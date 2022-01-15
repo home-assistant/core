@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "empty": "Ingen resultater i bys\u00f8k: vennligst sjekk byfeltet"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "By"
+                },
+                "description": "Velg din by fra listen",
+                "title": ""
+            },
+            "user": {
+                "data": {
+                    "city": "By"
+                },
+                "description": "Fyll inn postnummeret (bare for Frankrike, anbefalt) eller bynavn",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Prognosemodus"
+                }
+            }
+        }
+    }
+}

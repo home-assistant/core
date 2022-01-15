@@ -1,0 +1,7 @@
+{
+  "domain": "picotts",
+  "name": "Pico TTS",
+  "documentation": "https://www.home-assistant.io/integrations/picotts",
+  "codeowners": [],
+  "iot_class": "local_push"
+}

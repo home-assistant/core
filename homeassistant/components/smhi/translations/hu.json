@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "A n\u00e9v m\u00e1r l\u00e9tezik",
+            "wrong_location": "Csak sv\u00e9dorsz\u00e1gi helysz\u00edn megengedett"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "N\u00e9v"
+                },
+                "title": "Helysz\u00edn Sv\u00e9dorsz\u00e1gban"
+            }
+        }
+    }
+}

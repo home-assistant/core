@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Pont eisoes wedi'i ffurfweddu",
+            "no_bridges": "Dim pontydd deCONZ wedi eu darganfod"
+        },
+        "error": {
+            "no_key": "Methu cael allwedd API"
+        },
+        "step": {
+            "link": {
+                "description": "Datgloi eich porth deCONZ i gofrestru gyda Cynorthwydd Cartref.\n\n1. Ewch i osodiadau system deCONZ \n2. Bwyso botwm \"Datgloi porth\"",
+                "title": "Cysylltu \u00e2 deCONZ"
+            }
+        }
+    }
+}

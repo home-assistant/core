@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "Deje que {entity_name} limpie",
+            "dock": "Deje que {entity_name} regrese a la base"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} est\u00e1 limpiando",
+            "is_docked": "{entity_name} en la base"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} empez\u00f3 a limpiar",
+            "docked": "{entity_name} en la base"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "Limpiando",
+            "docked": "En la base",
+            "error": "Error",
+            "idle": "Inactivo",
+            "off": "Apagado",
+            "on": "Encendido",
+            "paused": "En pausa",
+            "returning": "Volviendo a la base"
+        }
+    },
+    "title": "Aspiradora"
+}

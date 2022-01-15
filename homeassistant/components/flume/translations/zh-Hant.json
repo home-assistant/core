@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "{username} \u5bc6\u78bc\u4e0d\u518d\u6709\u6548\u3002",
+                "title": "\u91cd\u65b0\u8a8d\u8b49 Flume \u5e33\u865f"
+            },
+            "user": {
+                "data": {
+                    "client_id": "\u5ba2\u6236\u7aef ID",
+                    "client_secret": "\u5ba2\u6236\u7aef\u79c1\u9470",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u6b32\u5b58\u53d6 Flume \u500b\u4eba API\u3001\u5c07\u9700\u8981\u65bc https://portal.flumetech.com/settings#token \u7372\u5f97\u5ba2\u6236\u7aef ID\uff08Client ID\u300f\u53ca\u5ba2\u6236\u7aef\u79c1\u9470\uff08Client Secret\uff09",
+                "title": "\u9023\u7dda\u81f3 Flume \u5e33\u865f"
+            }
+        }
+    }
+}

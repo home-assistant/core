@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "link": {
+                "description": "Voulez-vous configurer {name} ({host})?",
+                "title": "Connectez-vous au concentrateur PowerView"
+            },
+            "user": {
+                "data": {
+                    "host": "Adresse IP"
+                },
+                "title": "Connectez-vous au concentrateur PowerView"
+            }
+        }
+    }
+}

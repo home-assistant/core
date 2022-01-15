@@ -1,0 +1,69 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_apparent_power": "Praegune {entity_name} n\u00e4iv v\u00f5imsus",
+            "is_battery_level": "Praegune {entity_name} aku tase",
+            "is_carbon_dioxide": "{entity_name} praegune s\u00fcsihappegaasi tase",
+            "is_carbon_monoxide": "{entity_name} praegune vingugaasi tase",
+            "is_current": "Praegune {entity_name} voolutugevus",
+            "is_energy": "Praegune {entity_name} v\u00f5imsus",
+            "is_frequency": "Praegune {entity_name} sagedus",
+            "is_gas": "Praegune {entity_name} gaas",
+            "is_humidity": "Praegune {entity_name} niiskus",
+            "is_illuminance": "Praegune {entity_name} valgustatus",
+            "is_nitrogen_dioxide": "Praegune {entity_name} l\u00e4mmastikdioksiidi kontsentratsioonitase",
+            "is_nitrogen_monoxide": "Praegune {entity_name} l\u00e4mmastikmonooksiidi kontsentratsioonitase",
+            "is_nitrous_oxide": "Praegune {entity_name} dil\u00e4mmastikoksiidi kontsentratsioonitase",
+            "is_ozone": "Praegune osoonisisalduse tase {entity_name}",
+            "is_pm1": "Praegune {entity_name} PM1 kontsentratsioonitase",
+            "is_pm10": "Praegune {entity_name} PM10 kontsentratsioonitase",
+            "is_pm25": "Praegune {entity_name} PM2.5 kontsentratsioonitase",
+            "is_power": "Praegune {entity_name} toide (v\u00f5imsus)",
+            "is_power_factor": "Praegune {entity_name} v\u00f5imsusfaktor",
+            "is_pressure": "Praegune {entity_name} r\u00f5hk",
+            "is_reactive_power": "Praegune {entity_name} reaktiivv\u00f5imsus",
+            "is_signal_strength": "Praegune {entity_name} signaali tugevus",
+            "is_sulphur_dioxide": "Praegune v\u00e4\u00e4veldioksiidi kontsentratsioonitase {entity_name}",
+            "is_temperature": "Praegune {entity_name} temperatuur",
+            "is_value": "Praegune {entity_name} v\u00e4\u00e4rtus",
+            "is_volatile_organic_compounds": "Praegune {entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsioonitase",
+            "is_voltage": "Praegune {entity_name}pinge"
+        },
+        "trigger_type": {
+            "apparent_power": "{entity_name} n\u00e4iv v\u00f5imsus muutub",
+            "battery_level": "{entity_name} aku tase muutub",
+            "carbon_dioxide": "{entity_name} s\u00fcsihappegaasi tase muutus",
+            "carbon_monoxide": "{entity_name} vingugaasi tase muutus",
+            "current": "{entity_name} voolutugevus muutub",
+            "energy": "{entity_name} v\u00f5imsus muutub",
+            "frequency": "{entity_name} sagedus muutub",
+            "gas": "{entity_name} gaasivahetus",
+            "humidity": "{entity_name} niiskus muutub",
+            "illuminance": "{entity_name} valgustustugevus muutub",
+            "nitrogen_dioxide": "{entity_name} l\u00e4mmastikdioksiidi kontsentratsiooni muutused",
+            "nitrogen_monoxide": "{entity_name} l\u00e4mmastikmonooksiidi kontsentratsiooni muutused",
+            "nitrous_oxide": "{entity_name} l\u00e4mmastikoksiidi kontsentratsiooni muutused",
+            "ozone": "{entity_name} osooni kontsentratsiooni muutused",
+            "pm1": "{entity_name} PM1 kontsentratsiooni muutused",
+            "pm10": "{entity_name} PM10 kontsentratsiooni muutused",
+            "pm25": "{entity_name} PM2.5 kontsentratsiooni muutused",
+            "power": "{entity_name} energiare\u017eiimi muutub",
+            "power_factor": "{entity_name} v\u00f5imsus  muutub",
+            "pressure": "{entity_name} r\u00f5hk muutub",
+            "reactive_power": "{entity_name} reaktiivv\u00f5imsus muutub",
+            "signal_strength": "{entity_name} signaalitugevus muutub",
+            "sulphur_dioxide": "{entity_name} v\u00e4\u00e4veldioksiidi kontsentratsiooni muutused",
+            "temperature": "{entity_name} temperatuur muutub",
+            "value": "{entity_name} v\u00e4\u00e4rtus muutub",
+            "volatile_organic_compounds": "{entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsiooni muutused",
+            "voltage": "{entity_name} pingemuutub"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "V\u00e4ljas",
+            "on": "Sees"
+        }
+    },
+    "title": "Andur"
+}

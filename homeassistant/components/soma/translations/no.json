@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "connection_error": "Tilkobling mislyktes",
+            "missing_configuration": "Soma-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "result_error": "SOMA Connect svarte med feilstatus."
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect.",
+                "title": ""
+            }
+        }
+    }
+}

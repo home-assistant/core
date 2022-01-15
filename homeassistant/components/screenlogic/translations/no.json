@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "IP adresse",
+                    "port": "Port"
+                },
+                "description": "Skriv inn din ScreenLogic Gateway-informasjon.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Gateway"
+                },
+                "description": "F\u00f8lgende ScreenLogic-gateways ble oppdaget. Velg en \u00e5 konfigurere, eller velg \u00e5 konfigurere en ScreenLogic gateway manuelt.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunder mellom skanninger"
+                },
+                "description": "Angi innstillinger for {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "matrix",
+  "name": "Matrix",
+  "documentation": "https://www.home-assistant.io/integrations/matrix",
+  "requirements": ["matrix-client==0.4.0"],
+  "codeowners": ["@tinloaf"],
+  "iot_class": "cloud_push"
+}

@@ -1,0 +1,5 @@
+<MediaContainer size="3">
+  <Player title="Zone A" machineIdentifier="RINCON_12345678901234561:1234567891" deviceClass="speaker" product="Sonos" platform="Sonos" platformVersion="56.0-76060" protocol="plex" protocolVersion="1" protocolCapabilities="timeline,playback,playqueues,provider-playback" lanIP="192.168.1.11"/>
+  <Player title="Zone B + 2" machineIdentifier="RINCON_12345678901234562:1234567892" deviceClass="speaker" product="Sonos" platform="Sonos" platformVersion="56.0-76060" protocol="plex" protocolVersion="1" protocolCapabilities="timeline,playback,playqueues,provider-playback" lanIP="192.168.1.12"/>
+  <Player title="Zone C" machineIdentifier="RINCON_12345678901234563:1234567893" deviceClass="speaker" product="Sonos" platform="Sonos" platformVersion="56.0-76060" protocol="plex" protocolVersion="1" protocolCapabilities="timeline,playback,playqueues,provider-playback" lanIP="192.168.1.13"/>
+</MediaContainer>

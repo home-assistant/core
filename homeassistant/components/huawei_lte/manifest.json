@@ -1,0 +1,19 @@
+{
+  "domain": "huawei_lte",
+  "name": "Huawei LTE",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/huawei_lte",
+  "requirements": [
+    "huawei-lte-api==1.4.18",
+    "stringcase==1.2.0",
+    "url-normalize==1.4.1"
+  ],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+      "manufacturer": "Huawei"
+    }
+  ],
+  "codeowners": ["@scop", "@fphammerle"],
+  "iot_class": "local_polling"
+}

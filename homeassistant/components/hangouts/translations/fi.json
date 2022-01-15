@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Tapahtui tuntematon virhe."
+        },
+        "error": {
+            "invalid_2fa": "Virheellinen kaksitekij\u00e4todennus, yrit\u00e4 uudelleen.",
+            "invalid_2fa_method": "Virheellinen 2FA-menetelm\u00e4 (tarkista puhelimessa).",
+            "invalid_login": "Virheellinen kirjautuminen, yrit\u00e4 uudelleen."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA-pin"
+                },
+                "description": "Tyhj\u00e4",
+                "title": "Kaksivaiheinen tunnistus"
+            },
+            "user": {
+                "data": {
+                    "email": "S\u00e4hk\u00f6postiosoite",
+                    "password": "Salasana"
+                },
+                "description": "Tyhj\u00e4",
+                "title": "Google Hangouts -kirjautuminen"
+            }
+        }
+    }
+}

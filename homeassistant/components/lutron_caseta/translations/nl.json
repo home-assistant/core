@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kon niet verbinden",
+            "not_lutron_device": "Ontdekt apparaat is geen Lutron-apparaat"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "Kan bridge (host: {host} ) niet instellen, ge\u00efmporteerd uit configuration.yaml.",
+                "title": "Het importeren van de Cas\u00e9ta bridge configuratie is mislukt."
+            },
+            "link": {
+                "description": "Om te koppelen met {name} ({host}), na het verzenden van dit formulier, druk op de zwarte knop op de achterkant van de brug.",
+                "title": "Koppel met de bridge"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Voer het IP-adres van het apparaat in.",
+                "title": "Automatisch verbinding maken met de bridge"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Eerste knop",
+            "button_2": "Tweede knop",
+            "button_3": "Derde knop",
+            "button_4": "Vierde knop",
+            "close_1": "Sluit 1",
+            "close_2": "Sluit 2",
+            "close_3": "Sluit 3",
+            "close_4": "Sluit 4",
+            "close_all": "Sluit alles",
+            "group_1_button_1": "Eerste Groep eerste knop",
+            "group_1_button_2": "Eerste Groep tweede knop",
+            "group_2_button_1": "Tweede Groep eerste knop",
+            "group_2_button_2": "Tweede Groep tweede knop",
+            "lower": "Verlagen",
+            "lower_1": "Verlagen 1",
+            "lower_2": "Verlagen 2",
+            "lower_3": "Verlagen 3",
+            "lower_4": "Verlaag 4",
+            "lower_all": "Verlaag alles",
+            "off": "Uit",
+            "on": "Aan",
+            "open_1": "Open 1",
+            "open_2": "Open 2",
+            "open_3": "Open 3",
+            "open_4": "Open 4",
+            "open_all": "Open alle",
+            "raise": "Verhogen",
+            "raise_1": "Verhogen 1",
+            "raise_2": "Verhogen 2",
+            "raise_3": "Verhogen 3",
+            "raise_4": "Verhogen 4",
+            "raise_all": "Verhoog alles",
+            "stop": "Stop (favoriet)",
+            "stop_1": "Stop 1",
+            "stop_2": "Stop 2",
+            "stop_3": "Stop 3",
+            "stop_4": "Stop 4",
+            "stop_all": "Stop alles"
+        },
+        "trigger_type": {
+            "press": "\" {subtype} \" ingedrukt",
+            "release": "\"{subtype}\" losgelaten"
+        }
+    }
+}

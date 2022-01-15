@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "title": "Re-authenticate Tile",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "user": {
+        "title": "Configure Tile",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Tile",
+        "data": {
+          "show_inactive": "Show inactive Tiles"
+        }
+      }
+    }
+  }
+}

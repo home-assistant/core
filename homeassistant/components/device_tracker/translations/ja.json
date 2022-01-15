@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} \u306f\u3001\u5728\u5b85\u3067\u3059",
+            "is_not_home": "{entity_name} \u306f\u3001\u4e0d\u5728\u3067\u3059"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} \u304c\u30be\u30fc\u30f3\u306b\u5165\u308b",
+            "leaves": "{entity_name} \u304c\u30be\u30fc\u30f3\u304b\u3089\u96e2\u308c\u308b"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "\u5728\u5b85",
+            "not_home": "\u96e2\u5e2d(away)"
+        }
+    },
+    "title": "\u30c7\u30d0\u30a4\u30b9\u30c8\u30e9\u30c3\u30ab\u30fc"
+}

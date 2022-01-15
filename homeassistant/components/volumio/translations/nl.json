@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken met ontdekte Volumio"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Wilt u Volumio (`{name}`) toevoegen aan Home Assistant?",
+                "title": "Volumio ontdekt"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,37 @@
+reconnect:
+  description: Reconnects your FRITZ!Box internet connection
+  fields:
+    device_id:
+      name: Fritz!Box Device
+      description: Select the Fritz!Box to reconnect
+      required: true
+      selector:
+        device:
+          integration: fritz
+          entity:
+            device_class: connectivity
+reboot:
+  description: Reboots your FRITZ!Box
+  fields:
+    device_id:
+      name: Fritz!Box Device
+      description: Select the Fritz!Box to reboot
+      required: true
+      selector:
+        device:
+          integration: fritz
+          entity:
+            device_class: connectivity
+
+cleanup:
+  description: Remove FRITZ!Box stale device_tracker entities
+  fields:
+    device_id:
+      name: Fritz!Box Device
+      description: Select the Fritz!Box to check
+      required: true
+      selector:
+        device:
+          integration: fritz
+          entity:
+            device_class: connectivity

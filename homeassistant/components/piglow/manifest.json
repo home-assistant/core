@@ -1,0 +1,8 @@
+{
+  "domain": "piglow",
+  "name": "Piglow",
+  "documentation": "https://www.home-assistant.io/integrations/piglow",
+  "requirements": ["piglow==1.2.4"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

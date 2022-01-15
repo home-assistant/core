@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan endast konfigurera ett Point-konto.",
+            "authorize_url_timeout": "Timeout n\u00e4r genererar url f\u00f6r auktorisering.",
+            "external_setup": "Point har lyckats med konfigurering ifr\u00e5n ett annat fl\u00f6de.",
+            "no_flows": "Du beh\u00f6ver konfigurera Point innan de kan autentisera med den. [L\u00e4s instruktioner](https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Lyckad autentisering med Minut f\u00f6r din(a) Point-enhet(er)"
+        },
+        "error": {
+            "follow_link": "F\u00f6lj l\u00e4nken och autentisera innan du trycker p\u00e5 Skicka",
+            "no_token": "Ej autentiserad med Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "V\u00e4nligen f\u00f6lj l\u00e4nken nedan och <b>Acceptera</b> tillg\u00e5ng till ditt Minut-konto, kom tillbaka och tryck p\u00e5 <b>Skicka</b> nedan. \n\n [L\u00e4nk]({authorization_url})",
+                "title": "Autentisera Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Leverant\u00f6r"
+                },
+                "description": "V\u00e4lj via vilken autentiseringsleverant\u00f6r du vill autentisera med Point.",
+                "title": "Autentiseringsleverant\u00f6r"
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "domain": "input_text",
+  "name": "Input Text",
+  "documentation": "https://www.home-assistant.io/integrations/input_text",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

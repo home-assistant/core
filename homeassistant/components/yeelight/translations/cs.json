@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "flow_title": "{model} {id} ({host})",
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Za\u0159\u00edzen\u00ed"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hostitel"
+                },
+                "description": "Pokud z\u016fstane hostitel pr\u00e1zdn\u00fd, k vyhled\u00e1n\u00ed za\u0159\u00edzen\u00ed se pou\u017eije zji\u0161\u0165ov\u00e1n\u00ed."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model (voliteln\u00fd)",
+                    "nightlight_switch": "Pou\u017e\u00edt p\u0159ep\u00edna\u010d no\u010dn\u00edho osv\u011btlen\u00ed",
+                    "save_on_change": "Ulo\u017eit stav p\u0159i zm\u011bn\u011b",
+                    "transition": "\u010cas p\u0159echodu (v ms)",
+                    "use_music_mode": "Povolit hudebn\u00ed re\u017eim"
+                },
+                "description": "Pokud ponech\u00e1te model pr\u00e1zdn\u00fd, bude automaticky rozpozn\u00e1n."
+            }
+        }
+    }
+}

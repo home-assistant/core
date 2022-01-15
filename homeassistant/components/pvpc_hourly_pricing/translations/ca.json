@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nom del sensor",
+                    "power": "Pot\u00e8ncia contractada (kW)",
+                    "power_p3": "Pot\u00e8ncia contractada del per\u00edode vall P3 (kW)",
+                    "tariff": "Tarifa aplicable per zona geogr\u00e0fica"
+                },
+                "description": "Aquest sensor utilitza l'API oficial per obtenir els [preus per hora de l'electricitat (PVPC)](https://www.esios.ree.es/es/pvpc) a Espanya.\nPer a m\u00e9s informaci\u00f3, consulta la [documentaci\u00f3 de la integraci\u00f3](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
+                "title": "Configuraci\u00f3 del sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "power": "Pot\u00e8ncia contractada (kW)",
+                    "power_p3": "Pot\u00e8ncia contractada del per\u00edode vall P3 (kW)",
+                    "tariff": "Tarifa aplicable per zona geogr\u00e0fica"
+                },
+                "description": "Aquest sensor utilitza l'API oficial per obtenir els [preus per hora de l'electricitat (PVPC)](https://www.esios.ree.es/es/pvpc) a Espanya.\nPer a m\u00e9s informaci\u00f3, consulta la [documentaci\u00f3 de la integraci\u00f3](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
+                "title": "Configuraci\u00f3 del sensor"
+            }
+        }
+    }
+}

@@ -1,0 +1,49 @@
+# Describes the format for available ifttt services
+
+push_alarm_state:
+  name: Push alarm state
+  description: Update the alarm state to the specified value.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel which state has to be updated.
+      required: true
+      selector:
+        entity:
+          domain: alarm_control_panel
+    state:
+      name: State
+      description: The state to which the alarm control panel has to be set.
+      required: true
+      example: "armed_night"
+      selector:
+        text:
+
+trigger:
+  name: Trigger
+  description: Triggers the configured IFTTT Webhook.
+  fields:
+    event:
+      name: Event
+      description: The name of the event to send.
+      required: true
+      example: "MY_HA_EVENT"
+      selector:
+        text:
+    value1:
+      name: Value 1
+      description: Generic field to send data via the event.
+      example: "Hello World"
+      selector:
+        text:
+    value2:
+      name: Value 2
+      description: Generic field to send data via the event.
+      example: "some additional data"
+      selector:
+        text:
+    value3:
+      name: Value 3
+      description: Generic field to send data via the event.
+      example: "even more data"
+      selector:
+        text:

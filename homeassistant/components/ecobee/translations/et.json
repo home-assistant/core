@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "error": {
+            "pin_request_failed": "Viga ecobee'lt PIN-koodi taotlemisel. Palun veendu, et API v\u00f5ti on \u00f5ige.",
+            "token_request_failed": "Viga ecobee-lt m\u00e4rgendite taotlemisel. Palun proovi uuesti."
+        },
+        "step": {
+            "authorize": {
+                "description": "kinnita see rakendus aadressil https://www.ecobee.com/consumerportal/index.html PIN koodiga:\n\n {pin}\n\n Seej\u00e4rel vajuta Esita.",
+                "title": "Rakenduse tuvastamine saidil ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "Sisesta saidilt ecobee.com saadud API v\u00f5ti.",
+                "title": "ecobee API v\u00f5ti"
+            }
+        }
+    }
+}

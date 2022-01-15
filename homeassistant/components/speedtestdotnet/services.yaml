@@ -1,0 +1,3 @@
+speedtest:
+  name: Speedtest
+  description: Immediately execute a speed test with Speedtest.net

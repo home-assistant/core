@@ -1,335 +1,198 @@
-"""
-Support for ZigBee Home Automation devices.
+"""Support for Zigbee Home Automation devices."""
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
-"""
 import asyncio
 import logging
 
 import voluptuous as vol
+from zhaquirks import setup as setup_quirks
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
+from homeassistant import config_entries, const as ha_const
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant import const as ha_const
-from homeassistant.helpers import discovery, entity
-from homeassistant.util import slugify
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
-REQUIREMENTS = ['bellows==0.4.0']
+from . import api
+from .core import ZHAGateway
+from .core.const import (
+    BAUD_RATES,
+    CONF_BAUDRATE,
+    CONF_CUSTOM_QUIRKS_PATH,
+    CONF_DATABASE,
+    CONF_DEVICE_CONFIG,
+    CONF_ENABLE_QUIRKS,
+    CONF_RADIO_TYPE,
+    CONF_USB_PATH,
+    CONF_ZIGPY,
+    DATA_ZHA,
+    DATA_ZHA_CONFIG,
+    DATA_ZHA_GATEWAY,
+    DATA_ZHA_PLATFORM_LOADED,
+    DATA_ZHA_SHUTDOWN_TASK,
+    DOMAIN,
+    PLATFORMS,
+    SIGNAL_ADD_ENTITIES,
+    RadioType,
+)
+from .core.discovery import GROUP_PROBE
 
-DOMAIN = 'zha'
-
-CONF_BAUDRATE = 'baudrate'
-CONF_DATABASE = 'database_path'
-CONF_DEVICE_CONFIG = 'device_config'
-CONF_USB_PATH = 'usb_path'
-DATA_DEVICE_CONFIG = 'zha_device_config'
-
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Optional(ha_const.CONF_TYPE): cv.string,
-})
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        CONF_USB_PATH: cv.string,
-        vol.Optional(CONF_BAUDRATE, default=57600): cv.positive_int,
-        CONF_DATABASE: cv.string,
-        vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
-    })
-}, extra=vol.ALLOW_EXTRA)
-
-ATTR_DURATION = 'duration'
-
-SERVICE_PERMIT = 'permit'
-SERVICE_SCHEMAS = {
-    SERVICE_PERMIT: vol.Schema({
-        vol.Optional(ATTR_DURATION, default=60):
-            vol.All(vol.Coerce(int), vol.Range(1, 254)),
-    }),
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
+ZHA_CONFIG_SCHEMA = {
+    vol.Optional(CONF_BAUDRATE): cv.positive_int,
+    vol.Optional(CONF_DATABASE): cv.string,
+    vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
+        {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
+    ),
+    vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
+    vol.Optional(CONF_ZIGPY): dict,
+    vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
+    vol.Optional(CONF_USB_PATH): cv.string,
+    vol.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
 }
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            vol.All(
+                cv.deprecated(CONF_USB_PATH),
+                cv.deprecated(CONF_BAUDRATE),
+                cv.deprecated(CONF_RADIO_TYPE),
+                ZHA_CONFIG_SCHEMA,
+            ),
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-
-# ZigBee definitions
-CENTICELSIUS = 'C-100'
-# Key in hass.data dict containing discovery info
-DISCOVERY_KEY = 'zha_discovery_info'
+# Zigbee definitions
+CENTICELSIUS = "C-100"
 
 # Internal definitions
-APPLICATION_CONTROLLER = None
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
-    """Set up ZHA.
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up ZHA from config."""
+    hass.data[DATA_ZHA] = {}
 
-    Will automatically load components to support devices found on the network.
-    """
-    global APPLICATION_CONTROLLER
-
-    import bellows.ezsp
-    from bellows.zigbee.application import ControllerApplication
-
-    ezsp_ = bellows.ezsp.EZSP()
-    usb_path = config[DOMAIN].get(CONF_USB_PATH)
-    baudrate = config[DOMAIN].get(CONF_BAUDRATE)
-    yield from ezsp_.connect(usb_path, baudrate)
-
-    database = config[DOMAIN].get(CONF_DATABASE)
-    APPLICATION_CONTROLLER = ControllerApplication(ezsp_, database)
-    listener = ApplicationListener(hass, config)
-    APPLICATION_CONTROLLER.add_listener(listener)
-    yield from APPLICATION_CONTROLLER.startup(auto_form=True)
-
-    for device in APPLICATION_CONTROLLER.devices.values():
-        hass.async_add_job(listener.async_device_initialized(device, False))
-
-    @asyncio.coroutine
-    def permit(service):
-        """Allow devices to join this network."""
-        duration = service.data.get(ATTR_DURATION)
-        _LOGGER.info("Permitting joins for %ss", duration)
-        yield from APPLICATION_CONTROLLER.permit(duration)
-
-    hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
-                                 schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
+    if DOMAIN in config:
+        conf = config[DOMAIN]
+        hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
 
     return True
 
 
-class ApplicationListener:
-    """All handlers for events that happen on the ZigBee application."""
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Set up ZHA.
 
-    def __init__(self, hass, config):
-        """Initialize the listener."""
-        self._hass = hass
-        self._config = config
-        hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
-
-    def device_joined(self, device):
-        """Handle device joined.
-
-        At this point, no information about the device is known other than its
-        address
-        """
-        # Wait for device_initialized, instead
-        pass
-
-    def device_initialized(self, device):
-        """Handle device joined and basic information discovered."""
-        self._hass.async_add_job(self.async_device_initialized(device, True))
-
-    def device_left(self, device):
-        """Handle device leaving the network."""
-        pass
-
-    def device_removed(self, device):
-        """Handle device being removed from the network."""
-        pass
-
-    @asyncio.coroutine
-    def async_device_initialized(self, device, join):
-        """Handle device joined and basic information discovered (async)."""
-        import bellows.zigbee.profiles
-        import homeassistant.components.zha.const as zha_const
-        zha_const.populate_data()
-
-        for endpoint_id, endpoint in device.endpoints.items():
-            if endpoint_id == 0:  # ZDO
-                continue
-
-            discovered_info = yield from _discover_endpoint_info(endpoint)
-
-            component = None
-            profile_clusters = ([], [])
-            device_key = '%s-%s' % (str(device.ieee), endpoint_id)
-            node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
-                device_key, {})
-
-            if endpoint.profile_id in bellows.zigbee.profiles.PROFILES:
-                profile = bellows.zigbee.profiles.PROFILES[endpoint.profile_id]
-                if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
-                                              {}).get(endpoint.device_type,
-                                                      None):
-                    profile_clusters = profile.CLUSTERS[endpoint.device_type]
-                    profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
-                    component = profile_info[endpoint.device_type]
-
-            if ha_const.CONF_TYPE in node_config:
-                component = node_config[ha_const.CONF_TYPE]
-                profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
-
-            if component:
-                in_clusters = [endpoint.in_clusters[c]
-                               for c in profile_clusters[0]
-                               if c in endpoint.in_clusters]
-                out_clusters = [endpoint.out_clusters[c]
-                                for c in profile_clusters[1]
-                                if c in endpoint.out_clusters]
-                discovery_info = {
-                    'endpoint': endpoint,
-                    'in_clusters': {c.cluster_id: c for c in in_clusters},
-                    'out_clusters': {c.cluster_id: c for c in out_clusters},
-                    'new_join': join,
-                }
-                discovery_info.update(discovered_info)
-                self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
-
-                yield from discovery.async_load_platform(
-                    self._hass,
-                    component,
-                    DOMAIN,
-                    {'discovery_key': device_key},
-                    self._config,
-                )
-
-            for cluster_id, cluster in endpoint.in_clusters.items():
-                cluster_type = type(cluster)
-                if cluster_id in profile_clusters[0]:
-                    continue
-                if cluster_type not in zha_const.SINGLE_CLUSTER_DEVICE_CLASS:
-                    continue
-
-                component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
-                discovery_info = {
-                    'endpoint': endpoint,
-                    'in_clusters': {cluster.cluster_id: cluster},
-                    'out_clusters': {},
-                    'new_join': join,
-                }
-                discovery_info.update(discovered_info)
-                cluster_key = '%s-%s' % (device_key, cluster_id)
-                self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
-
-                yield from discovery.async_load_platform(
-                    self._hass,
-                    component,
-                    DOMAIN,
-                    {'discovery_key': cluster_key},
-                    self._config,
-                )
-
-
-class Entity(entity.Entity):
-    """A base class for ZHA entities."""
-
-    _domain = None  # Must be overridden by subclasses
-
-    def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
-                 model, **kwargs):
-        """Init ZHA entity."""
-        self._device_state_attributes = {}
-        ieeetail = ''.join([
-            '%02x' % (o, ) for o in endpoint.device.ieee[-4:]
-        ])
-        if manufacturer and model is not None:
-            self.entity_id = '%s.%s_%s_%s_%s' % (
-                self._domain,
-                slugify(manufacturer),
-                slugify(model),
-                ieeetail,
-                endpoint.endpoint_id,
-            )
-            self._device_state_attributes['friendly_name'] = '%s %s' % (
-                manufacturer,
-                model,
-            )
-        else:
-            self.entity_id = "%s.zha_%s_%s" % (
-                self._domain,
-                ieeetail,
-                endpoint.endpoint_id,
-            )
-        for cluster in in_clusters.values():
-            cluster.add_listener(self)
-        for cluster in out_clusters.values():
-            cluster.add_listener(self)
-        self._endpoint = endpoint
-        self._in_clusters = in_clusters
-        self._out_clusters = out_clusters
-        self._state = ha_const.STATE_UNKNOWN
-
-    def attribute_updated(self, attribute, value):
-        """Handle an attribute updated on this cluster."""
-        pass
-
-    def zdo_command(self, aps_frame, tsn, command_id, args):
-        """Handle a ZDO command received on this cluster."""
-        pass
-
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return self._device_state_attributes
-
-
-@asyncio.coroutine
-def _discover_endpoint_info(endpoint):
-    """Find some basic information about an endpoint."""
-    extra_info = {
-        'manufacturer': None,
-        'model': None,
-    }
-    if 0 not in endpoint.in_clusters:
-        return extra_info
-
-    @asyncio.coroutine
-    def read(attributes):
-        """Read attributes and update extra_info convenience function."""
-        result, _ = yield from endpoint.in_clusters[0].read_attributes(
-            attributes,
-            allow_cache=True,
-        )
-        extra_info.update(result)
-
-    yield from read(['manufacturer', 'model'])
-    if extra_info['manufacturer'] is None or extra_info['model'] is None:
-        # Some devices fail at returning multiple results. Attempt separately.
-        yield from read(['manufacturer'])
-        yield from read(['model'])
-
-    for key, value in extra_info.items():
-        if isinstance(value, bytes):
-            try:
-                extra_info[key] = value.decode('ascii').strip()
-            except UnicodeDecodeError:
-                # Unsure what the best behaviour here is. Unset the key?
-                pass
-
-    return extra_info
-
-
-def get_discovery_info(hass, discovery_info):
-    """Get the full discovery info for a device.
-
-    Some of the info that needs to be passed to platforms is not JSON
-    serializable, so it cannot be put in the discovery_info dictionary. This
-    component places that info we need to pass to the platform in hass.data,
-    and this function is a helper for platforms to retrieve the complete
-    discovery info.
+    Will automatically load components to support devices found on the network.
     """
-    if discovery_info is None:
-        return
 
-    discovery_key = discovery_info.get('discovery_key', None)
-    all_discovery_info = hass.data.get(DISCOVERY_KEY, {})
-    discovery_info = all_discovery_info.get(discovery_key, None)
-    return discovery_info
+    zha_data = hass.data.setdefault(DATA_ZHA, {})
+    config = zha_data.get(DATA_ZHA_CONFIG, {})
+
+    for platform in PLATFORMS:
+        zha_data.setdefault(platform, [])
+
+    if config.get(CONF_ENABLE_QUIRKS, True):
+        setup_quirks(config)
+
+    zha_gateway = ZHAGateway(hass, config, config_entry)
+    await zha_gateway.async_initialize()
+
+    zha_data[DATA_ZHA_PLATFORM_LOADED] = []
+    for platform in PLATFORMS:
+        coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.application_controller.ieee))},
+        name="Zigbee Coordinator",
+        manufacturer="ZHA",
+        model=zha_gateway.radio_description,
+    )
+
+    api.async_load_api(hass)
+
+    async def async_zha_shutdown(event):
+        """Handle shutdown tasks."""
+        await zha_data[DATA_ZHA_GATEWAY].shutdown()
+        await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
+
+    zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
+        ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
+    )
+    asyncio.create_task(async_load_entities(hass))
+    return True
 
 
-@asyncio.coroutine
-def safe_read(cluster, attributes):
-    """Swallow all exceptions from network read.
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Unload ZHA config entry."""
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
 
-    If we throw during initialization, setup fails. Rather have an entity that
-    exists, but is in a maybe wrong state, than no entity. This method should
-    probably only be used during initialization.
-    """
-    try:
-        result, _ = yield from cluster.read_attributes(
-            attributes,
-            allow_cache=False,
+    GROUP_PROBE.cleanup()
+    api.async_unload_api(hass)
+
+    # our components don't have unload methods so no need to look at return values
+    await asyncio.gather(
+        *(
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            for platform in PLATFORMS
         )
-        return result
-    except Exception:  # pylint: disable=broad-except
-        return {}
+    )
+
+    hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
+
+    return True
+
+
+async def async_load_entities(hass: HomeAssistant) -> None:
+    """Load entities after integration was setup."""
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
+    to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
+    results = await asyncio.gather(*to_setup, return_exceptions=True)
+    for res in results:
+        if isinstance(res, Exception):
+            _LOGGER.warning("Couldn't setup zha platform: %s", res)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        data = {
+            CONF_RADIO_TYPE: config_entry.data[CONF_RADIO_TYPE],
+            CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
+        }
+
+        baudrate = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {}).get(CONF_BAUDRATE)
+        if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
+            data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+    if config_entry.version == 2:
+        data = {**config_entry.data}
+
+        if data[CONF_RADIO_TYPE] == "ti_cc":
+            data[CONF_RADIO_TYPE] = "znp"
+
+        config_entry.version = 3
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    return True

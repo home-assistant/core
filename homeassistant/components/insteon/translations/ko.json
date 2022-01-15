@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "select_single": "\ud558\ub098\uc758 \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c",
+                    "port": "\ud3ec\ud2b8"
+                },
+                "description": "Insteon Hub \ubc84\uc804 1\uc744 \uad6c\uc131\ud569\ub2c8\ub2e4. (2014\ub144 \uc774\uc804)",
+                "title": "Insteon Hub \ubc84\uc804 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "Insteon Hub \ubc84\uc804 2\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Insteon Hub \ubc84\uc804 2"
+            },
+            "plm": {
+                "data": {
+                    "device": "USB \uc7a5\uce58 \uacbd\ub85c"
+                },
+                "description": "Insteon PowerLinc Modem (PLM)\uc744 \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "\ubaa8\ub380 \uc720\ud615."
+                },
+                "description": "Insteon \ubaa8\ub380 \uc720\ud615\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "input_error": "\ud56d\ubaa9\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uac12\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694.",
+            "select_single": "\uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "\uae30\uae30 \uc8fc\uc18c (\uc608: 1a2b3c)",
+                    "cat": "\uae30\uae30 \ubc94\uc8fc (\uc608: 0x10)",
+                    "subcat": "\uae30\uae30 \ud558\uc704 \ubc94\uc8fc (\uc608: 0x0a)"
+                },
+                "description": "\uae30\uae30 \uc7ac\uc815\uc758\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4.",
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "\ud558\uc6b0\uc2a4 \ucf54\ub4dc (a - p)",
+                    "platform": "\ud50c\ub7ab\ud3fc",
+                    "steps": "\ubc1d\uae30 \uc870\uc808 \ub2e8\uacc4 (\uc870\uba85 \uae30\uae30 \uc804\uc6a9, \uae30\ubcf8\uac12 22)",
+                    "unitcode": "\uc720\ub2db \ucf54\ub4dc (1-16)"
+                },
+                "description": "Insteon Hub \ube44\ubc00\ubc88\ud638\ub97c \ubcc0\uacbd\ud569\ub2c8\ub2e4.",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "Insteon \ud5c8\ube0c\uc758 \uc5f0\uacb0 \uc815\ubcf4\ub97c \ubcc0\uacbd\ud569\ub2c8\ub2e4. \ubcc0\uacbd\ud55c \ud6c4\uc5d0\ub294 Home Assistant\ub97c \ub2e4\uc2dc \uc2dc\uc791\ud574\uc57c \ud569\ub2c8\ub2e4. \ud5c8\ube0c \uc790\uccb4\uc758 \uad6c\uc131\uc740 \ubcc0\uacbd\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \ud5c8\ube0c\uc758 \uad6c\uc131\uc744 \ubcc0\uacbd\ud558\ub824\uba74 \ud5c8\ube0c \uc571\uc744 \uc0ac\uc6a9\ud574\uc8fc\uc138\uc694.",
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "\uae30\uae30 \uc7ac\uc815\uc758\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4.",
+                    "add_x10": "X10 \uae30\uae30\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4.",
+                    "change_hub_config": "\ud5c8\ube0c \uad6c\uc131\uc744 \ubcc0\uacbd\ud569\ub2c8\ub2e4.",
+                    "remove_override": "\uae30\uae30 \uc7ac\uc815\uc758\ub97c \uc81c\uac70\ud569\ub2c8\ub2e4.",
+                    "remove_x10": "X10 \uae30\uae30\ub97c \uc81c\uac70\ud569\ub2c8\ub2e4."
+                },
+                "description": "\uad6c\uc131\ud560 \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "\uc81c\uac70\ud560 \uae30\uae30\uc758 \uc8fc\uc18c\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694"
+                },
+                "description": "\uae30\uae30 \uc7ac\uc815\uc758 \uc81c\uac70\ud558\uae30",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "\uc81c\uac70\ud560 \uae30\uae30\uc758 \uc8fc\uc18c\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694"
+                },
+                "description": "X10 \uae30\uae30 \uc81c\uac70\ud558\uae30",
+                "title": "Insteon"
+            }
+        }
+    }
+}

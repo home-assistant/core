@@ -1,0 +1,26 @@
+{
+  "domain": "unifi",
+  "name": "UniFi Network",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/unifi",
+  "requirements": [
+    "aiounifi==29"
+  ],
+  "codeowners": [
+    "@Kane610"
+  ],
+  "quality_scale": "platinum",
+  "ssdp": [
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+      "modelDescription": "UniFi Dream Machine"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+      "modelDescription": "UniFi Dream Machine Pro"
+    }
+  ],
+  "iot_class": "local_push"
+}

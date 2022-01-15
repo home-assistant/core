@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwuert"
+                },
+                "description": "Soll den Ariichtungs Prozess gestart ginn?",
+                "title": "PoolSense"
+            }
+        }
+    }
+}

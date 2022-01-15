@@ -1,0 +1,8 @@
+{
+  "domain": "bt_smarthub",
+  "name": "BT Smart Hub",
+  "documentation": "https://www.home-assistant.io/integrations/bt_smarthub",
+  "requirements": ["btsmarthub_devicelist==0.2.0"],
+  "codeowners": ["@jxwolstenholme"],
+  "iot_class": "local_polling"
+}

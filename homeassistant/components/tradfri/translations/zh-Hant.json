@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d"
+        },
+        "error": {
+            "cannot_authenticate": "\u7121\u6cd5\u9a57\u8b49\uff0c\u7db2\u95dc\u662f\u5426\u8207\u5176\u4ed6\u4f3a\u670d\u5668\u3001\u4f8b\u5982 Homekit \u5df2\u9032\u884c\u914d\u5c0d\uff1f",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_key": "\u63d0\u4f9b\u4e4b\u5b89\u5168\u78bc\u8a3b\u518a\u5931\u6557\u3002\u5047\u5982\u6b64\u60c5\u6cc1\u6301\u7e8c\u767c\u751f\uff0c\u8acb\u5617\u8a66\u91cd\u555f\u9598\u9053\u5668\u3002",
+            "timeout": "\u8a8d\u8b49\u78bc\u903e\u6642\u3002"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "security_code": "\u5b89\u5168\u78bc"
+                },
+                "description": "\u60a8\u53ef\u4ee5\u65bc\u9598\u9053\u5668\u80cc\u9762\u627e\u5230\u5b89\u5168\u78bc\u3002",
+                "title": "\u8f38\u5165\u5b89\u5168\u78bc"
+            }
+        }
+    }
+}

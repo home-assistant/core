@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "station_id": "Sensor ID",
+          "show_on_map": "Show on map"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "invalid_sensor": "Sensor not available or invalid",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}

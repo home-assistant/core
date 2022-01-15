@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Storitev je \u017ee konfigurirana",
+            "cannot_connect": "Povezava ni uspela",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "hassio_confirm": {
+                "description": "Ali se \u017eelite povezati z dodatkom {addon} ?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Geslo"
+                },
+                "description": "Vnesite pravilno geslo za gostitelja: {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "password": "Geslo",
+                    "port": "Vrata"
+                }
+            }
+        }
+    }
+}

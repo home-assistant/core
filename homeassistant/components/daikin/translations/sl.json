@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "error": {
+            "api_password": "Neveljavna avtentikacija, uporabite API klju\u010d ali geslo."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj"
+                },
+                "description": "Vnesite naslov IP va\u0161e Daikin klime.",
+                "title": "Nastavite Daikin klimo"
+            }
+        }
+    }
+}

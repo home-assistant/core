@@ -1,0 +1,8 @@
+{
+  "domain": "ecoal_boiler",
+  "name": "eSterownik eCoal.pl Boiler",
+  "documentation": "https://www.home-assistant.io/integrations/ecoal_boiler",
+  "requirements": ["ecoaliface==0.4.0"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

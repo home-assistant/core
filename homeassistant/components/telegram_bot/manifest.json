@@ -1,0 +1,9 @@
+{
+  "domain": "telegram_bot",
+  "name": "Telegram bot",
+  "documentation": "https://www.home-assistant.io/integrations/telegram_bot",
+  "requirements": ["python-telegram-bot==13.1", "PySocks==1.7.1"],
+  "dependencies": ["http"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
+}

@@ -1,0 +1,37 @@
+# Describes the format for available denonavr services
+
+get_command:
+  name: Get command
+  description: "Send a generic HTTP get command."
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player
+  fields:
+    command:
+      name: Command
+      description: Endpoint of the command, including associated parameters.
+      example: "/goform/formiPhoneAppDirect.xml?RCKSK0410370"
+      required: true
+      selector:
+        text:
+set_dynamic_eq:
+  name: Set dynamic equalizer
+  description: "Enable or disable DynamicEQ."
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player
+  fields:
+    dynamic_eq:
+      description: "True/false for enable/disable."
+      default: true
+      selector:
+        boolean:
+update_audyssey:
+  name: Update audyssey
+  description: "Update Audyssey settings."
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player

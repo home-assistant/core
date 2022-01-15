@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Punctul de acces este deja configurat",
+            "unknown": "Sa produs o eroare necunoscut\u0103."
+        },
+        "error": {
+            "invalid_sgtin_or_pin": "Cod PIN invalid, \u00eencerca\u021bi din nou.",
+            "press_the_button": "V\u0103 rug\u0103m s\u0103 ap\u0103sa\u021bi butonul albastru."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "pin": "Cod PIN (op\u021bional)"
+                }
+            }
+        }
+    }
+}

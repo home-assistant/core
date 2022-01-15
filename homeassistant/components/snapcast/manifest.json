@@ -1,0 +1,8 @@
+{
+  "domain": "snapcast",
+  "name": "Snapcast",
+  "documentation": "https://www.home-assistant.io/integrations/snapcast",
+  "requirements": ["snapcast==2.1.3"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

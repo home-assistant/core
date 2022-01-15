@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Para enviar eventos para o Home Assistant, voc\u00ea precisar\u00e1 configurar o recurso de webhook na Plaato Airlock.\n\nPreencha as seguintes informa\u00e7\u00f5es:\n\n- URL: `{webhook_url}`\n- M\u00e9todo: POST\n\nVeja [a documenta\u00e7\u00e3o]({docs_url}) para mais detalhes."
+        },
+        "step": {
+            "user": {
+                "description": "Tens a certeza que queres montar a Plaato Airlock?",
+                "title": "Configurar o Plaato Webhook"
+            }
+        }
+    }
+}

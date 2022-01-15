@@ -1,0 +1,7 @@
+{
+  "domain": "dte_energy_bridge",
+  "name": "DTE Energy Bridge",
+  "documentation": "https://www.home-assistant.io/integrations/dte_energy_bridge",
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

@@ -1,210 +1,283 @@
-"""
-Component to count within automations.
+"""Component to count within automations."""
+from __future__ import annotations
 
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/counter/
-"""
-import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    CONF_ICON,
+    CONF_ID,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
+    CONF_NAME,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
-from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.loader import bind_hass
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_INITIAL = 'initial'
-ATTR_STEP = 'step'
+ATTR_INITIAL = "initial"
+ATTR_STEP = "step"
+ATTR_MINIMUM = "minimum"
+ATTR_MAXIMUM = "maximum"
+VALUE = "value"
 
-CONF_INITIAL = 'initial'
-CONF_STEP = 'step'
+CONF_INITIAL = "initial"
+CONF_RESTORE = "restore"
+CONF_STEP = "step"
 
 DEFAULT_INITIAL = 0
 DEFAULT_STEP = 1
-DOMAIN = 'counter'
+DOMAIN = "counter"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-SERVICE_DECREMENT = 'decrement'
-SERVICE_INCREMENT = 'increment'
-SERVICE_RESET = 'reset'
+SERVICE_DECREMENT = "decrement"
+SERVICE_INCREMENT = "increment"
+SERVICE_RESET = "reset"
+SERVICE_CONFIGURE = "configure"
 
-SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
-                cv.positive_int,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
-        }, None)
-    })
-}, extra=vol.ALLOW_EXTRA)
+CREATE_FIELDS = {
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
+    vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
+    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
+    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+}
 
-
-@bind_hass
-def increment(hass, entity_id):
-    """Increment a counter."""
-    hass.add_job(async_increment, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_increment(hass, entity_id):
-    """Increment a counter."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: entity_id}))
+UPDATE_FIELDS = {
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_INITIAL): cv.positive_int,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_MINIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_RESTORE): cv.boolean,
+    vol.Optional(CONF_STEP): cv.positive_int,
+}
 
 
-@bind_hass
-def decrement(hass, entity_id):
-    """Decrement a counter."""
-    hass.add_job(async_decrement, hass, entity_id)
+def _none_to_empty_dict(value):
+    if value is None:
+        return {}
+    return value
 
 
-@callback
-@bind_hass
-def async_decrement(hass, entity_id):
-    """Decrement a counter."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: entity_id}))
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            vol.All(
+                _none_to_empty_dict,
+                {
+                    vol.Optional(CONF_ICON): cv.icon,
+                    vol.Optional(
+                        CONF_INITIAL, default=DEFAULT_INITIAL
+                    ): cv.positive_int,
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(
+                        None, vol.Coerce(int)
+                    ),
+                    vol.Optional(CONF_MINIMUM, default=None): vol.Any(
+                        None, vol.Coerce(int)
+                    ),
+                    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
+                    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+                },
+            )
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
-@bind_hass
-def reset(hass, entity_id):
-    """Reset a counter."""
-    hass.add_job(async_reset, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_reset(hass, entity_id):
-    """Reset a counter."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_RESET, {ATTR_ENTITY_ID: entity_id}))
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
-    """Set up a counter."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the counters."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
 
-    entities = []
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Counter.from_yaml
+    )
 
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
+    storage_collection = CounterStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}.storage_collection"),
+        id_manager,
+    )
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, Counter
+    )
 
-        name = cfg.get(CONF_NAME)
-        initial = cfg.get(CONF_INITIAL)
-        step = cfg.get(CONF_STEP)
-        icon = cfg.get(CONF_ICON)
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config.get(DOMAIN, {}).items()]
+    )
+    await storage_collection.async_load()
 
-        entities.append(Counter(object_id, name, initial, step, icon))
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
 
-    if not entities:
-        return False
+    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
+    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
+    component.async_register_entity_service(SERVICE_RESET, {}, "async_reset")
+    component.async_register_entity_service(
+        SERVICE_CONFIGURE,
+        {
+            vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
+            vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+            vol.Optional(ATTR_STEP): cv.positive_int,
+            vol.Optional(ATTR_INITIAL): cv.positive_int,
+            vol.Optional(VALUE): cv.positive_int,
+        },
+        "async_configure",
+    )
 
-    @asyncio.coroutine
-    def async_handler_service(service):
-        """Handle a call to the counter services."""
-        target_counters = component.async_extract_from_service(service)
-
-        if service.service == SERVICE_INCREMENT:
-            attr = 'async_increment'
-        elif service.service == SERVICE_DECREMENT:
-            attr = 'async_decrement'
-        elif service.service == SERVICE_RESET:
-            attr = 'async_reset'
-
-        tasks = [getattr(counter, attr)() for counter in target_counters]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_INCREMENT, async_handler_service)
-    hass.services.async_register(
-        DOMAIN, SERVICE_DECREMENT, async_handler_service)
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESET, async_handler_service)
-
-    yield from component.async_add_entities(entities)
     return True
 
 
-class Counter(Entity):
+class CounterStorageCollection(collection.StorageCollection):
+    """Input storage based collection."""
+
+    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: dict) -> dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return {**data, **update_data}
+
+
+class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, step, icon):
+    def __init__(self, config: dict) -> None:
         """Initialize a counter."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
-        self._step = step
-        self._state = self._initial = initial
-        self._icon = icon
+        self._config: dict = config
+        self._state: int | None = config[CONF_INITIAL]
+        self.editable: bool = True
+
+    @classmethod
+    def from_yaml(cls, config: dict) -> Counter:
+        """Create counter instance from yaml config."""
+        counter = cls(config)
+        counter.editable = False
+        counter.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        return counter
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """If entity should be polled."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return name of the counter."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     @property
-    def state(self):
+    def state(self) -> int | None:
         """Return the current value of the counter."""
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
-        return {
-            ATTR_INITIAL: self._initial,
-            ATTR_STEP: self._step,
+        ret = {
+            ATTR_EDITABLE: self.editable,
+            ATTR_INITIAL: self._config[CONF_INITIAL],
+            ATTR_STEP: self._config[CONF_STEP],
         }
+        if self._config[CONF_MINIMUM] is not None:
+            ret[CONF_MINIMUM] = self._config[CONF_MINIMUM]
+        if self._config[CONF_MAXIMUM] is not None:
+            ret[CONF_MAXIMUM] = self._config[CONF_MAXIMUM]
+        return ret
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    @property
+    def unique_id(self) -> str | None:
+        """Return unique id of the entity."""
+        return self._config[CONF_ID]
+
+    def compute_next_state(self, state) -> int:
+        """Keep the state within the range of min/max values."""
+        if self._config[CONF_MINIMUM] is not None:
+            state = max(self._config[CONF_MINIMUM], state)
+        if self._config[CONF_MAXIMUM] is not None:
+            state = min(self._config[CONF_MAXIMUM], state)
+
+        return state
+
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
-        # If not None, we got an initial value.
-        if self._state is not None:
-            return
+        await super().async_added_to_hass()
+        # __init__ will set self._state to self._initial, only override
+        # if needed.
+        if (
+            self._config[CONF_RESTORE]
+            and (state := await self.async_get_last_state()) is not None
+        ):
+            self._state = self.compute_next_state(int(state.state))
+            self._config[CONF_INITIAL] = state.attributes.get(ATTR_INITIAL)
+            self._config[CONF_MAXIMUM] = state.attributes.get(ATTR_MAXIMUM)
+            self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
+            self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        self._state = state and state.state == state
-
-    @asyncio.coroutine
-    def async_decrement(self):
+    @callback
+    def async_decrement(self) -> None:
         """Decrement the counter."""
-        self._state -= self._step
-        yield from self.async_update_ha_state()
+        self._state = self.compute_next_state(self._state - self._config[CONF_STEP])
+        self.async_write_ha_state()
 
-    @asyncio.coroutine
-    def async_increment(self):
+    @callback
+    def async_increment(self) -> None:
         """Increment a counter."""
-        self._state += self._step
-        yield from self.async_update_ha_state()
+        self._state = self.compute_next_state(self._state + self._config[CONF_STEP])
+        self.async_write_ha_state()
 
-    @asyncio.coroutine
-    def async_reset(self):
+    @callback
+    def async_reset(self) -> None:
         """Reset a counter."""
-        self._state = self._initial
-        yield from self.async_update_ha_state()
+        self._state = self.compute_next_state(self._config[CONF_INITIAL])
+        self.async_write_ha_state()
+
+    @callback
+    def async_configure(self, **kwargs) -> None:
+        """Change the counter's settings with a service."""
+        new_state = kwargs.pop(VALUE, self._state)
+        self._config = {**self._config, **kwargs}
+        self._state = self.compute_next_state(new_state)
+        self.async_write_ha_state()
+
+    async def async_update_config(self, config: dict) -> None:
+        """Change the counter's settings WS CRUD."""
+        self._config = config
+        self._state = self.compute_next_state(self._state)
+        self.async_write_ha_state()

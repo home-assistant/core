@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp",
+            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni."
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            }
+        }
+    }
+}

@@ -1,0 +1,15 @@
+snapshot:
+  name: Snapshot
+  description: Take a snapshot of the media player zone.
+  target:
+    entity:
+      integration: monoprice
+      domain: media_player
+
+restore:
+  name: Restore
+  description: Restore a snapshot of the media player zone.
+  target:
+    entity:
+      integration: monoprice
+      domain: media_player

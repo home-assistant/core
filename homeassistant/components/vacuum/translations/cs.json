@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "Nechat {entity_name} ukl\u00edzet",
+            "dock": "Nechat {entity_name} vr\u00e1tit se do stanice"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} ukl\u00edz\u00ed",
+            "is_docked": "{entity_name} je ve stanici"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} zah\u00e1jil \u00faklid",
+            "docked": "{entity_name} p\u0159ijel do stanice"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "Ukl\u00edz\u00ed",
+            "docked": "Ve stanici",
+            "error": "Chyba",
+            "idle": "Ne\u010dinn\u00fd",
+            "off": "Vypnuto",
+            "on": "Zapnuto",
+            "paused": "Pozastaveno",
+            "returning": "N\u00e1vrat do stanice"
+        }
+    },
+    "title": "Vysava\u010d"
+}

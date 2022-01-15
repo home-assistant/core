@@ -1,0 +1,122 @@
+# Describes the format for available IHC services
+
+set_runtime_value_bool:
+  name: Set runtime value boolean
+  description: Set a boolean runtime value on the IHC controller.
+  fields:
+    controller_id:
+      name: Controller ID
+      description: |
+        If you have multiple controller, this is the index of you controller
+        starting with 0.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+    ihc_id:
+      name: IHC ID
+      description: The integer IHC resource ID.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          mode: box
+    value:
+      name: Value
+      description: The boolean value to set.
+      required: true
+      selector:
+        boolean:
+
+set_runtime_value_int:
+  name: Set runtime value integer
+  description: Set an integer runtime value on the IHC controller.
+  fields:
+    controller_id:
+      name: Controller ID
+      description: |
+        If you have multiple controller, this is the index of you controller
+        starting with 0.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+    ihc_id:
+      name: IHC ID
+      description: The integer IHC resource ID.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          mode: box
+    value:
+      name: Value
+      description: The integer value to set.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          mode: box
+
+set_runtime_value_float:
+  name: Set runtime value float
+  description: Set a float runtime value on the IHC controller.
+  fields:
+    controller_id:
+      name: Controller ID
+      description: |
+        If you have multiple controller, this is the index of you controller
+        starting with 0.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+    ihc_id:
+      name: IHC ID
+      description: The integer IHC resource ID.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          mode: box
+    value:
+      name: Value
+      description: The float value to set.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: 0.01
+          mode: box
+
+pulse:
+  name: Pulse
+  description: Pulses an input on the IHC controller.
+  fields:
+    controller_id:
+      name: Controller ID
+      description: |
+        If you have multiple controller, this is the index of you controller
+        starting with 0.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+    ihc_id:
+      name: IHC ID
+      description: The integer IHC resource ID.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          mode: box

@@ -1,0 +1,51 @@
+{
+   "activityDataPoints" : {},
+   "preparation" : null,
+   "openWindow" : null,
+   "tadoMode" : "HOME",
+   "nextScheduleChange" : {
+      "setting" : {
+         "temperature" : {
+            "fahrenheit" : 149,
+            "celsius" : 65
+         },
+         "type" : "HOT_WATER",
+         "power" : "ON"
+      },
+      "start" : "2020-03-26T05:00:00Z"
+   },
+   "nextTimeBlock" : {
+      "start" : "2020-03-26T05:00:00.000Z"
+   },
+   "overlay" : {
+      "setting" : {
+         "temperature" : {
+            "celsius" : 30,
+            "fahrenheit" : 86
+         },
+         "type" : "HOT_WATER",
+         "power" : "ON"
+      },
+      "termination" : {
+         "type" : "TADO_MODE",
+         "projectedExpiry" : "2020-03-26T05:00:00Z",
+         "typeSkillBasedApp" : "TADO_MODE"
+      },
+      "type" : "MANUAL"
+   },
+   "geolocationOverride" : false,
+   "geolocationOverrideDisableTime" : null,
+   "sensorDataPoints" : {},
+   "overlayType" : "MANUAL",
+   "link" : {
+      "state" : "ONLINE"
+   },
+   "setting" : {
+      "type" : "HOT_WATER",
+      "temperature" : {
+         "fahrenheit" : 86,
+         "celsius" : 30
+      },
+      "power" : "ON"
+   }
+}

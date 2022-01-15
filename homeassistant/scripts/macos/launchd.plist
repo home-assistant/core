@@ -8,7 +8,7 @@
     <key>EnvironmentVariables</key>
     <dict>
       <key>PATH</key>
-      <string>/usr/local/bin/:/usr/bin:/usr/sbin:$PATH</string>
+      <string>/usr/local/bin/:/usr/bin:/usr/sbin:/sbin:$PATH</string>
       <key>LC_CTYPE</key>
       <string>UTF-8</string>
     </dict>

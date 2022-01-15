@@ -1,0 +1,1 @@
+"""The Alpha Vantage component."""

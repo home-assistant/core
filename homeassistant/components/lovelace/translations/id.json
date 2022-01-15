@@ -1,0 +1,10 @@
+{
+    "system_health": {
+        "info": {
+            "dashboards": "Dasbor",
+            "mode": "Mode",
+            "resources": "Sumber Daya",
+            "views": "Tampilan"
+        }
+    }
+}

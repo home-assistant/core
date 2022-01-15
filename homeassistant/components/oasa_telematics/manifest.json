@@ -1,0 +1,8 @@
+{
+  "domain": "oasa_telematics",
+  "name": "OASA Telematics",
+  "documentation": "https://www.home-assistant.io/integrations/oasa_telematics/",
+  "requirements": ["oasatelematics==0.3"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
+}

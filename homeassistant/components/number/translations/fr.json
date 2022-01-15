@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_value": "D\u00e9finir la valeur de {entity_name}"
+        }
+    },
+    "title": "Nombre"
+}

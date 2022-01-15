@@ -1,0 +1,28 @@
+{
+  "controller": {
+    "id": 1,
+    "user_id": 1,
+    "serial_number": "12345678",
+    "mac": "12345678",
+    "firmware_version": "V1SHTHF",
+    "name": "Melissa 12345678",
+    "type": "melissa",
+    "room_id": null,
+    "created": "2016-07-06 18:59:46",
+    "deleted_at": null,
+    "online": true,
+    "_relation": {
+      "command_log": {
+        "state": 1,
+        "mode": 2,
+        "temp": 16,
+        "fan": 1
+      }
+    }
+  },
+  "_links": {
+    "self": {
+      "href": "/v1/controllers/12345678"
+    }
+  }
+}

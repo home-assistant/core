@@ -1,0 +1,44 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Armer {entity_name} mode sortie",
+            "arm_home": "Armer {entity_name} en mode \"maison\"",
+            "arm_night": "Armer {entity_name} en mode \"nuit\"",
+            "arm_vacation": "Armer {entity_name} vacances",
+            "disarm": "D\u00e9sarmer {entity_name}",
+            "trigger": "D\u00e9clencheur {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} est arm\u00e9",
+            "is_armed_home": "{entity_name} est arm\u00e9 \u00e0 la maison",
+            "is_armed_night": "{entity_name} est arm\u00e9 la nuit",
+            "is_armed_vacation": "{entity_name} est arm\u00e9 en mode vacances",
+            "is_disarmed": "{entity_name} est d\u00e9sarm\u00e9",
+            "is_triggered": "{entity_name} est d\u00e9clench\u00e9"
+        },
+        "trigger_type": {
+            "armed_away": "Armer {entity_name} en mode \"sortie\"",
+            "armed_home": "Armer {entity_name} en mode \"maison\"",
+            "armed_night": "Armer {entity_name} en mode \"nuit\"",
+            "armed_vacation": "{entity_name} vacances arm\u00e9es",
+            "disarmed": "{entity_name} d\u00e9sarm\u00e9",
+            "triggered": "{entity_name} d\u00e9clench\u00e9"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Activ\u00e9",
+            "armed_away": "Enclench\u00e9e (absent)",
+            "armed_custom_bypass": "Arm\u00e9 avec exception personnalis\u00e9e",
+            "armed_home": "Enclench\u00e9e (pr\u00e9sent)",
+            "armed_night": "Enclench\u00e9 (nuit)",
+            "armed_vacation": "Arm\u00e9es vacances",
+            "arming": "Activation",
+            "disarmed": "D\u00e9sactiv\u00e9e",
+            "disarming": "D\u00e9sactivation",
+            "pending": "En attente",
+            "triggered": "D\u00e9clench\u00e9"
+        }
+    },
+    "title": "Panneau de contr\u00f4le d'alarme"
+}

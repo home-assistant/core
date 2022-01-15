@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Port server sudah digunakan.",
+            "already_configured": "Port server sudah dikonfigurasi.",
+            "start_server_failed": "Gagal memulai server."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "title": "Siapkan server TCP untuk perangkat WIFFI"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Tenggang waktu (menit)"
+                }
+            }
+        }
+    }
+}

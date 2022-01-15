@@ -1,0 +1,94 @@
+create_group:
+  name: Create group
+  description: Create a new person group.
+  fields:
+    name:
+      name: Name
+      description: Name of the group.
+      required: true
+      example: family
+      selector:
+        text:
+create_person:
+  name: Create person
+  description: Create a new person in the group.
+  fields:
+    group:
+      name: Group
+      description: Name of the group
+      required: true
+      example: family
+      selector:
+        text:
+    name:
+      name: Name
+      description: Name of the person
+      required: true
+      example: Hans
+      selector:
+        text:
+delete_group:
+  name: Delete group
+  description: Delete a new person group.
+  fields:
+    name:
+      name: Name
+      description: Name of the group.
+      required: true
+      example: family
+      selector:
+        text:
+delete_person:
+  name: Delete person
+  description: Delete a person in the group.
+  fields:
+    group:
+      name: Group
+      description: Name of the group.
+      required: true
+      example: family
+      selector:
+        text:
+    name:
+      name: Name
+      description: Name of the person.
+      required: true
+      example: Hans
+      selector:
+        text:
+face_person:
+  name: Face person
+  description: Add a new picture to a person.
+  fields:
+    camera_entity:
+      name: Camera entity
+      description: Camera to take a picture.
+      required: true
+      example: camera.door
+      selector:
+        text:
+    group:
+      name: Group
+      description: Name of the group.
+      required: true
+      example: family
+      selector:
+        text:
+    person:
+      name: Person
+      description: Name of the person.
+      required: true
+      example: Hans
+      selector:
+        text:
+train_group:
+  name: Train group
+  description: Train a person group.
+  fields:
+    group:
+      name: Group
+      description: Name of the group
+      required: true
+      example: family
+      selector:
+        text:

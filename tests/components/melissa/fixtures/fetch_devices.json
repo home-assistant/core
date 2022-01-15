@@ -1,0 +1,27 @@
+{
+  "12345678": {
+    "user_id": 1,
+    "serial_number": "12345678",
+    "mac": "12345678",
+    "firmware_version": "V1SHTHF",
+    "name": "Melissa 12345678",
+    "type": "melissa",
+    "room_id": null,
+    "created": "2016-07-06 18:59:46",
+    "id": 1,
+    "online": true,
+    "brand_id": 1,
+    "controller_log": {
+      "temp": 27.4,
+      "created": "2018-01-08T21:01:14.281Z",
+      "raw_temperature": 28928,
+      "humidity": 18.7,
+      "raw_humidity": 12946
+    },
+    "_links": {
+      "self": {
+        "href": "/v1/controllers"
+      }
+    }
+  }
+}

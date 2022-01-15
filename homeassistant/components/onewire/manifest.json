@@ -1,0 +1,9 @@
+{
+  "domain": "onewire",
+  "name": "1-Wire",
+  "documentation": "https://www.home-assistant.io/integrations/onewire",
+  "config_flow": true,
+  "requirements": ["pyownet==0.10.0.post1", "pi1wire==0.1.0"],
+  "codeowners": ["@garbled1", "@epenet"],
+  "iot_class": "local_polling"
+}

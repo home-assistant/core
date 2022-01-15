@@ -1,0 +1,74 @@
+# Support for a Genius Hub system
+# Describes the format for available services
+
+set_zone_mode:
+  name: Set zone mode
+  description: >-
+    Set the zone to an operating mode.
+  fields:
+    entity_id:
+      name: Entity
+      description: The zone's entity_id.
+      required: true
+      selector:
+        entity:
+          integration: geniushub
+          domain: climate
+    mode:
+      name: Mode
+      description: "One of: off, timer or footprint."
+      required: true
+      selector:
+        select:
+          options:
+            - 'off'
+            - 'timer'
+            - 'footprint'
+
+set_zone_override:
+  name: Set zone override
+  description: >-
+    Override the zone's set point for a given duration.
+  fields:
+    entity_id:
+      name: Entity
+      description: The zone's entity_id.
+      required: true
+      selector:
+        entity:
+          integration: geniushub
+          domain: climate
+    temperature:
+      name: Temperature
+      description: The target temperature.
+      required: true
+      selector:
+        number:
+          min: 4
+          max: 28
+          step: 0.1
+          unit_of_measurement: '°'
+    duration:
+      name: Duration
+      description: >-
+        The duration of the override. Optional, default 1 hour, maximum 24 hours.
+      example: '{"minutes": 135}'
+      selector:
+        object:
+
+set_switch_override:
+  name: Set switch override
+  description: >-
+    Override switch for a given duration.
+  target:
+    entity:
+      integration: geniushub
+      domain: switch
+  fields:
+    duration:
+      name: Duration
+      description: >-
+        The duration of the override. Optional, default 1 hour, maximum 24 hours.
+      example: '{"minutes": 135}'
+      selector:
+        object:

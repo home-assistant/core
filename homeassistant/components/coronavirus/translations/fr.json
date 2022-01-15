@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Pays"
+                },
+                "title": "Choisissez un pays \u00e0 surveiller"
+            }
+        }
+    }
+}

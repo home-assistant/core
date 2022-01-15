@@ -1,0 +1,7 @@
+{
+  "domain": "openalpr_local",
+  "name": "OpenALPR Local",
+  "documentation": "https://www.home-assistant.io/integrations/openalpr_local",
+  "codeowners": [],
+  "iot_class": "local_push"
+}

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "create_entry": {
+            "default": "Per configurar les opcions avan\u00e7ades mira la [documentaci\u00f3 de Life360]({docs_url})."
+        },
+        "error": {
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_username": "Nom d'usuari incorrecte",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Per configurar les opcions avan\u00e7ades mira la [documentaci\u00f3 de Life360]({docs_url}). Pot ser que ho hagis de fer abans d'afegir cap compte.",
+                "title": "Informaci\u00f3 del compte Life360"
+            }
+        }
+    }
+}

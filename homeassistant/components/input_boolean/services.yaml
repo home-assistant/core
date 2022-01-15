@@ -1,0 +1,24 @@
+toggle:
+  name: Toggle
+  description: Toggle an input boolean
+  target:
+    entity:
+      domain: input_boolean
+
+turn_off:
+  name: Turn off
+  description: Turn off an input boolean
+  target:
+    entity:
+      domain: input_boolean
+
+turn_on:
+  name: Turn on
+  description: Turn on an input boolean
+  target:
+    entity:
+      domain: input_boolean
+
+reload:
+  name: Reload
+  description: Reload the input_boolean configuration

@@ -1,0 +1,24 @@
+sync:
+  name: Sync
+  description: Syncs the remote's configuration.
+  target:
+    entity:
+      integration: harmony
+      domain: remote
+
+change_channel:
+  name: Change channel
+  description: Sends change channel command to the Harmony HUB
+  target:
+    entity:
+      integration: harmony
+      domain: remote
+  fields:
+    channel:
+      name: Channel
+      description: Channel number to change to
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100000

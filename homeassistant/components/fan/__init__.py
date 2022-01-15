@@ -1,324 +1,510 @@
-"""
-Provides functionality to interact with fans.
+"""Provides functionality to interact with fans."""
+from __future__ import annotations
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/fan/
-"""
-import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
+import math
+from typing import final
 
 import voluptuous as vol
 
-from homeassistant.components import group
-from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
-                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID,
-                                 STATE_UNKNOWN)
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'fan'
-DEPENDENCIES = ['group']
+DOMAIN = "fan"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-GROUP_NAME_ALL_FANS = 'all fans'
-ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)
-
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 # Bitfield of features supported by the fan entity
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
+SUPPORT_PRESET_MODE = 8
 
-SERVICE_SET_SPEED = 'set_speed'
-SERVICE_OSCILLATE = 'oscillate'
-SERVICE_SET_DIRECTION = 'set_direction'
+SERVICE_SET_SPEED = "set_speed"
+SERVICE_INCREASE_SPEED = "increase_speed"
+SERVICE_DECREASE_SPEED = "decrease_speed"
+SERVICE_OSCILLATE = "oscillate"
+SERVICE_SET_DIRECTION = "set_direction"
+SERVICE_SET_PERCENTAGE = "set_percentage"
+SERVICE_SET_PRESET_MODE = "set_preset_mode"
 
-SPEED_OFF = 'off'
-SPEED_LOW = 'low'
-SPEED_MEDIUM = 'medium'
-SPEED_HIGH = 'high'
+SPEED_OFF = "off"
+SPEED_LOW = "low"
+SPEED_MEDIUM = "medium"
+SPEED_HIGH = "high"
 
-DIRECTION_FORWARD = 'forward'
-DIRECTION_REVERSE = 'reverse'
+DIRECTION_FORWARD = "forward"
+DIRECTION_REVERSE = "reverse"
 
-ATTR_SPEED = 'speed'
-ATTR_SPEED_LIST = 'speed_list'
-ATTR_OSCILLATING = 'oscillating'
-ATTR_DIRECTION = 'direction'
+ATTR_SPEED = "speed"
+ATTR_PERCENTAGE = "percentage"
+ATTR_PERCENTAGE_STEP = "percentage_step"
+ATTR_SPEED_LIST = "speed_list"
+ATTR_OSCILLATING = "oscillating"
+ATTR_DIRECTION = "direction"
+ATTR_PRESET_MODE = "preset_mode"
+ATTR_PRESET_MODES = "preset_modes"
 
-PROP_TO_ATTR = {
-    'speed': ATTR_SPEED,
-    'speed_list': ATTR_SPEED_LIST,
-    'oscillating': ATTR_OSCILLATING,
-    'direction': ATTR_DIRECTION,
-}  # type: dict
+_NOT_SPEED_OFF = "off"
 
-FAN_SET_SPEED_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_SPEED): cv.string
-})  # type: dict
+OFF_SPEED_VALUES = [SPEED_OFF, None]
 
-FAN_TURN_ON_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_SPEED): cv.string
-})  # type: dict
+LEGACY_SPEED_LIST = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-FAN_TURN_OFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})  # type: dict
 
-FAN_OSCILLATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_OSCILLATING): cv.boolean
-})  # type: dict
+class NoValidSpeedsError(ValueError):
+    """Exception class when there are no valid speeds."""
 
-FAN_TOGGLE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
-})
 
-FAN_SET_DIRECTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_DIRECTION): cv.string
-})  # type: dict
+class NotValidSpeedError(ValueError):
+    """Exception class when the speed in not in the speed list."""
 
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {
-        'method': 'async_turn_on',
-        'schema': FAN_TURN_ON_SCHEMA,
-    },
-    SERVICE_TURN_OFF: {
-        'method': 'async_turn_off',
-        'schema': FAN_TURN_OFF_SCHEMA,
-    },
-    SERVICE_TOGGLE: {
-        'method': 'async_toggle',
-        'schema': FAN_TOGGLE_SCHEMA,
-    },
-    SERVICE_SET_SPEED: {
-        'method': 'async_set_speed',
-        'schema': FAN_SET_SPEED_SCHEMA,
-    },
-    SERVICE_OSCILLATE: {
-        'method': 'async_oscillate',
-        'schema': FAN_OSCILLATE_SCHEMA,
-    },
-    SERVICE_SET_DIRECTION: {
-        'method': 'async_set_direction',
-        'schema': FAN_SET_DIRECTION_SCHEMA,
-    },
-}
+
+class NotValidPresetModeError(ValueError):
+    """Exception class when the preset_mode in not in the preset_modes list."""
 
 
 @bind_hass
-def is_on(hass, entity_id: str=None) -> bool:
+def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
-    return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
+    if ATTR_SPEED in state.attributes:
+        return state.attributes[ATTR_SPEED] not in OFF_SPEED_VALUES
+    return state.state == STATE_ON
 
 
-@bind_hass
-def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
-    """Turn all or specified fan on."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_SPEED, speed),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def turn_off(hass, entity_id: str=None) -> None:
-    """Turn all or specified fan off."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, entity_id: str=None) -> None:
-    """Toggle all or specified fans."""
-    data = {
-        ATTR_ENTITY_ID: entity_id
-    }
-
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-@bind_hass
-def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
-    """Set oscillation on all or specified fan."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OSCILLATING, should_oscillate),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_OSCILLATE, data)
-
-
-@bind_hass
-def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
-    """Set speed for all or specified fan."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_SPEED, speed),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_SPEED, data)
-
-
-@bind_hass
-def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
-    """Set direction for all or specified fan."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_DIRECTION, direction),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
-
-
-@asyncio.coroutine
-def async_setup(hass, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Expose fan control via statemachine and services."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_FANS)
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_fan_service(service):
-        """Hande service call for fans."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = service.data.copy()
-
-        # Convert the entity ids to valid fan ids
-        target_fans = component.async_extract_from_service(service)
-        params.pop(ATTR_ENTITY_ID, None)
-
-        update_tasks = []
-        for fan in target_fans:
-            yield from getattr(fan, method['method'])(**params)
-            if not fan.should_poll:
-                continue
-            update_tasks.append(fan.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    for service_name in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service_name].get('schema')
-        hass.services.async_register(
-            DOMAIN, service_name, async_handle_fan_service, schema=schema)
+    # After the transition to percentage and preset_modes concludes,
+    # switch this back to async_turn_on and remove async_turn_on_compat
+    component.async_register_entity_service(
+        SERVICE_TURN_ON,
+        {
+            vol.Optional(ATTR_SPEED): cv.string,
+            vol.Optional(ATTR_PERCENTAGE): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
+            vol.Optional(ATTR_PRESET_MODE): cv.string,
+        },
+        "async_turn_on_compat",
+    )
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    # After the transition to percentage and preset_modes concludes,
+    # remove this service
+    component.async_register_entity_service(
+        SERVICE_SET_SPEED,
+        {vol.Required(ATTR_SPEED): cv.string},
+        "async_set_speed_deprecated",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_INCREASE_SPEED,
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_increase_speed",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_DECREASE_SPEED,
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_decrease_speed",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_OSCILLATE,
+        {vol.Required(ATTR_OSCILLATING): cv.boolean},
+        "async_oscillate",
+        [SUPPORT_OSCILLATE],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_DIRECTION,
+        {vol.Optional(ATTR_DIRECTION): cv.string},
+        "async_set_direction",
+        [SUPPORT_DIRECTION],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_PERCENTAGE,
+        {
+            vol.Required(ATTR_PERCENTAGE): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_set_percentage",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_PRESET_MODE,
+        {vol.Required(ATTR_PRESET_MODE): cv.string},
+        "async_set_preset_mode",
+        [SUPPORT_SET_SPEED, SUPPORT_PRESET_MODE],
+    )
 
     return True
 
 
-class FanEntity(ToggleEntity):
-    """Representation of a fan."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
-    def set_speed(self: ToggleEntity, speed: str) -> None:
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class FanEntityDescription(ToggleEntityDescription):
+    """A class that describes fan entities."""
+
+
+class FanEntity(ToggleEntity):
+    """Base class for fan entities."""
+
+    entity_description: FanEntityDescription
+    _attr_current_direction: str | None = None
+    _attr_oscillating: bool | None = None
+    _attr_percentage: int | None
+    _attr_preset_mode: str | None
+    _attr_preset_modes: list[str] | None
+    _attr_speed_count: int
+    _attr_supported_features: int = 0
+
+    def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         raise NotImplementedError()
 
-    def async_set_speed(self: ToggleEntity, speed: str):
-        """Set the speed of the fan.
+    async def async_set_speed_deprecated(self, speed: str):
+        """Set the speed of the fan."""
+        _LOGGER.error(
+            "The fan.set_speed service is deprecated and will fail in 2022.3 and later, use fan.set_percentage or fan.set_preset_mode instead"
+        )
+        await self.async_set_speed(speed)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if speed is SPEED_OFF:
-            return self.async_turn_off()
-        return self.hass.async_add_job(self.set_speed, speed)
+    async def async_set_speed(self, speed: str):
+        """Set the speed of the fan."""
+        if speed == SPEED_OFF:
+            await self.async_turn_off()
+            return
 
-    def set_direction(self: ToggleEntity, direction: str) -> None:
+        if self.preset_modes and speed in self.preset_modes:
+            await self.async_set_preset_mode(speed)
+            return
+
+        await self.async_set_percentage(self.speed_to_percentage(speed))
+
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan, as a percentage."""
+        raise NotImplementedError()
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan, as a percentage."""
+        if percentage == 0:
+            await self.async_turn_off()
+        await self.hass.async_add_executor_job(self.set_percentage, percentage)
+
+    async def async_increase_speed(self, percentage_step: int | None = None) -> None:
+        """Increase the speed of the fan."""
+        await self._async_adjust_speed(1, percentage_step)
+
+    async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
+        """Decrease the speed of the fan."""
+        await self._async_adjust_speed(-1, percentage_step)
+
+    async def _async_adjust_speed(
+        self, modifier: int, percentage_step: int | None
+    ) -> None:
+        """Increase or decrease the speed of the fan."""
+        current_percentage = self.percentage or 0
+
+        if percentage_step is not None:
+            new_percentage = current_percentage + (percentage_step * modifier)
+        else:
+            speed_range = (1, self.speed_count)
+            speed_index = math.ceil(
+                percentage_to_ranged_value(speed_range, current_percentage)
+            )
+            new_percentage = ranged_value_to_percentage(
+                speed_range, speed_index + modifier
+            )
+
+        new_percentage = max(0, min(100, new_percentage))
+
+        await self.async_set_percentage(new_percentage)
+
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        raise NotImplementedError()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
+
+    def _valid_preset_mode_or_raise(self, preset_mode):
+        """Raise NotValidPresetModeError on invalid preset_mode."""
+        preset_modes = self.preset_modes
+        if not preset_modes or preset_mode not in preset_modes:
+            raise NotValidPresetModeError(
+                f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
+            )
+
+    def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         raise NotImplementedError()
 
-    def async_set_direction(self: ToggleEntity, direction: str):
-        """Set the direction of the fan.
+    async def async_set_direction(self, direction: str):
+        """Set the direction of the fan."""
+        await self.hass.async_add_executor_job(self.set_direction, direction)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_direction, direction)
-
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    # pylint: disable=arguments-differ
+    def turn_on(
+        self,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
-    def async_turn_on(self: ToggleEntity, speed: str=None, **kwargs):
+    async def async_turn_on_compat(
+        self,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan.
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if speed is SPEED_OFF:
-            return self.async_turn_off()
-        return self.hass.async_add_job(
-            ft.partial(self.turn_on, speed, **kwargs))
+        This _compat version wraps async_turn_on with
+        backwards and forward compatibility.
 
-    def oscillate(self: ToggleEntity, oscillating: bool) -> None:
+        This compatibility shim will be removed in 2022.3
+        """
+        if preset_mode is not None:
+            self._valid_preset_mode_or_raise(preset_mode)
+            speed = preset_mode
+            percentage = None
+        elif speed is not None:
+            _LOGGER.error(
+                "Calling fan.turn_on with the speed argument is deprecated and will fail in 2022.3 and later, use percentage or preset_mode instead"
+            )
+            if self.preset_modes and speed in self.preset_modes:
+                preset_mode = speed
+                percentage = None
+            else:
+                percentage = self.speed_to_percentage(speed)
+        elif percentage is not None:
+            speed = self.percentage_to_speed(percentage)
+
+        await self.async_turn_on(
+            speed=speed,
+            percentage=percentage,
+            preset_mode=preset_mode,
+            **kwargs,
+        )
+
+    # pylint: disable=arguments-differ
+    async def async_turn_on(
+        self,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs,
+    ) -> None:
+        """Turn on the fan."""
+        if speed == SPEED_OFF:
+            await self.async_turn_off()
+        else:
+            await self.hass.async_add_executor_job(
+                ft.partial(
+                    self.turn_on,
+                    speed=speed,
+                    percentage=percentage,
+                    preset_mode=preset_mode,
+                    **kwargs,
+                )
+            )
+
+    def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        pass
+        raise NotImplementedError()
 
-    def async_oscillate(self: ToggleEntity, oscillating: bool):
-        """Oscillate the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.oscillate, oscillating)
+    async def async_oscillate(self, oscillating: bool):
+        """Oscillate the fan."""
+        await self.hass.async_add_executor_job(self.oscillate, oscillating)
 
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
+        return self.speed not in [SPEED_OFF, None]
 
     @property
-    def speed(self) -> str:
+    def speed(self) -> str | None:
         """Return the current speed."""
-        return None
+        if preset_mode := self.preset_mode:
+            return preset_mode
+        if (percentage := self.percentage) is None:
+            return None
+        return self.percentage_to_speed(percentage)
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def percentage(self) -> int | None:
+        """Return the current speed as a percentage."""
+        if hasattr(self, "_attr_percentage"):
+            return self._attr_percentage
+        return 0
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        if hasattr(self, "_attr_speed_count"):
+            return self._attr_speed_count
+        return 100
+
+    @property
+    def percentage_step(self) -> float:
+        """Return the step size for percentage."""
+        return 100 / self.speed_count
+
+    @property
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return []
+        speeds = [SPEED_OFF, *LEGACY_SPEED_LIST]
+        if preset_modes := self.preset_modes:
+            speeds.extend(preset_modes)
+        return speeds
 
     @property
-    def current_direction(self) -> str:
+    def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
-        return None
+        return self._attr_current_direction
 
     @property
-    def state_attributes(self: ToggleEntity) -> dict:
+    def oscillating(self) -> bool | None:
+        """Return whether or not the fan is currently oscillating."""
+        return self._attr_oscillating
+
+    @property
+    def capability_attributes(self):
+        """Return capability attributes."""
+        attrs = {}
+        if self.supported_features & SUPPORT_SET_SPEED:
+            attrs[ATTR_SPEED_LIST] = self.speed_list
+
+        if (
+            self.supported_features & SUPPORT_SET_SPEED
+            or self.supported_features & SUPPORT_PRESET_MODE
+        ):
+            attrs[ATTR_PRESET_MODES] = self.preset_modes
+
+        return attrs
+
+    def speed_to_percentage(self, speed: str) -> int:  # pylint: disable=no-self-use
+        """Map a legacy speed to a percentage."""
+        if speed in OFF_SPEED_VALUES:
+            return 0
+        if speed not in LEGACY_SPEED_LIST:
+            raise NotValidSpeedError(f"The speed {speed} is not a valid speed.")
+        return ordered_list_item_to_percentage(LEGACY_SPEED_LIST, speed)
+
+    def percentage_to_speed(  # pylint: disable=no-self-use
+        self, percentage: int
+    ) -> str:
+        """Map a percentage to a legacy speed."""
+        if percentage == 0:
+            return SPEED_OFF
+        return percentage_to_ordered_list_item(LEGACY_SPEED_LIST, percentage)
+
+    @final
+    @property
+    def state_attributes(self) -> dict:
         """Return optional state attributes."""
-        data = {}  # type: dict
+        data: dict[str, float | str | None] = {}
+        supported_features = self.supported_features
 
-        for prop, attr in PROP_TO_ATTR.items():
-            if not hasattr(self, prop):
-                continue
+        if supported_features & SUPPORT_DIRECTION:
+            data[ATTR_DIRECTION] = self.current_direction
 
-            value = getattr(self, prop)
-            if value is not None:
-                data[attr] = value
+        if supported_features & SUPPORT_OSCILLATE:
+            data[ATTR_OSCILLATING] = self.oscillating
+
+        if supported_features & SUPPORT_SET_SPEED:
+            data[ATTR_SPEED] = self.speed
+            data[ATTR_PERCENTAGE] = self.percentage
+            data[ATTR_PERCENTAGE_STEP] = self.percentage_step
+
+        if (
+            supported_features & SUPPORT_PRESET_MODE
+            or supported_features & SUPPORT_SET_SPEED
+        ):
+            data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
 
     @property
-    def supported_features(self: ToggleEntity) -> int:
+    def supported_features(self) -> int:
         """Flag supported features."""
-        return 0
+        return self._attr_supported_features
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode, e.g., auto, smart, interval, favorite.
+
+        Requires SUPPORT_SET_SPEED.
+        """
+        if hasattr(self, "_attr_preset_mode"):
+            return self._attr_preset_mode
+        return None
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of available preset modes.
+
+        Requires SUPPORT_SET_SPEED.
+        """
+        if hasattr(self, "_attr_preset_modes"):
+            return self._attr_preset_modes
+        return None

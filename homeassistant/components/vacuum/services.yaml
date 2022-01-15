@@ -1,119 +1,102 @@
 # Describes the format for available vacuum services
 
 turn_on:
+  name: Turn on
   description: Start a new cleaning task.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
 
 turn_off:
+  name: Turn off
   description: Stop the current cleaning task and return to home.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
 
 stop:
+  name: Stop
   description: Stop the current cleaning task.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
 
 locate:
+  name: Locate
   description: Locate the vacuum cleaner robot.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
 
 start_pause:
+  name: Start/Pause
   description: Start, pause, or resume the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+
+start:
+  name: Start
+  description: Start or resume the cleaning task.
+  target:
+    entity:
+      domain: vacuum
+
+pause:
+  name: Pause
+  description: Pause the cleaning task.
+  target:
+    entity:
+      domain: vacuum
 
 return_to_base:
+  name: Return to base
   description: Tell the vacuum cleaner to return to its dock.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
 
 clean_spot:
+  name: Clean spot
   description: Tell the vacuum cleaner to do a spot clean-up.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
 
 send_command:
+  name: Send command
   description: Send a raw command to the vacuum cleaner.
+  target:
+    entity:
+      domain: vacuum
   fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
     command:
+      name: Command
       description: Command to execute.
-      example: 'set_dnd_timer'
+      required: true
+      example: "set_dnd_timer"
+      selector:
+        text:
     params:
+      name: Parameters
       description: Parameters for the command.
-      example: '[22,0,6,0]'
+      example: '{ "key": "value" }'
+      selector:
+        object:
 
 set_fan_speed:
+  name: Set fan speed
   description: Set the fan speed of the vacuum cleaner.
+  target:
+    entity:
+      domain: vacuum
   fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
     fan_speed:
-      description: Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium', or by percentage, between 0 and 100.
-      example: 'low'
-
-xiaomi_remote_control_start:
-  description: Start remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-
-xiaomi_remote_control_stop:
-  description: Stop remote control mode of the vacuum cleaner.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-
-xiaomi_remote_control_move:
-  description: Remote control the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-    velocity:
-      description: Speed, between -0.29 and 0.29.
-      example: '0.2'
-    rotation:
-      description: Rotation, between -179 degrees and 179 degrees.
-      example: '90'
-    duration:
-      description: Duration of the movement.
-      example: '1500'
-
-xiaomi_remote_control_move_step:
-  description: Remote control the vacuum cleaner, only makes one move and then stops.
-  fields:
-    entity_id:
-      description: Name of the botvac entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-    velocity:
-      description: Speed, between -0.29 and 0.29.
-      example: '0.2'
-    rotation:
-      description: Rotation, between -179 degrees and 179 degrees.
-      example: '90'
-    duration:
-      description: Duration of the movement.
-      example: '1500'
+      name: Fan speed
+      description:
+        Platform dependent vacuum cleaner fan speed, with speed steps, like
+        'medium' or by percentage, between 0 and 100.
+      required: true
+      example: "low"
+      selector:
+        text:

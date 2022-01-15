@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "webhook_not_internet_accessible": "La teva inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per poder rebre missatges webhook."
+        },
+        "create_entry": {
+            "default": "Per enviar esdeveniments a Home Assistant, haur\u00e0s de configurar l'opci\u00f3 webhook de GPSLogger.\n\nCompleta la seg\u00fcent informaci\u00f3:\n\n- URL: `{webhook_url}` \n- M\u00e8tode: POST \n\nConsulta la [documentaci\u00f3]({docs_url}) per a m\u00e9s detalls."
+        },
+        "step": {
+            "user": {
+                "description": "Est\u00e0s segur que vols configurar el Webhook de GPSLogger?",
+                "title": "Configuraci\u00f3 del Webhook de GPSLogger"
+            }
+        }
+    }
+}

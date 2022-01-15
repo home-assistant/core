@@ -1,0 +1,1956 @@
+{
+    "nodeId": 19,
+    "index": 0,
+    "installerIcon": 7168,
+    "userIcon": 7168,
+    "status": 4,
+    "ready": true,
+    "deviceClass": {
+      "basic": {
+        "key": 4,
+        "label": "Routing Slave"
+      },
+      "generic": {
+        "key": 17,
+        "label": "Multilevel Switch"
+      },
+      "specific": {
+        "key": 0,
+        "label": "Unused"
+      },
+      "mandatorySupportedCCs": [
+        32,
+        38
+      ],
+      "mandatoryControlledCCs": []
+    },
+    "isListening": true,
+    "isFrequentListening": false,
+    "isRouting": true,
+    "maxBaudRate": 40000,
+    "isSecure": false,
+    "version": 4,
+    "isBeaming": true,
+    "manufacturerId": 798,
+    "productId": 1,
+    "productType": 14,
+    "firmwareVersion": "1.34",
+    "zwavePlusVersion": 2,
+    "nodeType": 0,
+    "roleType": 5,
+    "name": "family_room_combo",
+    "deviceConfig": {
+      "filename": "/opt/node_modules/@zwave-js/config/config/devices/0x031e/lzw36.json",
+      "manufacturerId": 798,
+      "manufacturer": "Inovelli",
+      "label": "LZW36",
+      "description": "Fan/Light Dimmer",
+      "devices": [
+        {
+          "productType": "0x000e",
+          "productId": "0x0001"
+        }
+      ],
+      "firmwareVersion": {
+        "min": "0.0",
+        "max": "255.255"
+      },
+      "associations": {},
+      "paramInformation": {
+        "_map": {}
+      }
+    },
+    "label": "LZW36",
+    "neighbors": [
+      1,
+      13,
+      14,
+      15,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "endpointCountIsDynamic": false,
+    "endpointsHaveIdenticalCapabilities": true,
+    "individualEndpointCount": 2,
+    "aggregatedEndpointCount": 0,
+    "interviewAttempts": 1,
+    "interviewStage": 7,
+    "commandClasses": [
+      {
+        "id": 38,
+        "name": "Multilevel Switch",
+        "version": 4,
+        "isSecure": false
+      },
+      {
+        "id": 94,
+        "name": "Z-Wave Plus Info",
+        "version": 2,
+        "isSecure": false
+      },
+      {
+        "id": 152,
+        "name": "Security",
+        "version": 1,
+        "isSecure": true
+      },
+      {
+        "id": 108,
+        "name": "Supervision",
+        "version": 1,
+        "isSecure": false
+      },
+      {
+        "id": 112,
+        "name": "Configuration",
+        "version": 4,
+        "isSecure": false
+      },
+      {
+        "id": 133,
+        "name": "Association",
+        "version": 2,
+        "isSecure": false
+      },
+      {
+        "id": 89,
+        "name": "Association Group Information",
+        "version": 3,
+        "isSecure": false
+      },
+      {
+        "id": 142,
+        "name": "Multi Channel Association",
+        "version": 3,
+        "isSecure": false
+      },
+      {
+        "id": 134,
+        "name": "Version",
+        "version": 3,
+        "isSecure": false
+      },
+      {
+        "id": 114,
+        "name": "Manufacturer Specific",
+        "version": 2,
+        "isSecure": false
+      },
+      {
+        "id": 90,
+        "name": "Device Reset Locally",
+        "version": 1,
+        "isSecure": false
+      },
+      {
+        "id": 117,
+        "name": "Protection",
+        "version": 2,
+        "isSecure": false
+      },
+      {
+        "id": 122,
+        "name": "Firmware Update Meta Data",
+        "version": 5,
+        "isSecure": false
+      },
+      {
+        "id": 91,
+        "name": "Central Scene",
+        "version": 3,
+        "isSecure": false
+      },
+      {
+        "id": 135,
+        "name": "Indicator",
+        "version": 3,
+        "isSecure": false
+      },
+      {
+        "id": 96,
+        "name": "Multi Channel",
+        "version": 4,
+        "isSecure": false
+      },
+      {
+        "id": 50,
+        "name": "Meter",
+        "version": 3,
+        "isSecure": false
+      }
+    ],
+    "endpoints": [
+      {
+        "nodeId": 19,
+        "index": 0,
+        "installerIcon": 7168,
+        "userIcon": 7168
+      },
+      {
+        "nodeId": 19,
+        "index": 1,
+        "installerIcon": 1536,
+        "userIcon": 1536
+      },
+      {
+        "nodeId": 19,
+        "index": 2,
+        "installerIcon": 1536,
+        "userIcon": 1536
+      }
+    ],
+    "values": [
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 1,
+        "propertyName": "Light Dimming Speed",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 98,
+          "default": 4,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light Dimming Speed",
+          "description": "This changes the speed in which the attached light dims up or down. A setting of 0 should turn the light immediately on or off (almost like an on/off switch). Increasing the value should slow down the transition speed. Range:0-98 Default: 4",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 2,
+        "propertyName": "Light Dimming Speed (From Switch)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 99,
+          "default": 99,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light Dimming Speed (From Switch)",
+          "description": "This changes the speed in which the attached light dims up or down when controlled from the physical switch. A setting of 0 should turn the light immediately on or off (almost like an on/off switch). Increasing the value should slow down the transition speed. A setting of 99 should keep this in sync with parameter 1. Range:0-99 Default: 99",
+          "isFromConfig": true
+        },
+        "value": 99
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 3,
+        "propertyName": "Light Ramp Rate",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 99,
+          "default": 99,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light Ramp Rate",
+          "description": "This changes the speed in which the attached light turns on or off. For example, when a user sends the switch a basicSet(value: 0xFF) or basicSet(value: 0x00), this is the speed in which those actions take place. A setting of 0 should turn the light immediately on or off (almost like an on/off switch). Increasing the value should slow down the transition speed. A setting of 99 should keep this in sync with parameter 1. Range:0-99 Default: 99",
+          "isFromConfig": true
+        },
+        "value": 99
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 4,
+        "propertyName": "Light Ramp Rate (From Switch)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 99,
+          "default": 99,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light Ramp Rate (From Switch)",
+          "description": "This changes the speed in which the attached light turns on or off from the physical switch. For example, when a user presses the up or down button, this is the speed in which those actions take place. A setting of 0 should turn the light immediately on or off (almost like an on/off switch). Increasing the value should slow down the transition speed. A setting of 99 should keep this in sync with parameter 1. Range:0-99 Default: 99",
+          "isFromConfig": true
+        },
+        "value": 99
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 5,
+        "propertyName": "Minimum Light Level",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 1,
+          "max": 45,
+          "default": 1,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Minimum Light Level",
+          "description": "The minimum level that the dimmer allows the bulb to be dimmed to. Useful when the user has an LED bulb that does not turn on or flickers at a lower level. Range:1-45 Default: 1",
+          "isFromConfig": true
+        },
+        "value": 40
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 6,
+        "propertyName": "Maximum Light Level",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 55,
+          "max": 99,
+          "default": 99,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Maximum Light Level",
+          "description": "The maximum level that the dimmer allows the bulb to be dimmed to. Useful when the user has an LED bulb that reaches its maximum level before the dimmer value of 99. Range:55-99 Default: 99",
+          "isFromConfig": true
+        },
+        "value": 99
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 7,
+        "propertyName": "Minimum Fan Level",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 1,
+          "max": 45,
+          "default": 1,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Minimum Fan Level",
+          "description": "The minimum level that the dimmer allows the fan to be dimmed to. Useful when the user has a fan that does not turn at a lower level. Range:1-45 Default: 1",
+          "isFromConfig": true
+        },
+        "value": 1
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 8,
+        "propertyName": "Maximum Fan Level",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 55,
+          "max": 99,
+          "default": 99,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Maximum Fan Level",
+          "description": "The maximum level that the dimmer allows the fan to be dimmed to. Range:55-99 Default: 99",
+          "isFromConfig": true
+        },
+        "value": 99
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 10,
+        "propertyName": "Auto Off Light Timer",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 2,
+          "min": 0,
+          "max": 32767,
+          "default": 0,
+          "unit": "s",
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Auto Off Light Timer",
+          "description": "Automatically turns the light switch off after this many seconds. When the switch is turned on a timer is started that is the duration of this setting. When the timer expires, the switch is turned off. Range:0-32767 Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 11,
+        "propertyName": "Auto Off Fan Timer",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 2,
+          "min": 0,
+          "max": 32767,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Auto Off Fan Timer",
+          "description": "Automatically turns the fan switch off after this many seconds. When the switch is turned on a timer is started that is the duration of this setting. When the timer expires, the switch is turned off. Range:0-32767 Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 12,
+        "propertyName": "Default Light Level (Local)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 1,
+          "max": 99,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Default Light Level (Local)",
+          "description": "Default level for the dimmer when it is powered on from the local switch. A setting of 0 means that the switch will return to the level that it was on before it was turned off. Range:1-99 Default: 0",
+          "isFromConfig": true
+        },
+        "value": 70
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 13,
+        "propertyName": "Default Light Level (Z-Wave)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 1,
+          "max": 99,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Default Light Level (Z-Wave)",
+          "description": "Default level for the dimmer when it is powered on from a Z-Wave command. A setting of 0 means that the switch will return to the level that it was on before it was turned off. Range:1-99 Default: 0",
+          "isFromConfig": true
+        },
+        "value": 85
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 14,
+        "propertyName": "Default Fan Level (Local)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 99,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "Last State",
+            "33": "Low",
+            "66": "Medium",
+            "99": "High"
+          },
+          "label": "Default Fan Level (Local)",
+          "description": "Default level for the fan dimmer when it is powered on from the local switch. Default: Last State",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 15,
+        "propertyName": "Default Fan Level (Z-Wave)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 99,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "Last State",
+            "33": "Low",
+            "66": "Medium",
+            "99": "High"
+          },
+          "label": "Default Fan Level (Z-Wave)",
+          "description": "Default level for the fan dimmer when it is powered on from the local switch. Default: Last State",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 16,
+        "propertyName": "Light State After Power Restored",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 100,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light State After Power Restored",
+          "description": "The state the switch should return to once power is restored after power failure. 0 = off, 1-99 = level, 100=previous. Range:0-100 Default: 100",
+          "isFromConfig": true
+        },
+        "value": 100
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 17,
+        "propertyName": "Fan State After Power Restored",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 100,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan State After Power Restored",
+          "description": "The state the switch should return to once power is restored after power failure. Default: Off",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 18,
+        "propertyName": "Light LED Indicator Color",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 2,
+          "min": 0,
+          "max": 255,
+          "default": 170,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light LED Indicator Color",
+          "description": "This is the color of the Light LED strip represented as part of the HUE color wheel. Since the wheel has 360 values and this parameter only has 255, the following equation can be used to determine the color: value/255 * 360 = Hue color wheel value Range: 0 to 255 Default: 170",
+          "isFromConfig": true
+        },
+        "value": 170
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 19,
+        "propertyName": "Light LED Strip Intensity",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 10,
+          "default": 5,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light LED Strip Intensity",
+          "description": "This is the intensity of the Light LED strip. Range: 0-10 Default: 5",
+          "isFromConfig": true
+        },
+        "value": 10
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 20,
+        "propertyName": "Fan LED Indicator Color",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 2,
+          "min": 0,
+          "max": 255,
+          "default": 170,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan LED Indicator Color",
+          "description": "This is the color of the Fan LED strip represented as part of the HUE color wheel. Since the wheel has 360 values and this parameter only has 255, the following equation can be used to determine the color: value/255 * 360 = Hue color wheel value Range: 0 to 255 Default: 170",
+          "isFromConfig": true
+        },
+        "value": 170
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 21,
+        "propertyName": "Fan LED Strip Intensity",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 10,
+          "default": 5,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan LED Strip Intensity",
+          "description": "This is the intensity of the Fan LED strip. Range: 0-10 Default: 5",
+          "isFromConfig": true
+        },
+        "value": 10
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 22,
+        "propertyName": "Light LED Strip Intensity (When OFF)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 10,
+          "default": 1,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light LED Strip Intensity (When OFF)",
+          "description": "This is the intensity of the Light LED strip when the switch is off. This is useful for users to see the light switch location when the lights are off. Range: 0-10 Default: 1",
+          "isFromConfig": true
+        },
+        "value": 4
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 23,
+        "propertyName": "Fan LED Strip Intensity (When OFF)",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 10,
+          "default": 1,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan LED Strip Intensity (When OFF)",
+          "description": "This is the intensity of the Fan LED strip when the switch is off. This is useful for users to see the light switch location when the lights are off. Range: 0-10 Default: 1",
+          "isFromConfig": true
+        },
+        "value": 4
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 26,
+        "propertyName": "Light LED Strip Timeout",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 10,
+          "default": 3,
+          "unit": "s",
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light LED Strip Timeout",
+          "description": "When the LED strip is disabled (Light LED Strip Intensity is set to 0), this setting allows the LED strip to turn on temporarily while being adjusted. Range: 0-10 Default: 3 Disabled: 0",
+          "isFromConfig": true
+        },
+        "value": 3
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 27,
+        "propertyName": "Fan LED Strip Timeout",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 10,
+          "default": 3,
+          "unit": "s",
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan LED Strip Timeout",
+          "description": "When the LED strip is disabled (Fan LED Strip Intensity is set to 0), this setting allows the LED strip to turn on temporarily while being adjusted. Range: 0-10 Default: 3 Disabled: 0",
+          "isFromConfig": true
+        },
+        "value": 3
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 28,
+        "propertyName": "Active Power Reports",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 100,
+          "default": 10,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Active Power Reports",
+          "description": "The power level change that will result in a new power report being sent. The value is a percentage of the previous report. 0 = disabled. Range:0-100 Default: 10",
+          "isFromConfig": true
+        },
+        "value": 10
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 29,
+        "propertyName": "Periodic Power & Energy Reports",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 2,
+          "min": 0,
+          "max": 32767,
+          "default": 3600,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Periodic Power & Energy Reports",
+          "description": "Time period between consecutive power & energy reports being sent (in seconds). The timer is reset after each report is sent. Range:0-32767 Default: 3600",
+          "isFromConfig": true
+        },
+        "value": 3600
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 30,
+        "propertyName": "Energy Reports",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 100,
+          "default": 10,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Energy Reports",
+          "description": "The energy level change that will result in a new energy report being sent. The value is a percentage of the previous report. Range:0-100 Default: 10",
+          "isFromConfig": true
+        },
+        "value": 10
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 31,
+        "propertyName": "Local Protection",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 3,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "None",
+            "1": "light",
+            "2": "fan",
+            "3": "Both"
+          },
+          "label": "Local Protection",
+          "description": "Enable local protection on these buttons. 0 = none, 1 = light, 2 = fan, 3 = both.",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 24,
+        "propertyKey": 2130706432,
+        "propertyName": "Light LED Strip Effect",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 5,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "Off",
+            "1": "Solid",
+            "2": "Slow Blink",
+            "3": "Fast Blink",
+            "4": "Chase",
+            "5": "Pulse"
+          },
+          "label": "Light LED Strip Effect",
+          "description": "Light LED Strip Effect. 0 = Off, 1 = Solid, 2 = Slow Blink, 3 = Fast Blink, 4 = Chase, 5 = Pulse Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 24,
+        "propertyKey": 16711680,
+        "propertyName": "Light LED Strip Effect Duration",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 255,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light LED Strip Effect Duration",
+          "description": "Light LED Strip Effect Duration. 1 to 60 = seconds, 61 to 120 minutes, 121 - 254 = hours, 255 = Indefinitely Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 24,
+        "propertyKey": 65280,
+        "propertyName": "Light LED Strip Effect Intensity",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 9,
+          "default": 3,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light LED Strip Effect Intensity",
+          "description": "Light LED Strip Effect Intensity. 0 to 9. 0 = dim, 9 = bright Default: 3",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 24,
+        "propertyKey": 255,
+        "propertyName": "Light LED Strip Effect Color",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 255,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Light LED Strip Effect Color",
+          "description": "Light LED Strip Effect Color. Color - 0 - 255. Hue color wheel. value/255 * 360 = Hue color wheel value Range: 0-255 Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 25,
+        "propertyKey": 2130706432,
+        "propertyName": "Fan LED Strip Effect",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 5,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "Off",
+            "1": "Solid",
+            "2": "Slow Blink",
+            "3": "Fast Blink",
+            "4": "Chase",
+            "5": "Pulse"
+          },
+          "label": "Fan LED Strip Effect",
+          "description": "Fan LED Strip Effect. 0 = Off, 1 = Solid, 2 = Slow Blink, 3 = Fast Blink, 4 = Chase, 5 = Pulse Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 25,
+        "propertyKey": 16711680,
+        "propertyName": "Fan LED Strip Effect Duration",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 255,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan LED Strip Effect Duration",
+          "description": "Fan LED Strip Duration. 1 to 60 = seconds, 61 to 120 minutes, 121 - 254 = hours, 255 = Indefinitely Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 25,
+        "propertyKey": 65280,
+        "propertyName": "Fan LED Strip Effect Intensity",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 9,
+          "default": 3,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan LED Strip Effect Intensity",
+          "description": "Fan LED Strip Intensity 0 to 9. 0 = dim, 9 = bright Default: 3",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 25,
+        "propertyKey": 255,
+        "propertyName": "Fan LED Strip Effect Color",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 4,
+          "min": 0,
+          "max": 255,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": true,
+          "label": "Fan LED Strip Effect Color",
+          "description": "Fan LED Color 0 - 255. Hue color wheel. value/255 * 360 = Hue color wheel value Range: 0-255 Default: 0",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 112,
+        "commandClassName": "Configuration",
+        "property": 51,
+        "propertyName": "Instant On",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 1,
+          "default": 1,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "Enabled (no delay)",
+            "1": "Disabled (700ms delay)"
+          },
+          "label": "Instant On",
+          "description": "Enables instant on (ie: disables the 700ms button delay). Note, if you disable the delay, it will also disable scene control except for the following: Light on/off pressed, held, released, Fan on/off pressed, held, released & light up/down fan up/down pressed (firmware 1.36+).",
+          "isFromConfig": true
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "libraryType",
+        "propertyName": "libraryType",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Library type"
+        },
+        "value": 3
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "protocolVersion",
+        "propertyName": "protocolVersion",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave protocol version"
+        },
+        "value": "7.13"
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "firmwareVersions",
+        "propertyName": "firmwareVersions",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave chip firmware versions"
+        },
+        "value": [
+          "1.34"
+        ]
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "hardwareVersion",
+        "propertyName": "hardwareVersion",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave chip hardware version"
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "sdkVersion",
+        "propertyName": "sdkVersion",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": "7.13.4"
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "applicationFrameworkAPIVersion",
+        "propertyName": "applicationFrameworkAPIVersion",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": "10.13.4"
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "applicationFrameworkBuildNumber",
+        "propertyName": "applicationFrameworkBuildNumber",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": 310
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "hostInterfaceVersion",
+        "propertyName": "hostInterfaceVersion",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": "unused"
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "hostInterfaceBuildNumber",
+        "propertyName": "hostInterfaceBuildNumber",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "zWaveProtocolVersion",
+        "propertyName": "zWaveProtocolVersion",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": "7.13.4"
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "zWaveProtocolBuildNumber",
+        "propertyName": "zWaveProtocolBuildNumber",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": 310
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "applicationVersion",
+        "propertyName": "applicationVersion",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": "1.34.1"
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "applicationBuildNumber",
+        "propertyName": "applicationBuildNumber",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        },
+        "value": 43707
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 114,
+        "commandClassName": "Manufacturer Specific",
+        "property": "manufacturerId",
+        "propertyName": "manufacturerId",
+        "ccVersion": 2,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Manufacturer ID"
+        },
+        "value": 798
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 114,
+        "commandClassName": "Manufacturer Specific",
+        "property": "productType",
+        "propertyName": "productType",
+        "ccVersion": 2,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Product type"
+        },
+        "value": 14
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 114,
+        "commandClassName": "Manufacturer Specific",
+        "property": "productId",
+        "propertyName": "productId",
+        "ccVersion": 2,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Product ID"
+        },
+        "value": 1
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 117,
+        "commandClassName": "Protection",
+        "property": "local",
+        "propertyName": "local",
+        "ccVersion": 2,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "label": "Local protection state",
+          "states": {
+            "0": "Unprotected",
+            "1": "ProtectedBySequence",
+            "2": "NoOperationPossible"
+          }
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 117,
+        "commandClassName": "Protection",
+        "property": "rf",
+        "propertyName": "rf",
+        "ccVersion": 2,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "label": "RF protection state",
+          "states": {
+            "0": "Unprotected",
+            "1": "NoControl",
+            "2": "NoResponse"
+          }
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 117,
+        "commandClassName": "Protection",
+        "property": "exclusiveControlNodeId",
+        "propertyName": "exclusiveControlNodeId",
+        "ccVersion": 2,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 117,
+        "commandClassName": "Protection",
+        "property": "timeout",
+        "propertyName": "timeout",
+        "ccVersion": 2,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 91,
+        "commandClassName": "Central Scene",
+        "property": "slowRefresh",
+        "propertyName": "slowRefresh",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Send held down notifications at a slow rate",
+          "description": "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms."
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 91,
+        "commandClassName": "Central Scene",
+        "property": "scene",
+        "propertyKey": "001",
+        "propertyName": "scene",
+        "propertyKeyName": "001",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 255,
+          "label": "Scene 001",
+          "states": {
+            "0": "KeyPressed",
+            "1": "KeyReleased",
+            "2": "KeyHeldDown",
+            "3": "KeyPressed2x",
+            "4": "KeyPressed3x",
+            "5": "KeyPressed4x",
+            "6": "KeyPressed5x"
+          }
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 91,
+        "commandClassName": "Central Scene",
+        "property": "scene",
+        "propertyKey": "002",
+        "propertyName": "scene",
+        "propertyKeyName": "002",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 255,
+          "label": "Scene 002",
+          "states": {
+            "0": "KeyPressed",
+            "1": "KeyReleased",
+            "2": "KeyHeldDown",
+            "3": "KeyPressed2x",
+            "4": "KeyPressed3x",
+            "5": "KeyPressed4x",
+            "6": "KeyPressed5x"
+          }
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 91,
+        "commandClassName": "Central Scene",
+        "property": "scene",
+        "propertyKey": "003",
+        "propertyName": "scene",
+        "propertyKeyName": "003",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 255,
+          "label": "Scene 003",
+          "states": {
+            "0": "KeyPressed"
+          }
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 91,
+        "commandClassName": "Central Scene",
+        "property": "scene",
+        "propertyKey": "004",
+        "propertyName": "scene",
+        "propertyKeyName": "004",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 255,
+          "label": "Scene 004",
+          "states": {
+            "0": "KeyPressed"
+          }
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 91,
+        "commandClassName": "Central Scene",
+        "property": "scene",
+        "propertyKey": "005",
+        "propertyName": "scene",
+        "propertyKeyName": "005",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 255,
+          "label": "Scene 005",
+          "states": {
+            "0": "KeyPressed"
+          }
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 91,
+        "commandClassName": "Central Scene",
+        "property": "scene",
+        "propertyKey": "006",
+        "propertyName": "scene",
+        "propertyKeyName": "006",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 255,
+          "label": "Scene 006",
+          "states": {
+            "0": "KeyPressed"
+          }
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 135,
+        "commandClassName": "Indicator",
+        "property": 80,
+        "propertyKey": 3,
+        "propertyName": "Node Identify",
+        "propertyKeyName": "On/Off Period: Duration",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "label": "Node Identify - On/Off Period: Duration",
+          "description": "Sets the duration of an on/off period in 1/10th seconds. Must be set together with \"On/Off Cycle Count\"",
+          "ccSpecific": {
+            "indicatorId": 80,
+            "propertyId": 3
+          }
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 135,
+        "commandClassName": "Indicator",
+        "property": 80,
+        "propertyKey": 4,
+        "propertyName": "Node Identify",
+        "propertyKeyName": "On/Off Cycle Count",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "label": "Node Identify - On/Off Cycle Count",
+          "description": "Sets the number of on/off periods. 0xff means infinite. Must be set together with \"On/Off Period duration\"",
+          "ccSpecific": {
+            "indicatorId": 80,
+            "propertyId": 4
+          }
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 135,
+        "commandClassName": "Indicator",
+        "property": 80,
+        "propertyKey": 5,
+        "propertyName": "Node Identify",
+        "propertyKeyName": "On/Off Period: On time",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "label": "Node Identify - On/Off Period: On time",
+          "description": "This property is used to set the length of the On time during an On/Off period. It allows asymetic On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
+          "ccSpecific": {
+            "indicatorId": 80,
+            "propertyId": 5
+          }
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 50,
+        "commandClassName": "Meter",
+        "property": "value",
+        "propertyKey": 65537,
+        "propertyName": "value",
+        "propertyKeyName": "Electric_kWh_Consumed",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "label": "Electric Consumed [kWh]",
+          "unit": "kWh",
+          "ccSpecific": {
+            "meterType": 1,
+            "rateType": 1,
+            "scale": 0
+          }
+        },
+        "value": 78.057
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 50,
+        "commandClassName": "Meter",
+        "property": "deltaTime",
+        "propertyKey": 65537,
+        "propertyName": "deltaTime",
+        "propertyKeyName": "Electric_kWh_Consumed",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "label": "Electric Consumed [kWh] (prev. time delta)",
+          "unit": "s",
+          "ccSpecific": {
+            "meterType": 1,
+            "rateType": 1,
+            "scale": 0
+          }
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 50,
+        "commandClassName": "Meter",
+        "property": "value",
+        "propertyKey": 66049,
+        "propertyName": "value",
+        "propertyKeyName": "Electric_W_Consumed",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "label": "Electric Consumed [W]",
+          "unit": "W",
+          "ccSpecific": {
+            "meterType": 1,
+            "rateType": 1,
+            "scale": 2
+          }
+        },
+        "value": 0.4
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 50,
+        "commandClassName": "Meter",
+        "property": "deltaTime",
+        "propertyKey": 66049,
+        "propertyName": "deltaTime",
+        "propertyKeyName": "Electric_W_Consumed",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "label": "Electric Consumed [W] (prev. time delta)",
+          "unit": "s",
+          "ccSpecific": {
+            "meterType": 1,
+            "rateType": 1,
+            "scale": 2
+          }
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 50,
+        "commandClassName": "Meter",
+        "property": "reset",
+        "propertyName": "reset",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "boolean",
+          "readable": false,
+          "writeable": true,
+          "label": "Reset accumulated values"
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 50,
+        "commandClassName": "Meter",
+        "property": "previousValue",
+        "propertyKey": 65537,
+        "propertyName": "previousValue",
+        "propertyKeyName": "Electric_kWh_Consumed",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "label": "Electric Consumed [kWh] (prev. value)",
+          "unit": "kWh",
+          "ccSpecific": {
+            "meterType": 1,
+            "rateType": 1,
+            "scale": 0
+          }
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 50,
+        "commandClassName": "Meter",
+        "property": "previousValue",
+        "propertyKey": 66049,
+        "propertyName": "previousValue",
+        "propertyKeyName": "Electric_W_Consumed",
+        "ccVersion": 3,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "label": "Electric Consumed [W] (prev. value)",
+          "unit": "W",
+          "ccSpecific": {
+            "meterType": 1,
+            "rateType": 1,
+            "scale": 2
+          }
+        }
+      },
+      {
+        "endpoint": 1,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "min": 0,
+          "max": 99,
+          "label": "Target value"
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 1,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "duration",
+        "propertyName": "duration",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "duration",
+          "readable": true,
+          "writeable": true,
+          "label": "Transition duration"
+        },
+        "value": {
+          "value": 0,
+          "unit": "seconds"
+        }
+      },
+      {
+        "endpoint": 1,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "currentValue",
+        "propertyName": "currentValue",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 99,
+          "label": "Current value"
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 1,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "Up",
+        "propertyName": "Up",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Perform a level change (Up)",
+          "ccSpecific": {
+            "switchType": 2
+          }
+        }
+      },
+      {
+        "endpoint": 1,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "Down",
+        "propertyName": "Down",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Perform a level change (Down)",
+          "ccSpecific": {
+            "switchType": 2
+          }
+        }
+      },
+      {
+        "endpoint": 2,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "min": 0,
+          "max": 99,
+          "label": "Target value"
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 2,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "duration",
+        "propertyName": "duration",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "duration",
+          "readable": true,
+          "writeable": true,
+          "label": "Transition duration"
+        },
+        "value": {
+          "value": 0,
+          "unit": "seconds"
+        }
+      },
+      {
+        "endpoint": 2,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "currentValue",
+        "propertyName": "currentValue",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 99,
+          "label": "Current value"
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 2,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "Up",
+        "propertyName": "Up",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Perform a level change (Up)",
+          "ccSpecific": {
+            "switchType": 2
+          }
+        }
+      },
+      {
+        "endpoint": 2,
+        "commandClass": 38,
+        "commandClassName": "Multilevel Switch",
+        "property": "Down",
+        "propertyName": "Down",
+        "ccVersion": 4,
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Perform a level change (Down)",
+          "ccSpecific": {
+            "switchType": 2
+          }
+        }
+      }
+    ]
+  }

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_upb_file": "Fehlende oder ung\u00fcltige UPB UPStart-Exportdatei, \u00fcberpr\u00fcfe den Namen und den Pfad der Datei.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adresse (siehe Beschreibung oben)",
+                    "file_path": "Pfad und Name der UPStart UPB-Exportdatei.",
+                    "protocol": "Protokoll"
+                },
+                "description": "Schlie\u00dfe ein Universal Powerline Bus Powerline Interface Module (UPB PIM) an. Der Adress-String muss in der Form 'address[:port]' f\u00fcr 'TCP' vorliegen. Der Port ist optional und standardm\u00e4\u00dfig auf 2101 eingestellt. Beispiel: '192.168.1.42'. F\u00fcr das serielle Protokoll muss die Adresse die Form 'tty[:baud]' haben. Die Baudrate ist optional und standardm\u00e4\u00dfig auf 4800 eingestellt. Beispiel: '/dev/ttyS1'.",
+                "title": "Stelle eine Verbindung zu UPB PIM her"
+            }
+        }
+    }
+}

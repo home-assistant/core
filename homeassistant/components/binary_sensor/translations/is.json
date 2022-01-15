@@ -1,0 +1,88 @@
+{
+    "state": {
+        "_": {
+            "off": "Sl\u00f6kkt",
+            "on": "Kveikt"
+        },
+        "battery": {
+            "off": "Venjulegt",
+            "on": "L\u00e1gt"
+        },
+        "cold": {
+            "off": "Venjulegt",
+            "on": "Kalt"
+        },
+        "connectivity": {
+            "off": "Aftengdur",
+            "on": "Tengdur"
+        },
+        "door": {
+            "off": "Loku\u00f0",
+            "on": "Opin"
+        },
+        "garage_door": {
+            "off": "Loku\u00f0",
+            "on": "Opin"
+        },
+        "gas": {
+            "off": "Hreinsa",
+            "on": "Uppg\u00f6tva\u00f0"
+        },
+        "heat": {
+            "off": "Venjulegt",
+            "on": "Heitt"
+        },
+        "lock": {
+            "off": "L\u00e6st",
+            "on": "Afl\u00e6st"
+        },
+        "moisture": {
+            "off": "\u00deurrt",
+            "on": "Blautt"
+        },
+        "motion": {
+            "off": "Engin hreyfing",
+            "on": "Hreyfing"
+        },
+        "occupancy": {
+            "off": "Engin vi\u00f0vera",
+            "on": "Uppg\u00f6tva\u00f0"
+        },
+        "opening": {
+            "off": "Loka\u00f0",
+            "on": "Opi\u00f0"
+        },
+        "presence": {
+            "off": "Fjarverandi",
+            "on": "Heima"
+        },
+        "problem": {
+            "off": "\u00cd lagi",
+            "on": "Vandam\u00e1l"
+        },
+        "running": {
+            "off": "Ekki \u00ed gangi",
+            "on": "\u00cd gangi"
+        },
+        "safety": {
+            "off": "\u00d6ruggt",
+            "on": "\u00d3\u00f6ruggt"
+        },
+        "smoke": {
+            "off": "Hreinsa",
+            "on": "Uppg\u00f6tva\u00f0"
+        },
+        "sound": {
+            "off": "Hreinsa",
+            "on": "Uppg\u00f6tva\u00f0"
+        },
+        "vibration": {
+            "on": "Uppg\u00f6tva\u00f0"
+        },
+        "window": {
+            "off": "Loka",
+            "on": "Opna"
+        }
+    },
+    "title": "Tv\u00edundar skynjari"
+}

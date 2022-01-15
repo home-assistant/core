@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up Wemo?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "long_press": "Wemo button was pressed for 2 seconds"
+    }
+  }
+}

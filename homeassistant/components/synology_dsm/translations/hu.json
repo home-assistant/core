@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az ism\u00e9telt hiteles\u00edt\u00e9s sikeres volt",
+            "reconfigure_successful": "Az \u00fajrakonfigur\u00e1l\u00e1s sikeres"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "missing_data": "Hi\u00e1nyz\u00f3 adatok: pr\u00f3b\u00e1lja \u00fajra k\u00e9s\u0151bb vagy m\u00e1s konfigur\u00e1ci\u00f3val",
+            "otp_failed": "A k\u00e9tl\u00e9pcs\u0151s azonos\u00edt\u00e1s sikertelen, pr\u00f3b\u00e1lkozzon \u00faj jelsz\u00f3val",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "K\u00f3d"
+                },
+                "title": "Synology DSM: k\u00e9tl\u00e9pcs\u0151s azonos\u00edt\u00e1s"
+            },
+            "link": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
+                },
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "reauth": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Indokl\u00e1s: {details}",
+                "title": "Synology DSM Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Synology DSM Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Percek a vizsg\u00e1latok k\u00f6z\u00f6tt",
+                    "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s (m\u00e1sodperc)"
+                }
+            }
+        }
+    }
+}

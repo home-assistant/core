@@ -1,0 +1,8 @@
+{
+  "domain": "gc100",
+  "name": "Global Cach\u00e9 GC-100",
+  "documentation": "https://www.home-assistant.io/integrations/gc100",
+  "requirements": ["python-gc100==1.0.3a0"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

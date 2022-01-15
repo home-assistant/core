@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "armed": "Aktiviran",
+            "armed_away": "Aktiviran odsutno",
+            "armed_custom_bypass": "Aktiviran",
+            "armed_home": "Aktiviran doma",
+            "armed_night": "Aktiviran no\u010dni",
+            "arming": "Aktiviranje",
+            "disarmed": "Deaktiviran",
+            "disarming": "Deaktiviranje",
+            "pending": "U tijeku",
+            "triggered": "Okinut"
+        }
+    },
+    "title": "Upravlja\u010dka plo\u010da za alarm"
+}

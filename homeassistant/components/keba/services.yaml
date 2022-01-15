@@ -1,0 +1,95 @@
+# Describes the format for available services for KEBA charging staitons
+
+request_data:
+  name: Request data
+  description: >
+    Request new data from the charging station.
+
+authorize:
+  name: Authorize
+  description: >
+    Authorizes a charging process with the predefined RFID tag of the configuration file.
+
+deauthorize:
+  name: Deauthorize
+  description: >
+    Deauthorizes the running charging process with the predefined RFID tag of the configuration file.
+
+set_energy:
+  name: Set energy
+  description: Sets the energy target after which the charging process stops.
+  fields:
+    energy:
+      name: Energy
+      description: >
+        The energy target to stop charging. Setting 0 disables the limit.
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "kWh"
+
+set_current:
+  name: Set current
+  description: Sets the maximum current for charging processes.
+  fields:
+    current:
+      name: Current
+      description: >
+        The maximum current used for the charging process.
+        The value is depending on the DIP-switch settings and the used cable of the
+        charging station.
+      default: 6
+      selector:
+        number:
+          min: 6
+          max: 63
+          step: 0.1
+          unit_of_measurement: "A"
+
+enable:
+  name: Enable
+  description: >
+    Starts a charging process if charging station is authorized.
+
+disable:
+  name: Disable
+  description: >
+    Stops the charging process if charging station is authorized.
+
+set_failsafe:
+  name: Set failsafe
+  description: >
+    Set the failsafe mode of the charging station. If all parameters are 0, the failsafe mode will be disabled.
+  fields:
+    failsafe_timeout:
+      name: Failsafe timeout
+      description: >
+        Timeout after which the failsafe mode is triggered, if set_current was not executed during this time.
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    failsafe_fallback:
+      name: Failsafe fallback
+      description: >
+        Fallback current to be set after timeout.
+      default: 6
+      selector:
+        number:
+          min: 6
+          max: 63
+          step: 0.1
+          unit_of_measurement: "A"
+    failsafe_persist:
+      name: Failsafe persist
+      description: >
+        If failsafe_persist is 0, the failsafe option is only until charging station reboot. If failsafe_persist is 1, the failsafe option will survive a reboot.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1

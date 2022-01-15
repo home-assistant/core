@@ -1,0 +1,7 @@
+{
+  "domain": "hddtemp",
+  "name": "hddtemp",
+  "documentation": "https://www.home-assistant.io/integrations/hddtemp",
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

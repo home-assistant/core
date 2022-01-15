@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "one": "Bo\u015f",
+            "other": "Bo\u015f"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "confirm": {
+                "description": "Arcam FMJ'yi ` {host} ` \u00fczerinde Home Assistant'a eklemek istiyor musunuz?"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                },
+                "description": "L\u00fctfen cihaz\u0131n ana bilgisayar ad\u0131n\u0131 veya IP adresini girin."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} nin a\u00e7\u0131lmas\u0131 istendi"
+        }
+    }
+}

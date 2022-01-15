@@ -1,0 +1,8 @@
+{
+  "domain": "radiotherm",
+  "name": "Radio Thermostat",
+  "documentation": "https://www.home-assistant.io/integrations/radiotherm",
+  "requirements": ["radiotherm==2.1.0"],
+  "codeowners": ["@vinnyfuria"],
+  "iot_class": "local_polling"
+}

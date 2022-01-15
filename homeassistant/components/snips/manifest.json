@@ -1,0 +1,8 @@
+{
+  "domain": "snips",
+  "name": "Snips",
+  "documentation": "https://www.home-assistant.io/integrations/snips",
+  "dependencies": ["mqtt"],
+  "codeowners": [],
+  "iot_class": "local_push"
+}

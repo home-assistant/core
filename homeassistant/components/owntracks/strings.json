@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up OwnTracks",
+        "description": "Are you sure you want to set up OwnTracks?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "create_entry": {
+      "default": "\n\nOn Android, open [the OwnTracks app]({android_url}), go to preferences -> connection. Change the following settings:\n - Mode: Private HTTP\n - Host: {webhook_url}\n - Identification:\n   - Username: `'<Your name>'`\n   - Device ID: `'<Your device name>'`\n\nOn iOS, open [the OwnTracks app]({ios_url}), tap (i) icon in top left -> settings. Change the following settings:\n - Mode: HTTP\n - URL: {webhook_url}\n - Turn on authentication\n - UserID: `'<Your name>'`\n\n{secret}\n\nSee [the documentation]({docs_url}) for more information."
+    }
+  }
+}

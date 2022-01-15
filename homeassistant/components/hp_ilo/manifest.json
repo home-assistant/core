@@ -1,0 +1,8 @@
+{
+  "domain": "hp_ilo",
+  "name": "HP Integrated Lights-Out (ILO)",
+  "documentation": "https://www.home-assistant.io/integrations/hp_ilo",
+  "requirements": ["python-hpilo==4.3"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

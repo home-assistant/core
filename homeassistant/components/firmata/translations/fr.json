@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "one": "Vide ",
+            "other": "Vide"
+        }
+    }
+}

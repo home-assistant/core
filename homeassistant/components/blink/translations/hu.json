@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "K\u00e9tfaktoros k\u00f3d"
+                },
+                "description": "Adja meg az e-mail c\u00edm\u00e9re k\u00fcld\u00f6tt PIN-t",
+                "title": "K\u00e9tfaktoros hiteles\u00edt\u00e9s"
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Jelentkezzen be Blink-fi\u00f3kkal"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Szkennel\u00e9si intervallum (m\u00e1sodperc)"
+                },
+                "description": "Blink integr\u00e1ci\u00f3 konfigur\u00e1l\u00e1sa",
+                "title": "Villog\u00e1si lehet\u0151s\u00e9gek"
+            }
+        }
+    }
+}
