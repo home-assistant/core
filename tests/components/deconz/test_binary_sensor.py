@@ -126,7 +126,12 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
             "1": {
                 "name": "Presence sensor",
                 "type": "ZHAPresence",
-                "state": {"dark": False, "presence": False, "tampered": False},
+                "state": {
+                    "dark": False,
+                    "lowbattery": False,
+                    "presence": False,
+                    "tampered": False,
+                },
                 "config": {"on": True, "reachable": True, "temperature": 10},
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
@@ -137,7 +142,8 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
 
     ent_reg = er.async_get(hass)
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
+    hass.states.get("binary_sensor.presence_sensor_low_battery").state == STATE_OFF
     presence_tamper = hass.states.get("binary_sensor.presence_sensor_tampered")
     assert presence_tamper.state == STATE_OFF
     assert (

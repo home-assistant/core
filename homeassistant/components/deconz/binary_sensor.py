@@ -103,6 +103,16 @@ BINARY_SENSOR_DESCRIPTIONS = [
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
+    DeconzBinarySensorDescription(
+        device_property="low_battery",
+        suffix="Low Battery",
+        update_key="lowbattery",
+        entity_description=BinarySensorEntityDescription(
+            key="low_battery",
+            device_class=BinarySensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
 ]
 
 
