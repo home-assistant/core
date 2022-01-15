@@ -188,6 +188,7 @@ class DBAccess:
             cur.execute("SELECT counted FROM AreaMonitoring WHERE areaid=?", (ID,))
             rows = cur.fetchall()
             value = rows[0][0]
+            cur.close()
             return value
         except:
             return "error"
@@ -199,6 +200,7 @@ class DBAccess:
             data = (count, ID)
             cur.execute(sql, data)
             self.conn.commit()
+            cur.close()
         except:
             return False
         return True
