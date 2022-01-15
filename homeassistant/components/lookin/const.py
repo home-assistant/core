@@ -14,3 +14,11 @@ PLATFORMS: Final = [
     Platform.MEDIA_PLAYER,
     Platform.SENSOR,
 ]
+
+
+TYPE_TO_PLATFORM = {
+    "01": Platform.MEDIA_PLAYER,
+    "02": Platform.MEDIA_PLAYER,
+    "03": Platform.LIGHT,
+    "EF": Platform.CLIMATE,
+}
