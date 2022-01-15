@@ -500,7 +500,7 @@ async def test_services(
         pv_mock.assert_called_once_with(
             "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
             {
-                "videoFormat": "hls",
+                "MediaType": "hls",
             },
         )
 
