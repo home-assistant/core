@@ -46,19 +46,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load Tradfri switches based on a config entry."""
-    gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api = coordinator_data[KEY_API]
+    if (
+        COORDINATOR in hass.data[DOMAIN][config_entry.entry_id]
+    ):  # make integration reload work
+        gateway_id = config_entry.data[CONF_GATEWAY_ID]
+        coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+        api = coordinator_data[KEY_API]
 
-    async_add_entities(
-        TradfriAirPurifierFan(
-            device_coordinator,
-            api,
-            gateway_id,
+        async_add_entities(
+            TradfriAirPurifierFan(
+                device_coordinator,
+                api,
+                gateway_id,
+            )
+            for device_coordinator in coordinator_data[COORDINATOR_LIST]
+            if device_coordinator.device.has_air_purifier_control
         )
-        for device_coordinator in coordinator_data[COORDINATOR_LIST]
-        if device_coordinator.device.has_air_purifier_control
-    )
 
 
 class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
