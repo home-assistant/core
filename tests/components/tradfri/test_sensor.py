@@ -32,7 +32,7 @@ def mock_sensor(state_name: str, state_value: str, device_number=0):
 
 
 async def test_battery_sensor(hass, mock_gateway, mock_api_factory):
-    """Test that sensors are correctly added."""
+    """Test that a battery sensor is correctly added."""
     mock_gateway.mock_devices.append(
         mock_sensor(state_name="battery_level", state_value=60)
     )
