@@ -32,6 +32,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
+    CONCENTRATION_PARTS_PER_BILLION,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -137,7 +138,18 @@ SENSOR_DESCRIPTIONS = [
         suffix="Temperature",
         update_key="temperature",
         entity_description=ENTITY_DESCRIPTIONS[Temperature],
-    )
+    ),
+    DeconzSensorDescription(
+        device_property="air_quality_ppb",
+        suffix="PPB",
+        update_key="airqualityppb",
+        entity_description=SensorEntityDescription(
+            key="air_quality_ppb",
+            device_class=SensorDeviceClass.AQI,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        ),
+    ),
 ]
 
 
@@ -189,7 +201,9 @@ async def async_setup_entry(
 
             for sensor_description in SENSOR_DESCRIPTIONS:
 
-                if getattr(sensor, sensor_description.device_property):
+                if hasattr(sensor, sensor_description.device_property) and getattr(
+                    sensor, sensor_description.device_property
+                ):
                     known_sensors = set(gateway.entities[DOMAIN])
                     new_sensor = DeconzPropertySensor(
                         sensor, gateway, sensor_description
