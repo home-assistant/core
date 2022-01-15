@@ -29,7 +29,7 @@ def mock_switch(test_features=None, test_state=None, device_number=0):
         test_features = {}
     if test_state is None:
         test_state = {}
-    mock_fan_data = Mock(**test_state)
+    mock_switch_data = Mock(**test_state)
 
     dev_info_mock = MagicMock()
     dev_info_mock.manufacturer = "manufacturer"
@@ -50,7 +50,7 @@ def mock_switch(test_features=None, test_state=None, device_number=0):
     socket_control = SocketControl(_mock_switch)
 
     # Store the initial state.
-    setattr(socket_control, "sockets", [mock_fan_data])
+    setattr(socket_control, "sockets", [mock_switch_data])
     _mock_switch.socket_control = socket_control
     return _mock_switch
 
