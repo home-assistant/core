@@ -1,8 +1,8 @@
 {
-  "domain": "vartastorage",
+  "domain": "varta_storage",
   "name": "VARTA Storage",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/vartastorage",
+  "documentation": "https://www.home-assistant.io/integrations/varta_storage",
   "requirements": [
     "vartastorage==0.2.1"
   ],

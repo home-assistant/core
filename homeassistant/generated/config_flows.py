@@ -322,7 +322,7 @@ FLOWS = [
     "upcloud",
     "upnp",
     "uptimerobot",
-    "vartastorage",
+    "varta_storage",
     "velbus",
     "venstar",
     "vera",

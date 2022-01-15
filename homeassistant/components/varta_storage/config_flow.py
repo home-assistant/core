@@ -1,23 +1,21 @@
 """Config flow for VARTA Storage integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from vartastorage import vartastorage
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required("host"): str, vol.Required("port", default=502): int}
+    {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT, default=502): int}
 )
 
 
@@ -85,8 +83,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

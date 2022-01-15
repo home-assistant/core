@@ -571,7 +571,7 @@ homeassistant/components/usb/* @bdraco
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/vallox/* @andre-richter
-homeassistant/components/vartastorage/* @Vip0r
+homeassistant/components/varta_storage/* @Vip0r
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/venstar/* @garbled1
