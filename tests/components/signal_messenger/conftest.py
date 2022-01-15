@@ -6,16 +6,7 @@ import pytest
 from requests_mock.mocker import Mocker
 
 from homeassistant.components.signal_messenger.notify import SignalNotificationService
-
-
-@pytest.fixture
-def signal_notification_service():
-    """Set up signal notification service."""
-    recipients = ["+435565656565"]
-    number = "+43443434343"
-    client = SignalCliRestApi("http://127.0.0.1:8080", number)
-    return SignalNotificationService(recipients, client)
-
+from homeassistant.core import HomeAssistant
 
 SIGNAL_SEND_PATH_SUFIX = "/v2/send"
 MESSAGE = "Testing Signal Messenger platform :)"
@@ -23,6 +14,16 @@ CONTENT = b"TestContent"
 NUMBER_FROM = "+43443434343"
 NUMBERS_TO = ["+435565656565"]
 URL_ATTACHMENT = "http://127.0.0.1:8080/image.jpg"
+
+
+@pytest.fixture
+def signal_notification_service(hass: HomeAssistant) -> SignalNotificationService:
+    """Set up signal notification service."""
+    hass.config.allowlist_external_urls.add(URL_ATTACHMENT)
+    recipients = ["+435565656565"]
+    number = "+43443434343"
+    client = SignalCliRestApi("http://127.0.0.1:8080", number)
+    return SignalNotificationService(hass, recipients, client)
 
 
 @pytest.fixture

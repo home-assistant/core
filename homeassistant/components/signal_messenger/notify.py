@@ -64,7 +64,7 @@ def get_service(
 
     signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr)
 
-    return SignalNotificationService(recp_nrs, signal_cli_rest_api)
+    return SignalNotificationService(hass, recp_nrs, signal_cli_rest_api)
 
 
 class SignalNotificationService(BaseNotificationService):
@@ -72,11 +72,13 @@ class SignalNotificationService(BaseNotificationService):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         recp_nrs: list[str],
         signal_cli_rest_api: SignalCliRestApi,
     ) -> None:
         """Initialize the service."""
 
+        self._hass = hass
         self._recp_nrs = recp_nrs
         self._signal_cli_rest_api = signal_cli_rest_api
 
@@ -95,7 +97,7 @@ class SignalNotificationService(BaseNotificationService):
 
         filenames = self.get_filenames(data)
         attachments_as_bytes = self.get_attachments_as_bytes(
-            data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+            data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES, self._hass
         )
 
         try:
@@ -118,7 +120,9 @@ class SignalNotificationService(BaseNotificationService):
 
     @staticmethod
     def get_attachments_as_bytes(
-        data: Any, attachment_size_limit: int
+        data: Any,
+        attachment_size_limit: int,
+        hass: HomeAssistant,
     ) -> list[bytearray] | None:
         """Retrieve attachments from URLs defined in data."""
         try:
@@ -132,6 +136,10 @@ class SignalNotificationService(BaseNotificationService):
 
         for url in urls:
             try:
+                if not hass.config.is_allowed_external_url(url):
+                    _LOGGER.error("URL '%s' not in allow list", url)
+                    continue
+
                 resp = requests.get(
                     url, verify=data[ATTR_VERIFY_SSL], timeout=10, stream=True
                 )
@@ -157,5 +165,8 @@ class SignalNotificationService(BaseNotificationService):
             except Exception as ex:
                 _LOGGER.error("%s", ex)
                 raise ex
+
+        if not attachments_as_bytes:
+            return None
 
         return attachments_as_bytes
