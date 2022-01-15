@@ -5,8 +5,6 @@ import pytest
 
 from . import GATEWAY_ID, TRADFRI_PATH
 
-from tests.components.tradfri.test_light import mock_group
-
 # pylint: disable=protected-access
 
 
@@ -37,7 +35,7 @@ def mock_gateway_fixture():
         """Return mock groups."""
         return gateway.mock_groups
 
-    gateway_info = mock_group(id=GATEWAY_ID, firmware_version="1.2.1234")
+    gateway_info = Mock(id=GATEWAY_ID, firmware_version="1.2.1234")
 
     def get_gateway_info():
         """Return mock gateway info."""
