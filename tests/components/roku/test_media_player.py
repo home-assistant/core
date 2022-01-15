@@ -525,7 +525,7 @@ async def test_services(
             "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
             {
                 "MediaType": "hls",
-            }
+            },
         )
 
     with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
