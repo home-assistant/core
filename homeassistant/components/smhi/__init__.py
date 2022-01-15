@@ -10,8 +10,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SMHI forecast as config entry."""
 
     # Setting unique id where missing
-    unique_id = f"{entry.data[CONF_LATITUDE]}-{entry.data[CONF_LONGITUDE]}"
     if entry.unique_id is None:
+        unique_id = f"{entry.data[CONF_LATITUDE]}-{entry.data[CONF_LONGITUDE]}"
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
