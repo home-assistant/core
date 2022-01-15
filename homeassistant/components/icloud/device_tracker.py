@@ -27,7 +27,7 @@ async def async_setup_scanner(
     config: ConfigType,
     see: Callable[..., Awaitable[None]],
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Old way of setting up the iCloud tracker."""
 
 

@@ -17,12 +17,7 @@ from homeassistant.components.fritz.const import (
     ERROR_UNKNOWN,
 )
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -48,7 +43,6 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
-MOCK_IMPORT_CONFIG = {CONF_HOST: MOCK_HOST, CONF_USERNAME: "username"}
 MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
@@ -485,43 +479,6 @@ async def test_ssdp_exception(hass: HomeAssistant, mock_get_source_ip):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "confirm"
-
-
-async def test_import(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
-    """Test importing."""
-    with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
-        side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
-        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
-        return_value=MOCK_FIRMWARE_INFO,
-    ), patch(
-        "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry, patch(
-        "requests.get"
-    ) as mock_request_get, patch(
-        "requests.post"
-    ) as mock_request_post, patch(
-        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
-        return_value=MOCK_IP,
-    ):
-
-        mock_request_get.return_value.status_code = 200
-        mock_request_get.return_value.content = MOCK_REQUEST
-        mock_request_post.return_value.status_code = 200
-        mock_request_post.return_value.text = MOCK_REQUEST
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG
-        )
-
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_PASSWORD] is None
-        assert result["data"][CONF_USERNAME] == "username"
-        await hass.async_block_till_done()
-
-    assert mock_setup_entry.called
 
 
 async def test_options_flow(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):

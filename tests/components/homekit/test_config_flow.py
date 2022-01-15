@@ -2,9 +2,14 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.homekit.const import DOMAIN, SHORT_BRIDGE_NAME
+from homeassistant.components.homekit.const import (
+    CONF_FILTER,
+    DOMAIN,
+    SHORT_BRIDGE_NAME,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT, async_init_entry
@@ -346,6 +351,10 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "include_exclude"
+
+    # Inject garbage to ensure the options data
+    # is being deep copied and we cannot mutate it in flight
+    config_entry.options[CONF_FILTER][CONF_INCLUDE_DOMAINS].append("garbage")
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],

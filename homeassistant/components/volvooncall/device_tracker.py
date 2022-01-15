@@ -17,10 +17,10 @@ async def async_setup_scanner(
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Set up the Volvo tracker."""
     if discovery_info is None:
-        return
+        return False
 
     vin, component, attr, slug_attr = discovery_info
     data = hass.data[DATA_KEY]
@@ -39,3 +39,5 @@ async def async_setup_scanner(
         )
 
     async_dispatcher_connect(hass, SIGNAL_STATE_UPDATED, see_vehicle)
+
+    return True

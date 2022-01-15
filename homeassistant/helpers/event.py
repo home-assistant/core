@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Iterable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Callable, List, Union, cast
+from typing import Any, Union, cast
 
 import attr
 from typing_extensions import Concatenate, ParamSpec
@@ -1079,7 +1079,7 @@ class _TrackTemplateResultInfo:
 TrackTemplateResultListener = Callable[
     [
         Union[Event, None],
-        List[TrackTemplateResult],
+        list[TrackTemplateResult],
     ],
     None,
 ]

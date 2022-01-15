@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Container, Generator
+from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -69,8 +69,6 @@ from .trace import (
     trace_stack_top,
 )
 from .typing import ConfigType, TemplateVarsType
-
-# mypy: disallow-any-generics
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"

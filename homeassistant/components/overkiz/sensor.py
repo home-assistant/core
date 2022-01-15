@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OverkizStateType
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
@@ -401,6 +402,9 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         # Transform the value with a lambda function
         if self.entity_description.native_value:
             return self.entity_description.native_value(state.value)
+
+        if isinstance(state.value, (dict, list)):
+            return None
 
         return state.value
 

@@ -6,7 +6,6 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 import re
-import sys
 from typing import Any
 
 from icmplib import NameLookupError, async_ping
@@ -205,25 +204,15 @@ class PingDataSubProcess(PingData):
     def __init__(self, hass, host, count, privileged) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
-        if sys.platform == "win32":
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                str(self._count),
-                "-w",
-                "1000",
-                self._ip_address,
-            ]
-        else:
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                "-q",
-                "-c",
-                str(self._count),
-                "-W1",
-                self._ip_address,
-            ]
+        self._ping_cmd = [
+            "ping",
+            "-n",
+            "-q",
+            "-c",
+            str(self._count),
+            "-W1",
+            self._ip_address,
+        ]
 
     async def async_ping(self):
         """Send ICMP echo request and return details if success."""
@@ -261,12 +250,6 @@ class PingDataSubProcess(PingData):
                     pinger.returncode,
                 )
 
-            if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(
-                    str(out_data).rsplit("\n", maxsplit=1)[-1]
-                )
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             if "max/" not in str(out_data):
                 match = PING_MATCHER_BUSYBOX.search(
                     str(out_data).rsplit("\n", maxsplit=1)[-1]

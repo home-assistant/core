@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ast import literal_eval
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime as dt
 from functools import lru_cache, partial, wraps
@@ -12,7 +13,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import Any, Union, cast
 import uuid
 
 import attr

@@ -406,6 +406,8 @@ async def test_camera_removed(hass, auth):
         DEVICE_TRAITS,
         auth=auth,
     )
+    # Simplify test setup
+    subscriber.cache_policy.fetch = False
 
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
@@ -631,6 +633,8 @@ async def test_event_image_expired(hass, auth):
 async def test_multiple_event_images(hass, auth):
     """Test fallback for an event event image that has been cleaned up on expiration."""
     subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    # Simplify test setup
+    subscriber.cache_policy.fetch = False
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("camera.my_camera")
 

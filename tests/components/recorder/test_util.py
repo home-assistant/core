@@ -570,7 +570,7 @@ async def test_write_lock_db(hass, tmp_path):
 
     instance = hass.data[DATA_INSTANCE]
 
-    with util.write_lock_db(instance):
+    with util.write_lock_db_sqlite(instance):
         # Database should be locked now, try writing SQL command
         with instance.engine.connect() as connection:
             with pytest.raises(OperationalError):

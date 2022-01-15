@@ -32,6 +32,10 @@ MODELS_PORT_80 = [
     "SXS",
 ]
 PORT_80 = 80
+MODELS_PORT_5555 = [
+    "R7000",
+]
+PORT_5555 = 5555
 # update method V2 models
 MODELS_V2 = [
     "Orbi",

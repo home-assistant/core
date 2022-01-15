@@ -116,7 +116,7 @@ async def mock_hls_stream_source_fixture():
         yield mock_hls_stream_source
 
 
-async def provide_web_rtc_answer(stream_source: str, offer: str) -> str:
+async def provide_web_rtc_answer(stream_source: str, offer: str, stream_id: str) -> str:
     """Simulate an rtsp to webrtc provider."""
     assert stream_source == STREAM_SOURCE
     assert offer == WEBRTC_OFFER

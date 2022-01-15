@@ -36,9 +36,11 @@ async def async_setup_scanner(
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Set up an endpoint for the Meraki tracker."""
     hass.http.register_view(MerakiView(config, async_see))
+
+    return True
 
 
 class MerakiView(HomeAssistantView):
