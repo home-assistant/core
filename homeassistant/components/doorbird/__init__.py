@@ -7,6 +7,7 @@ from doorbirdpy import DoorBird
 import requests
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -167,7 +168,8 @@ async def _async_register_events(hass, doorstation):
     try:
         await hass.async_add_executor_job(doorstation.register_events, hass)
     except requests.exceptions.HTTPError:
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             "Doorbird configuration failed.  Please verify that API "
             "Operator permission is enabled for the Doorbird user. "
             "A restart will be required once permissions have been "

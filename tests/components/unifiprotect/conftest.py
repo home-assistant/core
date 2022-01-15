@@ -2,11 +2,12 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from ipaddress import IPv4Address
 import json
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

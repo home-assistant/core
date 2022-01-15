@@ -7,7 +7,11 @@ from typing import Any
 from pylaunches.objects.launch import Launch
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -34,6 +38,13 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+)
+
+
+SENSOR_DESCRIPTION = SensorEntityDescription(
+    key="next_launch",
+    icon="mdi:rocket-launch",
+    name=DEFAULT_NAME,
 )
 
 
@@ -72,7 +83,12 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            NextLaunchSensor(coordinator, entry.entry_id, name),
+            NextLaunchSensor(
+                coordinator,
+                entry.entry_id,
+                name,
+                SENSOR_DESCRIPTION,
+            ),
         ]
     )
 
@@ -81,16 +97,25 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     """Representation of the next launch sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_icon = "mdi:rocket-launch"
     _next_launch: Launch | None = None
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, entry_id: str, name: str
+        self,
+        coordinator: DataUpdateCoordinator,
+        entry_id: str,
+        name: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize a Launch Library entity."""
         super().__init__(coordinator)
         self._attr_name = name
-        self._attr_unique_id = f"{entry_id}_next_launch"
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self.entity_description = description
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self._next_launch is not None
 
     @property
     def native_value(self) -> str | None:
@@ -98,11 +123,6 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
         if self._next_launch is None:
             return None
         return self._next_launch.name
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and self._next_launch is not None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

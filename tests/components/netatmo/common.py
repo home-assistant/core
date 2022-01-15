@@ -106,5 +106,5 @@ def selected_platforms(platforms):
     """Restrict loaded platforms to list given."""
     with patch("homeassistant.components.netatmo.PLATFORMS", platforms), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.webhook.async_generate_url"):
+    ), patch("homeassistant.components.netatmo.webhook_generate_url"):
         yield

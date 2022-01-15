@@ -23,6 +23,10 @@ def format_as_flux_mac(mac: str | None) -> str | None:
     return None if mac is None else mac.replace(":", "").upper()
 
 
+def _human_readable_option(const_option: str) -> str:
+    return const_option.replace("_", " ").title()
+
+
 def _flux_color_mode_to_hass(
     flux_color_mode: str | None, flux_color_modes: set[str]
 ) -> str:
@@ -48,3 +52,26 @@ def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
             return effect
     # unreachable due to schema validation
     assert False  # pragma: no cover
+
+
+def _min_rgb_brightness(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Ensure the RGB value will not turn off the device from a turn on command."""
+    if all(byte == 0 for byte in rgb):
+        return (1, 1, 1)
+    return rgb
+
+
+def _min_rgbw_brightness(rgbw: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    """Ensure the RGBW value will not turn off the device from a turn on command."""
+    if all(byte == 0 for byte in rgbw):
+        return (1, 1, 1, 0)
+    return rgbw
+
+
+def _min_rgbwc_brightness(
+    rgbwc: tuple[int, int, int, int, int]
+) -> tuple[int, int, int, int, int]:
+    """Ensure the RGBWC value will not turn off the device from a turn on command."""
+    if all(byte == 0 for byte in rgbwc):
+        return (1, 1, 1, 0, 0)
+    return rgbwc

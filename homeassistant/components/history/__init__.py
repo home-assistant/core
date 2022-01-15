@@ -12,7 +12,7 @@ from aiohttp import web
 from sqlalchemy import not_, or_
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import history, models as history_models
 from homeassistant.components.recorder.statistics import (
@@ -98,13 +98,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
-    hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:chart-box"
-    )
-    hass.components.websocket_api.async_register_command(
-        ws_get_statistics_during_period
-    )
-    hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
+    frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
+    websocket_api.async_register_command(hass, ws_get_statistics_during_period)
+    websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
 
     return True
 

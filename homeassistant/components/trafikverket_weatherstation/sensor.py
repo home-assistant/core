@@ -31,6 +31,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -165,7 +167,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Trafikverket Weather configuration from YAML."""
     _LOGGER.warning(
@@ -218,6 +220,14 @@ class TrafikverketWeatherStation(SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._station = sensor_station
         self._weather_api = weather_api
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Trafikverket",
+            model="v1.2",
+            name=sensor_station,
+            configuration_url="https://api.trafikinfo.trafikverket.se/",
+        )
         self._weather: WeatherStationInfo | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

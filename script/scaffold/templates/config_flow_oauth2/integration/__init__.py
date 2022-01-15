@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

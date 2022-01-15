@@ -2,9 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import re
-
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -34,16 +31,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from .const import DOMAIN
-
-
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return None
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
-
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv

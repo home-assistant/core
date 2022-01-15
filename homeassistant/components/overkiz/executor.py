@@ -6,8 +6,8 @@ from typing import Any
 from urllib.parse import urlparse
 
 from pyoverkiz.models import Command, Device
+from pyoverkiz.types import StateType as OverkizStateType
 
-from .const import OverkizStateType
 from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)

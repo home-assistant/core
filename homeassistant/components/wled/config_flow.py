@@ -1,6 +1,7 @@
 """Config flow to configure the WLED integration."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -74,7 +75,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self.discovered_host = discovery_info.host
         try:
             self.discovered_device = await self._async_get_device(discovery_info.host)
-        except WLEDConnectionError:
+        except (WLEDConnectionError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(self.discovered_device.info.mac_address)
@@ -83,6 +84,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"name": self.discovered_device.info.name},
+                "configuration_url": f"http://{discovery_info.host}",
             }
         )
         return await self.async_step_zeroconf_confirm()

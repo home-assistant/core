@@ -2,8 +2,12 @@
 from abc import ABC, abstractmethod
 
 from homeassistant.core import callback
+from homeassistant.helpers.storage import Store
 
+from .const import DOMAIN
 from .state_report import async_enable_proactive_mode
+
+STORE_AUTHORIZED = "authorized"
 
 
 class AbstractConfig(ABC):
@@ -14,6 +18,12 @@ class AbstractConfig(ABC):
     def __init__(self, hass):
         """Initialize abstract config."""
         self.hass = hass
+        self._store = None
+
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        self._store = AlexaConfigStore(self.hass)
+        await self._store.async_load()
 
     @property
     def supports_auth(self):
@@ -86,3 +96,48 @@ class AbstractConfig(ABC):
     async def async_accept_grant(self, code):
         """Accept a grant."""
         raise NotImplementedError
+
+    @property
+    def authorized(self):
+        """Return authorization status."""
+        return self._store.authorized
+
+    def set_authorized(self, authorized):
+        """Set authorization status.
+
+        - Set when an incoming message is received from Alexa.
+        - Unset if state reporting fails
+        """
+        self._store.set_authorized(authorized)
+
+
+class AlexaConfigStore:
+    """A configuration store for Alexa."""
+
+    _STORAGE_VERSION = 1
+    _STORAGE_KEY = DOMAIN
+
+    def __init__(self, hass):
+        """Initialize a configuration store."""
+        self._data = None
+        self._hass = hass
+        self._store = Store(hass, self._STORAGE_VERSION, self._STORAGE_KEY)
+
+    @property
+    def authorized(self):
+        """Return authorization status."""
+        return self._data[STORE_AUTHORIZED]
+
+    @callback
+    def set_authorized(self, authorized):
+        """Set authorization status."""
+        if authorized != self._data[STORE_AUTHORIZED]:
+            self._data[STORE_AUTHORIZED] = authorized
+            self._store.async_delay_save(lambda: self._data, 1.0)
+
+    async def async_load(self):
+        """Load saved configuration from disk."""
+        if data := await self._store.async_load():
+            self._data = data
+        else:
+            self._data = {STORE_AUTHORIZED: False}
