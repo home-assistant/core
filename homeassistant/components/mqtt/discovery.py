@@ -48,6 +48,7 @@ SUPPORTED_COMPONENTS = [
     "humidifier",
     "light",
     "lock",
+    "notify",
     "number",
     "scene",
     "siren",
@@ -232,7 +233,13 @@ async def async_start(  # noqa: C901
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
-                    elif component == "tag":
+                    elif component in "notify":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable=import-outside-toplevel
+                        from . import notify
+
+                        await notify.async_setup_entry(hass, config_entry)
+                    elif component in "tag":
                         # Local import to avoid circular dependencies
                         # pylint: disable=import-outside-toplevel
                         from . import tag

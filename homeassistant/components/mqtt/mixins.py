@@ -211,10 +211,10 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
-    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    """Set up entity, automation, notify service or tag creation dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
-        """Discover and add an MQTT entity, automation or tag."""
+        """Discover and add an MQTT entity, automation, notify service or tag."""
         discovery_data = discovery_payload.discovery_data
         try:
             config = schema(discovery_payload)
