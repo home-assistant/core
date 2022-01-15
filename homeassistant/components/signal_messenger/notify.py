@@ -25,7 +25,22 @@ CONF_SIGNAL_CLI_REST_API = "url"
 CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
-ATTR_VERIFY_SSL = "verifySsl"
+ATTR_VERIFY_SSL = "verify_ssl"
+
+DATA_FILENAMES_SCHEMA = vol.Schema({vol.Required(ATTR_FILENAMES): [cv.string]})
+
+DATA_URLS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_URLS): [cv.url],
+        vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
+
+DATA_SCHEMA = vol.Any(
+    None,
+    DATA_FILENAMES_SCHEMA,
+    DATA_URLS_SCHEMA,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -72,6 +87,12 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
+        try:
+            data = DATA_SCHEMA(data)
+        except vol.Invalid as ex:
+            _LOGGER.error("Invalid message data: %s", ex)
+            raise ex
+
         filenames = self.get_filenames(data)
         attachments_as_bytes = self.get_attachments_as_bytes(
             data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
@@ -88,39 +109,32 @@ class SignalNotificationService(BaseNotificationService):
     @staticmethod
     def get_filenames(data: Any) -> list[str] | None:
         """Extract attachment filenames from data."""
-        if data is None:
+        try:
+            data = DATA_FILENAMES_SCHEMA(data)
+        except vol.Invalid:
             return None
 
-        if ATTR_FILENAMES in data:
-            if isinstance(data[ATTR_FILENAMES], list):
-                return data[ATTR_FILENAMES]
-
-            raise ValueError(f"'{ATTR_FILENAMES}' property must be a list")
-
-        return None
+        return data[ATTR_FILENAMES]
 
     @staticmethod
     def get_attachments_as_bytes(
         data: Any, attachment_size_limit: int
     ) -> list[bytearray] | None:
         """Retrieve attachments from URLs defined in data."""
-        if data is None or ATTR_URLS not in data:
+        try:
+            data = DATA_URLS_SCHEMA(data)
+        except vol.Invalid:
             return None
 
-        if not isinstance(data[ATTR_URLS], list):
-            raise ValueError(f"'{ATTR_URLS}' property must be a list")
-
-        verify = True
-
-        if ATTR_VERIFY_SSL in data and isinstance(data[ATTR_VERIFY_SSL], bool):
-            verify = data[ATTR_VERIFY_SSL]
+        urls = data[ATTR_URLS]
 
         attachments_as_bytes: list[bytearray] = []
 
-        urls = data[ATTR_URLS]
         for url in urls:
             try:
-                resp = requests.get(url, verify=verify, timeout=10, stream=True)
+                resp = requests.get(
+                    url, verify=data[ATTR_VERIFY_SSL], timeout=10, stream=True
+                )
                 resp.raise_for_status()
 
                 if (
