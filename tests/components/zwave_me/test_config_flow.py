@@ -134,4 +134,4 @@ async def test_handle_error_user(hass: HomeAssistant):
                 "token": "test-token",
             },
         )
-        assert result2["errors"] == {'base': 'no_valid_uuid_set'}
+        assert result2["errors"] == {"base": "no_valid_uuid_set"}
