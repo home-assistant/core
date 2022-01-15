@@ -371,7 +371,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
         Calculate and update entity state if it has changed.
         """
         if not self._item.dpiapp_ids:
-            self.hass.loop.create_task(self.remove_item({self.key}))
+            self.hass.async_create_task(self.remove_item({self.key}))
             return
 
         if self._known_app_ids != self._item.dpiapp_ids:
