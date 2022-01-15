@@ -29,11 +29,12 @@ KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
 PLATFORMS = [
-    Platform.COVER,
+    # Temporarily disabled
+    #    Platform.COVER,
     Platform.FAN,
-    Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
+    #    Platform.LIGHT,
+    #    Platform.SENSOR,
+    #    Platform.SWITCH,
 ]
 TIMEOUT_API = 30
 ATTR_MAX_FAN_STEPS = 49
