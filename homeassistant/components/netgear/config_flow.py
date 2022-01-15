@@ -23,7 +23,9 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MODELS_PORT_80,
+    MODELS_PORT_5555,
     PORT_80,
+    PORT_5555,
 )
 from .errors import CannotLoginException
 from .router import get_api
@@ -126,15 +128,16 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device_url = urlparse(discovery_info.ssdp_location)
         if device_url.hostname:
             updated_data[CONF_HOST] = device_url.hostname
-        if device_url.scheme == "https":
-            updated_data[CONF_SSL] = True
-        else:
-            updated_data[CONF_SSL] = False
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
+
+        if device_url.scheme == "https":
+            updated_data[CONF_SSL] = True
+        else:
+            updated_data[CONF_SSL] = False
 
         updated_data[CONF_PORT] = DEFAULT_PORT
         for model in MODELS_PORT_80:
@@ -144,6 +147,14 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 model
             ):
                 updated_data[CONF_PORT] = PORT_80
+        for model in MODELS_PORT_5555:
+            if discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
+                model
+            ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
+                model
+            ):
+                updated_data[CONF_PORT] = PORT_5555
+                updated_data[CONF_SSL] = True
 
         self.placeholders.update(updated_data)
         self.discovered = True
