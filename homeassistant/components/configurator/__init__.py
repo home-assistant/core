@@ -115,14 +115,14 @@ def notify_errors(hass, request_id, error):
 
 @bind_hass
 @async_callback
-def async_request_done(hass, request_id):
+def async_request_done(hass: HomeAssistant, request_id: str) -> None:
     """Mark a configuration request as done."""
     with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
 
 
 @bind_hass
-def request_done(hass, request_id):
+def request_done(hass: HomeAssistant, request_id: str) -> None:
     """Mark a configuration request as done."""
     return run_callback_threadsafe(
         hass.loop, async_request_done, hass, request_id

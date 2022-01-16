@@ -1,5 +1,4 @@
 """Support for the Fitbit API."""
-
 from __future__ import annotations
 
 import datetime
@@ -14,6 +13,7 @@ from fitbit.api import FitbitOauth2Client
 from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenError
 import voluptuous as vol
 
+from homeassistant.components import configurator
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -175,7 +175,7 @@ def setup_platform(
         return
 
     if "fitbit" in _CONFIGURING:
-        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
+        configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
 
     access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token: str | None = config_file.get(ATTR_REFRESH_TOKEN)
