@@ -44,7 +44,7 @@ async def async_setup_entry(
 
     for device in devices:
         # Assume a shade device if the type is not present in the api response (Connect <2.2.6)
-        if ("type" in device.keys()) and (device["type"].lower() == "tilt"):
+        if "type" in device and device["type"].lower() == "tilt":
             entities.append(SomaTilt(device, hass.data[DOMAIN][API]))
         else:
             entities.append(SomaShade(device, hass.data[DOMAIN][API]))
