@@ -105,6 +105,21 @@ NEXIA_TO_HA_HVAC_MODE_MAP = {
     value: key for key, value in HA_TO_NEXIA_HVAC_MODE_MAP.items()
 }
 
+HVAC_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+]
+
+NEXIA_SUPPORTED = (
+    SUPPORT_TARGET_TEMPERATURE_RANGE
+    | SUPPORT_TARGET_TEMPERATURE
+    | SUPPORT_FAN_MODE
+    | SUPPORT_PRESET_MODE
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -158,12 +173,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._has_emergency_heat = self._thermostat.has_emergency_heat()
         self._has_humidify_support = self._thermostat.has_humidify_support()
         self._has_dehumidify_support = self._thermostat.has_dehumidify_support()
-        supported = (
-            SUPPORT_TARGET_TEMPERATURE_RANGE
-            | SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_FAN_MODE
-            | SUPPORT_PRESET_MODE
-        )
+        supported = NEXIA_SUPPORTED
         if self._has_humidify_support or self._has_dehumidify_support:
             supported |= SUPPORT_TARGET_HUMIDITY
         if self._has_emergency_heat:
@@ -171,13 +181,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._attr_supported_features = supported
         self._attr_preset_modes = self._zone.get_presets()
         self._attr_fan_modes = self._thermostat.get_fan_modes()
-        self._attr_hvac_modes = [
-            HVAC_MODE_OFF,
-            HVAC_MODE_AUTO,
-            HVAC_MODE_HEAT_COOL,
-            HVAC_MODE_HEAT,
-            HVAC_MODE_COOL,
-        ]
+        self._attr_hvac_modes = HVAC_MODES
         self._attr_min_humidity = percent_conv(min_humidity)
         self._attr_max_humidity = percent_conv(max_humidity)
         self._attr_min_temp = min_setpoint
