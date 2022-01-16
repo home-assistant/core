@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import siren
 from homeassistant.components.siren import SirenEntity
+from homeassistant.components.siren.const import SUPPORT_TURN_OFF, SUPPORT_TURN_ON
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_VALUE_TEMPLATE,
-    STATE_OFF,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -58,6 +58,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
 
+SUPPORT_FLAGS = SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -96,8 +98,13 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT siren."""
-        self._state = False
+        self._attr_name = config[CONF_NAME]
+        self._attr_should_poll = False
+        self._attr_supported_features = SUPPORT_FLAGS
+        self._attr_is_on = False
+        self._attr_extra_state_attributes = {}
 
+        self._state = False
         self._state_on = None
         self._state_off = None
         self._optimistic = None
@@ -132,9 +139,9 @@ class MqttSiren(MqttEntity, SirenEntity):
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
             if payload == self._state_on:
-                self._state = True
+                self._attr_is_on = True
             elif payload == self._state_off:
-                self._state = False
+                self._attr_is_on = False
 
             self.async_write_ha_state()
 
@@ -154,14 +161,6 @@ class MqttSiren(MqttEntity, SirenEntity):
                     }
                 },
             )
-
-        if self._optimistic:
-            self._state = STATE_OFF
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     @property
     def assumed_state(self):
@@ -183,7 +182,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         )
         if self._optimistic:
             # Optimistically assume that siren has changed state.
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
@@ -201,5 +200,5 @@ class MqttSiren(MqttEntity, SirenEntity):
         )
         if self._optimistic:
             # Optimistically assume that siren has changed state.
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
