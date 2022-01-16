@@ -103,6 +103,9 @@ async def async_setup_entry(
 class SmhiWeather(WeatherEntity):
     """Representation of a weather entity."""
 
+    _attr_attribution = "Swedish weather institute (SMHI)"
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(
         self,
         name: str,
@@ -112,25 +115,19 @@ class SmhiWeather(WeatherEntity):
     ) -> None:
         """Initialize the SMHI weather entity."""
 
-        self._name = name
-        self._latitude = latitude
-        self._longitude = longitude
+        self._attr_name = name
+        self._attr_unique_id = f"{latitude}, {longitude}"
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
-        self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
+        self._smhi_api = Smhi(longitude, latitude, session=session)
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{self._latitude}, {self._longitude}")},
+            identifiers={(DOMAIN, f"{latitude}, {longitude}")},
             manufacturer="SMHI",
             model="v2",
-            name=self._name,
+            name=self._attr_name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return f"{self._latitude}, {self._longitude}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
@@ -157,21 +154,11 @@ class SmhiWeather(WeatherEntity):
         return await self._smhi_api.async_get_forecast()
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def temperature(self) -> int | None:
         """Return the temperature."""
         if self._forecasts is not None:
             return self._forecasts[0].temperature
         return None
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def humidity(self) -> int | None:
@@ -240,11 +227,6 @@ class SmhiWeather(WeatherEntity):
             (k for k, v in CONDITION_CLASSES.items() if self._forecasts[0].symbol in v),
             None,
         )
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Swedish weather institute (SMHI)"
 
     @property
     def forecast(self) -> list[Forecast] | None:
