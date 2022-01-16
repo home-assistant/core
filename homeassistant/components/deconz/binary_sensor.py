@@ -49,9 +49,13 @@ ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 
 ENTITY_DESCRIPTIONS = {
+    Alarm: BinarySensorEntityDescription(
+        key="alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
     CarbonMonoxide: BinarySensorEntityDescription(
         key="carbonmonoxide",
-        device_class=BinarySensorDeviceClass.GAS,
+        device_class=BinarySensorDeviceClass.CO,
     ),
     Fire: BinarySensorEntityDescription(
         key="fire",
