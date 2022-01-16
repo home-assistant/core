@@ -128,10 +128,8 @@ def read_client_keys(config_file: str) -> dict[str, str]:
     engine = db.create_engine(f"sqlite:///{config_file}")
     table = db.Table("unnamed", db.MetaData(), autoload=True, autoload_with=engine)
     results = engine.connect().execute(db.select([table])).fetchall()
-    client_keys = {k: loads(v) for k, v in results}
-    if isinstance(client_keys, dict):
-        return client_keys
-    return {}
+    db_client_keys = {k: loads(v) for k, v in results}
+    return db_client_keys
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

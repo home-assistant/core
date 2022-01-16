@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_service(
     hass: HomeAssistant,
-    _config: ConfigType,
+    config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> BaseNotificationService | None:
     """Return the notify service."""

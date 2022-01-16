@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from aiowebostv import WebOsTvPairError
@@ -48,7 +49,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, import_info: ConfigType) -> FlowResult:
+    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Set the config entry up from yaml."""
         self._host = import_info[CONF_HOST]
         self._name = import_info.get(CONF_NAME) or import_info[CONF_HOST]
@@ -63,7 +64,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("WebOS Smart TV host %s imported from YAML config", self._host)
         return self.async_create_entry(title=self._name, data=data)
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -93,7 +96,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_step_pairing(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Display pairing form."""
         self._async_check_configured_entry()
