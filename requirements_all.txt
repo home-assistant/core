@@ -1031,7 +1031,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.miflora
-miflora==0.7.0
+miflora==0.7.2
 
 # homeassistant.components.mill
 mill-local==0.1.1
