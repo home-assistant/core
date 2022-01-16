@@ -213,7 +213,9 @@ def cmdline() -> list[str]:
     if os.path.basename(sys.argv[0]) == "__main__.py":
         modulepath = os.path.dirname(sys.argv[0])
         os.environ["PYTHONPATH"] = os.path.dirname(modulepath)
-        return [sys.executable] + [arg for arg in sys.argv if arg != "--daemon"]
+        return [sys.executable, "-m", "homeassistant"] + [
+            arg for arg in sys.argv[1:] if arg != "--daemon"
+        ]
 
     return [arg for arg in sys.argv if arg != "--daemon"]
 
