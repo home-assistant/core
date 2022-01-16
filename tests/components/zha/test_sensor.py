@@ -360,7 +360,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             general.DeviceTemperature.cluster_id,
             "device_temperature",
             async_test_device_temperature,
-            0,
+            1,
             None,
             None,
         ),
