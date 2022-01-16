@@ -79,7 +79,6 @@ SWING_HORIZONTAL = "horizontal"
 
 # This are support current states of HVAC
 CURRENT_HVAC_OFF = "off"
-CURRENT_HVAC_STANDBY = "standby"
 CURRENT_HVAC_HEAT = "heating"
 CURRENT_HVAC_COOL = "cooling"
 CURRENT_HVAC_DRY = "drying"
@@ -91,7 +90,6 @@ CURRENT_HVAC_PREHEAT = "preheat"
 # A list of possible HVAC actions.
 CURRENT_HVAC_ACTIONS = [
     CURRENT_HVAC_OFF,
-    CURRENT_HVAC_STANDBY,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_DRY,
