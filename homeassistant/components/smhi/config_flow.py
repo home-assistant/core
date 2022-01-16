@@ -21,9 +21,9 @@ async def async_check_location(
     hass: HomeAssistant, longitude: float, latitude: float
 ) -> bool:
     """Return true if location is ok."""
+    session = aiohttp_client.async_get_clientsession(hass)
+    smhi_api = Smhi(longitude, latitude, session=session)
     try:
-        session = aiohttp_client.async_get_clientsession(hass)
-        smhi_api = Smhi(longitude, latitude, session=session)
         await smhi_api.async_get_forecast()
     except SmhiForecastException:
         return False
@@ -45,48 +45,40 @@ class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             lat = user_input[CONF_LATITUDE]
-            long = user_input[CONF_LONGITUDE]
-            if await async_check_location(self.hass, long, lat):
+            lon = user_input[CONF_LONGITUDE]
+            if await async_check_location(self.hass, lon, lat):
                 name = DEFAULT_NAME
                 if (
                     lat == self.hass.config.latitude
-                    and long == self.hass.config.longitude
+                    and lon == self.hass.config.longitude
                 ):
                     name = HOME_LOCATION_NAME
 
                 user_input[CONF_NAME] = name
 
-                await self.async_set_unique_id(f"{lat}-{long}")
+                await self.async_set_unique_id(f"{lat}-{lon}")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=name, data=user_input)
 
             errors["base"] = "wrong_location"
+
+        default_lat: float = self.hass.config.latitude
+        default_lon: float = self.hass.config.longitude
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.data[CONF_LATITUDE] == self.hass.config.latitude
                 and entry.data[CONF_LONGITUDE] == self.hass.config.longitude
             ):
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(CONF_LATITUDE): cv.latitude,
-                            vol.Required(CONF_LONGITUDE): cv.longitude,
-                        }
-                    ),
-                    errors=errors,
-                )
+                default_lat = 0
+                default_lon = 0
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    vol.Required(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
+                    vol.Required(CONF_LATITUDE, default=default_lat): cv.latitude,
+                    vol.Required(CONF_LONGITUDE, default=default_lon): cv.longitude,
                 }
             ),
             errors=errors,
