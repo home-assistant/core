@@ -22,11 +22,6 @@ async def test_sensors(hass: HomeAssistant):
 
     registry = entity_registry.async_get(hass)
 
-    # states = hass.states.async_entity_ids()
-    # entries = entity_registry.async_entries_for_device(
-    #     registry, device_id="SNADVA1234567"
-    # )
-
     # Temp Sensors.
     state = hass.states.get("sensor.flashforge_t0_now_temp")
     assert state is not None

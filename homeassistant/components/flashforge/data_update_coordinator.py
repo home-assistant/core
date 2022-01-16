@@ -1,4 +1,4 @@
-"""Example integration using DataUpdateCoordinator."""
+"""DataUpdateCoordinator for flashforge integration."""
 
 from datetime import timedelta
 import logging
@@ -53,7 +53,7 @@ class FlashForgeDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(err) from err
 
         return {
-            "status": self.printer.status,
+            "status": self.printer.machine_status,
         }
 
     async def async_config_entry_first_refresh(self):
