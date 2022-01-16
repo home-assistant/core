@@ -1,10 +1,6 @@
 """Constant values for the AEMET OpenData component."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import date
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
@@ -39,7 +35,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     Platform,
 )
-from homeassistant.util import dt as dt_util
 
 ATTRIBUTION = "Powered by AEMET OpenData"
 CONF_STATION_UPDATES = "station_updates"
@@ -205,53 +200,44 @@ FORECAST_MODE_ATTR_API = {
     FORECAST_MODE_HOURLY: ATTR_API_FORECAST_HOURLY,
 }
 
-
-@dataclass
-class ForecastSensorEntityDescription(SensorEntityDescription):
-    """Class describing Aemet forecast sensor entities."""
-
-    value: Callable = date
-
-
-FORECAST_SENSOR_TYPES: tuple[ForecastSensorEntityDescription, ...] = (
-    ForecastSensorEntityDescription(
+FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key=ATTR_FORECAST_CONDITION,
         name="Condition",
     ),
-    ForecastSensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_FORECAST_PRECIPITATION,
         name="Precipitation",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
     ),
-    ForecastSensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_FORECAST_PRECIPITATION_PROBABILITY,
         name="Precipitation probability",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    ForecastSensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_FORECAST_TEMP,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    ForecastSensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_FORECAST_TEMP_LOW,
         name="Temperature Low",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    ForecastSensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_FORECAST_TIME,
         name="Time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value=lambda value: dt_util.parse_datetime(value),
     ),
-    ForecastSensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_FORECAST_WIND_BEARING,
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
     ),
-    ForecastSensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_FORECAST_WIND_SPEED,
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
