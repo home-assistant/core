@@ -76,7 +76,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result4["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result4["title"] == "Weather"
+    assert result4["title"] == "Weather 1.0 1.0"
     assert result4["data"] == {
         "latitude": 1.0,
         "longitude": 1.0,
@@ -124,7 +124,7 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "Weather"
+    assert result3["title"] == "Weather 2.0 2.0"
     assert result3["data"] == {
         "latitude": 2.0,
         "longitude": 2.0,
@@ -151,9 +151,6 @@ async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
         return_value={"test": "something", "test2": "something else"},
-    ), patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
-        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -165,3 +162,4 @@ async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
