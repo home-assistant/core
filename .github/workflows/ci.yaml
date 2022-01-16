@@ -17,7 +17,6 @@ env:
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
-  DEPENDENCY_CONFLICTS: 14  # Update this one if a PR resolves a dependency conflict
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -703,7 +702,7 @@ jobs:
       - name: Run pip check
         run: |
           . venv/bin/activate
-          ./script/pip_check $PIP_CACHE $DEPENDENCY_CONFLICTS
+          ./script/pip_check $PIP_CACHE
 
   pytest:
     runs-on: ubuntu-latest
