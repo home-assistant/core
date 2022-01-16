@@ -43,7 +43,9 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @callback
     def _observe_update(self, device: Device) -> None:
         """Update the coordinator for a device when a change is detected."""
+        self._exception = None  # Clear stored exception
         self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
+
         self.async_set_updated_data(data=device)
 
     @callback
@@ -65,11 +67,6 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )  # Change interval so we get a swift refresh
         await self.async_request_refresh()
 
-    async def _async_run_observe(self, cmd: Command, device: Device = None) -> None:
-        """Run observe in a coroutine."""
-        self._exception = None
-        await self.api(cmd)
-
     @callback
     def _async_start_observe(
         self, device: Device, exc: Exception | None = None
@@ -77,6 +74,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Start observation of device."""
         if exc:
             _LOGGER.debug("Observation failed for %s", device, exc_info=exc)
+
         return device.observe(
             callback=self._observe_update,
             err_callback=self._exception_callback,
@@ -95,7 +93,10 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             ) from err
 
         if not self.data:  # Start subscription
-            cmd = self._async_start_observe(device=self.device)
-            self.hass.async_create_task(self._async_run_observe(cmd, self.device))
+            try:
+                cmd = self._async_start_observe(device=self.device)
+                await self.api(cmd)
+            except RequestError as exc:
+                await self._handle_exception(device=self.device, exc=exc)
 
         return self.device
