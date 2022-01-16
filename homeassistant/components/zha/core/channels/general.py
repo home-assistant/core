@@ -172,7 +172,12 @@ class Commissioning(ZigbeeChannel):
 class DeviceTemperature(ZigbeeChannel):
     """Device Temperature channel."""
 
-    REPORT_CONFIG = [{"attr": "current_temperature", "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50)}]
+    REPORT_CONFIG = [
+        {
+            "attr": "current_temperature",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        }
+    ]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.GreenPowerProxy.cluster_id)
