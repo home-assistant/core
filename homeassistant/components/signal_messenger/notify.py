@@ -25,7 +25,22 @@ CONF_SIGNAL_CLI_REST_API = "url"
 CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
-ATTR_VERIFY_SSL = "verifySsl"
+ATTR_VERIFY_SSL = "verify_ssl"
+
+DATA_FILENAMES_SCHEMA = vol.Schema({vol.Required(ATTR_FILENAMES): [cv.string]})
+
+DATA_URLS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_URLS): [cv.url],
+        vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
+
+DATA_SCHEMA = vol.Any(
+    None,
+    DATA_FILENAMES_SCHEMA,
+    DATA_URLS_SCHEMA,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -49,7 +64,7 @@ def get_service(
 
     signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr)
 
-    return SignalNotificationService(recp_nrs, signal_cli_rest_api)
+    return SignalNotificationService(hass, recp_nrs, signal_cli_rest_api)
 
 
 class SignalNotificationService(BaseNotificationService):
@@ -57,11 +72,13 @@ class SignalNotificationService(BaseNotificationService):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         recp_nrs: list[str],
         signal_cli_rest_api: SignalCliRestApi,
     ) -> None:
         """Initialize the service."""
 
+        self._hass = hass
         self._recp_nrs = recp_nrs
         self._signal_cli_rest_api = signal_cli_rest_api
 
@@ -72,9 +89,15 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
+        try:
+            data = DATA_SCHEMA(data)
+        except vol.Invalid as ex:
+            _LOGGER.error("Invalid message data: %s", ex)
+            raise ex
+
         filenames = self.get_filenames(data)
         attachments_as_bytes = self.get_attachments_as_bytes(
-            data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+            data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES, self._hass
         )
 
         try:
@@ -88,39 +111,38 @@ class SignalNotificationService(BaseNotificationService):
     @staticmethod
     def get_filenames(data: Any) -> list[str] | None:
         """Extract attachment filenames from data."""
-        if data is None:
+        try:
+            data = DATA_FILENAMES_SCHEMA(data)
+        except vol.Invalid:
             return None
 
-        if ATTR_FILENAMES in data:
-            if isinstance(data[ATTR_FILENAMES], list):
-                return data[ATTR_FILENAMES]
-
-            raise ValueError(f"'{ATTR_FILENAMES}' property must be a list")
-
-        return None
+        return data[ATTR_FILENAMES]
 
     @staticmethod
     def get_attachments_as_bytes(
-        data: Any, attachment_size_limit: int
+        data: Any,
+        attachment_size_limit: int,
+        hass: HomeAssistant,
     ) -> list[bytearray] | None:
         """Retrieve attachments from URLs defined in data."""
-        if data is None or ATTR_URLS not in data:
+        try:
+            data = DATA_URLS_SCHEMA(data)
+        except vol.Invalid:
             return None
 
-        if not isinstance(data[ATTR_URLS], list):
-            raise ValueError(f"'{ATTR_URLS}' property must be a list")
-
-        verify = True
-
-        if ATTR_VERIFY_SSL in data and isinstance(data[ATTR_VERIFY_SSL], bool):
-            verify = data[ATTR_VERIFY_SSL]
+        urls = data[ATTR_URLS]
 
         attachments_as_bytes: list[bytearray] = []
 
-        urls = data[ATTR_URLS]
         for url in urls:
             try:
-                resp = requests.get(url, verify=verify, timeout=10, stream=True)
+                if not hass.config.is_allowed_external_url(url):
+                    _LOGGER.error("URL '%s' not in allow list", url)
+                    continue
+
+                resp = requests.get(
+                    url, verify=data[ATTR_VERIFY_SSL], timeout=10, stream=True
+                )
                 resp.raise_for_status()
 
                 if (
@@ -128,14 +150,23 @@ class SignalNotificationService(BaseNotificationService):
                     and int(str(resp.headers.get("Content-Length")))
                     > attachment_size_limit
                 ):
-                    raise ValueError("Attachment too large (Content-Length)")
+                    raise ValueError(
+                        "Attachment too large (Content-Length reports {}). Max size: {} bytes".format(
+                            int(str(resp.headers.get("Content-Length"))),
+                            CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
+                        )
+                    )
 
                 size = 0
                 chunks = bytearray()
                 for chunk in resp.iter_content(1024):
                     size += len(chunk)
                     if size > attachment_size_limit:
-                        raise ValueError("Attachment too large (Stream)")
+                        raise ValueError(
+                            "Attachment too large (Stream reports {}). Max size: {} bytes".format(
+                                size, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+                            )
+                        )
 
                     chunks.extend(chunk)
 
@@ -143,5 +174,8 @@ class SignalNotificationService(BaseNotificationService):
             except Exception as ex:
                 _LOGGER.error("%s", ex)
                 raise ex
+
+        if not attachments_as_bytes:
+            return None
 
         return attachments_as_bytes
