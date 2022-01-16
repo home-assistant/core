@@ -153,24 +153,26 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._has_emergency_heat = self._thermostat.has_emergency_heat()
         self._has_humidify_support = self._thermostat.has_humidify_support()
         self._has_dehumidify_support = self._thermostat.has_dehumidify_support()
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
         supported = (
             SUPPORT_TARGET_TEMPERATURE_RANGE
             | SUPPORT_TARGET_TEMPERATURE
             | SUPPORT_FAN_MODE
             | SUPPORT_PRESET_MODE
         )
-
         if self._has_humidify_support or self._has_dehumidify_support:
             supported |= SUPPORT_TARGET_HUMIDITY
-
         if self._has_emergency_heat:
             supported |= SUPPORT_AUX_HEAT
-
-        return supported
+        self._attr_supported_features = supported
+        self._attr_preset_modes = self._zone.get_presets()
+        self._attr_fan_modes = self._thermostat.get_fan_modes()
+        self._attr_hvac_modes = [
+            HVAC_MODE_OFF,
+            HVAC_MODE_AUTO,
+            HVAC_MODE_HEAT_COOL,
+            HVAC_MODE_HEAT,
+            HVAC_MODE_COOL,
+        ]
 
     @property
     def is_fan_on(self):
@@ -191,11 +193,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
         return self._thermostat.get_fan_mode()
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return self._thermostat.get_fan_modes()
 
     @property
     def min_temp(self):
@@ -326,17 +323,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             return HVAC_MODE_HEAT_COOL
 
         return NEXIA_TO_HA_HVAC_MODE_MAP[mode]
-
-    @property
-    def hvac_modes(self):
-        """List of HVAC available modes."""
-        return [
-            HVAC_MODE_OFF,
-            HVAC_MODE_AUTO,
-            HVAC_MODE_HEAT_COOL,
-            HVAC_MODE_HEAT,
-            HVAC_MODE_COOL,
-        ]
 
     def set_temperature(self, **kwargs):
         """Set target temperature."""
