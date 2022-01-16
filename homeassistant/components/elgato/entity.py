@@ -19,7 +19,7 @@ class ElgatoEntity(Entity):
             identifiers={(DOMAIN, info.serial_number)},
             manufacturer="Elgato",
             model=info.product_name,
-            name=info.product_name,
+            name=info.display_name,
             sw_version=f"{info.firmware_version} ({info.firmware_build_number})",
         )
         if mac is not None:
