@@ -9,9 +9,11 @@ from nexia.const import (
     SYSTEM_STATUS_COOL,
     SYSTEM_STATUS_HEAT,
     SYSTEM_STATUS_IDLE,
-    UNIT_FAHRENHEIT,
 )
+from nexia.home import NexiaHome
+from nexia.thermostat import NexiaThermostat
 from nexia.util import find_humidity_setpoint
+from nexia.zone import NexiaThermostatZone
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -111,7 +113,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up climate for a Nexia device."""
     coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home = coordinator.nexia_home
+    nexia_home: NexiaHome = coordinator.nexia_home
 
     platform = entity_platform.async_get_current_platform()
 
@@ -127,11 +129,11 @@ async def async_setup_entry(
         SERVICE_SET_HVAC_RUN_MODE, SET_HVAC_RUN_MODE_SCHEMA, SERVICE_SET_HVAC_RUN_MODE
     )
 
-    entities = []
+    entities: list[NexiaZone] = []
     for thermostat_id in nexia_home.get_thermostat_ids():
-        thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         for zone_id in thermostat.get_zone_ids():
-            zone = thermostat.get_zone_by_id(zone_id)
+            zone: NexiaThermostatZone = thermostat.get_zone_by_id(zone_id)
             entities.append(NexiaZone(coordinator, zone))
 
     async_add_entities(entities)
@@ -140,11 +142,16 @@ async def async_setup_entry(
 class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     """Provides Nexia Climate support."""
 
-    def __init__(self, coordinator, zone):
+    def __init__(
+        self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
+    ) -> None:
         """Initialize the thermostat."""
         super().__init__(
             coordinator, zone, name=zone.get_name(), unique_id=zone.zone_id
         )
+        unit = self._thermostat.get_unit()
+        min_humidity, max_humidity = self._thermostat.get_humidity_setpoint_limits()
+        min_setpoint, max_setpoint = self._thermostat.get_setpoint_limits()
         # The has_* calls are stable for the life of the device
         # and do not do I/O
         self._has_relative_humidity = self._thermostat.has_relative_humidity()
@@ -171,19 +178,18 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             HVAC_MODE_HEAT,
             HVAC_MODE_COOL,
         ]
-        min_humidity, max_humidity = self._thermostat.get_humidity_setpoint_limits()
         self._attr_min_humidity = percent_conv(min_humidity)
         self._attr_max_humidity = percent_conv(max_humidity)
+        self._attr_min_temp = min_setpoint
+        self._attr_max_temp = max_setpoint
+        self._attr_temperature_unit = TEMP_CELSIUS if unit == "C" else TEMP_FAHRENHEIT
+        self._attr_target_temperature_step = 0.5 if unit == "C" else 1.0
+        self._attr_preset_modes = self._zone.get_presets()
 
     @property
     def is_fan_on(self):
         """Blower is on."""
         return self._thermostat.is_blower_active()
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS if self._thermostat.get_unit() == "C" else TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
@@ -194,16 +200,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
         return self._thermostat.get_fan_mode()
-
-    @property
-    def min_temp(self):
-        """Minimum temp for the current setting."""
-        return (self._thermostat.get_setpoint_limits())[0]
-
-    @property
-    def max_temp(self):
-        """Maximum temp for the current setting."""
-        return (self._thermostat.get_setpoint_limits())[1]
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
@@ -225,11 +221,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     def preset_mode(self):
         """Preset that is active."""
         return self._zone.get_preset()
-
-    @property
-    def preset_modes(self):
-        """All presets."""
-        return self._zone.get_presets()
 
     def set_humidity(self, humidity):
         """Dehumidify target."""
@@ -265,13 +256,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         if current_mode == OPERATION_MODE_HEAT:
             return self._zone.get_heating_setpoint()
         return None
-
-    @property
-    def target_temperature_step(self):
-        """Step size of temperature units."""
-        if self._thermostat.get_unit() == UNIT_FAHRENHEIT:
-            return 1.0
-        return 0.5
 
     @property
     def target_temperature_high(self):

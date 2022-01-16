@@ -11,7 +11,6 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .coordinator import NexiaDataUpdateCoordinator
@@ -40,7 +39,7 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
     """Provides Nexia hold switch support."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, zone: NexiaThermostatZone
+        self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
     ) -> None:
         """Initialize the hold mode switch."""
         switch_name = f"{zone.get_name()} Hold"
