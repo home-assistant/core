@@ -66,7 +66,7 @@ def device_reg(hass):
 
 
 async def _async_setup_lutron_with_picos(hass, device_reg):
-    """Setups a lutron bridge with picos."""
+    """Set up a lutron bridge with picos."""
     await async_setup_component(hass, DOMAIN, {})
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={})

@@ -120,7 +120,7 @@ def events(hass):
 
 @pytest.fixture
 async def coap_wrapper(hass):
-    """Setups a coap wrapper with mocked device."""
+    """Set up a coap wrapper with mocked device."""
     await async_setup_component(hass, "shelly", {})
 
     config_entry = MockConfigEntry(
@@ -155,7 +155,7 @@ async def coap_wrapper(hass):
 
 @pytest.fixture
 async def rpc_wrapper(hass):
-    """Setups a coap wrapper with mocked device."""
+    """Set up a coap wrapper with mocked device."""
     await async_setup_component(hass, "shelly", {})
 
     config_entry = MockConfigEntry(

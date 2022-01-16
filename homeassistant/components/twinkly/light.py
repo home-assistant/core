@@ -46,7 +46,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Setups an entity from a config entry (UI config flow)."""
+    """Set up an entity from a config entry (UI config flow)."""
 
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     device_info = hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICE_INFO]

@@ -27,7 +27,7 @@ PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{CONTRACT}"
 
 @fixture
 def mock_auth():
-    """Setups authentication."""
+    """Set up authentication."""
 
     with patch("pyprosegur.auth.Auth.login", return_value=True):
         yield
