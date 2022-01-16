@@ -40,8 +40,8 @@ class RokuSensorEntityDescription(
 
 SENSORS: tuple[RokuSensorEntityDescription, ...] = (
     RokuSensorEntityDescription(
-        key="current_app_id",
-        name="Current App ID",
+        key="active_app_id",
+        name="Active App ID",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.app.app_id,
     ),
