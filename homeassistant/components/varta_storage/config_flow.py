@@ -38,15 +38,6 @@ class VartaHub:
         except ValueError:
             return False
 
-    def get_serial(self):
-        """Collect serial number of the VartaStorage device."""
-        varta = vartastorage.VartaStorage(self.host, self.port)
-        try:
-            varta.get_serial()
-            return varta.serial
-        except ValueError:
-            return False
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
@@ -60,7 +51,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise CannotConnect
 
     # Return info stored in the config entry.
-    return {"title": data["host"] + " (S/N: " + hub.serial + ")", "serial": hub.serial}
+    return {"title": f"{data['host']} (S/N: {hub.serial} )", "serial": hub.serial}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -84,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.warning("Unexpected exception")
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(info["serial"])

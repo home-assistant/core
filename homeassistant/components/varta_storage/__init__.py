@@ -9,7 +9,7 @@ from vartastorage import vartastorage
 
 from homeassistant import config_entries, core
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, POWER_WATT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -58,101 +58,101 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         thisdict = {}
         thisdict[0] = {
             "name": "VARTA state of charge",
-            "state": result.soc,
+            "native_value": result.soc,
             "device_class": "battery",
             "state_class": "measurement",
-            "unit_of_measurement": "%",
+            "native_unit_of_measurement": PERCENTAGE,
         }
         thisdict[1] = {
             "name": "VARTA grid power",
-            "state": result.grid_power,
+            "native_value": result.grid_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[2] = {
             "name": "VARTA to_grid power",
-            "state": result.to_grid_power,
+            "native_value": result.to_grid_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[3] = {
             "name": "VARTA from_grid power",
-            "state": result.from_grid_power,
+            "native_value": result.from_grid_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[4] = {
             "name": "VARTA state",
-            "state": result.state,
+            "native_value": result.state,
             "device_class": "None",
             "state_class": "None",
-            "unit_of_measurement": "",
+            "native_unit_of_measurement": None,
         }
         thisdict[5] = {
             "name": "VARTA state text",
-            "state": result.state_text,
+            "native_value": result.state_text,
             "device_class": "None",
             "state_class": "None",
-            "unit_of_measurement": "",
+            "native_unit_of_measurement": None,
         }
         thisdict[6] = {
             "name": "VARTA active power",
-            "state": result.active_power,
+            "native_value": result.active_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[7] = {
             "name": "VARTA apparent power",
-            "state": result.apparent_power,
+            "native_value": result.apparent_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[8] = {
             "name": "VARTA charge power",
-            "state": result.charge_power,
+            "native_value": result.charge_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[9] = {
             "name": "VARTA discharge power",
-            "state": result.discharge_power,
+            "native_value": result.discharge_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[10] = {
             "name": "VARTA error code",
-            "state": result.error_code,
+            "native_value": result.error_code,
             "device_class": "None",
             "state_class": "None",
-            "unit_of_measurement": "",
+            "native_unit_of_measurement": None,
         }
         thisdict[11] = {
             "name": "VARTA production power",
-            "state": result.production_power,
+            "native_value": result.production_power,
             "device_class": "power",
             "state_class": "measurement",
-            "unit_of_measurement": "W",
+            "native_unit_of_measurement": POWER_WATT,
         }
         thisdict[12] = {
             "name": "VARTA total production power",
-            "state": result.total_production_power,
+            "native_value": result.total_production_power,
             "device_class": "energy",
             "state_class": "total_increasing",
-            "unit_of_measurement": "kWh",
+            "native_unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         }
         thisdict[13] = {
             "name": "VARTA total charged energy",
-            "state": result.total_charged_energy,
+            "native_value": result.total_charged_energy,
             "device_class": "energy",
             "state_class": "total",
-            "unit_of_measurement": "kWh",
+            "native_unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         }
 
         return thisdict

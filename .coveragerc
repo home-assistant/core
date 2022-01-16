@@ -1194,6 +1194,7 @@ omit =
     homeassistant/components/varta_storage/__init__.py
     homeassistant/components/varta_storage/const.py
     homeassistant/components/varta_storage/sensor.py
+    homeassistant/components/varta_storage/significant_change.py
     homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py

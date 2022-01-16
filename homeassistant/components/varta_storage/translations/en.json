@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device with this serial is already configured."
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect. Please check your config",
-            "invalid_auth": "Invalid authentication. Please check your config.",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {

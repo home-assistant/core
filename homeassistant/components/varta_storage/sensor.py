@@ -52,10 +52,9 @@ class VartaStorageEntity(CoordinatorEntity, SensorEntity):
         return self.coordinator.data[self.idx]["name"]
 
     @property
-    # pylint: disable=overridden-final-method
-    def state(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self.idx]["state"]
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.coordinator.data[self.idx]["native_value"]
 
     @property
     def device_class(self):
@@ -68,7 +67,6 @@ class VartaStorageEntity(CoordinatorEntity, SensorEntity):
         return self.coordinator.data[self.idx]["state_class"]
 
     @property
-    # pylint: disable=overridden-final-method
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the sensor."""
-        return self.coordinator.data[self.idx]["unit_of_measurement"]
+        return self.coordinator.data[self.idx]["native_unit_of_measurement"]
