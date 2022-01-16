@@ -63,8 +63,6 @@ def setup_platform(
     mode = config.get(CONF_MODE)
     url = f"http://{host}:{port}/api/LiveData.xml"
 
-    lvl = {"base": 1, "advanced": 2, "extended": 3}
-
     gateway = Ted5000Gateway(url)
 
     # Get MTU information to create the sensors.
@@ -77,13 +75,13 @@ def setup_platform(
     for mtu in gateway.data:
         dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
         dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
-        if lvl[mode] >= 2:  # advanced or extended
+        if mode in {"advanced","extended"}:  # advanced or extended
             dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_KILO_WATT_HOUR))
             dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_KILO_WATT_HOUR))
             dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
 
     # Create utility sensors
-    if lvl[mode] >= 3:  # extended only
+    if mode == "extended":  # extended only
         # MTUs Quantity
         dev_utility.append(Ted5000Utility(gateway, name, 0, ATTR_HIDDEN))
         # Current Rate $/kWh
