@@ -731,6 +731,7 @@ omit =
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
+    homeassistant/components/nexia/entity.py
     homeassistant/components/nexia/climate.py
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/__init__.py
