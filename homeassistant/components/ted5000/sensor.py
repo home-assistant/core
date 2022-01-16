@@ -75,7 +75,7 @@ def setup_platform(
     for mtu in gateway.data:
         dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
         dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
-        if mode in {"advanced","extended"}:  # advanced or extended
+        if mode in {"advanced", "extended"}:  # advanced or extended
             dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_KILO_WATT_HOUR))
             dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_KILO_WATT_HOUR))
             dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
