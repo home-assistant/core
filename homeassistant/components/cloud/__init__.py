@@ -116,20 +116,20 @@ class CloudNotAvailable(HomeAssistantError):
 
 @bind_hass
 @callback
-def async_is_logged_in(hass) -> bool:
+def async_is_logged_in(hass: HomeAssistant) -> bool:
     """Test if user is logged in."""
     return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
 
 
 @bind_hass
 @callback
-def async_active_subscription(hass) -> bool:
+def async_active_subscription(hass: HomeAssistant) -> bool:
     """Test if user has an active subscription."""
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
 
 
 @bind_hass
-async def async_create_cloudhook(hass, webhook_id: str) -> str:
+async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
@@ -139,7 +139,7 @@ async def async_create_cloudhook(hass, webhook_id: str) -> str:
 
 
 @bind_hass
-async def async_delete_cloudhook(hass, webhook_id: str) -> None:
+async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
     """Delete a cloudhook."""
     if DOMAIN not in hass.data:
         raise CloudNotAvailable
@@ -149,7 +149,7 @@ async def async_delete_cloudhook(hass, webhook_id: str) -> None:
 
 @bind_hass
 @callback
-def async_remote_ui_url(hass) -> str:
+def async_remote_ui_url(hass: HomeAssistant) -> str:
     """Get the remote UI URL."""
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
