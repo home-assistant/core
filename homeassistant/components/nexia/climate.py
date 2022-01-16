@@ -18,8 +18,6 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MIN_HUMIDITY,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
@@ -173,6 +171,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             HVAC_MODE_HEAT,
             HVAC_MODE_COOL,
         ]
+        min_humidity, max_humidity = self._thermostat.get_humidity_setpoint_limits()
+        self._attr_min_humidity = percent_conv(min_humidity)
+        self._attr_max_humidity = percent_conv(max_humidity)
 
     @property
     def is_fan_on(self):
@@ -378,12 +379,8 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         if not self._has_relative_humidity:
             return data
 
-        min_humidity = percent_conv(self._thermostat.get_humidity_setpoint_limits()[0])
-        max_humidity = percent_conv(self._thermostat.get_humidity_setpoint_limits()[1])
         data.update(
             {
-                ATTR_MIN_HUMIDITY: min_humidity,
-                ATTR_MAX_HUMIDITY: max_humidity,
                 ATTR_DEHUMIDIFY_SUPPORTED: self._has_dehumidify_support,
                 ATTR_HUMIDIFY_SUPPORTED: self._has_humidify_support,
             }
