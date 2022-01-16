@@ -1,4 +1,6 @@
 """Support for Nexia / Trane XL thermostats."""
+from __future__ import annotations
+
 from nexia.const import (
     HOLD_PERMANENT,
     HOLD_RESUME_SCHEDULE,
