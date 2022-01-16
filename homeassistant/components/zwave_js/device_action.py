@@ -194,10 +194,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             value_id = entry.unique_id.split(".")[1]
             # If this unique ID doesn't have a value ID, we know it is the node status
             # sensor which doesn't have any relevant actions
-            if re.match(VALUE_ID_REGEX, value_id):
-                value = node.values[value_id]
-            else:
+            if not re.match(VALUE_ID_REGEX, value_id):
                 continue
+            value = node.values[value_id]
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
