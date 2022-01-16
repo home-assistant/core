@@ -1,4 +1,4 @@
-"""Sensor for Shelly."""
+"""Number for Shelly."""
 from __future__ import annotations
 
 import asyncio
@@ -14,9 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, NUMBER_ENTITIES
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD
 from .entity import (
-    BlockAttributeDescription,
+    NumberAttributeDescription,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
 )
@@ -24,13 +24,21 @@ from .utils import get_device_entry_gen
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-SENSORS: Final = {
-    ("device", "valvePos"): BlockAttributeDescription(
+
+NUMBERS: Final = {
+    ("device", "valvePos"): NumberAttributeDescription(
         icon="mdi:pipe-valve",
         name="Valve Position",
         unit=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
         entity_category=EntityCategory.CONFIG,
+        min=0,
+        max=100,
+        step=1,
+        mode=NumberMode("slider"),
+        rest_path="thermostat/0",
+        rest_arg="pos",
+        rest_channel=False,
     ),
 }
 
@@ -40,18 +48,20 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensors for device."""
+    """Set up numbers for device."""
     if get_device_entry_gen(config_entry) == 2:
         return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, SENSORS, BlockSleepingNumber
+            hass, config_entry, async_add_entities, NUMBERS, BlockSleepingNumber
         )
 
 
 class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     """Represent a block sleeping number."""
+
+    description: NumberAttributeDescription
 
     @property
     def value(self) -> float:
@@ -69,38 +79,35 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     @property
     def min_value(self) -> float:
         """Return minimum value."""
-        return cast(float, NUMBER_ENTITIES[self.wrapper.model]["min"])
+        return self.description.min
 
     @property
     def max_value(self) -> float:
         """Return maximum value."""
-        return cast(float, NUMBER_ENTITIES[self.wrapper.model]["max"])
+        return self.description.max
 
     @property
     def step(self) -> float:
         """Return step increment/decrement value."""
-        return cast(float, NUMBER_ENTITIES[self.wrapper.model]["step"])
+        return self.description.step
 
     @property
     def mode(self) -> NumberMode:
         """Return mode."""
-        return cast(NumberMode, NUMBER_ENTITIES[self.wrapper.model]["mode"])
+        return self.description.mode
 
     async def async_set_value(self, value: float) -> None:
         """Set value."""
         # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
-        rest_path = cast(str, NUMBER_ENTITIES[self.wrapper.model]["rest_path"])
-        rest_arg = cast(str, NUMBER_ENTITIES[self.wrapper.model]["rest_arg"])
-        await self._set_state_full_path(rest_path, {rest_arg: value})
+        await self._set_state_full_path(
+            self.description.rest_path, {self.description.rest_arg: value}
+        )
         self.async_write_ha_state()
 
     async def _set_state_full_path(self, path: str, params: Any) -> Any:
         """Set block state (HTTP request)."""
 
-        if (
-            cast(bool, NUMBER_ENTITIES[self.wrapper.model]["rest_channel"])
-            and self.block is not None
-        ):
+        if self.description.rest_channel and self.block is not None:
             path = f"{path}/{self.block.channel}"
 
         _LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)

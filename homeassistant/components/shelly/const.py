@@ -167,15 +167,3 @@ MAX_RPC_KEY_INSTANCES = 4
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
-
-NUMBER_ENTITIES: Final = {
-    "SHTRV-01": {
-        "min": 0,
-        "max": 100,
-        "step": 1,
-        "mode": "slider",
-        "rest_path": "thermostat/0",
-        "rest_arg": "pos",
-        "rest_channel": False,
-    }
-}
