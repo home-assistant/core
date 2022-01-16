@@ -7,7 +7,6 @@ import logging
 import ephem
 import voluptuous as vol
 
-"""from homeassistant import util"""
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
