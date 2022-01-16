@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
@@ -16,7 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import DEFAULT_NAME, DOMAIN, HOME_LOCATION_NAME
 
 
-@callback
 async def async_check_location(
     hass: HomeAssistant, longitude: float, latitude: float
 ) -> bool:
