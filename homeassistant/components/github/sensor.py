@@ -13,9 +13,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, IssuesPulls
 from .coordinator import (
@@ -26,7 +28,6 @@ from .coordinator import (
     RepositoryIssueDataUpdateCoordinator,
     RepositoryReleaseDataUpdateCoordinator,
 )
-from .entity import GitHubEntity
 
 
 @dataclass
@@ -150,8 +151,9 @@ async def async_setup_entry(
     entities: list[GitHubSensorBaseEntity] = []
 
     for coordinators in repositories.values():
+        repository_information = coordinators["information"].data
         entities.extend(
-            sensor(coordinators)
+            sensor(coordinators, repository_information)
             for sensor in (
                 GitHubSensorLatestCommitEntity,
                 GitHubSensorLatestIssueEntity,
@@ -161,15 +163,41 @@ async def async_setup_entry(
         )
 
         entities.extend(
-            GitHubSensorDescriptionEntity(coordinators, description)
+            GitHubSensorDescriptionEntity(
+                coordinators, description, repository_information
+            )
             for description in SENSOR_DESCRIPTIONS
         )
 
     async_add_entities(entities)
 
 
-class GitHubSensorBaseEntity(GitHubEntity, SensorEntity):
+class GitHubSensorBaseEntity(CoordinatorEntity, SensorEntity):
     """Defines a base GitHub sensor entity."""
+
+    _attr_attribution = "Data provided by the GitHub API"
+
+    coordinator: GitHubBaseDataUpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: GitHubBaseDataUpdateCoordinator,
+        repository_information: GitHubRepositoryModel,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(repository_information.id))},
+            name=repository_information.full_name,
+            manufacturer="GitHub",
+            configuration_url=f"https://github.com/{self.coordinator.repository}",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.data is not None
 
 
 class GitHubSensorDescriptionEntity(GitHubSensorBaseEntity):
@@ -183,14 +211,16 @@ class GitHubSensorDescriptionEntity(GitHubSensorBaseEntity):
         coordinators: DataUpdateCoordinators,
         description: GitHubSensorInformationEntityDescription
         | GitHubSensorIssueEntityDescription,
+        repository_information: GitHubRepositoryModel,
     ) -> None:
         """Initialize a GitHub sensor entity."""
-        _coordinator = coordinators[description.coordinator_key]
-
-        super().__init__(coordinator=_coordinator)
+        super().__init__(
+            coordinator=coordinators[description.coordinator_key],
+            repository_information=repository_information,
+        )
         self.entity_description = description
-        self._attr_name = f"{_coordinator.repository} {description.name}"
-        self._attr_unique_id = f"{_coordinator.repository}_{description.key}"
+        self._attr_name = f"{repository_information.full_name} {description.name}"
+        self._attr_unique_id = f"{repository_information.id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -206,14 +236,19 @@ class GitHubSensorLatestBaseEntity(GitHubSensorBaseEntity):
     _attr_entity_registry_enabled_default = False
     _attr_icon = "mdi:github"
 
-    def __init__(self, coordinators: DataUpdateCoordinators) -> None:
+    def __init__(
+        self,
+        coordinators: DataUpdateCoordinators,
+        repository_information: GitHubRepositoryModel,
+    ) -> None:
         """Initialize a GitHub sensor entity."""
-        _coordinator = coordinators[self._coordinator_key]
-
-        super().__init__(coordinator=_coordinator)
-        self._attr_name = f"{_coordinator.repository} {self._name}"
+        super().__init__(
+            coordinator=coordinators[self._coordinator_key],
+            repository_information=repository_information,
+        )
+        self._attr_name = f"{repository_information.full_name} {self._name}"
         self._attr_unique_id = (
-            f"{_coordinator.repository}_{self._name.lower().replace(' ', '_')}"
+            f"{repository_information.id}_{self._name.lower().replace(' ', '_')}"
         )
 
 
