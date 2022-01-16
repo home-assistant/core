@@ -53,7 +53,11 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ZONE_UPDATE, self._update_callback
+            )
+        )
 
     @property
     def extra_state_attributes(self):
