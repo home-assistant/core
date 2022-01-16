@@ -160,6 +160,8 @@ homeassistant/components/coinbase/* @tombrien
 tests/components/coinbase/* @tombrien
 homeassistant/components/color_extractor/* @GenericStudent
 tests/components/color_extractor/* @GenericStudent
+homeassistant/components/comexio/* @Sanderd17
+tests/components/comexio/* @Sanderd17
 homeassistant/components/comfoconnect/* @michaelarnauts
 tests/components/comfoconnect/* @michaelarnauts
 homeassistant/components/compensation/* @Petro31

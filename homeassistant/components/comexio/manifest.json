@@ -1,0 +1,16 @@
+{
+  "domain": "comexio",
+  "name": "Comexio",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/comexio",
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "requirements": [
+    "comexio-http==0.0.3"
+  ],
+  "codeowners": [
+    "@Sanderd17"
+  ],
+  "iot_class": "local_polling"
+}
