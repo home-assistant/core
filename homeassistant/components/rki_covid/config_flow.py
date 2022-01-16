@@ -34,7 +34,7 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             _LOGGER.debug(f"Coordinator: {coordinator}")
 
-            for case in sorted(coordinator.data.values(), key=lambda case: case.name):
+            for case in coordinator.data.values():
                 self._options[case.county] = case.county
 
         if user_input is not None:
