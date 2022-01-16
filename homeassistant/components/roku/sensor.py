@@ -38,6 +38,13 @@ class RokuSensorEntityDescription(
 
 SENSORS: tuple[RokuSensorEntityDescription, ...] = (
     RokuSensorEntityDescription(
+        key="active_app",
+        name="Active App",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:application",
+        value_fn=lambda device: device.app.name,
+    ),
+    RokuSensorEntityDescription(
         key="active_app_id",
         name="Active App ID",
         entity_category=EntityCategory.DIAGNOSTIC,
