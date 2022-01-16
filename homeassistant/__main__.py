@@ -8,7 +8,11 @@ import platform
 import sys
 import threading
 
-from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+from homeassistant.const import (  # pylint: disable=hass-relative-import
+    REQUIRED_PYTHON_VER,
+    RESTART_EXIT_CODE,
+    __version__,
+)
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
@@ -25,8 +29,8 @@ def validate_python() -> None:
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
-    # pylint: disable=import-outside-toplevel
-    from . import config as config_util
+    # pylint: disable=import-outside-toplevel,hass-relative-import
+    import homeassistant.config as config_util
 
     lib_dir = os.path.join(config_dir, "deps")
 
@@ -59,8 +63,8 @@ def ensure_config_path(config_dir: str) -> None:
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
-    # pylint: disable=import-outside-toplevel
-    from . import config as config_util
+    # pylint: disable=import-outside-toplevel,hass-relative-import
+    import homeassistant.config as config_util
 
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate."
@@ -267,8 +271,8 @@ def main() -> int:
     args = get_arguments()
 
     if args.script is not None:
-        # pylint: disable=import-outside-toplevel
-        from . import scripts
+        # pylint: disable=import-outside-toplevel,hass-relative-import
+        from homeassistant import scripts
 
         return scripts.run(args.script)
 
@@ -283,8 +287,8 @@ def main() -> int:
     if args.pid_file:
         write_pid(args.pid_file)
 
-    # pylint: disable=import-outside-toplevel
-    from . import runner
+    # pylint: disable=import-outside-toplevel,hass-relative-import
+    from homeassistant import runner
 
     runtime_conf = runner.RuntimeConfig(
         config_dir=config_dir,
