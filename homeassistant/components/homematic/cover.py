@@ -92,7 +92,7 @@ class HMCover(HMDevice, CoverEntity):
         if "LEVEL_2" not in self._data:
             return None
 
-        if (position := self._data.get("LEVEL_2", 0)) is None or position == '':
+        if (position := self._data.get("LEVEL_2", 0)) is None or position == "":
             return None
         return int(position * 100)
 
