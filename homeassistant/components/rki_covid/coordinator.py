@@ -45,19 +45,21 @@ class RkiCovidDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.parser.load_data()
                 _LOGGER.debug("Fetch data from rki-covid-parser finished successfully")
 
-                # districts
-                for d in self.parser.districts:
-                    district = self.parser.districts[d]
-                    items[district.county] = self._accumulate_district(district)
-
-                # states
-                for s in self.parser.states:
-                    state = self.parser.states[s]
-                    name = "BL " + state.name
-                    items[name] = self._accumulate_state(name, state)
-
                 # country
                 items["Deutschland"] = self._accumulate_country(self.parser.country)
+
+                # states
+                for s in sorted(
+                    self.parser.states.values(), key=lambda state: state.name
+                ):
+                    st = self.parser.states[s.name]
+                    name = "BL " + st.name
+                    items[name] = self._accumulate_state(name, st)
+
+                # districts
+                for d in sorted(self.parser.districts.values(), key=lambda di: di.name):
+                    district = self.parser.districts[d.id]
+                    items[district.county] = self._accumulate_district(district)
 
                 _LOGGER.debug("Parsing data finished")
 
