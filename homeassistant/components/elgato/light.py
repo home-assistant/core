@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -40,7 +41,9 @@ async def async_setup_entry(
     """Set up Elgato Light based on a config entry."""
     data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
     settings = await data.client.settings()
-    async_add_entities([ElgatoLight(data.client, data.info, settings)], True)
+    async_add_entities(
+        [ElgatoLight(data.client, data.info, entry.data.get(CONF_MAC), settings)], True
+    )
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -53,9 +56,11 @@ async def async_setup_entry(
 class ElgatoLight(ElgatoEntity, LightEntity):
     """Defines an Elgato Light."""
 
-    def __init__(self, client: Elgato, info: Info, settings: Settings) -> None:
+    def __init__(
+        self, client: Elgato, info: Info, mac: str | None, settings: Settings
+    ) -> None:
         """Initialize Elgato Light."""
-        super().__init__(client, info)
+        super().__init__(client, info, mac)
         self._state: State | None = None
 
         min_mired = 143
