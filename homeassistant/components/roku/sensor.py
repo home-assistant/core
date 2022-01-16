@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
-from .models import RokuEntity
+from .entity import RokuEntity
 
 
 @dataclass
