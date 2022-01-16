@@ -8,10 +8,8 @@ from datetime import datetime
 from rokuecp.models import Device as RokuDevice 
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
