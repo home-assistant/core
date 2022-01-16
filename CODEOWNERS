@@ -31,8 +31,6 @@ homeassistant/components/adguard/* @frenck
 tests/components/adguard/* @frenck
 homeassistant/components/advantage_air/* @Bre77
 tests/components/advantage_air/* @Bre77
-homeassistant/components/aemet/* @noltari
-tests/components/aemet/* @noltari
 homeassistant/components/agent_dvr/* @ispysoftware
 tests/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
@@ -214,8 +212,8 @@ homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/dlna_dmr/* @StevenLooman @chishm
 tests/components/dlna_dmr/* @StevenLooman @chishm
-homeassistant/components/doorbird/* @oblogic7 @bdraco
-tests/components/doorbird/* @oblogic7 @bdraco
+homeassistant/components/doorbird/* @oblogic7 @bdraco @flacjacket
+tests/components/doorbird/* @oblogic7 @bdraco @flacjacket
 homeassistant/components/dsmr/* @Robbie1221 @frenck
 tests/components/dsmr/* @Robbie1221 @frenck
 homeassistant/components/dsmr_reader/* @depl0y
@@ -310,8 +308,8 @@ homeassistant/components/freebox/* @hacf-fr @Quentame
 tests/components/freebox/* @hacf-fr @Quentame
 homeassistant/components/freedompro/* @stefano055415
 tests/components/freedompro/* @stefano055415
-homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
-tests/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
+homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74 @mib1185
+tests/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74 @mib1185
 homeassistant/components/fritzbox/* @mib1185 @flabbamann
 tests/components/fritzbox/* @mib1185 @flabbamann
 homeassistant/components/fronius/* @nielstron @farmio
@@ -921,8 +919,8 @@ homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/system_bridge/* @timmo001
 tests/components/system_bridge/* @timmo001
-homeassistant/components/tado/* @michaelarnauts @noltari
-tests/components/tado/* @michaelarnauts @noltari
+homeassistant/components/tado/* @michaelarnauts
+tests/components/tado/* @michaelarnauts
 homeassistant/components/tag/* @balloob @dmulcahey
 tests/components/tag/* @balloob @dmulcahey
 homeassistant/components/tailscale/* @frenck
@@ -973,9 +971,8 @@ homeassistant/components/tuya/* @Tuya @zlinoliver @METISU @frenck
 tests/components/tuya/* @Tuya @zlinoliver @METISU @frenck
 homeassistant/components/twentemilieu/* @frenck
 tests/components/twentemilieu/* @frenck
-homeassistant/components/twinkly/* @dr1rrb
-tests/components/twinkly/* @dr1rrb
-homeassistant/components/ubus/* @noltari
+homeassistant/components/twinkly/* @dr1rrb @Robbie1221
+tests/components/twinkly/* @dr1rrb @Robbie1221
 homeassistant/components/unifi/* @Kane610
 tests/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk

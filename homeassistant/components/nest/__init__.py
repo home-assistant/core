@@ -1,12 +1,15 @@
 """Support for Nest devices."""
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
 from aiohttp import web
+from google_nest_sdm.camera_traits import CameraClipPreviewTrait
+from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.event_media import Media
 from google_nest_sdm.exceptions import (
@@ -57,7 +60,11 @@ from .const import (
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
-from .media_source import async_get_media_event_store, get_media_source_devices
+from .media_source import (
+    async_get_media_event_store,
+    async_get_transcoder,
+    get_media_source_devices,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -234,6 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     subscriber.cache_policy.fetch = True
     # Use disk backed event media store
     subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
+    subscriber.cache_policy.transcoder = await async_get_transcoder(hass)
 
     async def async_config_reload() -> None:
         await hass.config_entries.async_reload(entry.entry_id)
@@ -333,9 +341,7 @@ class NestEventViewBase(HomeAssistantView, ABC):
                 f"No Nest Device found for '{device_id}'", HTTPStatus.NOT_FOUND
             )
         try:
-            media = await nest_device.event_media_manager.get_media_from_token(
-                event_token
-            )
+            media = await self.load_media(nest_device, event_token)
         except DecodeException as err:
             raise HomeAssistantError(
                 "Even token was invalid: %s" % event_token
@@ -348,8 +354,13 @@ class NestEventViewBase(HomeAssistantView, ABC):
             )
         return await self.handle_media(media)
 
-    async def handle_media(self, media: Media) -> web.StreamResponse:
+    @abstractmethod
+    async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
         """Load the specified media."""
+
+    @abstractmethod
+    async def handle_media(self, media: Media) -> web.StreamResponse:
+        """Process the specified media."""
 
     def _json_error(self, message: str, status: HTTPStatus) -> web.StreamResponse:
         """Return a json error message with additional logging."""
@@ -367,8 +378,12 @@ class NestEventMediaView(NestEventViewBase):
     url = "/api/nest/event_media/{device_id}/{event_token}"
     name = "api:nest:event_media"
 
+    async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
+        """Load the specified media."""
+        return await nest_device.event_media_manager.get_media_from_token(event_token)
+
     async def handle_media(self, media: Media) -> web.StreamResponse:
-        """Start a GET request."""
+        """Process the specified media."""
         return web.Response(body=media.contents, content_type=media.content_type)
 
 
@@ -377,15 +392,38 @@ class NestEventMediaThumbnailView(NestEventViewBase):
 
     This is primarily used to render media for events for MediaSource. The media type
     depends on the specific device e.g. an image, or a movie clip preview.
+
+    mp4 clips are transcoded and thumbnailed by the SDM transcoder. jpgs are thumbnailed
+    from the original in this view.
     """
 
     url = "/api/nest/event_media/{device_id}/{event_token}/thumbnail"
     name = "api:nest:event_media"
 
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize NestEventMediaThumbnailView."""
+        super().__init__(hass)
+        self._lock = asyncio.Lock()
+        self.hass = hass
+
+    async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
+        """Load the specified media."""
+        if CameraClipPreviewTrait.NAME in nest_device.traits:
+            async with self._lock:  # Only one transcode subprocess at a time
+                return (
+                    await nest_device.event_media_manager.get_clip_thumbnail_from_token(
+                        event_token
+                    )
+                )
+        return await nest_device.event_media_manager.get_media_from_token(event_token)
+
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Start a GET request."""
-        image = Image(media.event_image_type.content_type, media.contents)
-        contents = img_util.scale_jpeg_camera_image(
-            image, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX
-        )
-        return web.Response(body=contents, content_type=media.content_type)
+        contents = media.contents
+        content_type = media.content_type
+        if content_type == "image/jpeg":
+            image = Image(media.event_image_type.content_type, contents)
+            contents = img_util.scale_jpeg_camera_image(
+                image, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX
+            )
+        return web.Response(body=contents, content_type=content_type)
