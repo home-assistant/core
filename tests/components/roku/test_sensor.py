@@ -33,7 +33,7 @@ async def test_roku_sensors(
     assert entry.entity_category is None
     assert state.state == ""
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active App ID"
-    assert state.attributes.get(ATTR_ICON) == "mdi:"
+    assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id
@@ -81,7 +81,7 @@ async def test_rokutv_sensors(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == '58" Onn Roku TV Active App ID'
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:"
+    assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id
