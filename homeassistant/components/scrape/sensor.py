@@ -170,10 +170,12 @@ class ScrapeSensor(SensorEntity):
                 else:
                     value = tag.text
         except IndexError:
-            _LOGGER.warn(f"Index '{self._index}' not found in {self.entity_id}")
+            _LOGGER.warning("Index '%s' not found in %s", self._attr, self.entity_id)
             value = None
         except KeyError:
-            _LOGGER.warn(f"Attribute '{self._attr}' not found in {self.entity_id}")
+            _LOGGER.warning(
+                "Attribute '%s' not found in %s", self._attr, self.entity_id
+            )
             value = None
         _LOGGER.debug(value)
         return value
