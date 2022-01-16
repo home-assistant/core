@@ -63,13 +63,12 @@ class SomaTilt(SomaEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = (
+        return (
             SUPPORT_OPEN_TILT
             | SUPPORT_CLOSE_TILT
             | SUPPORT_STOP_TILT
             | SUPPORT_SET_TILT_POSITION
         )
-        return supported_features
 
     @property
     def current_cover_tilt_position(self):
@@ -155,10 +154,7 @@ class SomaShade(SomaEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
-        )
-        return supported_features
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
 
     @property
     def current_cover_position(self):
