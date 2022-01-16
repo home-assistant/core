@@ -11,7 +11,6 @@ from datetime import timedelta
 import aiohttp
 import asyncio
 import async_timeout
-from typing import Any
 from .data import DistrictData, StateData
 from homeassistant.helpers import update_coordinator
 
