@@ -220,7 +220,7 @@ def assert_devices_and_entities_created(hass: HomeAssistant, expected: DeviceTes
         # The current standard is a 2-tuple (hkc was not migrated when this change was brought in)
 
         # There are currently really 3 cases here:
-        # - We can match exactly one device by serial number. This wont work for devices like the Ryse.
+        # - We can match exactly one device by serial number. This won't work for devices like the Ryse.
         #   These have nlank or broken serial numbers.
         # - The device unique id is "00:00:00:00:00:00" - this is the pairing id. This is only set for
         #   the root (bridge) device.
