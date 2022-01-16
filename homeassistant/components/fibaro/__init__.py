@@ -29,7 +29,6 @@ from homeassistant.util import convert, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"
 
 CONF_COLOR = "color"
