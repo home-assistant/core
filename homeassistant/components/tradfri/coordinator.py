@@ -31,7 +31,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize device coordinator."""
         self.api = api
         self.device = device
-        self._exception = None
+        self._exception: Exception | None = None
 
         super().__init__(
             hass,
@@ -46,21 +46,29 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
         self.async_set_updated_data(data=device)
 
+    @callback
+    def _exception_callback(self, device: Device, exc: Exception | None = None) -> None:
+        """Schedule handling exception.."""
+        self.hass.async_create_task(self._handle_exception(device=device, exc=exc))
+
+    async def _handle_exception(
+        self, device: Device, exc: Exception | None = None
+    ) -> None:
+        """Handle observe exceptions in a coroutine."""
+        self._exception = (
+            exc  # Store exception so that it gets raised in _async_update_data
+        )
+
+        _LOGGER.debug("Observation failed for %s, trying again", device, exc_info=exc)
+        self.update_interval = timedelta(
+            seconds=5
+        )  # Change interval so we get a swift refresh
+        await self.async_request_refresh()
+
     async def _async_run_observe(self, cmd: Command, device: Device = None) -> None:
         """Run observe in a coroutine."""
         self._exception = None
-
-        try:
-            await self.api(cmd)
-        except RequestError as err:
-            _LOGGER.debug(
-                "Observation failed for %s, trying again", device, exc_info=err
-            )
-            self.update_interval = timedelta(
-                seconds=5
-            )  # Change interval so we get a swift refresh
-            self._exception = err
-            await self.async_request_refresh()
+        await self.api(cmd)
 
     @callback
     def _async_start_observe(
@@ -71,24 +79,23 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Observation failed for %s", device, exc_info=exc)
         return device.observe(
             callback=self._observe_update,
-            err_callback=self._async_start_observe,
+            err_callback=self._exception_callback,
             duration=0,
         )
 
     async def _async_update_data(self) -> Device:
         """Fetch data from the gateway for a specific device."""
-        if self._exception:
-            raise self._exception
-
         try:
-            if not self.data:  # Start subscription
-                cmd = self._async_start_observe(device=self.device)
-                self.hass.async_create_task(self._async_run_observe(cmd, self.device))
-
-            return self.device
-
+            if self._exception:
+                raise self._exception  # pylint: disable-msg=raising-bad-type
         except RequestError as err:
             raise UpdateFailed(
                 f"Error communicating with API: {err}. Try unplugging and replugging your "
                 f"IKEA gateway."
             ) from err
+
+        if not self.data:  # Start subscription
+            cmd = self._async_start_observe(device=self.device)
+            self.hass.async_create_task(self._async_run_observe(cmd, self.device))
+
+        return self.device

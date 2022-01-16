@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseDevice
+from .base_class import TradfriBaseEntity
 from .const import (
     ATTR_AUTO,
     ATTR_MAX_FAN_STEPS,
@@ -60,7 +60,7 @@ async def async_setup_entry(
     )
 
 
-class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
+class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
