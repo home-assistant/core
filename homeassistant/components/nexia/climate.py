@@ -139,7 +139,7 @@ async def async_setup_entry(
             zone = thermostat.get_zone_by_id(zone_id)
             entities.append(NexiaZone(coordinator, zone))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
