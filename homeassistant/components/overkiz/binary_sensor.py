@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OverkizStateType
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 

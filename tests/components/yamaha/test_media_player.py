@@ -74,12 +74,6 @@ async def test_setup_no_host(hass, device, main_zone):
 
 async def test_setup_discovery(hass, device, main_zone):
     """Test set up integration via discovery."""
-    with patch("rxv.find", return_value=[device]):
-        assert await async_setup_component(
-            hass, "media_player", {"media_player": {"platform": "yamaha"}}
-        )
-        await hass.async_block_till_done()
-
     discovery_info = {
         "name": "Yamaha Receiver",
         "model_name": "Yamaha",

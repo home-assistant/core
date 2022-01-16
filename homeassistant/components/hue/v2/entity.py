@@ -142,8 +142,9 @@ class HueBaseEntity(Entity):
         # return if we already processed this entity
         if self._ignore_availability is not None:
             return
-        # only do the availability check for entities connected to a device
-        if self.device is None:
+        # only do the availability check for entities connected to a device (with `on` feature)
+        if self.device is None or not hasattr(self.resource, "on"):
+            self._ignore_availability = False
             return
         # ignore availability if user added device to ignore list
         if self.device.id in self.bridge.config_entry.options.get(
@@ -190,6 +191,7 @@ class HueBaseEntity(Entity):
                     self.device.product_data.model_id,
                     self.device.product_data.software_version,
                 )
-                # do we want to store this in some persistent storage?
-                self._ignore_availability = True
+                # set attribute to false because we only want to log once per light/device.
+                # a user must opt-in to ignore availability through integration options
+                self._ignore_availability = False
         self._last_state = cur_state

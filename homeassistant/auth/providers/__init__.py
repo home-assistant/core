@@ -22,8 +22,6 @@ from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
 from ..models import Credentials, RefreshToken, User, UserMeta
 
-# mypy: disallow-any-generics
-
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
 

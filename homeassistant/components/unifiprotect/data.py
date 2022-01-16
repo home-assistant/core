@@ -1,16 +1,20 @@
 """Base class for protect data."""
 from __future__ import annotations
 
-from collections import deque
 from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
 from typing import Any
 
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import Bootstrap, ModelType, WSSubscriptionMessage
+from pyunifiprotect.data import (
+    Bootstrap,
+    Event,
+    Liveview,
+    ModelType,
+    WSSubscriptionMessage,
+)
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
-from pyunifiprotect.data.nvr import Liveview
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -43,7 +47,6 @@ class ProtectData:
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
         self.last_update_success = False
-        self.access_tokens: dict[str, deque] = {}
         self.api = protect
 
     @property
@@ -117,6 +120,14 @@ class ProtectData:
                 for camera in self.api.bootstrap.cameras.values():
                     if camera.feature_flags.has_lcd_screen:
                         self.async_signal_device_id_update(camera.id)
+        # trigger updates for camera that the event references
+        elif isinstance(message.new_obj, Event):
+            if message.new_obj.camera is not None:
+                self.async_signal_device_id_update(message.new_obj.camera.id)
+            elif message.new_obj.light is not None:
+                self.async_signal_device_id_update(message.new_obj.light.id)
+            elif message.new_obj.sensor is not None:
+                self.async_signal_device_id_update(message.new_obj.sensor.id)
         # alert user viewport needs restart so voice clients can get new options
         elif len(self.api.bootstrap.viewers) > 0 and isinstance(
             message.new_obj, Liveview
@@ -177,10 +188,3 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s", device_id)
         for update_callback in self._subscriptions[device_id]:
             update_callback()
-
-    @callback
-    def async_get_or_create_access_tokens(self, entity_id: str) -> deque:
-        """Wrap access_tokens to automatically create underlying data structure if missing."""
-        if entity_id not in self.access_tokens:
-            self.access_tokens[entity_id] = deque([], 2)
-        return self.access_tokens[entity_id]

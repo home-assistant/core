@@ -152,6 +152,56 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="status_light",
+        name="Status Light On",
+        icon="mdi:led-on",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="led_settings.is_enabled",
+        ufp_set_method="set_status_light",
+    ),
+    ProtectSwitchEntityDescription(
+        key="motion",
+        name="Motion Detection",
+        icon="mdi:walk",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="motion_settings.is_enabled",
+        ufp_set_method="set_motion_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="temperature",
+        name="Temperature Sensor",
+        icon="mdi:thermometer",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="temperature_settings.is_enabled",
+        ufp_set_method="set_temperature_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="humidity",
+        name="Humidity Sensor",
+        icon="mdi:water-percent",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="humidity_settings.is_enabled",
+        ufp_set_method="set_humidity_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="light",
+        name="Light Sensor",
+        icon="mdi:brightness-5",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="light_settings.is_enabled",
+        ufp_set_method="set_light_status",
+    ),
+    ProtectSwitchEntityDescription(
+        key="alarm",
+        name="Alarm Sound Detection",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="alarm_settings.is_enabled",
+        ufp_set_method="set_alarm_status",
+    ),
+)
+
 
 LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
@@ -178,6 +228,7 @@ async def async_setup_entry(
         all_descs=ALL_DEVICES_SWITCHES,
         camera_descs=CAMERA_SWITCHES,
         light_descs=LIGHT_SWITCHES,
+        sense_descs=SENSE_SWITCHES,
     )
     async_add_entities(entities)
 

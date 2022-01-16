@@ -1,5 +1,4 @@
 """Support for power & energy sensors for VeSync outlets."""
-from datetime import datetime
 import logging
 
 from homeassistant.components.sensor import (
@@ -7,47 +6,51 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncBaseEntity
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SENSORS
+from .const import DOMAIN, VS_DISCOVERY, VS_SENSORS
 from .switch import DEV_TYPE_TO_HA
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(VS_SENSORS), async_discover
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SENSORS), discover)
     )
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    _async_setup_entities(hass.data[DOMAIN][VS_SENSORS], async_add_entities)
-    return True
+    _setup_entities(hass.data[DOMAIN][VS_SENSORS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    dev_list = []
+    entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
-            dev_list.append(VeSyncPowerSensor(dev))
-            dev_list.append(VeSyncEnergySensor(dev))
-        else:
+        if DEV_TYPE_TO_HA.get(dev.device_type) != "outlet":
             # Not an outlet that supports energy/power, so do not create sensor entities
             continue
+        entities.append(VeSyncPowerSensor(dev))
+        entities.append(VeSyncEnergySensor(dev))
 
-    async_add_entities(dev_list, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
@@ -125,11 +128,6 @@ class VeSyncEnergySensor(VeSyncSensorEntity):
     def device_class(self):
         """Return the energy device class."""
         return SensorDeviceClass.ENERGY
-
-    @property
-    def last_reset(self):
-        """Return datetime representing beginning of day."""
-        return datetime.today()
 
     @property
     def native_value(self):

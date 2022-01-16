@@ -4,7 +4,13 @@ from unittest.mock import Mock, patch
 from smhi.smhi_lib import Smhi as SmhiApi, SmhiForecastException
 
 from homeassistant.components.smhi import config_flow
+from homeassistant.components.smhi.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+
+from tests.common import MockConfigEntry
 
 
 # pylint: disable=protected-access
@@ -200,6 +206,8 @@ async def test_flow_entry_created_from_user_input() -> None:
         return_value={"test": "something", "name_exist": "config"},
     ), patch.object(
         flow, "_check_location", return_value=True
+    ), patch.object(
+        flow, "async_set_unique_id", return_value=None
     ):
 
         result = await flow.async_step_user(user_input=test_data)
@@ -266,3 +274,36 @@ async def test_check_location_faulty() -> None:
     ), patch.object(SmhiApi, "async_get_forecast", side_effect=SmhiForecastException()):
 
         assert await flow._check_location("58", "17") is False
+
+
+async def test_flow_unique_id_not_unique(hass: HomeAssistant) -> None:
+    """Test that unique id is unique."""
+
+    test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={"name": "away", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"},
+        unique_id="0.0-0.0",
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.smhi.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        return_value={"kalle": "anka"},
+    ):
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            test_data,
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["reason"] == "already_configured"

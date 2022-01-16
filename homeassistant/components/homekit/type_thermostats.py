@@ -174,6 +174,7 @@ class Thermostat(HomeAccessory):
         self.char_target_heat_cool.override_properties(
             valid_values=self.hc_hass_to_homekit
         )
+        self.char_target_heat_cool.allow_invalid_client_values = True
         # Current and target temperature characteristics
 
         self.char_current_temp = serv_thermostat.configure_char(
@@ -252,7 +253,6 @@ class Thermostat(HomeAccessory):
 
         hvac_mode = state.state
         homekit_hvac_mode = HC_HASS_TO_HOMEKIT[hvac_mode]
-
         # Homekit will reset the mode when VIEWING the temp
         # Ignore it if its the same mode
         if (
@@ -282,7 +282,7 @@ class Thermostat(HomeAccessory):
                             target_hc,
                             hc_fallback,
                         )
-                        target_hc = hc_fallback
+                        self.char_target_heat_cool.value = target_hc = hc_fallback
                         break
 
             params[ATTR_HVAC_MODE] = self.hc_homekit_to_hass[target_hc]
