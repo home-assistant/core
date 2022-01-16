@@ -1,5 +1,4 @@
 """Config flow for FlashForge 3D Printer."""
-import typing
 from typing import Any
 
 from ffpp import Discovery
@@ -87,16 +86,14 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_auto_confirm(
-        self, _: typing.Dict[str, Any] = None
-    ) -> FlowResult:
+    async def async_step_auto_confirm(self, _: dict[str, Any] = None) -> FlowResult:
         """User confirmed to add device to Home Assistant."""
         return self._async_create_entry()
 
     @callback
     def _async_show_form(
         self,
-        errors: typing.Dict[str, str] = None,
+        errors: dict[str, str] = None,
     ) -> FlowResult:
         """Create and show the form for user."""
 
