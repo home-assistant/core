@@ -1,14 +1,12 @@
 """global fixtures for tests."""
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
-from typing import Dict
 
 from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 from homeassistant.components.rki_covid.const import DOMAIN
 from rki_covid_parser.model.country import Country
-from rki_covid_parser.model.district import District
 
 from . import MOCK_DISTRICTS
 

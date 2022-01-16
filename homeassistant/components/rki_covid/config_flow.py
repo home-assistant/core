@@ -35,10 +35,7 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(f"Coordinator: {coordinator}")
 
             for case in sorted(coordinator.data.values(), key=lambda case: case.name):
-                if case.county:
-                    self._options[case.county] = case.county
-                else:
-                    self._options[case.name] = case.name
+                self._options[case.county] = case.county
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[ATTR_COUNTY])
