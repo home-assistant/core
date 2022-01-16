@@ -124,6 +124,9 @@ aioesphomeapi==10.6.0
 # homeassistant.components.flo
 aioflo==2021.11.0
 
+# homeassistant.components.github
+aiogithubapi==22.1.0
+
 # homeassistant.components.guardian
 aioguardian==2021.11.0
 
