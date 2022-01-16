@@ -265,7 +265,7 @@ class GitHubSensorLatestReleaseEntity(GitHubSensorLatestBaseEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.name
+        return self.coordinator.data.name[:255]
 
     @property
     def extra_state_attributes(self) -> Mapping[str, str | None]:
@@ -293,7 +293,7 @@ class GitHubSensorLatestIssueEntity(GitHubSensorLatestBaseEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.issues[0].title
+        return self.coordinator.data.issues[0].title[:255]
 
     @property
     def extra_state_attributes(self) -> Mapping[str, str | int | None]:
@@ -321,7 +321,7 @@ class GitHubSensorLatestPullEntity(GitHubSensorLatestBaseEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.pulls[0].title
+        return self.coordinator.data.pulls[0].title[:255]
 
     @property
     def extra_state_attributes(self) -> Mapping[str, str | int | None]:
@@ -344,7 +344,7 @@ class GitHubSensorLatestCommitEntity(GitHubSensorLatestBaseEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.commit.message
+        return self.coordinator.data.commit.message.splitlines()[0][:255]
 
     @property
     def extra_state_attributes(self) -> Mapping[str, str | int | None]:
