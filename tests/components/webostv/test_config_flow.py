@@ -119,8 +119,6 @@ async def test_options_flow(hass, client):
     """Test options config flow."""
     entry = await setup_webostv(hass)
 
-    hass.states.async_set("script.test", "off", {"domain": "script"})
-
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -235,7 +233,7 @@ async def test_ssdp_in_progress(hass, client):
 
 async def test_ssdp_update_uuid(hass, client):
     """Test that ssdp updates existing host entry uuid."""
-    entry = await setup_webostv(hass)
+    entry = await setup_webostv(hass, None)
     assert client
     assert entry.unique_id is None
 
@@ -251,7 +249,7 @@ async def test_ssdp_update_uuid(hass, client):
 
 async def test_ssdp_not_update_uuid(hass, client):
     """Test that ssdp not updates different host."""
-    entry = await setup_webostv(hass)
+    entry = await setup_webostv(hass, None)
     assert client
     assert entry.unique_id is None
 

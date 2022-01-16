@@ -71,6 +71,7 @@ def async_get_client_wrapper_by_device_entry(
     Raises ValueError if client wrapper is not found.
     """
     for config_entry_id in device.config_entries:
+        wrapper: WebOsClientWrapper | None
         if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
             break
 

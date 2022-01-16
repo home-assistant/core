@@ -33,7 +33,7 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate config."""
     platform = _get_trigger_platform(config)
-    return platform.TRIGGER_SCHEMA(config)
+    return cast(ConfigType, platform.TRIGGER_SCHEMA(config))
 
 
 async def async_attach_trigger(
