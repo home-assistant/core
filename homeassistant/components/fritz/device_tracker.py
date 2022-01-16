@@ -35,17 +35,15 @@ async def async_setup_entry(
     data_fritz: FritzData = hass.data[DATA_FRITZ]
 
     @callback
-    def update_avm_wrapper() -> None:
+    def update_avm_device() -> None:
         """Update the values of AVM device."""
         _async_add_entities(avm_wrapper, async_add_entities, data_fritz)
 
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, avm_wrapper.signal_device_new, update_avm_wrapper
-        )
+        async_dispatcher_connect(hass, avm_wrapper.signal_device_new, update_avm_device)
     )
 
-    update_avm_wrapper()
+    update_avm_device()
 
 
 @callback

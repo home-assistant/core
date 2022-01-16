@@ -352,14 +352,12 @@ async def async_setup_entry(
     async_add_entities(entities_list)
 
     @callback
-    def update_avm_wrapper() -> None:
+    def update_avm_device() -> None:
         """Update the values of the AVM device."""
         async_add_entities(profile_entities_list(avm_wrapper, data_fritz))
 
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, avm_wrapper.signal_device_new, update_avm_wrapper
-        )
+        async_dispatcher_connect(hass, avm_wrapper.signal_device_new, update_avm_device)
     )
 
 

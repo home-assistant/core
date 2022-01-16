@@ -32,7 +32,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         """Call correct Fritz service."""
 
         if not (
-            fritzbox_entry_ids := await _async_get_configured_avm_wrapper(
+            fritzbox_entry_ids := await _async_get_configured_avm_device(
                 hass, service_call
             )
         ):
@@ -55,7 +55,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
 
 
-async def _async_get_configured_avm_wrapper(
+async def _async_get_configured_avm_device(
     hass: HomeAssistant, service_call: ServiceCall
 ) -> list:
     """Get FritzBoxTools class from config entry."""
