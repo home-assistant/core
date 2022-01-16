@@ -125,8 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
 
-    # Need to do this at least once in case statics are defined and discovery is disabled
-    await wemo_discovery.discover_statics()
+    # Need to do this at least once in case static devices are defined and discovery is disabled
+    await wemo_discovery.discover_static_devices()
 
     if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await wemo_discovery.async_discover_and_schedule()
@@ -208,7 +208,7 @@ class WemoDiscovery:
                 pywemo.discover_devices
             ):
                 await self._wemo_dispatcher.async_add_unique_device(self._hass, device)
-            await self.discover_statics()
+            await self.discover_static_devices()
 
         finally:
             # Run discovery more frequently after hass has just started.
@@ -229,7 +229,7 @@ class WemoDiscovery:
             self._stop()
             self._stop = None
 
-    async def discover_statics(self) -> None:
+    async def discover_static_devices(self) -> None:
         """Initialize or Re-Initialize connections to statically configured devices."""
         if not self._static_config:
             return
