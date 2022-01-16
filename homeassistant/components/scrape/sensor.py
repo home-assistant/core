@@ -160,14 +160,21 @@ class ScrapeSensor(SensorEntity):
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
         _LOGGER.debug(raw_data)
 
-        if self._attr is not None:
-            value = raw_data.select(self._select)[self._index].get(self._attr)
-        else:
-            tag = raw_data.select(self._select)[self._index]
-            if tag.name in ("style", "script", "template"):
-                value = tag.string
+        try:
+            if self._attr is not None:
+                value = raw_data.select(self._select)[self._index][self._attr]
             else:
-                value = tag.text
+                tag = raw_data.select(self._select)[self._index]
+                if tag.name in ("style", "script", "template"):
+                    value = tag.string
+                else:
+                    value = tag.text
+        except IndexError:
+            _LOGGER.warn(f"Index '{self._index}' not found in {self.entity_id}")
+            value = None
+        except KeyError:
+            _LOGGER.warn(f"Attribute '{self._attr}' not found in {self.entity_id}")
+            value = None
         _LOGGER.debug(value)
         return value
 
