@@ -10,7 +10,6 @@ from homeassistant import config_entries, core
 from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -23,6 +22,8 @@ from homeassistant.helpers.update_coordinator import (
 
 
 from .const import (
+    DOMAIN,
+    DATA_CONFIG_ENTRY,
     ATTR_COUNTY,
     ATTRIBUTION,
     CONF_DISTRICT_NAME,
@@ -98,8 +99,7 @@ async def async_setup_entry(
 ):
     """Create sensors from a config entry in the integrations UI."""
     _LOGGER.debug(f"create sensor from config entry {config_entry.data}")
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
 
     if coordinator is None or coordinator.data is None:
         raise PlatformNotReady("Data coordinator could not be initialized!")
