@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from rokuecp.models import Device as RokuDevice 
+from rokuecp.models import Device as RokuDevice
 
 from homeassistant.components.sensor import (
     SensorEntity,
