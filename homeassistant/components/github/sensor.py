@@ -92,11 +92,12 @@ SENSOR_DESCRIPTIONS: tuple[
     ),
     GitHubSensorInformationEntityDescription(
         key="subscribers_count",
-        name="Subscribers",
+        name="Watchers",
         icon="mdi:glasses",
-        native_unit_of_measurement="Subscribers",
+        native_unit_of_measurement="Watchers",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        # The API returns a watcher_count, but subscribers_count is more accurate
         value_fn=lambda data: data.subscribers_count,
         coordinator_key="information",
     ),
