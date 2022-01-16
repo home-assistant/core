@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant import core
 from homeassistant.components.alexa import state_report
 
-from . import DEFAULT_CONFIG, TEST_URL
+from . import TEST_URL, get_default_config
 
 
 async def test_report_state(hass, aioclient_mock):
@@ -17,7 +17,7 @@ async def test_report_state(hass, aioclient_mock):
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
 
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
 
     hass.states.async_set(
         "binary_sensor.test_contact",
@@ -41,6 +41,64 @@ async def test_report_state(hass, aioclient_mock):
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_contact"
 
 
+async def test_report_state_retry(hass, aioclient_mock):
+    """Test proactive state retries once."""
+    aioclient_mock.post(
+        TEST_URL,
+        text='{"payload":{"code":"INVALID_ACCESS_TOKEN_EXCEPTION","description":""}}',
+        status=403,
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
+
+
+async def test_report_state_unsets_authorized_on_error(hass, aioclient_mock):
+    """Test proactive state unsets authorized on error."""
+    aioclient_mock.post(
+        TEST_URL,
+        text='{"payload":{"code":"INVALID_ACCESS_TOKEN_EXCEPTION","description":""}}',
+        status=403,
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    config = get_default_config()
+    await state_report.async_enable_proactive_mode(hass, config)
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    config._store.set_authorized.assert_not_called()
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+    config._store.set_authorized.assert_called_once_with(False)
+
+
 async def test_report_state_instance(hass, aioclient_mock):
     """Test proactive state reports with instance."""
     aioclient_mock.post(TEST_URL, text="", status=202)
@@ -58,7 +116,7 @@ async def test_report_state_instance(hass, aioclient_mock):
         },
     )
 
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
 
     hass.states.async_set(
         "fan.test_fan",
@@ -97,15 +155,12 @@ async def test_report_state_instance(hass, aioclient_mock):
             assert report["instance"] == "fan.preset_mode"
             assert report["namespace"] == "Alexa.ModeController"
             checks += 1
-        if report["name"] == "percentage":
+        if report["name"] == "rangeValue":
             assert report["value"] == 90
-            assert report["namespace"] == "Alexa.PercentageController"
+            assert report["instance"] == "fan.percentage"
+            assert report["namespace"] == "Alexa.RangeController"
             checks += 1
-        if report["name"] == "powerLevel":
-            assert report["value"] == 90
-            assert report["namespace"] == "Alexa.PowerLevelController"
-            checks += 1
-    assert checks == 4
+    assert checks == 3
 
     assert call_json["event"]["endpoint"]["endpointId"] == "fan#test_fan"
 
@@ -120,8 +175,18 @@ async def test_send_add_or_update_message(hass, aioclient_mock):
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
 
+    hass.states.async_set(
+        "zwave.bla",
+        "wow_such_unsupported",
+    )
+
+    entities = [
+        "binary_sensor.test_contact",
+        "binary_sensor.non_existing",  # Supported, but does not exist
+        "zwave.bla",  # Unsupported
+    ]
     await state_report.async_send_add_or_update_message(
-        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact", "zwave.bla"]
+        hass, get_default_config(), entities
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -148,7 +213,7 @@ async def test_send_delete_message(hass, aioclient_mock):
     )
 
     await state_report.async_send_delete_message(
-        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact", "zwave.bla"]
+        hass, get_default_config(), ["binary_sensor.test_contact", "zwave.bla"]
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -174,7 +239,7 @@ async def test_doorbell_event(hass, aioclient_mock):
         {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
     )
 
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
 
     hass.states.async_set(
         "binary_sensor.test_doorbell",
@@ -214,7 +279,8 @@ async def test_doorbell_event(hass, aioclient_mock):
 async def test_proactive_mode_filter_states(hass, aioclient_mock):
     """Test all the cases that filter states."""
     aioclient_mock.post(TEST_URL, text="", status=202)
-    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+    config = get_default_config()
+    await state_report.async_enable_proactive_mode(hass, config)
 
     # First state should report
     hass.states.async_set(
@@ -265,7 +331,7 @@ async def test_proactive_mode_filter_states(hass, aioclient_mock):
         "off",
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
-    with patch.object(DEFAULT_CONFIG, "should_expose", return_value=False):
+    with patch.object(config, "should_expose", return_value=False):
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 0

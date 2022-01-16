@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -31,6 +32,9 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from .browse_media import browse_node, browse_top_level
@@ -56,7 +60,11 @@ SUPPORT_VOLUMIO = (
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=15)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Volumio media player platform."""
 
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -99,15 +107,15 @@ class Volumio(MediaPlayerEntity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Volumio",
-            "sw_version": self._info["systemversion"],
-            "model": self._info["hardware"],
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Volumio",
+            model=self._info["hardware"],
+            name=self.name,
+            sw_version=self._info["systemversion"],
+        )
 
     @property
     def media_content_type(self):

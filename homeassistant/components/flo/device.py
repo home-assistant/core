@@ -42,7 +42,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             async with timeout(10):
                 await asyncio.gather(
-                    *[self._update_device(), self._update_consumption_data()]
+                    *[
+                        self.send_presence_ping(),
+                        self._update_device(),
+                        self._update_consumption_data(),
+                    ]
                 )
         except (RequestError) as error:
             raise UpdateFailed(error) from error
@@ -187,6 +191,10 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def battery_level(self) -> float:
         """Return the battery level for battery-powered device, e.g. leak detectors."""
         return self._device_information["battery"]["level"]
+
+    async def send_presence_ping(self):
+        """Send Flo a presence ping."""
+        await self.api_client.presence.ping()
 
     async def async_set_mode_home(self):
         """Set the Flo location to home mode."""

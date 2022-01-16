@@ -12,7 +12,7 @@ from aioshelly.rpc_device import RpcDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import singleton
+from homeassistant.helpers import device_registry, singleton
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -57,9 +57,7 @@ def get_block_device_name(device: BlockDevice) -> str:
 
 def get_rpc_device_name(device: RpcDevice) -> str:
     """Naming for device."""
-    # Gen2 does not support setting device name
-    # AP SSID name is used as a nicely formatted device name
-    return cast(str, device.config["wifi"]["ap"]["ssid"] or device.hostname)
+    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
@@ -133,6 +131,10 @@ def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
     if settings["device"]["type"] in SHBTN_MODELS:
         return True
 
+    if settings.get("mode") == "roller":
+        button_type = settings["rollers"][0]["button_type"]
+        return button_type in ["momentary", "momentary_on_release"]
+
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
     if button is None:
         return False
@@ -149,16 +151,15 @@ def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
     return button_type in ["momentary", "momentary_on_release"]
 
 
-def get_device_uptime(uptime: float, last_uptime: str | None) -> str:
+def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
-        or abs((delta_uptime - datetime.fromisoformat(last_uptime)).total_seconds())
-        > UPTIME_DEVIATION
+        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0).isoformat()
+        return delta_uptime
 
     return last_uptime
 
@@ -345,3 +346,28 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
             triggers.append((trigger_type, subtype))
 
     return triggers
+
+
+@callback
+def device_update_info(
+    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
+) -> None:
+    """Update device registry info."""
+
+    _LOGGER.debug("Updating device registry info for %s", entry.title)
+
+    assert entry.unique_id
+
+    dev_registry = device_registry.async_get(hass)
+    if device := dev_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={
+            (
+                device_registry.CONNECTION_NETWORK_MAC,
+                device_registry.format_mac(entry.unique_id),
+            )
+        },
+    ):
+        dev_registry.async_update_device(
+            device.id, sw_version=shellydevice.firmware_version
+        )

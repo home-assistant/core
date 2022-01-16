@@ -5,17 +5,18 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.nsw_fuel_station import (
-    DATA_NSW_FUEL_STATION,
-    StationPriceData,
-)
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+
+from . import DATA_NSW_FUEL_STATION, StationPriceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NSW Fuel Station sensor."""
 
     station_id = config[CONF_STATION_ID]

@@ -31,7 +31,7 @@
             },
             "start_addon": {
                 "data": {
-                    "network_key": "\u7db2\u8def\u5bc6\u9470",
+                    "network_key": "\u7db2\u8def\u91d1\u9470",
                     "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
                 },
                 "title": "\u8acb\u8f38\u5165 OpenZWave \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a\u3002"

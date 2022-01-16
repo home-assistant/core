@@ -1,20 +1,16 @@
 """Config flow for Logitech Squeezebox integration."""
 import asyncio
+from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_registry import async_get
@@ -115,7 +111,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             status = await server.async_query("serverstatus")
             if not status:
-                if server.http_status == HTTP_UNAUTHORIZED:
+                if server.http_status == HTTPStatus.UNAUTHORIZED:
                     return "invalid_auth"
                 return "cannot_connect"
         except Exception:  # pylint: disable=broad-except
@@ -162,13 +158,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_import(self, config):
-        """Import a config flow from configuration."""
-        error = await self._validate_input(config)
-        if error:
-            return self.async_abort(reason=error)
-        return self.async_create_entry(title=config[CONF_HOST], data=config)
-
     async def async_step_integration_discovery(self, discovery_info):
         """Handle discovery of a server."""
         _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)
@@ -189,18 +178,22 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_edit()
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
         _LOGGER.debug(
             "Reached dhcp discovery of a player with info: %s", discovery_info
         )
-        await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
 
         registry = async_get(self.hass)
 
+        if TYPE_CHECKING:
+            assert self.unique_id
         # if we have detected this player, do nothing. if not, there must be a server out there for us to configure, so start the normal user flow (which tries to autodetect server)
         if registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
             # this player is already known, so do nothing other than mark as configured

@@ -1,5 +1,6 @@
 """Handler for Hass.io."""
 import asyncio
+from http import HTTPStatus
 import logging
 import os
 
@@ -10,7 +11,7 @@ from homeassistant.components.http import (
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, SERVER_PORT
+from homeassistant.const import SERVER_PORT
 
 from .const import X_HASSIO
 
@@ -119,6 +120,14 @@ class HassIO:
         return self.send_command(f"/addons/{addon}/info", method="get")
 
     @api_data
+    def get_addon_stats(self, addon):
+        """Return stats for an Add-on.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(f"/addons/{addon}/stats", method="get")
+
+    @api_data
     def get_store(self):
         """Return data from the store.
 
@@ -217,7 +226,7 @@ class HassIO:
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
-            if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
+            if request.status not in (HTTPStatus.OK, HTTPStatus.BAD_REQUEST):
                 _LOGGER.error("%s return code %d", command, request.status)
                 raise HassioAPIError()
 

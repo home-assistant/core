@@ -9,7 +9,7 @@
         "flow_title": "Samsung-tv: {model}",
         "step": {
             "confirm": {
-                "description": "Vil du konfigurere Samsung-tv {model}? Hvis du aldrig har oprettet forbindelse til Home Assistant f\u00f8r, b\u00f8r du se en popup p\u00e5 dit tv, der beder om godkendelse. Manuelle konfigurationer for dette tv vil blive overskrevet.",
+                "description": "Vil du konfigurere Samsung-tv {device}? Hvis du aldrig har oprettet forbindelse til Home Assistant f\u00f8r, b\u00f8r du se en popup p\u00e5 dit tv, der beder om godkendelse. Manuelle konfigurationer for dette tv vil blive overskrevet.",
                 "title": "Samsung-tv"
             },
             "user": {

@@ -6,8 +6,8 @@
             "no_devices_found": "Nessun dispositivo trovato sulla rete"
         },
         "error": {
-            "one": "Vuoto",
-            "other": "Vuoto"
+            "one": "Pi\u00f9",
+            "other": "Altri"
         },
         "flow_title": "{name}",
         "step": {

@@ -45,9 +45,7 @@ async def async_call_action_from_config(
             "Unable to resolve webhook ID from the device ID"
         )
 
-    service_name = get_notify_service(hass, webhook_id)
-
-    if service_name is None:
+    if (service_name := get_notify_service(hass, webhook_id)) is None:
         raise InvalidDeviceAutomationConfig(
             "Unable to find notify service for webhook ID"
         )

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "hassio_confirm": {
+                "description": "Vols connectar-te al complement {addon}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "Introdueix la contrasenya correcta de l'amfitri\u00f3: {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

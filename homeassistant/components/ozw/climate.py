@@ -26,9 +26,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
@@ -140,7 +142,11 @@ HVAC_MODE_ZW_MAPPINGS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Z-Wave Climate from Config Entry."""
 
     @callback
@@ -254,9 +260,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
         Must know if single or double setpoint.
         """
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-
-        if hvac_mode is not None:
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(hvac_mode)
 
         if len(self._current_mode_setpoint_values) == 1:
@@ -290,8 +294,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
                 "Thermostat %s does not support setting a mode", self.entity_id
             )
             return
-        hvac_mode_value = self._hvac_modes.get(hvac_mode)
-        if hvac_mode_value is None:
+        if (hvac_mode_value := self._hvac_modes.get(hvac_mode)) is None:
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
         self.values.mode.send_value(hvac_mode_value)

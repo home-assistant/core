@@ -16,21 +16,15 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN, SERVICE_IDENTIFY
+from . import HomeAssistantElgatoData
+from .const import DOMAIN, SERVICE_IDENTIFY
+from .entity import ElgatoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,10 +38,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato Light based on a config entry."""
-    elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
-    info = await elgato.info()
-    settings = await elgato.settings()
-    async_add_entities([ElgatoLight(elgato, info, settings)], True)
+    data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
+    settings = await data.client.settings()
+    async_add_entities([ElgatoLight(data.client, data.info, settings)], True)
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -57,15 +50,13 @@ async def async_setup_entry(
     )
 
 
-class ElgatoLight(LightEntity):
+class ElgatoLight(ElgatoEntity, LightEntity):
     """Defines an Elgato Light."""
 
-    def __init__(self, elgato: Elgato, info: Info, settings: Settings) -> None:
+    def __init__(self, client: Elgato, info: Info, settings: Settings) -> None:
         """Initialize Elgato Light."""
-        self._info = info
-        self._settings = settings
+        super().__init__(client, info)
         self._state: State | None = None
-        self.elgato = elgato
 
         min_mired = 143
         max_mired = 344
@@ -129,7 +120,7 @@ class ElgatoLight(LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         try:
-            await self.elgato.light(on=False)
+            await self.client.light(on=False)
         except ElgatoError:
             _LOGGER.error("An error occurred while updating the Elgato Light")
             self._state = None
@@ -161,7 +152,7 @@ class ElgatoLight(LightEntity):
             temperature = self.color_temp
 
         try:
-            await self.elgato.light(
+            await self.client.light(
                 on=True,
                 brightness=brightness,
                 hue=hue,
@@ -176,7 +167,7 @@ class ElgatoLight(LightEntity):
         """Update Elgato entity."""
         restoring = self._state is None
         try:
-            self._state = await self.elgato.state()
+            self._state = await self.client.state()
             if restoring:
                 _LOGGER.info("Connection restored")
         except ElgatoError as err:
@@ -184,21 +175,10 @@ class ElgatoLight(LightEntity):
             meth("An error occurred while updating the Elgato Light: %s", err)
             self._state = None
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Elgato Light."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-            ATTR_NAME: self._info.product_name,
-            ATTR_MANUFACTURER: "Elgato",
-            ATTR_MODEL: self._info.product_name,
-            ATTR_SW_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-        }
-
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""
         try:
-            await self.elgato.identify()
+            await self.client.identify()
         except ElgatoError:
             _LOGGER.exception("An error occurred while identifying the Elgato Light")
             self._state = None

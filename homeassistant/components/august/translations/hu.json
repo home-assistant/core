@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -14,7 +14,7 @@
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
-                "description": "Add meg a(z) {username} jelszav\u00e1t.",
+                "description": "Adja meg {username} jelszav\u00e1t.",
                 "title": "August fi\u00f3k \u00fajrahiteles\u00edt\u00e9se"
             },
             "user_validate": {

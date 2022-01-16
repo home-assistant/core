@@ -1,7 +1,8 @@
 """Flow handler for Crownstone."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (

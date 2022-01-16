@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
@@ -93,7 +94,9 @@ async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
         for expect in expected
     ]
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     triggers = [value for value in triggers if value["domain"] == "rfxtrx"]
     assert_lists_same(triggers, expected_triggers)
 
@@ -148,7 +151,6 @@ async def test_firing_event(hass, device_reg: DeviceRegistry, rfxtrx, event):
 async def test_invalid_trigger(hass, device_reg: DeviceRegistry):
     """Test for invalid actions."""
     event = EVENT_LIGHTING_1
-    notification_calls = async_mock_service(hass, "persistent_notification", "create")
 
     await setup_entry(hass, {event.code: {"fire_event": True, "signal_repetitions": 1}})
 
@@ -179,8 +181,8 @@ async def test_invalid_trigger(hass, device_reg: DeviceRegistry):
     )
     await hass.async_block_till_done()
 
-    assert len(notification_calls) == 1
+    assert len(notifications := hass.states.async_all("persistent_notification")) == 1
     assert (
         "The following integrations and platforms could not be set up"
-        in notification_calls[0].data["message"]
+        in notifications[0].attributes["message"]
     )

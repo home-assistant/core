@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-import pyrepetier
+import pyrepetierng as pyrepetier
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -16,14 +16,15 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,28 +38,38 @@ UPDATE_SIGNAL = "repetier_update_signal"
 TEMP_DATA = {"tempset": "temp_set", "tempread": "state", "output": "output"}
 
 
-API_PRINTER_METHODS = {
-    "bed_temperature": {
-        "offline": {"heatedbeds": None, "state": "off"},
-        "state": {"heatedbeds": "temp_data"},
-        "temp_data": TEMP_DATA,
-        "attribute": "heatedbeds",
-    },
-    "extruder_temperature": {
-        "offline": {"extruder": None, "state": "off"},
-        "state": {"extruder": "temp_data"},
-        "temp_data": TEMP_DATA,
-        "attribute": "extruder",
-    },
-    "chamber_temperature": {
-        "offline": {"heatedchambers": None, "state": "off"},
-        "state": {"heatedchambers": "temp_data"},
-        "temp_data": TEMP_DATA,
-        "attribute": "heatedchambers",
-    },
-    "current_state": {
-        "offline": {"state": None},
-        "state": {
+@dataclass
+class APIMethods:
+    """API methods for properties."""
+
+    offline: dict[str, str | None]
+    state: dict[str, str]
+    temp_data: dict[str, str] | None = None
+    attribute: str | None = None
+
+
+API_PRINTER_METHODS: dict[str, APIMethods] = {
+    "bed_temperature": APIMethods(
+        offline={"heatedbeds": None, "state": "off"},
+        state={"heatedbeds": "temp_data"},
+        temp_data=TEMP_DATA,
+        attribute="heatedbeds",
+    ),
+    "extruder_temperature": APIMethods(
+        offline={"extruder": None, "state": "off"},
+        state={"extruder": "temp_data"},
+        temp_data=TEMP_DATA,
+        attribute="extruder",
+    ),
+    "chamber_temperature": APIMethods(
+        offline={"heatedchambers": None, "state": "off"},
+        state={"heatedchambers": "temp_data"},
+        temp_data=TEMP_DATA,
+        attribute="heatedchambers",
+    ),
+    "current_state": APIMethods(
+        offline={"state": None},
+        state={
             "state": "state",
             "activeextruder": "active_extruder",
             "hasxhome": "x_homed",
@@ -67,10 +78,10 @@ API_PRINTER_METHODS = {
             "firmware": "firmware",
             "firmwareurl": "firmware_url",
         },
-    },
-    "current_job": {
-        "offline": {"job": None, "state": "off"},
-        "state": {
+    ),
+    "current_job": APIMethods(
+        offline={"job": None, "state": "off"},
+        state={
             "done": "state",
             "job": "job_name",
             "jobid": "job_id",
@@ -84,25 +95,25 @@ API_PRINTER_METHODS = {
             "y": "y",
             "z": "z",
         },
-    },
-    "job_end": {
-        "offline": {"job": None, "state": "off", "start": None, "printtime": None},
-        "state": {
+    ),
+    "job_end": APIMethods(
+        offline={"job": None, "state": "off", "start": None, "printtime": None},
+        state={
             "job": "job_name",
             "start": "start",
             "printtime": "print_time",
             "printedtimecomp": "from_start",
         },
-    },
-    "job_start": {
-        "offline": {
+    ),
+    "job_start": APIMethods(
+        offline={
             "job": None,
             "state": "off",
             "start": None,
             "printedtimecomp": None,
         },
-        "state": {"job": "job_name", "start": "start", "printedtimecomp": "from_start"},
-    },
+        state={"job": "job_name", "start": "start", "printedtimecomp": "from_start"},
+    ),
 }
 
 
@@ -133,21 +144,21 @@ SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
         type="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         name="_bed_",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "extruder_temperature": RepetierSensorEntityDescription(
         key="extruder_temperature",
         type="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         name="_extruder_",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "chamber_temperature": RepetierSensorEntityDescription(
         key="chamber_temperature",
         type="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         name="_chamber_",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "current_state": RepetierSensorEntityDescription(
         key="current_state",
@@ -206,7 +217,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Repetier Server component."""
     hass.data[REPETIER_API] = {}
 
@@ -251,17 +262,16 @@ class PrinterAPI:
         """Get data from the state cache."""
         printer = self.printers[printer_id]
         methods = API_PRINTER_METHODS[sensor_type]
-        for prop, offline in methods["offline"].items():
-            state = getattr(printer, prop)
-            if state == offline:
+        for prop, offline in methods.offline.items():
+            if getattr(printer, prop) == offline:
                 # if state matches offline, sensor is offline
                 return None
 
         data = {}
-        for prop, attr in methods["state"].items():
+        for prop, attr in methods.state.items():
             prop_data = getattr(printer, prop)
             if attr == "temp_data":
-                temp_methods = methods["temp_data"]
+                temp_methods = methods.temp_data or {}
                 for temp_prop, temp_attr in temp_methods.items():
                     data[temp_attr] = getattr(prop_data[temp_id], temp_prop)
             else:
@@ -290,8 +300,8 @@ class PrinterAPI:
                     continue
 
                 methods = API_PRINTER_METHODS[sensor_type]
-                if "temp_data" in methods["state"].values():
-                    prop_data = getattr(printer, methods["attribute"])
+                if "temp_data" in methods.state.values():
+                    prop_data = getattr(printer, methods.attribute or "")
                     if prop_data is None:
                         continue
                     for idx, _ in enumerate(prop_data):
@@ -305,4 +315,6 @@ class PrinterAPI:
 
         if not sensor_info:
             return
-        load_platform(self._hass, "sensor", DOMAIN, sensor_info, self.config)
+        load_platform(
+            self._hass, "sensor", DOMAIN, {"sensors": sensor_info}, self.config
+        )

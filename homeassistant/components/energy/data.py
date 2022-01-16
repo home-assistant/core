@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import Counter
-from collections.abc import Awaitable
-from typing import Callable, Literal, Optional, TypedDict, Union, cast
+from collections.abc import Awaitable, Callable
+from typing import Literal, Optional, TypedDict, Union, cast
 
 import voluptuous as vol
 

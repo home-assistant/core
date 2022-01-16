@@ -1,8 +1,9 @@
 """Provides device automations for Tasmota."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import attr
 from hatasmota.models import DiscoveryHashType

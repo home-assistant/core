@@ -4,18 +4,19 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry, start
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
+
+from . import start
+from .entity import Entity
+from .event import async_track_time_interval
+from .json import JSONEncoder
+from .singleton import singleton
+from .storage import Store
 
 DATA_RESTORE_STATE_TASK = "restore_state_task"
 
@@ -29,6 +30,8 @@ STATE_DUMP_INTERVAL = timedelta(minutes=15)
 
 # How long should a saved state be preserved if the entity no longer exists
 STATE_EXPIRATION = timedelta(days=7)
+
+_StoredStateT = TypeVar("_StoredStateT", bound="StoredState")
 
 
 class StoredState:
@@ -44,14 +47,14 @@ class StoredState:
         return {"state": self.state.as_dict(), "last_seen": self.last_seen}
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> StoredState:
+    def from_dict(cls: type[_StoredStateT], json_dict: dict) -> _StoredStateT:
         """Initialize a stored state from a dict."""
         last_seen = json_dict["last_seen"]
 
         if isinstance(last_seen, str):
             last_seen = dt_util.parse_datetime(last_seen)
 
-        return cls(State.from_dict(json_dict["state"]), last_seen)
+        return cls(cast(State, State.from_dict(json_dict["state"])), last_seen)
 
 
 class RestoreStateData:
@@ -117,7 +120,7 @@ class RestoreStateData:
         current_entity_ids = {
             state.entity_id
             for state in all_states
-            if not state.attributes.get(entity_registry.ATTR_RESTORED)
+            if not state.attributes.get(ATTR_RESTORED)
         }
 
         # Start with the currently registered states
@@ -126,7 +129,7 @@ class RestoreStateData:
             for state in all_states
             if state.entity_id in self.entity_ids and
             # Ignore all states that are entity registry placeholders
-            not state.attributes.get(entity_registry.ATTR_RESTORED)
+            not state.attributes.get(ATTR_RESTORED)
         ]
         expiration_time = now - STATE_EXPIRATION
 

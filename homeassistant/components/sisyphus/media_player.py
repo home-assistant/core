@@ -163,7 +163,7 @@ class SisyphusPlayer(MediaPlayerEntity):
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(Track.ThumbnailSize.LARGE)
 
-        return super.media_image_url()
+        return super().media_image_url
 
     async def async_turn_on(self):
         """Wake up a sleeping table."""

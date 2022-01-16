@@ -1,4 +1,5 @@
 """Constants for Plugwise component."""
+from homeassistant.const import Platform
 
 API = "api"
 ATTR_ILLUMINANCE = "illuminance"
@@ -20,8 +21,13 @@ STRETCH_USERNAME = "stretch"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 UNIT_LUMEN = "lm"
 
-PLATFORMS_GATEWAY = ["binary_sensor", "climate", "sensor", "switch"]
-SENSOR_PLATFORMS = ["sensor", "switch"]
+PLATFORMS_GATEWAY = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+SENSOR_PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 ZEROCONF_MAP = {
     "smile": "P1",
     "smile_thermo": "Anna",
@@ -31,8 +37,8 @@ ZEROCONF_MAP = {
 
 # Sensor mapping
 SENSOR_MAP_DEVICE_CLASS = 2
-SENSOR_MAP_ICON = 3
 SENSOR_MAP_MODEL = 0
+SENSOR_MAP_STATE_CLASS = 3
 SENSOR_MAP_UOM = 1
 
 # Default directives

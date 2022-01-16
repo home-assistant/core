@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "cannot_connect": "Nem siker\u00fclt csatlakozni, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja \u00fajra. A h\u00e1l\u00f3zati \u00e9s Ethernet k\u00e1belek kih\u00faz\u00e1sa \u00e9s \u00fajracsatlakoztat\u00e1sa seg\u00edthet",
             "not_denonavr_manufacturer": "Nem egy Denon AVR h\u00e1l\u00f3zati vev\u0151, felfedezett gy\u00e1rt\u00f3 nem egyezik",
             "not_denonavr_missing": "Nem Denon AVR h\u00e1l\u00f3zati vev\u0151, a felfedez\u00e9si inform\u00e1ci\u00f3k nem teljesek"

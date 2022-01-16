@@ -3,12 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.geo_location import DOMAIN
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, CONF_SOURCE, CONF_ZONE
 from homeassistant.core import HassJob, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
 from homeassistant.helpers.event import TrackStates, async_track_state_change_filtered
+
+from . import DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -52,8 +53,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         if not source_match(from_state, source) and not source_match(to_state, source):
             return
 
-        zone_state = hass.states.get(zone_entity_id)
-        if zone_state is None:
+        if (zone_state := hass.states.get(zone_entity_id)) is None:
             _LOGGER.warning(
                 "Unable to execute automation %s: Zone %s not found",
                 automation_info["name"],

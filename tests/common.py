@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import collections
 from collections import OrderedDict
+from collections.abc import Awaitable, Collection
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -16,7 +17,7 @@ import threading
 import time
 from time import monotonic
 import types
-from typing import Any, Awaitable, Collection
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -69,7 +70,9 @@ CLIENT_REDIRECT_URI = "https://example.com/app/callback"
 
 
 async def async_get_device_automations(
-    hass: HomeAssistant, automation_type: str, device_id: str
+    hass: HomeAssistant,
+    automation_type: device_automation.DeviceAutomationType,
+    device_id: str,
 ) -> Any:
     """Get a device automation for a single device id."""
     automations = await device_automation.async_get_device_automations(
@@ -284,7 +287,12 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
 
-    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries = config_entries.ConfigEntries(
+        hass,
+        {
+            "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
+        },
+    )
     hass.config_entries._entries = {}
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
@@ -371,9 +379,12 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 @ha.callback
 def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime, fire_all: bool = False
+    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
 ) -> None:
-    """Fire a time changes event."""
+    """Fire a time changed event."""
+    if datetime_ is None:
+        datetime_ = date_util.utcnow()
+
     hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
     for task in list(hass.loop._scheduled):
@@ -397,11 +408,22 @@ def async_fire_time_changed(
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
-def load_fixture(filename):
+def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
+    """Get path of fixture."""
+    if integration is None and "/" in filename and not filename.startswith("helpers/"):
+        integration, filename = filename.split("/", 1)
+
+    if integration is None:
+        return pathlib.Path(__file__).parent.joinpath("fixtures", filename)
+    else:
+        return pathlib.Path(__file__).parent.joinpath(
+            "components", integration, "fixtures", filename
+        )
+
+
+def load_fixture(filename, integration=None):
     """Load a fixture."""
-    path = os.path.join(os.path.dirname(__file__), "fixtures", filename)
-    with open(path, encoding="utf-8") as fptr:
-        return fptr.read()
+    return get_fixture_path(filename, integration).read_text()
 
 
 def mock_state_change_event(hass, new_state, old_state=None):
@@ -426,8 +448,11 @@ def mock_component(hass, component):
 def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = mock_entries or OrderedDict()
-    registry._rebuild_index()
+    if mock_entries is None:
+        mock_entries = {}
+    registry.entities = entity_registry.EntityRegistryItems()
+    for key, entry in mock_entries.items():
+        registry.entities[key] = entry
 
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
@@ -885,8 +910,9 @@ def init_recorder_component(hass, add_config=None):
 
 async def async_init_recorder_component(hass, add_config=None):
     """Initialize the recorder asynchronously."""
-    config = dict(add_config) if add_config else {}
-    config[recorder.CONF_DB_URL] = "sqlite://"
+    config = add_config or {}
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert await async_setup_component(
@@ -929,6 +955,41 @@ class MockEntity(entity.Entity):
             self.entity_id = values["entity_id"]
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._handle("available")
+
+    @property
+    def capability_attributes(self):
+        """Info about capabilities."""
+        return self._handle("capability_attributes")
+
+    @property
+    def device_class(self):
+        """Info how device should be classified."""
+        return self._handle("device_class")
+
+    @property
+    def device_info(self):
+        """Info how it links to a device."""
+        return self._handle("device_info")
+
+    @property
+    def entity_category(self):
+        """Return the entity category."""
+        return self._handle("entity_category")
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._handle("entity_registry_enabled_default")
+
+    @property
+    def icon(self):
+        """Return the suggested icon."""
+        return self._handle("icon")
+
+    @property
     def name(self):
         """Return the name of the entity."""
         return self._handle("name")
@@ -939,39 +1000,9 @@ class MockEntity(entity.Entity):
         return self._handle("should_poll")
 
     @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._handle("unique_id")
-
-    @property
     def state(self):
         """Return the state of the entity."""
         return self._handle("state")
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._handle("available")
-
-    @property
-    def device_info(self):
-        """Info how it links to a device."""
-        return self._handle("device_info")
-
-    @property
-    def device_class(self):
-        """Info how device should be classified."""
-        return self._handle("device_class")
-
-    @property
-    def unit_of_measurement(self):
-        """Info on the units the entity state is in."""
-        return self._handle("unit_of_measurement")
-
-    @property
-    def capability_attributes(self):
-        """Info about capabilities."""
-        return self._handle("capability_attributes")
 
     @property
     def supported_features(self):
@@ -979,9 +1010,14 @@ class MockEntity(entity.Entity):
         return self._handle("supported_features")
 
     @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._handle("entity_registry_enabled_default")
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return self._handle("unique_id")
+
+    @property
+    def unit_of_measurement(self):
+        """Info on the units the entity state is in."""
+        return self._handle("unit_of_measurement")
 
     def _handle(self, attr):
         """Return attribute value."""
@@ -1025,8 +1061,9 @@ def mock_storage(data=None):
 
     def mock_write_data(store, path, data_to_write):
         """Mock version of write data."""
-        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
         # To ensure that the data can be serialized
+        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
+        raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
     async def mock_remove(store):
@@ -1210,3 +1247,17 @@ def assert_lists_same(a, b):
     assert collections.Counter([hashdict(i) for i in a]) == collections.Counter(
         [hashdict(i) for i in b]
     )
+
+
+def raise_contains_mocks(val):
+    """Raise for mocks."""
+    if isinstance(val, Mock):
+        raise ValueError
+
+    if isinstance(val, dict):
+        for dict_value in val.values():
+            raise_contains_mocks(dict_value)
+
+    if isinstance(val, list):
+        for dict_value in val:
+            raise_contains_mocks(dict_value)

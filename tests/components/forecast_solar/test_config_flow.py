@@ -61,6 +61,11 @@ async def test_options_flow(
 ) -> None:
     """Test config flow options."""
     mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 

@@ -24,5 +24,10 @@
                 "title": "Link da conta Nest"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Movimento detectado"
+        }
     }
 }

@@ -1,6 +1,7 @@
 """Setup mocks for the Plugwise integration tests."""
 
 from functools import partial
+from http import HTTPStatus
 import re
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -38,15 +39,15 @@ def mock_smile():
 @pytest.fixture(name="mock_smile_unauth")
 def mock_smile_unauth(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the Plugwise Smile unauthorized for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=401)
-    aioclient_mock.put(re.compile(".*"), status=401)
+    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
 
 
 @pytest.fixture(name="mock_smile_error")
 def mock_smile_error(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the Plugwise Smile server failure for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=500)
-    aioclient_mock.put(re.compile(".*"), status=500)
+    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 @pytest.fixture(name="mock_smile_notconnect")

@@ -2,15 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOVING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -21,7 +20,6 @@ from .const import (
     CONF_UID,
     DATA_COORDINATOR,
     DATA_COORDINATOR_PAIRED_SENSOR,
-    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
@@ -35,17 +33,19 @@ SENSOR_KIND_MOVED = "moved"
 SENSOR_DESCRIPTION_AP_ENABLED = BinarySensorEntityDescription(
     key=SENSOR_KIND_AP_INFO,
     name="Onboard AP Enabled",
-    device_class=DEVICE_CLASS_CONNECTIVITY,
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 SENSOR_DESCRIPTION_LEAK_DETECTED = BinarySensorEntityDescription(
     key=SENSOR_KIND_LEAK_DETECTED,
     name="Leak Detected",
-    device_class=DEVICE_CLASS_MOISTURE,
+    device_class=BinarySensorDeviceClass.MOISTURE,
 )
 SENSOR_DESCRIPTION_MOVED = BinarySensorEntityDescription(
     key=SENSOR_KIND_MOVED,
     name="Recently Moved",
-    device_class=DEVICE_CLASS_MOVING,
+    device_class=BinarySensorDeviceClass.MOVING,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 PAIRED_SENSOR_DESCRIPTIONS = (
@@ -66,7 +66,7 @@ async def async_setup_entry(
     @callback
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id][
+        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR_PAIRED_SENSOR][
             uid
         ]
 
@@ -78,7 +78,7 @@ async def async_setup_entry(
         )
 
     # Handle adding paired sensors after HASS startup:
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id].append(
+    entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED.format(entry.data[CONF_UID]),
@@ -89,7 +89,7 @@ async def async_setup_entry(
     # Add all valve controller-specific binary sensors:
     sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = [
         ValveControllerBinarySensor(
-            entry, hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id], description
+            entry, hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR], description
         )
         for description in VALVE_CONTROLLER_DESCRIPTIONS
     ]
@@ -98,8 +98,8 @@ async def async_setup_entry(
     sensors.extend(
         [
             PairedSensorBinarySensor(entry, coordinator, description)
-            for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-                entry.entry_id
+            for coordinator in hass.data[DOMAIN][entry.entry_id][
+                DATA_COORDINATOR_PAIRED_SENSOR
             ].values()
             for description in PAIRED_SENSOR_DESCRIPTIONS
         ]

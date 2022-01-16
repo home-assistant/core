@@ -9,8 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEventDevice
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 from .const import (
@@ -97,7 +100,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
 
@@ -161,7 +169,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(project_devices)
 
-    def handle_new_task(call):
+    def handle_new_task(call: ServiceCall) -> None:
         """Call when a user creates a new Todoist Task from Home Assistant."""
         project_name = call.data[PROJECT_NAME]
         project_id = project_id_lookup[project_name]
@@ -188,12 +196,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             due_date = dt.parse_datetime(call.data[DUE_DATE])
             if due_date is None:
                 due = dt.parse_date(call.data[DUE_DATE])
+                if due is None:
+                    raise ValueError(f"Invalid due_date: {call.data[DUE_DATE]}")
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
             date_format = "%Y-%m-%dT%H:%M%S"
-            due_date = datetime.strftime(due_date, date_format)
-            _due["date"] = due_date
+            _due["date"] = datetime.strftime(due_date, date_format)
 
         if _due:
             item.update(due=_due)
@@ -209,12 +218,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             due_date = dt.parse_datetime(call.data[REMINDER_DATE])
             if due_date is None:
                 due = dt.parse_date(call.data[REMINDER_DATE])
+                if due is None:
+                    raise ValueError(
+                        f"Invalid reminder_date: {call.data[REMINDER_DATE]}"
+                    )
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
             date_format = "%Y-%m-%dT%H:%M:%S"
-            due_date = datetime.strftime(due_date, date_format)
-            _reminder_due["date"] = due_date
+            _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
         if _reminder_due:
             api.reminders.add(item["id"], due=_reminder_due)
@@ -233,8 +245,7 @@ def _parse_due_date(data: dict, gmt_string) -> datetime | None:
     # Add time information to date only strings.
     if len(data["date"]) == 10:
         return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
-    nowtime = dt.parse_datetime(data["date"])
-    if not nowtime:
+    if not (nowtime := dt.parse_datetime(data["date"])):
         return None
     if nowtime.tzinfo is None:
         data["date"] += gmt_string
@@ -422,7 +433,7 @@ class TodoistProjectData:
                 # it shouldn't be counted.
                 return None
 
-            task[DUE_TODAY] = task[END].date() == datetime.today().date()
+            task[DUE_TODAY] = task[END].date() == dt.utcnow().date()
 
             # Special case: Task is overdue.
             if task[END] <= task[START]:

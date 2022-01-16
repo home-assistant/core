@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Callable, Generic, TypeVar
+from typing import Generic, TypeVar
 import urllib.error
 
 import aiohttp
@@ -15,9 +15,9 @@ import requests
 from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
+from . import entity, event
 from .debounce import Debouncer
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10

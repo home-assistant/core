@@ -2,20 +2,14 @@
 import functools
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_MOVING,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_VIBRATION,
-    DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
@@ -25,7 +19,6 @@ from .core.const import (
     CHANNEL_ON_OFF,
     CHANNEL_ZONE,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -34,20 +27,25 @@ from .entity import ZhaEntity
 
 # Zigbee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {
-    0x000D: DEVICE_CLASS_MOTION,
-    0x0015: DEVICE_CLASS_OPENING,
-    0x0028: DEVICE_CLASS_SMOKE,
-    0x002A: DEVICE_CLASS_MOISTURE,
-    0x002B: DEVICE_CLASS_GAS,
-    0x002D: DEVICE_CLASS_VIBRATION,
+    0x000D: BinarySensorDeviceClass.MOTION,
+    0x0015: BinarySensorDeviceClass.OPENING,
+    0x0028: BinarySensorDeviceClass.SMOKE,
+    0x002A: BinarySensorDeviceClass.MOISTURE,
+    0x002B: BinarySensorDeviceClass.GAS,
+    0x002D: BinarySensorDeviceClass.VIBRATION,
 }
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation binary sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.BINARY_SENSOR]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -56,20 +54,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 class BinarySensor(ZhaEntity, BinarySensorEntity):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = None
-    DEVICE_CLASS = None
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA binary sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel = channels[0]
-        self._device_class = self.DEVICE_CLASS
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -91,11 +87,6 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
             return False
         return self._state
 
-    @property
-    def device_class(self) -> str:
-        """Return device class from component DEVICE_CLASSES."""
-        return self._device_class
-
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
@@ -113,20 +104,20 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
             self._state = attr_value
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ACCELEROMETER)
+@MULTI_MATCH(channel_names=CHANNEL_ACCELEROMETER)
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "acceleration"
-    DEVICE_CLASS = DEVICE_CLASS_MOVING
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOVING
 
 
-@STRICT_MATCH(channel_names=CHANNEL_OCCUPANCY)
+@MULTI_MATCH(channel_names=CHANNEL_OCCUPANCY)
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "occupancy"
-    DEVICE_CLASS = DEVICE_CLASS_OCCUPANCY
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
@@ -134,10 +125,10 @@ class Opening(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "on_off"
-    DEVICE_CLASS = DEVICE_CLASS_OPENING
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
 
 
-@STRICT_MATCH(channel_names=CHANNEL_BINARY_INPUT)
+@MULTI_MATCH(channel_names=CHANNEL_BINARY_INPUT)
 class BinaryInput(BinarySensor):
     """ZHA BinarySensor."""
 
@@ -160,10 +151,10 @@ class Motion(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "on_off"
-    DEVICE_CLASS = DEVICE_CLASS_MOTION
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ZONE)
+@MULTI_MATCH(channel_names=CHANNEL_ZONE)
 class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 

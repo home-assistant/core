@@ -7,14 +7,17 @@ import logging
 import ephem
 import voluptuous as vol
 
-from homeassistant import util
+"""from homeassistant import util"""
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_NAME, CONF_TYPE, DEVICE_CLASS_TIMESTAMP, TIME_DAYS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import as_local, get_time_zone, utcnow
 
@@ -109,45 +112,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Display the current season."""
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
 
-    time_zone = hass.config.time_zone
-    latitude = util.convert(hass.config.latitude, float)
     _type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
 
-    if time_zone is None:
-        _LOGGER.warning(
-            "Time zone not set in Home Assistant configuration, UTC will be returned"
-        )
-
-    if latitude < 0:
+    if hass.config.latitude < 0:
         hemisphere = SOUTHERN
-    elif latitude > 0:
+    elif hass.config.latitude > 0:
         hemisphere = NORTHERN
     else:
         hemisphere = EQUATOR
 
-    if EQUATOR in hemisphere:
+    if hemisphere == EQUATOR:
         _LOGGER.warning(
             "Season cannot be determined for equator, 'unknown' state will be shown"
         )
 
     _LOGGER.debug(_type)
 
-    season_data = SeasonData(hemisphere, _type, time_zone)
+    season_data = SeasonData(hemisphere, _type, hass.config.time_zone)
 
     await season_data.async_update()
 
     entities = []
     for description in SENSOR_TYPES:
-        if description.key in ENTITY_SEASON:
+        if description.key == ENTITY_SEASON:
             entities.append(Season(season_data, description, name))
-        elif hemisphere not in EQUATOR:
+        elif hemisphere != EQUATOR:
             entities.append(Season(season_data, description, name))
 
     async_add_entities(entities, True)
@@ -164,7 +162,7 @@ class Season(SensorEntity):
     ):
         """Initialize the sensor."""
         self.entity_description = description
-        if name in DEFAULT_NAME and description.key != ENTITY_SEASON:
+        if name == DEFAULT_NAME and description.key != ENTITY_SEASON:
             self._attr_name = f"{name} {description.name}"
         else:
             self._attr_name = f"{description.name}"
@@ -176,7 +174,7 @@ class Season(SensorEntity):
         await self.season_data.async_update()
         if self.entity_description.key in self.season_data.data:
             self._attr_native_value = self.season_data.data[self.entity_description.key]
-            if self.entity_description.key in ENTITY_SEASON:
+            if self.entity_description.key == ENTITY_SEASON:
                 self._attr_icon = SEASON_ICONS[
                     self.season_data.data[self.entity_description.key]
                 ]

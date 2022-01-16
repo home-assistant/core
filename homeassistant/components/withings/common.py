@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 from enum import Enum, IntEnum
+from http import HTTPStatus
 import logging
 import re
-from typing import Any, Callable, Dict
+from typing import Any
 
 from aiohttp.web import Response
 import requests
@@ -31,7 +33,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
-    HTTP_UNAUTHORIZED,
     MASS_KILOGRAMS,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
@@ -57,12 +58,12 @@ from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
-    f"^{HTTP_UNAUTHORIZED},.*",
+    f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
-MeasurementData = Dict[Measurement, Any]
+MeasurementData = dict[Measurement, Any]
 
 
 class NotAuthenticatedError(HomeAssistantError):
@@ -587,7 +588,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            Dict[MeasureType, Any]
+            dict[MeasureType, Any]
         ](
             hass,
             _LOGGER,
@@ -744,7 +745,9 @@ class DataManager:
                 flow = next(
                     iter(
                         flow
-                        for flow in self._hass.config_entries.flow.async_progress()
+                        for flow in self._hass.config_entries.flow.async_progress_by_handler(
+                            const.DOMAIN
+                        )
                         if flow.context == context
                     ),
                     None,

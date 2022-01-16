@@ -1,9 +1,14 @@
 """Media player support for Panasonic Viera TV."""
+from __future__ import annotations
+
 import logging
 
 from panasonic_viera import Keys
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -18,7 +23,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -48,7 +57,11 @@ SUPPORT_VIERATV = (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Panasonic Viera TV from a config entry."""
 
     config = config_entry.data
@@ -78,23 +91,21 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return self._device_info[ATTR_UDN]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         if self._device_info is None:
             return None
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-            "manufacturer": self._device_info.get(
-                ATTR_MANUFACTURER, DEFAULT_MANUFACTURER
-            ),
-            "model": self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
+            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+            model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+            name=self._name,
+        )
 
     @property
     def device_class(self):
         """Return the device class of the device."""
-        return DEVICE_CLASS_TV
+        return MediaPlayerDeviceClass.TV
 
     @property
     def name(self):

@@ -24,7 +24,7 @@ PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = False
-DEFAULT_GOOGLE_REPORT_STATE = False
+DEFAULT_GOOGLE_REPORT_STATE = True
 DEFAULT_EXPOSED_DOMAINS = [
     "climate",
     "cover",
@@ -61,15 +61,3 @@ MODE_DEV = "development"
 MODE_PROD = "production"
 
 DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
-
-
-class InvalidTrustedNetworks(Exception):
-    """Raised when invalid trusted networks config."""
-
-
-class InvalidTrustedProxies(Exception):
-    """Raised when invalid trusted proxies config."""
-
-
-class RequireRelink(Exception):
-    """The skill needs to be relinked."""

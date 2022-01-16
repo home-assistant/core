@@ -1,7 +1,7 @@
 """Exposures to KNX bus."""
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
@@ -137,8 +137,7 @@ class KNXExposeSensor:
     async def _async_entity_changed(self, event: Event) -> None:
         """Handle entity change."""
         new_state = event.data.get("new_state")
-        new_value = self._get_expose_value(new_state)
-        if new_value is None:
+        if (new_value := self._get_expose_value(new_state)) is None:
             return
         old_state = event.data.get("old_state")
         # don't use default value for comparison on first state change (old_state is None)

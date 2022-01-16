@@ -1,4 +1,6 @@
 """Test Local Media Source."""
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components import media_source
@@ -78,25 +80,25 @@ async def test_media_view(hass, hass_client):
 
     # Protects against non-existent files
     resp = await client.get("/media/local/invalid.txt")
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     resp = await client.get("/media/recordings/invalid.txt")
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     # Protects against non-media files
     resp = await client.get("/media/local/not_media.txt")
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     # Protects against unknown local media sources
     resp = await client.get("/media/unknown_source/not_media.txt")
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     # Fetch available media
     resp = await client.get("/media/local/test.mp3")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     resp = await client.get("/media/local/Epic Sax Guy 10 Hours.mp4")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     resp = await client.get("/media/recordings/test.mp3")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK

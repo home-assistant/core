@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "powered_off": "Apakah proyektor dinyalakan? Anda perlu menyalakan proyektor untuk konfigurasi awal."
         },
         "step": {
             "user": {

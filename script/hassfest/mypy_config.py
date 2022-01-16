@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from typing import Final
 
+from homeassistant.const import REQUIRED_PYTHON_VER
+
 from .model import Config, Integration
 
 # Modules which have type hints which known to be broken.
@@ -14,9 +16,7 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.awair.*",
     "homeassistant.components.blueprint.*",
-    "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.climacell.*",
     "homeassistant.components.cloud.*",
     "homeassistant.components.config.*",
@@ -49,7 +49,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.homekit.*",
     "homeassistant.components.homekit_controller.*",
     "homeassistant.components.honeywell.*",
-    "homeassistant.components.humidifier.*",
     "homeassistant.components.iaqualink.*",
     "homeassistant.components.icloud.*",
     "homeassistant.components.image.*",
@@ -69,10 +68,8 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.litejet.*",
     "homeassistant.components.litterrobot.*",
     "homeassistant.components.lovelace.*",
-    "homeassistant.components.luftdaten.*",
     "homeassistant.components.lutron_caseta.*",
     "homeassistant.components.lyric.*",
-    "homeassistant.components.media_source.*",
     "homeassistant.components.melcloud.*",
     "homeassistant.components.meteo_france.*",
     "homeassistant.components.metoffice.*",
@@ -106,7 +103,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.profiler.*",
     "homeassistant.components.rachio.*",
     "homeassistant.components.ring.*",
-    "homeassistant.components.rpi_power.*",
     "homeassistant.components.ruckus_unleashed.*",
     "homeassistant.components.screenlogic.*",
     "homeassistant.components.search.*",
@@ -126,13 +122,11 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.telegram_bot.*",
     "homeassistant.components.template.*",
     "homeassistant.components.toon.*",
-    "homeassistant.components.tplink.*",
     "homeassistant.components.unifi.*",
     "homeassistant.components.upnp.*",
     "homeassistant.components.vera.*",
     "homeassistant.components.verisure.*",
     "homeassistant.components.vizio.*",
-    "homeassistant.components.wemo.*",
     "homeassistant.components.withings.*",
     "homeassistant.components.xbox.*",
     "homeassistant.components.xiaomi_aqara.*",
@@ -150,7 +144,7 @@ HEADER: Final = """
 """.lstrip()
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
-    "python_version": "3.8",
+    "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
@@ -181,6 +175,12 @@ STRICT_SETTINGS: Final[list[str]] = [
     # "no_implicit_reexport",
 ]
 
+# Strict settings are already applied for core files.
+# To enable granular typing, add additional settings if core files are given.
+STRICT_SETTINGS_CORE: Final[list[str]] = [
+    "disallow_any_generics",
+]
+
 
 def generate_and_validate(config: Config) -> str:
     """Validate and generate mypy config."""
@@ -191,11 +191,19 @@ def generate_and_validate(config: Config) -> str:
         lines = fp.readlines()
 
     # Filter empty and commented lines.
-    strict_modules: list[str] = [
+    parsed_modules: list[str] = [
         line.strip()
         for line in lines
         if line.strip() != "" and not line.startswith("#")
     ]
+
+    strict_modules: list[str] = []
+    strict_core_modules: list[str] = []
+    for module in parsed_modules:
+        if module.startswith("homeassistant.components"):
+            strict_modules.append(module)
+        else:
+            strict_core_modules.append(module)
 
     ignored_modules_set: set[str] = set(IGNORED_MODULES)
     for module in strict_modules:
@@ -212,7 +220,7 @@ def generate_and_validate(config: Config) -> str:
             )
 
     # Validate that all modules exist.
-    all_modules = strict_modules + IGNORED_MODULES
+    all_modules = strict_modules + strict_core_modules + IGNORED_MODULES
     for module in all_modules:
         if module.endswith(".*"):
             module_path = Path(module[:-2].replace(".", os.path.sep))
@@ -239,6 +247,12 @@ def generate_and_validate(config: Config) -> str:
         mypy_config.set(general_section, key, value)
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
+
+    for core_module in strict_core_modules:
+        core_section = f"mypy-{core_module}"
+        mypy_config.add_section(core_section)
+        for key in STRICT_SETTINGS_CORE:
+            mypy_config.set(core_section, key, "true")
 
     # By default strict checks are disabled for components.
     components_section = "mypy-homeassistant.components.*"

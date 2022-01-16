@@ -7,7 +7,6 @@ https://home-assistant.io/integrations/zha/
 from __future__ import annotations
 
 import asyncio
-import logging
 
 from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import security
@@ -41,8 +40,6 @@ IAS_ACE_GET_ZONE_STATUS = (
 NAME = 0
 SIGNAL_ARMED_STATE_CHANGED = "zha_armed_state_changed"
 SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(AceCluster.cluster_id)

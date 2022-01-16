@@ -6,6 +6,7 @@ import aiohttp
 from pyrituals import Account, Diffuser
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -13,7 +14,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN
 
-PLATFORMS = ["binary_sensor", "number", "select", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 

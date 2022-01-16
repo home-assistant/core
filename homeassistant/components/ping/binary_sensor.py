@@ -6,20 +6,22 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 import re
-import sys
 from typing import Any
 
 from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
 
@@ -38,7 +40,7 @@ DEFAULT_PING_COUNT = 5
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 50
 
 PING_MATCHER = re.compile(
     r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"
@@ -62,7 +64,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ping Binary sensor."""
     host = config[CONF_HOST]
@@ -99,9 +104,9 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         return self._available
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def is_on(self) -> bool:
@@ -199,25 +204,15 @@ class PingDataSubProcess(PingData):
     def __init__(self, hass, host, count, privileged) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
-        if sys.platform == "win32":
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                str(self._count),
-                "-w",
-                "1000",
-                self._ip_address,
-            ]
-        else:
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                "-q",
-                "-c",
-                str(self._count),
-                "-W1",
-                self._ip_address,
-            ]
+        self._ping_cmd = [
+            "ping",
+            "-n",
+            "-q",
+            "-c",
+            str(self._count),
+            "-W1",
+            self._ip_address,
+        ]
 
     async def async_ping(self):
         """Send ICMP echo request and return details if success."""
@@ -255,12 +250,6 @@ class PingDataSubProcess(PingData):
                     pinger.returncode,
                 )
 
-            if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(
-                    str(out_data).rsplit("\n", maxsplit=1)[-1]
-                )
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             if "max/" not in str(out_data):
                 match = PING_MATCHER_BUSYBOX.search(
                     str(out_data).rsplit("\n", maxsplit=1)[-1]

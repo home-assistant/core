@@ -1,10 +1,18 @@
 """Configuration for HEOS tests."""
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 from unittest.mock import Mock, patch as patch
 
-from pyheos import Dispatcher, Heos, HeosPlayer, HeosSource, InputSource, const
+from pyheos import (
+    Dispatcher,
+    Heos,
+    HeosGroup,
+    HeosPlayer,
+    HeosSource,
+    InputSource,
+    const,
+)
 import pytest
 
 from homeassistant.components import ssdp
@@ -24,7 +32,7 @@ def config_entry_fixture():
 
 @pytest.fixture(name="controller")
 def controller_fixture(
-    players, favorites, input_sources, playlists, change_data, dispatcher
+    players, favorites, input_sources, playlists, change_data, dispatcher, group
 ):
     """Create a mock Heos controller fixture."""
     mock_heos = Mock(Heos)
@@ -40,6 +48,8 @@ def controller_fixture(
     mock_heos.is_signed_in = True
     mock_heos.signed_in_username = "user@user.com"
     mock_heos.connection_state = const.STATE_CONNECTED
+    mock_heos.get_groups.return_value = group
+    mock_heos.create_group.return_value = None
     mock = Mock(return_value=mock_heos)
 
     with patch("homeassistant.components.heos.Heos", new=mock), patch(
@@ -56,35 +66,51 @@ def config_fixture():
 
 @pytest.fixture(name="players")
 def player_fixture(quick_selects):
-    """Create a mock HeosPlayer."""
-    player = Mock(HeosPlayer)
-    player.player_id = 1
-    player.name = "Test Player"
-    player.model = "Test Model"
-    player.version = "1.0.0"
-    player.is_muted = False
-    player.available = True
-    player.state = const.PLAY_STATE_STOP
-    player.ip_address = "127.0.0.1"
-    player.network = "wired"
-    player.shuffle = False
-    player.repeat = const.REPEAT_OFF
-    player.volume = 25
-    player.now_playing_media.supported_controls = const.CONTROLS_ALL
-    player.now_playing_media.album_id = 1
-    player.now_playing_media.queue_id = 1
-    player.now_playing_media.source_id = 1
-    player.now_playing_media.station = "Station Name"
-    player.now_playing_media.type = "Station"
-    player.now_playing_media.album = "Album"
-    player.now_playing_media.artist = "Artist"
-    player.now_playing_media.media_id = "1"
-    player.now_playing_media.duration = None
-    player.now_playing_media.current_position = None
-    player.now_playing_media.image_url = "http://"
-    player.now_playing_media.song = "Song"
-    player.get_quick_selects.return_value = quick_selects
-    return {player.player_id: player}
+    """Create two mock HeosPlayers."""
+    players = {}
+    for i in (1, 2):
+        player = Mock(HeosPlayer)
+        player.player_id = i
+        if i > 1:
+            player.name = f"Test Player {i}"
+        else:
+            player.name = "Test Player"
+        player.model = "Test Model"
+        player.version = "1.0.0"
+        player.is_muted = False
+        player.available = True
+        player.state = const.PLAY_STATE_STOP
+        player.ip_address = f"127.0.0.{i}"
+        player.network = "wired"
+        player.shuffle = False
+        player.repeat = const.REPEAT_OFF
+        player.volume = 25
+        player.now_playing_media.supported_controls = const.CONTROLS_ALL
+        player.now_playing_media.album_id = 1
+        player.now_playing_media.queue_id = 1
+        player.now_playing_media.source_id = 1
+        player.now_playing_media.station = "Station Name"
+        player.now_playing_media.type = "Station"
+        player.now_playing_media.album = "Album"
+        player.now_playing_media.artist = "Artist"
+        player.now_playing_media.media_id = "1"
+        player.now_playing_media.duration = None
+        player.now_playing_media.current_position = None
+        player.now_playing_media.image_url = "http://"
+        player.now_playing_media.song = "Song"
+        player.get_quick_selects.return_value = quick_selects
+        players[player.player_id] = player
+    return players
+
+
+@pytest.fixture(name="group")
+def group_fixture(players):
+    """Create a HEOS group consisting of two players."""
+    group = Mock(HeosGroup)
+    group.leader = players[1]
+    group.members = [players[2]]
+    group.group_id = 999
+    return {group.group_id: group}
 
 
 @pytest.fixture(name="favorites")
@@ -120,16 +146,20 @@ def dispatcher_fixture() -> Dispatcher:
 @pytest.fixture(name="discovery_data")
 def discovery_data_fixture() -> dict:
     """Return mock discovery data for testing."""
-    return {
-        ssdp.ATTR_SSDP_LOCATION: "http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
-        ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
-        ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
-        ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
-        ssdp.ATTR_UPNP_SERIAL: None,
-        ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
-    }
+    return ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
+        upnp={
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
+            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
+            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ssdp.ATTR_UPNP_SERIAL: None,
+            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+        },
+    )
 
 
 @pytest.fixture(name="quick_selects")

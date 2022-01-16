@@ -7,12 +7,12 @@ import homeconnect
 from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     CONF_DEVICE,
     CONF_ENTITIES,
-    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TIME_SECONDS,
 )
@@ -77,6 +77,8 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = Dishwasher(self.hass, app)
             elif app.type == "FridgeFreezer":
                 device = FridgeFreezer(self.hass, app)
+            elif app.type == "Refrigerator":
+                device = Refrigerator(self.hass, app)
             elif app.type == "Oven":
                 device = Oven(self.hass, app)
             elif app.type == "CoffeeMaker":
@@ -159,7 +161,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         device.
         """
         sensors = {
-            "Remaining Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, 1),
+            "Remaining Program Time": (None, None, SensorDeviceClass.TIMESTAMP, 1),
             "Duration": (TIME_SECONDS, "mdi:update", None, 1),
             "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
         }
@@ -275,6 +277,8 @@ class Dryer(
         {"name": "LaundryCare.Dryer.Program.Shirts15"},
         {"name": "LaundryCare.Dryer.Program.Pillow"},
         {"name": "LaundryCare.Dryer.Program.AntiShrink"},
+        {"name": "LaundryCare.Dryer.Program.TimeCold"},
+        {"name": "LaundryCare.Dryer.Program.TimeWarm"},
     ]
 
     def get_entity_info(self):
@@ -494,6 +498,15 @@ class Hood(
 
 class FridgeFreezer(DeviceWithDoor):
     """Fridge/Freezer class."""
+
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        door_entity = self.get_door_entity()
+        return {"binary_sensor": [door_entity]}
+
+
+class Refrigerator(DeviceWithDoor):
+    """Refrigerator class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""

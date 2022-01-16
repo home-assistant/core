@@ -15,16 +15,15 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_DELAY_SECS,
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
-    PLATFORM_SCHEMA,
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
@@ -32,16 +31,18 @@ from homeassistant.components.remote import (
     SUPPORT_LEARN_COMMAND,
     RemoteEntity,
 )
-from homeassistant.const import CONF_HOST, STATE_OFF
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_COMMAND, STATE_OFF
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.util.dt import utcnow
+from homeassistant.util import dt
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
-from .helpers import data_packet, import_device
+from .helpers import data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,24 +86,12 @@ SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
     {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the device and discontinue platform.
-
-    This is for backward compatibility.
-    Do not use this method.
-    """
-    import_device(hass, config[CONF_HOST])
-    _LOGGER.warning(
-        "The remote platform is deprecated, please remove it from your configuration"
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Broadlink remote."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     remote = BroadlinkRemote(
@@ -213,10 +202,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         kwargs[ATTR_COMMAND] = command
         kwargs = SERVICE_SEND_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
-        device = kwargs.get(ATTR_DEVICE)
+        subdevice = kwargs.get(ATTR_DEVICE)
         repeat = kwargs[ATTR_NUM_REPEATS]
         delay = kwargs[ATTR_DELAY_SECS]
         service = f"{RM_DOMAIN}.{SERVICE_SEND_COMMAND}"
+        device = self._device
 
         if not self._attr_is_on:
             _LOGGER.warning(
@@ -228,13 +218,13 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             await self._async_load_storage()
 
         try:
-            code_list = self._extract_codes(commands, device)
+            code_list = self._extract_codes(commands, subdevice)
         except ValueError as err:
             _LOGGER.error("Failed to call %s: %s", service, err)
             raise
 
         rf_flags = {0xB2, 0xD7}
-        if not hasattr(self._device.api, "sweep_frequency") and any(
+        if not hasattr(device.api, "sweep_frequency") and any(
             c[0] in rf_flags for codes in code_list for c in codes
         ):
             err_msg = f"{self.entity_id} doesn't support sending RF commands"
@@ -247,18 +237,18 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(delay)
 
             if len(codes) > 1:
-                code = codes[self._flags[device]]
+                code = codes[self._flags[subdevice]]
             else:
                 code = codes[0]
 
             try:
-                await self._device.async_request(self._device.api.send_data, code)
+                await device.async_request(device.api.send_data, code)
             except (BroadlinkException, OSError) as err:
                 _LOGGER.error("Error during %s: %s", service, err)
                 break
 
             if len(codes) > 1:
-                self._flags[device] ^= 1
+                self._flags[subdevice] ^= 1
             at_least_one_sent = True
 
         if at_least_one_sent:
@@ -269,9 +259,10 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
         command_type = kwargs[ATTR_COMMAND_TYPE]
-        device = kwargs[ATTR_DEVICE]
+        subdevice = kwargs[ATTR_DEVICE]
         toggle = kwargs[ATTR_ALTERNATIVE]
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
+        device = self._device
 
         if not self._attr_is_on:
             _LOGGER.warning(
@@ -286,7 +277,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             if command_type == COMMAND_TYPE_IR:
                 learn_command = self._async_learn_ir_command
 
-            elif hasattr(self._device.api, "sweep_frequency"):
+            elif hasattr(device.api, "sweep_frequency"):
                 learn_command = self._async_learn_rf_command
 
             else:
@@ -310,7 +301,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     continue
 
-                self._codes.setdefault(device, {}).update({command: code})
+                self._codes.setdefault(subdevice, {}).update({command: code})
                 should_store = True
 
             if should_store:
@@ -318,25 +309,28 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
     async def _async_learn_ir_command(self, command):
         """Learn an infrared command."""
+        device = self._device
+
         try:
-            await self._device.async_request(self._device.api.enter_learning)
+            await device.async_request(device.api.enter_learning)
 
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press the '{command}' button.",
             title="Learn command",
             notification_id="learn_command",
         )
 
         try:
-            start_time = utcnow()
-            while (utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt.utcnow()
+            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
-                    code = await self._device.async_request(self._device.api.check_data)
+                    code = await device.async_request(device.api.check_data)
                 except (ReadError, StorageError):
                     continue
                 return b64encode(code).decode("utf8")
@@ -347,69 +341,69 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="learn_command"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="learn_command"
             )
 
     async def _async_learn_rf_command(self, command):
         """Learn a radiofrequency command."""
+        device = self._device
+
         try:
-            await self._device.async_request(self._device.api.sweep_frequency)
+            await device.async_request(device.api.sweep_frequency)
 
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to sweep frequency: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press and hold the '{command}' button.",
             title="Sweep frequency",
             notification_id="sweep_frequency",
         )
 
         try:
-            start_time = utcnow()
-            while (utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt.utcnow()
+            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
-                found = await self._device.async_request(
-                    self._device.api.check_frequency
-                )
+                found = await device.async_request(device.api.check_frequency)
                 if found:
                     break
             else:
-                await self._device.async_request(
-                    self._device.api.cancel_sweep_frequency
-                )
+                await device.async_request(device.api.cancel_sweep_frequency)
                 raise TimeoutError(
                     "No radiofrequency found within "
                     f"{LEARNING_TIMEOUT.total_seconds()} seconds"
                 )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="sweep_frequency"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="sweep_frequency"
             )
 
         await asyncio.sleep(1)
 
         try:
-            await self._device.async_request(self._device.api.find_rf_packet)
+            await device.async_request(device.api.find_rf_packet)
 
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press the '{command}' button again.",
             title="Learn command",
             notification_id="learn_command",
         )
 
         try:
-            start_time = utcnow()
-            while (utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt.utcnow()
+            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
-                    code = await self._device.async_request(self._device.api.check_data)
+                    code = await device.async_request(device.api.check_data)
                 except (ReadError, StorageError):
                     continue
                 return b64encode(code).decode("utf8")
@@ -420,15 +414,15 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="learn_command"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="learn_command"
             )
 
     async def async_delete_command(self, **kwargs):
         """Delete a list of commands from a remote."""
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
-        device = kwargs[ATTR_DEVICE]
+        subdevice = kwargs[ATTR_DEVICE]
         service = f"{RM_DOMAIN}.{SERVICE_DELETE_COMMAND}"
 
         if not self._attr_is_on:
@@ -443,9 +437,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             await self._async_load_storage()
 
         try:
-            codes = self._codes[device]
+            codes = self._codes[subdevice]
         except KeyError as err:
-            err_msg = f"Device not found: {repr(device)}"
+            err_msg = f"Device not found: {repr(subdevice)}"
             _LOGGER.error("Failed to call %s. %s", service, err_msg)
             raise ValueError(err_msg) from err
 
@@ -470,8 +464,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         # Clean up
         if not codes:
-            del self._codes[device]
-            if self._flags.pop(device, None) is not None:
+            del self._codes[subdevice]
+            if self._flags.pop(subdevice, None) is not None:
                 self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
         self._code_storage.async_delay_save(self._get_codes, CODE_SAVE_DELAY)

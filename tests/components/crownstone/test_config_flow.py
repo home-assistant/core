@@ -1,7 +1,8 @@
 """Tests for the Crownstone integration."""
 from __future__ import annotations
 
-from typing import Generator, Union
+from collections.abc import Generator
+from typing import Union
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from crownstone_cloud.cloud_models.spheres import Spheres
@@ -47,6 +48,16 @@ def usb_comports() -> MockFixture:
     with patch(
         "serial.tools.list_ports.comports",
         MagicMock(return_value=[get_mocked_com_port()]),
+    ) as comports_mock:
+        yield comports_mock
+
+
+@pytest.fixture(name="pyserial_comports_none_types")
+def usb_comports_none_types() -> MockFixture:
+    """Mock pyserial comports."""
+    with patch(
+        "serial.tools.list_ports.comports",
+        MagicMock(return_value=[get_mocked_com_port_none_types()]),
     ) as comports_mock:
         yield comports_mock
 
@@ -100,6 +111,19 @@ def get_mocked_com_port():
     port.description = "crownstone dongle - crownstone dongle"
     port.vid = 1234
     port.pid = 5678
+
+    return port
+
+
+def get_mocked_com_port_none_types():
+    """Mock of a serial port with NoneTypes."""
+    port = ListPortInfo("/dev/ttyUSB1234")
+    port.device = "/dev/ttyUSB1234"
+    port.serial_number = None
+    port.manufacturer = None
+    port.description = "crownstone dongle - crownstone dongle"
+    port.vid = None
+    port.pid = None
 
     return port
 
@@ -262,7 +286,7 @@ async def test_successful_login_no_usb(
 
 async def test_successful_login_with_usb(
     crownstone_setup: MockFixture,
-    pyserial_comports: MockFixture,
+    pyserial_comports_none_types: MockFixture,
     usb_path: MockFixture,
     hass: HomeAssistant,
 ):
@@ -282,17 +306,18 @@ async def test_successful_login_with_usb(
     # should show usb form
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "usb_config"
-    assert pyserial_comports.call_count == 1
+    assert pyserial_comports_none_types.call_count == 1
 
-    # create a mocked port
-    port = get_mocked_com_port()
+    # create a mocked port which should be in
+    # the list returned from list_ports_as_str, from .helpers
+    port = get_mocked_com_port_none_types()
     port_select = usb.human_readable_device_name(
         port.device,
         port.serial_number,
         port.manufacturer,
         port.description,
-        f"{hex(port.vid)[2:]:0>4}".upper(),
-        f"{hex(port.pid)[2:]:0>4}".upper(),
+        port.vid,
+        port.pid,
     )
 
     # select a port from the list
@@ -301,7 +326,7 @@ async def test_successful_login_with_usb(
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "usb_sphere_config"
-    assert pyserial_comports.call_count == 2
+    assert pyserial_comports_none_types.call_count == 2
     assert usb_path.call_count == 1
 
     # select a sphere
@@ -406,7 +431,8 @@ async def test_options_flow_setup_usb(
     assert result["step_id"] == "usb_config"
     assert pyserial_comports.call_count == 1
 
-    # create a mocked port
+    # create a mocked port which should be in
+    # the list returned from list_ports_as_str, from .helpers
     port = get_mocked_com_port()
     port_select = usb.human_readable_device_name(
         port.device,

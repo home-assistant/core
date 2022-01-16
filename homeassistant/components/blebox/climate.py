@@ -1,5 +1,4 @@
 """BleBox climate entity."""
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -9,12 +8,19 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a BleBox climate entity."""
 
     create_blebox_entities(
@@ -40,8 +46,7 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the actual current HVAC action."""
-        is_on = self._feature.is_on
-        if not is_on:
+        if not (is_on := self._feature.is_on):
             return None if is_on is None else CURRENT_HVAC_OFF
 
         # NOTE: In practice, there's no need to handle case when is_heating is None

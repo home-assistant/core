@@ -30,19 +30,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _btle_connect(mac: str) -> dict:
+def _btle_connect() -> dict:
     """Scan for BTLE advertisement data."""
-    # Try to find switchbot mac in nearby devices,
-    # by scanning for btle devices.
 
-    switchbots = GetSwitchbotDevices()
-    switchbots.discover()
-    switchbot_device = switchbots.get_device_data(mac=mac)
+    switchbot_devices = GetSwitchbotDevices().discover()
 
-    if not switchbot_device:
+    if not switchbot_devices:
         raise NotConnectedError("Failed to discover switchbot")
 
-    return switchbot_device
+    return switchbot_devices
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -50,11 +46,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _validate_mac(self, data: dict) -> FlowResult:
-        """Try to connect to Switchbot device and create entry if successful."""
-        await self.async_set_unique_id(data[CONF_MAC].replace(":", ""))
-        self._abort_if_unique_id_configured()
-
+    async def _get_switchbots(self) -> dict:
+        """Try to discover nearby Switchbot devices."""
         # asyncio.lock prevents btle adapter exceptions if there are multiple calls to this method.
         # store asyncio.lock in hass data if not present.
         if DOMAIN not in self.hass.data:
@@ -64,17 +57,11 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         connect_lock = self.hass.data[DOMAIN][BTLE_LOCK]
 
-        # Validate bluetooth device mac.
+        # Discover switchbots nearby.
         async with connect_lock:
-            _btle_adv_data = await self.hass.async_add_executor_job(
-                _btle_connect, data[CONF_MAC]
-            )
+            _btle_adv_data = await self.hass.async_add_executor_job(_btle_connect)
 
-        if _btle_adv_data["modelName"] in SUPPORTED_MODEL_TYPES:
-            data[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[_btle_adv_data["modelName"]]
-            return self.async_create_entry(title=data[CONF_NAME], data=data)
-
-        return self.async_abort(reason="switchbot_unsupported_type")
+        return _btle_adv_data
 
     @staticmethod
     @callback
@@ -84,36 +71,59 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler(config_entry)
 
+    def __init__(self):
+        """Initialize the config flow."""
+        self._discovered_devices = {}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input[CONF_MAC] = user_input[CONF_MAC].replace("-", ":").lower()
+            await self.async_set_unique_id(user_input[CONF_MAC].replace(":", ""))
+            self._abort_if_unique_id_configured()
 
-            # abort if already configured.
-            for item in self._async_current_entries():
-                if item.data.get(CONF_MAC) == user_input[CONF_MAC]:
-                    return self.async_abort(reason="already_configured_device")
+            user_input[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[
+                self._discovered_devices[self.unique_id]["modelName"]
+            ]
 
-            try:
-                return await self._validate_mac(user_input)
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-            except NotConnectedError:
-                errors["base"] = "cannot_connect"
+        try:
+            self._discovered_devices = await self._get_switchbots()
 
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
+        except NotConnectedError:
+            return self.async_abort(reason="cannot_connect")
+
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        # Get devices already configured.
+        configured_devices = {
+            item.data[CONF_MAC]
+            for item in self._async_current_entries(include_ignore=False)
+        }
+
+        # Get supported devices not yet configured.
+        unconfigured_devices = {
+            device["mac_address"]: f"{device['mac_address']} {device['modelName']}"
+            for device in self._discovered_devices.values()
+            if device.get("modelName") in SUPPORTED_MODEL_TYPES
+            and device["mac_address"] not in configured_devices
+        }
+
+        if not unconfigured_devices:
+            return self.async_abort(reason="no_unconfigured_devices")
 
         data_schema = vol.Schema(
             {
+                vol.Required(CONF_MAC): vol.In(unconfigured_devices),
                 vol.Required(CONF_NAME): str,
                 vol.Optional(CONF_PASSWORD): str,
-                vol.Required(CONF_MAC): str,
             }
         )
 

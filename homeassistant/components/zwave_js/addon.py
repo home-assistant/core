@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar
+
+from typing_extensions import ParamSpec
 
 from homeassistant.components.hassio import (
     async_create_backup,
@@ -24,9 +27,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 
-from .const import ADDON_SLUG, CONF_ADDON_DEVICE, CONF_ADDON_NETWORK_KEY, DOMAIN, LOGGER
+from .const import (
+    ADDON_SLUG,
+    CONF_ADDON_DEVICE,
+    CONF_ADDON_S0_LEGACY_KEY,
+    CONF_ADDON_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    DOMAIN,
+    LOGGER,
+)
 
-F = TypeVar("F", bound=Callable[..., Any])  # pylint: disable=invalid-name
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 
@@ -38,13 +51,17 @@ def get_addon_manager(hass: HomeAssistant) -> AddonManager:
     return AddonManager(hass)
 
 
-def api_error(error_message: str) -> Callable[[F], F]:
+def api_error(
+    error_message: str,
+) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Coroutine[Any, Any, _R]]]:
     """Handle HassioAPIError and raise a specific AddonError."""
 
-    def handle_hassio_api_error(func: F) -> F:
+    def handle_hassio_api_error(
+        func: Callable[_P, Awaitable[_R]]
+    ) -> Callable[_P, Coroutine[Any, Any, _R]]:
         """Handle a HassioAPIError."""
 
-        async def wrapper(*args, **kwargs):  # type: ignore
+        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap an add-on manager method."""
             try:
                 return_value = await func(*args, **kwargs)
@@ -53,7 +70,7 @@ def api_error(error_message: str) -> Callable[[F], F]:
 
             return return_value
 
-        return cast(F, wrapper)
+        return wrapper
 
     return handle_hassio_api_error
 
@@ -170,7 +187,13 @@ class AddonManager:
 
     @callback
     def async_schedule_install_setup_addon(
-        self, usb_path: str, network_key: str, catch_error: bool = False
+        self,
+        usb_path: str,
+        s0_legacy_key: str,
+        s2_access_control_key: str,
+        s2_authenticated_key: str,
+        s2_unauthenticated_key: str,
+        catch_error: bool = False,
     ) -> asyncio.Task:
         """Schedule a task that installs and sets up the Z-Wave JS add-on.
 
@@ -180,7 +203,14 @@ class AddonManager:
             LOGGER.info("Z-Wave JS add-on is not installed. Installing add-on")
             self._install_task = self._async_schedule_addon_operation(
                 self.async_install_addon,
-                partial(self.async_configure_addon, usb_path, network_key),
+                partial(
+                    self.async_configure_addon,
+                    usb_path,
+                    s0_legacy_key,
+                    s2_access_control_key,
+                    s2_authenticated_key,
+                    s2_unauthenticated_key,
+                ),
                 self.async_start_addon,
                 catch_error=catch_error,
             )
@@ -260,13 +290,23 @@ class AddonManager:
         """Stop the Z-Wave JS add-on."""
         await async_stop_addon(self._hass, ADDON_SLUG)
 
-    async def async_configure_addon(self, usb_path: str, network_key: str) -> None:
+    async def async_configure_addon(
+        self,
+        usb_path: str,
+        s0_legacy_key: str,
+        s2_access_control_key: str,
+        s2_authenticated_key: str,
+        s2_unauthenticated_key: str,
+    ) -> None:
         """Configure and start Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
 
         new_addon_options = {
             CONF_ADDON_DEVICE: usb_path,
-            CONF_ADDON_NETWORK_KEY: network_key,
+            CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
+            CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
+            CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
+            CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
         }
 
         if new_addon_options != addon_info.options:
@@ -274,7 +314,13 @@ class AddonManager:
 
     @callback
     def async_schedule_setup_addon(
-        self, usb_path: str, network_key: str, catch_error: bool = False
+        self,
+        usb_path: str,
+        s0_legacy_key: str,
+        s2_access_control_key: str,
+        s2_authenticated_key: str,
+        s2_unauthenticated_key: str,
+        catch_error: bool = False,
     ) -> asyncio.Task:
         """Schedule a task that configures and starts the Z-Wave JS add-on.
 
@@ -283,7 +329,14 @@ class AddonManager:
         if not self._start_task or self._start_task.done():
             LOGGER.info("Z-Wave JS add-on is not running. Starting add-on")
             self._start_task = self._async_schedule_addon_operation(
-                partial(self.async_configure_addon, usb_path, network_key),
+                partial(
+                    self.async_configure_addon,
+                    usb_path,
+                    s0_legacy_key,
+                    s2_access_control_key,
+                    s2_authenticated_key,
+                    s2_unauthenticated_key,
+                ),
                 self.async_start_addon,
                 catch_error=catch_error,
             )

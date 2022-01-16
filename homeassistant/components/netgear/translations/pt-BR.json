@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (Opcional)",
+                    "password": "Senha",
+                    "port": "Porta (Opcional)",
+                    "ssl": "Utilize um certificado SSL",
+                    "username": "Usu\u00e1rio (Opcional)"
+                },
+                "description": "Host padr\u00e3o: {host}\n Porta padr\u00e3o: {port}\n Usu\u00e1rio padr\u00e3o: {username}",
+                "title": "Netgear"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Especifique configura\u00e7\u00f5es opcionais",
+                "title": "Netgear"
+            }
+        }
+    }
+}

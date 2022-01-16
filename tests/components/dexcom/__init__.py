@@ -16,7 +16,7 @@ CONFIG = {
     CONF_SERVER: SERVER_US,
 }
 
-GLUCOSE_READING = GlucoseReading(json.loads(load_fixture("dexcom_data.json")))
+GLUCOSE_READING = GlucoseReading(json.loads(load_fixture("data.json", "dexcom")))
 
 
 async def init_integration(hass) -> MockConfigEntry:

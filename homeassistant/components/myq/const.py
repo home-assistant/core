@@ -14,11 +14,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    Platform,
 )
 
 DOMAIN = "myq"
 
-PLATFORMS = ["cover", "binary_sensor", "light"]
+PLATFORMS = [Platform.COVER, Platform.BINARY_SENSOR, Platform.LIGHT]
 
 MYQ_TO_HASS = {
     MYQ_COVER_STATE_CLOSED: STATE_CLOSED,

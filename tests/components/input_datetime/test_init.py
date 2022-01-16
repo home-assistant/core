@@ -744,3 +744,30 @@ async def test_timestamp(hass):
 
     finally:
         dt_util.set_default_time_zone(ORIG_TIMEZONE)
+
+
+@pytest.mark.parametrize(
+    "config, error",
+    [
+        (
+            {"has_time": True, "has_date": True, "initial": "abc"},
+            "'abc' can't be parsed as a datetime",
+        ),
+        (
+            {"has_time": False, "has_date": True, "initial": "abc"},
+            "'abc' can't be parsed as a date",
+        ),
+        (
+            {"has_time": True, "has_date": False, "initial": "abc"},
+            "'abc' can't be parsed as a time",
+        ),
+    ],
+)
+async def test_invalid_initial(hass, caplog, config, error):
+    """Test configuration is rejected if the initial value is invalid."""
+    assert not await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"test_date": config}},
+    )
+    assert error in caplog.text

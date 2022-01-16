@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import argparse
+import faulthandler
 import os
 import platform
-import subprocess
 import sys
 import threading
 
-from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+
+FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
 
 def validate_python() -> None:
@@ -24,7 +26,7 @@ def validate_python() -> None:
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
     # pylint: disable=import-outside-toplevel
-    import homeassistant.config as config_util
+    from . import config as config_util
 
     lib_dir = os.path.join(config_dir, "deps")
 
@@ -58,7 +60,7 @@ def ensure_config_path(config_dir: str) -> None:
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     # pylint: disable=import-outside-toplevel
-    import homeassistant.config as config_util
+    from . import config as config_util
 
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate."
@@ -262,24 +264,11 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    # Run a simple daemon runner process on Windows to handle restarts
-    if os.name == "nt" and "--runner" not in sys.argv:
-        nt_args = cmdline() + ["--runner"]
-        while True:
-            try:
-                subprocess.check_call(nt_args)
-                sys.exit(0)
-            except KeyboardInterrupt:
-                sys.exit(0)
-            except subprocess.CalledProcessError as exc:
-                if exc.returncode != RESTART_EXIT_CODE:
-                    sys.exit(exc.returncode)
-
     args = get_arguments()
 
     if args.script is not None:
         # pylint: disable=import-outside-toplevel
-        from homeassistant import scripts
+        from . import scripts
 
         return scripts.run(args.script)
 
@@ -295,7 +284,7 @@ def main() -> int:
         write_pid(args.pid_file)
 
     # pylint: disable=import-outside-toplevel
-    from homeassistant import runner
+    from . import runner
 
     runtime_conf = runner.RuntimeConfig(
         config_dir=config_dir,
@@ -309,7 +298,15 @@ def main() -> int:
         open_ui=args.open_ui,
     )
 
-    exit_code = runner.run(runtime_conf)
+    fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
+    with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
+        faulthandler.enable(fault_file)
+        exit_code = runner.run(runtime_conf)
+        faulthandler.disable()
+
+    if os.path.getsize(fault_file_name) == 0:
+        os.remove(fault_file_name)
+
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 

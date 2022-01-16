@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Hely neve",
+                    "site_nmi": "Hely NMI"
+                },
+                "description": "V\u00e1lassza ki a hozz\u00e1adni k\u00edv\u00e1nt hely NMI-j\u00e9t.",
+                "title": "Amber Electric"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API Token",
+                    "site_id": "Hely ID"
+                },
+                "description": "API-kulcs gener\u00e1l\u00e1s\u00e1hoz l\u00e1togasson el ide: {api_url}",
+                "title": "Amber Electric"
+            }
+        }
+    }
+}

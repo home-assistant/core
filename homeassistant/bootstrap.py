@@ -15,24 +15,28 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 import yarl
 
-from homeassistant import config as conf_util, config_entries, core, loader
-from homeassistant.components import http
-from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import area_registry, device_registry, entity_registry
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import (
+from . import config as conf_util, config_entries, core, loader
+from .components import http, persistent_notification
+from .const import (
+    REQUIRED_NEXT_PYTHON_HA_RELEASE,
+    REQUIRED_NEXT_PYTHON_VER,
+    SIGNAL_BOOTSTRAP_INTEGRATONS,
+)
+from .exceptions import HomeAssistantError
+from .helpers import area_registry, device_registry, entity_registry
+from .helpers.dispatcher import async_dispatcher_send
+from .helpers.typing import ConfigType
+from .setup import (
     DATA_SETUP,
     DATA_SETUP_STARTED,
     DATA_SETUP_TIME,
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
-from homeassistant.util.async_ import gather_with_concurrency
-import homeassistant.util.dt as dt_util
-from homeassistant.util.logging import async_activate_log_queue_handler
-from homeassistant.util.package import async_get_user_site, is_virtual_env
+from .util import dt as dt_util
+from .util.async_ import gather_with_concurrency
+from .util.logging import async_activate_log_queue_handler
+from .util.package import async_get_user_site, is_virtual_env
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -46,7 +50,6 @@ DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
-SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
 
 STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
@@ -240,18 +243,20 @@ async def async_from_config_dict(
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
-    if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
+    if (
+        REQUIRED_NEXT_PYTHON_HA_RELEASE
+        and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
+    ):
         msg = (
             "Support for the running Python version "
             f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
-            f"be removed in the first release after {REQUIRED_NEXT_PYTHON_DATE}. "
+            f"be removed in Home Assistant {REQUIRED_NEXT_PYTHON_HA_RELEASE}. "
             "Please upgrade Python to "
-            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER)} or "
-            "higher."
+            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])}."
         )
         _LOGGER.warning(msg)
-        hass.components.persistent_notification.async_create(
-            msg, "Python version", "python_version"
+        persistent_notification.async_create(
+            hass, msg, "Python version", "python_version"
         )
 
     return hass

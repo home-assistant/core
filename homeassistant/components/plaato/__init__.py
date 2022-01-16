@@ -1,5 +1,4 @@
 """Support for Plaato devices."""
-
 from datetime import timedelta
 import logging
 
@@ -23,6 +22,7 @@ from pyplaato.plaato import (
 )
 import voluptuous as vol
 
+from homeassistant.components import webhook
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -85,9 +85,8 @@ WEBHOOK_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
     hass.data.setdefault(DOMAIN, {})
-    use_webhook = entry.data[CONF_USE_WEBHOOK]
 
-    if use_webhook:
+    if entry.data[CONF_USE_WEBHOOK]:
         async_setup_webhook(hass, entry)
     else:
         await async_setup_coordinator(hass, entry)
@@ -107,8 +106,8 @@ def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
 
     _set_entry_data(entry, hass)
 
-    hass.components.webhook.async_register(
-        DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
     )
 
 
@@ -147,7 +146,7 @@ def _set_entry_data(entry, hass, coordinator=None, device_id=None):
     }
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     use_webhook = entry.data[CONF_USE_WEBHOOK]
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -161,7 +160,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_webhook(hass: HomeAssistant, entry: ConfigEntry):
     """Unload webhook based entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
-        hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return await async_unload_platforms(hass, entry, PLATFORMS)
 
 

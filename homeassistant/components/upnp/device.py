@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 from async_upnp_client import UpnpDevice, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.components import ssdp
@@ -15,7 +16,7 @@ from homeassistant.components.ssdp import SsdpChange
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
 
 from .const import (
     BYTES_RECEIVED,
@@ -30,6 +31,17 @@ from .const import (
 )
 
 
+async def async_create_upnp_device(
+    hass: HomeAssistant, ssdp_location: str
+) -> UpnpDevice:
+    """Create UPnP device."""
+    session = async_get_clientsession(hass)
+    requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
+
+    factory = UpnpFactory(requester, disable_state_variable_validation=True)
+    return await factory.async_create_device(ssdp_location)
+
+
 class Device:
     """Home Assistant representation of a UPnP/IGD device."""
 
@@ -40,24 +52,11 @@ class Device:
         self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
-    async def async_create_upnp_device(
-        cls, hass: HomeAssistant, ssdp_location: str
-    ) -> UpnpDevice:
-        """Create UPnP device."""
-        # Build async_upnp_client requester.
-        session = async_get_clientsession(hass)
-        requester = AiohttpSessionRequester(session, True, 10)
-
-        # Create async_upnp_client device.
-        factory = UpnpFactory(requester, disable_state_variable_validation=True)
-        return await factory.async_create_device(ssdp_location)
-
-    @classmethod
     async def async_create_device(
         cls, hass: HomeAssistant, ssdp_location: str
     ) -> Device:
         """Create UPnP/IGD device."""
-        upnp_device = await Device.async_create_upnp_device(hass, ssdp_location)
+        upnp_device = await async_create_upnp_device(hass, ssdp_location)
 
         # Create profile wrapper.
         igd_device = IgdDevice(upnp_device, None)
@@ -66,7 +65,7 @@ class Device:
         # Register SSDP callback for updates.
         usn = f"{upnp_device.udn}::{upnp_device.device_type}"
         await ssdp.async_register_callback(
-            hass, device.async_ssdp_callback, {ssdp.ATTR_SSDP_USN: usn}
+            hass, device.async_ssdp_callback, {"usn": usn}
         )
 
         return device
@@ -75,7 +74,8 @@ class Device:
         self, headers: Mapping[str, Any], change: SsdpChange
     ) -> None:
         """SSDP callback, update if needed."""
-        if change != SsdpChange.UPDATE or ssdp.ATTR_SSDP_LOCATION not in headers:
+        _LOGGER.debug("SSDP Callback, change: %s, headers: %s", change, headers)
+        if ssdp.ATTR_SSDP_LOCATION not in headers:
             return
 
         location = headers[ssdp.ATTR_SSDP_LOCATION]
@@ -83,7 +83,7 @@ class Device:
         if location == device.device_url:
             return
 
-        new_upnp_device = Device.async_create_upnp_device(self.hass, location)
+        new_upnp_device = await async_create_upnp_device(self.hass, location)
         device.reinit(new_upnp_device)
 
     @property
@@ -154,7 +154,7 @@ class Device:
         )
 
         return {
-            TIMESTAMP: dt_util.utcnow(),
+            TIMESTAMP: utcnow(),
             BYTES_RECEIVED: values[0],
             BYTES_SENT: values[1],
             PACKETS_RECEIVED: values[2],
@@ -168,10 +168,29 @@ class Device:
         values = await asyncio.gather(
             self._igd_device.async_get_status_info(),
             self._igd_device.async_get_external_ip_address(),
+            return_exceptions=True,
         )
+        result = []
+        for idx, value in enumerate(values):
+            if isinstance(value, UpnpError):
+                # Not all routers support some of these items although based
+                # on defined standard they should.
+                _LOGGER.debug(
+                    "Exception occurred while trying to get status %s for device %s: %s",
+                    "status" if idx == 1 else "external IP address",
+                    self,
+                    str(value),
+                )
+                result.append(None)
+                continue
+
+            if isinstance(value, Exception):
+                raise value
+
+            result.append(value)
 
         return {
-            WAN_STATUS: values[0][0] if values[0] is not None else None,
-            ROUTER_UPTIME: values[0][2] if values[0] is not None else None,
-            ROUTER_IP: values[1],
+            WAN_STATUS: result[0][0] if result[0] is not None else None,
+            ROUTER_UPTIME: result[0][2] if result[0] is not None else None,
+            ROUTER_IP: result[1],
         }

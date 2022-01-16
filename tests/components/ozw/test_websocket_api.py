@@ -43,7 +43,7 @@ from homeassistant.components.websocket_api.const import (
 from .common import MQTTMessage, setup_ozw
 
 
-async def test_websocket_api(hass, generic_data, hass_ws_client):
+async def test_websocket_api(hass, generic_data, hass_ws_client, mqtt_mock):
     """Test the ozw websocket api."""
     await setup_ozw(hass, fixture=generic_data)
     client = await hass_ws_client(hass)
@@ -280,7 +280,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["code"] == ERR_NOT_FOUND
 
 
-async def test_ws_locks(hass, lock_data, hass_ws_client):
+async def test_ws_locks(hass, lock_data, hass_ws_client, mqtt_mock):
     """Test lock websocket apis."""
     await setup_ozw(hass, fixture=lock_data)
     client = await hass_ws_client(hass)
@@ -319,7 +319,9 @@ async def test_ws_locks(hass, lock_data, hass_ws_client):
     assert msg["success"]
 
 
-async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):
+async def test_refresh_node(
+    hass, generic_data, sent_messages, hass_ws_client, mqtt_mock
+):
     """Test the ozw refresh node api."""
     receive_message = await setup_ozw(hass, fixture=generic_data)
     client = await hass_ws_client(hass)
@@ -368,7 +370,7 @@ async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):
     assert result["node_query_stage"] == "versions"
 
 
-async def test_refresh_node_unsubscribe(hass, generic_data, hass_ws_client):
+async def test_refresh_node_unsubscribe(hass, generic_data, hass_ws_client, mqtt_mock):
     """Test unsubscribing the ozw refresh node api."""
     await setup_ozw(hass, fixture=generic_data)
     client = await hass_ws_client(hass)

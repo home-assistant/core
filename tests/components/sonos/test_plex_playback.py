@@ -14,16 +14,9 @@ from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 
-from .test_media_player import setup_platform
 
-
-async def test_plex_play_media(
-    hass,
-    config_entry,
-    config,
-):
+async def test_plex_play_media(hass, async_autosetup_sonos):
     """Test playing media via the Plex integration."""
-    await setup_platform(hass, config_entry, config)
     media_player = "media_player.zone_a"
     media_content_id = (
         '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album"}'

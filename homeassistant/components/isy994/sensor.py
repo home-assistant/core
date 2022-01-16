@@ -25,10 +25,8 @@ from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> bool:
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the ISY994 sensor platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
@@ -57,8 +55,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
             return UOM_FRIENDLY_NAME.get(uom[0], uom[0])
 
         # Special cases for ISY UOM index units:
-        isy_states = UOM_TO_STATES.get(uom)
-        if isy_states:
+        if isy_states := UOM_TO_STATES.get(uom):
             return isy_states
 
         if uom in (UOM_ON_OFF, UOM_INDEX):
@@ -69,8 +66,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Get the state of the ISY994 sensor device."""
-        value = self._node.status
-        if value == ISY_VALUE_UNKNOWN:
+        if (value := self._node.status) == ISY_VALUE_UNKNOWN:
             return None
 
         # Get the translated ISY Unit of Measurement

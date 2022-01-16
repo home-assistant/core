@@ -8,7 +8,7 @@ import speedtest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -83,6 +83,11 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             update_method=self.async_update,
         )
 
+    def initialize(self) -> None:
+        """Initialize speedtest api."""
+        self.api = speedtest.Speedtest()
+        self.update_servers()
+
     def update_servers(self):
         """Update list of test servers."""
         test_servers = self.api.get_servers()
@@ -131,12 +136,11 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
     async def async_setup(self) -> None:
         """Set up SpeedTest."""
         try:
-            self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
-            await self.hass.async_add_executor_job(self.update_servers)
+            await self.hass.async_add_executor_job(self.initialize)
         except speedtest.SpeedtestException as err:
             raise ConfigEntryNotReady from err
 
-        async def request_update(call):
+        async def request_update(call: ServiceCall) -> None:
             """Request update."""
             await self.async_request_refresh()
 

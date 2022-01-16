@@ -6,11 +6,10 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import ATTR_OPTION, DOMAIN, SERVICE_SELECT_OPTION
+from .const import ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +22,7 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 

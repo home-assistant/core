@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+
+from .typing import ConfigType, TemplateVarsType
 
 _PLATFORM_ALIASES = {
     "device_automation": ("device",),
