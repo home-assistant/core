@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test we get the form and create an entry."""
 
     hass.config.latitude = 0.0
     hass.config.longitude = 0.0
@@ -55,6 +55,7 @@ async def test_form(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
+    # Check title is "Weather" when not home coordinates
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -105,9 +106,34 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "wrong_location"}
 
+    # Continue flow with new coordinates
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        return_value={"test": "something", "test2": "something else"},
+    ), patch(
+        "homeassistant.components.smhi.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LATITUDE: 2.0,
+                CONF_LONGITUDE: 2.0,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"] == "Weather"
+    assert result3["data"] == {
+        "latitude": 2.0,
+        "longitude": 2.0,
+        "name": "Weather",
+    }
+
 
 async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
-    """Test we handle invalid coordinates."""
+    """Test we handle unique id already exist."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.0-1.0",
