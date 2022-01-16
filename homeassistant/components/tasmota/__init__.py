@@ -134,7 +134,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for platform in PLATFORMS:
         hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format(platform))()
 
-    # deattach device triggers
+    # detach device triggers
     device_registry = await hass.helpers.device_registry.async_get_registry()
     devices = async_entries_for_config_entry(device_registry, entry.entry_id)
     for device in devices:
