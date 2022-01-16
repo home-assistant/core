@@ -12,6 +12,7 @@ on:
     paths:
       - "requirements.txt"
       - "requirements_all.txt"
+      - ".github/workflows/wheels.yml"
 
 jobs:
   init:

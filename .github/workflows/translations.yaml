@@ -10,6 +10,7 @@ on:
       - dev
     paths:
       - "**strings.json"
+      - ".github/workflows/translations.yaml"
 
 env:
   DEFAULT_PYTHON: 3.9
