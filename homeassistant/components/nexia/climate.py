@@ -43,7 +43,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -55,8 +54,6 @@ from .const import (
     ATTR_RUN_MODE,
     ATTR_ZONE_STATUS,
     DOMAIN,
-    SIGNAL_THERMOSTAT_UPDATE,
-    SIGNAL_ZONE_UPDATE,
 )
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
@@ -150,8 +147,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         super().__init__(
             coordinator, zone, name=zone.get_name(), unique_id=zone.zone_id
         )
-        self._undo_humidfy_dispatcher = None
-        self._undo_aircleaner_dispatcher = None
         # The has_* calls are stable for the life of the device
         # and do not do I/O
         self._has_relative_humidity = self._thermostat.has_relative_humidity()
@@ -454,7 +449,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             self._zone.call_permanent_hold()
             self._zone.set_mode(mode=HA_TO_NEXIA_HVAC_MODE_MAP[hvac_mode])
 
-        self.schedule_update_ha_state()
+        self._signal_zone_update()
 
     def set_aircleaner_mode(self, aircleaner_mode):
         """Set the aircleaner mode."""
@@ -480,26 +475,3 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             return
         self._thermostat.set_dehumidify_setpoint(target_humidity)
         self._signal_thermostat_update()
-
-    def _signal_thermostat_update(self):
-        """Signal a thermostat update.
-
-        Whenever the underlying library does an action against
-        a thermostat, the data for the thermostat and all
-        connected zone is updated.
-
-        Update all the zones on the thermostat.
-        """
-        dispatcher_send(
-            self.hass, f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}"
-        )
-
-    def _signal_zone_update(self):
-        """Signal a zone update.
-
-        Whenever the underlying library does an action against
-        a zone, the data for the zone is updated.
-
-        Update a single zone.
-        """
-        dispatcher_send(self.hass, f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}")
