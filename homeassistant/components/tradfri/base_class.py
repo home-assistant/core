@@ -35,10 +35,9 @@ def handle_error(
     return wrapper
 
 
-class TradfriBaseDevice(CoordinatorEntity):
+class TradfriBaseEntity(CoordinatorEntity):
     """Base Tradfri device."""
 
-    _platform_type: str
 
     def __init__(
         self,
@@ -52,9 +51,7 @@ class TradfriBaseDevice(CoordinatorEntity):
         self._gateway_id = gateway_id
 
         self._device: Device = device_coordinator.data
-        self._attr_available = self._device.reachable
 
-        self._coordinator = device_coordinator
         self._device_id = self._device.id
         self._api = handle_error(api)
         self._attr_name = self._device.name
@@ -77,4 +74,4 @@ class TradfriBaseDevice(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return cast(bool, self._device.reachable)
+        return cast(bool, self._device.reachable) and super().available
