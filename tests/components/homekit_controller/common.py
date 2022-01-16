@@ -55,7 +55,7 @@ class DeviceTestInfo:
     hw_version: str
     serial_number: str
 
-    devices: list["DeviceTestInfo"]
+    devices: list[DeviceTestInfo]
     entities: list[EntityTestInfo]
 
 
