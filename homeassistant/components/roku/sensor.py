@@ -41,6 +41,7 @@ SENSORS: tuple[RokuSensorEntityDescription, ...] = (
         key="active_app_id",
         name="Active App ID",
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:application-cog",
         value_fn=lambda device: device.app.app_id,
     ),
 )
