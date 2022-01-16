@@ -591,16 +591,15 @@ async def test_failure_scenarios(
     )
 
 
-async def test_disabled_entity_actions(
+async def test_unavailable_entity_actions(
     hass: HomeAssistant,
     client: Client,
     lock_schlage_be469: Node,
     integration: ConfigEntry,
 ) -> None:
-    """Test disabled and unavailable entities are not included in actions list."""
-    entity_id_disabled = "sensor.touchscreen_deadbolt_access_control_lock_state"
+    """Test unavailable entities are not included in actions list."""
     entity_id_unavailable = "binary_sensor.touchscreen_deadbolt_home_security_intrusion"
-    hass.states.async_set(entity_id_unavailable, STATE_UNAVAILABLE)
+    hass.states.async_set(entity_id_unavailable, STATE_UNAVAILABLE, force_update=True)
     await hass.async_block_till_done()
     node = lock_schlage_be469
     dev_reg = device_registry.async_get(hass)
@@ -609,7 +608,6 @@ async def test_disabled_entity_actions(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device.id
     )
-    assert not any(action.get("entity_id") == entity_id_disabled for action in actions)
     assert not any(
         action.get("entity_id") == entity_id_unavailable for action in actions
     )

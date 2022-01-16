@@ -173,15 +173,16 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in entity_registry.async_entries_for_device(
+        registry, device_id, include_disabled_entities=False
+    ):
         # If an entry is unavailable, it is possible that the underlying value
         # is no longer valid. Additionally, if an entry is disabled, its
         # underlying value is not being monitored by HA so we shouldn't allow
         # actions against it.
         if (
-            (state := hass.states.get(entry.entity_id))
-            and state.state == STATE_UNAVAILABLE
-        ) or entry.disabled:
+            state := hass.states.get(entry.entity_id)
+        ) and state.state == STATE_UNAVAILABLE:
             continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
