@@ -74,34 +74,24 @@ async def test_rokutv_sensors(
     device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.58_onn_roku_tv_active_app")
-    entry = entity_registry.async_get(
-        "sensor.58_onn_roku_tv_active_app"
-    )
+    entry = entity_registry.async_get("sensor.58_onn_roku_tv_active_app")
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_active_app"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "Antenna TV"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == '58" Onn Roku TV Active App'
-    )
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active App'
     assert state.attributes.get(ATTR_ICON) == "mdi:application"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("sensor.58_onn_roku_tv_active_app_id")
-    entry = entity_registry.async_get(
-        "sensor.58_onn_roku_tv_active_app_id"
-    )
+    entry = entity_registry.async_get("sensor.58_onn_roku_tv_active_app_id")
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_active_app_id"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "tvinput-dtv"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == '58" Onn Roku TV Active App ID'
-    )
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active App ID'
     assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
