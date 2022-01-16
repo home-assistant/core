@@ -1,13 +1,14 @@
 """Support gathering ted5000 information."""
 from __future__ import annotations
 
+from contextlib import suppress
+from datetime import timedelta
 import logging
+
 import requests
 import voluptuous as vol
 import xmltodict
 
-from contextlib import suppress
-from datetime import timedelta
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
