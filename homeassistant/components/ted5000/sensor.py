@@ -1,13 +1,13 @@
 """Support gathering ted5000 information."""
+import logging
+import requests
+import voluptuous as vol
+import xmltodict
+
 from __future__ import annotations
 
 from contextlib import suppress
 from datetime import timedelta
-import logging
-
-import requests
-import voluptuous as vol
-import xmltodict
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
@@ -70,39 +70,41 @@ def setup_platform(
     # Get MTU information to create the sensors.
     gateway.update()
 
-    dev = []
+    devMTUs = []
+    devUtility = []
 
     # Create MTU sensors
     for mtu in gateway.data:
-        dev.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
-        dev.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
+        devMTUs.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
+        devMTUs.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
         if lvl[mode] >= 2:  # advanced or extended
-            dev.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_KILO_WATT_HOUR))
-            dev.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_KILO_WATT_HOUR))
-            dev.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
+            devMTUs.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_KILO_WATT_HOUR))
+            devMTUs.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_KILO_WATT_HOUR))
+            devMTUs.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
 
     # Create utility sensors
     if lvl[mode] >= 3:  # extended only
         # MTUs Quantity
-        dev.append(Ted5000Utility(gateway, name, 0, ATTR_HIDDEN))
+        devUtility.append(Ted5000Utility(gateway, name, 0, ATTR_HIDDEN))
         # Current Rate $/kWh
-        dev.append(Ted5000Utility(gateway, name, 1, CURRENCY_DOLLAR))
+        devUtility.append(Ted5000Utility(gateway, name, 1, CURRENCY_DOLLAR))
         # Days left in billing cycle
-        dev.append(Ted5000Utility(gateway, name, 2, TIME_DAYS))
+        devUtility.append(Ted5000Utility(gateway, name, 2, TIME_DAYS))
         # Plan type (Flat, Tier, TOU, Tier+TOU)
-        dev.append(Ted5000Utility(gateway, name, 3, ATTR_HIDDEN))
+        devUtility.append(Ted5000Utility(gateway, name, 3, ATTR_HIDDEN))
         # Current Tier (0 = Disabled)
-        dev.append(Ted5000Utility(gateway, name, 4, ATTR_HIDDEN))
+        devUtility.append(Ted5000Utility(gateway, name, 4, ATTR_HIDDEN))
         # Current TOU (0 = Disabled)
-        dev.append(Ted5000Utility(gateway, name, 5, ATTR_HIDDEN))
+        devUtility.append(Ted5000Utility(gateway, name, 5, ATTR_HIDDEN))
         # Current TOU Description (if Current TOU is 0 => Not Configured)
-        dev.append(Ted5000Utility(gateway, name, 6, ATTR_HIDDEN))
+        devUtility.append(Ted5000Utility(gateway, name, 6, ATTR_HIDDEN))
         # Carbon Rate lbs/kW
-        dev.append(Ted5000Utility(gateway, name, 7, ATTR_HIDDEN))
+        devUtility.append(Ted5000Utility(gateway, name, 7, ATTR_HIDDEN))
         # Meter read date
-        dev.append(Ted5000Utility(gateway, name, 8, ATTR_HIDDEN))
+        devUtility.append(Ted5000Utility(gateway, name, 8, ATTR_HIDDEN))
 
-    add_entities(dev)
+    add_entities(devMTUs)
+    add_entities(devUtility)
 
 
 class Ted5000Sensor(SensorEntity):
