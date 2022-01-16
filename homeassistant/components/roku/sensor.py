@@ -7,10 +7,7 @@ from datetime import datetime
 
 from rokuecp.models import Device as RokuDevice
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -67,7 +64,8 @@ async def async_setup_entry(
             device_id=unique_id,
             coordinator=coordinator,
             description=description,
-        ) for description in SENSORS
+        )
+        for description in SENSORS
     )
 
 
