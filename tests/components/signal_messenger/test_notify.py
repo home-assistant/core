@@ -190,7 +190,7 @@ def test_get_attachments_with_large_attachment(
 
     assert signal_requests_mock.called
     assert signal_requests_mock.call_count == 1
-    assert "Attachment too large (Content-Length)" in str(exc.value)
+    assert "Attachment too large (Content-Length reports" in str(exc.value)
 
 
 def test_get_attachments_with_large_attachment_no_header(
@@ -208,7 +208,7 @@ def test_get_attachments_with_large_attachment_no_header(
 
     assert signal_requests_mock.called
     assert signal_requests_mock.call_count == 1
-    assert "Attachment too large (Stream)" in str(exc.value)
+    assert "Attachment too large (Stream reports" in str(exc.value)
 
 
 def test_get_filenames_with_none_data(
