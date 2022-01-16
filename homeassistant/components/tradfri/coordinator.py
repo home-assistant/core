@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
@@ -14,7 +13,7 @@ from pytradfri.error import RequestError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL, TIMEOUT_API
+from .const import SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,12 +81,9 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             raise self._exception
 
         try:
-            async with async_timeout.timeout(TIMEOUT_API):
-                if not self.data:  # Start subscription
-                    cmd = self._async_start_observe(device=self.device)
-                    self.hass.async_create_task(
-                        self._async_run_observe(cmd, self.device)
-                    )
+            if not self.data:  # Start subscription
+                cmd = self._async_start_observe(device=self.device)
+                self.hass.async_create_task(self._async_run_observe(cmd, self.device))
 
             return self.device
 
