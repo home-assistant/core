@@ -269,7 +269,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
+                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
 

@@ -7,6 +7,9 @@ from screenlogicpy.const import (
 )
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
@@ -42,7 +45,11 @@ SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
     entities = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]

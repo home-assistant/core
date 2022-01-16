@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -40,7 +42,7 @@ from .entity import OverkizDescriptiveEntity, OverkizEntity
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
-    native_value: Callable[[str | int | float], str | int | float] | None = None
+    native_value: Callable[[OverkizStateType], StateType] | None = None
 
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
@@ -64,7 +66,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        native_value=lambda value: round(float(value)),
+        native_value=lambda value: round(cast(float, value)),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -235,7 +237,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_RELATIVE_HUMIDITY,
         name="Relative Humidity",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,  # core:MeasuredValueType = core:RelativeValueInPercentage
         state_class=SensorStateClass.MEASUREMENT,
@@ -244,7 +246,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_TEMPERATURE,
         name="Temperature",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,  # core:MeasuredValueType = core:TemperatureInCelcius
         state_class=SensorStateClass.MEASUREMENT,
@@ -291,7 +293,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_SUN_ENERGY,
         name="Sun Energy",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -299,7 +301,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_WIND_SPEED,
         name="Wind Speed",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         icon="mdi:weather-windy",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -394,12 +396,15 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if not state:
+        if not state or not state.value:
             return None
 
         # Transform the value with a lambda function
         if self.entity_description.native_value:
             return self.entity_description.native_value(state.value)
+
+        if isinstance(state.value, (dict, list)):
+            return None
 
         return state.value
 
@@ -418,9 +423,11 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         self._attr_name = "HomeKit Setup Code"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the value of the sensor."""
-        return self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE).value
+        if state := self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE):
+            return cast(str, state.value)
+        return None
 
     @property
     def device_info(self) -> DeviceInfo:

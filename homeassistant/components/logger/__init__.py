@@ -3,8 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "logger"
 
@@ -49,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
     hass.data[DOMAIN] = {}
     logging.setLoggerClass(_get_logger_class(hass.data[DOMAIN]))

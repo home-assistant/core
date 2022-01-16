@@ -1,8 +1,12 @@
 """The lookin integration entity."""
 from __future__ import annotations
 
+from abc import abstractmethod
+import logging
+from typing import cast
+
 from aiolookin import POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD, Climate, Remote
-from aiolookin.models import Device
+from aiolookin.models import Device, UDPCommandType, UDPEvent
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -12,6 +16,8 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, MODEL_NAMES
 from .models import LookinData
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
@@ -124,3 +130,58 @@ class LookinPowerEntity(LookinCoordinatorEntity):
             self._power_on_command = POWER_ON_CMD
         if POWER_OFF_CMD in self._function_names:
             self._power_off_command = POWER_OFF_CMD
+
+
+class LookinPowerPushRemoteEntity(LookinPowerEntity):
+    """A Lookin entity that has a power on and power off command with push updates."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        uuid: str,
+        device: Remote,
+        lookin_data: LookinData,
+    ) -> None:
+        """Init the entity."""
+        super().__init__(coordinator, uuid, device, lookin_data)
+        self._update_from_status(self._remote.status)
+        self._attr_name = self._remote.name
+
+    @property
+    def _remote(self) -> Remote:
+        return cast(Remote, self.coordinator.data)
+
+    @abstractmethod
+    def _update_from_status(self, status: str) -> None:
+        """Update properties from status."""
+
+    def _async_push_update(self, event: UDPEvent) -> None:
+        """Process an update pushed via UDP."""
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
+        self._update_from_status(event.value)
+        self.coordinator.async_set_updated_data(self._remote)
+
+    async def _async_push_update_device(self, event: UDPEvent) -> None:
+        """Process an update pushed via UDP."""
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
+        await self.coordinator.async_refresh()
+        self._attr_name = self._remote.name
+
+    async def async_added_to_hass(self) -> None:
+        """Call when the entity is added to hass."""
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.ir,
+                self._uuid,
+                self._async_push_update,
+            )
+        )
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.data,
+                self._uuid,
+                self._async_push_update_device,
+            )
+        )

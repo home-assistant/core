@@ -38,6 +38,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
@@ -46,6 +48,7 @@ from .const import (
     ATTR_SMHI_CLOUDINESS,
     ATTR_SMHI_THUNDER_PROBABILITY,
     ATTR_SMHI_WIND_GUST_SPEED,
+    DOMAIN,
     ENTITY_ID_SENSOR_FORMAT,
 )
 
@@ -115,6 +118,14 @@ class SmhiWeather(WeatherEntity):
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{self._latitude}, {self._longitude}")},
+            manufacturer="SMHI",
+            model="v2",
+            name=self._name,
+            configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
+        )
 
     @property
     def unique_id(self) -> str:

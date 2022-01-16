@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera as ProtectCamera
@@ -36,14 +36,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockEntityFixture, enable_entity, time_changed
+from .conftest import (
+    MockEntityFixture,
+    assert_entity_counts,
+    enable_entity,
+    time_changed,
+)
 
 
 @pytest.fixture(name="camera")
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera, no extra setup."""
+    """Fixture for a single camera for testing the camera platform."""
 
     camera_obj = mock_camera.copy(deep=True)
     camera_obj._api = mock_entry.api
@@ -60,16 +65,50 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
     }
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.CAMERA]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 2
+    return (camera_obj, "camera.test_camera_high")
 
-    yield (camera_obj, "camera.test_camera_high")
+
+@pytest.fixture(name="camera_package")
+async def camera_package_fixture(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
+):
+    """Fixture for a single camera for testing the camera platform."""
+
+    camera_obj = mock_camera.copy(deep=True)
+    camera_obj._api = mock_entry.api
+    camera_obj.channels[0]._api = mock_entry.api
+    camera_obj.channels[1]._api = mock_entry.api
+    camera_obj.channels[2]._api = mock_entry.api
+    camera_obj.name = "Test Camera"
+    camera_obj.feature_flags.has_package_camera = True
+    camera_obj.channels[0].is_rtsp_enabled = True
+    camera_obj.channels[0].name = "High"
+    camera_obj.channels[0].rtsp_alias = "test_high_alias"
+    camera_obj.channels[1].is_rtsp_enabled = False
+    camera_obj.channels[2].is_rtsp_enabled = False
+    package_channel = camera_obj.channels[0].copy(deep=True)
+    package_channel.is_rtsp_enabled = False
+    package_channel.name = "Package Camera"
+    package_channel.id = 3
+    package_channel.fps = 2
+    package_channel.rtsp_alias = "test_package_alias"
+    camera_obj.channels.append(package_channel)
+
+    mock_entry.api.bootstrap.cameras = {
+        camera_obj.id: camera_obj,
+    }
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.CAMERA, 3, 2)
+
+    return (camera_obj, "camera.test_camera_package_camera")
 
 
 def validate_default_camera_entity(
@@ -258,21 +297,37 @@ async def test_basic_setup(
     camera_no_channels.channels[1].is_rtsp_enabled = False
     camera_no_channels.channels[2].is_rtsp_enabled = False
 
+    camera_package = mock_camera.copy(deep=True)
+    camera_package._api = mock_entry.api
+    camera_package.channels[0]._api = mock_entry.api
+    camera_package.channels[1]._api = mock_entry.api
+    camera_package.channels[2]._api = mock_entry.api
+    camera_package.name = "Test Camera 5"
+    camera_package.id = "test_package"
+    camera_package.channels[0].is_rtsp_enabled = True
+    camera_package.channels[0].name = "High"
+    camera_package.channels[0].rtsp_alias = "test_high_alias"
+    camera_package.channels[1].is_rtsp_enabled = False
+    camera_package.channels[2].is_rtsp_enabled = False
+    package_channel = camera_package.channels[0].copy(deep=True)
+    package_channel.is_rtsp_enabled = False
+    package_channel.name = "Package Camera"
+    package_channel.id = 3
+    package_channel.fps = 2
+    package_channel.rtsp_alias = "test_package_alias"
+    camera_package.channels.append(package_channel)
+
     mock_entry.api.bootstrap.cameras = {
         camera_high_only.id: camera_high_only,
         camera_medium_only.id: camera_medium_only,
         camera_all_channels.id: camera_all_channels,
         camera_no_channels.id: camera_no_channels,
+        camera_package.id: camera_package,
     }
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.CAMERA]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 4
-    assert len(entity_registry.entities) == 11
+    assert_entity_counts(hass, Platform.CAMERA, 14, 6)
 
     # test camera 1
     entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
@@ -320,6 +375,19 @@ async def test_basic_setup(
         hass, camera_no_channels, 0, entity_id, features=0
     )
 
+    # test camera 5
+    entity_id = validate_default_camera_entity(hass, camera_package, 0)
+    await validate_rtsps_camera_state(hass, camera_package, 0, entity_id)
+
+    entity_id = validate_rtsp_camera_entity(hass, camera_package, 0)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsp_camera_state(hass, camera_package, 0, entity_id)
+
+    entity_id = validate_default_camera_entity(hass, camera_package, 3)
+    await validate_no_stream_camera_state(
+        hass, camera_package, 3, entity_id, features=0
+    )
+
 
 async def test_missing_channels(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: ProtectCamera
@@ -351,6 +419,19 @@ async def test_camera_image(
 
     await async_get_image(hass, camera[1])
     mock_entry.api.get_camera_snapshot.assert_called_once()
+
+
+async def test_package_camera_image(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    camera_package: tuple[Camera, str],
+):
+    """Test retrieving package camera image."""
+
+    mock_entry.api.get_package_camera_snapshot = AsyncMock()
+
+    await async_get_image(hass, camera_package[1])
+    mock_entry.api.get_package_camera_snapshot.assert_called_once()
 
 
 async def test_camera_generic_update(
@@ -440,6 +521,7 @@ async def test_camera_ws_update(
     new_camera.is_recording = True
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
@@ -467,6 +549,7 @@ async def test_camera_ws_update_offline(
     new_camera.state = StateType.DISCONNECTED
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
@@ -481,6 +564,7 @@ async def test_camera_ws_update_offline(
     new_camera.state = StateType.CONNECTED
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_camera
 
     new_bootstrap.cameras = {new_camera.id: new_camera}

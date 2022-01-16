@@ -39,6 +39,9 @@ async def async_setup_entry(
 class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     """A Ubiquiti UniFi Protect Reboot button."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_device_class = ButtonDeviceClass.RESTART
+
     def __init__(
         self,
         data: ProtectData,
@@ -47,8 +50,6 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         """Initialize an UniFi camera."""
         super().__init__(data, device)
         self._attr_name = f"{self.device.name} Reboot Device"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_class = ButtonDeviceClass.RESTART
 
     async def async_press(self) -> None:
         """Press the button."""

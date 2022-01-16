@@ -4,11 +4,11 @@ from __future__ import annotations
 from typing import Final, cast
 
 from homeassistant.components.binary_sensor import (
-    STATE_ON,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

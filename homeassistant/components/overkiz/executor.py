@@ -6,6 +6,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from pyoverkiz.models import Command, Device
+from pyoverkiz.types import StateType as OverkizStateType
 
 from .coordinator import OverkizDataUpdateCoordinator
 
@@ -37,7 +38,7 @@ class OverkizExecutor:
         """Return True if a command exists in a list of commands."""
         return self.select_command(*commands) is not None
 
-    def select_state(self, *states: str) -> str | None:
+    def select_state(self, *states: str) -> OverkizStateType:
         """Select first existing active state in a list of states."""
         for state in states:
             if current_state := self.device.states[state]:
@@ -49,7 +50,7 @@ class OverkizExecutor:
         """Return True if a state exists in self."""
         return self.select_state(*states) is not None
 
-    def select_attribute(self, *attributes: str) -> str | None:
+    def select_attribute(self, *attributes: str) -> OverkizStateType:
         """Select first existing active state in a list of states."""
         for attribute in attributes:
             if current_attribute := self.device.attributes[attribute]:

@@ -5,7 +5,7 @@ from collections.abc import Generator
 import logging
 
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera as UFPCamera
+from pyunifiprotect.data import Camera as UFPCamera, StateType
 from pyunifiprotect.data.devices import CameraChannel
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
@@ -40,7 +40,9 @@ def get_camera_channels(
 
         is_default = True
         for channel in camera.channels:
-            if channel.is_rtsp_enabled:
+            if channel.is_package:
+                yield camera, channel, True
+            elif channel.is_rtsp_enabled:
                 yield camera, channel, is_default
                 is_default = False
 
@@ -60,6 +62,8 @@ async def async_setup_entry(
 
     entities = []
     for camera, channel, is_default in get_camera_channels(data.api):
+        # do not enable streaming for package camera
+        # 2 FPS causes a lot of buferring
         entities.append(
             ProtectCamera(
                 data,
@@ -67,11 +71,11 @@ async def async_setup_entry(
                 channel,
                 is_default,
                 True,
-                disable_stream,
+                disable_stream or channel.is_package,
             )
         )
 
-        if channel.is_rtsp_enabled:
+        if channel.is_rtsp_enabled and not channel.is_package:
             entities.append(
                 ProtectCamera(
                     data,
@@ -88,6 +92,8 @@ async def async_setup_entry(
 class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
 
+    device: UFPCamera
+
     def __init__(
         self,
         data: ProtectData,
@@ -98,12 +104,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         disable_stream: bool,
     ) -> None:
         """Initialize an UniFi camera."""
-        self.device: UFPCamera = camera
         self.channel = channel
         self._secure = secure
         self._disable_stream = disable_stream
         self._last_image: bytes | None = None
-        super().__init__(data)
+        super().__init__(data, camera)
 
         if self._secure:
             self._attr_unique_id = f"{self.device.id}_{self.channel.id}"
@@ -137,9 +142,12 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         super()._async_update_device_from_protect()
         self.channel = self.device.channels[self.channel.id]
         self._attr_motion_detection_enabled = (
-            self.device.is_connected and self.device.feature_flags.has_motion_zones
+            self.device.state == StateType.CONNECTED
+            and self.device.feature_flags.has_motion_zones
         )
-        self._attr_is_recording = self.device.is_connected and self.device.is_recording
+        self._attr_is_recording = (
+            self.device.state == StateType.CONNECTED and self.device.is_recording
+        )
 
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {
@@ -154,7 +162,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return the Camera Image."""
-        last_image = await self.device.get_snapshot(width, height)
+        if self.channel.is_package:
+            last_image = await self.device.get_package_snapshot(width, height)
+        else:
+            last_image = await self.device.get_snapshot(width, height)
         self._last_image = last_image
         return self._last_image
 

@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Hue-Gruppen erlauben",
                     "allow_hue_scenes": "Hue-Szenen zulassen",
-                    "allow_unreachable": "Erlaube nicht erreichbaren Gl\u00fchlampen, ihren Zustand korrekt zu melden"
+                    "allow_unreachable": "Erlaube nicht erreichbaren Gl\u00fchlampen, ihren Zustand korrekt zu melden",
+                    "ignore_availability": "Verbindungsstatus f\u00fcr die angegebenen Ger\u00e4te ignorieren"
                 }
             }
         }

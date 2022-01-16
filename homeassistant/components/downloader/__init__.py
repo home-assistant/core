@@ -8,8 +8,9 @@ import threading
 import requests
 import voluptuous as vol
 
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Listen for download events to download files."""
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
 

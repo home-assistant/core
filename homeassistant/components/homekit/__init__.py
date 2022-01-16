@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import ipaddress
 import logging
 import os
@@ -26,6 +27,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -338,7 +340,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
     return await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
@@ -347,8 +349,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 @callback
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
-    options = dict(entry.options)
-    data = dict(entry.data)
+    options = deepcopy(dict(entry.options))
+    data = deepcopy(dict(entry.data))
     modified = False
     for importable_option in CONFIG_OPTIONS:
         if importable_option not in entry.options and importable_option in entry.data:
@@ -707,7 +709,12 @@ class HomeKit:
         """Remove all pairings for an accessory so it can be repaired."""
         state = self.driver.state
         for client_uuid in list(state.paired_clients):
-            state.remove_paired_client(client_uuid)
+            # We need to check again since removing a single client
+            # can result in removing all the clients that the client
+            # granted access to if it was an admin, otherwise
+            # remove_paired_client can generate a KeyError
+            if client_uuid in state.paired_clients:
+                state.remove_paired_client(client_uuid)
         self.driver.async_persist()
         self.driver.async_update_advertisement()
         self._async_show_setup_message()
@@ -911,6 +918,8 @@ class HomeKit:
             config[ATTR_MODEL] = device_entry.model
         if device_entry.sw_version:
             config[ATTR_SW_VERSION] = device_entry.sw_version
+        if device_entry.hw_version:
+            config[ATTR_HW_VERSION] = device_entry.hw_version
         if device_entry.config_entries:
             first_entry = list(device_entry.config_entries)[0]
             if entry := self.hass.config_entries.async_get_entry(first_entry):

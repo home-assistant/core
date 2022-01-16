@@ -26,8 +26,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,10 +174,14 @@ def determine_zones(receiver):
     return out
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Onkyo platform."""
-    host = config.get(CONF_HOST)
-    hosts = []
+    hosts: list[OnkyoDevice] = []
 
     def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
@@ -193,7 +199,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
     )
 
-    if CONF_HOST in config and host not in KNOWN_HOSTS:
+    if CONF_HOST in config and (host := config[CONF_HOST]) not in KNOWN_HOSTS:
         try:
             receiver = eiscp.eISCP(host)
             hosts.append(

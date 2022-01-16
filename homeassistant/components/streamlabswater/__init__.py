@@ -5,9 +5,10 @@ from streamlabswater import streamlabswater
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "streamlabswater"
 
@@ -39,7 +40,7 @@ SET_AWAY_MODE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the streamlabs water integration."""
 
     conf = config[DOMAIN]

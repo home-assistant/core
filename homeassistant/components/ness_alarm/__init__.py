@@ -15,11 +15,13 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "ness_alarm"
 DATA_NESS = "ness_alarm"
@@ -84,7 +86,7 @@ SERVICE_SCHEMA_AUX = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm platform."""
 
     conf = config[DOMAIN]
@@ -110,10 +112,12 @@ async def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     hass.async_create_task(
-        async_load_platform(hass, "binary_sensor", DOMAIN, {CONF_ZONES: zones}, config)
+        async_load_platform(
+            hass, Platform.BINARY_SENSOR, DOMAIN, {CONF_ZONES: zones}, config
+        )
     )
     hass.async_create_task(
-        async_load_platform(hass, "alarm_control_panel", DOMAIN, {}, config)
+        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config)
     )
 
     def on_zone_change(zone_id: int, state: bool):

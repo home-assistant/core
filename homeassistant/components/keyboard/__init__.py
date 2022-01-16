@@ -10,13 +10,15 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "keyboard"
 
 TAP_KEY_SCHEMA = vol.Schema({})
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Listen for keyboard events."""
 
     keyboard = PyKeyboard()

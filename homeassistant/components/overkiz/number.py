@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizState
 
@@ -92,7 +93,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
-            return state.value
+            return cast(float, state.value)
 
         return None
 

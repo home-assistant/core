@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
 from async_upnp_client.utils import async_get_local_ip
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -65,27 +66,32 @@ from .data import EventListenAddr, get_domain_data
 
 PARALLEL_UPDATES = 0
 
-Func = TypeVar("Func", bound=Callable[..., Any])
+_T = TypeVar("_T", bound="DlnaDmrEntity")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 
-def catch_request_errors(func: Func) -> Func:
+def catch_request_errors(
+    func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R | None]]:  # type: ignore[misc]
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
-    async def wrapper(self: "DlnaDmrEntity", *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
         """Catch UpnpError errors and check availability before and after request."""
         if not self.available:
             _LOGGER.warning(
                 "Device disappeared when trying to call service %s", func.__name__
             )
-            return
+            return None
         try:
-            return await func(self, *args, **kwargs)
+            return await func(self, *args, **kwargs)  # type: ignore[no-any-return]  # mypy can't yet infer 'func'
         except UpnpError as err:
             self.check_available = True
             _LOGGER.error("Error during call %s: %r", func.__name__, err)
+        return None
 
-    return cast(Func, wrapper)
+    return wrapper
 
 
 async def async_setup_entry(

@@ -10,12 +10,24 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "host": "IP/host van UniFi Protect-server",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "UniFi Protect Reauth"
+            },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
-                }
+                    "port": "Poort",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                },
+                "title": "UniFi Protect Setup"
             }
         }
     },

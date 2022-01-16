@@ -36,7 +36,6 @@ async def async_setup_sensor_wrapper(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> ConfigEntry:
     """Set up the Version sensor platform."""
-    await async_setup_component(hass, "persistent_notification", {})
     with patch(
         "pyhaversion.HaVersion.get_version",
         return_value=(MOCK_VERSION, MOCK_VERSION_DATA),
@@ -47,7 +46,6 @@ async def async_setup_sensor_wrapper(
         await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
-    print(config_entries)
     config_entry = config_entries[-1]
     assert config_entry.source == "import"
     return config_entry

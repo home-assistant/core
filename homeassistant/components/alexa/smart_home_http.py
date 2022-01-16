@@ -97,6 +97,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     by the cloud component which will call async_handle_message directly.
     """
     smart_home_config = AlexaConfig(hass, config)
+    await smart_home_config.async_initialize()
     hass.http.register_view(SmartHomeView(smart_home_config))
 
     if smart_home_config.should_report_state:

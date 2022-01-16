@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -24,7 +25,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensor entities."""
 
-    value_fn: Callable[[str], bool]
+    value_fn: Callable[[OverkizStateType], bool]
 
 
 @dataclass
@@ -106,7 +107,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz binary sensors from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizBinarySensor] = []

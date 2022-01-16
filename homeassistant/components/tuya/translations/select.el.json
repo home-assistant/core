@@ -1,0 +1,17 @@
+{
+    "state": {
+        "tuya__vacuum_cistern": {
+            "closed": "\u039a\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
+            "high": "\u03a5\u03c8\u03b7\u03bb\u03cc",
+            "low": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03cc",
+            "middle": "\u039c\u03b5\u03c3\u03b1\u03af\u03bf"
+        },
+        "tuya__vacuum_collection": {
+            "large": "\u039c\u03b5\u03b3\u03ac\u03bb\u03bf"
+        },
+        "tuya__vacuum_mode": {
+            "standby": "\u039a\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7 \u03b1\u03bd\u03b1\u03bc\u03bf\u03bd\u03ae\u03c2",
+            "zone": "\u0396\u03ce\u03bd\u03b7"
+        }
+    }
+}

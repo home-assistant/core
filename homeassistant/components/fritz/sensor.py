@@ -7,13 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Literal
 
-from fritzconnection.core.exceptions import (
-    FritzActionError,
-    FritzActionFailedError,
-    FritzConnectionException,
-    FritzInternalError,
-    FritzServiceError,
-)
+from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import (
@@ -35,7 +29,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
+from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
+from .wrapper import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,6 +147,7 @@ class FritzSensorEntityDescription(SensorEntityDescription, FritzRequireKeysMixi
     """Describes Fritz sensor entity."""
 
     connection_type: Literal["dsl"] | None = None
+    exclude_mesh_role: MeshRoles = MeshRoles.SLAVE
 
 
 SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
@@ -167,6 +163,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
+        exclude_mesh_role=MeshRoles.NONE,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
@@ -279,35 +276,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
-    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-
-    if (
-        not fritzbox_tools.connection
-        or "WANIPConn1" not in fritzbox_tools.connection.services
-    ):
-        # Only routers are supported at the moment
-        return
+    avm_device: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = AvmWrapper(avm_device)
 
     dsl: bool = False
-    try:
-        dslinterface = await hass.async_add_executor_job(
-            fritzbox_tools.connection.call_action,
-            "WANDSLInterfaceConfig:1",
-            "GetInfo",
-        )
+    dslinterface = await avm_wrapper.get_wan_dsl_interface_config()
+    if dslinterface:
         dsl = dslinterface["NewEnable"]
-    except (
-        FritzInternalError,
-        FritzActionError,
-        FritzActionFailedError,
-        FritzServiceError,
-    ):
-        pass
 
     entities = [
-        FritzBoxSensor(fritzbox_tools, entry.title, description)
+        FritzBoxSensor(avm_device, entry.title, description)
         for description in SENSOR_TYPES
-        if dsl or description.connection_type != DSL_CONNECTION
+        if (dsl or description.connection_type != DSL_CONNECTION)
+        and description.exclude_mesh_role != avm_device.mesh_role
     ]
 
     async_add_entities(entities, True)
@@ -320,7 +301,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        fritzbox_tools: FritzBoxTools,
+        avm_device: FritzBoxTools,
         device_friendly_name: str,
         description: FritzSensorEntityDescription,
     ) -> None:
@@ -329,15 +310,15 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._last_device_value: str | None = None
         self._attr_available = True
         self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = f"{fritzbox_tools.unique_id}-{description.key}"
-        super().__init__(fritzbox_tools, device_friendly_name)
+        self._attr_unique_id = f"{avm_device.unique_id}-{description.key}"
+        super().__init__(avm_device, device_friendly_name)
 
     def update(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
         try:
-            status: FritzStatus = self._fritzbox_tools.fritz_status
+            status: FritzStatus = self._avm_device.fritz_status
             self._attr_available = True
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)

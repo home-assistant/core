@@ -1,4 +1,6 @@
 """Support for Tado Smart device trackers."""
+from __future__ import annotations
+
 import asyncio
 from collections import namedtuple
 from datetime import timedelta
@@ -15,8 +17,10 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Return a Tado scanner."""
     scanner = TadoDeviceScanner(hass, config[DOMAIN])
     return scanner if scanner.success_init else None
