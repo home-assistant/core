@@ -140,7 +140,7 @@ class Device:
         - total bytes sent
         - total bytes received
         - total packets sent
-        - total packats received
+        - total packets received
 
         Data is timestamped.
         """
