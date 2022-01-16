@@ -51,7 +51,7 @@ ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 ENTITY_DESCRIPTIONS = {
     CarbonMonoxide: BinarySensorEntityDescription(
         key="carbonmonoxide",
-        device_class=BinarySensorDeviceClass.GAS,
+        device_class=BinarySensorDeviceClass.CO,
     ),
     Fire: BinarySensorEntityDescription(
         key="fire",
