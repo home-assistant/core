@@ -190,7 +190,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._attr_max_temp = max_setpoint
         self._attr_temperature_unit = TEMP_CELSIUS if unit == "C" else TEMP_FAHRENHEIT
         self._attr_target_temperature_step = 0.5 if unit == "C" else 1.0
-        self._attr_preset_modes = self._zone.get_presets()
 
     @property
     def is_fan_on(self):
