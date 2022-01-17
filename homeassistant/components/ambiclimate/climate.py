@@ -60,13 +60,13 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Ambicliamte device."""
+    """Set up the Ambiclimate device."""
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Ambicliamte device from config entry."""
+    """Set up the Ambiclimate device from config entry."""
     config = entry.data
     websession = async_get_clientsession(hass)
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
