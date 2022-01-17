@@ -44,7 +44,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _tunnels: list
+    _tunnels: list[GatewayDescriptor]
     _gateway_ip: str = ""
     _gateway_port: int = DEFAULT_MCAST_PORT
 
@@ -64,25 +64,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_type(self, user_input: dict | None = None) -> FlowResult:
         """Handle connection type configuration."""
-        errors: dict = {}
-        supported_connection_types = CONF_KNX_INITIAL_CONNECTION_TYPES.copy()
-        fields = {}
-
-        if user_input is None:
-            gateways = await scan_for_gateways()
-
-            if gateways:
-                supported_connection_types.insert(0, CONF_KNX_AUTOMATIC)
-                self._tunnels = [
-                    gateway for gateway in gateways if gateway.supports_tunnelling
-                ]
-
-            fields = {
-                vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(
-                    supported_connection_types
-                )
-            }
-
         if user_input is not None:
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
             if connection_type == CONF_KNX_AUTOMATIC:
@@ -99,6 +80,22 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_manual_tunnel()
 
+        errors: dict = {}
+        supported_connection_types = CONF_KNX_INITIAL_CONNECTION_TYPES.copy()
+        fields = {}
+        gateways = await scan_for_gateways()
+
+        if gateways:
+            # add automatic only if a gateway responded
+            supported_connection_types.insert(0, CONF_KNX_AUTOMATIC)
+            self._tunnels = [
+                gateway for gateway in gateways if gateway.supports_tunnelling
+            ]
+
+        fields = {
+            vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(supported_connection_types)
+        }
+
         return self.async_show_form(
             step_id="type", data_schema=vol.Schema(fields), errors=errors
         )
@@ -107,8 +104,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """General setup."""
-        errors: dict = {}
-
         if user_input is not None:
             return self.async_create_entry(
                 title=f"{CONF_KNX_TUNNELING.capitalize()} @ {user_input[CONF_HOST]}",
@@ -129,6 +124,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        errors: dict = {}
         fields = {
             vol.Required(CONF_HOST, default=self._gateway_ip): str,
             vol.Required(CONF_PORT, default=self._gateway_port): vol.Coerce(int),
@@ -149,8 +145,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_tunnel(self, user_input: dict | None = None) -> FlowResult:
         """Select a tunnel from a list. Will be skipped if the gateway scan was unsuccessful or if only one gateway was found."""
-        errors: dict = {}
-
         if user_input is not None:
             gateway: GatewayDescriptor = next(
                 gateway
@@ -163,6 +157,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_manual_tunnel()
 
+        errors: dict = {}
         tunnel_repr = {
             str(tunnel) for tunnel in self._tunnels if tunnel.supports_tunnelling
         }
@@ -182,8 +177,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_routing(self, user_input: dict | None = None) -> FlowResult:
         """Routing setup."""
-        errors: dict = {}
-
         if user_input is not None:
             return self.async_create_entry(
                 title=CONF_KNX_ROUTING.capitalize(),
@@ -205,6 +198,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        errors: dict = {}
         fields = {
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
@@ -434,7 +428,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
         )
 
 
-async def scan_for_gateways(stop_on_found: int = 0) -> list:
+async def scan_for_gateways(stop_on_found: int = 0) -> list[GatewayDescriptor]:
     """Scan for gateways within the network."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(
