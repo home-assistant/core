@@ -600,9 +600,7 @@ async def test_unavailable_entity_actions(
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device({get_device_id(client, node)})
     assert device
-    actions = await async_get_device_automations(
-        hass, DeviceAutomationType.ACTION, device.id
-    )
+    actions = await async_get_device_automations(hass, "action", device.id)
     assert not any(
         action.get("entity_id") == entity_id_unavailable for action in actions
     )
