@@ -101,7 +101,7 @@ async def test_get_image_http_log_password_redacted(
     url = "http://vi:pass@example.com/default.jpg"
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
-        "http://vi:pass@example.com/default.jpg",
+        url,
     ):
         await async_setup_component(
             hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -120,9 +120,9 @@ async def test_get_image_http_log_password_redacted(
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert f"Error retrieving proxied image from {url}" not in caplog.text
     assert (
-        f"Error retrieving proxied image from {url.replace('pass', 'xxxxxxxx')}"
-        in caplog.text
-    )
+        "Error retrieving proxied image from "
+        f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}"
+    ) in caplog.text
 
 
 async def test_get_async_get_browse_image(hass, hass_client_no_auth, hass_ws_client):
