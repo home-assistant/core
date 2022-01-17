@@ -1,4 +1,4 @@
-"""Support for power sensors in WeMo Insight devices."""
+"""Support for power sensors in WeMo Insight devices and for diagnostics."""
 from __future__ import annotations
 
 import asyncio
@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -50,6 +51,18 @@ ATTRIBUTE_SENSORS = (
         key="today_kwh",
         unique_id_suffix="todaymw",
         state_conversion=lambda state: round(cast(float, state), 2),
+    ),
+    AttributeSensorDescription(
+        name="IP Address",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:ip",
+        key="host",
+    ),
+    AttributeSensorDescription(
+        name="UPnP Port",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:connection",
+        key="port",
     ),
 )
 
@@ -99,12 +112,14 @@ class AttributeSensor(WemoEntity, SensorEntity):
     @property
     def unique_id_suffix(self) -> str | None:
         """Suffix to append to the WeMo device's unique ID."""
-        return self.entity_description.unique_id_suffix
+        if (suffix := self.entity_description.unique_id_suffix) is not None:
+            return suffix
+        return super().unique_id_suffix
 
     def convert_state(self, value: StateType) -> StateType:
         """Convert native state to a value appropriate for the sensor."""
         if (convert := self.entity_description.state_conversion) is None:
-            return None
+            return value
         return convert(value)
 
     @property

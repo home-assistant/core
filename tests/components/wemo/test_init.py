@@ -20,6 +20,8 @@ from .conftest import (
 
 from tests.common import async_fire_time_changed
 
+ENTITIES_PER_DEVICE = 3
+
 
 async def test_config_no_config(hass):
     """Component setup succeeds when there are no config entry for the domain."""
@@ -50,7 +52,7 @@ async def test_static_duplicate_static_entry(hass, pywemo_device):
     await hass.async_block_till_done()
     entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
-    assert len(entity_entries) == 1
+    assert len(entity_entries) == ENTITIES_PER_DEVICE
 
 
 async def test_static_config_with_port(hass, pywemo_device):
@@ -68,7 +70,7 @@ async def test_static_config_with_port(hass, pywemo_device):
     await hass.async_block_till_done()
     entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
-    assert len(entity_entries) == 1
+    assert len(entity_entries) == ENTITIES_PER_DEVICE
 
 
 async def test_static_config_without_port(hass, pywemo_device):
@@ -86,7 +88,7 @@ async def test_static_config_without_port(hass, pywemo_device):
     await hass.async_block_till_done()
     entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
-    assert len(entity_entries) == 1
+    assert len(entity_entries) == ENTITIES_PER_DEVICE
 
 
 async def test_static_config_with_invalid_host(hass):
@@ -150,7 +152,7 @@ async def test_discovery(hass, pywemo_registry):
     # Verify that the expected number of devices were setup.
     entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
-    assert len(entity_entries) == 3
+    assert len(entity_entries) == 3 * ENTITIES_PER_DEVICE
 
     # Verify that hass stops cleanly.
     await hass.async_stop()
