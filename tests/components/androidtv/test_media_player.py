@@ -1192,7 +1192,7 @@ async def test_exception(hass):
         assert state is not None
         assert state.state == STATE_OFF
 
-        # When an unforessen exception occurs, we close the ADB connection and raise the exception
+        # When an unforeseen exception occurs, we close the ADB connection and raise the exception
         with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
             await hass.helpers.entity_component.async_update_entity(entity_id)
             state = hass.states.get(entity_id)
