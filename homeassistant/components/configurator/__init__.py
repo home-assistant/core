@@ -106,7 +106,7 @@ def async_notify_errors(hass, request_id, error):
 
 
 @bind_hass
-def notify_errors(hass, request_id, error):
+def notify_errors(hass: HomeAssistant, request_id: str, error: str) -> None:
     """Add errors to a config request."""
     return run_callback_threadsafe(
         hass.loop, async_notify_errors, hass, request_id, error
