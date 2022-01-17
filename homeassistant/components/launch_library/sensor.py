@@ -139,15 +139,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN]
 
     async_add_entities(
-        [
-            NextLaunchSensor(
-                coordinator=coordinator,
-                entry_id=entry.entry_id,
-                description=description,
-                name=name if description.key == NEXT_LAUNCH else None,
-            )
-            for description in SENSOR_DESCRIPTIONS
-        ]
+        NextLaunchSensor(
+            coordinator=coordinator,
+            entry_id=entry.entry_id,
+            description=description,
+            name=name if description.key == NEXT_LAUNCH else None,
+        )
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
