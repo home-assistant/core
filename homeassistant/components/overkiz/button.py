@@ -39,6 +39,13 @@ BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
         icon="mdi:human-greeting-variant",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
+    # RTDIndoorSiren / RTDOutdoorSiren
+    ButtonEntityDescription(key="dingDong", name="Ding Dong", icon="mdi:bell-ring"),
+    ButtonEntityDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
+    ButtonEntityDescription(
+        key="fastBipSequence", name="Fast Bip Sequence", icon="mdi:bell-ring"
+    ),
+    ButtonEntityDescription(key="ring", name="Ring", icon="mdi:bell-ring"),
 ]
 
 
