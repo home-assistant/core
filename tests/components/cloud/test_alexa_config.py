@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
@@ -146,6 +147,75 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
     token = await conf.async_get_access_token()
     assert token == "mock-token"
     assert len(aioclient_mock.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    "reject_reason,expected_exception,reporting_disabled",
+    [
+        ("RefreshTokenNotFound", errors.RequireRelink, True),
+        ("UnknownRegion", errors.RequireRelink, True),
+        ("OtherReason", errors.NoTokenAvailable, False),
+    ],
+)
+async def test_alexa_config_fail_refresh_token(
+    hass,
+    cloud_prefs,
+    aioclient_mock,
+    reject_reason,
+    expected_exception,
+    reporting_disabled,
+):
+    """Test Alexa config failing to refresh token."""
+
+    aioclient_mock.post(
+        "http://example/alexa_token",
+        json={
+            "access_token": "mock-token",
+            "event_endpoint": "http://example.com/alexa_endpoint",
+            "expires_in": 30,
+        },
+    )
+    conf = alexa_config.CloudAlexaConfig(
+        hass,
+        ALEXA_SCHEMA({}),
+        "mock-user-id",
+        cloud_prefs,
+        Mock(
+            alexa_access_token_url="http://example/alexa_token",
+            auth=Mock(async_check_token=AsyncMock()),
+            websession=async_get_clientsession(hass),
+        ),
+    )
+    await conf.async_initialize()
+    await conf.set_authorized(True)
+
+    assert cloud_prefs.alexa_report_state is False
+    assert conf.should_report_state is False
+    assert conf.is_reporting_states is False
+
+    # Enable state reporting
+    await cloud_prefs.async_update(alexa_report_state=True)
+    await hass.async_block_till_done()
+
+    assert cloud_prefs.alexa_report_state is True
+    assert conf.should_report_state is True
+    assert conf.is_reporting_states is True
+
+    # Invalidate the token and try to fetch another
+    conf.async_invalidate_access_token()
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "http://example/alexa_token",
+        json={"reason": reject_reason},
+        status=400,
+    )
+    with pytest.raises(expected_exception):
+        await conf.async_get_access_token()
+
+    # Check state reporting is still wanted in cloud prefs, but disabled in Alexa
+    assert cloud_prefs.alexa_report_state is True
+    assert conf.should_report_state is not reporting_disabled
+    assert conf.is_reporting_states is not reporting_disabled
 
 
 @contextlib.contextmanager
