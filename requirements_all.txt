@@ -1374,7 +1374,7 @@ pyads==3.2.2
 pyaehw4a1==0.3.9
 
 # homeassistant.components.aftership
-pyaftership==0.1.2
+pyaftership==21.11.0
 
 # homeassistant.components.airnow
 pyairnow==1.1.0
