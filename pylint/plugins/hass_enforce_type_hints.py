@@ -68,8 +68,6 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if not [annotation for annotation in annotations if annotation is not None]:
             return
 
-        print(annotations)
-
         # Check that the first argument is "HomeAssistant".
         if (
             not isinstance(annotations[0], astroid.Name)
