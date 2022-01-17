@@ -135,7 +135,7 @@ class SmhiWeather(WeatherEntity):
             identifiers={(DOMAIN, f"{latitude}, {longitude}")},
             manufacturer="SMHI",
             model="v2",
-            name=self._attr_name,
+            name=name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
         self._attr_condition = None
