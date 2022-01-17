@@ -150,11 +150,11 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
 
 
 @pytest.mark.parametrize(
-    "reject_reason,expected_exception,reporting_disabled",
+    "reject_reason,expected_exception",
     [
-        ("RefreshTokenNotFound", errors.RequireRelink, True),
-        ("UnknownRegion", errors.RequireRelink, True),
-        ("OtherReason", errors.NoTokenAvailable, False),
+        ("RefreshTokenNotFound", errors.RequireRelink),
+        ("UnknownRegion", errors.RequireRelink),
+        ("OtherReason", errors.NoTokenAvailable),
     ],
 )
 async def test_alexa_config_fail_refresh_token(
@@ -163,7 +163,6 @@ async def test_alexa_config_fail_refresh_token(
     aioclient_mock,
     reject_reason,
     expected_exception,
-    reporting_disabled,
 ):
     """Test Alexa config failing to refresh token."""
 
@@ -175,6 +174,7 @@ async def test_alexa_config_fail_refresh_token(
             "expires_in": 30,
         },
     )
+    aioclient_mock.post("http://example.com/alexa_endpoint", text="", status=202)
     conf = alexa_config.CloudAlexaConfig(
         hass,
         ALEXA_SCHEMA({}),
@@ -193,6 +193,8 @@ async def test_alexa_config_fail_refresh_token(
     assert conf.should_report_state is False
     assert conf.is_reporting_states is False
 
+    hass.states.async_set("fan.test_fan", "off")
+
     # Enable state reporting
     await cloud_prefs.async_update(alexa_report_state=True)
     await hass.async_block_till_done()
@@ -200,6 +202,10 @@ async def test_alexa_config_fail_refresh_token(
     assert cloud_prefs.alexa_report_state is True
     assert conf.should_report_state is True
     assert conf.is_reporting_states is True
+
+    # Change states to trigger event listener
+    hass.states.async_set("fan.test_fan", "on")
+    await hass.async_block_till_done()
 
     # Invalidate the token and try to fetch another
     conf.async_invalidate_access_token()
@@ -209,15 +215,26 @@ async def test_alexa_config_fail_refresh_token(
         json={"reason": reject_reason},
         status=400,
     )
-    with pytest.raises(expected_exception):
-        await conf.async_get_access_token()
+
+    # Change states to trigger event listener
+    hass.states.async_set("fan.test_fan", "off")
+    await hass.async_block_till_done()
 
     # Check state reporting is still wanted in cloud prefs, but disabled for Alexa
     assert cloud_prefs.alexa_report_state is True
-    assert conf.should_report_state is not reporting_disabled
-    assert conf.is_reporting_states is not reporting_disabled
+    assert conf.should_report_state is False
+    assert conf.is_reporting_states is False
 
-    # Simulate we're again authorized - state reporting should be re-enabled for Alexa
+    # Simulate we're again authorized, but token update fails
+    with pytest.raises(expected_exception):
+        await conf.set_authorized(True)
+
+    assert cloud_prefs.alexa_report_state is True
+    assert conf.should_report_state is False
+    assert conf.is_reporting_states is False
+
+    # Simulate we're again authorized and token update succeeds
+    # State reporting should now be re-enabled for Alexa
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         "http://example/alexa_token",

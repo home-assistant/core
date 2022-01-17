@@ -159,7 +159,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         if resp.status == HTTPStatus.BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
-                    await self.set_authorized(False)
                     persistent_notification.async_create(
                         self.hass,
                         f"There was an error reporting state to Alexa ({body['reason']}). "

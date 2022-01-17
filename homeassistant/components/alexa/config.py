@@ -115,7 +115,12 @@ class AbstractConfig(ABC):
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
                 _LOGGER.debug("Enable proactive mode")
-                await self.async_enable_proactive_mode()
+                try:
+                    await self.async_enable_proactive_mode()
+                except Exception:
+                    # We failed to enable proactive mode, unset authorized flag
+                    self._store.set_authorized(False)
+                    raise
             else:
                 _LOGGER.debug("Disable proactive mode")
                 await self.async_disable_proactive_mode()
