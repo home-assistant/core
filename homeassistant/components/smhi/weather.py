@@ -210,8 +210,3 @@ class SmhiWeather(WeatherEntity):
             )
 
         return data
-
-    @property
-    def condition(self) -> str | None:
-        """Return the current condition."""
-        return self._attr_condition
