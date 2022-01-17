@@ -123,8 +123,8 @@ async def async_setup_entry(
     )
 
 
-class LaunchLibraryBaseSensor(CoordinatorEntity, SensorEntity):
-    """Representation of the base sensor."""
+class NextLaunchBaseSensor(CoordinatorEntity, SensorEntity):
+    """Representation of the base next launch sensor."""
 
     _attr_attribution = ATTRIBUTION
     _next_launch: Launch | None = None
@@ -138,7 +138,8 @@ class LaunchLibraryBaseSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize a Launch Library entity."""
         super().__init__(coordinator)
-        self._attr_name = name if name else description.name
+        if name:
+            self._attr_name = name
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
 
@@ -159,7 +160,7 @@ class LaunchLibraryBaseSensor(CoordinatorEntity, SensorEntity):
         self._handle_coordinator_update()
 
 
-class NextLaunchSensor(LaunchLibraryBaseSensor):
+class NextLaunchSensor(NextLaunchBaseSensor):
     """Representation of the next launch information sensor."""
 
     @property
@@ -182,7 +183,7 @@ class NextLaunchSensor(LaunchLibraryBaseSensor):
         }
 
 
-class LaunchTimeSensor(LaunchLibraryBaseSensor):
+class LaunchTimeSensor(NextLaunchBaseSensor):
     """Representation of the next launch time sensor."""
 
     @property
