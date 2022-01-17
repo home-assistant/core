@@ -1,6 +1,11 @@
 """Tests for the sensors provided by the Roku integration."""
 from homeassistant.components.roku.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -36,7 +41,7 @@ async def test_roku_sensors(
     assert state
     assert entry.unique_id == f"{UPNP_SERIAL}_active_app_id"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
-    assert state.state is None
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active App ID"
     assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -90,7 +95,7 @@ async def test_rokutv_sensors(
     assert state
     assert entry.unique_id == "YN00H5555555_active_app_id"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
-    assert state.state == "tvinput-dtv"
+    assert state.state == "tvinput.dtv"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active App ID'
     assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
     assert ATTR_DEVICE_CLASS not in state.attributes
