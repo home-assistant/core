@@ -73,13 +73,20 @@ ATTR_EVENT_ID = "event_id"
 
 
 @dataclass
-class DeconzSensorDescription:
+class DeconzSensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
 
     device_property: str
     suffix: str
     update_key: str
-    entity_description: SensorEntityDescription
+
+
+@dataclass
+class DeconzSensorDescription(
+    SensorEntityDescription,
+    DeconzSensorDescriptionMixin,
+):
+    """Class describing deCONZ binary sensor entities."""
 
 
 ENTITY_DESCRIPTIONS = {
@@ -134,21 +141,22 @@ ENTITY_DESCRIPTIONS = {
 
 SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
+        key="temperature",
         device_property="secondary_temperature",
         suffix="Temperature",
         update_key="temperature",
-        entity_description=ENTITY_DESCRIPTIONS[Temperature],
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     DeconzSensorDescription(
+        key="air_quality_ppb",
         device_property="air_quality_ppb",
         suffix="PPB",
         update_key="airqualityppb",
-        entity_description=SensorEntityDescription(
-            key="air_quality_ppb",
-            device_class=SensorDeviceClass.AQI,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        ),
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
     ),
 ]
 
@@ -294,20 +302,19 @@ class DeconzPropertySensor(DeconzDevice, SensorEntity):
         self,
         device: PydeconzSensor,
         gateway: DeconzGateway,
-        sensor_description: DeconzSensorDescription,
+        description: DeconzSensorDescription,
     ) -> None:
         """Initialize deCONZ sensor."""
-        self.sensor_description = sensor_description
-        self.entity_description = sensor_description.entity_description
+        self.entity_description = description
         super().__init__(device, gateway)
 
-        self._attr_name = f"{self._device.name} {sensor_description.suffix}"
-        self._update_keys = {sensor_description.update_key, "reachable"}
+        self._attr_name = f"{self._device.name} {description.suffix}"
+        self._update_keys = {description.update_key, "reachable"}
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.serial}-{self.sensor_description.suffix.lower()}"
+        return f"{self.serial}-{self.entity_description.suffix.lower()}"
 
     @callback
     def async_update_callback(self) -> None:
@@ -318,7 +325,7 @@ class DeconzPropertySensor(DeconzDevice, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return getattr(self._device, self.sensor_description.device_property)  # type: ignore[no-any-return]
+        return getattr(self._device, self.entity_description.device_property)  # type: ignore[no-any-return]
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):
