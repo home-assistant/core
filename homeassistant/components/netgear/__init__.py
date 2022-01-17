@@ -21,7 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = entry.data.get(CONF_PORT)
     ssl = entry.data.get(CONF_SSL)
     if port != router.port or ssl != router.ssl:
-        hass.config_entries.async_update_entry(entry, data={CONF_PORT: router.port, CONF_SSL: router.ssl})
+        hass.config_entries.async_update_entry(
+            entry, data={CONF_PORT: router.port, CONF_SSL: router.ssl}
+        )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router

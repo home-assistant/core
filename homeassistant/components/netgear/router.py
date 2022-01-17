@@ -244,6 +244,16 @@ class NetgearRouter:
         """Event specific per Netgear entry to signal updates in devices."""
         return f"{DOMAIN}-{self._host}-device-update"
 
+    @property
+    def port(self) -> int:
+        """Port used by the API."""
+        return self._api.port
+
+    @property
+    def ssl(self) -> bool:
+        """SSL used by the API."""
+        return self._api.ssl
+
 
 class NetgearDeviceEntity(Entity):
     """Base class for a device connected to a Netgear router."""
