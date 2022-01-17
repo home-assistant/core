@@ -126,7 +126,7 @@ class HostInfo(TypedDict):
 
 
 class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
-    """FrtizBoxTools class."""
+    """FritzBoxTools class."""
 
     def __init__(
         self,
