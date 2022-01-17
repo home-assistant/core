@@ -743,7 +743,7 @@ gios==2.1.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances_api==0.2.0
+glances_api==0.3.4
 
 # homeassistant.components.gntp
 gntp==1.0.3
