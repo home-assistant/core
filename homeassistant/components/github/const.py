@@ -13,7 +13,7 @@ DOMAIN = "github"
 CLIENT_ID = "ce3981304697fb012542"
 # THIS NEED TO CHANGE!!!!
 
-DEFAULT_REPOSITORIES = ["home-assistant/core"]
+DEFAULT_REPOSITORIES = ["home-assistant/core", "esphome/esphome"]
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=300)
 
 CONF_ACCESS_TOKEN = "access_token"
