@@ -54,7 +54,7 @@ from .onewirehub import OneWireHub
 class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
     """Class describing OneWire sensor entities."""
 
-    override_key: str | None = None
+    override_key: Callable[[str, Mapping[str, Any]], str] | None = None
 
 
 SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
@@ -195,7 +195,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Thermocouple temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
             read_mode=READ_MODE_FLOAT,
-            override_key="typeK/temperature",
+            override_key=lambda d, o: "typeK/temperature",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
