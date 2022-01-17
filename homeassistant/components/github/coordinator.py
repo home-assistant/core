@@ -76,7 +76,15 @@ class RepositoryReleaseDataUpdateCoordinator(
         result = await self._client.repos.releases.list(
             self.repository, **{"params": {"per_page": 1}}
         )
-        return result.data[0] if result.data else None
+        if not result.data:
+            return None
+
+        for release in result.data:
+            if not release.prerelease:
+                return release
+
+        # Fall back to the latest release if no non-prerelease release is found
+        return result.data[0]
 
 
 class RepositoryIssueDataUpdateCoordinator(
