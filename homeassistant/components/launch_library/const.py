@@ -13,3 +13,7 @@ ATTR_WINDOW_END = "window_end"
 ATTRIBUTION = "Data provided by Launch Library."
 
 DEFAULT_NAME = "Next launch"
+
+NEXT_LAUNCH = "next_launch"
+LAUNCH_TIME = "launch_time"
+LAUNCH_PROBABILITY = "launch_probability"

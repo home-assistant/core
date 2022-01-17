@@ -37,6 +37,9 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
+    LAUNCH_PROBABILITY,
+    LAUNCH_TIME,
+    NEXT_LAUNCH,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,25 +50,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="next_launch",
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    NEXT_LAUNCH: SensorEntityDescription(
+        key=NEXT_LAUNCH,
         icon="mdi:rocket-launch",
         name=DEFAULT_NAME,
     ),
-    SensorEntityDescription(
-        key="launch_time",
+    LAUNCH_TIME: SensorEntityDescription(
+        key=LAUNCH_TIME,
         icon="mdi:clock-outline",
         name="Launch time",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    SensorEntityDescription(
-        key="launch_probability",
+    LAUNCH_PROBABILITY: SensorEntityDescription(
+        key=LAUNCH_PROBABILITY,
         icon="mdi:horseshoe",
         name="Launch Probability",
         native_unit_of_measurement=PERCENTAGE,
     ),
-)
+}
 
 
 async def async_setup_platform(
@@ -106,18 +109,18 @@ async def async_setup_entry(
             NextLaunchSensor(
                 coordinator,
                 entry.entry_id,
-                SENSOR_DESCRIPTIONS[0],
+                SENSOR_DESCRIPTIONS[NEXT_LAUNCH],
                 name,
             ),
             LaunchTimeSensor(
                 coordinator,
                 entry.entry_id,
-                SENSOR_DESCRIPTIONS[1],
+                SENSOR_DESCRIPTIONS[LAUNCH_TIME],
             ),
             LaunchProbabilitySensor(
                 coordinator,
                 entry.entry_id,
-                SENSOR_DESCRIPTIONS[2],
+                SENSOR_DESCRIPTIONS[LAUNCH_PROBABILITY],
             ),
         ]
     )
