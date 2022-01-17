@@ -275,7 +275,7 @@ class CloudPreferences:
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)
 
     async def get_cloud_user(self) -> str:
-        """Return ID from Home Assistant Cloud system user."""
+        """Return ID of Home Assistant Cloud system user."""
         user = await self._load_cloud_user()
 
         if user:
