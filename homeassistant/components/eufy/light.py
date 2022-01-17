@@ -101,7 +101,7 @@ class EufyLight(LightEntity):
 
     @property
     def max_mireds(self):
-        """Return maximu supported color temperature."""
+        """Return maximum supported color temperature."""
         return kelvin_to_mired(EUFY_MIN_KELVIN)
 
     @property
