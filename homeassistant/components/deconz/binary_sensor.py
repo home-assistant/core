@@ -51,13 +51,20 @@ ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 
 
 @dataclass
-class DeconzBinarySensorDescription:
+class DeconzBinarySensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
 
     device_property: str
     suffix: str
     update_key: str
-    entity_description: BinarySensorEntityDescription
+
+
+@dataclass
+class DeconzBinarySensorDescription(
+    BinarySensorEntityDescription,
+    DeconzBinarySensorDescriptionMixin,
+):
+    """Class describing deCONZ binary sensor entities."""
 
 
 ENTITY_DESCRIPTIONS = {
@@ -94,24 +101,20 @@ ENTITY_DESCRIPTIONS = {
 
 BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
+        key="tamper",
         device_property="tampered",
         suffix="Tampered",
         update_key="tampered",
-        entity_description=BinarySensorEntityDescription(
-            key="tamper",
-            device_class=BinarySensorDeviceClass.TAMPER,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DeconzBinarySensorDescription(
+        key="low_battery",
         device_property="low_battery",
         suffix="Low Battery",
         update_key="lowbattery",
-        entity_description=BinarySensorEntityDescription(
-            key="low_battery",
-            device_class=BinarySensorDeviceClass.BATTERY,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
@@ -235,8 +238,7 @@ class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
         description: DeconzBinarySensorDescription,
     ) -> None:
         """Initialize deCONZ binary sensor."""
-        self.description = description
-        self.entity_description = description.entity_description
+        self.entity_description = description
         super().__init__(device, gateway)
 
         self._attr_name = f"{self._device.name} {description.suffix}"
@@ -245,7 +247,7 @@ class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.serial}-{self.description.suffix.lower()}"
+        return f"{self.serial}-{self.entity_description.suffix.lower()}"
 
     @callback
     def async_update_callback(self) -> None:
@@ -256,4 +258,4 @@ class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return getattr(self._device, self.description.device_property)  # type: ignore[no-any-return]
+        return getattr(self._device, self.entity_description.device_property)  # type: ignore[no-any-return]
