@@ -128,6 +128,7 @@ async def test_idle_setup(
     await setup_integration(hass, aioclient_mock, power=False)
 
     state = hass.states.get(MAIN_ENTITY_ID)
+    assert state
     assert state.state == STATE_STANDBY
 
 
