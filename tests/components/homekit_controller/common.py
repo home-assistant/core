@@ -45,7 +45,7 @@ class EntityTestInfo:
 
 @dataclass
 class DeviceTestInfo:
-    """Describes how we exepced a device to be created by homekit_controller."""
+    """Describes how we expected a device to be created by homekit_controller."""
 
     unique_id: str
     name: str
