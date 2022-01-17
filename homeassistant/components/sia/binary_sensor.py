@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -84,7 +84,7 @@ ENTITY_DESCRIPTION_CONNECTIVITY = SIABinarySensorEntityDescription(
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
     entity_category=EntityCategory.DIAGNOSTIC,
     code_consequences={"RP": True},
-    always_reset_availability=False,
+    set_state_not_availability=True,
 )
 
 
@@ -198,19 +198,13 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
                 self._attr_available = False
 
     def update_state(self, sia_event: SIAEvent) -> bool:
-        """Update the state of the binary sensor."""
+        """Update the state of the binary sensor.
+
+        Return True if the interval callback needs to be updated.
+        """
         new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False
         _LOGGER.debug("New state will be %s", new_state)
         self._attr_is_on = bool(new_state)
         return True
-
-    @callback
-    def async_set_unavailable(self, _) -> None:
-        """Set unavailable or is_on to False for connectivity sensor."""
-        if self.entity_description.always_reset_availability:
-            self._attr_is_on = False
-        else:
-            self._attr_available = False
-        self.async_write_ha_state()

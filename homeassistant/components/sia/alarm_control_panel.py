@@ -144,7 +144,10 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             self._attr_available = False
 
     def update_state(self, sia_event: SIAEvent) -> bool:
-        """Update the state of the alarm control panel."""
+        """Update the state of the alarm control panel.
+
+        Return True if the interval callback needs to be updated.
+        """
         new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False

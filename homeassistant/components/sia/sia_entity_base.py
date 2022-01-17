@@ -31,7 +31,7 @@ class SIARequiredKeysMixin:
 class SIAEntityDescription(EntityDescription, SIARequiredKeysMixin):
     """Entity Description for SIA entities."""
 
-    always_reset_availability: bool = True
+    set_state_not_availability: bool = False
 
 
 class SIABaseEntity(RestoreEntity):
@@ -63,7 +63,7 @@ class SIABaseEntity(RestoreEntity):
             via_device=(DOMAIN, f"{port}_{account}"),
         )
 
-        self._cancel_availability_cb: CALLBACK_TYPE | None = None
+        self._post_interval_update_cb_canceller: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
 
@@ -85,7 +85,7 @@ class SIABaseEntity(RestoreEntity):
         )
         self.handle_last_state(await self.async_get_last_state())
         if self._attr_available:
-            self.async_create_availability_cb()
+            self.async_create_post_interval_update_cb()
 
     @abstractmethod
     def handle_last_state(self, last_state: State | None) -> None:
@@ -96,8 +96,7 @@ class SIABaseEntity(RestoreEntity):
 
         Overridden from Entity.
         """
-        if self._cancel_availability_cb:
-            self._cancel_availability_cb()
+        self._cancel_post_interval_update_cb()
 
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
@@ -113,26 +112,33 @@ class SIABaseEntity(RestoreEntity):
 
     @abstractmethod
     def update_state(self, sia_event: SIAEvent) -> bool:
-        """Do the entity specific state updates."""
+        """Do the entity specific state updates.
 
-    @callback
-    def async_reset_availability_cb(self) -> None:
-        """Reset availability cb by cancelling the current and creating a new one."""
-        self._attr_available = True
-        if self._cancel_availability_cb:
-            self._cancel_availability_cb()
-        self.async_create_availability_cb()
+        Return True if the interval callback needs to be updated.
+        """
 
-    def async_create_availability_cb(self) -> None:
-        """Create a availability cb and return the callback."""
-        self._cancel_availability_cb = async_call_later(
+    def async_create_post_interval_update_cb(self) -> None:
+        """Create a port interval update cb and return the callback."""
+        self._post_interval_update_cb_canceller = async_call_later(
             self.hass,
             get_unavailability_interval(self.ping_interval),
-            self.async_set_unavailable,
+            self.async_post_interval_update,
         )
 
     @callback
-    def async_set_unavailable(self, _) -> None:
-        """Set unavailable."""
+    def async_post_interval_update(self, _) -> None:
+        """Set unavailable or update state after a ping interval.
+
+        Since not all types of entities that inherit from SIABaseEntity have _attr_is_on, this function uses the setattr instead of a direct assignment.
+        """
+        if self.entity_description.set_state_not_availability:
+            setattr(self, "_attr_is_on", False)
+            self.async_write_ha_state()
+            return
         self._attr_available = False
         self.async_write_ha_state()
+
+    def _cancel_post_interval_update_cb(self) -> None:
+        """Cancel the callback."""
+        if self._post_interval_update_cb_canceller:
+            self._post_interval_update_cb_canceller()
