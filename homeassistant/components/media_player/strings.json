@@ -13,7 +13,8 @@
       "turned_off": "{entity_name} turned off",
       "idle": "{entity_name} becomes idle",
       "paused": "{entity_name} is paused",
-      "playing": "{entity_name} starts playing"
+      "playing": "{entity_name} starts playing",
+      "changed_states": "{entity_name} changed states"
     }
   },
   "state": {

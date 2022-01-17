@@ -350,7 +350,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.3
+async-upnp-client==0.23.4
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -404,7 +404,7 @@ beautifulsoup4==4.10.0
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.7
+bimmer_connected==0.8.10
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.3
+flux_led==0.28.4
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -743,7 +743,7 @@ gios==2.1.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances_api==0.2.0
+glances_api==0.3.4
 
 # homeassistant.components.gntp
 gntp==1.0.3
@@ -1374,7 +1374,7 @@ pyads==3.2.2
 pyaehw4a1==0.3.9
 
 # homeassistant.components.aftership
-pyaftership==0.1.2
+pyaftership==21.11.0
 
 # homeassistant.components.airnow
 pyairnow==1.1.0
@@ -2012,7 +2012,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==1.7.0
+pyunifiprotect==3.1.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0

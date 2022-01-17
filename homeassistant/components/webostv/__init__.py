@@ -166,8 +166,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             else:
                 break
 
+        ent_reg = entity_registry.async_get(hass)
+        if not (
+            new_entity_id := ent_reg.async_get_entity_id(
+                Platform.MEDIA_PLAYER, DOMAIN, key
+            )
+        ):
+            _LOGGER.debug(
+                "Not updating webOSTV Smart TV entity %s unique_id, entity missing",
+                entity_id,
+            )
+            return
+
         uuid = client.hello_info["deviceUUID"]
-        ent_reg.async_update_entity(entity_id, new_unique_id=uuid)
+        ent_reg.async_update_entity(new_entity_id, new_unique_id=uuid)
         await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},

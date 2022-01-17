@@ -117,7 +117,11 @@ async def async_send_changereport_message(
     try:
         token = await config.async_get_access_token()
     except (RequireRelink, NoTokenAvailable):
-        config.set_authorized(False)
+        await config.set_authorized(False)
+        _LOGGER.error(
+            "Error when sending ChangeReport to Alexa, could not get access token"
+        )
+        return
 
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -170,7 +174,7 @@ async def async_send_changereport_message(
                 alexa_properties,
                 invalidate_access_token=False,
             )
-        config.set_authorized(False)
+        await config.set_authorized(False)
 
     _LOGGER.error(
         "Error when sending ChangeReport to Alexa: %s: %s",
