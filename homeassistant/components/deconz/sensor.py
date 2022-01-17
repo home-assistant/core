@@ -1,7 +1,7 @@
 """Support for deCONZ sensors."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
+from collections.abc import Callable, ValuesView
 from dataclasses import dataclass
 
 from pydeconz.sensor import (
@@ -79,6 +79,7 @@ class DeconzSensorDescriptionMixin:
     device_property: str
     suffix: str
     update_key: str
+    value_fn: Callable[[PydeconzSensor], float | int | None]
 
 
 @dataclass
@@ -143,6 +144,7 @@ SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="temperature",
         device_property="secondary_temperature",
+        value_fn=lambda device: device.secondary_temperature,
         suffix="Temperature",
         update_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -152,6 +154,7 @@ SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="air_quality_ppb",
         device_property="air_quality_ppb",
+        value_fn=lambda device: device.air_quality_ppb,
         suffix="PPB",
         update_key="airqualityppb",
         device_class=SensorDeviceClass.AQI,
@@ -209,15 +212,16 @@ async def async_setup_entry(
 
             for sensor_description in SENSOR_DESCRIPTIONS:
 
-                if hasattr(sensor, sensor_description.device_property) and getattr(
-                    sensor, sensor_description.device_property
-                ):
-                    known_sensors = set(gateway.entities[DOMAIN])
-                    new_sensor = DeconzPropertySensor(
-                        sensor, gateway, sensor_description
-                    )
-                    if new_sensor.unique_id not in known_sensors:
-                        entities.append(new_sensor)
+                try:
+                    if sensor_description.value_fn(sensor):
+                        known_sensors = set(gateway.entities[DOMAIN])
+                        new_sensor = DeconzPropertySensor(
+                            sensor, gateway, sensor_description
+                        )
+                        if new_sensor.unique_id not in known_sensors:
+                            entities.append(new_sensor)
+                except AttributeError:
+                    continue
 
         if entities:
             async_add_entities(entities)
@@ -325,7 +329,7 @@ class DeconzPropertySensor(DeconzDevice, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return getattr(self._device, self.entity_description.device_property)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)  # type: ignore[no-any-return]
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):
