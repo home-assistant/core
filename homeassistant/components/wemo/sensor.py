@@ -7,8 +7,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import convert
 
@@ -17,10 +20,14 @@ from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up WeMo sensors."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
         async_add_entities(
             [InsightCurrentPower(coordinator), InsightTodayEnergy(coordinator)]
@@ -42,6 +49,7 @@ class InsightSensor(WemoEntity, SensorEntity):
     @property
     def name_suffix(self) -> str:
         """Return the name of the entity if any."""
+        assert self.entity_description.name
         return self.entity_description.name
 
     @property
@@ -50,7 +58,7 @@ class InsightSensor(WemoEntity, SensorEntity):
         return self.entity_description.key
 
     @property
-    def available(self) -> str:
+    def available(self) -> bool:
         """Return true if sensor is available."""
         return (
             self.entity_description.key in self.wemo.insight_params
@@ -72,12 +80,11 @@ class InsightCurrentPower(InsightSensor):
     @property
     def native_value(self) -> StateType:
         """Return the current power consumption."""
-        return (
-            convert(
-                self.wemo.insight_params.get(self.entity_description.key), float, 0.0
-            )
-            / 1000.0
+        milliwatts = convert(
+            self.wemo.insight_params.get(self.entity_description.key), float, 0.0
         )
+        assert isinstance(milliwatts, float)
+        return milliwatts / 1000.0
 
 
 class InsightTodayEnergy(InsightSensor):
@@ -94,7 +101,8 @@ class InsightTodayEnergy(InsightSensor):
     @property
     def native_value(self) -> StateType:
         """Return the current energy use today."""
-        miliwatts = convert(
+        milliwatt_seconds = convert(
             self.wemo.insight_params.get(self.entity_description.key), float, 0.0
         )
-        return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
+        assert isinstance(milliwatt_seconds, float)
+        return round(milliwatt_seconds / (1000.0 * 1000.0 * 60), 2)

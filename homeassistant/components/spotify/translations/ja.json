@@ -21,7 +21,7 @@
     },
     "system_health": {
         "info": {
-            "api_endpoint_reachable": "Spotify API\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u306b\u5230\u9054\u53ef\u80fd"
+            "api_endpoint_reachable": "Spotify API\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u306b\u30a2\u30af\u30bb\u30b9\u53ef\u80fd"
         }
     }
 }

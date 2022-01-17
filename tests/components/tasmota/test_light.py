@@ -10,10 +10,9 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components import light
 from homeassistant.components.light import SUPPORT_EFFECT, SUPPORT_TRANSITION
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, Platform
 
 from .test_common import (
     DEFAULT_CONFIG,
@@ -1620,7 +1619,7 @@ async def test_availability_when_connection_lost(
     config["rl"][0] = 2
     config["lt_st"] = 1  # 1 channel light (Dimmer)
     await help_test_availability_when_connection_lost(
-        hass, mqtt_client_mock, mqtt_mock, light.DOMAIN, config
+        hass, mqtt_client_mock, mqtt_mock, Platform.LIGHT, config
     )
 
 
@@ -1629,7 +1628,7 @@ async def test_availability(hass, mqtt_mock, setup_tasmota):
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 2
     config["lt_st"] = 1  # 1 channel light (Dimmer)
-    await help_test_availability(hass, mqtt_mock, light.DOMAIN, config)
+    await help_test_availability(hass, mqtt_mock, Platform.LIGHT, config)
 
 
 async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
@@ -1637,7 +1636,9 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 2
     config["lt_st"] = 1  # 1 channel light (Dimmer)
-    await help_test_availability_discovery_update(hass, mqtt_mock, light.DOMAIN, config)
+    await help_test_availability_discovery_update(
+        hass, mqtt_mock, Platform.LIGHT, config
+    )
 
 
 async def test_availability_poll_state(
@@ -1649,7 +1650,7 @@ async def test_availability_poll_state(
     config["lt_st"] = 1  # 1 channel light (Dimmer)
     poll_topic = "tasmota_49A3BC/cmnd/STATE"
     await help_test_availability_poll_state(
-        hass, mqtt_client_mock, mqtt_mock, light.DOMAIN, config, poll_topic, ""
+        hass, mqtt_client_mock, mqtt_mock, Platform.LIGHT, config, poll_topic, ""
     )
 
 
@@ -1663,7 +1664,7 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog, setup_tasmota):
     config2["lt_st"] = 0
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, light.DOMAIN, config1, config2
+        hass, mqtt_mock, caplog, Platform.LIGHT, config1, config2
     )
 
 
@@ -1677,7 +1678,7 @@ async def test_discovery_removal_relay_as_light(hass, mqtt_mock, caplog, setup_t
     config2["so"]["30"] = 0  # Disable Home Assistant auto-discovery as light
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, light.DOMAIN, config1, config2
+        hass, mqtt_mock, caplog, Platform.LIGHT, config1, config2
     )
 
 
@@ -1693,7 +1694,7 @@ async def test_discovery_removal_relay_as_light2(
     config2["so"]["30"] = 0  # Disable Home Assistant auto-discovery as light
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, light.DOMAIN, config1, config2
+        hass, mqtt_mock, caplog, Platform.LIGHT, config1, config2
     )
 
 
@@ -1706,7 +1707,7 @@ async def test_discovery_update_unchanged_light(hass, mqtt_mock, caplog, setup_t
         "homeassistant.components.tasmota.light.TasmotaLight.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, light.DOMAIN, config, discovery_update
+            hass, mqtt_mock, caplog, Platform.LIGHT, config, discovery_update
         )
 
 
@@ -1717,7 +1718,7 @@ async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     config["lt_st"] = 1  # 1 channel light (Dimmer)
     unique_id = f"{DEFAULT_CONFIG['mac']}_light_light_0"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, light.DOMAIN, unique_id, config
+        hass, mqtt_mock, Platform.LIGHT, unique_id, config
     )
 
 
@@ -1728,7 +1729,7 @@ async def test_discovery_device_remove_relay_as_light(hass, mqtt_mock, setup_tas
     config["so"]["30"] = 1  # Enforce Home Assistant auto-discovery as light
     unique_id = f"{DEFAULT_CONFIG['mac']}_light_relay_0"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, light.DOMAIN, unique_id, config
+        hass, mqtt_mock, Platform.LIGHT, unique_id, config
     )
 
 
@@ -1743,7 +1744,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, light.DOMAIN, config, topics
+        hass, mqtt_mock, Platform.LIGHT, config, topics
     )
 
 
@@ -1753,5 +1754,5 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota)
     config["rl"][0] = 2
     config["lt_st"] = 1  # 1 channel light (Dimmer)
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, light.DOMAIN, config
+        hass, mqtt_mock, Platform.LIGHT, config
     )

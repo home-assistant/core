@@ -1,4 +1,6 @@
 """Support for Decora dimmers."""
+from __future__ import annotations
+
 import copy
 from functools import wraps
 import logging
@@ -16,7 +18,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +76,12 @@ def retry(method):
     return wrapper_retry
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an Decora switch."""
     lights = []
     for address, device_config in config[CONF_DEVICES].items():

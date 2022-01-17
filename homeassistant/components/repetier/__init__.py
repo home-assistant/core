@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-import pyrepetier
+import pyrepetierng as pyrepetier
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
@@ -19,10 +19,12 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -215,7 +217,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Repetier Server component."""
     hass.data[REPETIER_API] = {}
 
@@ -313,4 +315,6 @@ class PrinterAPI:
 
         if not sensor_info:
             return
-        load_platform(self._hass, "sensor", DOMAIN, sensor_info, self.config)
+        load_platform(
+            self._hass, "sensor", DOMAIN, {"sensors": sensor_info}, self.config
+        )

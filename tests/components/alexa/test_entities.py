@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant.components.alexa import smart_home
 from homeassistant.const import __version__
 
-from . import DEFAULT_CONFIG, get_new_request
+from . import get_default_config, get_new_request
 
 
 async def test_unsupported_domain(hass):
@@ -13,7 +13,7 @@ async def test_unsupported_domain(hass):
 
     hass.states.async_set("woz.boop", "on", {"friendly_name": "Boop Woz"})
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
 
     assert "event" in msg
     msg = msg["event"]
@@ -27,7 +27,7 @@ async def test_serialize_discovery(hass):
 
     hass.states.async_set("switch.bla", "on", {"friendly_name": "Boop Woz"})
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
 
     assert "event" in msg
     msg = msg["event"]
@@ -51,7 +51,7 @@ async def test_serialize_discovery_recovers(hass, caplog):
         "homeassistant.components.alexa.capabilities.AlexaPowerController.serialize_discovery",
         side_effect=TypeError,
     ):
-        msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+        msg = await smart_home.async_handle_message(hass, get_default_config(), request)
 
     assert "event" in msg
     msg = msg["event"]

@@ -4,16 +4,8 @@ from unittest.mock import Mock
 
 from requests.exceptions import HTTPError
 
-from homeassistant.components.fritzbox.const import (
-    ATTR_STATE_DEVICE_LOCKED,
-    ATTR_STATE_LOCKED,
-    DOMAIN as FB_DOMAIN,
-)
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-)
+from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN, SensorStateClass
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -44,17 +36,15 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state
     assert state.state == "1.23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Temperature"
-    assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
-    assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(f"{ENTITY_ID}_humidity")
     assert state
     assert state.state == "42"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Humidity"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(f"{ENTITY_ID}_battery")
     assert state

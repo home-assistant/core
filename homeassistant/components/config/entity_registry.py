@@ -18,10 +18,10 @@ from homeassistant.helpers.entity_registry import (
 
 async def async_setup(hass):
     """Enable the Entity Registry views."""
-    hass.components.websocket_api.async_register_command(websocket_list_entities)
-    hass.components.websocket_api.async_register_command(websocket_get_entity)
-    hass.components.websocket_api.async_register_command(websocket_update_entity)
-    hass.components.websocket_api.async_register_command(websocket_remove_entity)
+    websocket_api.async_register_command(hass, websocket_list_entities)
+    websocket_api.async_register_command(hass, websocket_get_entity)
+    websocket_api.async_register_command(hass, websocket_update_entity)
+    websocket_api.async_register_command(hass, websocket_remove_entity)
     return True
 
 

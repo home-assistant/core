@@ -19,6 +19,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCKED,
     CONF_HOST,
@@ -29,9 +30,10 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import format_unique_id, load_games, save_games
 from .const import (
@@ -58,7 +60,11 @@ MEDIA_IMAGE_DEFAULT = None
 DEFAULT_RETRIES = 2
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up PS4 from a config entry."""
     config = config_entry
     creds = config.data[CONF_TOKEN]

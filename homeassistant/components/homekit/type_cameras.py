@@ -11,7 +11,7 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
@@ -139,7 +139,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = get_ffmpeg_manager(hass)
         for config_key, conf in CONFIG_DEFAULTS.items():
             if config_key not in config:
                 config[config_key] = conf

@@ -12,7 +12,7 @@ coverage==6.2.0
 freezegun==1.1.0
 jsonpickle==1.4.1
 mock-open==1.4.0
-mypy==0.910
+mypy==0.931
 pre-commit==2.16.0
 pylint==2.12.1
 pipdeptree==2.2.0

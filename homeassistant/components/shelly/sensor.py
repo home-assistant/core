@@ -286,6 +286,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         default_enabled=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "rssi": RpcAttributeDescription(
         key="wifi",

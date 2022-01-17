@@ -28,7 +28,7 @@ async def async_setup_ha_cast(
 
     if user is None:
         user = await hass.auth.async_create_system_user(
-            "Home Assistant Cast", group_ids=[auth.GROUP_ID_ADMIN]
+            "Home Assistant Cast", group_ids=[auth.const.GROUP_ID_ADMIN]
         )
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "user_id": user.id}
@@ -39,7 +39,7 @@ async def async_setup_ha_cast(
     else:
         refresh_token = await hass.auth.async_create_refresh_token(user)
 
-    async def handle_show_view(call: core.ServiceCall):
+    async def handle_show_view(call: core.ServiceCall) -> None:
         """Handle a Show View service call."""
         hass_url = get_url(hass, require_ssl=True, prefer_external=True)
 

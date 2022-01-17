@@ -19,7 +19,7 @@ from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR]
 

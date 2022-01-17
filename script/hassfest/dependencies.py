@@ -102,6 +102,7 @@ ALLOWED_USED_COMPONENTS = {
     "hassio",
     "homeassistant",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",

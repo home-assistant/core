@@ -11,9 +11,11 @@ from oauthlib.oauth2 import AccessDeniedError
 import requests
 from ring_doorbell import Auth, Ring
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, __version__
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +37,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ring component."""
     if DOMAIN not in config:
         return True
@@ -51,7 +53,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
     def token_updater(token):
@@ -111,7 +113,7 @@ async def async_setup_entry(hass, entry):
     if hass.services.has_service(DOMAIN, "update"):
         return True
 
-    async def async_refresh_all(_):
+    async def async_refresh_all(_: ServiceCall) -> None:
         """Refresh all ring data."""
         for info in hass.data[DOMAIN].values():
             await info["device_data"].async_refresh_all()
@@ -125,7 +127,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ring entry."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
