@@ -1,7 +1,5 @@
 """The tests for the feedreader component."""
 from datetime import timedelta
-from os import remove
-from os.path import exists
 from unittest import mock
 from unittest.mock import mock_open, patch
 
@@ -32,13 +30,6 @@ def load_fixture_bytes(src):
     feed_data = load_fixture(src)
     raw = bytes(feed_data, "utf-8")
     return raw
-
-
-@pytest.fixture(scope="module", autouse=True)
-def mock_pickle_open():
-    """Mock builtins.open for feedreader storage."""
-    with patch("homeassistant.components.feedreader.open", mock_open(), create=True):
-        yield
 
 
 @pytest.fixture(name="feed_one_event")
@@ -72,14 +63,10 @@ async def fixture_events(hass):
 
 
 @pytest.fixture(name="feed_storage", autouse=True)
-def fixture_feed_storage(hass):
-    """Create storage account for feedreader."""
-    data_file = hass.config.path(f"{feedreader.DOMAIN}.pickle")
-
-    yield
-
-    if exists(data_file):
-        remove(data_file)
+def fixture_feed_storage():
+    """Mock builtins.open for feedreader storage."""
+    with patch("homeassistant.components.feedreader.open", mock_open(), create=True):
+        yield
 
 
 async def test_setup_one_feed(hass):
