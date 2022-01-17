@@ -1,4 +1,6 @@
 """Constants for the GitHub integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 from logging import Logger, getLogger
 from typing import NamedTuple
@@ -23,5 +25,7 @@ CONF_REPOSITORIES = "repositories"
 class IssuesPulls(NamedTuple):
     """Issues and pull requests."""
 
-    issues: list[GitHubIssueModel]
-    pulls: list[GitHubIssueModel]
+    issues_count: int
+    issue_last: GitHubIssueModel | None
+    pulls_count: int
+    pull_last: GitHubIssueModel | None

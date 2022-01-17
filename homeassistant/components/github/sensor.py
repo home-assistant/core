@@ -118,7 +118,7 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement="Issues",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: len(data.issues),
+        value_fn=lambda data: data.issues_count,
         coordinator_key="issue",
     ),
     GitHubSensorIssueEntityDescription(
@@ -127,7 +127,7 @@ SENSOR_DESCRIPTIONS: tuple[
         native_unit_of_measurement="Pull Requests",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: len(data.pulls),
+        value_fn=lambda data: data.pulls_count,
         coordinator_key="issue",
     ),
 )
@@ -280,17 +280,20 @@ class GitHubSensorLatestIssueEntity(GitHubSensorLatestBaseEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and len(self.coordinator.data.issues) != 0
+        return super().available and self.coordinator.data.issues_count != 0
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.issues[0].title[:255]
+        if (issue := self.coordinator.data.issue_last) is None:
+            return None
+        return issue.title[:255]
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, str | int | None]:
+    def extra_state_attributes(self) -> Mapping[str, str | int | None] | None:
         """Return the extra state attributes."""
-        issue = self.coordinator.data.issues[0]
+        if (issue := self.coordinator.data.issue_last) is None:
+            return None
         return {
             "url": issue.html_url,
             "number": issue.number,
@@ -308,17 +311,20 @@ class GitHubSensorLatestPullEntity(GitHubSensorLatestBaseEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and len(self.coordinator.data.pulls) != 0
+        return super().available and self.coordinator.data.pulls_count != 0
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.pulls[0].title[:255]
+        if (pull := self.coordinator.data.pull_last) is None:
+            return None
+        return pull.title[:255]
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, str | int | None]:
+    def extra_state_attributes(self) -> Mapping[str, str | int | None] | None:
         """Return the extra state attributes."""
-        pull = self.coordinator.data.pulls[0]
+        if (pull := self.coordinator.data.pull_last) is None:
+            return None
         return {
             "url": pull.html_url,
             "number": pull.number,

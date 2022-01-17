@@ -117,7 +117,15 @@ class RepositoryIssueDataUpdateCoordinator(
             issue for issue in all_issues or [] if issue.pull_request is not None
         ]
 
-        return IssuesPulls(issues=issues, pulls=pulls)
+        issues_count = len(issues)
+        pulls_count = len(pulls)
+
+        return IssuesPulls(
+            issues_count=issues_count,
+            issue_last=issues[0] if issues_count != 0 else None,
+            pulls_count=pulls_count,
+            pull_last=pulls[0] if pulls_count != 0 else None,
+        )
 
 
 class RepositoryCommitDataUpdateCoordinator(
