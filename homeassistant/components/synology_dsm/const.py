@@ -9,6 +9,7 @@ from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -47,6 +48,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 CONF_DEVICE_TOKEN = "device_token"
+CONF_SNAPSHOT_QUALITY = "snap_profile_type"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
@@ -55,6 +57,7 @@ DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = 10  # sec
+DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"
 
