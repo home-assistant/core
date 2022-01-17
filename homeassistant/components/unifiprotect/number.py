@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Generic
 
 from pyunifiprotect.data.devices import Camera, Light
 
@@ -15,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin
+from .models import ProtectSetableKeysMixin, T
 
 
 @dataclass
@@ -29,7 +30,7 @@ class NumberKeysMixin:
 
 @dataclass
 class ProtectNumberEntityDescription(
-    ProtectSetableKeysMixin, NumberEntityDescription, NumberKeysMixin
+    ProtectSetableKeysMixin, NumberEntityDescription, NumberKeysMixin, Generic[T]
 ):
     """Describes UniFi Protect Number entity."""
 
@@ -94,7 +95,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_value="light_device_settings.pir_sensitivity",
         ufp_set_method="set_sensitivity",
     ),
-    ProtectNumberEntityDescription(
+    ProtectNumberEntityDescription[Light](
         key="duration",
         name="Auto-shutoff Duration",
         icon="mdi:camera-timer",

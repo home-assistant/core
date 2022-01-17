@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
-from typing import Any, Final
+from typing import Any, Final, Generic
 
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
@@ -37,7 +37,7 @@ from homeassistant.util.dt import utcnow
 from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin
+from .models import ProtectSetableKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -104,7 +104,9 @@ SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
 
 
 @dataclass
-class ProtectSelectEntityDescription(ProtectSetableKeysMixin, SelectEntityDescription):
+class ProtectSelectEntityDescription(
+    ProtectSetableKeysMixin, SelectEntityDescription, Generic[T]
+):
     """Describes UniFi Protect Select entity."""
 
     ufp_options: list[dict[str, Any]] | None = None
@@ -246,7 +248,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value_fn=_get_light_motion_current,
         ufp_set_method_fn=_set_light_mode,
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Light](
         key="paired_camera",
         name="Paired Camera",
         icon="mdi:cctv",
@@ -274,13 +276,13 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         icon="mdi:cctv",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
-        ufp_options_callable=_get_paired_camera_options,
+        ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
     ),
 )
 
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Viewer](
         key="viewer",
         name="Liveview",
         icon="mdi:view-dashboard",

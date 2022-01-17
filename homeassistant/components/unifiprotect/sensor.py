@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Generic, Union
 
 from pyunifiprotect.data import (
     NVR,
@@ -45,7 +45,7 @@ from .entity import (
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import ProtectRequiredKeysMixin
+from .models import ProtectRequiredKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -53,7 +53,9 @@ DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
-class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescription):
+class ProtectSensorEntityDescription(
+    ProtectRequiredKeysMixin, SensorEntityDescription, Generic[T]
+):
     """Describes UniFi Protect Sensor entity."""
 
     precision: int | None = None
@@ -104,7 +106,7 @@ def _get_alarm_sound(obj: ProtectAdoptableDeviceModel | NVR) -> str:
 
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[Union[ProtectAdoptableDeviceModel, NVR]](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -254,7 +256,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 )
 
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[Union[ProtectAdoptableDeviceModel, NVR]](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -332,7 +334,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="storage_stats.storage_distribution.free.percentage",
         precision=2,
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[NVR](
         key="record_capacity",
         name="Recording Capacity",
         native_unit_of_measurement=TIME_SECONDS,
@@ -364,7 +366,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="system_info.cpu.temperature",
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[NVR](
         key="memory_utilization",
         name="Memory Utilization",
         native_unit_of_measurement=PERCENTAGE,
