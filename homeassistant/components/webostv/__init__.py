@@ -169,7 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ent_reg = entity_registry.async_get(hass)
         if not ent_reg.async_get_entity_id(Platform.MEDIA_PLAYER, DOMAIN, key):
             _LOGGER.debug(
-                "Not updating webOSTV Smart TV entity %s unique_id, entity unavailable",
+                "Not updating webOSTV Smart TV entity %s unique_id, entity missing",
                 entity_id,
             )
             return
