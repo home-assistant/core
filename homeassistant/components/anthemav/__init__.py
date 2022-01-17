@@ -6,14 +6,14 @@ import logging
 import anthemav
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ANTHEMAV_UDATE_SIGNAL, DOMAIN
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except OSError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = avr
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = avr
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 

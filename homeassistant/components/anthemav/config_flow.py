@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import anthemav
+from anthemav.connection import Connection
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -35,7 +36,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def connect_device(user_input: dict[str, Any]):
+async def connect_device(user_input: dict[str, Any]) -> Connection:
     """Connect to the AVR device."""
 
     @callback
@@ -77,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        avr = None
+        avr: Connection | None = None
         try:
             avr = await connect_device(user_input)
         except OSError:
@@ -115,6 +116,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(user_input)
