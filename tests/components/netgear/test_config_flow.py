@@ -106,8 +106,6 @@ async def test_user(hass, service):
         result["flow_id"],
         {
             CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -135,8 +133,6 @@ async def test_user_connect_error(hass, service_failed):
         result["flow_id"],
         {
             CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -159,8 +155,6 @@ async def test_user_incomplete_info(hass, service_incomplete):
         result["flow_id"],
         {
             CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },

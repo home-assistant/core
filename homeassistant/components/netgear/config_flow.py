@@ -39,9 +39,7 @@ def _discovery_schema_with_defaults(discovery_info):
 
 def _user_schema_with_defaults(user_input):
     user_schema = {
-        vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-        vol.Optional(CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)): int,
-        vol.Optional(CONF_SSL, default=user_input.get(CONF_SSL, False)): bool,
+        vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str
     }
     user_schema.update(_ordered_shared_schema(user_input))
 
@@ -169,8 +167,8 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form()
 
         host = user_input.get(CONF_HOST, self.placeholders[CONF_HOST])
-        port = user_input.get(CONF_PORT, self.placeholders[CONF_PORT])
-        ssl = user_input.get(CONF_SSL, self.placeholders[CONF_SSL])
+        port = self.placeholders[CONF_PORT]
+        ssl = self.placeholders[CONF_SSL]
         username = user_input.get(CONF_USERNAME, self.placeholders[CONF_USERNAME])
         password = user_input[CONF_PASSWORD]
         if not username:
