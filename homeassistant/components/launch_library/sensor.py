@@ -1,6 +1,8 @@
 """Support for Launch Library sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Any
@@ -50,25 +52,57 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    NEXT_LAUNCH: SensorEntityDescription(
+@dataclass
+class NextLaunchSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Launch], datetime | int | str | None]
+    attributes_fn: Callable[[Launch], dict[str, Any] | None]
+
+
+@dataclass
+class NextLaunchSensorEntityDescription(
+    SensorEntityDescription, NextLaunchSensorEntityDescriptionMixin
+):
+    """Describes a Next Launch sensor entity."""
+
+
+SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
+    NextLaunchSensorEntityDescription(
         key=NEXT_LAUNCH,
         icon="mdi:rocket-launch",
         name=DEFAULT_NAME,
+        value_fn=lambda next_launch: next_launch.name,
+        attributes_fn=lambda next_launch: {
+            ATTR_LAUNCH_PROVIDER: next_launch.launch_service_provider.name,
+            ATTR_LAUNCH_PAD: next_launch.pad.name,
+            ATTR_LAUNCH_FACILITY: next_launch.pad.location.name,
+            ATTR_LAUNCH_PAD_COUNTRY_CODE: next_launch.pad.location.country_code,
+        },
     ),
-    LAUNCH_TIME: SensorEntityDescription(
+    NextLaunchSensorEntityDescription(
         key=LAUNCH_TIME,
         icon="mdi:clock-outline",
         name="Launch time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda next_launch: parse_datetime(next_launch.net),
+        attributes_fn=lambda next_launch: {
+            ATTR_WINDOW_START: next_launch.window_start,
+            ATTR_WINDOW_END: next_launch.window_end,
+            ATTR_STREAM_LIVE: next_launch.webcast_live,
+        },
     ),
-    LAUNCH_PROBABILITY: SensorEntityDescription(
+    NextLaunchSensorEntityDescription(
         key=LAUNCH_PROBABILITY,
         icon="mdi:horseshoe",
         name="Launch Probability",
         native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda next_launch: next_launch.probability
+        if next_launch.probability != -1
+        else STATE_UNKNOWN,
+        attributes_fn=lambda next_launch: None,
     ),
-}
+)
 
 
 async def async_setup_platform(
@@ -107,36 +141,29 @@ async def async_setup_entry(
     async_add_entities(
         [
             NextLaunchSensor(
-                coordinator,
-                entry.entry_id,
-                SENSOR_DESCRIPTIONS[NEXT_LAUNCH],
-                name,
-            ),
-            LaunchTimeSensor(
-                coordinator,
-                entry.entry_id,
-                SENSOR_DESCRIPTIONS[LAUNCH_TIME],
-            ),
-            LaunchProbabilitySensor(
-                coordinator,
-                entry.entry_id,
-                SENSOR_DESCRIPTIONS[LAUNCH_PROBABILITY],
-            ),
+                coordinator=coordinator,
+                entry_id=entry.entry_id,
+                description=description,
+                name=name if description.name == NEXT_LAUNCH else None,
+            )
+            for description in SENSOR_DESCRIPTIONS
         ]
     )
 
 
-class NextLaunchBaseSensor(CoordinatorEntity, SensorEntity):
+class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     """Representation of the base next launch sensor."""
 
     _attr_attribution = ATTRIBUTION
     _next_launch: Launch | None = None
 
+    entity_description: NextLaunchSensorEntityDescription
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         entry_id: str,
-        description: SensorEntityDescription,
+        description: NextLaunchSensorEntityDescription,
         name: str | None = None,
     ) -> None:
         """Initialize a Launch Library entity."""
@@ -145,6 +172,20 @@ class NextLaunchBaseSensor(CoordinatorEntity, SensorEntity):
             self._attr_name = name
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
+
+    @property
+    def native_value(self) -> datetime | str | int | None:
+        """Return the state of the sensor."""
+        if self._next_launch is None:
+            return None
+        return self.entity_description.value_fn(self._next_launch)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the attributes of the sensor."""
+        if self._next_launch is None:
+            return None
+        return self.entity_description.attributes_fn(self._next_launch)
 
     @property
     def available(self) -> bool:
@@ -161,65 +202,3 @@ class NextLaunchBaseSensor(CoordinatorEntity, SensorEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
-
-
-class NextLaunchSensor(NextLaunchBaseSensor):
-    """Representation of the next launch information sensor."""
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        if self._next_launch is None:
-            return None
-        return self._next_launch.name
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the attributes of the sensor."""
-        if self._next_launch is None:
-            return None
-        return {
-            ATTR_LAUNCH_PROVIDER: self._next_launch.launch_service_provider.name,
-            ATTR_LAUNCH_PAD: self._next_launch.pad.name,
-            ATTR_LAUNCH_FACILITY: self._next_launch.pad.location.name,
-            ATTR_LAUNCH_PAD_COUNTRY_CODE: self._next_launch.pad.location.country_code,
-        }
-
-
-class LaunchTimeSensor(NextLaunchBaseSensor):
-    """Representation of the next launch time sensor."""
-
-    @property
-    def native_value(self) -> datetime | None:
-        """Return the state of the sensor."""
-        if self._next_launch is None:
-            return None
-        return parse_datetime(self._next_launch.net)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the attributes of the sensor."""
-        if self._next_launch is None:
-            return None
-        return {
-            ATTR_WINDOW_START: self._next_launch.window_start,
-            ATTR_WINDOW_END: self._next_launch.window_end,
-            ATTR_STREAM_LIVE: self._next_launch.webcast_live,
-        }
-
-
-class LaunchProbabilitySensor(NextLaunchBaseSensor):
-    """Representation of the launch probability sensor."""
-
-    @property
-    def native_value(self) -> int | str | None:
-        """Return the state of the sensor."""
-        if self._next_launch is None:
-            return None
-
-        # Library will return -1 if the probability is unknown, therefore
-        #  we check for it and return STATE_UNKNOWN instead so
-        # it is represent correctly that the probability is unknown.
-        if self._next_launch.probability == -1:
-            return STATE_UNKNOWN
-        return self._next_launch.probability
