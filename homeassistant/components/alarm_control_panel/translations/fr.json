@@ -20,7 +20,7 @@
             "armed_away": "Armer {entity_name} en mode \"sortie\"",
             "armed_home": "Armer {entity_name} en mode \"maison\"",
             "armed_night": "Armer {entity_name} en mode \"nuit\"",
-            "armed_vacation": "{entity_name} vacances arm\u00e9es",
+            "armed_vacation": "Armer {entity_name} en mode \"vacances\"",
             "disarmed": "{entity_name} d\u00e9sarm\u00e9",
             "triggered": "{entity_name} d\u00e9clench\u00e9"
         }
@@ -29,10 +29,10 @@
         "_": {
             "armed": "Activ\u00e9",
             "armed_away": "Enclench\u00e9e (absent)",
-            "armed_custom_bypass": "Arm\u00e9 avec exception personnalis\u00e9e",
+            "armed_custom_bypass": "Enclench\u00e9 avec exception personnalis\u00e9e",
             "armed_home": "Enclench\u00e9e (pr\u00e9sent)",
-            "armed_night": "Enclench\u00e9 (nuit)",
-            "armed_vacation": "Arm\u00e9es vacances",
+            "armed_night": "Enclench\u00e9e (nuit)",
+            "armed_vacation": "Enclench\u00e9e (vacances)",
             "arming": "Activation",
             "disarmed": "D\u00e9sactiv\u00e9e",
             "disarming": "D\u00e9sactivation",
