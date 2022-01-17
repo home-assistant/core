@@ -1,4 +1,6 @@
 """Support for Netgear routers."""
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
@@ -8,6 +10,8 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, PLATFORMS
 from .errors import CannotLoginException
 from .router import NetgearRouter
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -21,8 +25,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = entry.data.get(CONF_PORT)
     ssl = entry.data.get(CONF_SSL)
     if port != router.port or ssl != router.ssl:
-        hass.config_entries.async_update_entry(
-            entry, data={CONF_PORT: router.port, CONF_SSL: router.ssl}
+        data = entry.data.copy()
+        data[CONF_PORT] = router.port
+        data[CONF_SSL] = router.ssl
+        hass.config_entries.async_update_entry(entry, data=data)
+        _LOGGER.warning(
+            "Netgear port-SSL combination updated from (%i, %r) to (%i, %r), this schould only occur after a firmware update.",
+            port,
+            ssl,
+            router.port,
+            router.ssl,
         )
 
     hass.data.setdefault(DOMAIN, {})
