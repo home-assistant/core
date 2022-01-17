@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Protocol
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import ExtendedJSONEncoder
@@ -35,7 +37,18 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def _register_diagnostics_platform(hass, integration_domain, platform):
+class DiagnosticsProtocol(Protocol):
+    """Define the format that diagnostics platforms can have."""
+
+    async def async_get_config_entry_diagnostics(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> dict:
+        """Return diagnostics for a config entry."""
+
+
+async def _register_diagnostics_platform(
+    hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
+):
     """Register a diagnostics platform."""
     hass.data[DOMAIN][integration_domain] = {
         "config_entry": getattr(platform, "async_get_config_entry_diagnostics", None)
@@ -66,7 +79,9 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     url = "/api/diagnostics/{d_type}/{d_id}"
     name = "api:diagnostics"
 
-    async def get(self, request: web.Request, d_type: str, d_id: str) -> web.Response:
+    async def get(  # pylint: disable=no-self-use
+        self, request: web.Request, d_type: str, d_id: str
+    ) -> web.Response:
         """Download diagnostics."""
         if d_type != "config_entry":
             return web.Response(status=404)
