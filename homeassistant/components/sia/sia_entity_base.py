@@ -31,6 +31,8 @@ class SIARequiredKeysMixin:
 class SIAEntityDescription(EntityDescription, SIARequiredKeysMixin):
     """Entity Description for SIA entities."""
 
+    always_reset_availability: bool = True
+
 
 class SIABaseEntity(RestoreEntity):
     """Base class for SIA entities."""

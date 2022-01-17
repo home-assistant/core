@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -23,6 +23,7 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
+    KEY_CONNECTIVITY,
     KEY_MOISTURE,
     KEY_POWER,
     KEY_SMOKE,
@@ -78,6 +79,14 @@ ENTITY_DESCRIPTION_MOISTURE = SIABinarySensorEntityDescription(
     entity_registry_enabled_default=False,
 )
 
+ENTITY_DESCRIPTION_CONNECTIVITY = SIABinarySensorEntityDescription(
+    key=KEY_CONNECTIVITY,
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    code_consequences={"RP": True},
+    always_reset_availability=False,
+)
+
 
 def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
     """Generate binary sensors.
@@ -102,6 +111,24 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 entry.data[CONF_PORT],
                 account_data[CONF_ACCOUNT],
                 ENTITY_DESCRIPTION_POWER.device_class,
+            ),
+        )
+        yield SIABinarySensor(
+            port=entry.data[CONF_PORT],
+            account=account_data[CONF_ACCOUNT],
+            zone=SIA_HUB_ZONE,
+            ping_interval=account_data[CONF_PING_INTERVAL],
+            entity_description=ENTITY_DESCRIPTION_CONNECTIVITY,
+            unique_id=SIA_UNIQUE_ID_FORMAT_BINARY.format(
+                entry.entry_id,
+                account_data[CONF_ACCOUNT],
+                SIA_HUB_ZONE,
+                ENTITY_DESCRIPTION_CONNECTIVITY.device_class,
+            ),
+            name=SIA_NAME_FORMAT_HUB.format(
+                entry.data[CONF_PORT],
+                account_data[CONF_ACCOUNT],
+                ENTITY_DESCRIPTION_CONNECTIVITY.device_class,
             ),
         )
         zones = entry.options[CONF_ACCOUNTS][account_data[CONF_ACCOUNT]][CONF_ZONES]
@@ -178,3 +205,12 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
         _LOGGER.debug("New state will be %s", new_state)
         self._attr_is_on = bool(new_state)
         return True
+
+    @callback
+    def async_set_unavailable(self, _) -> None:
+        """Set unavailable or is_on to False for connectivity sensor."""
+        if self.entity_description.always_reset_availability:
+            self._attr_is_on = False
+        else:
+            self._attr_available = False
+        self.async_write_ha_state()

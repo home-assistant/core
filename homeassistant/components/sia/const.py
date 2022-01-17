@@ -36,6 +36,7 @@ KEY_ALARM: Final = "alarm_control_panel"
 KEY_SMOKE: Final = "smoke"
 KEY_MOISTURE: Final = "moisture"
 KEY_POWER: Final = "power"
+KEY_CONNECTIVITY: Final = "connectivity"
 
 PREVIOUS_STATE: Final = "previous_state"
 AVAILABILITY_EVENT_CODE: Final = "RP"
