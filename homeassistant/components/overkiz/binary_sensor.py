@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
 from pyoverkiz.types import StateType as OverkizStateType
@@ -99,6 +100,16 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
         value_fn=lambda state: state == OverkizCommandParam.DETECTED,
+    ),
+    # DomesticHotWaterProduction/WaterHeatingSystem
+    OverkizBinarySensorDescription(
+        key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
+        name="Energy Demand Status",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_fn=lambda state: cast(dict, state).get(
+            OverkizCommandParam.ENERGY_DEMAND_STATUS
+        )
+        == 1,
     ),
 ]
 
