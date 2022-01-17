@@ -71,6 +71,7 @@ FLOWS = [
     "dialogflow",
     "directv",
     "dlna_dmr",
+    "dnsip",
     "doorbird",
     "dsmr",
     "dunehd",
