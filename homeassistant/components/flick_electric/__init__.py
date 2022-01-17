@@ -49,7 +49,7 @@ class HassFlickAuth(AbstractFlickAuth):
     """Implementation of AbstractFlickAuth based on a Home Assistant entity config."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Flick authention based on a Home Assistant entity config."""
+        """Flick authentication based on a Home Assistant entity config."""
         super().__init__(aiohttp_client.async_get_clientsession(hass))
         self._entry = entry
         self._hass = hass
