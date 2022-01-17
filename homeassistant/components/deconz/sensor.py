@@ -326,7 +326,7 @@ class DeconzPropertySensor(DeconzDevice, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._device)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):
