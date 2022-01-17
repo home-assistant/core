@@ -96,8 +96,10 @@ class OverkizDescriptiveEntity(OverkizEntity):
         """Initialize the device."""
         super().__init__(device_url, coordinator)
         self.entity_description = description
-        self._attr_name = f"{super().name} {self.entity_description.name}"
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
+
+        if self.entity_description.name:
+            self._attr_name = f"{super().name} {self.entity_description.name}"
 
 
 # Used by translations of state and select sensors
