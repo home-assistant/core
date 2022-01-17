@@ -19,9 +19,7 @@ from pyunifiprotect.data import (
     RecordingMode,
     Viewer,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 from pyunifiprotect.data.devices import Sensor
-from pyunifiprotect.data.nvr import NVR
 from pyunifiprotect.data.types import ChimeType, MountType
 import voluptuous as vol
 
@@ -167,10 +165,7 @@ async def _set_light_mode(obj: Light, mode: str) -> None:
     )
 
 
-async def _set_paired_camera(
-    obj: ProtectAdoptableDeviceModel | NVR, camera_id: str
-) -> None:
-    assert isinstance(obj, (Sensor, Light))
+async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
     if camera_id == TYPE_EMPTY_VALUE:
         camera: Camera | None = None
     else:
@@ -214,7 +209,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="isp_settings.ir_led_mode",
         ufp_set_method="set_ir_led_model",
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Camera](
         key="doorbell_text",
         name="Doorbell Text",
         icon="mdi:card-text",
@@ -239,7 +234,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 )
 
 LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Light](
         key=_KEY_LIGHT_MOTION,
         name="Light Mode",
         icon="mdi:spotlight",
@@ -270,7 +265,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="mount_type",
         ufp_set_method="set_mount_type",
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Sensor](
         key="paired_camera",
         name="Paired Camera",
         icon="mdi:cctv",

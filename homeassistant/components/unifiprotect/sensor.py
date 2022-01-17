@@ -92,8 +92,7 @@ def _get_nvr_memory(obj: NVR) -> float | None:
     return (1 - memory.available / memory.total) * 100
 
 
-def _get_alarm_sound(obj: ProtectAdoptableDeviceModel | NVR) -> str:
-    assert isinstance(obj, Sensor)
+def _get_alarm_sound(obj: Sensor) -> str:
 
     alarm_type = OBJECT_TYPE_NONE
     if (
@@ -247,7 +246,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="stats.temperature.value",
         ufp_enabled="is_temperature_sensor_enabled",
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[Sensor](
         key="alarm_sound",
         name="Alarm Sound Detected",
         ufp_value_fn=_get_alarm_sound,
