@@ -6,7 +6,7 @@ from datetime import timedelta
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 from unittest import mock
 
 from aiohomekit.model import Accessories, Accessory
@@ -57,7 +57,7 @@ class EntityTestInfo:
 @dataclass
 class DeviceTriggerInfo:
     """
-    Describe a automation trigger we exepect to be created.
+    Describe a automation trigger we expect to be created.
 
     We only use these for a stateless characteristic like a doorbell.
     """
