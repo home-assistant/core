@@ -88,6 +88,11 @@ async def test_available_after_update(
     )
 
 
+async def test_turn_off_state(hass, wemo_entity):
+    """Test that the device state is updated after turning off."""
+    await entity_test_helpers.test_turn_off_state(hass, wemo_entity, Platform.FAN)
+
+
 async def test_fan_reset_filter_service(hass, pywemo_device, wemo_entity):
     """Verify that SERVICE_RESET_FILTER_LIFE is registered and works."""
     assert await hass.services.async_call(

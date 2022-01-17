@@ -9,7 +9,9 @@ from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.wemo import wemo_device
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -134,6 +136,19 @@ async def test_avaliable_after_update(
     pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
     await hass.async_block_till_done()
     assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
+
+
+async def test_turn_off_state(hass, wemo_entity, domain):
+    """Test that the device state is updated after turning off."""
+    await async_setup_component(hass, domain, {})
+
+    await hass.services.async_call(
+        domain,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+        blocking=True,
+    )
+    assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
 
 
 class EntityTestHelpers:

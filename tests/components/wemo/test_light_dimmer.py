@@ -44,6 +44,11 @@ async def test_available_after_update(
     )
 
 
+async def test_turn_off_state(hass, wemo_entity):
+    """Test that the device state is updated after turning off."""
+    await entity_test_helpers.test_turn_off_state(hass, wemo_entity, Platform.LIGHT)
+
+
 async def test_light_registry_state_callback(
     hass, pywemo_registry, pywemo_device, wemo_entity
 ):
