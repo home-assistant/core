@@ -13,27 +13,27 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     name = "hass_enforce_type_hints"
     priority = -1
     msgs = {
-        "W0012": (
+        "W0020": (
             "First argument should be of type HomeAssistant",
             "hass-enforce-type-hints-hass",
             "Used when setup has some arguments typed but first isn't HomeAssistant",
         ),
-        "W0013": (
+        "W0021": (
             "Second argument should be of type ConfigType",
             "hass-enforce-type-hints-config-type",
             "Used when setup has some arguments typed but first isn't ConfigType",
         ),
-        "W0014": (
+        "W0022": (
             "Second argument should be of type ConfigEntry",
             "hass-enforce-type-hints-config-entry",
             "Used when setup has some arguments typed but first isn't ConfigEntry",
         ),
-        "W0015": (
+        "W0023": (
             "Return type should be of type bool",
             "hass-enforce-type-hints-return-bool",
             "Used when setup has some arguments typed but doesn't return bool",
         ),
-        "W0016": (
+        "W0024": (
             "First argument should be of type HomeAssistant",
             "hass-enforce-type-hints-return-none",
             "Used when setup has some arguments typed but doesn't return None",
