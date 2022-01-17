@@ -2,11 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-import logging
 from typing import Any
-
-from lektricowifi import lektricowifi
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,21 +27,12 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import LektricoDevice
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
@@ -142,68 +129,6 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-
-
-class LektricoDevice:
-    """The device class for Lektrico charger."""
-
-    _last_client_refresh = datetime.min
-
-    def __init__(self, device: lektricowifi.Charger, hass: Any, friendly_name: str):
-        """Initialize a Lektrico Device."""
-        self._device = device
-        self._hass = hass
-        self.friendly_name = friendly_name.replace(" ", "_")
-        self._name = friendly_name
-        self._coordinator: DataUpdateCoordinator
-        self._update_fail_count = 0
-        self._info = None
-
-    @property
-    def coordinator(self) -> DataUpdateCoordinator:
-        """Return the coordinator of the Lektrico device."""
-        return self._coordinator
-
-    async def init_device(self) -> bool:
-        """Init the device status and start coordinator."""
-
-        # Create status update coordinator
-        await self._create_coordinator()
-
-        return True
-
-    async def async_device_update(self) -> lektricowifi.Info:
-        """Async Update device state."""
-        a_data = self._hass.async_add_job(self._device.charger_info)
-        data = await a_data
-        entity_reg = er.async_get(self._hass)
-        my_entry = entity_reg.async_get(f"sensor.{self.friendly_name}_{SENSORS[0].key}")
-        if my_entry is not None:
-            dev_reg = dr.async_get(self._hass)
-            if my_entry.device_id is not None:
-                device = dev_reg.async_get(my_entry.device_id)
-                if device is not None:
-                    dev_reg.async_update_device(device.id, sw_version=data.fw_version)
-        return data
-
-    async def _create_coordinator(self) -> None:
-        """Get the coordinator for a specific device."""
-        coordinator = DataUpdateCoordinator(
-            self._hass,
-            _LOGGER,
-            name=f"{DOMAIN}-{self._name}",
-            update_method=self.async_device_update,
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=SCAN_INTERVAL,
-        )
-        await coordinator.async_refresh()
-
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady
-
-        self._coordinator = coordinator
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -211,19 +136,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    charger: lektricowifi.Charger = hass.data[DOMAIN][entry.entry_id]
-
-    await charger.charger_info()
-    settings = await charger.charger_config()
-    _lektrico_device = LektricoDevice(charger, hass, entry.data[CONF_FRIENDLY_NAME])
-    if not await _lektrico_device.init_device():
-        _LOGGER.error("Error initializing Lektrico Device. Name: 1P7K")
+    _lektrico_device: LektricoDevice = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
         LektricoSensor(
-            charger,
             sensor_desc,
-            settings,
+            _lektrico_device.serial_number,
+            _lektrico_device.board_revision,
             _lektrico_device,
             entry.data[CONF_FRIENDLY_NAME],
         )
@@ -240,23 +159,23 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        charger: lektricowifi.Charger,
         description: LektricoSensorEntityDescription,
-        settings: lektricowifi.Settings,
+        serial_number: str,
+        board_revision: str,
         _lektrico_device: LektricoDevice,
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
         super().__init__(_lektrico_device.coordinator)
-        self.charger = charger
         self.friendly_name = friendly_name
+        self.serial_number = serial_number
+        self.board_revision = board_revision
         self.entity_description = description
 
         self._attr_name = f"{self.friendly_name} {description.name}"
-        self._attr_unique_id = f"{settings.serial_number}_{description.name}"
-        # ex: 500006_Led_Brightness
+        self._attr_unique_id = f"{serial_number}_{description.name}"
+        # ex: 500006_Led Brightness
 
-        self._settings = settings
         self._lektrico_device = _lektrico_device
 
     @property
@@ -279,9 +198,9 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this Lektrico charger."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._settings.serial_number)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self.serial_number)},
             ATTR_NAME: self.friendly_name,
             ATTR_MANUFACTURER: "Lektrico",
-            ATTR_MODEL: f"1P7K {self._settings.serial_number} rev.{self._settings.board_revision}",
+            ATTR_MODEL: f"1P7K {self.serial_number} rev.{self.board_revision}",
             ATTR_SW_VERSION: self._lektrico_device.coordinator.data.fw_version,
         }
