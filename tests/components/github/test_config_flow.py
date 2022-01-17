@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiogithubapi import GitHubException
 
 from homeassistant import config_entries
-from homeassistant.components.github.config_flow import stared_repositories
+from homeassistant.components.github.config_flow import starred_repositories
 from homeassistant.components.github.const import (
     CONF_ACCESS_TOKEN,
     CONF_REPOSITORIES,
@@ -53,7 +53,7 @@ async def test_full_user_flow_implementation(
     )
     aioclient_mock.get(
         "https://api.github.com/user/starred",
-        json=[{"full_name": "home-assistant/core"}],
+        json=[{"full_name": "home-assistant/core"}, {"full_name": "esphome/esphome"}],
         headers={"Content-Type": "application/json"},
     )
 
@@ -138,7 +138,7 @@ async def test_starred_pagination_with_paginated_result(hass: HomeAssistant) -> 
             )
         ),
     ):
-        repos = await stared_repositories(hass, MOCK_ACCESS_TOKEN)
+        repos = await starred_repositories(hass, MOCK_ACCESS_TOKEN)
 
     assert len(repos) == 2
     assert repos[-1] == DEFAULT_REPOSITORIES[0]
@@ -159,9 +159,9 @@ async def test_starred_pagination_with_no_starred(hass: HomeAssistant) -> None:
             )
         ),
     ):
-        repos = await stared_repositories(hass, MOCK_ACCESS_TOKEN)
+        repos = await starred_repositories(hass, MOCK_ACCESS_TOKEN)
 
-    assert len(repos) == 1
+    assert len(repos) == 2
     assert repos == DEFAULT_REPOSITORIES
 
 
@@ -173,9 +173,9 @@ async def test_starred_pagination_with_exception(hass: HomeAssistant) -> None:
             user=MagicMock(starred=AsyncMock(side_effect=GitHubException))
         ),
     ):
-        repos = await stared_repositories(hass, MOCK_ACCESS_TOKEN)
+        repos = await starred_repositories(hass, MOCK_ACCESS_TOKEN)
 
-    assert len(repos) == 1
+    assert len(repos) == 2
     assert repos == DEFAULT_REPOSITORIES
 
 

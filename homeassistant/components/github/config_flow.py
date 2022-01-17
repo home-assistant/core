@@ -33,7 +33,7 @@ from .const import (
 )
 
 
-async def stared_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
+async def starred_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
     """Return a list of repositories that the user has starred."""
     client = GitHubAPI(token=access_token, session=async_get_clientsession(hass))
 
@@ -95,36 +95,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_code=self._login_device.device_code
             )
             self._login = response.data
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+            await self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+
+        if self._login:
+            return self.async_show_progress_done(next_step_id="repositories")
+
+        if not self._device:
+            self._device = GitHubDeviceAPI(
+                client_id=CLIENT_ID,
+                session=async_get_clientsession(self.hass),
+                **{"client_name": SERVER_SOFTWARE},
             )
+        try:
+            response = await self._device.register()
+            self._login_device = response.data
+        except GitHubException as exception:
+            LOGGER.exception(exception)
+            return self.async_abort(reason="could_not_register")
 
-        if not self._login:
-            if not self._device:
-                self._device = GitHubDeviceAPI(
-                    client_id=CLIENT_ID,
-                    session=async_get_clientsession(self.hass),
-                    **{"client_name": SERVER_SOFTWARE},
-                )
-            try:
-                response = await self._device.register()
-                self._login_device = response.data
-            except GitHubException as exception:
-                LOGGER.exception(exception)
-                return self.async_abort(reason="could_not_register")
+        self.hass.async_create_task(_wait_for_login())
 
-            self.hass.async_create_task(_wait_for_login())
-
-            return self.async_show_progress(
-                step_id="device",
-                progress_action="wait_for_device",
-                description_placeholders={
-                    "url": OAUTH_USER_LOGIN,
-                    "code": self._login_device.user_code,
-                },
-            )
-
-        return self.async_show_progress_done(next_step_id="repositories")
+        return self.async_show_progress(
+            step_id="device",
+            progress_action="wait_for_device",
+            description_placeholders={
+                "url": OAUTH_USER_LOGIN,
+                "code": self._login_device.user_code,
+            },
+        )
 
     async def async_step_repositories(self, user_input: dict[str, Any] | None = None):
         """Handle repositories step."""
@@ -133,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._login is not None
 
         if not user_input:
-            repositories = await stared_repositories(
+            repositories = await starred_repositories(
                 self.hass, self._login.access_token
             )
             return self.async_show_form(
@@ -173,7 +171,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             configured_repositories: list[str] = self.config_entry.options[
                 CONF_REPOSITORIES
             ]
-            repositories = await stared_repositories(
+            repositories = await starred_repositories(
                 self.hass, self.config_entry.data[CONF_ACCESS_TOKEN]
             )
 

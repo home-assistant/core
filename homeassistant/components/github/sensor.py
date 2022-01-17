@@ -112,14 +112,6 @@ SENSOR_DESCRIPTIONS: tuple[
         value_fn=lambda data: data.forks_count,
         coordinator_key="information",
     ),
-    GitHubSensorInformationEntityDescription(
-        key="default_branch",
-        name="Default branch",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.default_branch,
-        coordinator_key="information",
-    ),
     GitHubSensorIssueEntityDescription(
         key="issues_count",
         name="Issues",
