@@ -33,9 +33,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OVERKIZ_STATE_TO_TRANSLATION
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizDescriptiveEntity, OverkizEntity
+from .entity import OverkizDescriptiveEntity, OverkizDeviceClass, OverkizEntity
 
 
 @dataclass
@@ -53,12 +53,14 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_value=lambda value: int(str(value).strip("%")),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY,
         name="Battery",
-        native_value=lambda value: str(value).capitalize(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=OverkizDeviceClass.BATTERY,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_RSSI_LEVEL,
@@ -309,15 +311,19 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.IO_SENSOR_ROOM,
         name="Sensor Room",
-        native_value=lambda value: str(value).capitalize(),
-        entity_registry_enabled_default=False,
+        device_class=OverkizDeviceClass.SENSOR_ROOM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:spray-bottle",
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_PRIORITY_LOCK_ORIGINATOR,
         name="Priority Lock Originator",
-        native_value=lambda value: str(value).capitalize(),
+        device_class=OverkizDeviceClass.PRIORITY_LOCK_ORIGINATOR,
         icon="mdi:lock",
         entity_registry_enabled_default=False,
+        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
+            cast(str, value), cast(str, value)
+        ),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_PRIORITY_LOCK_TIMER,
@@ -330,8 +336,19 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_DISCRETE_RSSI_LEVEL,
         name="Discrete RSSI Level",
         entity_registry_enabled_default=False,
-        native_value=lambda value: str(value).capitalize(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=OverkizDeviceClass.DISCRETE_RSSI_LEVEL,
+        icon="mdi:wifi",
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_SENSOR_DEFECT,
+        name="Sensor Defect",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=OverkizDeviceClass.SENSOR_DEFECT,
+        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
+            cast(str, value), cast(str, value)
+        ),
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
