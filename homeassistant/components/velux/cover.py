@@ -1,7 +1,11 @@
 """Support for Velux covers."""
 from __future__ import annotations
 
+import logging
+from typing import TYPE_CHECKING
+
 from pyvlx import OpeningDevice, Position
+from pyvlx.exception import PyVLXException
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components.cover import (
@@ -18,11 +22,17 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DATA_VELUX, VeluxEntity
+
+if TYPE_CHECKING:
+    from pyvlx.node import Node
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -32,10 +42,18 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    entities = []
+    entities: list[VeluxWindow | VeluxCover] = []
+
     for node in hass.data[DATA_VELUX].pyvlx.nodes:
         if isinstance(node, OpeningDevice):
-            entities.append(VeluxCover(node))
+            if isinstance(node, Window):
+                entities.append(VeluxWindow(hass, node))
+            else:
+                entities.append(VeluxCover(node))
+
+    for entity in entities:
+        await entity.async_init()
+
     async_add_entities(entities)
 
 
@@ -131,3 +149,63 @@ class VeluxCover(VeluxEntity, CoverEntity):
         await self.node.set_orientation(
             orientation=orientation, wait_for_completion=False
         )
+
+
+class VeluxWindow(VeluxCover):
+    """Representation of a Velux window."""
+
+    def __init__(self, hass: HomeAssistant, node: Node) -> None:
+        """Initialize Velux window."""
+        super().__init__(node)
+        self._hass = hass
+        self._extra_attr_limitation_min: int | None = None
+        self._extra_attr_limitation_max: int | None = None
+
+        self.coordinator = DataUpdateCoordinator(
+            self._hass,
+            _LOGGER,
+            name=self.unique_id,
+            update_method=self.async_update_limitation,
+            update_interval=self._hass.data[DATA_VELUX].scan_interval,
+        )
+
+    async def async_init(self):
+        """Async initialize."""
+        return await self.coordinator.async_config_entry_first_refresh()
+
+    async def async_update_limitation(self):
+        """Get the updated status of the cover (limitations only)."""
+        async with self._hass.data[DATA_VELUX].semaphore_poll_data:
+            try:
+                limitation = await self.node.get_limitation()
+                self._extra_attr_limitation_min = limitation.min_value
+                self._extra_attr_limitation_max = limitation.max_value
+            except PyVLXException:
+                _LOGGER.error("Error fetch limitation data for cover %s", self.name)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, int | None]:
+        """Return the state attributes."""
+        return {
+            "limitation_min": self._extra_attr_limitation_min,
+            "limitation_max": self._extra_attr_limitation_max,
+        }
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator.async_request_refresh()
