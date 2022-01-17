@@ -123,8 +123,6 @@ async def test_avaliable_after_update(
     ActionException when the SERVICE_TURN_ON method is called and that the
     state will be On after the update.
     """
-    await async_setup_component(hass, domain, {})
-
     await hass.services.async_call(
         domain,
         SERVICE_TURN_ON,
@@ -140,8 +138,6 @@ async def test_avaliable_after_update(
 
 async def test_turn_off_state(hass, wemo_entity, domain):
     """Test that the device state is updated after turning off."""
-    await async_setup_component(hass, domain, {})
-
     await hass.services.async_call(
         domain,
         SERVICE_TURN_OFF,

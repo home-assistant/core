@@ -70,7 +70,6 @@ async def test_turn_on_brightness(hass, pywemo_device, wemo_entity):
     pywemo_device.get_brightness.side_effect = lambda: brightness
     pywemo_device.set_brightness.side_effect = set_brightness
 
-    await async_setup_component(hass, Platform.LIGHT, {})
     await hass.services.async_call(
         Platform.LIGHT,
         SERVICE_TURN_ON,
