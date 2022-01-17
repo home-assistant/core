@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
