@@ -23,7 +23,7 @@ def client_fixture():
         client.software_info = {"device_id": "00:01:02:03:04:05"}
         client.system_info = {"modelName": "TVFAKE"}
         client.client_key = "0123456789"
-        client.apps = {0: {"title": "Applicaiton01"}}
+        client.apps = {0: {"title": "Application01"}}
         client.inputs = {0: {"label": "Input01"}, 1: {"label": "Input02"}}
 
         yield client
