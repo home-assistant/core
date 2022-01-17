@@ -49,9 +49,9 @@ class EntityTestInfo:
     friendly_name: str
     state: str
     supported_features: int = 0
-    capabilities: Optional[dict[str, Any]] = None
-    entity_category: Optional[EntityCategory] = None
-    unit_of_measurement: Optional[str] = None
+    capabilities: dict[str, Any] | None = None
+    entity_category: EntityCategory | None = None
+    unit_of_measurement: str | None = None
 
 
 @dataclass
@@ -80,11 +80,11 @@ class DeviceTestInfo:
     entities: list[EntityTestInfo]
 
     # At least one of these must be provided
-    unique_id: Optional[str] = None
-    serial_number: Optional[str] = None
+    unique_id: str | None = None
+    serial_number: str | None = None
 
     # A homekit device can have events but no entity (like a doorbell or remote)
-    stateless_triggers: Optional[list[DeviceTriggerInfo]] = None
+    stateless_triggers: list[DeviceTriggerInfo] | None = None
 
 
 class Helper:
