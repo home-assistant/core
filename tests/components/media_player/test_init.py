@@ -94,10 +94,10 @@ async def test_get_image_http_remote(hass, hass_client_no_auth):
         assert content == b"image"
 
 
-async def test_get_image_http_log_password_redacted(
+async def test_get_image_http_log_credentials_redacted(
     hass, hass_client_no_auth, aioclient_mock, caplog
 ):
-    """Test password is redacted when logging url when fetching image."""
+    """Test credentials are redacted when logging url when fetching image."""
     url = "http://vi:pass@example.com/default.jpg"
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
