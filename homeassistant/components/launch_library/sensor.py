@@ -47,24 +47,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-NEXT_LAUNCH_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="next_launch",
-    icon="mdi:rocket-launch",
-    name=DEFAULT_NAME,
-)
-
-LAUNCH_TIME_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="launch_time",
-    icon="mdi:clock-outline",
-    name="Launch time",
-    device_class=SensorDeviceClass.TIMESTAMP,
-)
-
-LAUNCH_PROBABILITY_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="launch_probability",
-    icon="mdi:horseshoe",
-    name="Launch Probability",
-    native_unit_of_measurement=PERCENTAGE,
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="next_launch",
+        icon="mdi:rocket-launch",
+        name=DEFAULT_NAME,
+    ),
+    SensorEntityDescription(
+        key="launch_time",
+        icon="mdi:clock-outline",
+        name="Launch time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="launch_probability",
+        icon="mdi:horseshoe",
+        name="Launch Probability",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 )
 
 
@@ -106,18 +106,18 @@ async def async_setup_entry(
             NextLaunchSensor(
                 coordinator,
                 entry.entry_id,
-                NEXT_LAUNCH_SENSOR_DESCRIPTION,
+                SENSOR_DESCRIPTIONS[0],
                 name,
             ),
             LaunchTimeSensor(
                 coordinator,
                 entry.entry_id,
-                LAUNCH_TIME_SENSOR_DESCRIPTION,
+                SENSOR_DESCRIPTIONS[1],
             ),
             LaunchProbabilitySensor(
                 coordinator,
                 entry.entry_id,
-                LAUNCH_PROBABILITY_SENSOR_DESCRIPTION,
+                SENSOR_DESCRIPTIONS[2],
             ),
         ]
     )
@@ -205,7 +205,7 @@ class LaunchTimeSensor(NextLaunchBaseSensor):
         }
 
 
-class LaunchProbabilitySensor(LaunchLibraryBaseSensor):
+class LaunchProbabilitySensor(NextLaunchBaseSensor):
     """Representation of the launch probability sensor."""
 
     @property
