@@ -43,7 +43,6 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @callback
     def _observe_update(self, device: Device) -> None:
         """Update the coordinator for a device when a change is detected."""
-        self._exception = None  # Clear stored exception
         self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
 
         self.async_set_updated_data(data=device)
@@ -67,25 +66,13 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )  # Change interval so we get a swift refresh
         await self.async_request_refresh()
 
-    @callback
-    def _async_start_observe(
-        self, device: Device, exc: Exception | None = None
-    ) -> Command:
-        """Start observation of device."""
-        if exc:
-            _LOGGER.debug("Observation failed for %s", device, exc_info=exc)
-
-        return device.observe(
-            callback=self._observe_update,
-            err_callback=self._exception_callback,
-            duration=0,
-        )
-
     async def _async_update_data(self) -> Device:
         """Fetch data from the gateway for a specific device."""
         try:
             if self._exception:
-                raise self._exception  # pylint: disable-msg=raising-bad-type
+                exc = self._exception
+                self._exception = None  # Clear stored exception
+                raise exc  # pylint: disable-msg=raising-bad-type
         except RequestError as err:
             raise UpdateFailed(
                 f"Error communicating with API: {err}. Try unplugging and replugging your "
@@ -94,7 +81,11 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
         if not self.data:  # Start subscription
             try:
-                cmd = self._async_start_observe(device=self.device)
+                cmd = self.device.observe(
+                    callback=self._observe_update,
+                    err_callback=self._exception_callback,
+                    duration=0,
+                )
                 await self.api(cmd)
             except RequestError as exc:
                 await self._handle_exception(device=self.device, exc=exc)
