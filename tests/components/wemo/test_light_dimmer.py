@@ -7,14 +7,8 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
@@ -47,13 +41,13 @@ async def test_available_after_update(
     pywemo_device.on.side_effect = ActionException
     pywemo_device.get_state.return_value = 1
     await entity_test_helpers.test_avaliable_after_update(
-        hass, pywemo_registry, pywemo_device, wemo_entity, Platform.LIGHT
+        hass, pywemo_registry, pywemo_device, wemo_entity, LIGHT_DOMAIN
     )
 
 
 async def test_turn_off_state(hass, wemo_entity):
     """Test that the device state is updated after turning off."""
-    await entity_test_helpers.test_turn_off_state(hass, wemo_entity, Platform.LIGHT)
+    await entity_test_helpers.test_turn_off_state(hass, wemo_entity, LIGHT_DOMAIN)
 
 
 async def test_turn_on_brightness(hass, pywemo_device, wemo_entity):
@@ -71,7 +65,7 @@ async def test_turn_on_brightness(hass, pywemo_device, wemo_entity):
     pywemo_device.set_brightness.side_effect = set_brightness
 
     await hass.services.async_call(
-        Platform.LIGHT,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [wemo_entity.entity_id], ATTR_BRIGHTNESS: 204},
         blocking=True,
