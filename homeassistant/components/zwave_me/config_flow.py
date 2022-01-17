@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from . import get_uuid
+from . import helpers
 from .const import CONF_TOKEN, CONF_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,9 +48,9 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.url = f"ws://{self.url}"
             self.url = url_normalize(self.url, default_scheme="ws")
             if self.uuid is None:
-                self.uuid = await get_uuid(self.url, self.token)
+                self.uuid = await helpers.get_uuid(self.url, self.token)
                 if self.uuid is not None:
-                    await self.async_set_unique_id(self.uuid + self.url)
+                    await self.async_set_unique_id(f"{self.uuid}_{self.url}")
                     self._abort_if_unique_id_configured()
                 else:
                     errors["base"] = "no_valid_uuid_set"
@@ -74,7 +74,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.url = discovery_info.host
-        self.uuid = await get_uuid(self.url, self.token)
+        self.uuid = await helpers.get_uuid(self.url, self.token)
         if self.uuid is None:
             return self.async_abort(reason="no_valid_uuid_set")
 

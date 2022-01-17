@@ -15,16 +15,6 @@ from .const import DOMAIN, PLATFORMS, ZWAVE_PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_uuid(url, token):
-    """Get an uuid from Z-Wave-Me."""
-    conn = ZWaveMe(url=url, token=token)
-    uuid = None
-    if await conn.get_connection():
-        uuid = await conn.get_uuid()
-    await conn.close_ws()
-    return uuid
-
-
 async def async_setup_entry(hass, entry):
     """Set up Z-Wave-Me from a config entry."""
     hass.data.setdefault(DOMAIN, {})
