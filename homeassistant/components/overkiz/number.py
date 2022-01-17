@@ -50,6 +50,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     ),
 ]
 
+SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -60,10 +62,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizNumber] = []
 
-    key_supported_states = {
-        description.key: description for description in NUMBER_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -72,7 +70,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizNumber(
                         device.device_url,

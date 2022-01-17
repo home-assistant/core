@@ -344,6 +344,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     ),
 ]
 
+SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -353,10 +355,6 @@ async def async_setup_entry(
     """Set up the Overkiz sensors from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = []
-
-    key_supported_states = {
-        description.key: description for description in SENSOR_DESCRIPTIONS
-    }
 
     for device in data.coordinator.data.values():
         if device.widget == UIWidget.HOMEKIT_STACK:
@@ -374,7 +372,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizStateSensor(
                         device.device_url,

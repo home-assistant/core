@@ -41,6 +41,10 @@ BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
     ),
 ]
 
+SUPPORTED_COMMANDS = {
+    description.key: description for description in BUTTON_DESCRIPTIONS
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,10 +55,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[ButtonEntity] = []
 
-    supported_commands = {
-        description.key: description for description in BUTTON_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -63,7 +63,7 @@ async def async_setup_entry(
             continue
 
         for command in device.definition.commands:
-            if description := supported_commands.get(command.command_name):
+            if description := SUPPORTED_COMMANDS.get(command.command_name):
                 entities.append(
                     OverkizButton(
                         device.device_url,
