@@ -146,7 +146,7 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     hass.states.get("binary_sensor.presence_sensor_low_battery").state == STATE_OFF
     assert (
         ent_reg.async_get("binary_sensor.presence_sensor_low_battery").entity_category
-        == EntityCategory.DIAGNOSTIC
+        is EntityCategory.DIAGNOSTIC
     )
     presence_tamper = hass.states.get("binary_sensor.presence_sensor_tampered")
     assert presence_tamper.state == STATE_OFF
@@ -155,7 +155,7 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     )
     assert (
         ent_reg.async_get("binary_sensor.presence_sensor_tampered").entity_category
-        == EntityCategory.DIAGNOSTIC
+        is EntityCategory.DIAGNOSTIC
     )
 
     event_changed_sensor = {
