@@ -109,3 +109,9 @@ repos:
         language: script
         types: [text]
         files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|\.strict-typing|homeassistant/.+/services\.yaml|script/hassfest/.+\.py)$
+      - id: enforce_type_hints
+        name: enforce_type_hints
+        entry: script/run-in-env.sh python3 -m script.enforce_type_hints
+        language: script
+        types: [text]
+        files: ^homeassistant/components/.+\.py$
