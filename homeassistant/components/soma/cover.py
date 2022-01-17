@@ -27,7 +27,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import API, DEVICES, DOMAIN, SomaEntity
 
-from .const import MSG_API_UNREACHABLE, MSG_DEVICE_UNREACHABLE
+from .const import (
+    MSG_API_UNREACHABLE,
+    MSG_API_REACHABLE,
+    MSG_DEVICE_UNREACHABLE,
+    MSG_DEVICE_REACHABLE,
+)
 from .utils import is_api_response_success
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,17 +138,25 @@ class SomaTilt(SomaEntity, CoverEntity):
             response = await self.hass.async_add_executor_job(
                 self.api.get_shade_state, self.device["mac"]
             )
+            if not self.api_is_available:
+                self.api_is_available = True
+                _LOGGER.info(MSG_API_REACHABLE)
         except RequestException:
-            _LOGGER.error(MSG_API_UNREACHABLE)
-            self.is_available = False
+            if self.api_is_available:
+                _LOGGER.warning(MSG_API_UNREACHABLE)
+                self.api_is_available = False
             return
 
         if not is_api_response_success(response):
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
-            self.is_available = False
+            if self.is_available:
+                self.is_available = False
+                _LOGGER.warning(MSG_DEVICE_UNREACHABLE, self.name, response["msg"])
             return
 
-        self.is_available = True
+        if not self.is_available:
+            self.is_available = True
+            _LOGGER.info(MSG_DEVICE_REACHABLE, self.name)
+
         api_position = int(response["position"])
 
         if "closed_upwards" in response.keys():
@@ -220,13 +233,23 @@ class SomaShade(SomaEntity, CoverEntity):
             response = await self.hass.async_add_executor_job(
                 self.api.get_shade_state, self.device["mac"]
             )
+            if not self.api_is_available:
+                self.api_is_available = True
+                _LOGGER.info(MSG_API_REACHABLE)
         except RequestException:
-            _LOGGER.error(MSG_API_UNREACHABLE)
-            self.is_available = False
+            if self.api_is_available:
+                _LOGGER.warning(MSG_API_UNREACHABLE)
+                self.api_is_available = False
             return
+
         if not is_api_response_success(response):
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
-            self.is_available = False
+            if self.is_available:
+                self.is_available = False
+                _LOGGER.warning(MSG_DEVICE_UNREACHABLE, self.name, response["msg"])
             return
+
+        if not self.is_available:
+            self.is_available = True
+            _LOGGER.info(MSG_DEVICE_REACHABLE, self.name)
+
         self.current_position = 100 - int(response["position"])
-        self.is_available = True

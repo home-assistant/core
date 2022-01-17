@@ -72,6 +72,7 @@ class SomaEntity(Entity):
         self.current_position = 50
         self.battery_state = 0
         self.is_available = True
+        self.api_is_available = True
 
     @property
     def available(self):
