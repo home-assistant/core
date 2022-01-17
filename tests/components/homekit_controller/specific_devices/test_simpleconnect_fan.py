@@ -20,7 +20,7 @@ async def test_simpleconnect_fan_setup(hass):
     accessories = await setup_accessories_from_file(hass, "simpleconnect_fan.json")
     await setup_test_accessories(hass, accessories)
 
-    assert_devices_and_entities_created(
+    await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
             unique_id="00:00:00:00:00:00",
@@ -37,6 +37,10 @@ async def test_simpleconnect_fan_setup(hass):
                     friendly_name="SIMPLEconnect Fan-06F674",
                     unique_id="homekit-1234567890abcd-8",
                     supported_features=SUPPORT_DIRECTION | SUPPORT_SET_SPEED,
+                    capabilities={
+                        "preset_modes": None,
+                        "speed_list": ["off", "low", "medium", "high"],
+                    },
                     state="off",
                 ),
             ],
