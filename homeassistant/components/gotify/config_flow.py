@@ -55,8 +55,6 @@ def sanitise_name(hass: HomeAssistant, name: str) -> str:
     i = 2
     while name in entry_names:
         name = raw_name + str(i)
-        i = i + 1
-    print(name)
     return name
 
 
