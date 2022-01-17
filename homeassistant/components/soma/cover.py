@@ -84,7 +84,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         """Close the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], 100)
         if is_api_response_success(response):
-            self.current_position = 0
+            self.set_position(0)
         else:
             _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
 
@@ -92,7 +92,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         """Open the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], -100)
         if is_api_response_success(response):
-            self.current_position = 100
+            self.set_position(100)
         else:
             _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
 
@@ -101,7 +101,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         response = self.api.stop_shade(self.device["mac"])
         if is_api_response_success(response):
             # Set cover position to some value where up/down are both enabled
-            self.current_position = 50
+            self.set_position(50)
         else:
             _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
 
@@ -113,7 +113,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         target_api_position = 100 - ((kwargs[ATTR_TILT_POSITION] / 50) * 100)
         response = self.api.set_shade_position(self.device["mac"], target_api_position)
         if is_api_response_success(response):
-            self.current_position = kwargs[ATTR_TILT_POSITION]
+            self.set_position(kwargs[ATTR_TILT_POSITION])
         else:
             _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
 
@@ -183,7 +183,7 @@ class SomaShade(SomaEntity, CoverEntity):
         response = self.api.stop_shade(self.device["mac"])
         if is_api_response_success(response):
             # Set cover position to some value where up/down are both enabled
-            self.current_position = 50
+            self.set_position(50)
         else:
             _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
 
