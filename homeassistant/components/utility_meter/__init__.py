@@ -142,7 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 name = f"{meter} {tariff}"
                 tariff_confs[name] = {
                     CONF_METER: meter,
-                    CONF_NAME: f"{meter} {tariff}",
+                    CONF_NAME: name,
                     CONF_TARIFF: tariff,
                 }
 
