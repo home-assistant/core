@@ -104,4 +104,4 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
 def register(linter: PyLinter) -> None:
     """Register the checker."""
-    linter.register_checker(HassConstructorFormatChecker(linter))
+    linter.register_checker(HassTypeHintChecker(linter))
