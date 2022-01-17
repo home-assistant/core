@@ -1,14 +1,12 @@
 """Custom data update coordinators for the GitHub integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Literal, TypedDict
 
 from aiogithubapi import (
     GitHubAPI,
     GitHubCommitModel,
     GitHubException,
-    GitHubIssueModel,
     GitHubReleaseModel,
     GitHubRepositoryModel,
 )
@@ -94,45 +92,30 @@ class RepositoryIssueDataUpdateCoordinator(
 
     async def fetch_data(self) -> IssuesPulls:
         """Get the latest data from GitHub."""
+        base_issue_response = await self._client.repos.issues.list(
+            self.repository, **{"params": {"per_page": 1}}
+        )
+        pull_response = await self._client.repos.pulls.list(
+            self.repository, **{"params": {"per_page": 1}}
+        )
 
-        async def _get_issues():
-            response = await self._client.repos.issues.list(
-                self.repository, **{"params": {"per_page": 100}}
-            )
-            if not response.is_last_page:
-                results = await asyncio.gather(
-                    *(
-                        self._client.repos.issues.list(
-                            self.repository,
-                            **{"params": {"per_page": 100, "page": page_number}},
-                        )
-                        for page_number in range(
-                            response.next_page_number, response.last_page_number + 1
-                        )
-                    )
-                )
-                for result in results:
-                    response.data.extend(result.data)
+        pulls_count = pull_response.last_page_number or 0
+        issues_count = (base_issue_response.last_page_number or 0) - pulls_count
 
-            return response.data
+        issue_last = base_issue_response.data[0] if issues_count != 0 else None
 
-        all_issues = await _get_issues()
-
-        issues: list[GitHubIssueModel] = [
-            issue for issue in all_issues or [] if issue.pull_request is None
-        ]
-        pulls: list[GitHubIssueModel] = [
-            issue for issue in all_issues or [] if issue.pull_request is not None
-        ]
-
-        issues_count = len(issues)
-        pulls_count = len(pulls)
+        if issue_last is not None and issue_last.pull_request:
+            issue_response = await self._client.repos.issues.list(self.repository)
+            for issue in issue_response.data:
+                if not issue.pull_request:
+                    issue_last = issue
+                    break
 
         return IssuesPulls(
             issues_count=issues_count,
-            issue_last=issues[0] if issues_count != 0 else None,
+            issue_last=issue_last,
             pulls_count=pulls_count,
-            pull_last=pulls[0] if pulls_count != 0 else None,
+            pull_last=pull_response.data[0] if pulls_count != 0 else None,
         )
 
 
