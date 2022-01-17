@@ -476,8 +476,9 @@ async def test_air_quality_sensor(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     assert hass.states.get("sensor.air_quality").state == "poor"
+    assert hass.states.get("sensor.air_quality_ppb").state == "809"
 
 
 async def test_daylight_sensor(hass, aioclient_mock):
