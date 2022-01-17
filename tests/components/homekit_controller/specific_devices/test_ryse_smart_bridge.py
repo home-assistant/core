@@ -5,6 +5,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
 )
+from homeassistant.const import PERCENTAGE
 
 from tests.components.homekit_controller.common import (
     DeviceTestInfo,
@@ -22,7 +23,7 @@ async def test_ryse_smart_bridge_setup(hass):
     accessories = await setup_accessories_from_file(hass, "ryse_smart_bridge.json")
     await setup_test_accessories(hass, accessories)
 
-    assert_devices_and_entities_created(
+    await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
             unique_id="00:00:00:00:00:00",
@@ -55,6 +56,7 @@ async def test_ryse_smart_bridge_setup(hass):
                             entity_id="sensor.master_bath_south_battery",
                             friendly_name="Master Bath South Battery",
                             unique_id="homekit-00:00:00:00:00:00-2-64",
+                            unit_of_measurement=PERCENTAGE,
                             state="100",
                         ),
                     ],
@@ -80,6 +82,7 @@ async def test_ryse_smart_bridge_setup(hass):
                             entity_id="sensor.ryse_smartshade_battery",
                             friendly_name="RYSE SmartShade Battery",
                             unique_id="homekit-00:00:00:00:00:00-3-64",
+                            unit_of_measurement=PERCENTAGE,
                             state="100",
                         ),
                     ],
@@ -97,7 +100,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
     )
     await setup_test_accessories(hass, accessories)
 
-    assert_devices_and_entities_created(
+    await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
             unique_id="00:00:00:00:00:00",
@@ -130,6 +133,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                             entity_id="sensor.lr_left_battery",
                             friendly_name="LR Left Battery",
                             unique_id="homekit-00:00:00:00:00:00-2-64",
+                            unit_of_measurement=PERCENTAGE,
                             state="89",
                         ),
                     ],
@@ -155,6 +159,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                             entity_id="sensor.lr_right_battery",
                             friendly_name="LR Right Battery",
                             unique_id="homekit-00:00:00:00:00:00-3-64",
+                            unit_of_measurement=PERCENTAGE,
                             state="100",
                         ),
                     ],
@@ -180,6 +185,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                             entity_id="sensor.br_left_battery",
                             friendly_name="BR Left Battery",
                             unique_id="homekit-00:00:00:00:00:00-4-64",
+                            unit_of_measurement=PERCENTAGE,
                             state="100",
                         ),
                     ],
@@ -205,6 +211,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                             entity_id="sensor.rzss_battery",
                             friendly_name="RZSS Battery",
                             unique_id="homekit-00:00:00:00:00:00-5-64",
+                            unit_of_measurement=PERCENTAGE,
                             state="0",
                         ),
                     ],
