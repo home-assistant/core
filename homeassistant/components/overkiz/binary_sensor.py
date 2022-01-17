@@ -102,6 +102,10 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     ),
 ]
 
+SUPPORTED_STATES = {
+    description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -112,10 +116,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizBinarySensor] = []
 
-    key_supported_states = {
-        description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -124,7 +124,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizBinarySensor(
                         device.device_url,
