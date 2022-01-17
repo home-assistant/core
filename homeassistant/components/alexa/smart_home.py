@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_handle_message(hass, config, request, context=None, enabled=True):
     """Handle incoming API messages.
 
-    If enabled is False, the response to all messagess will be a
+    If enabled is False, the response to all messages will be a
     BRIDGE_UNREACHABLE error. This can be used if the API has been disabled in
     configuration.
     """
