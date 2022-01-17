@@ -3,7 +3,7 @@ from datetime import timedelta
 from os import remove
 from os.path import exists
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 import pytest
 
@@ -32,6 +32,13 @@ def load_fixture_bytes(src):
     feed_data = load_fixture(src)
     raw = bytes(feed_data, "utf-8")
     return raw
+
+
+@pytest.fixture(scope="module", autouse=True)
+def mock_pickle_open():
+    """Mock builtins.open for feedreader storage."""
+    with patch("homeassistant.components.feedreader.open", mock_open(), create=True):
+        yield
 
 
 @pytest.fixture(name="feed_one_event")
