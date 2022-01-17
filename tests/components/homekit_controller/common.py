@@ -6,6 +6,7 @@ from datetime import timedelta
 import json
 import logging
 import os
+from typing import Any
 from unittest import mock
 
 from aiohomekit.model import Accessories, Accessory
@@ -14,6 +15,7 @@ from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController
 
 from homeassistant.components import zeroconf
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
@@ -24,10 +26,16 @@ from homeassistant.components.homekit_controller.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_device_automations,
+    load_fixture,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,22 +49,42 @@ class EntityTestInfo:
     friendly_name: str
     state: str
     supported_features: int = 0
+    capabilities: dict[str, Any] | None = None
+    entity_category: EntityCategory | None = None
+    unit_of_measurement: str | None = None
+
+
+@dataclass
+class DeviceTriggerInfo:
+    """
+    Describe a automation trigger we expect to be created.
+
+    We only use these for a stateless characteristic like a doorbell.
+    """
+
+    type: str
+    subtype: str
 
 
 @dataclass
 class DeviceTestInfo:
     """Describes how we exepced a device to be created by homekit_controlller."""
 
-    unique_id: str
     name: str
     manufacturer: str
     model: str
     sw_version: str
     hw_version: str
-    serial_number: str
 
     devices: list[DeviceTestInfo]
     entities: list[EntityTestInfo]
+
+    # At least one of these must be provided
+    unique_id: str | None = None
+    serial_number: str | None = None
+
+    # A homekit device can have events but no entity (like a doorbell or remote)
+    stateless_triggers: list[DeviceTriggerInfo] | None = None
 
 
 class Helper:
@@ -210,12 +238,14 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
     return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
 
 
-def assert_devices_and_entities_created(hass: HomeAssistant, expected: DeviceTestInfo):
+async def assert_devices_and_entities_created(
+    hass: HomeAssistant, expected: DeviceTestInfo
+):
     """Check that all expected devices and entities are loaded and enumerated as expected."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    def _do_assertions(expected: DeviceTestInfo) -> dr.DeviceEntry:
+    async def _do_assertions(expected: DeviceTestInfo) -> dr.DeviceEntry:
         # Note: homekit_controller currently uses a 3-tuple for device identifiers
         # The current standard is a 2-tuple (hkc was not migrated when this change was brought in)
 
@@ -245,11 +275,21 @@ def assert_devices_and_entities_created(hass: HomeAssistant, expected: DeviceTes
 
         # We might have matched the device by one identifier only
         # Lets check that the other one is correct. Otherwise the test might silently be wrong.
+        serial_number_set = False
+        accessory_id_set = False
+
         for _, key, value in device.identifiers:
             if key == IDENTIFIER_SERIAL_NUMBER:
                 assert value == expected.serial_number
+                serial_number_set = True
+
             elif key == IDENTIFIER_ACCESSORY_ID:
                 assert value == expected.unique_id
+                accessory_id_set = True
+
+        # If unique_id or serial is provided it MUST actually appear in the device registry entry.
+        assert (not expected.unique_id) ^ accessory_id_set
+        assert (not expected.serial_number) ^ serial_number_set
 
         for entity_info in expected.entities:
             entity = entity_registry.async_get(entity_info.entity_id)
@@ -259,6 +299,9 @@ def assert_devices_and_entities_created(hass: HomeAssistant, expected: DeviceTes
             assert entity.device_id == device.id
             assert entity.unique_id == entity_info.unique_id
             assert entity.supported_features == entity_info.supported_features
+            assert entity.entity_category == entity_info.entity_category
+            assert entity.unit_of_measurement == entity_info.unit_of_measurement
+            assert entity.capabilities == entity_info.capabilities
 
             state = hass.states.get(entity_info.entity_id)
             logger.debug("Comparing state %r to %r", state, entity_info)
@@ -267,14 +310,28 @@ def assert_devices_and_entities_created(hass: HomeAssistant, expected: DeviceTes
             assert state.state == entity_info.state
             assert state.attributes["friendly_name"] == entity_info.friendly_name
 
+        all_triggers = await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, device.id
+        )
+        stateless_triggers = []
+        for trigger in all_triggers:
+            if trigger.get("entity_id"):
+                continue
+            stateless_triggers.append(
+                DeviceTriggerInfo(
+                    type=trigger.get("type"), subtype=trigger.get("subtype")
+                )
+            )
+        assert stateless_triggers == (expected.stateless_triggers or [])
+
         for child in expected.devices:
-            child_device = _do_assertions(child)
+            child_device = await _do_assertions(child)
             assert child_device.via_device_id == device.id
             assert child_device.id != device.id
 
         return device
 
-    root_device = _do_assertions(expected)
+    root_device = await _do_assertions(expected)
 
     # Root device must not have a via, otherwise its not the device
     assert root_device.via_device_id is None
