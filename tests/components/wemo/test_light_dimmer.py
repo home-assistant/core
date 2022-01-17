@@ -58,15 +58,30 @@ async def test_turn_off_state(hass, wemo_entity):
 
 async def test_turn_on_brightness(hass, pywemo_device, wemo_entity):
     """Test setting the brightness value of the light."""
+    brightness = 0
+    state = 0
+
+    def set_brightness(b):
+        nonlocal brightness
+        nonlocal state
+        brightness, state = (b, int(bool(b)))
+
+    pywemo_device.get_state.side_effect = lambda: state
+    pywemo_device.get_brightness.side_effect = lambda: brightness
+    pywemo_device.set_brightness.side_effect = set_brightness
+
     await async_setup_component(hass, Platform.LIGHT, {})
     await hass.services.async_call(
         Platform.LIGHT,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [wemo_entity.entity_id], ATTR_BRIGHTNESS: 200},
+        {ATTR_ENTITY_ID: [wemo_entity.entity_id], ATTR_BRIGHTNESS: 204},
         blocking=True,
     )
 
-    pywemo_device.set_brightness.assert_called_once_with(78)
+    pywemo_device.set_brightness.assert_called_once_with(80)
+    states = hass.states.get(wemo_entity.entity_id)
+    assert states.state == STATE_ON
+    assert states.attributes[ATTR_BRIGHTNESS] == 204
 
 
 async def test_light_registry_state_callback(
