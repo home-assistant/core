@@ -8,6 +8,7 @@ the user has submitted configuration information.
 """
 from contextlib import suppress
 import functools as ft
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -60,7 +61,7 @@ def async_request_config(
     link_name=None,
     link_url=None,
     entity_picture=None,
-):
+) -> str:
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -87,7 +88,7 @@ def async_request_config(
 
 
 @bind_hass
-def request_config(hass, *args, **kwargs):
+def request_config(hass: HomeAssistant, *args: Any, **kwargs: Any) -> str:
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -149,7 +150,7 @@ class Configurator:
     @async_callback
     def async_request_config(
         self, name, callback, description, submit_caption, fields, entity_picture
-    ):
+    ) -> str:
         """Set up a request for configuration."""
         entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
