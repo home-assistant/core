@@ -118,8 +118,11 @@ class I2CHatSwitch(ToggleEntity):
             """Call fired when board is online."""
             self.schedule_update_ha_state()
 
-        self.I2C_HATS_MANAGER.register_online_callback(
-            self._address, self._channel, online_callback
+        await self.hass.async_add_executor_job(
+            self.I2C_HATS_MANAGER.register_online_callback,
+            self._address,
+            self._channel,
+            online_callback,
         )
 
     def _log_message(self, message):
