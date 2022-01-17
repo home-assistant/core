@@ -251,7 +251,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return self._device.brightness  # type: ignore
+        return self._device.brightness
 
     @property
     def color_temp(self) -> int:
@@ -261,17 +261,17 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value."""
-        return self._device.rgb_unscaled  # type: ignore
+        return self._device.rgb_unscaled
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
-        return self._device.rgbw  # type: ignore
+        return self._device.rgbw
 
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww aka rgbcw color value."""
-        return self._device.rgbcw  # type: ignore
+        return self._device.rgbcw
 
     @property
     def color_mode(self) -> str:
@@ -283,7 +283,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        return self._device.effect  # type: ignore
+        return self._device.effect
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
