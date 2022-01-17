@@ -144,7 +144,7 @@ async def async_setup_entry(
                 coordinator=coordinator,
                 entry_id=entry.entry_id,
                 description=description,
-                name=name if description.name == NEXT_LAUNCH else None,
+                name=name if description.key == NEXT_LAUNCH else None,
             )
             for description in SENSOR_DESCRIPTIONS
         ]
