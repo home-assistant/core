@@ -434,17 +434,17 @@ async def _account_data(cloud):
         certificate = None
 
     return {
-        "logged_in": True,
-        "email": claims["email"],
-        "cloud": cloud.iot.state,
-        "prefs": client.prefs.as_dict(),
-        "google_registered": google_config.has_registered_user_agent,
-        "google_entities": client.google_user_config["filter"].config,
-        "alexa_registered": alexa_config.authorized,
         "alexa_entities": client.alexa_user_config["filter"].config,
-        "remote_domain": remote.instance_domain,
-        "remote_connected": remote.is_connected,
+        "alexa_registered": alexa_config.authorized,
+        "cloud": cloud.iot.state,
+        "email": claims["email"],
+        "google_entities": client.google_user_config["filter"].config,
+        "google_registered": google_config.has_registered_user_agent,
+        "logged_in": True,
+        "prefs": client.prefs.as_dict(),
         "remote_certificate": certificate,
+        "remote_connected": remote.is_connected,
+        "remote_domain": remote.instance_domain,
     }
 
 
