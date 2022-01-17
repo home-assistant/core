@@ -9,9 +9,9 @@ import pytest
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import (
+    PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
-    PREF_ALEXA_REPORT_STATE,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import State
