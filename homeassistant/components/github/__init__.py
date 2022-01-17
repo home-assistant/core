@@ -52,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass=hass, entry=entry, client=client, repository=repository
             ),
         }
-        hass.data[DOMAIN][repository] = coordinators
 
         await asyncio.gather(
             *(
@@ -62,6 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 coordinators["commit"].async_config_entry_first_refresh(),
             )
         )
+
+        hass.data[DOMAIN][repository] = coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
