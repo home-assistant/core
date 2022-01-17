@@ -180,16 +180,12 @@ class WemoLight(WemoEntity, LightEntity):
 
             self.light.turn_on(**turn_on_kwargs)
 
-        self.schedule_update_ha_state()
-
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
         with self._wemo_exception_handler("turn off"):
             self.light.turn_off(transition=transition_time)
-
-        self.schedule_update_ha_state()
 
 
 class WemoDimmer(WemoBinaryStateEntity, LightEntity):
@@ -219,11 +215,7 @@ class WemoDimmer(WemoBinaryStateEntity, LightEntity):
             with self._wemo_exception_handler("turn on"):
                 self.wemo.on()
 
-        self.schedule_update_ha_state()
-
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
         with self._wemo_exception_handler("turn off"):
             self.wemo.off()
-
-        self.schedule_update_ha_state()
