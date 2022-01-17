@@ -298,6 +298,7 @@ class DeconzPropertySensor(DeconzDevice, SensorEntity):
 
     TYPE = DOMAIN
     _device: PydeconzSensor
+    entity_description: DeconzSensorDescription
 
     def __init__(
         self,
