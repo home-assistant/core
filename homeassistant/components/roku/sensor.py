@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 
 from rokuecp.models import Device as RokuDevice
 
@@ -12,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
@@ -23,7 +21,7 @@ from .entity import RokuEntity
 class RokuSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[RokuDevice], StateType]
+    value_fn: Callable[[RokuDevice], str | None]
 
 
 @dataclass
@@ -75,6 +73,6 @@ class RokuSensorEntity(RokuEntity, SensorEntity):
     entity_description: RokuSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
