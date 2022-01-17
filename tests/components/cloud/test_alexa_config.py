@@ -212,10 +212,25 @@ async def test_alexa_config_fail_refresh_token(
     with pytest.raises(expected_exception):
         await conf.async_get_access_token()
 
-    # Check state reporting is still wanted in cloud prefs, but disabled in Alexa
+    # Check state reporting is still wanted in cloud prefs, but disabled for Alexa
     assert cloud_prefs.alexa_report_state is True
     assert conf.should_report_state is not reporting_disabled
     assert conf.is_reporting_states is not reporting_disabled
+
+    # Simulate we're again authorized - state reporting should be re-enabled for Alexa
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "http://example/alexa_token",
+        json={
+            "access_token": "mock-token",
+            "event_endpoint": "http://example.com/alexa_endpoint",
+            "expires_in": 30,
+        },
+    )
+    await conf.set_authorized(True)
+    assert cloud_prefs.alexa_report_state is True
+    assert conf.should_report_state is True
+    assert conf.is_reporting_states is True
 
 
 @contextlib.contextmanager
