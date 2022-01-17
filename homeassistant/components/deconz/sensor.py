@@ -78,6 +78,7 @@ class DeconzSensorDescriptionMixin:
 
     suffix: str
     update_key: str
+    required_attr: str
     value_fn: Callable[[PydeconzSensor], float | int | None]
 
 
@@ -142,6 +143,7 @@ ENTITY_DESCRIPTIONS = {
 SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="temperature",
+        required_attr="secondary_temperature",
         value_fn=lambda device: device.secondary_temperature,
         suffix="Temperature",
         update_key="temperature",
@@ -151,6 +153,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     DeconzSensorDescription(
         key="air_quality_ppb",
+        required_attr="air_quality_ppb",
         value_fn=lambda device: device.air_quality_ppb,
         suffix="PPB",
         update_key="airqualityppb",
@@ -207,18 +210,17 @@ async def async_setup_entry(
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
+            known_sensor_entities = set(gateway.entities[DOMAIN])
             for sensor_description in SENSOR_DESCRIPTIONS:
 
-                try:
-                    if sensor_description.value_fn(sensor):
-                        known_sensors = set(gateway.entities[DOMAIN])
-                        new_sensor = DeconzPropertySensor(
-                            sensor, gateway, sensor_description
-                        )
-                        if new_sensor.unique_id not in known_sensors:
-                            entities.append(new_sensor)
-                except AttributeError:
+                if not hasattr(
+                    sensor, sensor_description.required_attr
+                ) or not sensor_description.value_fn(sensor):
                     continue
+
+                new_sensor = DeconzPropertySensor(sensor, gateway, sensor_description)
+                if new_sensor.unique_id not in known_sensor_entities:
+                    entities.append(new_sensor)
 
         if entities:
             async_add_entities(entities)
