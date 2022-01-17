@@ -152,7 +152,7 @@ async def async_setup_entry(
 
 
 class NextLaunchSensor(CoordinatorEntity, SensorEntity):
-    """Representation of the base next launch sensor."""
+    """Representation of the next launch sensors."""
 
     _attr_attribution = ATTRIBUTION
     _next_launch: Launch | None = None
