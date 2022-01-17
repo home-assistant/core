@@ -150,6 +150,7 @@ async def async_setup_entry(
             ):
                 entities.append(DeconzBinarySensor(sensor, gateway))
 
+            known_sensor_entities = set(gateway.entities[DOMAIN])
             for sensor_description in BINARY_SENSOR_DESCRIPTIONS:
 
                 if (
@@ -158,11 +159,10 @@ async def async_setup_entry(
                 ):
                     continue
 
-                known_sensors = set(gateway.entities[DOMAIN])
                 new_sensor = DeconzPropertyBinarySensor(
                     sensor, gateway, sensor_description
                 )
-                if new_sensor.unique_id not in known_sensors:
+                if new_sensor.unique_id not in known_sensor_entities:
                     entities.append(new_sensor)
 
         if entities:

@@ -210,6 +210,7 @@ async def async_setup_entry(
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
+            known_sensor_entities = set(gateway.entities[DOMAIN])
             for sensor_description in SENSOR_DESCRIPTIONS:
 
                 if not hasattr(
@@ -217,9 +218,8 @@ async def async_setup_entry(
                 ) or not sensor_description.value_fn(sensor):
                     continue
 
-                known_sensors = set(gateway.entities[DOMAIN])
                 new_sensor = DeconzPropertySensor(sensor, gateway, sensor_description)
-                if new_sensor.unique_id not in known_sensors:
+                if new_sensor.unique_id not in known_sensor_entities:
                     entities.append(new_sensor)
 
         if entities:
