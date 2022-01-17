@@ -38,6 +38,7 @@ from .const import (
     CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
     FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
@@ -63,6 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(ALLOWED_RTSP_TRANSPORT_PROTOCOLS),
+        vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, default=False): cv.boolean,
     }
 )
 
@@ -104,6 +106,10 @@ class GenericCamera(Camera):
             self.stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = device_info[
                 CONF_RTSP_TRANSPORT
             ]
+        if device_info[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]:
+            self.stream_options[
+                FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]
+            ] = "1"
 
         username = device_info.get(CONF_USERNAME)
         password = device_info.get(CONF_PASSWORD)
