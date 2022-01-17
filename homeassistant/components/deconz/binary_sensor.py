@@ -56,6 +56,7 @@ class DeconzBinarySensorDescriptionMixin:
 
     suffix: str
     update_key: str
+    required_attr: str
     value_fn: Callable[[PydeconzSensor], bool | None]
 
 
@@ -102,6 +103,7 @@ ENTITY_DESCRIPTIONS = {
 BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
         key="tamper",
+        required_attr="tampered",
         value_fn=lambda device: device.tampered,
         suffix="Tampered",
         update_key="tampered",
@@ -110,6 +112,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     ),
     DeconzBinarySensorDescription(
         key="low_battery",
+        required_attr="low_battery",
         value_fn=lambda device: device.low_battery,
         suffix="Low Battery",
         update_key="lowbattery",
@@ -149,10 +152,10 @@ async def async_setup_entry(
 
             for sensor_description in BINARY_SENSOR_DESCRIPTIONS:
 
-                try:
-                    if sensor_description.value_fn(sensor) is None:
-                        continue
-                except AttributeError:
+                if (
+                    not hasattr(sensor, sensor_description.required_attr)
+                    or sensor_description.value_fn(sensor) is None
+                ):
                     continue
 
                 known_sensors = set(gateway.entities[DOMAIN])
