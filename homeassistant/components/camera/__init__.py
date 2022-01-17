@@ -869,7 +869,7 @@ async def ws_camera_web_rtc_offer(
     """Handle the signal path for a WebRTC stream.
 
     This signal path is used to route the offer created by the client to the
-    camera device through the integration for negitioation on initial setup,
+    camera device through the integration for negotiation on initial setup,
     which returns an answer. The actual streaming is handled entirely between
     the client and camera device.
 

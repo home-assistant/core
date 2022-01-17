@@ -713,7 +713,7 @@ async def test_stream_unavailable(hass, hass_ws_client, mock_camera, mock_stream
         await client.receive_json()
         assert mock_update_callback.called
 
-    # Simluate the stream going unavailable
+    # Simulate the stream going unavailable
     callback = mock_update_callback.call_args.args[0]
     with patch(
         "homeassistant.components.camera.Stream.available", new_callable=lambda: False
