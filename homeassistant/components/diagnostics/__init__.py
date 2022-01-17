@@ -63,16 +63,16 @@ def handle_info(
 class DownloadDiagnosticsView(http.HomeAssistantView):
     """Base CameraView."""
 
-    url = "/api/diagnostics/{type}/{id}"
+    url = "/api/diagnostics/{d_type}/{d_id}"
     name = "api:diagnostics"
 
-    async def get(self, request: web.Request, type: str, id: str) -> web.Response:
+    async def get(self, request: web.Request, d_type: str, d_id: str) -> web.Response:
         """Download diagnostics."""
-        if type != "config_entry":
+        if d_type != "config_entry":
             return web.Response(status=404)
 
         hass = request.app["hass"]
-        config_entry = hass.config_entries.async_get_entry(id)
+        config_entry = hass.config_entries.async_get_entry(d_id)
 
         if config_entry is None:
             return web.Response(status=404)
@@ -92,8 +92,8 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         except TypeError:
             _LOGGER.error(
                 "Failed to serialize to JSON: %s/%s. Bad data at %s",
-                type,
-                id,
+                d_type,
+                d_id,
                 format_unserializable_data(find_paths_unserializable_data(data)),
             )
             return web.Response(status=500)
