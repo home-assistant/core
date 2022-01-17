@@ -847,6 +847,8 @@ tests/components/smartthings/* @andrewsayre
 homeassistant/components/smarttub/* @mdz
 tests/components/smarttub/* @mdz
 homeassistant/components/smarty/* @z0mbieprocess
+homeassistant/components/smhi/* @gjohansson-ST
+tests/components/smhi/* @gjohansson-ST
 homeassistant/components/sms/* @ocalvo
 homeassistant/components/smtp/* @fabaff
 tests/components/smtp/* @fabaff
