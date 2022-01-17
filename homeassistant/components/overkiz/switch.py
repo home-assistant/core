@@ -7,6 +7,7 @@ from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIClass, UIWidget
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, OverkizStateType
+from .const import DOMAIN
 from .entity import OverkizDescriptiveEntity
 
 
@@ -89,6 +90,10 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
     ),
 ]
 
+SUPPORTED_DEVICES = {
+    description.key: description for description in SWITCH_DESCRIPTIONS
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -99,12 +104,8 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizSwitch] = []
 
-    supported_devices = {
-        description.key: description for description in SWITCH_DESCRIPTIONS
-    }
-
     for device in data.platforms[Platform.SWITCH]:
-        if description := supported_devices.get(device.widget) or supported_devices.get(
+        if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
             device.ui_class
         ):
             entities.append(
