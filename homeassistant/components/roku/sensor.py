@@ -23,7 +23,7 @@ from .entity import RokuEntity
 class RokuSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[RokuDevice], datetime | StateType]
+    value_fn: Callable[[RokuDevice], StateType]
 
 
 @dataclass
@@ -75,6 +75,6 @@ class RokuSensorEntity(RokuEntity, SensorEntity):
     entity_description: RokuSensorEntityDescription
 
     @property
-    def native_value(self) -> datetime | StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
