@@ -230,6 +230,7 @@ class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
 
     TYPE = DOMAIN
     _device: PydeconzSensor
+    entity_description: DeconzBinarySensorDescription
 
     def __init__(
         self,
