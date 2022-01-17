@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import API, DEVICES, DOMAIN, SomaEntity
@@ -86,7 +87,9 @@ class SomaTilt(SomaEntity, CoverEntity):
         if is_api_response_success(response):
             self.set_position(0)
         else:
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
@@ -94,7 +97,9 @@ class SomaTilt(SomaEntity, CoverEntity):
         if is_api_response_success(response):
             self.set_position(100)
         else:
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
@@ -103,7 +108,9 @@ class SomaTilt(SomaEntity, CoverEntity):
             # Set cover position to some value where up/down are both enabled
             self.set_position(50)
         else:
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
@@ -115,7 +122,9 @@ class SomaTilt(SomaEntity, CoverEntity):
         if is_api_response_success(response):
             self.set_position(kwargs[ATTR_TILT_POSITION])
         else:
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     async def async_update(self):
         """Update the entity with the latest data."""
@@ -170,13 +179,17 @@ class SomaShade(SomaEntity, CoverEntity):
         """Close the cover."""
         response = self.api.set_shade_position(self.device["mac"], 100)
         if not is_api_response_success(response):
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         response = self.api.set_shade_position(self.device["mac"], 0)
         if not is_api_response_success(response):
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -185,7 +198,9 @@ class SomaShade(SomaEntity, CoverEntity):
             # Set cover position to some value where up/down are both enabled
             self.set_position(50)
         else:
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
@@ -194,7 +209,9 @@ class SomaShade(SomaEntity, CoverEntity):
             self.device["mac"], 100 - kwargs[ATTR_POSITION]
         )
         if not is_api_response_success(response):
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
+            raise HomeAssistantError(
+                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+            )
 
     async def async_update(self):
         """Update the cover with the latest data."""
