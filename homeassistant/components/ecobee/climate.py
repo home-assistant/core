@@ -76,6 +76,8 @@ DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
 HUMIDIFIER_MANUAL_MODE = "manual"
 
+ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
+
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
@@ -562,17 +564,18 @@ class Thermostat(ClimateEntity):
     @property
     def is_aux_heat(self):
         """Return true if aux heater."""
-        return "auxHeat" in self.thermostat["equipmentStatus"]
+        return self.thermostat["settings"]["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
-    async def async_turn_aux_heat_on(self) -> None:
+    def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
-        if not self.is_aux_heat:
-            _LOGGER.warning("# Changing aux heat is not supported")
+        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
+        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
+        self.update_without_throttle = True
 
-    async def async_turn_aux_heat_off(self) -> None:
+    def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        if self.is_aux_heat:
-            _LOGGER.warning("# Changing aux heat is not supported")
+        _LOGGER.debug("Setting HVAC mode to heat to disable aux heat")
+        self.set_hvac_mode(self._last_active_hvac_mode)
 
     def set_preset_mode(self, preset_mode):
         """Activate a preset."""

@@ -202,9 +202,11 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
 
 
 async def test_is_aux_heat_on(ecobee_fixture, thermostat):
-    """Test aux heat property."""
+    """Test aux heat property is only enabled for auxHeatOnly."""
     assert not thermostat.is_aux_heat
     ecobee_fixture["equipmentStatus"] = "fan, auxHeat"
+    assert not thermostat.is_aux_heat
+    ecobee_fixture["settings"]["hvacMode"] = "auxHeatOnly"
     assert thermostat.is_aux_heat
 
 
@@ -335,3 +337,17 @@ async def test_set_fan_mode_auto(thermostat, data):
     data.ecobee.set_fan_mode.assert_has_calls(
         [mock.call(1, "auto", "nextTransition", holdHours=None)]
     )
+
+
+async def test_turn_aux_heat_on(thermostat, data):
+    """Test when aux heat is set on.  This must change the HVAC mode."""
+    data.reset_mock()
+    thermostat.turn_aux_heat_on()
+    data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "auxHeatOnly")])
+
+
+async def test_turn_aux_heat_off(thermostat, data):
+    """Test when aux heat is tuned off.  Must change HVAC mode back to last used."""
+    data.reset_mock()
+    thermostat.turn_aux_heat_off()
+    data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "auto")])
