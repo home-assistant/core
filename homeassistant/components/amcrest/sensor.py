@@ -1,7 +1,6 @@
 """Support for Amcrest IP camera sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -79,7 +78,6 @@ class AmcrestSensor(SensorEntity):
         self._signal_name = name
         self._api = device.api
         self._channel = device.channel
-        self._unsub_dispatcher: Callable[[], None] | None = None
 
         self._attr_name = f"{name} {description.name}"
         self._attr_extra_state_attributes = {}
@@ -96,12 +94,10 @@ class AmcrestSensor(SensorEntity):
         _LOGGER.debug("Updating %s sensor", self.name)
 
         sensor_type = self.entity_description.key
-        if self._attr_unique_id is None and (serial_number := self._api.serial_number):
-            self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
 
         try:
             if self._attr_unique_id is None and (
-                serial_number := self._api.serial_number
+                serial_number := (await self._api.async_serial_number)
             ):
                 self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
 
@@ -133,19 +129,12 @@ class AmcrestSensor(SensorEntity):
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
-    async def async_on_demand_update(self) -> None:
-        """Update state."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self) -> None:
         """Subscribe to update signal."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass,
-            service_signal(SERVICE_UPDATE, self._signal_name),
-            self.async_on_demand_update,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                service_signal(SERVICE_UPDATE, self._signal_name),
+                self.async_write_ha_state,
+            )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from update signal."""
-        assert self._unsub_dispatcher is not None
-        self._unsub_dispatcher()

@@ -71,13 +71,13 @@ class AmcrestSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._turn_switch(True)
+        await self._async_turn_switch(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._turn_switch(False)
+        await self._async_turn_switch(False)
 
-    async def _turn_switch(self, mode: bool) -> None:
+    async def _async_turn_switch(self, mode: bool) -> None:
         """Set privacy mode."""
         lower_str = str(mode).lower()
         await self._api.async_command(

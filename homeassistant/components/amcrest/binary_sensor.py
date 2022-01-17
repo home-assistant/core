@@ -1,7 +1,6 @@
 """Support for Amcrest IP camera binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -173,7 +172,6 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
         self._attr_name = f"{name} {entity_description.name}"
         self._attr_should_poll = entity_description.should_poll
-        self._unsub_dispatcher: list[Callable[[], None]] = []
 
     @property
     def available(self) -> bool:
@@ -183,12 +181,12 @@ class AmcrestBinarySensor(BinarySensorEntity):
     async def async_update(self) -> None:
         """Update entity."""
         if self.entity_description.key == _ONLINE_KEY:
-            await self._update_online()
+            await self._async_update_online()
         else:
-            await self._update_others()
+            await self._async_update_others()
 
     @Throttle(_ONLINE_SCAN_INTERVAL)
-    async def _update_online(self) -> None:
+    async def _async_update_online(self) -> None:
         if not (self._api.available or self.is_on):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
@@ -199,16 +197,16 @@ class AmcrestBinarySensor(BinarySensorEntity):
             # accordingly.
             with suppress(AmcrestError):
                 await self._api.async_current_time
-                await self._update_unique_id()
+                await self._async_update_unique_id()
         self._attr_is_on = self._api.available
 
-    async def _update_others(self) -> None:
+    async def _async_update_others(self) -> None:
         if not self.available:
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
 
         try:
-            await self._update_unique_id()
+            await self._async_update_unique_id()
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
@@ -225,7 +223,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
 
-    async def _update_unique_id(self) -> None:
+    async def _async_update_unique_id(self) -> None:
         """Set the unique id."""
         if self._attr_unique_id is None and (
             serial_number := await self._api.async_serial_number
@@ -234,14 +232,12 @@ class AmcrestBinarySensor(BinarySensorEntity):
                 f"{serial_number}-{self.entity_description.key}-{self._channel}"
             )
 
-    async def async_on_demand_update(self) -> None:
+    @callback
+    def async_on_demand_update_online(self) -> None:
         """Update state."""
-        if self.entity_description.key == _ONLINE_KEY:
-            _LOGGER.debug(_UPDATE_MSG, self.name)
-            self._attr_is_on = self._api.available
-            self.async_write_ha_state()
-        else:
-            self.async_schedule_update_ha_state(True)
+        _LOGGER.debug(_UPDATE_MSG, self.name)
+        self._attr_is_on = self._api.available
+        self.async_write_ha_state()
 
     @callback
     def async_event_received(self, state: bool) -> None:
@@ -252,18 +248,28 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to signals."""
-        self._unsub_dispatcher.append(
-            async_dispatcher_connect(
-                self.hass,
-                service_signal(SERVICE_UPDATE, self._signal_name),
-                self.async_on_demand_update,
+        if self.entity_description.key == _ONLINE_KEY:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    service_signal(SERVICE_UPDATE, self._signal_name),
+                    self.async_on_demand_update_online,
+                )
             )
-        )
+        else:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    service_signal(SERVICE_UPDATE, self._signal_name),
+                    self.async_write_ha_state,
+                )
+            )
+
         if (
             self.entity_description.event_code
             and not self.entity_description.should_poll
         ):
-            self._unsub_dispatcher.append(
+            self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
                     service_signal(
@@ -274,8 +280,3 @@ class AmcrestBinarySensor(BinarySensorEntity):
                     self.async_event_received,
                 )
             )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from update signal."""
-        for unsub_dispatcher in self._unsub_dispatcher:
-            unsub_dispatcher()
