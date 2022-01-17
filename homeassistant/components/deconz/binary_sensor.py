@@ -261,4 +261,4 @@ class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._device)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)
