@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "app_setup_error": "Cannot create or setup gotify application",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "invalid_host": "Invalid hostname or IP address",
@@ -9,9 +10,9 @@
         "step": {
             "user": {
                 "data": {
+                    "client_secret": "Client Token",
                     "host": "Host",
-                    "name": "Name",
-                    "token": "API Token"
+                    "token": "App Token"
                 }
             }
         }
