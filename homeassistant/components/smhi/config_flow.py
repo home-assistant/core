@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
@@ -16,7 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import DEFAULT_NAME, DOMAIN, HOME_LOCATION_NAME
 
 
-@callback
 async def async_check_location(
     hass: HomeAssistant, longitude: float, latitude: float
 ) -> bool:
@@ -44,17 +43,19 @@ class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            lat = user_input[CONF_LATITUDE]
-            lon = user_input[CONF_LONGITUDE]
+            lat: float = user_input[CONF_LATITUDE]
+            lon: float = user_input[CONF_LONGITUDE]
             if await async_check_location(self.hass, lon, lat):
-                name = DEFAULT_NAME
+                name = f"{DEFAULT_NAME} {round(lat, 6)} {round(lon, 6)}"
                 if (
                     lat == self.hass.config.latitude
                     and lon == self.hass.config.longitude
                 ):
                     name = HOME_LOCATION_NAME
 
-                user_input[CONF_NAME] = name
+                user_input[CONF_NAME] = (
+                    HOME_LOCATION_NAME if name == HOME_LOCATION_NAME else DEFAULT_NAME
+                )
 
                 await self.async_set_unique_id(f"{lat}-{lon}")
                 self._abort_if_unique_id_configured()
