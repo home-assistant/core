@@ -76,7 +76,6 @@ ATTR_EVENT_ID = "event_id"
 class DeconzSensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
 
-    device_property: str
     suffix: str
     update_key: str
     value_fn: Callable[[PydeconzSensor], float | int | None]
@@ -143,7 +142,6 @@ ENTITY_DESCRIPTIONS = {
 SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="temperature",
-        device_property="secondary_temperature",
         value_fn=lambda device: device.secondary_temperature,
         suffix="Temperature",
         update_key="temperature",
@@ -153,7 +151,6 @@ SENSOR_DESCRIPTIONS = [
     ),
     DeconzSensorDescription(
         key="air_quality_ppb",
-        device_property="air_quality_ppb",
         value_fn=lambda device: device.air_quality_ppb,
         suffix="PPB",
         update_key="airqualityppb",
