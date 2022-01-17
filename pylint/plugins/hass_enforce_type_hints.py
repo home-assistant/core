@@ -5,8 +5,8 @@ from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 
-class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
-    """Checker for setup definitions."""
+class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
+    """Checker for setup type hints."""
 
     __implements__ = IAstroidChecker
 
