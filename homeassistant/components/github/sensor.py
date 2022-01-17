@@ -1,4 +1,4 @@
-"""Sensor platform for the GitHub integratiom."""
+"""Sensor platform for the GitHub integration."""
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
