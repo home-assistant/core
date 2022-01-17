@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, Generic, Union
+from typing import Any, Generic
 
 from pyunifiprotect.data import (
     NVR,
@@ -69,7 +69,7 @@ class ProtectSensorEntityDescription(
         return value
 
 
-def _get_uptime(obj: ProtectAdoptableDeviceModel | NVR) -> datetime | None:
+def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
     if obj.up_since is None:
         return None
 
@@ -106,7 +106,7 @@ def _get_alarm_sound(obj: ProtectAdoptableDeviceModel | NVR) -> str:
 
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription[Union[ProtectAdoptableDeviceModel, NVR]](
+    ProtectSensorEntityDescription[ProtectDeviceModel](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -256,7 +256,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 )
 
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription[Union[ProtectAdoptableDeviceModel, NVR]](
+    ProtectSensorEntityDescription[ProtectDeviceModel](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
