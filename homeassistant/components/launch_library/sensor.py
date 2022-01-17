@@ -133,9 +133,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-
     name = entry.data.get(CONF_NAME, DEFAULT_NAME)
-
     coordinator = hass.data[DOMAIN]
 
     async_add_entities(
@@ -154,7 +152,6 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _next_launch: Launch | None = None
-
     entity_description: NextLaunchSensorEntityDescription
 
     def __init__(
@@ -164,7 +161,7 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
         description: NextLaunchSensorEntityDescription,
         name: str | None = None,
     ) -> None:
-        """Initialize a Launch Library entity."""
+        """Initialize a Launch Library sensor."""
         super().__init__(coordinator)
         if name:
             self._attr_name = name
