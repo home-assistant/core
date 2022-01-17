@@ -1,7 +1,7 @@
 """Support for deCONZ binary sensors."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
+from collections.abc import Callable, ValuesView
 from dataclasses import dataclass
 
 from pydeconz.sensor import (
@@ -54,9 +54,9 @@ ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 class DeconzBinarySensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
 
-    device_property: str
     suffix: str
     update_key: str
+    value_fn: Callable[[PydeconzSensor], bool | None]
 
 
 @dataclass
@@ -102,7 +102,7 @@ ENTITY_DESCRIPTIONS = {
 BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
         key="tamper",
-        device_property="tampered",
+        value_fn=lambda device: device.tampered,
         suffix="Tampered",
         update_key="tampered",
         device_class=BinarySensorDeviceClass.TAMPER,
@@ -110,7 +110,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     ),
     DeconzBinarySensorDescription(
         key="low_battery",
-        device_property="low_battery",
+        value_fn=lambda device: device.low_battery,
         suffix="Low Battery",
         update_key="lowbattery",
         device_class=BinarySensorDeviceClass.BATTERY,
@@ -149,16 +149,16 @@ async def async_setup_entry(
 
             for sensor_description in BINARY_SENSOR_DESCRIPTIONS:
 
-                if (
-                    hasattr(sensor, sensor_description.device_property)
-                    and getattr(sensor, sensor_description.device_property) is not None
-                ):
-                    known_sensors = set(gateway.entities[DOMAIN])
-                    new_sensor = DeconzPropertyBinarySensor(
-                        sensor, gateway, sensor_description
-                    )
-                    if new_sensor.unique_id not in known_sensors:
-                        entities.append(new_sensor)
+                try:
+                    if sensor_description.value_fn(sensor) is not None:
+                        known_sensors = set(gateway.entities[DOMAIN])
+                        new_sensor = DeconzPropertyBinarySensor(
+                            sensor, gateway, sensor_description
+                        )
+                        if new_sensor.unique_id not in known_sensors:
+                            entities.append(new_sensor)
+                except AttributeError:
+                    continue
 
         if entities:
             async_add_entities(entities)
@@ -258,4 +258,4 @@ class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return getattr(self._device, self.entity_description.device_property)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)  # type: ignore[no-any-return]
