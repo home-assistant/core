@@ -141,7 +141,6 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
             raise ValueError("Preset must be 'Auto'.")
 
         await self._api(self._device_control.turn_on_auto_mode())
-        await self.coordinator.async_request_refresh()
 
     async def async_turn_on(
         self,
@@ -156,12 +155,10 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
 
         if percentage is not None:
             await self.async_set_percentage(percentage)
-            await self.coordinator.async_request_refresh()
             return
 
         preset_mode = preset_mode or ATTR_AUTO
         await self.async_set_preset_mode(preset_mode)
-        await self.coordinator.async_request_refresh()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -175,11 +172,9 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         await self._api(
             self._device_control.set_fan_speed(_from_fan_percentage(percentage))
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         if not self._device_control:
             return
         await self._api(self._device_control.turn_off())
-        await self.coordinator.async_request_refresh()
