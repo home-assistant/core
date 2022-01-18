@@ -79,15 +79,22 @@ async def async_cleanup_device_registry(
 ) -> None:
     """Remove entries form device registry if we no longer track the repository."""
     device_registry = dr.async_get(hass)
-    for dev_id, device_entry in list(device_registry.devices.items()):
-        for item in device_entry.identifiers:
+    devices = dr.async_entries_for_config_entry(
+        registry=device_registry,
+        config_entry_id=entry.entry_id,
+    )
+    for device in devices:
+        for item in device.identifiers:
             if DOMAIN == item[0] and item[1] not in entry.options[CONF_REPOSITORIES]:
                 LOGGER.debug(
-                    "Removing device %s for untracked repository %s",
-                    device_entry.id,
+                    "Unlinking device %s for untracked repository %s from config entry %s",
+                    device.id,
                     item[1],
+                    entry.entry_id,
                 )
-                device_registry.async_remove_device(dev_id)
+                device_registry.async_update_device(
+                    device.id, remove_config_entry_id=entry.entry_id
+                )
                 break
 
 

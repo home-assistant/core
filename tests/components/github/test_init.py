@@ -25,7 +25,7 @@ async def test_device_registry_cleanup(
     await async_cleanup_device_registry(hass, mock_config_entry)
 
     assert (
-        f"Removing device {device.id} for untracked repository test/repository"
+        f"Unlinking device {device.id} for untracked repository test/repository from config entry {mock_config_entry.entry_id}"
         in caplog.text
     )
     assert registry.async_get_device({(DOMAIN, "test/repository")}) is None
