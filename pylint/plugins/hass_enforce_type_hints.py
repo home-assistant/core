@@ -33,6 +33,7 @@ class TypeChecker:
                 return True
             return False
         if isinstance(node, astroid.Name) and node.name == self.expected_type:
+            # Name occurs when a namespace is not used, eg. "HomeAssistant"
             return True
         if isinstance(node, astroid.Attribute) and node.attrname == self.expected_type:
             # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
