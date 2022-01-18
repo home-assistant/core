@@ -2799,20 +2799,8 @@ async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_c
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_dump_view(integration, hass_client):
-    """Test the HTTP dump view."""
-    client = await hass_client()
-    with patch(
-        "zwave_js_server.dump.dump_msgs",
-        return_value=[{"hello": "world"}, {"second": "msg"}],
-    ):
-        resp = await client.get(f"/api/zwave_js/dump/{integration.entry_id}")
-    assert resp.status == HTTPStatus.OK
-    assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
-
-
 async def test_version_info(hass, integration, hass_ws_client, version_state):
-    """Test the HTTP dump node view."""
+    """Test version info API request."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
@@ -2908,21 +2896,6 @@ async def test_firmware_upload_view_invalid_payload(
 
 @pytest.mark.parametrize(
     "method, url",
-    [("get", "/api/zwave_js/dump/{}")],
-)
-async def test_view_non_admin_user(
-    integration, hass_client, hass_admin_user, method, url
-):
-    """Test config entry level views for non-admin users."""
-    client = await hass_client()
-    # Verify we require admin user
-    hass_admin_user.groups = []
-    resp = await client.request(method, url.format(integration.entry_id))
-    assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
-@pytest.mark.parametrize(
-    "method, url",
     [("post", "/api/zwave_js/firmware/upload/{}/{}")],
 )
 async def test_node_view_non_admin_user(
@@ -2941,7 +2914,6 @@ async def test_node_view_non_admin_user(
 @pytest.mark.parametrize(
     "method, url",
     [
-        ("get", "/api/zwave_js/dump/INVALID"),
         ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
     ],
 )

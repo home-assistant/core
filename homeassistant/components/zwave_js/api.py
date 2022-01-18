@@ -4,12 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
-import json
 from typing import Any
 
-from aiohttp import hdrs, web, web_exceptions, web_request
+from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
-from zwave_js_server import dump
 from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
@@ -350,7 +348,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
     websocket_api.async_register_command(hass, websocket_node_ready)
     websocket_api.async_register_command(hass, websocket_migrate_zwave)
-    hass.http.register_view(DumpView())
     hass.http.register_view(FirmwareUploadView())
 
 
@@ -1777,35 +1774,6 @@ async def websocket_data_collection_status(
         ENABLED: await client.driver.async_is_statistics_enabled(),
     }
     connection.send_result(msg[ID], result)
-
-
-class DumpView(HomeAssistantView):
-    """View to dump the state of the Z-Wave JS server."""
-
-    url = "/api/zwave_js/dump/{config_entry_id}"
-    name = "api:zwave_js:dump"
-
-    async def get(self, request: web.Request, config_entry_id: str) -> web.Response:
-        """Dump the state of Z-Wave."""
-        # pylint: disable=no-self-use
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-        hass = request.app["hass"]
-
-        if config_entry_id not in hass.data[DOMAIN]:
-            raise web_exceptions.HTTPBadRequest
-
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-
-        msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
-
-        return web.Response(
-            body=json.dumps(msgs, indent=2) + "\n",
-            headers={
-                hdrs.CONTENT_TYPE: "application/json",
-                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.json"',
-            },
-        )
 
 
 @websocket_api.require_admin
