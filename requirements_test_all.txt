@@ -1453,7 +1453,7 @@ twilio==6.32.0
 uEagle==0.0.2
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.0.0
+unifi-discovery==1.1.0
 
 # homeassistant.components.upb
 upb_lib==0.4.12
