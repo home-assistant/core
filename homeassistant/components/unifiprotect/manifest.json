@@ -48,18 +48,15 @@
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",
-      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
       "modelDescription": "UniFi Dream Machine"
     },
     {
       "manufacturer": "Ubiquiti Networks",
-      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
       "modelDescription": "UniFi Dream Machine Pro"
     },
     {
       "manufacturer": "Ubiquiti Networks",
-      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
       "modelDescription": "UniFi Dream Machine SE"
-    }
+    }    
   ]
 }
