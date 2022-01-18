@@ -28,7 +28,7 @@ class TypeChecker:
     error_message: str
 
     def check(self, node: astroid.NodeNG) -> str | None:
-        """Check"""
+        """Check the argument node against the expected type."""
         if self.expected_type is None:
             if isinstance(node, astroid.Const) and node.value is None:
                 return None
