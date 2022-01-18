@@ -60,13 +60,13 @@ class KNXTestKit:
 
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
-            self.xknx = args[0]
+            self.xknx = kwargs["xknx"]
             # disable rate limiter for tests (before StateUpdater starts)
             self.xknx.rate_limit = 0
             return DEFAULT
 
         with patch(
-            "xknx.xknx.KNXIPInterface",
+            "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
