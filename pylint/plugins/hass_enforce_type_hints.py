@@ -184,7 +184,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                 self.add_message(
                     "hass-argument-type",
                     node=node.args.args[key],
-                    args=(key, expected_type),
+                    args=(key + 1, expected_type),
                 )
 
         # Check the return type.
