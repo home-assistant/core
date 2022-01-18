@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.util.json import (
@@ -57,6 +57,7 @@ async def _register_diagnostics_platform(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "diagnostics/list"})
+@callback
 def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ):
@@ -74,7 +75,7 @@ def handle_info(
 
 
 class DownloadDiagnosticsView(http.HomeAssistantView):
-    """Base CameraView."""
+    """Download diagnostics view."""
 
     url = "/api/diagnostics/{d_type}/{d_id}"
     name = "api:diagnostics"
