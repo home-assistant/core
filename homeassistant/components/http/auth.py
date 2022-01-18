@@ -47,10 +47,10 @@ def async_sign_path(
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     if refresh_token_id is None:
-        if request := current_request.get():
-            refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
-        elif connection := websocket_api.current_connection.get():
+        if connection := websocket_api.current_connection.get():
             refresh_token_id = connection.refresh_token_id
+        elif request := current_request.get():
+            refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
         else:
             refresh_token_id = hass.data[STORAGE_KEY]
 
