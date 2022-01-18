@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "device_config": {
+                "data": {
+                    "pin": "PIN Code",
+                    "use_session": "Force session usage"
+                },
+                "title": "Device Configuration"
+            },
+            "user": {
+                "data": {
+                    "device_url": "Device URL"
+                }
+            }
+        }
+    }
+}

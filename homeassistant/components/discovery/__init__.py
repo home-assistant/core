@@ -60,7 +60,6 @@ SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
     SERVICE_SABNZBD: ServiceDetails("sabnzbd", None),
     "yamaha": ServiceDetails("media_player", "yamaha"),
-    "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
     "openhome": ServiceDetails("media_player", "openhome"),
     "bose_soundtouch": ServiceDetails("media_player", "soundtouch"),
     "bluesound": ServiceDetails("media_player", "bluesound"),

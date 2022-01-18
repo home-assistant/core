@@ -1,8 +1,13 @@
 {
   "domain": "frontier_silicon",
-  "name": "Frontier Silicon",
+  "name": "Frontier Silicon Media Player",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/frontier_silicon",
-  "requirements": ["afsapi==0.0.4"],
-  "codeowners": [],
-  "iot_class": "local_push"
+  "requirements": ["afsapi==0.2.0"],
+  "ssdp": [{ "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1" }],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@wlcrs"],
+  "iot_class": "local_polling"
 }
