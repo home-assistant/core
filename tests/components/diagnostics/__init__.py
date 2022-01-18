@@ -36,16 +36,15 @@ async def get_diagnostics_for_device(
         config_entry = domain_or_config_entry
 
     dev_reg = async_get(hass)
-    if isinstance(device_id, str):
-        device = dev_reg.async_get(device_id)
-    else:
+    if device_id is None:
         device = dev_reg.async_get_or_create(
             config_entry_id=config_entry.entry_id, identifiers={("test", "test")}
         )
+        device_id = device.id
 
     client = await hass_client()
     response = await client.get(
-        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/{device.id}"
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/{device_id}"
     )
     assert response.status == HTTPStatus.OK
     return await response.json()
