@@ -1,4 +1,6 @@
 """Support for Aqualink pool feature switches."""
+from __future__ import annotations
+
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -32,7 +34,7 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
         return self.dev.label
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return an icon based on the switch type."""
         if self.name == "Cleaner":
             return "mdi:robot-vacuum"
@@ -42,6 +44,7 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
             return "mdi:fan"
         if self.name.endswith("Heater"):
             return "mdi:radiator"
+        return None
 
     @property
     def is_on(self) -> bool:
