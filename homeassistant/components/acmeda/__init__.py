@@ -1,7 +1,7 @@
 """The Rollease Acmeda Automate integration."""
-
-from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .hub import PulseHub
@@ -11,9 +11,7 @@ CONF_HUBS = "hubs"
 PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Rollease Acmeda Automate hub from a config entry."""
     hub = PulseHub(hass, config_entry)
 
@@ -28,9 +26,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
