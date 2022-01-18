@@ -132,9 +132,9 @@ async def websocket_resolve_media(
         if url[0] == "/":
             url = async_sign_path(
                 hass,
-                connection.refresh_token_id,
                 quote(url),
                 timedelta(seconds=msg["expires"]),
+                refresh_token_id=connection.refresh_token_id,
             )
 
         connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})

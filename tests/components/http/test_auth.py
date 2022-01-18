@@ -96,7 +96,7 @@ async def test_cant_access_with_password_in_header(
     app, aiohttp_client, legacy_auth, hass
 ):
     """Test access with password in header."""
-    setup_auth(hass, app)
+    await setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     req = await client.get("/", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
@@ -110,7 +110,7 @@ async def test_cant_access_with_password_in_query(
     app, aiohttp_client, legacy_auth, hass
 ):
     """Test access with password in URL."""
-    setup_auth(hass, app)
+    await setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     resp = await client.get("/", params={"api_password": API_PASSWORD})
@@ -125,7 +125,7 @@ async def test_cant_access_with_password_in_query(
 
 async def test_basic_auth_does_not_work(app, aiohttp_client, hass, legacy_auth):
     """Test access with basic authentication."""
-    setup_auth(hass, app)
+    await setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
@@ -145,7 +145,7 @@ async def test_cannot_access_with_trusted_ip(
     hass, app2, trusted_networks_auth, aiohttp_client, hass_owner_user
 ):
     """Test access with an untrusted ip address."""
-    setup_auth(hass, app2)
+    await setup_auth(hass, app2)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -170,7 +170,7 @@ async def test_auth_active_access_with_access_token_in_header(
 ):
     """Test access with access token in header."""
     token = hass_access_token
-    setup_auth(hass, app)
+    await setup_auth(hass, app)
     client = await aiohttp_client(app)
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
 
@@ -202,7 +202,7 @@ async def test_auth_active_access_with_trusted_ip(
     hass, app2, trusted_networks_auth, aiohttp_client, hass_owner_user
 ):
     """Test access with an untrusted ip address."""
-    setup_auth(hass, app2)
+    await setup_auth(hass, app2)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -226,7 +226,7 @@ async def test_auth_legacy_support_api_password_cannot_access(
     app, aiohttp_client, legacy_auth, hass
 ):
     """Test access using api_password if auth.support_legacy."""
-    setup_auth(hass, app)
+    await setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     req = await client.get("/", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
@@ -243,12 +243,14 @@ async def test_auth_access_signed_path(hass, app, aiohttp_client, hass_access_to
     """Test access with signed url."""
     app.router.add_post("/", mock_handler)
     app.router.add_get("/another_path", mock_handler)
-    setup_auth(hass, app)
+    await setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
 
-    signed_path = async_sign_path(hass, refresh_token.id, "/", timedelta(seconds=5))
+    signed_path = async_sign_path(
+        hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
 
     req = await client.get(signed_path)
     assert req.status == HTTPStatus.OK
@@ -265,7 +267,7 @@ async def test_auth_access_signed_path(hass, app, aiohttp_client, hass_access_to
 
     # Never valid as expired in the past.
     expired_signed_path = async_sign_path(
-        hass, refresh_token.id, "/", timedelta(seconds=-5)
+        hass, "/", timedelta(seconds=-5), refresh_token_id=refresh_token.id
     )
 
     req = await client.get(expired_signed_path)
@@ -280,7 +282,7 @@ async def test_auth_access_signed_path(hass, app, aiohttp_client, hass_access_to
 async def test_local_only_user_rejected(hass, app, aiohttp_client, hass_access_token):
     """Test access with access token in header."""
     token = hass_access_token
-    setup_auth(hass, app)
+    await setup_auth(hass, app)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
