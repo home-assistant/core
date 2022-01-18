@@ -110,6 +110,27 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 ]
 
 
+def _get_all_annotation(node: astroid.FunctionDef) -> list[astroid.NodeNG | None]:
+    args = node.args
+    annotations = (
+        args.posonlyargs_annotations + args.annotations + args.kwonlyargs_annotations
+    )
+    if args.vararg is not None:
+        annotations.append(args.varargannotation)
+    if args.kwarg is not None:
+        annotations.append(args.kwargannotation)
+    return annotations
+
+
+def _has_valid_annotations(
+    annotations: list[astroid.NodeNG | None],
+) -> list[astroid.NodeNG | None]:
+    for annotation in annotations:
+        if annotation is not None:
+            return True
+    return False
+
+
 class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     """Checker for setup type hints."""
 
@@ -176,17 +197,8 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             return
 
         # Check that at least one argument is annotated.
-        args = node.args
-        annotations = (
-            args.posonlyargs_annotations
-            + args.annotations
-            + args.kwonlyargs_annotations
-        )
-        if args.vararg is not None:
-            annotations.append(args.varargannotation)
-        if args.kwarg is not None:
-            annotations.append(args.kwargannotation)
-        if not [annotation for annotation in annotations if annotation is not None]:
+        annotations = _get_all_annotation(node)
+        if node.returns is None and not _has_valid_annotations(annotations):
             return
 
         # Check that all arguments are annotated.
