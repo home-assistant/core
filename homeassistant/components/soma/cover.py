@@ -27,12 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import API, DEVICES, DOMAIN, SomaEntity
 
-from .const import (
-    MSG_API_UNREACHABLE,
-    MSG_API_REACHABLE,
-    MSG_DEVICE_UNREACHABLE,
-    MSG_DEVICE_REACHABLE,
-)
 from .utils import is_api_response_success
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +87,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             self.set_position(0)
         else:
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while closing the cover ({self.name}): {response["msg"]}'
             )
 
     def open_cover_tilt(self, **kwargs):
@@ -103,7 +97,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             self.set_position(100)
         else:
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while opening the cover ({self.name}): {response["msg"]}'
             )
 
     def stop_cover_tilt(self, **kwargs):
@@ -114,7 +108,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             self.set_position(50)
         else:
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while stopping the cover ({self.name}): {response["msg"]}'
             )
 
     def set_cover_tilt_position(self, **kwargs):
@@ -128,7 +122,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             self.set_position(kwargs[ATTR_TILT_POSITION])
         else:
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while setting the cover position ({self.name}): {response["msg"]}'
             )
 
     async def async_update(self):
@@ -140,22 +134,24 @@ class SomaTilt(SomaEntity, CoverEntity):
             )
             if not self.api_is_available:
                 self.api_is_available = True
-                _LOGGER.info(MSG_API_REACHABLE)
+                _LOGGER.info("Connection to SOMA Connect succeeded")
         except RequestException:
             if self.api_is_available:
-                _LOGGER.warning(MSG_API_UNREACHABLE)
+                _LOGGER.warning("Connection to SOMA Connect failed")
                 self.api_is_available = False
             return
 
         if not is_api_response_success(response):
             if self.is_available:
                 self.is_available = False
-                _LOGGER.warning(MSG_DEVICE_UNREACHABLE, self.name, response["msg"])
+                _LOGGER.warning(
+                    f'Device is unreachable ({self.name}). Error while fetching the state: {response["msg"]}'
+                )
             return
 
         if not self.is_available:
             self.is_available = True
-            _LOGGER.info(MSG_DEVICE_REACHABLE, self.name)
+            _LOGGER.info(f"Device {self.name} is now reachable")
 
         api_position = int(response["position"])
 
@@ -193,7 +189,7 @@ class SomaShade(SomaEntity, CoverEntity):
         response = self.api.set_shade_position(self.device["mac"], 100)
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while closing the cover ({self.name}): {response["msg"]}'
             )
 
     def open_cover(self, **kwargs):
@@ -201,7 +197,7 @@ class SomaShade(SomaEntity, CoverEntity):
         response = self.api.set_shade_position(self.device["mac"], 0)
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while opening the cover ({self.name}): {response["msg"]}'
             )
 
     def stop_cover(self, **kwargs):
@@ -212,7 +208,7 @@ class SomaShade(SomaEntity, CoverEntity):
             self.set_position(50)
         else:
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while stopping the cover ({self.name}): {response["msg"]}'
             )
 
     def set_cover_position(self, **kwargs):
@@ -223,7 +219,7 @@ class SomaShade(SomaEntity, CoverEntity):
         )
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                MSG_DEVICE_UNREACHABLE % (self.name, response["msg"])
+                f'Error while setting the cover position ({self.name}): {response["msg"]}'
             )
 
     async def async_update(self):
@@ -235,21 +231,23 @@ class SomaShade(SomaEntity, CoverEntity):
             )
             if not self.api_is_available:
                 self.api_is_available = True
-                _LOGGER.info(MSG_API_REACHABLE)
+                _LOGGER.info("Connection to SOMA Connect succeeded")
         except RequestException:
             if self.api_is_available:
-                _LOGGER.warning(MSG_API_UNREACHABLE)
+                _LOGGER.warning("Connection to SOMA Connect failed")
                 self.api_is_available = False
             return
 
         if not is_api_response_success(response):
             if self.is_available:
                 self.is_available = False
-                _LOGGER.warning(MSG_DEVICE_UNREACHABLE, self.name, response["msg"])
+                _LOGGER.warning(
+                    f'Device is unreachable ({self.name}). Error while fetching the state: {response["msg"]}'
+                )
             return
 
         if not self.is_available:
             self.is_available = True
-            _LOGGER.info(MSG_DEVICE_REACHABLE, self.name)
+            _LOGGER.info(f"Device {self.name} is now reachable")
 
         self.current_position = 100 - int(response["position"])
