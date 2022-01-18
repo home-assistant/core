@@ -225,7 +225,7 @@ class MotionEyeOptionsFlow(OptionsFlow):
             # the template input won't be a valid URL until after it's rendered.
             schema.update(
                 {
-                    vol.Required(
+                    vol.Optional(
                         CONF_STREAM_URL_TEMPLATE,
                         default=self._config_entry.options.get(
                             CONF_STREAM_URL_TEMPLATE,
