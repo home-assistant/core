@@ -88,7 +88,12 @@ from .discovery import (
     async_discover_node_values,
     async_discover_single_value,
 )
-from .helpers import async_enable_statistics, get_device_id, get_unique_id
+from .helpers import (
+    async_enable_statistics,
+    get_device_id,
+    get_device_id_ext,
+    get_unique_id,
+)
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
 
@@ -116,17 +121,27 @@ def register_node_in_dev_reg(
 ) -> device_registry.DeviceEntry:
     """Register node in dev reg."""
     device_id = get_device_id(client, node)
-    # If a device already exists but it doesn't match the new node, it means the node
-    # was replaced with a different device and the device needs to be removeed so the
-    # new device can be created. Otherwise if the device exists and the node is the same,
-    # the node was replaced with the same device model and we can reuse the device.
-    if (device := dev_reg.async_get_device({device_id})) and (
-        device.model != node.device_config.label
-        or device.manufacturer != node.device_config.manufacturer
+    device_id_ext = get_device_id_ext(client, node)
+    device = dev_reg.async_get_device({device_id})
+
+    # Replace the device if it can be determined that this node is not the
+    # same product as it was previously.
+    if (
+        device_id_ext
+        and device
+        and len(device.identifiers) == 2
+        and device_id_ext not in device.identifiers
     ):
         remove_device_func(device)
+        device = None
+
+    if device_id_ext:
+        ids = {device_id, device_id_ext}
+    else:
+        ids = {device_id}
+
     params = {
-        ATTR_IDENTIFIERS: {device_id},
+        ATTR_IDENTIFIERS: ids,
         ATTR_SW_VERSION: node.firmware_version,
         ATTR_NAME: node.name
         or node.device_config.description
@@ -338,7 +353,14 @@ async def async_setup_entry(  # noqa: C901
         device = dev_reg.async_get_device({dev_id})
         # We assert because we know the device exists
         assert device
-        if not replaced:
+        if replaced:
+            discovered_value_ids.pop(device.id, None)
+
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_{client.driver.controller.home_id}.{node.node_id}.node_status_remove_entity",
+            )
+        else:
             remove_device(device)
 
     @callback
