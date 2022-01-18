@@ -17,52 +17,96 @@ class TypeHintMatch:
 
     module_filter: re.Pattern
     function_name: str
-    # TODO: add the correct message
-    arg_types: dict[int, str]
-    return_type: str | None
-    disabled: bool = False
+    arg_types: dict[int, TypeChecker]
+    return_type: TypeChecker
+
+
+@dataclass
+class TypeChecker:
+    """Class for pattern matching."""
+
+    expected_type: str | None
+    error_message: str
+
+    def check(self, node: astroid.NodeNG) -> str | None:
+        """Check"""
+        if self.expected_type is None:
+            if isinstance(node, astroid.Const) and node.value is None:
+                return None
+            return self.error_message
+        if isinstance(node, astroid.Name) and node.name == self.expected_type:
+            return None
+        return self.error_message
 
 
 _MODULE_FILTERS: dict[str, re.Pattern] = {
     "init": re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
 }
 
+_ARGUMENT_MATCH: dict[str, TypeChecker] = {
+    "HomeAssistant": TypeChecker("HomeAssistant", "hass-type-hint-hass"),
+    "ConfigType": TypeChecker("ConfigType", "hass-type-hint-config-type"),
+    "ConfigEntry": TypeChecker("ConfigEntry", "hass-type-hint-config-entry"),
+}
+_RETURN_MATCH: dict[str, TypeChecker] = {
+    "bool": TypeChecker("bool", "hass-type-hint-return-bool"),
+    "None": TypeChecker(None, "hass-type-hint-return-none"),
+}
+
 _METHOD_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="setup",
-        arg_types={0: "HomeAssistant", 1: "ConfigType"},
-        return_type="bool",
+        arg_types={
+            0: _ARGUMENT_MATCH["HomeAssistant"],
+            1: _ARGUMENT_MATCH["ConfigType"],
+        },
+        return_type=_RETURN_MATCH["bool"],
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup",
-        arg_types={0: "HomeAssistant", 1: "ConfigType"},
-        return_type="bool",
+        arg_types={
+            0: _ARGUMENT_MATCH["HomeAssistant"],
+            1: _ARGUMENT_MATCH["ConfigType"],
+        },
+        return_type=_RETURN_MATCH["bool"],
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup_entry",
-        arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
-        return_type="bool",
+        arg_types={
+            0: _ARGUMENT_MATCH["HomeAssistant"],
+            1: _ARGUMENT_MATCH["ConfigEntry"],
+        },
+        return_type=_RETURN_MATCH["bool"],
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_remove_entry",
-        arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
-        return_type=None,
+        arg_types={
+            0: _ARGUMENT_MATCH["HomeAssistant"],
+            1: _ARGUMENT_MATCH["ConfigEntry"],
+        },
+        return_type=_RETURN_MATCH["None"],
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_unload_entry",
-        arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
-        return_type="bool",
+        arg_types={
+            0: _ARGUMENT_MATCH["HomeAssistant"],
+            1: _ARGUMENT_MATCH["ConfigEntry"],
+        },
+        return_type=_RETURN_MATCH["bool"],
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_migrate_entry",
-        arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
-        return_type="bool",
+        arg_types={
+            0: _ARGUMENT_MATCH["HomeAssistant"],
+            1: _ARGUMENT_MATCH["ConfigEntry"],
+        },
+        return_type=_RETURN_MATCH["bool"],
     ),
 ]
 
@@ -148,29 +192,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
         # Check that all arguments are annotated.
         for key, value in match.arg_types.items():
-            if (
-                not isinstance(annotations[key], astroid.Name)
-                or annotations[key].name != value
-            ):
-                # TODO: use the correct message
-                # "hass-type-hint-config-entry"
-                # "hass-type-hint-config-type"
-                # "hass-type-hint-hass"
-                self.add_message("hass-type-hint-hass", node=node)
+            if message := value.check(annotations[key]):
+                self.add_message(message, node=node)
 
         # Check the return type.
-        if match.return_type is None:
-            if (
-                not isinstance(node.returns, astroid.Const)
-                or node.returns.value is not None
-            ):
-                self.add_message("hass-type-hint-return-none", node=node)
-        else:
-            if (
-                not isinstance(node.returns, astroid.Name)
-                or node.returns.name != "bool"
-            ):
-                self.add_message("hass-type-hint-return-bool", node=node)
+        if message := match.return_type.check(node.returns):
+            self.add_message(message, node=node)
 
 
 def register(linter: PyLinter) -> None:
