@@ -16,14 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import DOMAIN, WiLightDevice
 from .support import wilight_to_hass_trigger, wilight_trigger as wl_trigger
 
-# Bitfield of features supported by the valve switch entities
-SUPPORT_WATERING_TIME = 1
-SUPPORT_PAUSE_TIME = 2
-SUPPORT_TRIGGER_1 = 4
-SUPPORT_TRIGGER_2 = 8
-SUPPORT_TRIGGER_3 = 16
-SUPPORT_TRIGGER_4 = 32
-
 # Attr of features supported by the valve switch entities
 ATTR_WATERING_TIME = "watering_time"
 ATTR_PAUSE_TIME = "pause_time"
@@ -120,31 +112,30 @@ async def async_setup_entry(
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for entity in entities:
-            if entity.entity_id == entity_id:
-                if isinstance(entity, WiLightValveSwitch):
-                    watering_time = service.data[ATTR_WATERING_TIME]
-                    await entity.async_set_switch_time(watering_time=watering_time)
+            if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
+                watering_time = service.data[ATTR_WATERING_TIME]
+                await entity.async_set_switch_time(watering_time=watering_time)
 
     async def set_trigger(service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for entity in entities:
-            if entity.entity_id == entity_id:
-                if isinstance(entity, WiLightValveSwitch):
-                    trigger_index = service.data[ATTR_TRIGGER_INDEX]
-                    trigger = service.data[ATTR_TRIGGER]
-                    await entity.async_set_trigger(
-                        trigger_index=trigger_index, trigger=trigger
-                    )
+            if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
+                trigger_index = service.data[ATTR_TRIGGER_INDEX]
+                trigger = service.data[ATTR_TRIGGER]
+                await entity.async_set_trigger(
+                    trigger_index=trigger_index, trigger=trigger
+                )
 
     async def set_pause_time(service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for entity in entities:
-            if entity.entity_id == entity_id:
-                if isinstance(entity, WiLightValvePauseSwitch):
-                    pause_time = service.data[ATTR_PAUSE_TIME]
-                    await entity.async_set_switch_time(pause_time=pause_time)
+            if (entity.entity_id == entity_id) & isinstance(
+                entity, WiLightValvePauseSwitch
+            ):
+                pause_time = service.data[ATTR_PAUSE_TIME]
+                await entity.async_set_switch_time(pause_time=pause_time)
 
     hass.services.async_register(
         DOMAIN,
@@ -274,28 +265,6 @@ class WiLightValveSwitch(WiLightDevice, ToggleEntity):
         return attr
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        supported_features = 0
-
-        if self.watering_time is not None:
-            supported_features |= SUPPORT_WATERING_TIME
-
-        if self.trigger_1 is not None:
-            supported_features |= SUPPORT_TRIGGER_1
-
-        if self.trigger_2 is not None:
-            supported_features |= SUPPORT_TRIGGER_2
-
-        if self.trigger_3 is not None:
-            supported_features |= SUPPORT_TRIGGER_3
-
-        if self.trigger_4 is not None:
-            supported_features |= SUPPORT_TRIGGER_4
-
-        return supported_features
-
-    @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
         return ICON_WATERING
@@ -362,16 +331,6 @@ class WiLightValvePauseSwitch(WiLightDevice, ToggleEntity):
             attr[ATTR_PAUSE_TIME] = self.pause_time
 
         return attr
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        supported_features = 0
-
-        if self.pause_time is not None:
-            supported_features |= SUPPORT_PAUSE_TIME
-
-        return supported_features
 
     @property
     def icon(self) -> str:

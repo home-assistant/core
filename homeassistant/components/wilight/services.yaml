@@ -3,7 +3,7 @@ set_watering_time:
   fields:
     entity_id:
       description: Name of a irrigation valve to set watering time
-      example: "switch.sprinkler_1"
+      example: "switch.wl000000000090_1_watering"
     watering_time:
       description: Duration for this irrigation to be turned on
       example: 30
@@ -12,7 +12,7 @@ set_pause_time:
   fields:
     entity_id:
       description: Name of a pause irrigation switch to set pause time
-      example: "switch.sprinkler_1_pause"
+      example: "switch.wl000000000090_2_pause"
     pause_time:
       description: Duration for this irrigation to be paused
       example: 24
