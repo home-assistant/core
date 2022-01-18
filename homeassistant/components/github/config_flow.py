@@ -10,6 +10,7 @@ from aiogithubapi import (
     GitHubException,
     GitHubLoginDeviceModel,
     GitHubLoginOauthModel,
+    GitHubRepositoryModel,
 )
 from aiogithubapi.const import OAUTH_USER_LOGIN
 import voluptuous as vol
@@ -37,7 +38,7 @@ async def starred_repositories(hass: HomeAssistant, access_token: str) -> list[s
     """Return a list of repositories that the user has starred."""
     client = GitHubAPI(token=access_token, session=async_get_clientsession(hass))
 
-    async def _get_starred():
+    async def _get_starred() -> list[GitHubRepositoryModel] | None:
         response = await client.user.starred(**{"params": {"per_page": 100}})
         if not response.is_last_page:
             results = await asyncio.gather(
@@ -56,14 +57,13 @@ async def starred_repositories(hass: HomeAssistant, access_token: str) -> list[s
         return response.data
 
     try:
-        if len(result := await _get_starred()) == 0:
-            return DEFAULT_REPOSITORIES
-
-        return sorted((repo.full_name for repo in result), key=str.casefold)
+        result = await _get_starred()
     except GitHubException:
-        pass
+        return DEFAULT_REPOSITORIES
 
-    return DEFAULT_REPOSITORIES
+    if not result or len(result) == 0:
+        return DEFAULT_REPOSITORIES
+    return sorted((repo.full_name for repo in result), key=str.casefold)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -71,11 +71,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self._device: GitHubDeviceAPI | None = None
         self._login: GitHubLoginOauthModel | None = None
         self._login_device: GitHubLoginDeviceModel | None = None
+        self._task: asyncio.Task | None = None
 
     async def async_step_user(
         self,
@@ -87,10 +88,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_device(user_input)
 
-    async def async_step_device(self, user_input: dict[str, Any] | None = None):
+    async def async_step_device(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
         """Handle device steps."""
 
-        async def _wait_for_login():
+        async def _wait_for_login() -> None:
+            # mypy is not aware that we can't get here without having these set already
+            assert self._device is not None
+            assert self._login_device is not None
+
             response = await self._device.activation(
                 device_code=self._login_device.device_code
             )
@@ -106,6 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
                 **{"client_name": SERVER_SOFTWARE},
             )
+
         try:
             response = await self._device.register()
             self._login_device = response.data
@@ -113,7 +122,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.exception(exception)
             return self.async_abort(reason="could_not_register")
 
-        self.hass.async_create_task(_wait_for_login())
+        if self._task is None:
+            self._task = self.hass.async_create_task(_wait_for_login())
 
         return self.async_show_progress(
             step_id="device",
@@ -124,7 +134,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_repositories(self, user_input: dict[str, Any] | None = None):
+    async def async_step_repositories(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
         """Handle repositories step."""
 
         # mypy is not aware that we can't get here without having this set already
@@ -153,7 +166,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -165,7 +180,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
         """Handle options flow."""
         if not user_input:
             configured_repositories: list[str] = self.config_entry.options[

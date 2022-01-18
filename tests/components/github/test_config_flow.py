@@ -170,7 +170,7 @@ async def test_starred_pagination_with_exception(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.github.config_flow.GitHubAPI",
         return_value=MagicMock(
-            user=MagicMock(starred=AsyncMock(side_effect=GitHubException))
+            user=MagicMock(starred=AsyncMock(side_effect=GitHubException("Error")))
         ),
     ):
         repos = await starred_repositories(hass, MOCK_ACCESS_TOKEN)
