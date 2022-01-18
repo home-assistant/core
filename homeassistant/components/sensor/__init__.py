@@ -1,13 +1,13 @@
 """Component to interface with various sensors that can be monitored."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 import inspect
 import logging
-from typing import Any, Callable, Final, cast, final
+from typing import Any, Final, cast, final
 
 import voluptuous as vol
 
