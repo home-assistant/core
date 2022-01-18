@@ -25,20 +25,19 @@ class TypeChecker:
     """Class for pattern matching."""
 
     expected_type: str | None
-    error_message: str
 
-    def check(self, node: astroid.NodeNG) -> str | None:
+    def check(self, node: astroid.NodeNG) -> bool:
         """Check the argument node against the expected type."""
         if self.expected_type is None:
             if isinstance(node, astroid.Const) and node.value is None:
-                return None
-            return self.error_message
+                return True
+            return False
         if isinstance(node, astroid.Name) and node.name == self.expected_type:
-            return None
+            return True
         if isinstance(node, astroid.Attribute) and node.attrname == self.expected_type:
             # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
-            return None
-        return self.error_message
+            return True
+        return False
 
 
 _MODULE_FILTERS: dict[str, re.Pattern] = {
@@ -46,13 +45,13 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
 }
 
 _ARGUMENT_MATCH: dict[str, TypeChecker] = {
-    "HomeAssistant": TypeChecker("HomeAssistant", "hass-type-hint-hass"),
-    "ConfigType": TypeChecker("ConfigType", "hass-type-hint-config-type"),
-    "ConfigEntry": TypeChecker("ConfigEntry", "hass-type-hint-config-entry"),
+    "HomeAssistant": TypeChecker("HomeAssistant"),
+    "ConfigType": TypeChecker("ConfigType"),
+    "ConfigEntry": TypeChecker("ConfigEntry"),
 }
 _RETURN_MATCH: dict[str, TypeChecker] = {
-    "bool": TypeChecker("bool", "hass-type-hint-return-bool"),
-    "None": TypeChecker(None, "hass-type-hint-return-none"),
+    "bool": TypeChecker("bool"),
+    "None": TypeChecker(None),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -143,29 +142,14 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W0020": (
-            "Argument should be of type HomeAssistant",
-            "hass-type-hint-hass",
-            "Used when method argument isn't HomeAssistant as expected",
+            "Argument %d should be of type %s",
+            "hass-argument-type",
+            "Used when method argument type is incorrect",
         ),
         "W0021": (
-            "Argument should be of type ConfigType",
-            "hass-type-hint-config-type",
-            "Used when method argument isn't ConfigType as expected",
-        ),
-        "W0022": (
-            "Argument should be of type ConfigEntry",
-            "hass-type-hint-config-entry",
-            "Used when method argument isn't ConfigEntry as expected",
-        ),
-        "W0023": (
-            "Return type should be of type bool",
-            "hass-type-hint-return-bool",
-            "Used when method return type isn't bool",
-        ),
-        "W0024": (
-            "Return type should be None",
-            "hass-type-hint-return-none",
-            "Used when method return type isn't None",
+            "Return type should be %s",
+            "hass-return-type",
+            "Used when method return type is incorrect",
         ),
     }
     options = ()
@@ -211,12 +195,18 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
         # Check that all arguments are correctly annotated.
         for key, value in match.arg_types.items():
-            if message := value.check(annotations[key]):
-                self.add_message(message, node=node.args.args[key])
+            if not value.check(annotations[key]):
+                self.add_message(
+                    "hass-argument-type",
+                    node=node.args.args[key],
+                    args=(key, value.expected_type),
+                )
 
         # Check the return type.
-        if message := match.return_type.check(node.returns):
-            self.add_message(message, node=node)
+        if not match.return_type.check(node.returns):
+            self.add_message(
+                "hass-return-type", node=node, args=match.return_type.expected_type
+            )
 
 
 def register(linter: PyLinter) -> None:
