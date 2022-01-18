@@ -238,6 +238,23 @@ SSDP = {
             "modelDescription": "UniFi Dream Machine Pro"
         }
     ],
+    "unifiprotect": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
+        }
+    ],
     "upnp": [
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
