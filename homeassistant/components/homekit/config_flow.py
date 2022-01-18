@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import random
 import re
 import string
+from typing import Final
 
 import voluptuous as vol
 
@@ -116,7 +118,7 @@ DEFAULT_DOMAINS = [
     "water_heater",
 ]
 
-_EMPTY_ENTITY_FILTER = {
+_EMPTY_ENTITY_FILTER: Final = {
     CONF_INCLUDE_DOMAINS: [],
     CONF_EXCLUDE_DOMAINS: [],
     CONF_INCLUDE_ENTITIES: [],
@@ -151,7 +153,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Choose specific domains in bridge mode."""
         if user_input is not None:
-            entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
             entity_filter[CONF_INCLUDE_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
             self.hk_data[CONF_FILTER] = entity_filter
             return await self.async_step_pairing()
@@ -492,7 +494,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hk_options.update(user_input)
             return await self.async_step_include_exclude()
 
-        self.hk_options = dict(self.config_entry.options)
+        self.hk_options = deepcopy(dict(self.config_entry.options))
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
