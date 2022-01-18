@@ -26,6 +26,9 @@ DATA = {
         "title": "Device Trigger",
         "docs": "https://developers.home-assistant.io/docs/en/device_automation_trigger.html",
     },
+    "diagnostics": {
+        "title": "Diagnostics",
+    },
     "integration": {
         "title": "Integration",
         "docs": "https://developers.home-assistant.io/docs/en/creating_integration_file_structure.html",
