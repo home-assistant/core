@@ -2391,6 +2391,9 @@ twilio==6.32.0
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
 
+# homeassistant.components.unifiprotect
+unifi-discovery==1.0.0
+
 # homeassistant.components.unifiled
 unifiled==0.11
 
