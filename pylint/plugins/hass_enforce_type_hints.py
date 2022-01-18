@@ -206,7 +206,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if node.returns is None and not _has_valid_annotations(annotations):
             return
 
-        # Check that all arguments are annotated.
+        # Check that all arguments are correctly annotated.
         for key, value in match.arg_types.items():
             if message := value.check(annotations[key]):
                 self.add_message(message, node=node)
