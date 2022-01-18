@@ -11,9 +11,7 @@ LOGGER: Logger = getLogger(__package__)
 
 DOMAIN = "github"
 
-# THIS NEED TO CHANGE!!!!
-CLIENT_ID = "ce3981304697fb012542"
-# THIS NEED TO CHANGE!!!!
+CLIENT_ID = "1440cafcc86e3ea5d6a2"
 
 DEFAULT_REPOSITORIES = ["home-assistant/core", "esphome/esphome"]
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=300)
