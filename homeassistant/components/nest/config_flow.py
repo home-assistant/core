@@ -44,14 +44,16 @@ from google_nest_sdm.structure import InfoTrait, Structure
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import get_random_string
 from homeassistant.util.json import load_json
 
-from . import api
+from . import api, auth
 from .const import (
     CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
@@ -117,6 +119,31 @@ def register_flow_implementation(
         "gen_authorize_url": gen_authorize_url,
         "convert_code": convert_code,
     }
+
+
+def register_flow_implementation_from_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> None:
+    """Register auth implementations for SDM API from configuration yaml."""
+    NestFlowHandler.async_register_implementation(
+        hass,
+        auth.InstalledAppAuth(
+            hass,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            config[DOMAIN][CONF_PROJECT_ID],
+        ),
+    )
+    NestFlowHandler.async_register_implementation(
+        hass,
+        auth.WebAuth(
+            hass,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            config[DOMAIN][CONF_PROJECT_ID],
+        ),
+    )
 
 
 class NestAuthError(HomeAssistantError):
