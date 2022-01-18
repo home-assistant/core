@@ -48,7 +48,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.honeywell.*",
     "homeassistant.components.iaqualink.*",
     "homeassistant.components.icloud.*",
-    "homeassistant.components.image.*",
     "homeassistant.components.incomfort.*",
     "homeassistant.components.influxdb.*",
     "homeassistant.components.input_datetime.*",
