@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,18 +22,14 @@ class FlashForgeDataUpdateCoordinator(DataUpdateCoordinator):
     config_entry: ConfigEntry
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        printer: Printer,
-        config_entry: ConfigEntry,
-        interval: int,
+        self, hass: HomeAssistant, printer: Printer, config_entry: ConfigEntry
     ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DEFAULT_NAME}-{config_entry.entry_id}",
-            update_interval=timedelta(seconds=interval),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
             update_method=self.async_update_data,
         )
         self.config_entry = config_entry
@@ -47,9 +43,7 @@ class FlashForgeDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via API."""
         try:
             await self.printer.update()
-        except TimeoutError as err:
-            raise UpdateFailed(err) from err
-        except ConnectionError as err:
+        except (TimeoutError, ConnectionError) as err:
             raise UpdateFailed(err) from err
 
         return {
@@ -61,9 +55,7 @@ class FlashForgeDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             self.printer.connected = ConnectionStatus.DISCONNECTED
             await self.printer.connect()
-        except TimeoutError as err:
-            raise ConfigEntryNotReady(err) from err
-        except ConnectionError as err:
+        except (TimeoutError, ConnectionError) as err:
             raise ConfigEntryNotReady(err) from err
 
         return await super().async_config_entry_first_refresh()
@@ -77,7 +69,6 @@ class FlashForgeDataUpdateCoordinator(DataUpdateCoordinator):
         firmware = self.printer.firmware
 
         return DeviceInfo(
-            configuration_url=None,
             identifiers={(DOMAIN, unique_id)},
             manufacturer="FlashForge",
             model=model,

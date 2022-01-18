@@ -6,9 +6,6 @@
   "requirements": [
     "ffpp==0.0.11"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": ["network"],
   "codeowners": [
     "@joseffallman"

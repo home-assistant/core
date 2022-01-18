@@ -122,9 +122,7 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await self.printer.connect()
-        except TimeoutError as err:
-            raise CannotConnect(err) from err
-        except ConnectionError as err:
+        except (TimeoutError, ConnectionError) as err:
             raise CannotConnect(err) from err
 
         if self.printer.serial is not None:
