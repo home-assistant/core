@@ -20,18 +20,6 @@ class TypeHintMatch:
     return_type: str | None
 
 
-def _is_valid_type(expected_type: str | None, node: astroid.NodeNG) -> bool:
-    """Check the argument node against the expected type."""
-    if expected_type is None:
-        return isinstance(node, astroid.Const) and node.value is None
-
-    if isinstance(node, astroid.Name) and node.name == expected_type:
-        # Name occurs when a namespace is not used, eg. "HomeAssistant"
-        return True
-    # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
-    return isinstance(node, astroid.Attribute) and node.attrname == expected_type
-
-
 _MODULE_FILTERS: dict[str, re.Pattern] = {
     # init matches only in the package root (__init__.py)
     "init": re.compile(r"^homeassistant.components.\w+$"),
@@ -93,6 +81,20 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type="bool",
     ),
 ]
+
+
+def _is_valid_type(expected_type: str | None, node: astroid.NodeNG) -> bool:
+    """Check the argument node against the expected type."""
+    # Const occurs when the type is None
+    if expected_type is None:
+        return isinstance(node, astroid.Const) and node.value is None
+
+    # Name occurs when a namespace is not used, eg. "HomeAssistant"
+    if isinstance(node, astroid.Name) and node.name == expected_type:
+        return True
+
+    # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
+    return isinstance(node, astroid.Attribute) and node.attrname == expected_type
 
 
 def _get_all_annotations(node: astroid.FunctionDef) -> list[astroid.NodeNG | None]:
