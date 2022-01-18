@@ -33,6 +33,7 @@ from .const import (
     ATTR_LAUNCH_PAD,
     ATTR_LAUNCH_PAD_COUNTRY_CODE,
     ATTR_LAUNCH_PROVIDER,
+    ATTR_REASON,
     ATTR_STREAM_LIVE,
     ATTR_WINDOW_END,
     ATTR_WINDOW_START,
@@ -40,6 +41,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LAUNCH_PROBABILITY,
+    LAUNCH_STATUS,
     LAUNCH_TIME,
     NEXT_LAUNCH,
 )
@@ -101,6 +103,17 @@ SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
         if next_launch.probability != -1
         else STATE_UNKNOWN,
         attributes_fn=lambda next_launch: None,
+    ),
+    NextLaunchSensorEntityDescription(
+        key=LAUNCH_STATUS,
+        icon="mdi:rocket-launch",
+        name="Launch status",
+        value_fn=lambda next_launch: next_launch.status.name,
+        attributes_fn=lambda next_launch: {
+            ATTR_REASON: next_launch.holdreason,
+        }
+        if next_launch.inhold
+        else None,
     ),
 )
 
