@@ -21,7 +21,12 @@ async def mock_diagnostics_integration(hass):
         Mock(
             async_get_config_entry_diagnostics=AsyncMock(
                 return_value={
-                    "hello": "info",
+                    "config_entry": "info",
+                }
+            ),
+            async_get_device_diagnostics=AsyncMock(
+                return_value={
+                    "device": "info",
                 }
             ),
         ),
@@ -40,7 +45,10 @@ async def test_websocket_info(hass, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == [
-        {"domain": "fake_integration", "handlers": {"config_entry": True}}
+        {
+            "domain": "fake_integration",
+            "handlers": {"config_entry": True, "device": True},
+        }
     ]
 
 
@@ -49,3 +57,4 @@ async def test_download_diagnostics(hass, hass_client):
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, "fake_integration"
     ) == {"hello": "info"}
+    

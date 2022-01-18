@@ -12,13 +12,18 @@ from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    async_config_entries_for_device,
+    async_get,
+)
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
 )
 
-from .const import DOMAIN
+from .const import D_TYPE_CONFIG_ENTRY, D_TYPE_DEVICE, D_TYPES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +50,21 @@ class DiagnosticsProtocol(Protocol):
     ) -> dict:
         """Return diagnostics for a config entry."""
 
+    async def async_get_device_diagnostics(
+        self, hass: HomeAssistant, device: DeviceEntry
+    ) -> dict:
+        """Return diagnostics for a device."""
+
 
 async def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ):
     """Register a diagnostics platform."""
     hass.data[DOMAIN][integration_domain] = {
-        "config_entry": getattr(platform, "async_get_config_entry_diagnostics", None)
+        D_TYPE_CONFIG_ENTRY: getattr(
+            platform, "async_get_config_entry_diagnostics", None
+        ),
+        D_TYPE_DEVICE: getattr(platform, "async_get_device_diagnostics", None),
     }
 
 
@@ -84,24 +97,49 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         self, request: web.Request, d_type: str, d_id: str
     ) -> web.Response:
         """Download diagnostics."""
-        if d_type != "config_entry":
+        if d_type not in D_TYPES:
             return web.Response(status=404)
 
         hass = request.app["hass"]
-        config_entry = hass.config_entries.async_get_entry(d_id)
 
-        if config_entry is None:
-            return web.Response(status=404)
+        if d_type == D_TYPE_CONFIG_ENTRY:
+            config_entry = hass.config_entries.async_get_entry(d_id)
 
-        info = hass.data[DOMAIN].get(config_entry.domain)
+            if config_entry is None:
+                return web.Response(status=404)
 
-        if info is None:
-            return web.Response(status=404)
+            info = hass.data[DOMAIN].get(config_entry.domain)
 
-        if info["config_entry"] is None:
-            return web.Response(status=404)
+            if info is None or info[D_TYPE_CONFIG_ENTRY] is None:
+                return web.Response(status=404)
 
-        data = await info["config_entry"](hass, config_entry)
+            data = await info[D_TYPE_CONFIG_ENTRY](hass, config_entry)
+            filename = f"{config_entry.domain}-{config_entry.entry_id}"
+        else:
+            dev_reg = async_get(hass)
+            device = dev_reg.async_get(d_id)
+
+            if device is None:
+                return web.Response(status=404)
+
+            func_list = {
+                info[D_TYPE_DEVICE]
+                for config_entry in async_config_entries_for_device(hass, device)
+                if (info := hass.data[DOMAIN].get(config_entry.domain)) is not None
+            }
+
+            if not func_list:
+                return web.Response(status=404)
+
+            if len(func_list) == 1:
+                data = await next(func for func in func_list)(hass, device)
+            else:
+                data = {}
+                for config_entry in async_config_entries_for_device(hass, device):
+                    data[config_entry.domain] = await hass.data[DOMAIN][
+                        config_entry.domain
+                    ][D_TYPE_DEVICE](hass, device)
+            filename = f"{device.name}-{device.id}"
 
         try:
             json_data = json.dumps(data, indent=4, cls=ExtendedJSONEncoder)
@@ -118,6 +156,6 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             body=json_data,
             content_type="application/json",
             headers={
-                "Content-Disposition": f'attachment; filename="{config_entry.domain}-{config_entry.entry_id}.json"'
+                "Content-Disposition": f'attachment; filename="{d_type}-{filename}.json"'
             },
         )
