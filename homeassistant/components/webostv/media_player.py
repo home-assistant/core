@@ -463,8 +463,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        current_input = self._client.get_input()
-        if current_input == LIVE_TV_APP_ID:
+        if self._client.current_app_id == LIVE_TV_APP_ID:
             await self._client.channel_up()
         else:
             await self._client.fast_forward()
@@ -472,8 +471,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
-        current_input = self._client.get_input()
-        if current_input == LIVE_TV_APP_ID:
+        if self._client.current_app_id == LIVE_TV_APP_ID:
             await self._client.channel_down()
         else:
             await self._client.rewind()
