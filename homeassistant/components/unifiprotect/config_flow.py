@@ -39,8 +39,6 @@ from .services import _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PLATFORM = "NVR"
-
 
 class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Protect config flow."""
@@ -99,7 +97,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {
             "name": discovery_info["hostname"]
             or discovery_info["platform"]
-            or discovery_info["mac"],
+            or f"NVR {discovery_info['mac']}",
             "ip_address": discovery_info["ip_address"],
         }
         self.context["title_placeholders"] = placeholders
