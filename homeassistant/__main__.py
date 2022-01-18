@@ -91,12 +91,6 @@ def get_arguments() -> argparse.Namespace:
         "-v", "--verbose", action="store_true", help="Enable verbose logging to file."
     )
     parser.add_argument(
-        "--pid-file",
-        metavar="path_to_pid_file",
-        default=None,
-        help="Path to PID file useful for running as daemon",
-    )
-    parser.add_argument(
         "--log-rotate-days",
         type=int,
         default=None,
@@ -153,40 +147,6 @@ def daemonize() -> None:
     os.dup2(infd.fileno(), sys.stdin.fileno())
     os.dup2(outfd.fileno(), sys.stdout.fileno())
     os.dup2(outfd.fileno(), sys.stderr.fileno())
-
-
-def check_pid(pid_file: str) -> None:
-    """Check that Home Assistant is not already running."""
-    # Check pid file
-    try:
-        with open(pid_file, encoding="utf8") as file:
-            pid = int(file.readline())
-    except OSError:
-        # PID File does not exist
-        return
-
-    # If we just restarted, we just found our own pidfile.
-    if pid == os.getpid():
-        return
-
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        # PID does not exist
-        return
-    print("Fatal Error: Home Assistant is already running.")
-    sys.exit(1)
-
-
-def write_pid(pid_file: str) -> None:
-    """Create a PID File."""
-    pid = os.getpid()
-    try:
-        with open(pid_file, "w", encoding="utf8") as file:
-            file.write(str(pid))
-    except OSError:
-        print(f"Fatal Error: Unable to write pid file {pid_file}")
-        sys.exit(1)
 
 
 def closefds_osx(min_fd: int, max_fd: int) -> None:
@@ -278,12 +238,8 @@ def main() -> int:
     ensure_config_path(config_dir)
 
     # Daemon functions
-    if args.pid_file:
-        check_pid(args.pid_file)
     if args.daemon:
         daemonize()
-    if args.pid_file:
-        write_pid(args.pid_file)
 
     # pylint: disable=import-outside-toplevel
     from . import runner
