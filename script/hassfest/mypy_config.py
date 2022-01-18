@@ -76,7 +76,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.netgear.*",
     "homeassistant.components.nightscout.*",
     "homeassistant.components.nilu.*",
-    "homeassistant.components.nsw_fuel_station.*",
     "homeassistant.components.nuki.*",
     "homeassistant.components.nws.*",
     "homeassistant.components.nzbget.*",
