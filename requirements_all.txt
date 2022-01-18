@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211229.1
+home-assistant-frontend==20220118.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2392,7 +2392,7 @@ twilio==6.32.0
 uEagle==0.0.2
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.0.0
+unifi-discovery==1.1.0
 
 # homeassistant.components.unifiled
 unifiled==0.11
