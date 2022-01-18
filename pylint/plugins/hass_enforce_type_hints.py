@@ -33,13 +33,13 @@ def _is_valid_type(expected_type: str | None, node: astroid.NodeNG) -> bool:
 
 
 _MODULE_FILTERS: dict[str, re.Pattern] = {
-    # __init__ matches only in the package root (__init__.py)
-    "__init__": re.compile(r"^homeassistant.components.\w+$"),
+    # init matches only in the package root (__init__.py)
+    "init": re.compile(r"^homeassistant.components.\w+$"),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
-        module_filter=_MODULE_FILTERS["__init__"],
+        module_filter=_MODULE_FILTERS["init"],
         function_name="setup",
         arg_types={
             0: "HomeAssistant",
@@ -48,7 +48,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=_MODULE_FILTERS["__init__"],
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup",
         arg_types={
             0: "HomeAssistant",
@@ -57,7 +57,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=_MODULE_FILTERS["__init__"],
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup_entry",
         arg_types={
             0: "HomeAssistant",
@@ -66,7 +66,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=_MODULE_FILTERS["__init__"],
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_remove_entry",
         arg_types={
             0: "HomeAssistant",
@@ -75,7 +75,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type=None,
     ),
     TypeHintMatch(
-        module_filter=_MODULE_FILTERS["__init__"],
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_unload_entry",
         arg_types={
             0: "HomeAssistant",
@@ -84,7 +84,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=_MODULE_FILTERS["__init__"],
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_migrate_entry",
         arg_types={
             0: "HomeAssistant",
