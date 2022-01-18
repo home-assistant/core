@@ -57,7 +57,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -109,6 +109,9 @@ class RegistryEntry:
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     name: str | None = attr.ib(default=None)
+    options: Mapping[str, Mapping[str, Any]] = attr.ib(
+        default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
+    )
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
@@ -560,6 +563,25 @@ class EntityRegistry:
 
         return new
 
+    @callback
+    def async_update_entity_options(
+        self, entity_id: str, domain: str, options: dict[str, Any]
+    ) -> None:
+        """Update entity options."""
+        old = self.entities[entity_id]
+        new_options: Mapping[str, Mapping[str, Any]] = {**old.options, domain: options}
+        self.entities[entity_id] = attr.evolve(old, options=new_options)
+
+        self.async_schedule_save()
+
+        data: dict[str, str | dict[str, Any]] = {
+            "action": "update",
+            "entity_id": entity_id,
+            "changes": {"options": old.options},
+        }
+
+        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
+
     async def async_load(self) -> None:
         """Load the entity registry."""
         async_setup_entity_restore(self.hass, self)
@@ -595,6 +617,7 @@ class EntityRegistry:
                     icon=entity["icon"],
                     id=entity["id"],
                     name=entity["name"],
+                    options=entity["options"],
                     original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
@@ -629,6 +652,7 @@ class EntityRegistry:
                 "icon": entry.icon,
                 "id": entry.id,
                 "name": entry.name,
+                "options": entry.options,
                 "original_device_class": entry.original_device_class,
                 "original_icon": entry.original_icon,
                 "original_name": entry.original_name,
@@ -749,7 +773,7 @@ async def _async_migrate(
     old_major_version: int, old_minor_version: int, data: dict
 ) -> dict:
     """Migrate to the new version."""
-    if old_major_version < 2 and old_minor_version < 2:
+    if old_major_version == 1 and old_minor_version < 2:
         # From version 1.1
         for entity in data["entities"]:
             # Populate all keys
@@ -768,17 +792,22 @@ async def _async_migrate(
             entity["supported_features"] = entity.get("supported_features", 0)
             entity["unit_of_measurement"] = entity.get("unit_of_measurement")
 
-    if old_major_version < 2 and old_minor_version < 3:
+    if old_major_version == 1 and old_minor_version < 3:
         # Version 1.3 adds original_device_class
         for entity in data["entities"]:
             # Move device_class to original_device_class
             entity["original_device_class"] = entity["device_class"]
             entity["device_class"] = None
 
-    if old_major_version < 2 and old_minor_version < 4:
+    if old_major_version == 1 and old_minor_version < 4:
         # Version 1.4 adds id
         for entity in data["entities"]:
             entity["id"] = uuid_util.random_uuid_hex()
+
+    if old_major_version == 1 and old_minor_version < 5:
+        # Version 1.5 adds entity options
+        for entity in data["entities"]:
+            entity["options"] = {}
 
     if old_major_version > 1:
         raise NotImplementedError
