@@ -29,8 +29,7 @@ KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
 PLATFORMS = [
-    # Temporarily disabled
-    #    Platform.COVER,
+    Platform.COVER,
     Platform.FAN,
     #    Platform.LIGHT,
     #    Platform.SENSOR,
