@@ -20,7 +20,7 @@ class TypeHintMatch:
     return_type: str | None
 
 
-def _is_valid_type(expected_type, node: astroid.NodeNG) -> bool:
+def _is_valid_type(expected_type: str | None, node: astroid.NodeNG) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is None:
         if isinstance(node, astroid.Const) and node.value is None:
@@ -99,7 +99,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 
 def _get_all_annotations(node: astroid.FunctionDef) -> list[astroid.NodeNG | None]:
     args = node.args
-    annotations = (
+    annotations: list[astroid.NodeNG | None] = (
         args.posonlyargs_annotations + args.annotations + args.kwonlyargs_annotations
     )
     if args.vararg is not None:
@@ -111,7 +111,7 @@ def _get_all_annotations(node: astroid.FunctionDef) -> list[astroid.NodeNG | Non
 
 def _has_valid_annotations(
     annotations: list[astroid.NodeNG | None],
-) -> list[astroid.NodeNG | None]:
+) -> bool:
     for annotation in annotations:
         if annotation is not None:
             return True
@@ -188,8 +188,8 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                 )
 
         # Check the return type.
-        if not _is_valid_type(expected_type := match.return_type, node.returns):
-            self.add_message("hass-return-type", node=node, args=expected_type)
+        if not _is_valid_type(return_type := match.return_type, node.returns):
+            self.add_message("hass-return-type", node=node, args=return_type or "None")
 
 
 def register(linter: PyLinter) -> None:
