@@ -1,4 +1,4 @@
-"""Plugin for constructor definitions."""
+"""Plugin to enforce type hints on specific functions."""
 from __future__ import annotations
 
 from dataclasses import dataclass
