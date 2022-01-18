@@ -63,7 +63,7 @@ def get_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate.",
-        epilog="If restart is requested, exits with code {RESTART_EXIT_CODE}",
+        epilog=f"If restart is requested, exits with code {RESTART_EXIT_CODE}",
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
