@@ -166,6 +166,7 @@ async def websocket_resolve_media(
                 hass,
                 quote(url),
                 timedelta(seconds=msg["expires"]),
+                refresh_token_id=connection.refresh_token_id,
             )
 
         connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
