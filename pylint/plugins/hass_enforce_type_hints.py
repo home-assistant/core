@@ -16,43 +16,27 @@ class TypeHintMatch:
 
     module_filter: re.Pattern
     function_name: str
-    arg_types: dict[int, TypeChecker]
-    return_type: TypeChecker
+    arg_types: dict[int, str]
+    return_type: str | None
 
 
-@dataclass
-class TypeChecker:
-    """Class for pattern matching."""
-
-    expected_type: str | None
-
-    def check(self, node: astroid.NodeNG) -> bool:
-        """Check the argument node against the expected type."""
-        if self.expected_type is None:
-            if isinstance(node, astroid.Const) and node.value is None:
-                return True
-            return False
-        if isinstance(node, astroid.Name) and node.name == self.expected_type:
-            # Name occurs when a namespace is not used, eg. "HomeAssistant"
-            return True
-        if isinstance(node, astroid.Attribute) and node.attrname == self.expected_type:
-            # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
+def _is_valid_type(expected_type, node: astroid.NodeNG) -> bool:
+    """Check the argument node against the expected type."""
+    if expected_type is None:
+        if isinstance(node, astroid.Const) and node.value is None:
             return True
         return False
 
+    if isinstance(node, astroid.Name) and node.name == expected_type:
+        # Name occurs when a namespace is not used, eg. "HomeAssistant"
+        return True
+    # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
+    return isinstance(node, astroid.Attribute) and node.attrname == expected_type
+
 
 _MODULE_FILTERS: dict[str, re.Pattern] = {
+    # init matches only in the package root (__init__.py)
     "init": re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
-}
-
-_ARGUMENT_MATCH: dict[str, TypeChecker] = {
-    "HomeAssistant": TypeChecker("HomeAssistant"),
-    "ConfigType": TypeChecker("ConfigType"),
-    "ConfigEntry": TypeChecker("ConfigEntry"),
-}
-_RETURN_MATCH: dict[str, TypeChecker] = {
-    "bool": TypeChecker("bool"),
-    "None": TypeChecker(None),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -60,55 +44,55 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         module_filter=_MODULE_FILTERS["init"],
         function_name="setup",
         arg_types={
-            0: _ARGUMENT_MATCH["HomeAssistant"],
-            1: _ARGUMENT_MATCH["ConfigType"],
+            0: "HomeAssistant",
+            1: "ConfigType",
         },
-        return_type=_RETURN_MATCH["bool"],
+        return_type="bool",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup",
         arg_types={
-            0: _ARGUMENT_MATCH["HomeAssistant"],
-            1: _ARGUMENT_MATCH["ConfigType"],
+            0: "HomeAssistant",
+            1: "ConfigType",
         },
-        return_type=_RETURN_MATCH["bool"],
+        return_type="bool",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup_entry",
         arg_types={
-            0: _ARGUMENT_MATCH["HomeAssistant"],
-            1: _ARGUMENT_MATCH["ConfigEntry"],
+            0: "HomeAssistant",
+            1: "ConfigEntry",
         },
-        return_type=_RETURN_MATCH["bool"],
+        return_type="bool",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_remove_entry",
         arg_types={
-            0: _ARGUMENT_MATCH["HomeAssistant"],
-            1: _ARGUMENT_MATCH["ConfigEntry"],
+            0: "HomeAssistant",
+            1: "ConfigEntry",
         },
-        return_type=_RETURN_MATCH["None"],
+        return_type=None,
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_unload_entry",
         arg_types={
-            0: _ARGUMENT_MATCH["HomeAssistant"],
-            1: _ARGUMENT_MATCH["ConfigEntry"],
+            0: "HomeAssistant",
+            1: "ConfigEntry",
         },
-        return_type=_RETURN_MATCH["bool"],
+        return_type="bool",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["init"],
         function_name="async_migrate_entry",
         arg_types={
-            0: _ARGUMENT_MATCH["HomeAssistant"],
-            1: _ARGUMENT_MATCH["ConfigEntry"],
+            0: "HomeAssistant",
+            1: "ConfigEntry",
         },
-        return_type=_RETURN_MATCH["bool"],
+        return_type="bool",
     ),
 ]
 
@@ -195,19 +179,17 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             return
 
         # Check that all arguments are correctly annotated.
-        for key, value in match.arg_types.items():
-            if not value.check(annotations[key]):
+        for key, expected_type in match.arg_types.items():
+            if not _is_valid_type(expected_type, annotations[key]):
                 self.add_message(
                     "hass-argument-type",
                     node=node.args.args[key],
-                    args=(key, value.expected_type),
+                    args=(key, expected_type),
                 )
 
         # Check the return type.
-        if not match.return_type.check(node.returns):
-            self.add_message(
-                "hass-return-type", node=node, args=match.return_type.expected_type
-            )
+        if not _is_valid_type(expected_type := match.return_type, node.returns):
+            self.add_message("hass-return-type", node=node, args=expected_type)
 
 
 def register(linter: PyLinter) -> None:
