@@ -186,6 +186,11 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         for match in _METHOD_MATCH:
             self._visit_functiondef(node, match)
 
+    def visit_asyncfunctiondef(self, node: astroid.AsyncFunctionDef) -> None:
+        """Called when a FunctionDef node is visited."""
+        for match in _METHOD_MATCH:
+            self._visit_functiondef(node, match)
+
     def _visit_functiondef(
         self, node: astroid.FunctionDef, match: TypeHintMatch
     ) -> None:
