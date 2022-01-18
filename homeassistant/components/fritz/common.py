@@ -40,7 +40,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DEFAULT_DEVICE_NAME,
-    DEFAULT_GUEST_WIFI_PW_LENGTH,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
@@ -519,9 +518,9 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
             if service_call.service == SERVICE_SET_GUEST_WIFI_PW:
                 await self.hass.async_add_executor_job(
-                    self.fritz_guest_wifi.set_password,
+                    self._set_guest_wifi_password,
                     service_call.data.get("password"),
-                    service_call.data.get("length", DEFAULT_GUEST_WIFI_PW_LENGTH),
+                    service_call.data.get("length"),
                 )
                 return
 
