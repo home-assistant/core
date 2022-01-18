@@ -38,8 +38,6 @@ def mock_covid_parser(hass: HomeAssistant):
         newRecovered=9,
         lastUpdate="a",
     )
-    # mock_district.population.return_value = 300
-    # mock_district.population = 300
 
     mock_district.weekIncidence = Mock()
 
@@ -47,15 +45,7 @@ def mock_covid_parser(hass: HomeAssistant):
     mock.load_data = AsyncMock()
     mock._accumulate_country = AsyncMock()
     mock.districts = {1: mock_district}
-    # 1: District(
-
-    # )
-
-    # Dict[int, District]
-    mock.states = {}  # Dict[str, State]
-    mock.country = Country()  # Country
-    #  self.districts: Dict[int, District] = {}
-    # self.states: Dict[str, State] = {}
-    # self.country = Country()
+    mock.states = {}
+    mock.country = Country()
 
     return mock
