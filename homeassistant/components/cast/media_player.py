@@ -22,7 +22,7 @@ from pychromecast.socket_client import (
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken
-from homeassistant.components import media_source, tts, zeroconf
+from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -305,6 +305,9 @@ class CastDevice(MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
+                # pylint: disable=[import-outside-toplevel]
+                from homeassistant.components import tts
+
                 with suppress(KeyError):  # base_url not configured
                     tts_base_url = tts.get_base_url(self.hass)
 
