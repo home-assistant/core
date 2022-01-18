@@ -179,8 +179,7 @@ def main() -> int:
     if os.path.getsize(fault_file_name) == 0:
         os.remove(fault_file_name)
 
-    if exit_code == RESTART_EXIT_CODE:
-        check_threads()
+    check_threads()
 
     return exit_code
 
