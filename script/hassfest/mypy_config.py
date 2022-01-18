@@ -71,7 +71,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.minecraft_server.*",
     "homeassistant.components.mobile_app.*",
     "homeassistant.components.motion_blinds.*",
-    "homeassistant.components.mullvad.*",
     "homeassistant.components.ness_alarm.*",
     "homeassistant.components.nest.legacy.*",
     "homeassistant.components.netgear.*",
