@@ -57,7 +57,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -109,6 +109,9 @@ class RegistryEntry:
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     name: str | None = attr.ib(default=None)
+    options: Mapping[str, Any] = attr.ib(
+        default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
+    )
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
@@ -318,6 +321,7 @@ class EntityRegistry:
         config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
         entity_category: str | None = None,
+        options: Mapping[str, Any] | None = None,
         original_device_class: str | None = None,
         original_icon: str | None = None,
         original_name: str | None = None,
@@ -339,6 +343,7 @@ class EntityRegistry:
                 config_entry_id=config_entry_id or UNDEFINED,
                 device_id=device_id or UNDEFINED,
                 entity_category=entity_category or UNDEFINED,
+                options=options or UNDEFINED,
                 original_device_class=original_device_class or UNDEFINED,
                 original_icon=original_icon or UNDEFINED,
                 original_name=original_name or UNDEFINED,
@@ -382,6 +387,7 @@ class EntityRegistry:
             disabled_by=disabled_by,
             entity_category=entity_category,
             entity_id=entity_id,
+            options=options,
             original_device_class=original_device_class,
             original_icon=original_icon,
             original_name=original_name,
@@ -471,6 +477,7 @@ class EntityRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
+        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
@@ -504,6 +511,7 @@ class EntityRegistry:
             ("entity_category", entity_category),
             ("icon", icon),
             ("name", name),
+            ("options", options),
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
             ("original_name", original_name),
@@ -595,6 +603,7 @@ class EntityRegistry:
                     icon=entity["icon"],
                     id=entity["id"],
                     name=entity["name"],
+                    options=entity["options"],
                     original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
@@ -629,6 +638,7 @@ class EntityRegistry:
                 "icon": entry.icon,
                 "id": entry.id,
                 "name": entry.name,
+                "options": entry.options,
                 "original_device_class": entry.original_device_class,
                 "original_icon": entry.original_icon,
                 "original_name": entry.original_name,
@@ -779,6 +789,11 @@ async def _async_migrate(
         # Version 1.4 adds id
         for entity in data["entities"]:
             entity["id"] = uuid_util.random_uuid_hex()
+
+    if old_major_version < 2 and old_minor_version < 5:
+        # Version 1.5 adds entity options
+        for entity in data["entities"]:
+            entity["options"] = {}
 
     if old_major_version > 1:
         raise NotImplementedError

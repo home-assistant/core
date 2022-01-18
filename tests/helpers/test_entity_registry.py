@@ -190,6 +190,7 @@ async def test_loading_saving_data(hass, registry):
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category="config",
+        options={"light": {"minimum_brightness": 20}},
         original_device_class="mock-device-class",
         original_icon="hass:original-icon",
         original_name="Original Name",
@@ -227,6 +228,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.name == "User Name"
+    assert new_entry2.options == {"light": {"minimum_brightness": 20}}
     assert new_entry2.original_device_class == "mock-device-class"
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
