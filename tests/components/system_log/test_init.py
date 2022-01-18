@@ -96,7 +96,7 @@ async def test_normal_logs(hass, simple_queue, hass_ws_client):
 
     # Assert done by get_error_log
     logs = await get_error_log(hass_ws_client)
-    assert len([msg for msg in logs if msg["level"] not in ("DEBUG", "INFO")]) == 0
+    assert len([msg for msg in logs if msg["level"] in ("DEBUG", "INFO")]) == 0
 
 
 async def test_exception(hass, simple_queue, hass_ws_client):
