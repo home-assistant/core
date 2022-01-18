@@ -66,7 +66,7 @@ class GitHubSensorInformationEntityDescription(
     GitHubSensorBaseEntityDescription,
     GitHubSensorInformationEntityDescriptionMixin,
 ):
-    """Describes GitHub informatio sensor entity."""
+    """Describes GitHub information sensor entity."""
 
 
 @dataclass
