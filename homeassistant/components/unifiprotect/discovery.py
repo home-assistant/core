@@ -24,12 +24,12 @@ async def async_start_discovery(hass: HomeAssistant) -> None:
     domain_data = hass.data.setdefault(DOMAIN, {})
     if DISCOVERY in domain_data:
         return
-    domain_data[DISCOVERY] = await async_discover_devices(hass)
+    domain_data[DISCOVERY] = True
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(hass, await async_discover_devices(hass))
 
-    async_trigger_discovery(hass, domain_data[DISCOVERY])
+    await _async_discovery()
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
 
