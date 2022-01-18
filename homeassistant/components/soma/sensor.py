@@ -58,14 +58,26 @@ class SomaSensor(SomaEntity, SensorEntity):
             response = await self.hass.async_add_executor_job(
                 self.api.get_battery_level, self.device["mac"]
             )
+            if not self.api_is_available:
+                self.api_is_available = True
+                _LOGGER.info("Connection to SOMA Connect succeeded")
         except RequestException:
-            _LOGGER.error(MSG_API_UNREACHABLE)
-            self.is_available = False
+            if self.api_is_available:
+                _LOGGER.warning("Connection to SOMA Connect failed")
+                self.api_is_available = False
             return
         if not is_api_response_success(response):
-            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
-            self.is_available = False
+            if self.is_available:
+                self.is_available = False
+                _LOGGER.warning(
+                    f'Device is unreachable ({self.name}). Error while fetching the battery state: {response["msg"]}'
+                )
             return
+
+        if not self.is_available:
+            self.is_available = True
+            _LOGGER.info(f"Device {self.name} is now reachable")
+
         # https://support.somasmarthome.com/hc/en-us/articles/360026064234-HTTP-API
         # battery_level response is expected to be min = 360, max 410 for
         # 0-100% levels above 410 are consider 100% and below 360, 0% as the
@@ -73,4 +85,3 @@ class SomaSensor(SomaEntity, SensorEntity):
         _battery = round(2 * (response["battery_level"] - 360))
         battery = max(min(100, _battery), 0)
         self.battery_state = battery
-        self.is_available = True
