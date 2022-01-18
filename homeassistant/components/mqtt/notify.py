@@ -1,6 +1,8 @@
 """Support for MQTT nonify."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components import notify
@@ -10,15 +12,23 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DEFAULT_RETAIN
+from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DEFAULT_RETAIN, DOMAIN
 from .siren import (
     CONF_MESSAGE_COMMAND_TEMPLATE,
     CONF_MESSAGE_COMMAND_TOPIC,
     CONF_SIREN_ENTITY,
     CONF_TITLE,
     MQTT_NOTIFY_CONFIG,
-    valid_siren_entity,
+    MqttSiren,
 )
+
+
+def valid_siren_entity(value: Any) -> MqttSiren:
+    """Validate if the value passed is a valid MqttSiren object."""
+    if not isinstance(value, MqttSiren):
+        raise vol.Invalid(f"Object {value} is not a valid MqttSiren entity")
+    return value
+
 
 SCHEMA_BASE = vol.Schema(
     {
@@ -36,14 +46,14 @@ SCHEMA_BASE = vol.Schema(
 async def async_get_service(
     hass: HomeAssistant,
     legacy_config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
+    discovery_info: DiscoveryInfoType,
 ) -> MqttNotificationService | None:
     """Prepare the MQTT notification service."""
     config = SCHEMA_BASE(discovery_info)
     hass.data.setdefault(
         MQTT_NOTIFY_CONFIG, {CONF_SERVICE: None, CONF_SERVICE_DATA: {}}
     )
-    target = config.get(CONF_TARGET) or config[CONF_MESSAGE_COMMAND_TOPIC]
+    target = config[CONF_MESSAGE_COMMAND_TOPIC]
     if hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA].get(
         config[CONF_MESSAGE_COMMAND_TOPIC]
     ):
@@ -51,7 +61,7 @@ async def async_get_service(
     hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA][target] = {
         CONF_ENCODING: config[CONF_ENCODING],
         CONF_TARGET: target,
-        CONF_NAME: config.get(CONF_NAME) or config[CONF_MESSAGE_COMMAND_TOPIC],
+        CONF_NAME: config.get(CONF_TARGET) or config.get(CONF_NAME) or target,
         CONF_MESSAGE_COMMAND_TOPIC: config[CONF_MESSAGE_COMMAND_TOPIC],
         CONF_MESSAGE_COMMAND_TEMPLATE: mqtt.MqttCommandTemplate(
             config.get(CONF_MESSAGE_COMMAND_TEMPLATE),
@@ -62,6 +72,7 @@ async def async_get_service(
         CONF_RETAIN: config[CONF_RETAIN],
         CONF_TITLE: config[CONF_TITLE],
     }
+    discovery_info[CONF_NAME] = DOMAIN
     return hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE] or MqttNotificationService(hass)
 
 

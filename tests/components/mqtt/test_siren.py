@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import siren
+from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -51,12 +52,10 @@ DEFAULT_CONFIG = {
 }
 
 
-async def async_turn_on(
-    hass,
-    entity_id=ENTITY_MATCH_ALL,
-) -> None:
+async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL, parameters={}) -> None:
     """Turn all or specified siren on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data.update(parameters)
 
     await hass.services.async_call(siren.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
@@ -66,6 +65,42 @@ async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL) -> None:
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     await hass.services.async_call(siren.DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+
+
+async def test_invalid_setup(hass, mqtt_mock, caplog):
+    """Test the setup with an invalid configuration."""
+    assert await async_setup_component(
+        hass,
+        siren.DOMAIN,
+        {
+            siren.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "name": "test",
+                "tone_command_topic": "tone-command-topic",
+                "available_tones": [],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid config for [siren.mqtt]: not a valid value." in caplog.text
+
+    assert await async_setup_component(
+        hass,
+        siren.DOMAIN,
+        {
+            siren.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "name": "test",
+                "tone_command_topic": "tone-command-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid config for [siren.mqtt]: not a valid value." in caplog.text
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock):
@@ -402,6 +437,137 @@ async def test_discovery_update_siren_template(hass, mqtt_mock, caplog):
     )
 
 
+async def test_command_templates(hass, mqtt_mock, caplog):
+    """Test siren with command templates."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
+    config1["name"] = "Beer"
+    config1["available_tones"] = ["ping", "chimes"]
+    config1["duration_command_topic"] = "duration-command-topic"
+    config1["tone_command_topic"] = "tone-command-topic"
+    config1["volume_command_topic"] = "volume-command-topic"
+    config1[
+        "command_template"
+    ] = "CMD: {{ value }}, DURATION: {{ duration }}, TONE: {{ tone }}, VOLUME: {{ volume_level }}"
+    config1["tone_command_template"] = "TONE: {{ value }}"
+    config1["duration_command_template"] = "DURATION: {{ value }}"
+    config1["volume_command_template"] = "VOLUME: {{ value }}"
+
+    config2 = copy.deepcopy(config1)
+    config2["name"] = "Milk"
+    config2["command_off_template"] = "CMD_OFF: {{ value }}"
+
+    assert await async_setup_component(
+        hass,
+        siren.DOMAIN,
+        {siren.DOMAIN: [config1, config2]},
+    )
+    await hass.async_block_till_done()
+
+    state1 = hass.states.get("siren.beer")
+    assert state1.state == STATE_OFF
+    assert state1.attributes.get(ATTR_ASSUMED_STATE)
+
+    state2 = hass.states.get("siren.milk")
+    assert state2.state == STATE_OFF
+    assert state1.attributes.get(ATTR_ASSUMED_STATE)
+
+    await async_turn_on(
+        hass,
+        entity_id="siren.beer",
+        parameters={
+            siren.ATTR_DURATION: 22,
+            siren.ATTR_TONE: "ping",
+            ATTR_VOLUME_LEVEL: 0.88,
+        },
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "test-topic", "CMD: ON, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "duration-command-topic", "DURATION: 22", 0, False
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "tone-command-topic", "TONE: ping", 0, False
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "volume-command-topic", "VOLUME: 0.88", 0, False
+    )
+    mqtt_mock.async_publish.call_count == 4
+    mqtt_mock.reset_mock()
+    await async_turn_off(
+        hass,
+        entity_id="siren.beer",
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "test-topic", "CMD: OFF, DURATION: , TONE: , VOLUME:", 0, False
+    )
+    mqtt_mock.async_publish.call_count == 1
+    mqtt_mock.reset_mock()
+    await async_turn_off(
+        hass,
+        entity_id="siren.milk",
+    )
+    mqtt_mock.async_publish.assert_any_call("test-topic", "CMD_OFF: OFF", 0, False)
+    mqtt_mock.async_publish.call_count == 1
+    mqtt_mock.reset_mock()
+
+
+async def test_notify_integration(hass, mqtt_mock, caplog):
+    """Test siren with notify."""
+    message_command_template = "{{ target_id }},{{ target_name }},{{ name }}[{{ entity_id }}] {{ title }}: {{ message }}"
+    config1 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
+    config1["name"] = "Milk"
+    config1["message_command_topic"] = "siren/bla/milk/message"
+    config1["message_command_template"] = message_command_template
+    config2 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
+    config2["name"] = "Beer"
+    config2["title"] = "Serious warning"
+    config2["target"] = "Beer alarm"
+    config2["message_command_topic"] = "siren/bla/beer/message"
+    config2["message_command_template"] = message_command_template
+
+    assert await async_setup_component(
+        hass,
+        siren.DOMAIN,
+        {siren.DOMAIN: [config1, config2]},
+    )
+    await hass.async_block_till_done()
+
+    state1 = hass.states.get("siren.beer")
+    assert state1.state == STATE_OFF
+    assert state1.attributes.get(ATTR_ASSUMED_STATE)
+
+    state2 = hass.states.get("siren.milk")
+    assert state2.state == STATE_OFF
+    assert state1.attributes.get(ATTR_ASSUMED_STATE)
+
+    data = {
+        "message": "The milk is almost finished!",
+    }
+    await hass.services.async_call("notify", "mqtt_milk", data, blocking=True)
+    mqtt_mock.async_publish.assert_any_call(
+        "siren/bla/milk/message",
+        "siren/bla/milk/message,Milk,Milk[siren.milk] Home Assistant: The milk is almost finished!",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.call_count == 1
+    mqtt_mock.reset_mock()
+
+    data = {
+        "message": "The beer is almost finished!",
+    }
+    await hass.services.async_call("notify", "mqtt_beer_alarm", data, blocking=True)
+    mqtt_mock.async_publish.assert_any_call(
+        "siren/bla/beer/message",
+        "siren/bla/beer/message,Beer alarm,Beer[siren.beer] Serious warning: The beer is almost finished!",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.call_count == 1
+    mqtt_mock.reset_mock()
+
+
 async def test_discovery_update_unchanged_siren(hass, mqtt_mock, caplog):
     """Test update of discovered siren."""
     data1 = (
@@ -460,6 +626,15 @@ async def test_entity_device_info_remove(hass, mqtt_mock):
     )
 
 
+async def test_entity_device_info_remove_with_notify_service(hass, mqtt_mock, caplog):
+    """Test device registry remove with deregistering notify service."""
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["siren"]["message_command_topic"] = "some-message-command-topic"
+    await help_test_entity_device_info_remove(hass, mqtt_mock, siren.DOMAIN, config)
+    assert "<Event service_removed[L]: domain=notify, service=mqtt_test>" in caplog.text
+
+
 async def test_entity_id_update_subscriptions(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
@@ -489,14 +664,35 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
             "command_topic",
             None,
             "ON",
-            None,
+            "command_template",
+        ),
+        (
+            siren.SERVICE_TURN_ON,
+            "duration_command_topic",
+            {siren.ATTR_DURATION: 22},
+            "22",
+            "duration_command_template",
+        ),
+        (
+            siren.SERVICE_TURN_ON,
+            "tone_command_topic",
+            {siren.ATTR_TONE: "xylophone"},
+            "xylophone",
+            "tone_command_template",
+        ),
+        (
+            siren.SERVICE_TURN_ON,
+            "volume_command_topic",
+            {siren.ATTR_VOLUME_LEVEL: 0.88},
+            "0.88",
+            "volume_command_template",
         ),
         (
             siren.SERVICE_TURN_OFF,
             "command_topic",
             None,
             "OFF",
-            None,
+            "command_off_template",
         ),
     ],
 )
@@ -510,9 +706,10 @@ async def test_publishing_with_custom_encoding(
     payload,
     template,
 ):
-    """Test publishing MQTT payload with different encoding."""
+    """Test publishing MQTT payload with command templates and different encoding."""
     domain = siren.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config[siren.ATTR_AVAILABLE_TONES] = ["siren", "xylophone"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
