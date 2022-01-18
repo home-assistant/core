@@ -1,4 +1,4 @@
-"""Tests for the FlashForge 3D Printer config flow."""
+"""Tests for the Flashforge config flow."""
 
 from unittest.mock import Mock, patch
 

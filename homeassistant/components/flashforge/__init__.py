@@ -1,4 +1,4 @@
-"""The FlashForge 3D Printer integration."""
+"""The Flashforge integration."""
 from __future__ import annotations
 
 from ffpp.Printer import Printer
@@ -15,7 +15,7 @@ PLATFORMS = [SENSOR_DOMAIN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up FlashForge 3D Printer from a config entry."""
+    """Set up Flashforge from a config entry."""
     printer = Printer(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
     hass.data.setdefault(DOMAIN, {})

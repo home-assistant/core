@@ -1,4 +1,4 @@
-"""Tests for the FlashForge 3D Printer integration."""
+"""Tests for the Flashforge integration."""
 
 from typing import Any
 from unittest.mock import Mock

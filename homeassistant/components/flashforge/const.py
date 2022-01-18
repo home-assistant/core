@@ -1,4 +1,4 @@
-"""Constants for the FlashForge 3D Printer integration."""
+"""Constants for the Flashforge integration."""
 
 DOMAIN = "flashforge"
 DEFAULT_NAME = "FlashForge"

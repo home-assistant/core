@@ -1,6 +1,6 @@
 {
   "domain": "flashforge",
-  "name": "FlashForge 3D Printer",
+  "name": "Flashforge",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flashforge",
   "requirements": [

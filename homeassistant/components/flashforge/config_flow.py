@@ -1,4 +1,4 @@
-"""Config flow for FlashForge 3D Printer."""
+"""Config flow for Flashforge."""
 from typing import Any
 
 from ffpp import Discovery

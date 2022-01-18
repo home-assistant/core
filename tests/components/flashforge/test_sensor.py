@@ -1,4 +1,4 @@
-"""Tests for the FlashForge 3D Printer sensors."""
+"""Tests for the Flashforge sensors."""
 from unittest.mock import patch
 
 from homeassistant.components.flashforge.const import DOMAIN
