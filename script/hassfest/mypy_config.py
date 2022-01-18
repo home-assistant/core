@@ -81,7 +81,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.nzbget.*",
     "homeassistant.components.omnilogic.*",
     "homeassistant.components.onboarding.*",
-    "homeassistant.components.ondilo_ico.*",
     "homeassistant.components.onvif.*",
     "homeassistant.components.ovo_energy.*",
     "homeassistant.components.ozw.*",
