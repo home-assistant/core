@@ -23,9 +23,7 @@ class TypeHintMatch:
 def _is_valid_type(expected_type: str | None, node: astroid.NodeNG) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is None:
-        if isinstance(node, astroid.Const) and node.value is None:
-            return True
-        return False
+        return isinstance(node, astroid.Const) and node.value is None
 
     if isinstance(node, astroid.Name) and node.name == expected_type:
         # Name occurs when a namespace is not used, eg. "HomeAssistant"
