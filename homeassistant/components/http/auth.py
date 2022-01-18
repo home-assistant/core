@@ -49,7 +49,9 @@ def async_sign_path(
     if refresh_token_id is None:
         if connection := websocket_api.current_connection.get():
             refresh_token_id = connection.refresh_token_id
-        elif request := current_request.get():
+        elif (
+            request := current_request.get()
+        ) and KEY_HASS_REFRESH_TOKEN_ID in request:
             refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
         else:
             refresh_token_id = hass.data[STORAGE_KEY]
@@ -104,7 +106,7 @@ def async_user_not_allowed_do_auth(
     return "User cannot authenticate remotely"
 
 
-async def setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:

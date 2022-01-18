@@ -22,7 +22,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
 from homeassistant.util import ssl as ssl_util
 
-from .auth import setup_auth
+from .auth import async_setup_auth
 from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
@@ -254,7 +254,7 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(self.hass, self.app, login_threshold)
 
-        await setup_auth(self.hass, self.app)
+        await async_setup_auth(self.hass, self.app)
 
         setup_cors(self.app, cors_origins)
 
