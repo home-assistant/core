@@ -50,6 +50,7 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
         alexa_entity_configs={"light.kitchen": entity_conf},
         alexa_default_expose=["light"],
         alexa_enabled=True,
+        alexa_report_state=False,
     )
     conf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
@@ -86,6 +87,9 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
 
 async def test_alexa_config_report_state(hass, cloud_prefs, cloud_stub):
     """Test Alexa config should expose using prefs."""
+    await cloud_prefs.async_update(
+        alexa_report_state=False,
+    )
     conf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
@@ -175,6 +179,9 @@ async def test_alexa_config_fail_refresh_token(
         },
     )
     aioclient_mock.post("http://example.com/alexa_endpoint", text="", status=202)
+    await cloud_prefs.async_update(
+        alexa_report_state=False,
+    )
     conf = alexa_config.CloudAlexaConfig(
         hass,
         ALEXA_SCHEMA({}),
@@ -273,6 +280,9 @@ def patch_sync_helper():
 
 async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs, cloud_stub):
     """Test Alexa config responds to updating exposed entities."""
+    await cloud_prefs.async_update(
+        alexa_report_state=False,
+    )
     await alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     ).async_initialize()
@@ -360,6 +370,9 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
 async def test_alexa_update_report_state(hass, cloud_prefs, cloud_stub):
     """Test Alexa config responds to reporting state."""
+    await cloud_prefs.async_update(
+        alexa_report_state=False,
+    )
     conf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
