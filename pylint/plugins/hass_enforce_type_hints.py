@@ -97,7 +97,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 ]
 
 
-def _get_all_annotation(node: astroid.FunctionDef) -> list[astroid.NodeNG | None]:
+def _get_all_annotations(node: astroid.FunctionDef) -> list[astroid.NodeNG | None]:
     args = node.args
     annotations = (
         args.posonlyargs_annotations + args.annotations + args.kwonlyargs_annotations
@@ -174,7 +174,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             return
 
         # Check that at least one argument is annotated.
-        annotations = _get_all_annotation(node)
+        annotations = _get_all_annotations(node)
         if node.returns is None and not _has_valid_annotations(annotations):
             return
 
