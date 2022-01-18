@@ -17,7 +17,6 @@ from .model import Config, Integration
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.blueprint.*",
-    "homeassistant.components.climacell.*",
     "homeassistant.components.cloud.*",
     "homeassistant.components.config.*",
     "homeassistant.components.conversation.*",
