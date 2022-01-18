@@ -35,6 +35,9 @@ class TypeChecker:
             return self.error_message
         if isinstance(node, astroid.Name) and node.name == self.expected_type:
             return None
+        if isinstance(node, astroid.Attribute) and node.attrname == self.expected_type:
+            # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
+            return None
         return self.error_message
 
 
