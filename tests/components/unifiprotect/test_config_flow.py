@@ -51,6 +51,12 @@ UNIFI_DISCOVERY_DICT = {
     "hostname": DEVICE_HOSTNAME,
     "platform": DEVICE_HOSTNAME,
 }
+UNIFI_DISCOVERY_DICT_PARTIAL = {
+    "ip_address": DEVICE_IP_ADDRESS,
+    "mac": DEVICE_MAC_ADDRESS,
+    "hostname": None,
+    "platform": None,
+}
 
 
 async def test_form(hass: HomeAssistant, mock_nvr: NVR) -> None:
@@ -301,6 +307,64 @@ async def test_discovered_by_unifi_discovery(
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "discovery_confirm"
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert flows[0]["context"]["title_placeholders"] == {
+        "ip_address": DEVICE_IP_ADDRESS,
+        "name": DEVICE_HOSTNAME,
+    }
+
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
+        return_value=mock_nvr,
+    ), patch(
+        "homeassistant.components.unifiprotect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "UnifiProtect"
+    assert result2["data"] == {
+        "host": DEVICE_IP_ADDRESS,
+        "username": "test-username",
+        "password": "test-password",
+        "id": "UnifiProtect",
+        "port": 443,
+        "verify_ssl": False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_discovered_by_unifi_discovery_partial(
+    hass: HomeAssistant, mock_nvr: NVR
+) -> None:
+    """Test a discovery from unifi-discovery partial."""
+
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT_PARTIAL,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert flows[0]["context"]["title_placeholders"] == {
+        "ip_address": DEVICE_IP_ADDRESS,
+        "name": "NVR DDEEFF",
+    }
+
     assert not result["errors"]
 
     with patch(
