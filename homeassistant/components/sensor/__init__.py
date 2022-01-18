@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 import inspect
 import logging
-from typing import Any, Final, cast, final
+from typing import Any, Callable, Final, cast, final
 
 import voluptuous as vol
 
@@ -46,6 +46,7 @@ from homeassistant.const import (  # noqa: F401
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -54,7 +55,11 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import (
+    dt as dt_util,
+    pressure as pressure_util,
+    temperature as temperature_util,
+)
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 
@@ -193,6 +198,11 @@ STATE_CLASS_MEASUREMENT: Final = "measurement"
 STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
+
+UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
+    SensorDeviceClass.PRESSURE: pressure_util.convert,
+    SensorDeviceClass.TEMPERATURE: temperature_util.convert,
+}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -359,6 +369,15 @@ class SensorEntity(Entity):
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
+        entity_registry = er.async_get(self.hass)
+        entry = entity_registry.async_get(self.entity_id)
+        if (
+            entry
+            and (sensor_options := entry.options.get(DOMAIN))
+            and (custom_unit := sensor_options.get("unit"))
+        ):
+            return cast(str, custom_unit)
+
         if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             return self.hass.config.units.temperature_unit
 
@@ -368,7 +387,8 @@ class SensorEntity(Entity):
     @property
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
-        unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.native_unit_of_measurement
+        unit_of_measurement = self.unit_of_measurement
         value = self.native_value
         device_class = self.device_class
 
@@ -407,16 +427,30 @@ class SensorEntity(Entity):
                     f"but does not provide a date state but {type(value)}"
                 ) from err
 
+        if (
+            value is not None
+            and self.device_class in UNIT_CONVERSIONS
+            and native_unit_of_measurement != unit_of_measurement
+        ):
+            value_s = str(value)
+            prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+            # Suppress ValueError (Could not convert sensor_value to float)
+            with suppress(ValueError):
+                value = UNIT_CONVERSIONS[self.device_class](
+                    float(value),  # type: ignore
+                    native_unit_of_measurement,  # type: ignore
+                    unit_of_measurement,  # type: ignore
+                )
+                value = round(value) if prec == 0 else round(value, prec)
+
         units = self.hass.config.units
         if (
             value is not None
-            and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-            and unit_of_measurement != units.temperature_unit
+            and self.device_class != DEVICE_CLASS_TEMPERATURE
+            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and native_unit_of_measurement != units.temperature_unit
         ):
-            if (
-                self.device_class != DEVICE_CLASS_TEMPERATURE
-                and not self._temperature_conversion_reported
-            ):
+            if not self._temperature_conversion_reported:
                 self._temperature_conversion_reported = True
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
@@ -429,7 +463,7 @@ class SensorEntity(Entity):
                     self.entity_id,
                     type(self),
                     self.device_class,
-                    unit_of_measurement,
+                    native_unit_of_measurement,
                     units.temperature_unit,
                     report_issue,
                 )
@@ -437,7 +471,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore[arg-type]
+                temp = units.temperature(float(value), native_unit_of_measurement)  # type: ignore[arg-type]
                 value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
