@@ -10,6 +10,7 @@ from pyunifiprotect.data.nvr import NVR
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp, ssdp
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -21,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_ALL_UPDATES,
@@ -32,6 +34,8 @@ from .const import (
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
 )
+from .discovery import async_start_discovery
+from .services import _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +48,77 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Init the config flow."""
         super().__init__()
-
         self.entry: config_entries.ConfigEntry | None = None
+        self._discovered_device: dict[str, str] = {}
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle discovery via dhcp."""
+        _LOGGER.debug("Starting discovery via: %s", discovery_info)
+        return await self._async_discovery_handoff()
+
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+        """Handle a discovered UniFi device."""
+        _LOGGER.debug("Starting discovery via: %s", discovery_info)
+        return await self._async_discovery_handoff()
+
+    async def _async_discovery_handoff(self) -> FlowResult:
+        """Ensure discovery is active."""
+        # Discovery requires an additional check so we use
+        # SSDP and DHCP to tell us to start it so it only
+        # runs on networks where unifi devices are present.
+        await async_start_discovery(self.hass)
+        return self.async_abort(reason="discovery_started")
+
+    async def async_step_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
+        """Handle discovery."""
+        self._discovered_device = discovery_info
+        mac = _async_unifi_mac_from_hass(discovery_info["mac"])
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: discovery_info["ip_address"]}
+        )
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        errors: dict[str, str] = {}
+        discovery_info = self._discovered_device
+        if user_input is not None:
+            user_input[CONF_HOST] = discovery_info["ip_address"]
+            user_input[CONF_PORT] = DEFAULT_PORT
+            nvr_data, errors = await self._async_get_nvr_data(user_input)
+            if nvr_data and not errors:
+                return self._async_create_entry(nvr_data.name, user_input)
+
+        placeholders = {
+            "name": discovery_info["hostname"]
+            or discovery_info["platform"]
+            or f"NVR {discovery_info['mac']}",
+            "ip_address": discovery_info["ip_address"],
+        }
+        self.context["title_placeholders"] = placeholders
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders=placeholders,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_VERIFY_SSL,
+                        default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                    ): bool,
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
 
     @staticmethod
     @callback
