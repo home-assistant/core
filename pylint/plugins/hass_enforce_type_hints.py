@@ -23,39 +23,43 @@ class TypeHintMatch:
     disabled: bool = False
 
 
+_MODULE_FILTERS: dict[str, re.Pattern] = {
+    "init": re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
+}
+
 _METHOD_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
-        module_filter=re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
+        module_filter=_MODULE_FILTERS["init"],
         function_name="setup",
         arg_types={0: "HomeAssistant", 1: "ConfigType"},
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup",
         arg_types={0: "HomeAssistant", 1: "ConfigType"},
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_setup_entry",
         arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_remove_entry",
         arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
         return_type=None,
     ),
     TypeHintMatch(
-        module_filter=re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_unload_entry",
         arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
         return_type="bool",
     ),
     TypeHintMatch(
-        module_filter=re.compile(r"^homeassistant.components.[a-zA-Z_]+$"),
+        module_filter=_MODULE_FILTERS["init"],
         function_name="async_migrate_entry",
         arg_types={0: "HomeAssistant", 1: "ConfigEntry"},
         return_type="bool",
