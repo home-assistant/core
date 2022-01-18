@@ -718,19 +718,6 @@ def async_entries_for_config_entry(
 
 
 @callback
-def async_config_entries_for_device(
-    hass: HomeAssistant,
-    device: DeviceEntry,
-) -> list[ConfigEntry]:
-    """Return config entries for a device."""
-    return [
-        config_entry
-        for entry_id in device.config_entries
-        if (config_entry := hass.config_entries.async_get_entry(entry_id)) is not None
-    ]
-
-
-@callback
 def async_config_entry_disabled_by_changed(
     registry: DeviceRegistry, config_entry: ConfigEntry
 ) -> None:

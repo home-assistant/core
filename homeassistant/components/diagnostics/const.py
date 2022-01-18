@@ -1,7 +1,16 @@
 """Constants for the Diagnostics integration."""
+from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "diagnostics"
 
-D_TYPE_CONFIG_ENTRY = "config_entry"
-D_TYPE_DEVICE = "device"
-D_TYPES = (D_TYPE_CONFIG_ENTRY, D_TYPE_DEVICE)
+
+class DiagnosticsType(StrEnum):
+    """Diagnostics types."""
+
+    CONFIG_ENTRY = "config_entry"
+
+
+class DiagnosticsSubType(StrEnum):
+    """Diagnostics sub types."""
+
+    DEVICE = "device"
