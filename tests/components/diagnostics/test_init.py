@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
-from . import get_diagnostics_for_config_entry
+from . import get_diagnostics_for_config_entry, get_diagnostics_for_device
 
 from tests.common import mock_platform
 
@@ -56,5 +56,8 @@ async def test_download_diagnostics(hass, hass_client):
     """Test record service."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, "fake_integration"
-    ) == {"hello": "info"}
-    
+    ) == {"config_entry": "info"}
+
+    assert await get_diagnostics_for_device(hass, hass_client, "fake_integration") == {
+        "device": "info"
+    }

@@ -1,7 +1,7 @@
 """Tests for the Diagnostics integration."""
 from http import HTTPStatus
-from homeassistant.helpers.device_registry import async_get
 
+from homeassistant.helpers.device_registry import async_get
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -25,7 +25,9 @@ async def get_diagnostics_for_config_entry(hass, hass_client, domain_or_config_e
     return await response.json()
 
 
-async def get_diagnostics_for_device(hass, hass_client, domain_or_config_entry, device_id):
+async def get_diagnostics_for_device(
+    hass, hass_client, domain_or_config_entry, device_id=None
+):
     """Return the diagnostics for the specified device."""
     if isinstance(domain_or_config_entry, str):
         config_entry = MockConfigEntry(domain=domain_or_config_entry)
