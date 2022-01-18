@@ -25,7 +25,7 @@ import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoBinaryStateEntity, WemoEntity
-from .wemo_device import DeviceCoordinator
+from .wemo_device import StateCoordinator
 
 # The WEMO_ constants below come from pywemo itself
 WEMO_OFF = 0
@@ -38,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up WeMo lights."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
+    async def _discovered_wemo(coordinator: StateCoordinator) -> None:
         """Handle a discovered Wemo device."""
         if isinstance(coordinator.wemo, Bridge):
             async_setup_bridge(hass, config_entry, async_add_entities, coordinator)
@@ -60,7 +60,7 @@ def async_setup_bridge(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    coordinator: DeviceCoordinator,
+    coordinator: StateCoordinator,
 ) -> None:
     """Set up a WeMo link."""
     known_light_ids = set()
@@ -88,7 +88,7 @@ class WemoLight(WemoEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
 
-    def __init__(self, coordinator: DeviceCoordinator, light: BridgeLight) -> None:
+    def __init__(self, coordinator: StateCoordinator, light: BridgeLight) -> None:
         """Initialize the WeMo light."""
         super().__init__(coordinator)
         self.light = light

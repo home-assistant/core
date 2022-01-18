@@ -27,7 +27,7 @@ from .const import (
     SERVICE_SET_HUMIDITY,
 )
 from .entity import WemoBinaryStateEntity
-from .wemo_device import DeviceCoordinator
+from .wemo_device import StateCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -55,7 +55,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
+    async def _discovered_wemo(coordinator: StateCoordinator) -> None:
         """Handle a discovered Wemo device."""
         async_add_entities([WemoHumidifier(coordinator)])
 
@@ -87,7 +87,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     _attr_supported_features = FanEntityFeature.SET_SPEED
     wemo: Humidifier
 
-    def __init__(self, coordinator: DeviceCoordinator) -> None:
+    def __init__(self, coordinator: StateCoordinator) -> None:
         """Initialize the WeMo switch."""
         super().__init__(coordinator)
         if self.wemo.fan_mode != FanMode.Off:

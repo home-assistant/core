@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoBinaryStateEntity, WemoEntity
-from .wemo_device import DeviceCoordinator
+from .wemo_device import StateCoordinator
 
 
 async def async_setup_entry(
@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
+    async def _discovered_wemo(coordinator: StateCoordinator) -> None:
         """Handle a discovered Wemo device."""
         if isinstance(coordinator.wemo, Insight):
             async_add_entities([InsightBinarySensor(coordinator)])

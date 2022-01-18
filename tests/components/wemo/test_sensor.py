@@ -1,6 +1,10 @@
 """Tests for the Wemo sensor entity."""
 
+from datetime import datetime, timezone
+from unittest.mock import create_autospec, patch
+
 import pytest
+from pywemo.ouimeaux_device.api.service import Action, Service
 
 from .conftest import (
     MOCK_HOST,
@@ -98,3 +102,41 @@ class TestInsightSensors(Common):
 
         ENTITY_ID_SUFFIX = "_today_energy"
         EXPECTED_STATE_VALUE = str(MOCK_INSIGHT_TODAY_KWH)
+
+
+class TestWiFiSignalSensor(Template):
+    """Test the Wifi Signal sensor."""
+
+    @pytest.fixture
+    def pywemo_device(self, pywemo_device):
+        """Add GetSignalStrength action to device."""
+        action = create_autospec(Action, instance=True)
+        action.return_value = {"SignalStrength": "80"}
+        pywemo_device.basicevent = create_autospec(Service, instance=True)
+        pywemo_device.basicevent.GetSignalStrength = action
+        yield pywemo_device
+
+    ENTITY_ID_SUFFIX = "_wifi_signal"
+    EXPECTED_STATE_VALUE = "-58"
+
+
+class TestBootTimeSensor(Template):
+    """Test the Boot Time sensor."""
+
+    @pytest.fixture
+    def pywemo_device(self, pywemo_device):
+        """Add GetExtMetaInfo action to device."""
+        action = create_autospec(Action, instance=True)
+        action.return_value = {
+            "ExtMetaInfo": "1|0|1|0|1579:8:42|4|1640081818|123456|1|Insight"
+        }
+        pywemo_device.metainfo = create_autospec(Service, instance=True)
+        pywemo_device.metainfo.GetExtMetaInfo = action
+        with patch("homeassistant.components.wemo.sensor.dt") as mock_dt:
+            mock_dt.utcnow.return_value = datetime.fromtimestamp(
+                1640081818, tz=timezone.utc
+            )
+            yield pywemo_device
+
+    ENTITY_ID_SUFFIX = "_boot_time"
+    EXPECTED_STATE_VALUE = "2021-10-16T15:08:16+00:00"

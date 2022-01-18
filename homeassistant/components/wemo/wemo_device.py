@@ -1,10 +1,15 @@
 """Home Assistant wrapper for a pyWeMo device."""
+from __future__ import annotations
+
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException
+from pywemo.ouimeaux_device.api.service import Action
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,6 +31,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 
 _LOGGER = logging.getLogger(__name__)
+SLOW_UPDATE_INTERVAL = timedelta(minutes=15)
 
 
 class DeviceCoordinator(DataUpdateCoordinator):
@@ -43,7 +49,17 @@ class DeviceCoordinator(DataUpdateCoordinator):
         self.wemo = wemo
         self.device_id = device_id
         self.device_info = _device_info(wemo)
-        self.supports_long_press = wemo.supports_long_press()
+
+
+class StateCoordinator(DeviceCoordinator):
+    """State update coordinator for WeMo device."""
+
+    action_coordinators: dict[tuple[int, str, str], ActionCoordinator] = {}
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize StateCoordinator."""
+        super().__init__(*args, **kwargs)
+        self.supports_long_press = self.wemo.supports_long_press()
         self.update_lock = asyncio.Lock()
 
     def subscription_callback(
@@ -124,6 +140,47 @@ class DeviceCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("WeMo update failed") from err
 
 
+@dataclass
+class ActionDescription:
+    """Description of a WeMo action method within a UPnP service."""
+
+    wemo_service: str
+    wemo_action: str
+    update_interval: timedelta
+
+    def upnp_action(self, wemo: WeMoDevice) -> Action | None:
+        """Return the WeMo UPnP Action for a WeMoDevice instance."""
+        if (service := getattr(wemo, self.wemo_service, None)) is None:
+            return None
+        action: Action | None = getattr(service, self.wemo_action, None)
+        return action
+
+
+class ActionCoordinator(DeviceCoordinator):
+    """Coordinator for fetching values from WeMo UPnP services."""
+
+    data: dict[str, str] | None = None
+
+    def __init__(
+        self, parent: DeviceCoordinator, description: ActionDescription
+    ) -> None:
+        """Create an ActionCoordinator instance."""
+        super().__init__(parent.hass, parent.wemo, parent.device_id)
+        self.name = (
+            f"{self.wemo.name} {description.wemo_service}.{description.wemo_action}"
+        )
+        self.update_interval = description.update_interval
+        assert (upnp_action := description.upnp_action(self.wemo)) is not None
+        self.upnp_action = upnp_action
+
+    async def _async_update_data(self) -> dict[str, str]:
+        """Update `data` by calling the UPnP Action."""
+        try:
+            return await self.hass.async_add_executor_job(self.upnp_action)
+        except ActionException as err:
+            raise UpdateFailed(f"{self.name} failed to update") from err
+
+
 def _device_info(wemo: WeMoDevice) -> DeviceInfo:
     return DeviceInfo(
         connections={(CONNECTION_UPNP, wemo.udn)},
@@ -147,7 +204,7 @@ async def async_register_device(
         config_entry_id=config_entry.entry_id, **_device_info(wemo)
     )
 
-    device = DeviceCoordinator(hass, wemo, entry.id)
+    device = StateCoordinator(hass, wemo, entry.id)
     hass.data[DOMAIN].setdefault("devices", {})[entry.id] = device
     registry = hass.data[DOMAIN]["registry"]
     registry.on(wemo, None, device.subscription_callback)
@@ -168,7 +225,19 @@ async def async_register_device(
 
 
 @callback
-def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordinator:
-    """Return DeviceCoordinator for device_id."""
-    coordinator: DeviceCoordinator = hass.data[DOMAIN]["devices"][device_id]
+def async_get_coordinator(hass: HomeAssistant, device_id: str) -> StateCoordinator:
+    """Return StateCoordinator for device_id."""
+    coordinator: StateCoordinator = hass.data[DOMAIN]["devices"][device_id]
+    return coordinator
+
+
+async def async_get_action_coordinator(
+    parent: StateCoordinator, description: ActionDescription
+) -> ActionCoordinator:
+    """Get ActionCoordinator for the specific description."""
+    key = (hash(parent.wemo), description.wemo_service, description.wemo_action)
+    if (coordinator := parent.action_coordinators.get(key)) is None:
+        coordinator = ActionCoordinator(parent, description)
+        await coordinator.async_config_entry_first_refresh()
+        parent.action_coordinators[key] = coordinator
     return coordinator

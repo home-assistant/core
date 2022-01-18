@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoBinaryStateEntity
-from .wemo_device import DeviceCoordinator
+from .wemo_device import StateCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -41,7 +41,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up WeMo switches."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
+    async def _discovered_wemo(coordinator: StateCoordinator) -> None:
         """Handle a discovered Wemo device."""
         async_add_entities([WemoSwitch(coordinator)])
 
