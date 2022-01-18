@@ -7,6 +7,7 @@ import pyatmo
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -119,7 +120,9 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
 
         self._attr_unique_id = f"{self._home_id}-schedule-select"
 
-        self._attr_current_option = getattr(self._home.get_selected_schedule(), "name")
+        self._attr_current_option = getattr(
+            self._home.get_selected_schedule(), "name", STATE_UNKNOWN
+        )
         self._attr_options = options
 
     async def async_added_to_hass(self) -> None:
