@@ -196,12 +196,16 @@ async def test_loading_saving_data(hass, registry):
         supported_features=5,
         unit_of_measurement="initial-unit_of_measurement",
     )
-    orig_entry2 = registry.async_update_entity(
+    registry.async_update_entity(
         orig_entry2.entity_id,
         device_class="user-class",
         name="User Name",
         icon="hass:user-icon",
     )
+    registry.async_update_entity_options(
+        orig_entry2.entity_id, "light", {"minimum_brightness": 20}
+    )
+    orig_entry2 = registry.async_get(orig_entry2.entity_id)
 
     assert len(registry.entities) == 2
 
@@ -227,6 +231,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.name == "User Name"
+    assert new_entry2.options == {"light": {"minimum_brightness": 20}}
     assert new_entry2.original_device_class == "mock-device-class"
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
@@ -568,6 +573,31 @@ async def test_update_entity(registry):
             == updated_entry.entity_id
         )
         entry = updated_entry
+
+
+async def test_update_entity_options(registry):
+    """Test updating entity."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    entry = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config
+    )
+
+    registry.async_update_entity_options(
+        entry.entity_id, "light", {"minimum_brightness": 20}
+    )
+    new_entry_1 = registry.async_get(entry.entity_id)
+
+    assert entry.options == {}
+    assert new_entry_1.options == {"light": {"minimum_brightness": 20}}
+
+    registry.async_update_entity_options(
+        entry.entity_id, "light", {"minimum_brightness": 30}
+    )
+    new_entry_2 = registry.async_get(entry.entity_id)
+
+    assert entry.options == {}
+    assert new_entry_1.options == {"light": {"minimum_brightness": 20}}
+    assert new_entry_2.options == {"light": {"minimum_brightness": 30}}
 
 
 async def test_disabled_by(registry):

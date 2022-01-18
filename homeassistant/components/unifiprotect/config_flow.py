@@ -35,7 +35,7 @@ from .const import (
     OUTDATED_LOG_MESSAGE,
 )
 from .discovery import async_start_discovery
-from .services import _async_unifi_mac_from_hass
+from .utils import _async_short_mac, _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {
             "name": discovery_info["hostname"]
             or discovery_info["platform"]
-            or f"NVR {discovery_info['mac']}",
+            or f"NVR {_async_short_mac(discovery_info['mac'])}",
             "ip_address": discovery_info["ip_address"],
         }
         self.context["title_placeholders"] = placeholders
