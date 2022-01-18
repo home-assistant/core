@@ -119,29 +119,29 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W0020": (
-            "First argument should be of type HomeAssistant",
+            "Argument should be of type HomeAssistant",
             "hass-type-hint-hass",
-            "Used when setup has some arguments typed but first isn't HomeAssistant",
+            "Used when method argument isn't HomeAssistant as expected",
         ),
         "W0021": (
-            "Second argument should be of type ConfigType",
+            "Argument should be of type ConfigType",
             "hass-type-hint-config-type",
-            "Used when setup has some arguments typed but first isn't ConfigType",
+            "Used when method argument isn't ConfigType as expected",
         ),
         "W0022": (
-            "Second argument should be of type ConfigEntry",
+            "Argument should be of type ConfigEntry",
             "hass-type-hint-config-entry",
-            "Used when setup has some arguments typed but first isn't ConfigEntry",
+            "Used when method argument isn't ConfigEntry as expected",
         ),
         "W0023": (
             "Return type should be of type bool",
             "hass-type-hint-return-bool",
-            "Used when setup has some arguments typed but doesn't return bool",
+            "Used when method return type isn't bool",
         ),
         "W0024": (
-            "First argument should be of type HomeAssistant",
+            "Return type should be None",
             "hass-type-hint-return-none",
-            "Used when setup has some arguments typed but doesn't return None",
+            "Used when method return type isn't None",
         ),
     }
     options = ()
