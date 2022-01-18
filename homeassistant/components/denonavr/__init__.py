@@ -3,7 +3,6 @@ import logging
 
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
-from homeassistant import config_entries, core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -89,8 +88,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-async def update_listener(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
