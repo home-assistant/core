@@ -38,7 +38,7 @@ async def _async_block_until_queue_empty(hass, sq):
     await hass.async_block_till_done()
 
 
-async def get_error_log(hass_ws_client, expected_count):
+async def get_error_log(hass_ws_client):
     """Fetch all entries from system_log via the API."""
     client = await hass_ws_client()
     await client.send_json({"id": 5, "type": "system_log/list"})
@@ -47,10 +47,7 @@ async def get_error_log(hass_ws_client, expected_count):
 
     assert msg["id"] == 5
     assert msg["success"]
-    data = msg["result"]
-
-    assert len(data) == expected_count
-    return data
+    return msg["result"]
 
 
 def _generate_and_log_exception(exception, log):
@@ -58,6 +55,18 @@ def _generate_and_log_exception(exception, log):
         raise Exception(exception)
     except:  # noqa: E722 pylint: disable=bare-except
         _LOGGER.exception(log)
+
+
+def find_log(logs, level):
+    """Return log with specific level."""
+    if not isinstance(level, tuple):
+        level = (level,)
+    log = next(
+        (log for log in logs if log["level"] in level),
+        None,
+    )
+    assert log is not None
+    return log
 
 
 def assert_log(log, exception, message, level):
@@ -86,7 +95,8 @@ async def test_normal_logs(hass, simple_queue, hass_ws_client):
     await _async_block_until_queue_empty(hass, simple_queue)
 
     # Assert done by get_error_log
-    await get_error_log(hass_ws_client, 0)
+    logs = await get_error_log(hass_ws_client)
+    assert len([msg for msg in logs if msg["level"] not in ("DEBUG", "INFO")]) == 0
 
 
 async def test_exception(hass, simple_queue, hass_ws_client):
@@ -94,8 +104,8 @@ async def test_exception(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     _generate_and_log_exception("exception message", "log message")
     await _async_block_until_queue_empty(hass, simple_queue)
-
-    log = (await get_error_log(hass_ws_client, 1))[0]
+    log = find_log(await get_error_log(hass_ws_client), "ERROR")
+    assert log is not None
     assert_log(log, "exception message", "log message", "ERROR")
 
 
@@ -105,7 +115,7 @@ async def test_warning(hass, simple_queue, hass_ws_client):
     _LOGGER.warning("warning message")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    log = (await get_error_log(hass_ws_client, 1))[0]
+    log = find_log(await get_error_log(hass_ws_client), "WARNING")
     assert_log(log, "", "warning message", "WARNING")
 
 
@@ -115,7 +125,7 @@ async def test_error(hass, simple_queue, hass_ws_client):
     _LOGGER.error("error message")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    log = (await get_error_log(hass_ws_client, 1))[0]
+    log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert_log(log, "", "error message", "ERROR")
 
 
@@ -157,7 +167,7 @@ async def test_critical(hass, simple_queue, hass_ws_client):
     _LOGGER.critical("critical message")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    log = (await get_error_log(hass_ws_client, 1))[0]
+    log = find_log(await get_error_log(hass_ws_client), "CRITICAL")
     assert_log(log, "", "critical message", "CRITICAL")
 
 
@@ -169,7 +179,7 @@ async def test_remove_older_logs(hass, simple_queue, hass_ws_client):
     _LOGGER.error("error message 3")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    log = await get_error_log(hass_ws_client, 2)
+    log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", "error message 3", "ERROR")
     assert_log(log[1], "", "error message 2", "ERROR")
 
@@ -188,7 +198,7 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     _LOGGER.error("error message 3")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    log = await get_error_log(hass_ws_client, 3)
+    log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", "error message 3", "ERROR")
     assert log[1]["count"] == 2
     assert_log(log[1], "", ["error message 2", "error message 2-2"], "ERROR")
@@ -196,7 +206,7 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     log_msg()
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    log = await get_error_log(hass_ws_client, 3)
+    log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", ["error message 2", "error message 2-2"], "ERROR")
     assert log[0]["timestamp"] > log[0]["first_occurred"]
 
@@ -206,7 +216,7 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     log_msg("2-6")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    log = await get_error_log(hass_ws_client, 3)
+    log = await get_error_log(hass_ws_client)
     assert_log(
         log[0],
         "",
@@ -231,7 +241,7 @@ async def test_clear_logs(hass, simple_queue, hass_ws_client):
     await _async_block_until_queue_empty(hass, simple_queue)
 
     # Assert done by get_error_log
-    await get_error_log(hass_ws_client, 0)
+    await get_error_log(hass_ws_client)
 
 
 async def test_write_log(hass):
@@ -280,7 +290,7 @@ async def test_unknown_path(hass, simple_queue, hass_ws_client):
     _LOGGER.findCaller = MagicMock(return_value=("unknown_path", 0, None, None))
     _LOGGER.error("error message")
     await _async_block_until_queue_empty(hass, simple_queue)
-    log = (await get_error_log(hass_ws_client, 1))[0]
+    log = (await get_error_log(hass_ws_client))[0]
     assert log["source"] == ["unknown_path", 0]
 
 
@@ -314,7 +324,7 @@ async def test_homeassistant_path(hass, simple_queue, hass_ws_client):
         await async_log_error_from_test_path(
             hass, "venv_path/homeassistant/component/component.py", simple_queue
         )
-        log = (await get_error_log(hass_ws_client, 1))[0]
+        log = (await get_error_log(hass_ws_client))[0]
     assert log["source"] == ["component/component.py", 5]
 
 
@@ -325,5 +335,5 @@ async def test_config_path(hass, simple_queue, hass_ws_client):
         await async_log_error_from_test_path(
             hass, "config/custom_component/test.py", simple_queue
         )
-        log = (await get_error_log(hass_ws_client, 1))[0]
+        log = (await get_error_log(hass_ws_client))[0]
     assert log["source"] == ["custom_component/test.py", 5]
