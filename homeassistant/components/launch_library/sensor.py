@@ -94,7 +94,7 @@ SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
     ),
     NextLaunchSensorEntityDescription(
         key=LAUNCH_PROBABILITY,
-        icon="mdi:horseshoe",
+        icon="mdi:dice-multiple",
         name="Launch Probability",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda next_launch: next_launch.probability
