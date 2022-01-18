@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==4.3.0
+HAP-python==4.4.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -388,7 +388,7 @@ beautifulsoup4==4.10.0
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.7
+bimmer_connected==0.8.10
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -659,7 +659,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.45
+flux_led==0.28.4
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1066,7 +1066,7 @@ nettigo-air-monitor==1.2.1
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.12
+nexia==0.9.13
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -2466,7 +2466,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
-yalexs==1.1.17
+yalexs==1.1.19
 
 # homeassistant.components.yeelight
 yeelight==0.7.8

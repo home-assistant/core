@@ -281,10 +281,10 @@ class BlockSleepingClimate(
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        if not self._attr_preset_modes:
+        if not self._preset_modes:
             return
 
-        preset_index = self._attr_preset_modes.index(preset_mode)
+        preset_index = self._preset_modes.index(preset_mode)
 
         if preset_index == 0:
             await self.set_state_full_path(schedule=0)
