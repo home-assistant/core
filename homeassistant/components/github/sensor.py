@@ -179,7 +179,7 @@ class GitHubSensorBaseEntity(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(repository_information.id))},
+            identifiers={(DOMAIN, self.coordinator.repository)},
             name=repository_information.full_name,
             manufacturer="GitHub",
             configuration_url=f"https://github.com/{self.coordinator.repository}",
