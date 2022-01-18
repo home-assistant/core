@@ -3,10 +3,12 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
 from pyunifiprotect import NotAuthorized, NvrError
 from pyunifiprotect.data.nvr import NVR
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp, ssdp
 from homeassistant.components.unifiprotect.const import (
     CONF_ALL_UPDATES,
     CONF_DISABLE_RTSP,
@@ -21,9 +23,34 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers import device_registry as dr
 
+from . import DEVICE_HOSTNAME, DEVICE_IP_ADDRESS, DEVICE_MAC_ADDRESS, _patch_discovery
 from .conftest import MAC_ADDR
 
 from tests.common import MockConfigEntry
+
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    hostname=DEVICE_HOSTNAME,
+    ip=DEVICE_IP_ADDRESS,
+    macaddress=DEVICE_MAC_ADDRESS,
+)
+SSDP_DISCOVERY = (
+    ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location=f"http://{DEVICE_IP_ADDRESS}:41417/rootDesc.xml",
+        upnp={
+            "friendlyName": "UniFi Dream Machine",
+            "modelDescription": "UniFi Dream Machine Pro",
+            "serialNumber": DEVICE_MAC_ADDRESS,
+        },
+    ),
+)
+UNIFI_DISCOVERY_DICT = {
+    "ip_address": DEVICE_IP_ADDRESS,
+    "mac": DEVICE_MAC_ADDRESS,
+    "hostname": DEVICE_HOSTNAME,
+    "platform": DEVICE_HOSTNAME,
+}
 
 
 async def test_form(hass: HomeAssistant, mock_nvr: NVR) -> None:
@@ -208,7 +235,9 @@ async def test_form_options(hass: HomeAssistant, mock_client) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.ProtectApiClient"
+    ) as mock_api:
         mock_api.return_value = mock_client
 
         await hass.config_entries.async_setup(mock_config.entry_id)
@@ -231,3 +260,73 @@ async def test_form_options(hass: HomeAssistant, mock_client) -> None:
         "disable_rtsp": True,
         "override_connection_host": True,
     }
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_SSDP, SSDP_DISCOVERY),
+    ],
+)
+async def test_discovered_by_ssdp_or_dhcp(
+    hass: HomeAssistant, source: str, data: dhcp.DhcpServiceInfo | ssdp.SsdpServiceInfo
+) -> None:
+    """Test we handoff to unifi-discovery when discovered via ssdp or dhcp."""
+
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": source},
+            data=data,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "discovery_started"
+
+
+async def test_discovered_by_unifi_discovery(
+    hass: HomeAssistant, mock_nvr: NVR
+) -> None:
+    """Test a discovery from unifi-discovery."""
+
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
+        return_value=mock_nvr,
+    ), patch(
+        "homeassistant.components.unifiprotect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "UnifiProtect"
+    assert result2["data"] == {
+        "host": DEVICE_IP_ADDRESS,
+        "username": "test-username",
+        "password": "test-password",
+        "id": "UnifiProtect",
+        "port": 443,
+        "verify_ssl": False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

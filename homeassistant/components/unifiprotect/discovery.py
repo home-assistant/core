@@ -1,6 +1,7 @@
 """The unifiprotect integration discovery."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -29,7 +30,9 @@ async def async_start_discovery(hass: HomeAssistant) -> None:
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(hass, await async_discover_devices(hass))
 
-    await _async_discovery()
+    # Do not block startup since discovery takes 31s or more
+    asyncio.create_task(_async_discovery())
+
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
 
@@ -48,17 +51,16 @@ def async_trigger_discovery(
 ) -> None:
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
-        if not device.services[UnifiService.Protect] or not device.hw_addr:
-            continue
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
-                data={
-                    "ip_address": device.source_ip,
-                    "mac": device.hw_addr,
-                    "hostname": device.hostname,  # can be None
-                    "platform": device.platform,  # can be None
-                },
+        if device.services[UnifiService.Protect] and device.hw_addr:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_DISCOVERY},
+                    data={
+                        "ip_address": device.source_ip,
+                        "mac": device.hw_addr,
+                        "hostname": device.hostname,  # can be None
+                        "platform": device.platform,  # can be None
+                    },
+                )
             )
-        )
