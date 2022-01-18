@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import faulthandler
 import os
-import platform
 import sys
 import threading
 
@@ -63,7 +62,8 @@ def get_arguments() -> argparse.Namespace:
     from . import config as config_util
 
     parser = argparse.ArgumentParser(
-        description="Home Assistant: Observe, Control, Automate."
+        description="Home Assistant: Observe, Control, Automate.",
+        epilog=f"If restart is requested, exits with code {RESTART_EXIT_CODE}",
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
@@ -106,36 +106,12 @@ def get_arguments() -> argparse.Namespace:
         "--log-no-color", action="store_true", help="Disable color logs"
     )
     parser.add_argument(
-        "--runner",
-        action="store_true",
-        help=f"On restart exit with code {RESTART_EXIT_CODE}",
-    )
-    parser.add_argument(
         "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
     )
 
     arguments = parser.parse_args()
 
     return arguments
-
-
-def closefds_osx(min_fd: int, max_fd: int) -> None:
-    """Make sure file descriptors get closed when we restart.
-
-    We cannot call close on guarded fds, and we cannot easily test which fds
-    are guarded. But we can set the close-on-exec flag on everything we want to
-    get rid of.
-    """
-    # pylint: disable=import-outside-toplevel
-    from fcntl import F_GETFD, F_SETFD, FD_CLOEXEC, fcntl
-
-    for _fd in range(min_fd, max_fd):
-        try:
-            val = fcntl(_fd, F_GETFD)
-            if not val & FD_CLOEXEC:
-                fcntl(_fd, F_SETFD, val | FD_CLOEXEC)
-        except OSError:
-            pass
 
 
 def cmdline() -> list[str]:
@@ -148,15 +124,8 @@ def cmdline() -> list[str]:
     return sys.argv
 
 
-def try_to_restart() -> None:
-    """Attempt to clean up state and start a new Home Assistant instance."""
-    # Things should be mostly shut down already at this point, now just try
-    # to clean up things that may have been left behind.
-    sys.stderr.write("Home Assistant attempting to restart.\n")
-
-    # Count remaining threads, ideally there should only be one non-daemonized
-    # thread left (which is us). Nothing we really do with it, but it might be
-    # useful when debugging shutdown/restart issues.
+def check_threads() -> None:
+    """Check if there are any lingering threads."""
     try:
         nthreads = sum(
             thread.is_alive() and not thread.daemon for thread in threading.enumerate()
@@ -169,25 +138,6 @@ def try_to_restart() -> None:
     # which are not marked as stopped at the python level.
     except AssertionError:
         sys.stderr.write("Failed to count non-daemonic threads.\n")
-
-    # Try to not leave behind open filedescriptors with the emphasis on try.
-    try:
-        max_fd = os.sysconf("SC_OPEN_MAX")
-    except ValueError:
-        max_fd = 256
-
-    if platform.system() == "Darwin":
-        closefds_osx(3, max_fd)
-    else:
-        os.closerange(3, max_fd)
-
-    # Now launch into a new instance of Home Assistant. If this fails we
-    # fall through and exit with error 100 (RESTART_EXIT_CODE) in which case
-    # systemd will restart us when RestartForceExitStatus=100 is set in the
-    # systemd.service file.
-    sys.stderr.write("Restarting Home Assistant\n")
-    args = cmdline()
-    os.execv(args[0], args)
 
 
 def main() -> int:
@@ -229,8 +179,7 @@ def main() -> int:
     if os.path.getsize(fault_file_name) == 0:
         os.remove(fault_file_name)
 
-    if exit_code == RESTART_EXIT_CODE and not args.runner:
-        try_to_restart()
+    check_threads()
 
     return exit_code
 
