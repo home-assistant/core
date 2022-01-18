@@ -1008,6 +1008,12 @@ class MediaPlayerEntity(Entity):
                     content_type = content_type.split(";")[0]
 
         if content is None:
+            url_parts = URL(url)
+            if url_parts.user is not None:
+                url_parts = url_parts.with_user("xxxx")
+            if url_parts.password is not None:
+                url_parts = url_parts.with_password("xxxxxxxx")
+            url = str(url_parts)
             _LOGGER.warning("Error retrieving proxied image from %s", url)
 
         return content, content_type

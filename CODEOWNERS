@@ -208,6 +208,8 @@ tests/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 tests/components/dhcp/* @bdraco
 homeassistant/components/dht/* @thegardenmonkey
+homeassistant/components/diagnostics/* @home-assistant/core
+tests/components/diagnostics/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/dlna_dmr/* @StevenLooman @chishm
@@ -336,6 +338,7 @@ tests/components/geonetnz_volcano/* @exxamalte
 homeassistant/components/gios/* @bieniu
 tests/components/gios/* @bieniu
 homeassistant/components/github/* @timmo001 @ludeeus
+tests/components/github/* @timmo001 @ludeeus
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 tests/components/glances/* @fabaff @engrbm87

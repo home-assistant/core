@@ -764,7 +764,7 @@ google-cloud-pubsub==2.9.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.5.0
+google-nest-sdm==1.5.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1690,7 +1690,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.8.0
+pynetgear==0.9.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -1752,7 +1752,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.12
+pypck==0.7.13
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
