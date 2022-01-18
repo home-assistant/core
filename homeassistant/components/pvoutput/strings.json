@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "To authenticate with PVOutput you'll need to get the API key at {account_url}.\n\nThe system IDs of registered systems are listed on that same page.",

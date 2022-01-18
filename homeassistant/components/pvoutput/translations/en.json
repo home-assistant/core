@@ -7,7 +7,6 @@
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
-        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "data": {
