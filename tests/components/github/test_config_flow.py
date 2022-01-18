@@ -1,5 +1,4 @@
 """Test the GitHub config flow."""
-import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import GitHubException
@@ -17,11 +16,12 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_SHOW_PROGRESS,
+    RESULT_TYPE_SHOW_PROGRESS_DONE,
 )
 
 from .common import MOCK_ACCESS_TOKEN
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -66,11 +66,6 @@ async def test_full_user_flow_implementation(
     assert result["type"] == RESULT_TYPE_SHOW_PROGRESS
     assert "flow_id" in result
 
-    async_fire_time_changed(
-        hass, datetime.datetime.now() + datetime.timedelta(seconds=1)
-    )
-    await hass.async_block_till_done()
-
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     result = await hass.config_entries.flow.async_configure(
@@ -103,6 +98,38 @@ async def test_flow_with_registration_failure(
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result.get("reason") == "could_not_register"
+
+
+async def test_flow_with_activation_failure(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test flow with activation failure of the device."""
+    aioclient_mock.post(
+        "https://github.com/login/device/code",
+        json={
+            "device_code": "3584d83530557fdd1f46af8289938c8ef79f9dc5",
+            "user_code": "WDJB-MJHT",
+            "verification_uri": "https://github.com/login/device",
+            "expires_in": 900,
+            "interval": 5,
+        },
+        headers={"Content-Type": "application/json"},
+    )
+    aioclient_mock.post(
+        "https://github.com/login/oauth/access_token",
+        side_effect=GitHubException("Activation failed"),
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["step_id"] == "device"
+    assert result["type"] == RESULT_TYPE_SHOW_PROGRESS
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == RESULT_TYPE_SHOW_PROGRESS_DONE
+    assert result["step_id"] == "could_not_register"
 
 
 async def test_already_configured(

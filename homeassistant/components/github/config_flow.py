@@ -71,12 +71,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    login_task: asyncio.Task | None = None
+
     def __init__(self) -> None:
         """Initialize."""
         self._device: GitHubDeviceAPI | None = None
         self._login: GitHubLoginOauthModel | None = None
         self._login_device: GitHubLoginDeviceModel | None = None
-        self._task: asyncio.Task | None = None
 
     async def async_step_user(
         self,
@@ -99,14 +100,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             assert self._device is not None
             assert self._login_device is not None
 
-            response = await self._device.activation(
-                device_code=self._login_device.device_code
-            )
-            self._login = response.data
-            await self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-
-        if self._login:
-            return self.async_show_progress_done(next_step_id="repositories")
+            try:
+                response = await self._device.activation(
+                    device_code=self._login_device.device_code
+                )
+                self._login = response.data
+            finally:
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+                )
 
         if not self._device:
             self._device = GitHubDeviceAPI(
@@ -122,17 +124,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.exception(exception)
             return self.async_abort(reason="could_not_register")
 
-        if self._task is None:
-            self._task = self.hass.async_create_task(_wait_for_login())
+        if not self.login_task:
+            self.login_task = self.hass.async_create_task(_wait_for_login())
+            return self.async_show_progress(
+                step_id="device",
+                progress_action="wait_for_device",
+                description_placeholders={
+                    "url": OAUTH_USER_LOGIN,
+                    "code": self._login_device.user_code,
+                },
+            )
 
-        return self.async_show_progress(
-            step_id="device",
-            progress_action="wait_for_device",
-            description_placeholders={
-                "url": OAUTH_USER_LOGIN,
-                "code": self._login_device.user_code,
-            },
-        )
+        try:
+            await self.login_task
+        except GitHubException as exception:
+            LOGGER.exception(exception)
+            return self.async_show_progress_done(next_step_id="could_not_register")
+
+        return self.async_show_progress_done(next_step_id="repositories")
 
     async def async_step_repositories(
         self,
@@ -163,6 +172,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_ACCESS_TOKEN: self._login.access_token},
             options={CONF_REPOSITORIES: user_input[CONF_REPOSITORIES]},
         )
+
+    async def async_step_could_not_register(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Handle issues that need transition await from progress step."""
+        return self.async_abort(reason="could_not_register")
 
     @staticmethod
     @callback
