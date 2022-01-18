@@ -14,6 +14,9 @@ from homeassistant.components.wemo.switch import (
     ATTR_ON_TODAY_TIME,
     ATTR_ON_TOTAL_TIME,
     ATTR_POWER_THRESHOLD,
+    ATTR_SENSOR_STATE,
+    ATTR_SWITCH_MODE,
+    MAKER_SWITCH_MOMENTARY,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -147,3 +150,25 @@ async def test_insight_state_attributes(hass, pywemo_registry):
         await async_update()
         attributes = hass.states.get(wemo_entity.entity_id).attributes
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_UNKNOWN
+
+
+async def test_maker_state_attributes(hass, pywemo_registry):
+    """Verify the switch attributes are set for the Insight device."""
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with create_pywemo_device(pywemo_registry, "Maker") as maker:
+        wemo_entity = await async_create_wemo_entity(hass, maker, "")
+        attributes = hass.states.get(wemo_entity.entity_id).attributes
+        assert attributes[ATTR_SENSOR_STATE] == STATE_OFF
+        assert attributes[ATTR_SWITCH_MODE] == MAKER_SWITCH_MOMENTARY
+
+        # Test 'ON' sensor state and 'TOGGLE' switch mode values.
+        maker.sensor_state = 0
+        maker.switch_mode = 0
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+            blocking=True,
+        )
+        attributes = hass.states.get(wemo_entity.entity_id).attributes
+        assert attributes[ATTR_SENSOR_STATE] == STATE_ON
