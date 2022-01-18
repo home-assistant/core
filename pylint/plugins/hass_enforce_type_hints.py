@@ -1,7 +1,6 @@
 """Plugin for constructor definitions."""
 from __future__ import annotations
 
-from ast import arguments
 from dataclasses import dataclass
 import re
 
