@@ -11,6 +11,7 @@ from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN, device_action
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -582,4 +583,24 @@ async def test_failure_scenarios(
             hass, {"type": "failed.test", "device_id": device.id}
         )
         == {}
+    )
+
+
+async def test_unavailable_entity_actions(
+    hass: HomeAssistant,
+    client: Client,
+    lock_schlage_be469: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test unavailable entities are not included in actions list."""
+    entity_id_unavailable = "binary_sensor.touchscreen_deadbolt_home_security_intrusion"
+    hass.states.async_set(entity_id_unavailable, STATE_UNAVAILABLE, force_update=True)
+    await hass.async_block_till_done()
+    node = lock_schlage_be469
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({get_device_id(client, node)})
+    assert device
+    actions = await async_get_device_automations(hass, "action", device.id)
+    assert not any(
+        action.get("entity_id") == entity_id_unavailable for action in actions
     )
