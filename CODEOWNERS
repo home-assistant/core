@@ -208,6 +208,8 @@ tests/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 tests/components/dhcp/* @bdraco
 homeassistant/components/dht/* @thegardenmonkey
+homeassistant/components/diagnostics/* @home-assistant/core
+tests/components/diagnostics/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/dlna_dmr/* @StevenLooman @chishm
