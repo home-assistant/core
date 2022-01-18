@@ -212,7 +212,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         # Check that all arguments are correctly annotated.
         for key, value in match.arg_types.items():
             if message := value.check(annotations[key]):
-                self.add_message(message, node=node)
+                self.add_message(message, node=node.args.args[key])
 
         # Check the return type.
         if message := match.return_type.check(node.returns):
