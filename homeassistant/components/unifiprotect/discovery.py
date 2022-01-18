@@ -24,6 +24,7 @@ async def async_start_discovery(hass: HomeAssistant) -> None:
     domain_data = hass.data.setdefault(DOMAIN, {})
     if DISCOVERY in domain_data:
         return
+    _LOGGER.debug("Starting unifi discovery")
     domain_data[DISCOVERY] = True
 
     async def _async_discovery(*_: Any) -> None:
