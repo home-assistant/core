@@ -5,7 +5,7 @@ from rki_covid_parser.model.state import State
 from rki_covid_parser.model.country import Country
 
 MOCK_DISTRICTS = {
-    "1": District(
+    "01234": District(
         {
             "RS": "01234",
             "GEN": "Amberg",

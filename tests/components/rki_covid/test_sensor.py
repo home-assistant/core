@@ -1,15 +1,11 @@
 """Test the RKI Covide numbers integration sensor."""
-from unittest.mock import AsyncMock, patch
-
+from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from homeassistant.components.rki_covid.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
 from tests.common import MockConfigEntry
-from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
-from rki_covid_parser.parser import RkiCovidParser
 from rki_covid_parser.const import (
     DISTRICTS_URL,
     DISTRICTS_URL_RECOVERED,
@@ -19,73 +15,76 @@ from rki_covid_parser.const import (
     HOSPITALIZATION_URL,
     VACCINATIONS_URL,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from aiohttp import ClientError
-from tests.components.rki_covid import MOCK_DISTRICTS, MOCK_STATES, MOCK_COUNTRY
 
 
-async def test_sensor_with_district(
+async def test_sensor_with_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test sensor when data coordinator could not be initialized."""
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    coordinator.parser = RkiCovidParser(async_get_clientsession(hass))
-    coordinator.parser.load_data = AsyncMock(return_value=None)
-    coordinator.parser.districts = MOCK_DISTRICTS
-    coordinator.parser.states = MOCK_STATES
-    coordinator.parser.country = MOCK_COUNTRY
-    with patch(
-        "homeassistant.components.rki_covid.coordinator.RkiCovidDataUpdateCoordinator",
-        return_value=coordinator,
-    ):
-        entry = MockConfigEntry(domain=DOMAIN, data={"county": "SK Amberg"})
-        entry.add_to_hass(hass)
+    aioclient_mock.get(
+        DISTRICTS_URL, text=load_fixture("response_districts.json", "rki_covid")
+    )
+    aioclient_mock.get(
+        DISTRICTS_URL_RECOVERED,
+        text=load_fixture("response_recovered.json", "rki_covid"),
+    )
+    aioclient_mock.get(
+        VACCINATIONS_URL,
+        text=load_fixture("germany_vaccinations_by_state.tsv", "rki_covid"),
+    )
+    aioclient_mock.get(
+        DISTRICTS_URL_NEW_CASES,
+        text=load_fixture("response_new_cases.json", "rki_covid"),
+    )
+    aioclient_mock.get(
+        DISTRICTS_URL_NEW_RECOVERED,
+        text=load_fixture("response_new_recovered.json", "rki_covid"),
+    )
+    aioclient_mock.get(
+        DISTRICTS_URL_NEW_DEATHS,
+        text=load_fixture("response_new_death.json", "rki_covid"),
+    )
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    aioclient_mock.get(
+        HOSPITALIZATION_URL,
+        text=load_fixture("hospitalization.csv", "rki_covid"),
+    )
 
-        assert hass.states.get("sensor.sk_amberg_count").state == "1337"
-        assert entry.unique_id == "SK Amberg"
+    entry1 = MockConfigEntry(domain=DOMAIN, data={"county": "SK Amberg"})
+    entry1.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry1.entry_id)
+    await hass.async_block_till_done()
 
+    entry2 = MockConfigEntry(domain=DOMAIN, data={"county": "BL Bayern"})
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+    await hass.async_block_till_done()
 
-async def test_sensor_with_state(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test sensor setup with mock data."""
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    coordinator.parser = RkiCovidParser(async_get_clientsession(hass))
-    coordinator.parser.load_data = AsyncMock(return_value=None)
-    coordinator.parser.districts = MOCK_DISTRICTS
-    coordinator.parser.states = MOCK_STATES
-    coordinator.parser.country = MOCK_COUNTRY
-    with patch(
-        "homeassistant.components.rki_covid.coordinator.RkiCovidDataUpdateCoordinator",
-        return_value=coordinator,
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="test entry",
-            unique_id="0123456",
-            data={"county": "SK Amberg"},
-        )
-        entry.add_to_hass(hass)
-        entity_id = "sensor.sk_amberg_count"
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    entry3 = MockConfigEntry(domain=DOMAIN, data={"county": "Deutschland"})
+    entry3.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry3.entry_id)
+    await hass.async_block_till_done()
 
-        state = hass.states.get(entity_id)
-        assert state
+    # verify district
+    amberg_count = hass.states.get("sensor.sk_amberg_count")
+    assert amberg_count
+    assert amberg_count.state == "1940"
 
-        assert hass.states.get("sensor.sk_amberg_count") is not None
-        assert hass.states.get("sensor.sk_amberg_count").state == "1337"
-        assert entry.unique_id == "SK Amberg"
+    # verify state
+    state_count = hass.states.get("sensor.bl_bayern_count")
+    assert state_count
+    assert state_count.state == "691474"
+
+    # verify county
+    county_count = hass.states.get("sensor.deutschland_count")
+    assert county_count
+    assert county_count.state == "4046112"
 
 
 async def test_async_setup(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the component gets setup."""
     assert await async_setup_component(hass, DOMAIN, {}) is True

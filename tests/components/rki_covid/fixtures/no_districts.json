@@ -1,0 +1,102 @@
+{
+    "objectIdFieldName": "OBJECTID",
+    "uniqueIdField": {
+        "name": "OBJECTID",
+        "isSystemMaintained": true
+    },
+    "globalIdFieldName": "",
+    "geometryType": "esriGeometryPolygon",
+    "spatialReference": {
+        "wkid": 4326,
+        "latestWkid": 4326
+    },
+    "fields": [
+        {
+            "name": "RS",
+            "type": "esriFieldTypeString",
+            "alias": "RS",
+            "sqlType": "sqlTypeOther",
+            "length": 5,
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "GEN",
+            "type": "esriFieldTypeString",
+            "alias": "GEN",
+            "sqlType": "sqlTypeOther",
+            "length": 33,
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "EWZ",
+            "type": "esriFieldTypeInteger",
+            "alias": "Einwohnerzahl",
+            "sqlType": "sqlTypeOther",
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "cases",
+            "type": "esriFieldTypeInteger",
+            "alias": "Fälle",
+            "sqlType": "sqlTypeOther",
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "deaths",
+            "type": "esriFieldTypeInteger",
+            "alias": "Todesfälle",
+            "sqlType": "sqlTypeOther",
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "county",
+            "type": "esriFieldTypeString",
+            "alias": "Landkreis",
+            "sqlType": "sqlTypeOther",
+            "length": 0,
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "last_update",
+            "type": "esriFieldTypeString",
+            "alias": "Aktualisierung",
+            "sqlType": "sqlTypeOther",
+            "length": 0,
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "cases7_lk",
+            "type": "esriFieldTypeInteger",
+            "alias": "Fälle der letzten 7 Tage pro Landkreis",
+            "sqlType": "sqlTypeOther",
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "death7_lk",
+            "type": "esriFieldTypeInteger",
+            "alias": "Todesfälle der letzten 7 Tage pro Landkreis",
+            "sqlType": "sqlTypeOther",
+            "domain": null,
+            "defaultValue": null
+        },
+        {
+            "name": "BL",
+            "type": "esriFieldTypeString",
+            "alias": "Bundesland",
+            "sqlType": "sqlTypeOther",
+            "length": 0,
+            "domain": null,
+            "defaultValue": null
+        }
+    ],
+    "features": [
+    ]
+}
