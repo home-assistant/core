@@ -14,6 +14,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     client = data.coordinator.client
-    setup = client.get_diagnostic_data()
+    setup = await client.get_diagnostic_data()
 
     return [setup]
