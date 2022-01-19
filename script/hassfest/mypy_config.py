@@ -88,7 +88,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.unifi.*",
     "homeassistant.components.upnp.*",
     "homeassistant.components.vera.*",
-    "homeassistant.components.verisure.*",
     "homeassistant.components.vizio.*",
     "homeassistant.components.withings.*",
     "homeassistant.components.xbox.*",
