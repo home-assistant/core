@@ -25,9 +25,10 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_PORT,
+    ENTITY_CATEGORIES,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -479,6 +480,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode)
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
+            ent_reg = entity_registry.async_get(self.hass)
+            entity_cat_entities = set()
+            for entity_id in all_supported_entities:
+                if ent_reg_ent := ent_reg.async_get(entity_id):
+                    if ent_reg_ent.entity_category in ENTITY_CATEGORIES:
+                        entity_cat_entities.add(entity_id)
+            all_supported_entities -= entity_cat_entities
             # Strip out entities that no longer exist to prevent error in the UI
             default_value = [
                 entity_id
