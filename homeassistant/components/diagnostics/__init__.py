@@ -52,7 +52,7 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
-        self, hass: HomeAssistant, device: DeviceEntry
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
     ) -> dict:
         """Return diagnostics for a device."""
 
