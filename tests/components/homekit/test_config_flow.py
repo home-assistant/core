@@ -335,6 +335,8 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
     config_entry.add_to_hass(hass)
 
     hass.states.async_set("climate.old", "off")
+    hass.states.async_set("climate.front_gate", "off")
+
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(
@@ -351,6 +353,8 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "include_exclude"
+    entities = result["data_schema"]({})["entities"]
+    assert entities == ["climate.front_gate"]
 
     # Inject garbage to ensure the options data
     # is being deep copied and we cannot mutate it in flight

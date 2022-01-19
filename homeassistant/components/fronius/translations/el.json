@@ -1,0 +1,10 @@
+{
+    "config": {
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c0\u03c1\u03bf\u03c3\u03b8\u03ad\u03c3\u03b5\u03c4\u03b5 \u03c4\u03bf {device} \u03c3\u03c4\u03bf Home Assistant;"
+            }
+        }
+    }
+}

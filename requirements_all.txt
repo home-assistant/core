@@ -350,7 +350,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.3
+async-upnp-client==0.23.4
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -404,7 +404,7 @@ beautifulsoup4==4.10.0
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.7
+bimmer_connected==0.8.10
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.3
+flux_led==0.28.4
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -743,7 +743,7 @@ gios==2.1.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances_api==0.2.0
+glances_api==0.3.4
 
 # homeassistant.components.gntp
 gntp==1.0.3
@@ -764,7 +764,7 @@ google-cloud-pubsub==2.9.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.4.0
+google-nest-sdm==1.5.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211229.1
+home-assistant-frontend==20220118.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1031,7 +1031,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.miflora
-miflora==0.7.0
+miflora==0.7.2
 
 # homeassistant.components.mill
 mill-local==0.1.1
@@ -1374,7 +1374,7 @@ pyads==3.2.2
 pyaehw4a1==0.3.9
 
 # homeassistant.components.aftership
-pyaftership==0.1.2
+pyaftership==21.11.0
 
 # homeassistant.components.airnow
 pyairnow==1.1.0
@@ -1654,7 +1654,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.2.2
+pymazda==0.3.0
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
@@ -1690,7 +1690,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.8.0
+pynetgear==0.9.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -1752,7 +1752,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.12
+pypck==0.7.13
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2015,7 +2015,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==1.7.0
+pyunifiprotect==3.1.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0
@@ -2081,7 +2081,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2021.10.0
+regenmaschine==2022.01.0
 
 # homeassistant.components.renault
 renault-api==0.1.4
@@ -2391,6 +2391,9 @@ twilio==6.32.0
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
 
+# homeassistant.components.unifiprotect
+unifi-discovery==1.1.0
+
 # homeassistant.components.unifiled
 unifiled==0.11
 
@@ -2487,7 +2490,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.15
+xknx==0.19.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2552,4 +2555,4 @@ zigpy==0.42.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.33.0
+zwave-js-server-python==0.34.0

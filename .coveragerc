@@ -391,6 +391,8 @@ omit =
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
+    homeassistant/components/github/__init__.py
+    homeassistant/components/github/coordinator.py
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -731,7 +733,9 @@ omit =
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
+    homeassistant/components/nexia/entity.py
     homeassistant/components/nexia/climate.py
+    homeassistant/components/nexia/switch.py
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
@@ -821,6 +825,7 @@ omit =
     homeassistant/components/overkiz/scene.py
     homeassistant/components/overkiz/select.py
     homeassistant/components/overkiz/sensor.py
+    homeassistant/components/overkiz/switch.py
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
     homeassistant/components/ovo_energy/sensor.py
@@ -1193,6 +1198,7 @@ omit =
     homeassistant/components/tuya/climate.py
     homeassistant/components/tuya/const.py
     homeassistant/components/tuya/cover.py
+    homeassistant/components/tuya/diagnostics.py
     homeassistant/components/tuya/fan.py
     homeassistant/components/tuya/humidifier.py
     homeassistant/components/tuya/light.py

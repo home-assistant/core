@@ -4,7 +4,7 @@
             "already_configured": "Device is already configured",
             "already_configured_device": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "backoff": "Device does not accept pairing reqests at this time (you might have entered an invalid PIN code too many times), try again later.",
+            "backoff": "Device does not accept pairing requests at this time (you might have entered an invalid PIN code too many times), try again later.",
             "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
             "device_not_found": "Device was not found during discovery, please try adding it again.",
             "inconsistent_device": "Expected protocols were not found during discovery. This normally indicates a problem with multicast DNS (Zeroconf). Please try adding the device again.",

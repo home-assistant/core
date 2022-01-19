@@ -13,7 +13,7 @@ from hass_nabucasa.client import CloudClient as Interface
 from homeassistant.components import persistent_notification, webhook
 from homeassistant.components.alexa import (
     errors as alexa_errors,
-    smart_home as alexa_sh,
+    smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import const as gc, smart_home as ga
 from homeassistant.core import Context, HomeAssistant, callback
@@ -180,7 +180,7 @@ class CloudClient(Interface):
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
         aconfig = await self.get_alexa_config()
-        return await alexa_sh.async_handle_message(
+        return await alexa_smart_home.async_handle_message(
             self._hass,
             aconfig,
             payload,

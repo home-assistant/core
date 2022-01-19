@@ -154,6 +154,7 @@ homeassistant.components.senseme.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
+homeassistant.components.smhi.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
@@ -190,6 +191,7 @@ homeassistant.components.wallbox.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
+homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*

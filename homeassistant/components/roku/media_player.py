@@ -30,6 +30,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -78,6 +79,13 @@ ATTRS_TO_LAUNCH_PARAMS = {
     ATTR_CONTENT_ID: "contentID",
     ATTR_MEDIA_TYPE: "MediaType",
 }
+
+PLAY_MEDIA_SUPPORTED_TYPES = (
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
+    FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+)
 
 ATTRS_TO_PLAY_VIDEO_PARAMS = {
     ATTR_NAME: "videoName",
@@ -375,9 +383,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Tune to channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
 
-        if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL):
+        if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(
-                "Invalid media type %s. Only %s, %s and %s are supported",
+                "Invalid media type %s. Only %s, %s, %s, and camera HLS streams are supported",
                 media_type,
                 MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
@@ -400,6 +408,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 param: extra[attr]
                 for (attr, param) in ATTRS_TO_PLAY_VIDEO_PARAMS.items()
                 if attr in extra
+            }
+
+            await self.coordinator.roku.play_video(media_id, params)
+        elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
+            params = {
+                "MediaType": "hls",
             }
 
             await self.coordinator.roku.play_video(media_id, params)

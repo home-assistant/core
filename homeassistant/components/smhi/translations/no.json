@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
         "error": {
             "name_exists": "Navnet eksisterer allerede",
             "wrong_location": "Bare plassering i Sverige"

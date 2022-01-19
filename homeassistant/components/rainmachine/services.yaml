@@ -45,7 +45,7 @@ pause_watering:
       selector:
         number:
           min: 1
-          max: 86400
+          max: 43200
           unit_of_measurement: seconds
 start_program:
   name: Start Program

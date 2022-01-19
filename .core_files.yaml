@@ -21,6 +21,7 @@ base_platforms: &base_platforms
   - homeassistant/components/climate/*
   - homeassistant/components/cover/*
   - homeassistant/components/device_tracker/*
+  - homeassistant/components/diagnostics/*
   - homeassistant/components/fan/*
   - homeassistant/components/geo_location/*
   - homeassistant/components/humidifier/*
@@ -118,6 +119,12 @@ tests: &tests
 other: &other
   - .github/workflows/*
   - homeassistant/scripts/**
+
+requirements:
+  - .github/workflows/*
+  - homeassistant/package_constraints.txt
+  - requirements*.txt
+  - setup.py
 
 any:
   - *base_platforms
