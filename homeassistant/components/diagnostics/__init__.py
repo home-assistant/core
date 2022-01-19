@@ -86,6 +86,34 @@ def handle_info(
     )
 
 
+def _get_json_file_response(
+    data: dict | list,
+    filename: str,
+    d_type: DiagnosticsType,
+    d_id: str,
+    sub_type: DiagnosticsSubType | None = None,
+    sub_id: str | None = None,
+) -> web.Response:
+    """Return JSON file from dictionary."""
+    try:
+        json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
+    except TypeError:
+        _LOGGER.error(
+            "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
+            d_type.value,
+            d_id,
+            f"/{sub_type.value}/{sub_id}" if sub_type is not None else "",
+            format_unserializable_data(find_paths_unserializable_data(data)),
+        )
+        return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    return web.Response(
+        body=json_data,
+        content_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
+    )
+
+
 class DownloadDiagnosticsView(http.HomeAssistantView):
     """Download diagnostics view."""
 
@@ -102,6 +130,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         sub_id: str | None = None,
     ) -> web.Response:
         """Download diagnostics."""
+        # t_type handling
         try:
             d_type = DiagnosticsType(d_type)
         except ValueError:
@@ -115,47 +144,35 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         info = hass.data[DOMAIN].get(config_entry.domain)
 
-        if info is None or info[d_type.value] is None:
+        if info is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
 
         if sub_type is None:
-            filename = f"{d_type}-{filename}"
+            if info[d_type.value] is None:
+                return web.Response(status=HTTPStatus.NOT_FOUND)
             data = await info[d_type.value](hass, config_entry)
-        else:
-            try:
-                sub_type = DiagnosticsSubType(sub_type)
-            except ValueError:
-                return web.Response(status=HTTPStatus.BAD_REQUEST)
+            filename = f"{d_type}-{filename}"
+            return _get_json_file_response(data, filename, d_type.value, d_id)
 
-            dev_reg = async_get(hass)
-            assert sub_id
-            device = dev_reg.async_get(sub_id)
-
-            if device is None:
-                return web.Response(status=HTTPStatus.NOT_FOUND)
-
-            filename += f"-{device.name}-{device.id}"
-
-            if info[sub_type.value] is None:
-                return web.Response(status=HTTPStatus.NOT_FOUND)
-
-            data = await info[sub_type.value](hass, config_entry, sub_id)
-
+        # sub_type handling
         try:
-            json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
-        except TypeError:
-            _LOGGER.error(
-                "Failed to serialize to JSON: %s/%s. Bad data at %s",
-                d_type,
-                d_id,
-                format_unserializable_data(find_paths_unserializable_data(data)),
-            )
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            sub_type = DiagnosticsSubType(sub_type)
+        except ValueError:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        return web.Response(
-            body=json_data,
-            content_type="application/json",
-            headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
-        )
+        dev_reg = async_get(hass)
+        assert sub_id
+        device = dev_reg.async_get(sub_id)
+
+        if device is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        filename += f"-{device.name}-{device.id}"
+
+        if info[sub_type.value] is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        data = await info[sub_type.value](hass, config_entry, sub_id)
+        return _get_json_file_response(data, filename, d_type, d_id, sub_type, sub_id)
