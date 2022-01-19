@@ -51,7 +51,7 @@
             },
             "init": {
                 "data": {
-                    "include_domains": "Domains to include",
+                    "domains": "Domains to include",
                     "include_exclude_mode": "Inclusion Mode",
                     "mode": "HomeKit Mode"
                 },
