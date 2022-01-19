@@ -58,7 +58,9 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return state of device (on/off)."""
+        """Return true if switch is on."""
+        if not self._device_data:
+            return False
         return cast(bool, self._device_data.state)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
