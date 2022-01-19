@@ -170,6 +170,9 @@ class JellyfinSource(MediaSource):
         if include_children:
             result.children_media_class = MEDIA_CLASS_ARTIST
             result.children = await self._build_artists(library_id)  # type: ignore[assignment]
+            if not result.children:
+                result.children_media_class = MEDIA_CLASS_ALBUM
+                result.children = await self._build_albums(library_id)  # type: ignore[assignment]
 
         return result
 
@@ -204,9 +207,9 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _build_albums(self, artist_id: str) -> list[BrowseMediaSource]:
+    async def _build_albums(self, parent_id: str) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
-        albums = await self._get_children(artist_id, ITEM_TYPE_ALBUM)
+        albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM)
         albums = sorted(albums, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
         return [await self._build_album(album, False) for album in albums]
 
