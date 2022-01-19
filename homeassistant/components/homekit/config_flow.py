@@ -144,6 +144,14 @@ def _async_build_entites_filter(
     return entity_filter
 
 
+def _async_cameras_from_entities(entities: list[str]) -> set[str]:
+    return {
+        entity_id
+        for entity_id in entities
+        if entity_id.startswith(CAMERA_ENTITY_PREFIX)
+    }
+
+
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     """Create a mapping of types of devices/entities HomeKit can support."""
     integrations = await asyncio.gather(
@@ -422,11 +430,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entites_filter(domains, entities)
-            self.included_cameras = {
-                entity_id
-                for entity_id in entities
-                if entity_id.startswith(CAMERA_ENTITY_PREFIX)
-            }
+            self.included_cameras = _async_cameras_from_entities(entities)
             self.hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
                 return await self.async_step_cameras()
@@ -457,16 +461,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_include(self, user_input=None):
-        """Choose entities to include from the domain."""
+        """Choose entities to include from the domain on the bridge."""
         domains = self.hk_options[CONF_DOMAINS]
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entites_filter(domains, entities)
-            self.included_cameras = {
-                entity_id
-                for entity_id in entities
-                if entity_id.startswith(CAMERA_ENTITY_PREFIX)
-            }
+            self.included_cameras = _async_cameras_from_entities(entities)
             self.hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
                 return await self.async_step_cameras()
@@ -476,7 +476,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
 
         all_supported_entities = _async_get_matching_entities(self.hass, domains)
-        # Bridge mode
         if not entities:
             entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
         # Strip out entities that no longer exist to prevent error in the UI
@@ -496,7 +495,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_exclude(self, user_input=None):
-        """Choose entities to exclude from the domain."""
+        """Choose entities to exclude from the domain on the bridge."""
         domains = self.hk_options[CONF_DOMAINS]
 
         if user_input is not None:
