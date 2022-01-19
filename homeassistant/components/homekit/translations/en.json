@@ -21,7 +21,7 @@
         "step": {
             "accessory": {
                 "data": {
-                    "entities": "Entities"
+                    "entities": "Entity"
                 },
                 "title": "Select the entity for the accessory"
             },
