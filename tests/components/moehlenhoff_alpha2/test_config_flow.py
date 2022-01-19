@@ -1,8 +1,6 @@
 """Test the moehlenhoff_alpha2 config flow."""
 import asyncio
-from unittest.mock import PropertyMock, patch
-
-from moehlenhoff_alpha2 import Alpha2Base
+from unittest.mock import patch
 
 from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -10,12 +8,13 @@ from homeassistant.core import HomeAssistant
 
 async def mock_fetch_static_data(self):
     """Mock moehlenhoff_alpha2.Alpha2Base._fetch_static_data."""
-    self.static_data = {"Devices": {"Device": {"ID": "Alpha2ID", "NAME": "Alpha2Name"}}}
+    self.static_data = {
+        "Devices": {"Device": {"ID": "fake_id", "NAME": "fake_base_name"}}
+    }
 
 
 async def test_duplicate_error(hass: HomeAssistant):
     """Test that errors are shown when duplicates are added."""
-    Alpha2Base.name = PropertyMock(return_value="fake_base_name")
     with patch(
         "moehlenhoff_alpha2.Alpha2Base._fetch_static_data", mock_fetch_static_data
     ):
