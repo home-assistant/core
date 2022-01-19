@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Awaitable
 import logging
-from typing import Any, Awaitable, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
