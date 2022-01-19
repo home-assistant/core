@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from pytradfri.command import Command
 
@@ -55,6 +55,11 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
 
         self._device_control = self._device.socket_control
         self._device_data = self._device_control.sockets[0]
+
+    @property
+    def is_on(self) -> bool:
+        """Return state of device (on/off)."""
+        return cast(bool, self._device_data.state)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
