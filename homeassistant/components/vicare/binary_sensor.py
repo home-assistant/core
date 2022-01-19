@@ -72,7 +72,7 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ),
 )
 
-SOLAR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
+GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key=SENSOR_SOLAR_PUMP_ACTIVE,
         name="Solar pump active",
@@ -133,7 +133,7 @@ async def async_setup_entry(
 
     entities = []
 
-    for description in SOLAR_SENSORS:
+    for description in GLOBAL_SENSORS:
         entity = await hass.async_add_executor_job(
             _build_entity,
             f"{name} {description.name}",
