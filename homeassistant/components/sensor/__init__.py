@@ -45,8 +45,7 @@ from homeassistant.const import (  # noqa: F401
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -274,6 +273,7 @@ class SensorEntity(Entity):
     )
     _last_reset_reported = False
     _temperature_conversion_reported = False
+    _sensor_option_unit_of_measurement: str | None = None
 
     # Temporary private attribute to track if deprecation has been logged.
     __datetime_as_string_deprecation_logged = False
@@ -369,14 +369,8 @@ class SensorEntity(Entity):
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
-        entity_registry = er.async_get(self.hass)
-        entry = entity_registry.async_get(self.entity_id)
-        if (
-            entry
-            and (sensor_options := entry.options.get(DOMAIN))
-            and (custom_unit := sensor_options.get("unit"))
-        ):
-            return cast(str, custom_unit)
+        if self._sensor_option_unit_of_measurement:
+            return self._sensor_option_unit_of_measurement
 
         if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             return self.hass.config.units.temperature_unit
@@ -486,6 +480,20 @@ class SensorEntity(Entity):
             return f"<Entity {self.name}>"
 
         return super().__repr__()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if (
+            (sensor_options := self.registry_entry.options.get(DOMAIN))
+            and (custom_unit := sensor_options.get("unit"))
+            and self.device_class in UNIT_CONVERSIONS
+        ):
+            self._sensor_option_unit_of_measurement = custom_unit
+            return
+
+        self._sensor_option_unit_of_measurement = None
 
 
 @dataclass
