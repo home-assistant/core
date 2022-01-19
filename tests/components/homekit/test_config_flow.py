@@ -296,15 +296,18 @@ async def test_options_flow_exclude_mode_advanced(hass, mock_get_source_ip):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"domains": ["fan", "vacuum", "climate", "humidifier"]},
+        user_input={
+            "domains": ["fan", "vacuum", "climate", "humidifier"],
+            "include_exclude_mode": "exclude",
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "include_exclude"
+    assert result["step_id"] == "exclude"
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": ["climate.old"], "include_exclude_mode": "exclude"},
+        user_input={"entities": ["climate.old"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "advanced"
@@ -348,11 +351,14 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"domains": ["fan", "vacuum", "climate"]},
+        user_input={
+            "domains": ["fan", "vacuum", "climate"],
+            "include_exclude_mode": "exclude",
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "include_exclude"
+    assert result["step_id"] == "exclude"
     entities = result["data_schema"]({})["entities"]
     assert entities == ["climate.front_gate"]
 
@@ -362,7 +368,7 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": ["climate.old"], "include_exclude_mode": "exclude"},
+        user_input={"entities": ["climate.old"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
@@ -424,11 +430,14 @@ async def test_options_flow_devices(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"domains": ["fan", "vacuum", "climate"]},
+        user_input={
+            "domains": ["fan", "vacuum", "climate"],
+            "include_exclude_mode": "exclude",
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "include_exclude"
+    assert result["step_id"] == "exclude"
 
     entry = entity_reg.async_get("light.ceiling_lights")
     assert entry is not None
@@ -438,7 +447,6 @@ async def test_options_flow_devices(
         result["flow_id"],
         user_input={
             "entities": ["climate.old"],
-            "include_exclude_mode": "exclude",
         },
     )
 

@@ -356,6 +356,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ):
                 self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
+            if CONF_INCLUDE_EXCLUDE_MODE in self.hk_options:
+                del self.hk_options[CONF_INCLUDE_EXCLUDE_MODE]
+
             return self.async_create_entry(title="", data=self.hk_options)
 
         all_supported_devices = await _async_get_supported_devices(self.hass)
