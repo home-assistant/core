@@ -77,7 +77,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sma.*",
     "homeassistant.components.smartthings.*",
     "homeassistant.components.solaredge.*",
-    "homeassistant.components.somfy.*",
     "homeassistant.components.sonos.*",
     "homeassistant.components.spotify.*",
     "homeassistant.components.stt.*",
