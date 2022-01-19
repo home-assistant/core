@@ -17,7 +17,11 @@ from homeassistant.components.dnsip.const import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from tests.common import MockConfigEntry
 
@@ -146,6 +150,45 @@ async def test_import_flow_success(
     assert result2["title"] == p_output["name"]
     assert result2["data"] == p_output
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_already_exist(hass: HomeAssistant) -> None:
+    """Test flow when unique id already exist."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_IPV4: True,
+            CONF_IPV6: True,
+        },
+        unique_id="home-assistant.io",
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.dnsip.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        return_value=RetrieveDNS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOSTNAME: "home-assistant.io",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
