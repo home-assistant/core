@@ -20,16 +20,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "create_seperate_entities": "Create seperate entities for blinds that allow top/down bottom/up functionality",
-          "import_batterystrength": "Create sensors for batteries",
-          "import_signalstrength": "Create sensors for signal strength"
-        }
-      }
-    }
   }
 }

@@ -33,9 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    CONF_CREATE_TOPDOWN_ENTITIES,
     COORDINATOR,
-    DEFAULT_CREATE_TOPDOWN_ENTITIES,
     DEVICE_INFO,
     DEVICE_MODEL,
     DOMAIN,
@@ -72,13 +70,6 @@ async def async_setup_entry(
     coordinator = pv_data[COORDINATOR]
     device_info = pv_data[DEVICE_INFO]
 
-    create_topdown = entry.options.get(
-        CONF_CREATE_TOPDOWN_ENTITIES, DEFAULT_CREATE_TOPDOWN_ENTITIES
-    )
-
-    if create_topdown is False:
-        _LOGGER.debug("Top/Down covers will have a single entity based on config")
-
     entities = []
     for raw_shade in shade_data.values():
         # The shade may be out of sync with the hub
@@ -99,7 +90,7 @@ async def async_setup_entry(
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
 
-        if create_topdown is True and shade.shade_type.shade_type in TOPDOWN_SHADES:
+        if shade.shade_type.shade_type in TOPDOWN_SHADES:
             entities.append(
                 PowerViewShade(
                     coordinator,

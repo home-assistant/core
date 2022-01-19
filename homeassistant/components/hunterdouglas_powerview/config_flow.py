@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aiopvapi.helpers.aiorequest import AioRequest
 import async_timeout
@@ -15,18 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
-from .const import (
-    CONF_CREATE_TOPDOWN_ENTITIES,
-    CONF_IMPORT_BATTERY_SENSOR,
-    CONF_IMPORT_SIGNAL_STRENGTH,
-    DEFAULT_CREATE_TOPDOWN_ENTITIES,
-    DEFAULT_IMPORT_BATTERY_SENSOR,
-    DEFAULT_IMPORT_SIGNAL_STRENGTH,
-    DEVICE_NAME,
-    DEVICE_SERIAL_NUMBER,
-    DOMAIN,
-    HUB_EXCEPTIONS,
-)
+from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, DOMAIN, HUB_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,11 +50,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hunter Douglas PowerView."""
 
     VERSION = 1
-
-    @staticmethod
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the powerview config flow."""
@@ -172,45 +155,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_CREATE_TOPDOWN_ENTITIES,
-                        default=self.config_entry.options.get(
-                            CONF_CREATE_TOPDOWN_ENTITIES,
-                            DEFAULT_CREATE_TOPDOWN_ENTITIES,
-                        ),
-                    ): bool,
-                    vol.Optional(
-                        CONF_IMPORT_BATTERY_SENSOR,
-                        default=self.config_entry.options.get(
-                            CONF_IMPORT_BATTERY_SENSOR, DEFAULT_IMPORT_BATTERY_SENSOR
-                        ),
-                    ): bool,
-                    vol.Optional(
-                        CONF_IMPORT_SIGNAL_STRENGTH,
-                        default=self.config_entry.options.get(
-                            CONF_IMPORT_SIGNAL_STRENGTH, DEFAULT_IMPORT_SIGNAL_STRENGTH
-                        ),
-                    ): bool,
-                }
-            ),
-        )
