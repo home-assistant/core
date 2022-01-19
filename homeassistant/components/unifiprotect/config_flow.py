@@ -82,9 +82,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)
         for entry in self._async_current_entries(include_ignore=False):
-            import pprint
-
-            pprint.pprint(["mac", mac, entry.unique_id])
             if entry.unique_id != mac:
                 continue
             new_host = None
