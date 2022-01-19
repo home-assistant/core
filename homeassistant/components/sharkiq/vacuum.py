@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import logging
+from typing import cast
 
 from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
 
@@ -108,7 +109,9 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def is_online(self) -> bool:
         """Tell us if the device is online."""
-        return self.coordinator.device_is_online(self.sharkiq.serial_number)
+        return cast(SharkIqUpdateCoordinator, self.coordinator).device_is_online(
+            self.sharkiq.serial_number
+        )
 
     @property
     def name(self) -> str:
@@ -222,7 +225,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         await self.sharkiq.async_find_device()
 
     @property
-    def fan_speed(self) -> str:
+    def fan_speed(self) -> str | None:
         """Return the current fan speed."""
         fan_speed = None
         speed_level = self.sharkiq.get_property_value(Properties.POWER_MODE)
