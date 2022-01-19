@@ -73,33 +73,30 @@ class SomaTilt(SomaEntity, CoverEntity):
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], 100)
-        if is_api_response_success(response):
-            self.set_position(0)
-        else:
+        if not is_api_response_success(response):
             raise HomeAssistantError(
                 f'Error while closing the cover ({self.name}): {response["msg"]}'
             )
+        self.set_position(0)
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], -100)
-        if is_api_response_success(response):
-            self.set_position(100)
-        else:
+        if not is_api_response_success(response):
             raise HomeAssistantError(
                 f'Error while opening the cover ({self.name}): {response["msg"]}'
             )
+        self.set_position(100)
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
         response = self.api.stop_shade(self.device["mac"])
-        if is_api_response_success(response):
-            # Set cover position to some value where up/down are both enabled
-            self.set_position(50)
-        else:
+        if not is_api_response_success(response):
             raise HomeAssistantError(
                 f'Error while stopping the cover ({self.name}): {response["msg"]}'
             )
+        # Set cover position to some value where up/down are both enabled
+        self.set_position(50)
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
@@ -108,12 +105,11 @@ class SomaTilt(SomaEntity, CoverEntity):
         # 100 -> Closed up (api: -100)
         target_api_position = 100 - ((kwargs[ATTR_TILT_POSITION] / 50) * 100)
         response = self.api.set_shade_position(self.device["mac"], target_api_position)
-        if is_api_response_success(response):
-            self.set_position(kwargs[ATTR_TILT_POSITION])
-        else:
+        if not is_api_response_success(response):
             raise HomeAssistantError(
                 f'Error while setting the cover position ({self.name}): {response["msg"]}'
             )
+        self.set_position(kwargs[ATTR_TILT_POSITION])
 
     async def async_update(self):
         """Update the entity with the latest data."""
@@ -164,13 +160,12 @@ class SomaShade(SomaEntity, CoverEntity):
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         response = self.api.stop_shade(self.device["mac"])
-        if is_api_response_success(response):
-            # Set cover position to some value where up/down are both enabled
-            self.set_position(50)
-        else:
+        if not is_api_response_success(response):
             raise HomeAssistantError(
                 f'Error while stopping the cover ({self.name}): {response["msg"]}'
             )
+        # Set cover position to some value where up/down are both enabled
+        self.set_position(50)
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
