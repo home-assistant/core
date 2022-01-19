@@ -144,7 +144,7 @@ def _set_query_mock_v1(
     query_api = mock_influx_client.return_value.query
     if side_effect:
         query_api.side_effect = side_effect
-    
+
     else:
         if return_value is None:
             return_value = []
