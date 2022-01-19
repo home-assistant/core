@@ -44,7 +44,7 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
 
-    await async_start_discovery(hass)
+    async_start_discovery(hass)
     session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     protect = ProtectApiClient(
         host=entry.data[CONF_HOST],
