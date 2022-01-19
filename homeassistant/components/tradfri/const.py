@@ -32,7 +32,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
     #    Platform.LIGHT,
-    #    Platform.SENSOR,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 TIMEOUT_API = 30
