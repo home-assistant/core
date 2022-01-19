@@ -17,9 +17,9 @@ from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DEFAULT_RETAIN, DOMAIN
 from .siren import (
     CONF_MESSAGE_COMMAND_TEMPLATE,
     CONF_MESSAGE_COMMAND_TOPIC,
-    CONF_SIREN_ENTITY,
     CONF_TITLE,
     MQTT_NOTIFY_CONFIG,
+    SIREN_ENTITY,
     MqttSiren,
 )
 
@@ -33,7 +33,7 @@ def valid_siren_entity(value: Any) -> MqttSiren:
 
 SCHEMA_BASE = vol.Schema(
     {
-        vol.Optional(CONF_SIREN_ENTITY): valid_siren_entity,
+        vol.Optional(SIREN_ENTITY): valid_siren_entity,
         vol.Optional(CONF_TARGET): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_MESSAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -55,13 +55,13 @@ async def async_get_service(
         MQTT_NOTIFY_CONFIG, {CONF_SERVICE: None, CONF_SERVICE_DATA: {}}
     )
     if (
-        CONF_SIREN_ENTITY in config
-        and config[CONF_SIREN_ENTITY].target
+        SIREN_ENTITY in config
+        and config[SIREN_ENTITY].target
         in hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA]
     ):
         # Remove the old target and trigger a service reload
         del hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA][
-            config[CONF_SIREN_ENTITY].target
+            config[SIREN_ENTITY].target
         ]
         await hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE].async_register_services()
 
@@ -74,14 +74,14 @@ async def async_get_service(
         CONF_MESSAGE_COMMAND_TEMPLATE: mqtt.MqttCommandTemplate(
             config.get(CONF_MESSAGE_COMMAND_TEMPLATE),
             hass=hass,
-            entity=config.get(CONF_SIREN_ENTITY),
+            entity=config.get(SIREN_ENTITY),
         ).async_render,
         CONF_QOS: config[CONF_QOS],
         CONF_RETAIN: config[CONF_RETAIN],
         CONF_TITLE: config[CONF_TITLE],
     }
-    if CONF_SIREN_ENTITY in config:
-        config[CONF_SIREN_ENTITY].target = target
+    if SIREN_ENTITY in config:
+        config[SIREN_ENTITY].target = target
 
     discovery_info[CONF_NAME] = DOMAIN
     return hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE] or MqttNotificationService(hass)

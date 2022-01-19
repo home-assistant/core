@@ -63,6 +63,8 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
 
+ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
+
 CONF_AVAILABLE_TONES = "available_tones"
 CONF_COMMAND_TEMPLATE = "command_template"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
@@ -70,13 +72,12 @@ CONF_DURATION_COMMAND_TEMPLATE = "duration_command_template"
 CONF_DURATION_COMMAND_TOPIC = "duration_command_topic"
 CONF_MESSAGE_COMMAND_TEMPLATE = "message_command_template"
 CONF_MESSAGE_COMMAND_TOPIC = "message_command_topic"
-CONF_SIREN_ENTITY = "siren_entity"
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
-CONF_SUPPORT_DURATION = "support_duration"
-CONF_SUPPORT_TURN_OFF = "support_turn_off"
-CONF_SUPPORT_TURN_ON = "support_turn_on"
-CONF_SUPPORT_VOLUME_SET = "support_volume_set"
+CONF_SUPPORT_DURATION = "supported_duration"
+CONF_SUPPORT_TURN_OFF = "supported_turn_off"
+CONF_SUPPORT_TURN_ON = "supported_turn_on"
+CONF_SUPPORT_VOLUME_SET = "supported_volume_set"
 CONF_TITLE = "title"
 CONF_TONE_COMMAND_TEMPLATE = "tone_command_template"
 CONF_TONE_COMMAND_TOPIC = "tone_command_topic"
@@ -85,7 +86,7 @@ CONF_VOLUME_COMMAND_TOPIC = "volume_command_topic"
 
 MQTT_NOTIFY_CONFIG = "mqtt_notify_config"
 
-ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
+SIREN_ENTITY = "siren_entity"
 
 
 def valid_tone_configuration(config):
@@ -265,7 +266,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         # integration notify platform
         if config.get(CONF_MESSAGE_COMMAND_TOPIC):
             notify_config = {
-                CONF_SIREN_ENTITY: self,
+                SIREN_ENTITY: self,
                 CONF_MESSAGE_COMMAND_TOPIC: config[CONF_MESSAGE_COMMAND_TOPIC],
                 CONF_RETAIN: config[CONF_RETAIN],
                 CONF_QOS: config[CONF_QOS],
