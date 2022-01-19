@@ -40,6 +40,11 @@ from .utils import _async_short_mac, _async_unifi_mac_from_hass
 _LOGGER = logging.getLogger(__name__)
 
 
+def _host_is_direct_connect(host: str) -> bool:
+    """Check if a host is a unifi direct connect domain."""
+    return host.endswith(".ui.direct")
+
+
 class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Protect config flow."""
 
@@ -74,10 +79,33 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery."""
         self._discovered_device = discovery_info
-        mac = _async_unifi_mac_from_hass(discovery_info["mac"])
+        mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.unique_id != mac:
+                continue
+            new_host = None
+            if (
+                _host_is_direct_connect(entry.data[CONF_HOST])
+                and discovery_info["direct_connect_domain"]
+                and entry.data[CONF_HOST] != discovery_info["direct_connect_domain"]
+            ):
+                new_host = discovery_info["direct_connect_domain"]
+            elif (
+                not _host_is_direct_connect(entry.data[CONF_HOST])
+                and entry.data[CONF_HOST] != discovery_info["source_ip"]
+            ):
+                new_host = discovery_info["source_ip"]
+            if new_host:
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_HOST: new_host}
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info["ip_address"]}
+            updates={CONF_HOST: discovery_info["source_ip"]}
         )
         return await self.async_step_discovery_confirm()
 
@@ -88,17 +116,24 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         discovery_info = self._discovered_device
         if user_input is not None:
-            user_input[CONF_HOST] = discovery_info["ip_address"]
             user_input[CONF_PORT] = DEFAULT_PORT
-            nvr_data, errors = await self._async_get_nvr_data(user_input)
+            nvr_data = None
+            if discovery_info["direct_connect_domain"]:
+                user_input[CONF_HOST] = discovery_info["direct_connect_domain"]
+                user_input[CONF_VERIFY_SSL] = True
+                nvr_data, errors = await self._async_get_nvr_data(user_input)
+            if not nvr_data or errors:
+                user_input[CONF_HOST] = discovery_info["source_ip"]
+                user_input[CONF_VERIFY_SSL] = False
+                nvr_data, errors = await self._async_get_nvr_data(user_input)
             if nvr_data and not errors:
                 return self._async_create_entry(nvr_data.name, user_input)
 
         placeholders = {
             "name": discovery_info["hostname"]
             or discovery_info["platform"]
-            or f"NVR {_async_short_mac(discovery_info['mac'])}",
-            "ip_address": discovery_info["ip_address"],
+            or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
+            "ip_address": discovery_info["source_ip"],
         }
         self.context["title_placeholders"] = placeholders
         user_input = user_input or {}
@@ -107,10 +142,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_VERIFY_SSL,
-                        default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                    ): bool,
                     vol.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,

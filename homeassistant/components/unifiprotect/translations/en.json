@@ -15,8 +15,7 @@
             "discovery_confirm": {
                 "data": {
                     "password": "Password",
-                    "username": "Username",
-                    "verify_ssl": "Verify SSL certificate"
+                    "username": "Username"
                 },
                 "description": "Do you want to setup {name} ({ip_address})?"
             },
