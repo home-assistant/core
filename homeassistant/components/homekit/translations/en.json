@@ -37,16 +37,16 @@
             },
             "include_exclude": {
                 "data": {
-                    "entities": "Entities",
-                    "mode": "Mode"
+                    "entities": "Entities"
                 },
-                "description": "Choose the entities to be included. In accessory mode, only a single entity is included. In bridge include mode, all entities in the domain will be included unless specific entities are selected. In bridge exclude mode, all entities in the domain will be included except for the excluded entities and categorized entities. For best performance, a separate HomeKit accessory will be created for each tv media player, activity based remote, lock, and camera.",
-                "title": "Select entities to be included"
+                "description": "In accessory mode, only a single entity is included. In bridge include mode, all entities in the domain will be included unless specific entities are selected. In bridge exclude mode, all entities in the domain will be included except for the excluded entities and categorized entities. For best performance, a separate HomeKit accessory will be created for each tv media player, activity based remote, lock, and camera.",
+                "title": "Select {include_exclude_mode} entities"
             },
             "init": {
                 "data": {
                     "include_domains": "Domains to include",
-                    "mode": "Mode"
+                    "include_exclude_mode": "Inclusion Mode",
+                    "mode": "HomeKit Mode"
                 },
                 "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
                 "title": "Select domains to be included."

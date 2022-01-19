@@ -449,14 +449,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return await self.async_step_advanced()
 
+        include_exclude_mode = self.hk_options[CONF_INCLUDE_EXCLUDE_MODE]
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        self.context["title_placholders"]["include_exclude_mode"] = include_exclude_mode
 
         all_supported_entities = _async_get_matching_entities(
             self.hass,
             domains=self.hk_options[CONF_DOMAINS],
         )
-        data_schema = {}
         if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
             # In accessory mode we can only have one
             default_value = next(
@@ -472,13 +473,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         else:
             # Bridge mode
             entities_schema_required = vol.Optional
-            include_exclude_mode = MODE_INCLUDE
             if not entities:
-                include_exclude_mode = MODE_EXCLUDE
                 entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
-            data_schema[
-                vol.Required(CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode)
-            ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
             if include_exclude_mode == MODE_EXCLUDE:
                 ent_reg = entity_registry.async_get(self.hass)
@@ -500,11 +496,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if entity_id in all_supported_entities
             ]
 
-        data_schema[
-            entities_schema_required(CONF_ENTITIES, default=default_value)
-        ] = entity_schema(all_supported_entities)
         return self.async_show_form(
-            step_id="include_exclude", data_schema=vol.Schema(data_schema)
+            step_id="include_exclude",
+            data_schema=vol.Schema(
+                {
+                    entities_schema_required(
+                        CONF_ENTITIES, default=default_value
+                    ): entity_schema(all_supported_entities)
+                }
+            ),
         )
 
     async def async_step_init(self, user_input=None):
@@ -524,7 +524,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if include_entities:
             domains.extend(_domains_set_from_entities(include_entities))
         name_to_type_map = await _async_name_to_type_map(self.hass)
-
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        include_exclude_mode = MODE_INCLUDE
+        if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
+            include_exclude_mode = MODE_INCLUDE if entities else MODE_EXCLUDE
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
@@ -532,6 +535,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
                         HOMEKIT_MODES
                     ),
+                    vol.Required(
+                        CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode
+                    ): vol.In(INCLUDE_EXCLUDE_MODES),
                     vol.Required(
                         CONF_DOMAINS,
                         default=domains,
