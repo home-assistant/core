@@ -123,4 +123,4 @@ async def test_no_discovery_info(hass, caplog):
     await hass.async_block_till_done()
     assert NOTIFY_DOMAIN in hass.config.components
     assert f"Failed to initialize notification service {DOMAIN}" in caplog.text
-    assert DOMAIN not in hass.services.async_services()
+    assert not hass.services.has_service("notify", TV_NAME)
