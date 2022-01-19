@@ -55,20 +55,13 @@ async def async_setup_entry(
 class SomaTilt(SomaEntity, CoverEntity):
     """Representation of a Soma Tilt device."""
 
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_BLIND
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return (
-            SUPPORT_OPEN_TILT
-            | SUPPORT_CLOSE_TILT
-            | SUPPORT_STOP_TILT
-            | SUPPORT_SET_TILT_POSITION
-        )
+    _attr_device_class = DEVICE_CLASS_BLIND
+    _attr_supported_features = (
+        SUPPORT_OPEN_TILT
+        | SUPPORT_CLOSE_TILT
+        | SUPPORT_STOP_TILT
+        | SUPPORT_SET_TILT_POSITION
+    )
 
     @property
     def current_cover_tilt_position(self):
@@ -164,15 +157,10 @@ class SomaTilt(SomaEntity, CoverEntity):
 class SomaShade(SomaEntity, CoverEntity):
     """Representation of a Soma Shade device."""
 
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_SHADE
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+    _attr_device_class = DEVICE_CLASS_SHADE
+    _attr_supported_features = (
+        SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+    )
 
     @property
     def current_cover_position(self):
