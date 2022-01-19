@@ -1,5 +1,4 @@
 """Support for hunterdouglass_powerview sensors."""
-import logging
 
 from aiopvapi.resources.shade import factory as PvShade
 
@@ -25,8 +24,6 @@ from .const import (
     SHADE_BATTERY_LEVEL_MAX,
 )
 from .entity import ShadeEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
