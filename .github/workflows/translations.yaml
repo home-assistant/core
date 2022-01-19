@@ -17,7 +17,7 @@ env:
 jobs:
   upload:
     name: Upload
-    if: secrets.LOKALISE_TOKEN != null
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
