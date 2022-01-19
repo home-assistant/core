@@ -1,7 +1,7 @@
 """Test evil genius labs diagnostics."""
 import pytest
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
