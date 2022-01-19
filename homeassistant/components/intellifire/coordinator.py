@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from aiohttp import ClientConnectionError
 from async_timeout import timeout
 from intellifire4py import IntellifireAsync, IntellifirePollData
 
@@ -32,7 +33,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         async with timeout(100):
             try:
                 await self._api.poll()
-            except Exception as exception:
+            except (ConnectionError, ClientConnectionError) as exception:
                 raise UpdateFailed from exception
         return self._api.data
 

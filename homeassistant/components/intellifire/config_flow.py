@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohttp import ClientConnectionError
 from intellifire4py import IntellifireAsync
 import voluptuous as vol
 
@@ -46,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             serial = await validate_input(self.hass, user_input[CONF_HOST])
-        except CannotConnect:
+        except (ConnectionError, ClientConnectionError):
             errors["base"] = "cannot_connect"
         except Exception as exception:  # pylint: disable=broad-except
             LOGGER.exception(exception)

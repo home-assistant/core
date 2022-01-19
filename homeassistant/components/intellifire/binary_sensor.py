@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from intellifire4py import IntellifirePollData
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IntellifireDataUpdateCoordinator
@@ -34,8 +36,8 @@ class IntellifireBinarySensorEntityDescription(
 INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...] = (
     IntellifireBinarySensorEntityDescription(
         key="on_off",  # This is the sensor name
-        name="Power",  # This is the human readable name
-        device_class=BinarySensorDeviceClass.POWER,
+        name="Flame",  # This is the human readable name
+        icon="mdi:fire",
         value_fn=lambda data: data.is_on,
     ),
     IntellifireBinarySensorEntityDescription(
@@ -94,9 +96,7 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         # Set the Display name the User will see
         self._attr_name = f"Fireplace {description.name}"
-        self._attr_unique_id = (
-            f"{description.key}_{coordinator.api.data.serial}"
-        )
+        self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
         # Configure the Device Info
         self._attr_device_info = self.coordinator.device_info
 
