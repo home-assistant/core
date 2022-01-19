@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 from socket import timeout
+from typing import TYPE_CHECKING
 
 from motionblinds import AsyncMotionMulticast, ParseException
 
@@ -156,6 +157,9 @@ async def async_setup_entry(
         version = f"{motion_gateway.firmware}, protocol: {motion_gateway.protocol}"
     else:
         version = f"Protocol: {motion_gateway.protocol}"
+
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
