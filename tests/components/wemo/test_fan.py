@@ -162,7 +162,7 @@ async def test_fan_set_percentage(
 
 
 class TestInitialFanMode:
-    """Test that the fan mode is set to high the first time turned on."""
+    """Test that the FanMode is set to High when turned on the first time."""
 
     @pytest.fixture
     def pywemo_device(self, pywemo_device):
