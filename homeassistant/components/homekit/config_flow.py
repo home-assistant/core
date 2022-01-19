@@ -452,9 +452,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         include_exclude_mode = self.hk_options[CONF_INCLUDE_EXCLUDE_MODE]
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        self.context["title_placeholders"] = {
-            "include_exclude_mode": include_exclude_mode
-        }
 
         all_supported_entities = _async_get_matching_entities(
             self.hass,
@@ -498,6 +495,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if entity_id in all_supported_entities
             ]
 
+        self.context["title_placeholders"] = {
+            CONF_INCLUDE_EXCLUDE_MODE: include_exclude_mode
+        }
         return self.async_show_form(
             step_id="include_exclude",
             data_schema=vol.Schema(
