@@ -1,6 +1,7 @@
 """The Diagnostics integration."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import json
 import logging
 from typing import Protocol
@@ -99,18 +100,18 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         try:
             d_type = DiagnosticsType(d_type)
         except ValueError:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
         config_entry = hass.config_entries.async_get_entry(d_id)
 
         if config_entry is None:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         info = hass.data[DOMAIN].get(config_entry.domain)
 
         if info is None or info[d_type.value] is None:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         data = await info[d_type.value](hass, config_entry)
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
@@ -124,7 +125,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
                 d_id,
                 format_unserializable_data(find_paths_unserializable_data(data)),
             )
-            return web.Response(status=500)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return web.Response(
             body=json_data,
@@ -148,13 +149,13 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
         try:
             sub_type = DiagnosticsSubType(sub_type)
         except ValueError:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         hass = request.app["hass"]
 
         config_entry = hass.config_entries.async_get_entry(config_entry_id)
 
         if config_entry is None:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         info = hass.data[DOMAIN].get(config_entry.domain)
 
@@ -166,7 +167,7 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
         device = dev_reg.async_get(sub_id)
 
         if device is None:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         data = await info[DiagnosticsSubType.DEVICE](hass, device)
 
@@ -181,7 +182,7 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
                 sub_id,
                 format_unserializable_data(find_paths_unserializable_data(data)),
             )
-            return web.Response(status=500)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return web.Response(
             body=json_data,
