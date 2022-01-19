@@ -32,8 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize(
     "config,data,unique_id",
@@ -61,10 +59,8 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
-async def test_duplicate_error(hass, config, data, unique_id):
+async def test_duplicate_error(hass, config, config_entry, data):
     """Test that errors are shown when duplicate entries are added."""
-    MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=data
     )
@@ -147,29 +143,36 @@ async def test_invalid_identifier_node_pro(hass):
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
-async def test_migration(hass):
+@pytest.mark.parametrize(
+    "config,unique_id",
+    [
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_GEOGRAPHIES: [
+                    {CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765},
+                    {
+                        CONF_CITY: "Beijing",
+                        CONF_STATE: "Beijing",
+                        CONF_COUNTRY: "China",
+                    },
+                ],
+            },
+            "abcde12345",
+        )
+    ],
+)
+async def test_migration(hass, config, config_entry, unique_id):
     """Test migrating from version 1 to the current version."""
-    conf = {
-        CONF_API_KEY: "abcde12345",
-        CONF_GEOGRAPHIES: [
-            {CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765},
-            {CONF_CITY: "Beijing", CONF_STATE: "Beijing", CONF_COUNTRY: "China"},
-        ],
-    }
-
-    entry = MockConfigEntry(domain=DOMAIN, version=1, unique_id="abcde12345", data=conf)
-    entry.add_to_hass(hass)
-
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     with patch("pyairvisual.air_quality.AirQuality.city"), patch(
         "pyairvisual.air_quality.AirQuality.nearest_city"
     ), patch.object(hass.config_entries, "async_forward_entry_setup"):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
-
     assert len(config_entries) == 2
 
     assert config_entries[0].unique_id == "51.528308, -0.3817765"
@@ -192,27 +195,28 @@ async def test_migration(hass):
     }
 
 
-async def test_options_flow(hass):
+@pytest.mark.parametrize(
+    "config,unique_id",
+    [
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_LATITUDE: 51.528308,
+                CONF_LONGITUDE: -0.3817765,
+            },
+            "51.528308, -0.3817765",
+        )
+    ],
+)
+async def test_options_flow(hass, config_entry):
     """Test config flow options."""
-    geography_conf = {
-        CONF_API_KEY: "abcde12345",
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="51.528308, -0.3817765",
-        data=geography_conf,
-        options={CONF_SHOW_ON_MAP: True},
-    )
-    entry.add_to_hass(hass)
+    config_entry.options = {CONF_SHOW_ON_MAP: True}
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
@@ -222,7 +226,7 @@ async def test_options_flow(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert entry.options == {CONF_SHOW_ON_MAP: False}
+        assert config_entry.options == {CONF_SHOW_ON_MAP: False}
 
 
 async def test_step_geography_by_coords(hass):
@@ -313,21 +317,24 @@ async def test_step_node_pro(hass):
         }
 
 
-async def test_step_reauth(hass):
+@pytest.mark.parametrize(
+    "config,unique_id",
+    [
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_LATITUDE: 51.528308,
+                CONF_LONGITUDE: -0.3817765,
+                CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+            },
+            "51.528308, -0.3817765",
+        )
+    ],
+)
+async def test_step_reauth(hass, config_entry):
     """Test that the reauth step works."""
-    entry_data = {
-        CONF_API_KEY: "abcde12345",
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
-        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
-    }
-
-    MockConfigEntry(
-        domain=DOMAIN, unique_id="51.528308, -0.3817765", data=entry_data
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=entry_data
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=config_entry.data
     )
     assert result["step_id"] == "reauth_confirm"
 
