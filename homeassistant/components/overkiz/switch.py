@@ -28,9 +28,9 @@ from .entity import OverkizDescriptiveEntity
 class OverkizSwitchDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
-    is_on: Callable[[Callable[[str], OverkizStateType]], bool]
     turn_on: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
     turn_off: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
+    is_on: Callable[[Callable[[str], OverkizStateType]], bool]
 
 
 @dataclass
