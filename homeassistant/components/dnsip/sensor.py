@@ -16,6 +16,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -83,13 +85,9 @@ async def async_setup_entry(
     )
     entities = []
     if entry.data[CONF_IPV4]:
-        entities.append(
-            WanIpSensor(name, hostname, resolver_ipv4, False, entry, f"{hostname}_ipv4")
-        )
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
     if entry.data[CONF_IPV6]:
-        entities.append(
-            WanIpSensor(name, hostname, resolver_ipv6, True, entry, f"{hostname}_ipv6")
-        )
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -105,12 +103,10 @@ class WanIpSensor(SensorEntity):
         hostname: str,
         resolver: str,
         ipv6: bool,
-        entry: ConfigEntry,
-        unique_id: str,
     ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = f"{name} IPv6" if ipv6 else name
-        self._attr_unique_id = f"{entry.entry_id}_{unique_id}"
+        self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
@@ -119,6 +115,13 @@ class WanIpSensor(SensorEntity):
             "Resolver": resolver,
             "Querytype": self.querytype,
         }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{hostname}_{ipv6}")},
+            manufacturer="DNS",
+            model=aiodns.__version__,
+            name=hostname,
+        )
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
