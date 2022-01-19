@@ -126,7 +126,7 @@ class CloudClient(Interface):
                         err,
                     )
                 async_call_later(self._hass, 30, enable_alexa)
-            except alexa_errors.NoTokenAvailable:
+            except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
                 pass
 
         async def enable_google(_):
