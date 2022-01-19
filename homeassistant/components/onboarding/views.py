@@ -1,4 +1,6 @@
 """Onboarding views."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 
@@ -77,7 +79,7 @@ class InstallationTypeOnboardingView(HomeAssistantView):
 class _BaseOnboardingView(HomeAssistantView):
     """Base class for onboarding."""
 
-    step = None
+    step: str | None = None
 
     def __init__(self, data, store):
         """Initialize the onboarding view."""
