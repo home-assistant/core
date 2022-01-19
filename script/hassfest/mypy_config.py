@@ -61,7 +61,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.ozw.*",
     "homeassistant.components.philips_js.*",
     "homeassistant.components.pioneer.*",
-    "homeassistant.components.plaato.*",
     "homeassistant.components.plex.*",
     "homeassistant.components.plugwise.*",
     "homeassistant.components.plum_lightpad.*",
