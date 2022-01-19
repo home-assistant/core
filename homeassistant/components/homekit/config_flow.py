@@ -450,7 +450,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="include",
+            step_id="accessory",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ENTITIES, default=default_value): vol.In(
@@ -485,6 +485,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="include",
+            description_placeholders={"domains": domains},
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
@@ -543,6 +544,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="exclude",
+            description_placeholders={"domains": domains},
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
