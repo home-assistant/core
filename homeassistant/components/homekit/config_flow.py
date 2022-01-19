@@ -485,7 +485,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="include",
-            description_placeholders={"domains": domains},
+            description_placeholders={"domains": " ,".join(domains)},
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
@@ -544,7 +544,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="exclude",
-            description_placeholders={"domains": domains},
+            description_placeholders={"domains": " ,".join(domains)},
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
