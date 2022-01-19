@@ -480,18 +480,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode)
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
-            ent_reg = entity_registry.async_get(self.hass)
-            entity_cat_entities = set()
-            for entity_id in all_supported_entities:
-                if ent_reg_ent := ent_reg.async_get(entity_id):
-                    if ent_reg_ent.entity_category in ENTITY_CATEGORIES:
-                        entity_cat_entities.add(entity_id)
-            # Remove entity category entities since we will exclude them anyways
-            all_supported_entities = {
-                k: v
-                for k, v in all_supported_entities.items()
-                if k not in entity_cat_entities
-            }
+            if include_exclude_mode == MODE_EXCLUDE:
+                ent_reg = entity_registry.async_get(self.hass)
+                entity_cat_entities = set()
+                for entity_id in all_supported_entities:
+                    if ent_reg_ent := ent_reg.async_get(entity_id):
+                        if ent_reg_ent.entity_category in ENTITY_CATEGORIES:
+                            entity_cat_entities.add(entity_id)
+                # Remove entity category entities since we will exclude them anyways
+                all_supported_entities = {
+                    k: v
+                    for k, v in all_supported_entities.items()
+                    if k not in entity_cat_entities
+                }
             # Strip out entities that no longer exist to prevent error in the UI
             default_value = [
                 entity_id
