@@ -116,6 +116,7 @@ class PowerViewShadeSignalSensor(ShadeEntity, SensorEntity):
     """Representation of an shade signal sensor."""
 
     _attr_entity_registry_enabled_default = False
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
     def native_unit_of_measurement(self):
