@@ -76,6 +76,8 @@ class HWEnergySwitchEntity(CoordinatorEntity[DeviceResponseEntry], SwitchEntity)
 class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
     """Representation of the main power switch."""
 
+    _attr_device_class = SwitchDeviceClass.OUTLET
+
     def __init__(
         self, coordinator: HWEnergyDeviceUpdateCoordinator, entry: ConfigEntry
     ) -> None:
@@ -84,7 +86,6 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
         # Config attributes
         self._attr_name = entry.title
-        self._attr_device_class = DEVICE_CLASS_OUTLET
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -119,6 +120,8 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
     It disables any method that can turn of the relay.
     """
 
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
     def __init__(
         self, coordinator: HWEnergyDeviceUpdateCoordinator, entry: ConfigEntry
     ) -> None:
@@ -127,9 +130,6 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
 
         # Config attributes
         self._attr_name = f"{entry.title} Switch Lock"
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
-        self._attr_device_class = DEVICE_CLASS_SWITCH
-        self._attr_icon = "mdi:lock"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
