@@ -19,7 +19,9 @@ from homeassistant.util.json import (
     format_unserializable_data,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, REDACTED
+
+__all__ = ["REDACTED"]
 
 _LOGGER = logging.getLogger(__name__)
 
