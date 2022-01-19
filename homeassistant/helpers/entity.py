@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
+    ENTITY_CATEGORIES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -56,25 +57,6 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
-class EntityCategory(StrEnum):
-    """Category of an entity.
-
-    An entity with a category will:
-    - Not be exposed to cloud, Alexa, or Google Assistant components
-    - Not be included in indirect service calls to devices or areas
-    """
-
-    # Config: An entity which allows changing the configuration of a device
-    CONFIG = "config"
-
-    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
-    DIAGNOSTIC = "diagnostic"
-
-    # System: An entity which is not useful for the user to interact with
-    SYSTEM = "system"
-
-
-ENTITY_CATEGORIES: Final[set[str]] = set(EntityCategory)
 ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
 
 
@@ -198,6 +180,24 @@ class DeviceInfo(TypedDict, total=False):
     sw_version: str | None
     hw_version: str | None
     via_device: tuple[str, str]
+
+
+class EntityCategory(StrEnum):
+    """Category of an entity.
+
+    An entity with a category will:
+    - Not be exposed to cloud, Alexa, or Google Assistant components
+    - Not be included in indirect service calls to devices or areas
+    """
+
+    # Config: An entity which allows changing the configuration of a device
+    CONFIG = "config"
+
+    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
+    DIAGNOSTIC = "diagnostic"
+
+    # System: An entity which is not useful for the user to interact with
+    SYSTEM = "system"
 
 
 @dataclass
