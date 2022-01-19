@@ -818,6 +818,7 @@ omit =
     homeassistant/components/overkiz/binary_sensor.py
     homeassistant/components/overkiz/button.py
     homeassistant/components/overkiz/coordinator.py
+    homeassistant/components/overkiz/diagnostics.py
     homeassistant/components/overkiz/entity.py
     homeassistant/components/overkiz/executor.py
     homeassistant/components/overkiz/light.py
