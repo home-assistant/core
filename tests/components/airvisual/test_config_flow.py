@@ -72,75 +72,65 @@ async def test_duplicate_error(hass, config, config_entry, data):
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_api_key(hass):
-    """Test that an invalid API key throws an error."""
-    with patch(
-        "pyairvisual.air_quality.AirQuality.nearest_city",
-        side_effect=InvalidKeyError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_KEY: "abcde12345",
-                CONF_LATITUDE: 51.528308,
-                CONF_LONGITUDE: -0.3817765,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
 @pytest.mark.parametrize(
-    "exc, errors",
+    "data,exc,errors,integration_type",
     [
-        (NotFoundError, {CONF_CITY: "location_not_found"}),
-        (AirVisualError, {"base": "unknown"}),
-    ],
-)
-async def test_invalid_identifier_geography(hass, exc, errors):
-    """Test that an invalid geography throws an error."""
-    with patch("pyairvisual.air_quality.AirQuality.city", side_effect=exc):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"type": INTEGRATION_TYPE_GEOGRAPHY_NAME},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
+        (
+            {
                 CONF_API_KEY: "abcde12345",
                 CONF_CITY: "Beijing",
                 CONF_STATE: "Beijing",
                 CONF_COUNTRY: "China",
             },
+            InvalidKeyError,
+            {CONF_API_KEY: "invalid_api_key"},
+            INTEGRATION_TYPE_GEOGRAPHY_NAME,
+        ),
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_CITY: "Beijing",
+                CONF_STATE: "Beijing",
+                CONF_COUNTRY: "China",
+            },
+            NotFoundError,
+            {CONF_CITY: "location_not_found"},
+            INTEGRATION_TYPE_GEOGRAPHY_NAME,
+        ),
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_CITY: "Beijing",
+                CONF_STATE: "Beijing",
+                CONF_COUNTRY: "China",
+            },
+            AirVisualError,
+            {"base": "unknown"},
+            INTEGRATION_TYPE_GEOGRAPHY_NAME,
+        ),
+        (
+            {
+                CONF_IP_ADDRESS: "192.168.1.100",
+                CONF_PASSWORD: "my_password",
+            },
+            NodeProError,
+            {CONF_IP_ADDRESS: "cannot_connect"},
+            INTEGRATION_TYPE_NODE_PRO,
+        ),
+    ],
+)
+async def test_errors(hass, data, exc, errors, integration_type):
+    """Test that an exceptions show an error."""
+    with patch("pyairvisual.air_quality.AirQuality.city", side_effect=exc):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={"type": integration_type}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=data
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == errors
-
-
-async def test_invalid_identifier_node_pro(hass):
-    """Test that an invalid Node/Pro identifier shows an error."""
-    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
-
-    with patch(
-        "pyairvisual.node.NodeSamba.async_connect",
-        side_effect=NodeProError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=node_pro_conf
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
 @pytest.mark.parametrize(
