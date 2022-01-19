@@ -79,7 +79,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 f"IKEA gateway."
             ) from err
 
-        if not self.data:  # Start subscription
+        if not self.data or not self.last_update_success:  # Start subscription
             try:
                 cmd = self.device.observe(
                     callback=self._observe_update,
