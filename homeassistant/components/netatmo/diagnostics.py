@@ -1,13 +1,12 @@
 """Diagnostics support for Netatmo."""
 from __future__ import annotations
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_HANDLER, DOMAIN
 from .data_handler import NetatmoDataHandler
-
-REDACTED = "REDACTED"
 
 
 async def async_get_config_entry_diagnostics(
@@ -25,6 +24,10 @@ async def async_get_config_entry_diagnostics(
         },
         "data": data_handler.data,
     }
+
+    if "token" in diagnostics_data["info"]["data"]:
+        diagnostics_data["info"]["data"]["token"]["access_token"] = REDACTED
+        diagnostics_data["info"]["data"]["token"]["refresh_token"] = REDACTED
 
     if "webhook_id" in diagnostics_data["info"]["data"]:
         diagnostics_data["info"]["data"]["webhook_id"] = REDACTED

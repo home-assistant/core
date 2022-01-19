@@ -34,9 +34,9 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
         "data": {
             "auth_implementation": "cloud",
             "token": {
-                "access_token": "mock-access-token",
+                "access_token": "**REDACTED**",
                 "expires_in": 60,
-                "refresh_token": "mock-refresh-token",
+                "refresh_token": "**REDACTED**",
                 "scope": [
                     "read_station",
                     "read_camera",
@@ -52,7 +52,7 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
                 ],
                 "type": "Bearer",
             },
-            "webhook_id": "REDACTED",
+            "webhook_id": "**REDACTED**",
         },
         "disabled_by": None,
         "domain": "netatmo",
@@ -60,19 +60,19 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
             "weather_areas": {
                 "Home avg": {
                     "area_name": "Home avg",
-                    "lat_ne": "REDACTED",
-                    "lat_sw": "REDACTED",
-                    "lon_ne": "REDACTED",
-                    "lon_sw": "REDACTED",
+                    "lat_ne": "**REDACTED**",
+                    "lat_sw": "**REDACTED**",
+                    "lon_ne": "**REDACTED**",
+                    "lon_sw": "**REDACTED**",
                     "mode": "avg",
                     "show_on_map": False,
                 },
                 "Home max": {
                     "area_name": "Home max",
-                    "lat_ne": "REDACTED",
-                    "lat_sw": "REDACTED",
-                    "lon_ne": "REDACTED",
-                    "lon_sw": "REDACTED",
+                    "lat_ne": "**REDACTED**",
+                    "lat_sw": "**REDACTED**",
+                    "lon_ne": "**REDACTED**",
+                    "lon_sw": "**REDACTED**",
                     "mode": "max",
                     "show_on_map": True,
                 },
