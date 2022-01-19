@@ -16,6 +16,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -113,6 +115,13 @@ class WanIpSensor(SensorEntity):
             "Resolver": resolver,
             "Querytype": self.querytype,
         }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{hostname}_{ipv6}")},
+            manufacturer="DNS",
+            model=aiodns.__version__,
+            name=hostname,
+        )
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
