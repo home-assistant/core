@@ -45,6 +45,8 @@ class CloudClient(Interface):
         self.alexa_user_config = alexa_user_config
         self._alexa_config: alexa_config.CloudAlexaConfig | None = None
         self._google_config: google_config.CloudGoogleConfig | None = None
+        self._alexa_config_init_lock = asyncio.Lock()
+        self._google_config_init_lock = asyncio.Lock()
 
     @property
     def base_path(self) -> Path:
@@ -85,28 +87,44 @@ class CloudClient(Interface):
     async def get_alexa_config(self) -> alexa_config.CloudAlexaConfig:
         """Return Alexa config."""
         if self._alexa_config is None:
-            assert self.cloud is not None
+            async with self._alexa_config_init_lock:
+                if self._alexa_config is not None:
+                    return self._alexa_config
 
-            cloud_user = await self._prefs.get_cloud_user()
+                assert self.cloud is not None
 
-            self._alexa_config = alexa_config.CloudAlexaConfig(
-                self._hass, self.alexa_user_config, cloud_user, self._prefs, self.cloud
-            )
-            await self._alexa_config.async_initialize()
+                cloud_user = await self._prefs.get_cloud_user()
+
+                self._alexa_config = alexa_config.CloudAlexaConfig(
+                    self._hass,
+                    self.alexa_user_config,
+                    cloud_user,
+                    self._prefs,
+                    self.cloud,
+                )
+                await self._alexa_config.async_initialize()
 
         return self._alexa_config
 
     async def get_google_config(self) -> google_config.CloudGoogleConfig:
         """Return Google config."""
         if not self._google_config:
-            assert self.cloud is not None
+            async with self._google_config_init_lock:
+                if self._google_config is not None:
+                    return self._google_config
 
-            cloud_user = await self._prefs.get_cloud_user()
+                assert self.cloud is not None
 
-            self._google_config = google_config.CloudGoogleConfig(
-                self._hass, self.google_user_config, cloud_user, self._prefs, self.cloud
-            )
-            await self._google_config.async_initialize()
+                cloud_user = await self._prefs.get_cloud_user()
+
+                self._google_config = google_config.CloudGoogleConfig(
+                    self._hass,
+                    self.google_user_config,
+                    cloud_user,
+                    self._prefs,
+                    self.cloud,
+                )
+                await self._google_config.async_initialize()
 
         return self._google_config
 
