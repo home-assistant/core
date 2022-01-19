@@ -71,7 +71,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Discovery requires an additional check so we use
         # SSDP and DHCP to tell us to start it so it only
         # runs on networks where unifi devices are present.
-        await async_start_discovery(self.hass)
+        async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
     async def async_step_discovery(

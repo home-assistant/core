@@ -21,7 +21,8 @@ DISCOVERY = "discovery"
 DISCOVERY_INTERVAL = timedelta(minutes=60)
 
 
-async def async_start_discovery(hass: HomeAssistant) -> None:
+@callback
+def async_start_discovery(hass: HomeAssistant) -> None:
     """Start discovery."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     if DISCOVERY in domain_data:
@@ -29,7 +30,7 @@ async def async_start_discovery(hass: HomeAssistant) -> None:
     domain_data[DISCOVERY] = True
 
     async def _async_discovery(*_: Any) -> None:
-        async_trigger_discovery(hass, await async_discover_devices(hass))
+        async_trigger_discovery(hass, await async_discover_devices())
 
     # Do not block startup since discovery takes 31s or more
     asyncio.create_task(_async_discovery())
@@ -37,7 +38,7 @@ async def async_start_discovery(hass: HomeAssistant) -> None:
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
 
-async def async_discover_devices(hass: HomeAssistant) -> list[UnifiDevice]:
+async def async_discover_devices() -> list[UnifiDevice]:
     """Discover devices."""
     scanner = AIOUnifiScanner()
     devices = await scanner.async_scan()
