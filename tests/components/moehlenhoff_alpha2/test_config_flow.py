@@ -8,10 +8,17 @@ from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 
+async def mock_fetch_static_data(self):
+    """Mock moehlenhoff_alpha2.Alpha2Base._fetch_static_data."""
+    self.static_data = {"Devices": {"Device": {"ID": "Alpha2ID", "NAME": "Alpha2Name"}}}
+
+
 async def test_duplicate_error(hass: HomeAssistant):
     """Test that errors are shown when duplicates are added."""
     Alpha2Base.name = PropertyMock(return_value="fake_base_name")
-    with patch("moehlenhoff_alpha2.Alpha2Base._fetch_static_data", return_value=True):
+    with patch(
+        "moehlenhoff_alpha2.Alpha2Base._fetch_static_data", mock_fetch_static_data
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data={"host": "fake_host"}
         )
@@ -29,7 +36,9 @@ async def test_duplicate_error(hass: HomeAssistant):
 async def test_user(hass: HomeAssistant):
     """Test starting a flow by user."""
 
-    with patch("moehlenhoff_alpha2.Alpha2Base._fetch_static_data", return_value=True):
+    with patch(
+        "moehlenhoff_alpha2.Alpha2Base._fetch_static_data", mock_fetch_static_data
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
