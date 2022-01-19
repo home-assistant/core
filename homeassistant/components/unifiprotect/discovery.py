@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 from datetime import timedelta
 import logging
 from typing import Any
@@ -56,11 +57,6 @@ def async_trigger_discovery(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": config_entries.SOURCE_DISCOVERY},
-                    data={
-                        "ip_address": device.source_ip,
-                        "mac": device.hw_addr,
-                        "hostname": device.hostname,  # can be None
-                        "platform": device.platform,  # can be None
-                    },
+                    data=asdict(device),
                 )
             )
