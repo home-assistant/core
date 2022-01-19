@@ -67,7 +67,6 @@ async def test_duplicate_error(hass, config, config_entry, data):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
@@ -128,7 +127,6 @@ async def test_errors(hass, data, exc, errors, integration_type):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=data
         )
-
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == errors
 
@@ -200,8 +198,6 @@ async def test_migration(hass, config, config_entry, unique_id):
 )
 async def test_options_flow(hass, config_entry):
     """Test config flow options."""
-    config_entry.options = {CONF_SHOW_ON_MAP: True}
-
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ):

@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.airvisual.const import DOMAIN
+from homeassistant.const import CONF_SHOW_ON_MAP
 
 from tests.common import MockConfigEntry
 
@@ -9,7 +10,12 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config, unique_id):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        data=config,
+        options={CONF_SHOW_ON_MAP: True},
+    )
     entry.add_to_hass(hass)
     return entry
 
