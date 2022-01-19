@@ -37,11 +37,6 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         return self._api.data
 
     @property
-    def serial(self) -> str:
-        """Return the serial number of the device."""
-        return self.api.data.serial
-
-    @property
     def api(self):
         """Return the API pointer."""
         return self._api
