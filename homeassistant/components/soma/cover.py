@@ -37,15 +37,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Soma cover platform."""
 
+    api = hass.data[DOMAIN][API]
     devices = hass.data[DOMAIN][DEVICES]
     entities = []
 
     for device in devices:
         # Assume a shade device if the type is not present in the api response (Connect <2.2.6)
         if "type" in device and device["type"].lower() == "tilt":
-            entities.append(SomaTilt(device, hass.data[DOMAIN][API]))
+            entities.append(SomaTilt(device, api))
         else:
-            entities.append(SomaShade(device, hass.data[DOMAIN][API]))
+            entities.append(SomaShade(device, api))
 
     async_add_entities(entities, True)
 
