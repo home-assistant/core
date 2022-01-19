@@ -35,8 +35,10 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
             "auth_implementation": "cloud",
             "token": {
                 "access_token": "**REDACTED**",
+                "restricted_access_token": "**REDACTED**",
                 "expires_in": 60,
                 "refresh_token": "**REDACTED**",
+                "restricted_refresh_token": "**REDACTED**",
                 "scope": [
                     "read_station",
                     "read_camera",

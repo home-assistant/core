@@ -28,6 +28,8 @@ async def async_get_config_entry_diagnostics(
     if "token" in diagnostics_data["info"]["data"]:
         diagnostics_data["info"]["data"]["token"]["access_token"] = REDACTED
         diagnostics_data["info"]["data"]["token"]["refresh_token"] = REDACTED
+        diagnostics_data["info"]["data"]["token"]["restricted_access_token"] = REDACTED
+        diagnostics_data["info"]["data"]["token"]["restricted_refresh_token"] = REDACTED
 
     if "webhook_id" in diagnostics_data["info"]["data"]:
         diagnostics_data["info"]["data"]["webhook_id"] = REDACTED
