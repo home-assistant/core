@@ -24,15 +24,18 @@ from renson_endura_delta.field_enum import (
     NIGHT_POLLUTION_FIELD,
     NIGHTTIME_FIELD,
     OUTDOOR_TEMP_FIELD,
+    FieldEnum,
 )
-import renson_endura_delta.renson as renson
+from renson_endura_delta.general_enum import DataType
+from renson_endura_delta.renson import RensonVentilation
 import voluptuous as vol
 
-from homeassistant.components.renson.renson_descriptions import (
-    RensonSensorEntityDescription,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.components.renson.renson_sensor import RensonSensor
-from homeassistant.components.sensor import PLATFORM_SCHEMA, STATE_CLASS_MEASUREMENT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, DEVICE_CLASS_HUMIDITY, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -45,6 +48,91 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST, default=[]): cv.string}
 )
+
+
+class RensonSensorEntityDescription(SensorEntityDescription):
+    """Description of sensor."""
+
+    def __init__(
+        self,
+        key: str,
+        name: str,
+        field: FieldEnum,
+        raw_format: bool,
+        state_class: str = None,
+        device_class: str = None,
+        native_unit_of_measurement: str = None,
+        entity_registry_enabled_default: bool = True,
+    ) -> None:
+        """Initialize class."""
+        super().__init__(
+            key=key,
+            state_class=state_class,
+            device_class=device_class,
+            native_unit_of_measurement=native_unit_of_measurement,
+            entity_registry_enabled_default=entity_registry_enabled_default,
+        )
+
+        self.name = name
+        self.field = field
+        self.raw_format = raw_format
+
+
+class RensonSensor(SensorEntity):
+    """Get a sensor data from the Renson API and store it in the state of the class."""
+
+    def __init__(
+        self,
+        description: RensonSensorEntityDescription,
+        renson_api: RensonVentilation,
+    ) -> None:
+        """Initialize class."""
+        super().__init__()
+
+        self._state = None
+        self.entity_description = description
+        self.field = description.field
+        self.data_type = description.field.field_type
+        self.renson_api = renson_api
+        self.raw_format = description.raw_format
+
+    @property
+    def state(self):
+        """Lookup the state of the sensor and save it."""
+        return self._state
+
+    def update(self):
+        """Save state of sensor."""
+        if self.raw_format:
+            self._state = self.renson_api.get_data_string(self.field)
+        else:
+            if self.data_type == DataType.NUMERIC:
+                self._state = self.renson_api.get_data_numeric(self.field)
+            elif self.data_type == DataType.STRING:
+                self._state = self.renson_api.get_data_string(self.field)
+
+            elif self.data_type == DataType.LEVEL:
+                self._state = self.renson_api.get_data_level(self.field).value
+
+            elif self.data_type == DataType.BOOLEAN:
+                self._state = self.renson_api.get_data_boolean(self.field)
+
+            elif self.data_type == DataType.QUALITY:
+                self._state = self.renson_api.get_data_quality(self.field).value
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities, discovery_info=None
+):
+    """Call the Renson integration to setup."""
+
+    renson_api: RensonVentilation = hass.data[DOMAIN][config.entry_id]
+
+    entities: list = []
+    for description in sensor_descriptions:
+        entities.append(RensonSensor(description, renson_api))
+    async_add_entities(entities)
+
 
 sensor_descriptions = [
     RensonSensorEntityDescription(
@@ -237,16 +325,3 @@ sensor_descriptions = [
         native_unit_of_measurement="days",
     ),
 ]
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities, discovery_info=None
-):
-    """Call the Renson integration to setup."""
-
-    renson_api: renson.RensonVentilation = hass.data[DOMAIN][config.entry_id]
-
-    entities: list = []
-    for description in sensor_descriptions:
-        entities.append(RensonSensor(description, renson_api))
-    async_add_entities(entities)
