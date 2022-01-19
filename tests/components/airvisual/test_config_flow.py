@@ -131,7 +131,7 @@ async def test_errors(hass, data, exc, errors, integration_type):
 
 
 @pytest.mark.parametrize(
-    "config,unique_id",
+    "config,config_entry_version,unique_id",
     [
         (
             {
@@ -145,6 +145,7 @@ async def test_errors(hass, data, exc, errors, integration_type):
                     },
                 ],
             },
+            1,
             "abcde12345",
         )
     ],
@@ -329,9 +330,9 @@ async def test_step_reauth(hass, config_entry):
 
     new_api_key = "defgh67890"
 
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.air_quality.AirQuality.nearest_city", return_value=True):
+    with patch("homeassistant.config_entries.ConfigEntries.async_reload"), patch(
+        "pyairvisual.air_quality.AirQuality.nearest_city"
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: new_api_key}
         )
