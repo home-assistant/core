@@ -17,8 +17,6 @@ from . import config_per_platform
 from .entity_platform import EntityPlatform, async_get_platforms
 from .typing import ConfigType
 
-# mypy: disallow-any-generics
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -79,8 +77,8 @@ async def _resetup_platform(
     if hasattr(component, "async_reset_platform"):
         # If the integration has its own way to reset
         # use this method.
-        await component.async_reset_platform(hass, integration_name)  # type: ignore
-        await component.async_setup(hass, root_config)  # type: ignore
+        await component.async_reset_platform(hass, integration_name)
+        await component.async_setup(hass, root_config)
         return
 
     # If it's an entity platform, we use the entity_platform

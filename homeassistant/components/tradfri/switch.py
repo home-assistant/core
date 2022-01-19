@@ -43,6 +43,7 @@ class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
         """Initialize a switch."""
         super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
+        self._refresh(device, write_ha=False)
 
     def _refresh(self, device: Command, write_ha: bool = True) -> None:
         """Refresh the switch data."""

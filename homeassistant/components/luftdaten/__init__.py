@@ -1,4 +1,8 @@
-"""Support for Luftdaten stations."""
+"""Support for Sensor.Community stations.
+
+Sensor.Community was previously called Luftdaten, hence the domain differs from
+the integration name.
+"""
 from __future__ import annotations
 
 import logging
@@ -23,7 +27,7 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Luftdaten as config entry."""
+    """Set up Sensor.Community as config entry."""
 
     # For backwards compat, set unique ID
     if entry.unique_id is None:
@@ -31,26 +35,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, unique_id=str(entry.data[CONF_SENSOR_ID])
         )
 
-    luftdaten = Luftdaten(entry.data[CONF_SENSOR_ID])
+    sensor_community = Luftdaten(entry.data[CONF_SENSOR_ID])
 
     async def async_update() -> dict[str, float | int]:
         """Update sensor/binary sensor data."""
         try:
-            await luftdaten.get_data()
+            await sensor_community.get_data()
         except LuftdatenError as err:
-            raise UpdateFailed("Unable to retrieve data from luftdaten.info") from err
+            raise UpdateFailed("Unable to retrieve data from Sensor.Community") from err
 
-        if not luftdaten.values:
-            raise UpdateFailed("Did not receive sensor data from luftdaten.info")
+        if not sensor_community.values:
+            raise UpdateFailed("Did not receive sensor data from Sensor.Community")
 
-        data: dict[str, float | int] = luftdaten.values
-        data.update(luftdaten.meta)
+        data: dict[str, float | int] = sensor_community.values
+        data.update(sensor_community.meta)
         return data
 
     coordinator: DataUpdateCoordinator[dict[Any, Any]] = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"{DOMAIN}_{luftdaten.sensor_id}",
+        name=f"{DOMAIN}_{sensor_community.sensor_id}",
         update_interval=DEFAULT_SCAN_INTERVAL,
         update_method=async_update,
     )
@@ -63,8 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload an Luftdaten config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    """Unload an Sensor.Community config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         del hass.data[DOMAIN][entry.entry_id]
     return unload_ok

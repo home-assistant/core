@@ -45,11 +45,11 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
-    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -57,6 +57,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
@@ -121,7 +122,11 @@ def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
     return CastDevice(info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Cast from a config entry."""
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
 
@@ -300,8 +305,11 @@ class CastDevice(MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
+                # pylint: disable=[import-outside-toplevel]
+                from homeassistant.components import tts
+
                 with suppress(KeyError):  # base_url not configured
-                    tts_base_url = self.hass.components.tts.get_base_url(self.hass)
+                    tts_base_url = tts.get_base_url(self.hass)
 
             with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
@@ -571,7 +579,7 @@ class CastDevice(MediaPlayerEntity):
                 return STATE_PLAYING
             return STATE_IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
-            return STATE_OFF
+            return STATE_IDLE
         return None
 
     @property

@@ -27,7 +27,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Anfitri\u00f3n"
+                    "host": "Host"
                 },
                 "description": "Configura tu Bosch Smart Home Controller para permitir la supervisi\u00f3n y el control con Home Assistant.",
                 "title": "Par\u00e1metros de autenticaci\u00f3n SHC"

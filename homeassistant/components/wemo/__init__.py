@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 import logging
-from typing import Any, Optional, Tuple
+from typing import Optional
 
 import pywemo
 import voluptuous as vol
@@ -42,7 +43,7 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-HostPortTuple = Tuple[str, Optional[int]]
+HostPortTuple = tuple[str, Optional[int]]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -197,7 +198,9 @@ class WemoDiscovery:
         self._scan_delay = 0
         self._static_config = static_config
 
-    async def async_discover_and_schedule(self, *_: tuple[Any]) -> None:
+    async def async_discover_and_schedule(
+        self, event_time: datetime | None = None
+    ) -> None:
         """Periodically scan the network looking for WeMo devices."""
         _LOGGER.debug("Scanning network for WeMo devices")
         try:

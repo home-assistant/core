@@ -1,4 +1,6 @@
 """The tests for Z-Wave JS device actions."""
+from unittest.mock import patch
+
 import pytest
 import voluptuous_serialize
 from zwave_js_server.client import Client
@@ -10,12 +12,13 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zwave_js import DOMAIN, device_action
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations, async_mock_service
+from tests.common import async_get_device_automations
 
 
 async def test_get_actions(
@@ -92,8 +95,130 @@ async def test_get_actions_meter(
     assert len(filtered_actions) > 0
 
 
-async def test_action(hass: HomeAssistant) -> None:
-    """Test for turn_on and turn_off actions."""
+async def test_actions(
+    hass: HomeAssistant,
+    client: Client,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test actions."""
+    node = climate_radio_thermostat_ct100_plus
+    device_id = get_device_id(client, node)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({device_id})
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_refresh_value",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "refresh_value",
+                        "device_id": device.id,
+                        "entity_id": "climate.z_wave_thermostat",
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_ping",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "ping",
+                        "device_id": device.id,
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_value",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "set_value",
+                        "device_id": device.id,
+                        "command_class": 112,
+                        "property": 1,
+                        "value": 1,
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_config_parameter",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "set_config_parameter",
+                        "device_id": device.id,
+                        "parameter": 1,
+                        "bitmask": None,
+                        "subtype": "2-112-0-3 (Beeper)",
+                        "value": 1,
+                    },
+                },
+            ]
+        },
+    )
+
+    with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
+        hass.bus.async_fire("test_event_refresh_value")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 1
+        assert args[0].value_id == "13-64-1-mode"
+
+    with patch("zwave_js_server.model.node.Node.async_ping") as mock_call:
+        hass.bus.async_fire("test_event_ping")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 0
+
+    with patch("zwave_js_server.model.node.Node.async_set_value") as mock_call:
+        hass.bus.async_fire("test_event_set_value")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 2
+        assert args[0] == "13-112-0-1"
+        assert args[1] == 1
+
+    with patch(
+        "homeassistant.components.zwave_js.services.async_set_config_parameter"
+    ) as mock_call:
+        hass.bus.async_fire("test_event_set_config_parameter")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 3
+        assert args[0].node_id == 13
+        assert args[1] == 1
+        assert args[2] == 1
+
+
+async def test_lock_actions(
+    hass: HomeAssistant,
+    client: Client,
+    lock_schlage_be469: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test actions for locks."""
+    node = lock_schlage_be469
+    device_id = get_device_id(client, node)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({device_id})
+    assert device
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -107,7 +232,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "type": "clear_lock_usercode",
-                        "device_id": "fake",
+                        "device_id": device.id,
                         "entity_id": "lock.touchscreen_deadbolt",
                         "code_slot": 1,
                     },
@@ -120,97 +245,80 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "type": "set_lock_usercode",
-                        "device_id": "fake",
+                        "device_id": device.id,
                         "entity_id": "lock.touchscreen_deadbolt",
                         "code_slot": 1,
                         "usercode": "1234",
-                    },
-                },
-                {
-                    "trigger": {
-                        "platform": "event",
-                        "event_type": "test_event_refresh_value",
-                    },
-                    "action": {
-                        "domain": DOMAIN,
-                        "type": "refresh_value",
-                        "device_id": "fake",
-                        "entity_id": "lock.touchscreen_deadbolt",
-                    },
-                },
-                {
-                    "trigger": {
-                        "platform": "event",
-                        "event_type": "test_event_ping",
-                    },
-                    "action": {
-                        "domain": DOMAIN,
-                        "type": "ping",
-                        "device_id": "fake",
-                    },
-                },
-                {
-                    "trigger": {
-                        "platform": "event",
-                        "event_type": "test_event_set_value",
-                    },
-                    "action": {
-                        "domain": DOMAIN,
-                        "type": "set_value",
-                        "device_id": "fake",
-                        "command_class": 112,
-                        "property": "test",
-                        "value": 1,
-                    },
-                },
-                {
-                    "trigger": {
-                        "platform": "event",
-                        "event_type": "test_event_set_config_parameter",
-                    },
-                    "action": {
-                        "domain": DOMAIN,
-                        "type": "set_config_parameter",
-                        "device_id": "fake",
-                        "parameter": 3,
-                        "bitmask": None,
-                        "subtype": "2-112-0-3 (Beeper)",
-                        "value": 255,
                     },
                 },
             ]
         },
     )
 
-    clear_lock_usercode = async_mock_service(hass, "zwave_js", "clear_lock_usercode")
-    hass.bus.async_fire("test_event_clear_lock_usercode")
-    await hass.async_block_till_done()
-    assert len(clear_lock_usercode) == 1
+    with patch("homeassistant.components.zwave_js.lock.clear_usercode") as mock_call:
+        hass.bus.async_fire("test_event_clear_lock_usercode")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 2
+        assert args[0].node_id == node.node_id
+        assert args[1] == 1
 
-    set_lock_usercode = async_mock_service(hass, "zwave_js", "set_lock_usercode")
-    hass.bus.async_fire("test_event_set_lock_usercode")
-    await hass.async_block_till_done()
-    assert len(set_lock_usercode) == 1
+    with patch("homeassistant.components.zwave_js.lock.set_usercode") as mock_call:
+        hass.bus.async_fire("test_event_set_lock_usercode")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 3
+        assert args[0].node_id == node.node_id
+        assert args[1] == 1
+        assert args[2] == "1234"
 
-    refresh_value = async_mock_service(hass, "zwave_js", "refresh_value")
-    hass.bus.async_fire("test_event_refresh_value")
-    await hass.async_block_till_done()
-    assert len(refresh_value) == 1
 
-    ping = async_mock_service(hass, "zwave_js", "ping")
-    hass.bus.async_fire("test_event_ping")
-    await hass.async_block_till_done()
-    assert len(ping) == 1
+async def test_reset_meter_action(
+    hass: HomeAssistant,
+    client: Client,
+    aeon_smart_switch_6: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test reset_meter action."""
+    node = aeon_smart_switch_6
+    device_id = get_device_id(client, node)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({device_id})
+    assert device
 
-    set_value = async_mock_service(hass, "zwave_js", "set_value")
-    hass.bus.async_fire("test_event_set_value")
-    await hass.async_block_till_done()
-    assert len(set_value) == 1
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_reset_meter",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "reset_meter",
+                        "device_id": device.id,
+                        "entity_id": "sensor.smart_switch_6_electric_consumed_kwh",
+                    },
+                },
+            ]
+        },
+    )
 
-    set_config_parameter = async_mock_service(hass, "zwave_js", "set_config_parameter")
-    hass.bus.async_fire("test_event_set_config_parameter")
-    await hass.async_block_till_done()
-    assert len(set_config_parameter) == 1
+    with patch(
+        "zwave_js_server.model.endpoint.Endpoint.async_invoke_cc_api"
+    ) as mock_call:
+        hass.bus.async_fire("test_event_reset_meter")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 2
+        assert args[0] == CommandClass.METER
+        assert args[1] == "reset"
 
 
 async def test_get_action_capabilities(
@@ -266,7 +374,28 @@ async def test_get_action_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    cc_options = [(cc.value, cc.name) for cc in CommandClass]
+    cc_options = [
+        (133, "Association"),
+        (89, "Association Group Information"),
+        (128, "Battery"),
+        (129, "Clock"),
+        (112, "Configuration"),
+        (90, "Device Reset Locally"),
+        (122, "Firmware Update Meta Data"),
+        (135, "Indicator"),
+        (114, "Manufacturer Specific"),
+        (96, "Multi Channel"),
+        (142, "Multi Channel Association"),
+        (49, "Multilevel Sensor"),
+        (115, "Powerlevel"),
+        (68, "Thermostat Fan Mode"),
+        (69, "Thermostat Fan State"),
+        (64, "Thermostat Mode"),
+        (66, "Thermostat Operating State"),
+        (67, "Thermostat Setpoint"),
+        (134, "Version"),
+        (94, "Z-Wave Plus Info"),
+    ]
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -459,4 +588,26 @@ async def test_failure_scenarios(
             hass, {"type": "failed.test", "device_id": device.id}
         )
         == {}
+    )
+
+
+async def test_unavailable_entity_actions(
+    hass: HomeAssistant,
+    client: Client,
+    lock_schlage_be469: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test unavailable entities are not included in actions list."""
+    entity_id_unavailable = "binary_sensor.touchscreen_deadbolt_home_security_intrusion"
+    hass.states.async_set(entity_id_unavailable, STATE_UNAVAILABLE, force_update=True)
+    await hass.async_block_till_done()
+    node = lock_schlage_be469
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({get_device_id(client, node)})
+    assert device
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device.id
+    )
+    assert not any(
+        action.get("entity_id") == entity_id_unavailable for action in actions
     )

@@ -8,7 +8,6 @@ from typing import cast
 
 from pywemo.exceptions import ActionException
 
-from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class WemoEntity(CoordinatorEntity):
     """Common methods for Wemo entities."""
+
+    coordinator: DeviceCoordinator  # Override CoordinatorEntity.coordinator type.
 
     # Most pyWeMo devices are associated with a single Home Assistant entity. When
     # that is not the case, name_suffix & unique_id_suffix can be used to provide
@@ -31,7 +32,6 @@ class WemoEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.wemo = coordinator.wemo
         self._device_info = coordinator.device_info
-        self._available = True
 
     @property
     def name_suffix(self) -> str | None:
@@ -45,11 +45,6 @@ class WemoEntity(CoordinatorEntity):
         if suffix := self.name_suffix:
             return f"{wemo_name} {suffix}"
         return wemo_name
-
-    @property
-    def available(self) -> bool:
-        """Return true if the device is available."""
-        return super().available and self._available
 
     @property
     def unique_id_suffix(self) -> str | None:
@@ -71,20 +66,23 @@ class WemoEntity(CoordinatorEntity):
         """Return the device info."""
         return self._device_info
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._available = True
-        super()._handle_coordinator_update()
-
     @contextlib.contextmanager
-    def _wemo_exception_handler(self, message: str) -> Generator[None, None, None]:
-        """Wrap device calls to set `_available` when wemo exceptions happen."""
+    def _wemo_call_wrapper(self, message: str) -> Generator[None, None, None]:
+        """Wrap calls to the device that change its state.
+
+        1. Takes care of making available=False when communications with the
+           device fails.
+        2. Ensures all entities sharing the same coordinator are aware of
+           updates to the device state.
+        """
         try:
             yield
         except ActionException as err:
             _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
-            self._available = False
+            self.coordinator.last_exception = err
+            self.coordinator.last_update_success = False  # Used for self.available.
+        finally:
+            self.hass.add_job(self.coordinator.async_update_listeners)
 
 
 class WemoBinaryStateEntity(WemoEntity):

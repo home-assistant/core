@@ -38,13 +38,16 @@
             "zone_details": {
                 "data": {
                     "zone_name": "Nombre de zona",
-                    "zone_rfid": "Serie RF"
-                }
+                    "zone_rfid": "Serie RF",
+                    "zone_type": "Tipo de zona"
+                },
+                "title": "Configurar AlarmDecoder"
             },
             "zone_select": {
                 "data": {
                     "zone_number": "N\u00famero de zona"
-                }
+                },
+                "title": "Configurar AlarmDecoder"
             }
         }
     }

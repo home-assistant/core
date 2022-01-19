@@ -37,6 +37,9 @@ class BinarySensorDeviceClass(StrEnum):
     # On means charging, Off means not charging
     BATTERY_CHARGING = "battery_charging"
 
+    # On means carbon monoxide detected, Off means no carbon monoxide (clear)
+    CO = "carbon_monoxide"
+
     # On means cold, Off means normal
     COLD = "cold"
 
@@ -120,6 +123,7 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
 DEVICE_CLASS_BATTERY = BinarySensorDeviceClass.BATTERY.value
 DEVICE_CLASS_BATTERY_CHARGING = BinarySensorDeviceClass.BATTERY_CHARGING.value
+DEVICE_CLASS_CO = BinarySensorDeviceClass.CO.value
 DEVICE_CLASS_COLD = BinarySensorDeviceClass.COLD.value
 DEVICE_CLASS_CONNECTIVITY = BinarySensorDeviceClass.CONNECTIVITY.value
 DEVICE_CLASS_DOOR = BinarySensorDeviceClass.DOOR.value

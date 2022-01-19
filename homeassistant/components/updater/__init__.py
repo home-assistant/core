@@ -7,10 +7,12 @@ import async_timeout
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.const import __version__ as current_version
+from homeassistant.const import Platform, __version__ as current_version
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery, update_coordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ class Updater:
         self.newest_version = newest_version
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the updater component."""
     conf = config.get(DOMAIN, {})
 
@@ -115,7 +117,7 @@ async def async_setup(hass, config):
     asyncio.create_task(coordinator.async_refresh())
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
     )
 
     return True

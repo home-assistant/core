@@ -24,7 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -234,7 +234,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
     rfx_object.event_callback = lambda event: hass.add_job(async_handle_receive, event)
 
-    def send(call):
+    def send(call: ServiceCall) -> None:
         event = call.data[ATTR_EVENT]
         rfx_object.transport.send(event)
 

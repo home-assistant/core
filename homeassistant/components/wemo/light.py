@@ -169,7 +169,7 @@ class WemoLight(WemoEntity, LightEntity):
             "force_update": False,
         }
 
-        with self._wemo_exception_handler("turn on"):
+        with self._wemo_call_wrapper("turn on"):
             if xy_color is not None:
                 self.light.set_color(xy_color, transition=transition_time)
 
@@ -180,16 +180,12 @@ class WemoLight(WemoEntity, LightEntity):
 
             self.light.turn_on(**turn_on_kwargs)
 
-        self.schedule_update_ha_state()
-
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
-        with self._wemo_exception_handler("turn off"):
+        with self._wemo_call_wrapper("turn off"):
             self.light.turn_off(transition=transition_time)
-
-        self.schedule_update_ha_state()
 
 
 class WemoDimmer(WemoBinaryStateEntity, LightEntity):
@@ -213,17 +209,13 @@ class WemoDimmer(WemoBinaryStateEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = int((brightness / 255) * 100)
-            with self._wemo_exception_handler("set brightness"):
+            with self._wemo_call_wrapper("set brightness"):
                 self.wemo.set_brightness(brightness)
         else:
-            with self._wemo_exception_handler("turn on"):
+            with self._wemo_call_wrapper("turn on"):
                 self.wemo.on()
-
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
-        with self._wemo_exception_handler("turn off"):
+        with self._wemo_call_wrapper("turn off"):
             self.wemo.off()
-
-        self.schedule_update_ha_state()
