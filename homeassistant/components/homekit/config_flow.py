@@ -486,12 +486,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if ent_reg_ent := ent_reg.async_get(entity_id):
                     if ent_reg_ent.entity_category in ENTITY_CATEGORIES:
                         entity_cat_entities.add(entity_id)
+            all_supported_entities = {
+                k: v
+                for k, v in all_supported_entities.items()
+                if k not in entity_cat_entities
+            }
             # Strip out entities that no longer exist to prevent error in the UI
             default_value = [
                 entity_id
                 for entity_id in entities
                 if entity_id in all_supported_entities
-                and entity_id not in entity_cat_entities
             ]
 
         data_schema[
