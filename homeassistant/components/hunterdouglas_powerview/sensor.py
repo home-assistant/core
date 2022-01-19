@@ -71,21 +71,13 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
     def name(self):
         """Name of the shade battery."""
         return f"{self._shade_name} Battery"
-
-    @property
-    def device_class(self):
-        """Shade battery Class."""
-        return SensorDeviceClass.BATTERY
 
     @property
     def unique_id(self):
@@ -117,16 +109,12 @@ class PowerViewShadeSignalSensor(ShadeEntity, SensorEntity):
 
     _attr_entity_registry_enabled_default = False
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
 
     @property
     def name(self):
         """Name of the shade signal sensor."""
         return f"{self._shade_name} Signal"
-
-    @property
-    def device_class(self):
-        """Shade signal sensor Class."""
-        return DEVICE_CLASS_SIGNAL_STRENGTH
 
     @property
     def unique_id(self):

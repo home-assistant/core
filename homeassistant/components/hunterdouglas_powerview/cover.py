@@ -57,6 +57,9 @@ TRANSITION_COMPLETE_DURATION = 30
 
 PARALLEL_UPDATES = 1
 
+# this equates to 0.75/100 in terms of blind position
+SHADE_CLOSED_POSITION = ((MIN_POSITION + (MAX_POSITION / 100)) / 100) * 75
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -174,12 +177,10 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         # so we find 1 percent of the maximum position, add that to the minimum in case of future change
         # then we find 75% of that number (491.51) to use as the bottom of the blind
         # this has more effect on top/down shades, but also works fine with normal shades
-        one_percent = MIN_POSITION + (MAX_POSITION / 100)
-        treat_as_bottom = (one_percent / 100) * 75
         cover_position = self._current_cover_position_bottom
         if self._motor in ["Top"]:
             cover_position = self._current_cover_position_top
-        return cover_position <= treat_as_bottom
+        return cover_position <= SHADE_CLOSED_POSITION
 
     @property
     def is_opening(self):
