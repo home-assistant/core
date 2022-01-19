@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 from socket import timeout
+from typing import TYPE_CHECKING
 
 from motionblinds import AsyncMotionMulticast, ParseException
 
@@ -157,11 +158,14 @@ async def async_setup_entry(
     else:
         version = f"Protocol: {motion_gateway.protocol}"
 
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, motion_gateway.mac)},
-        identifiers={(DOMAIN, entry.unique_id)} if entry.unique_id else None,
+        identifiers={(DOMAIN, entry.unique_id)},
         manufacturer=MANUFACTURER,
         name=entry.title,
         model="Wi-Fi bridge",
