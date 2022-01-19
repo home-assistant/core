@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COORDINATOR, DOMAIN, DeviceResponseEntry
+from .const import COORDINATOR, DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 
@@ -26,21 +26,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
 
-    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
-
-    if coordinator.api.state:
+    if hass.data[DOMAIN][entry.entry_id][COORDINATOR].api.state:
         async_add_entities(
             [
-                HWEnergyMainSwitchEntity(coordinator, entry),
-                HWEnergySwitchLockEntity(coordinator, entry),
+                HWEnergyMainSwitchEntity(
+                    hass.data[DOMAIN][entry.entry_id][COORDINATOR], entry
+                ),
+                HWEnergySwitchLockEntity(
+                    hass.data[DOMAIN][entry.entry_id][COORDINATOR], entry
+                ),
             ]
         )
 
 
-class HWEnergySwitchEntity(CoordinatorEntity[DeviceResponseEntry], SwitchEntity):
+class HWEnergySwitchEntity(CoordinatorEntity, SwitchEntity):
     """Representation switchable entity."""
+
+    coordinator: HWEnergyDeviceUpdateCoordinator
 
     def __init__(
         self,
@@ -62,15 +64,10 @@ class HWEnergySwitchEntity(CoordinatorEntity[DeviceResponseEntry], SwitchEntity)
         return {
             "name": self.entry.title,
             "manufacturer": "HomeWizard",
-            "sw_version": self.data["device"].firmware_version,
-            "model": self.data["device"].product_type,
-            "identifiers": {(DOMAIN, self.data["device"].serial)},
+            "sw_version": self.coordinator.data["device"].firmware_version,
+            "model": self.coordinator.data["device"].product_type,
+            "identifiers": {(DOMAIN, self.coordinator.data["device"].serial)},
         }
-
-    @property
-    def data(self) -> DeviceResponseEntry:
-        """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
 
 
 class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
