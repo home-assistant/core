@@ -1185,6 +1185,7 @@ async def test_volume_mute(hass):
                         service_data=service_data,
                         blocking=True,
                     )
+                    assert mute_volume.called
 
 
 async def test_connection_closed_on_ha_stop(hass):
