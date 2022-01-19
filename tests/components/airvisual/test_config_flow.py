@@ -7,6 +7,7 @@ from pyairvisual.errors import (
     NodeProError,
     NotFoundError,
 )
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airvisual.const import (
@@ -34,48 +35,48 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-async def test_duplicate_error(hass):
+@pytest.mark.parametrize(
+    "config,data,unique_id",
+    [
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_LATITUDE: 51.528308,
+                CONF_LONGITUDE: -0.3817765,
+            },
+            {
+                "type": INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+            },
+            "51.528308, -0.3817765",
+        ),
+        (
+            {
+                CONF_IP_ADDRESS: "192.168.1.100",
+                CONF_PASSWORD: "12345",
+            },
+            {
+                "type": INTEGRATION_TYPE_NODE_PRO,
+            },
+            "192.168.1.100",
+        ),
+    ],
+)
+async def test_duplicate_error(hass, config, data, unique_id):
     """Test that errors are shown when duplicate entries are added."""
-    geography_conf = {
-        CONF_API_KEY: "abcde12345",
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
-    }
-
-    MockConfigEntry(
-        domain=DOMAIN, unique_id="51.528308, -0.3817765", data=geography_conf
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
+        DOMAIN, context={"source": SOURCE_USER}, data=data
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=geography_conf
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "12345"}
-
-    MockConfigEntry(
-        domain=DOMAIN, unique_id="192.168.1.100", data=node_pro_conf
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=node_pro_conf
+        result["flow_id"], user_input=config
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_identifier_geography_api_key(hass):
+async def test_invalid_api_key(hass):
     """Test that an invalid API key throws an error."""
     with patch(
         "pyairvisual.air_quality.AirQuality.nearest_city",
@@ -99,12 +100,16 @@ async def test_invalid_identifier_geography_api_key(hass):
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
-async def test_invalid_identifier_geography_name(hass):
-    """Test that an invalid location name throws an error."""
-    with patch(
-        "pyairvisual.air_quality.AirQuality.city",
-        side_effect=NotFoundError,
-    ):
+@pytest.mark.parametrize(
+    "exc, errors",
+    [
+        (NotFoundError, {CONF_CITY: "location_not_found"}),
+        (AirVisualError, {"base": "unknown"}),
+    ],
+)
+async def test_invalid_identifier_geography(hass, exc, errors):
+    """Test that an invalid geography throws an error."""
+    with patch("pyairvisual.air_quality.AirQuality.city", side_effect=exc):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -121,32 +126,7 @@ async def test_invalid_identifier_geography_name(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_CITY: "location_not_found"}
-
-
-async def test_invalid_identifier_geography_unknown(hass):
-    """Test that an unknown identifier issue throws an error."""
-    with patch(
-        "pyairvisual.air_quality.AirQuality.city",
-        side_effect=AirVisualError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"type": INTEGRATION_TYPE_GEOGRAPHY_NAME},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_KEY: "abcde12345",
-                CONF_CITY: "Beijing",
-                CONF_STATE: "Beijing",
-                CONF_COUNTRY: "China",
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unknown"}
+        assert result["errors"] == errors
 
 
 async def test_invalid_identifier_node_pro(hass):
