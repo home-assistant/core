@@ -38,21 +38,18 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, init_recorder_component, mock_platform
+from tests.common import init_recorder_component, mock_platform
 from tests.components.recorder.common import trigger_db_commit
 
 EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
 
 @pytest.fixture
-def hass_():
+def hass_(hass):
     """Set up things to be run when tests are started."""
-    hass = get_test_home_assistant()
     init_recorder_component(hass)  # Force an in memory DB
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
-        assert setup_component(hass, logbook.DOMAIN, EMPTY_CONFIG)
-        yield hass
-    hass.stop()
+    assert setup_component(hass, logbook.DOMAIN, EMPTY_CONFIG)
+    return hass
 
 
 def test_service_call_create_logbook_entry(hass_):
