@@ -110,7 +110,7 @@ class SomaEntity(Entity):
         """Log device unreachable."""
         logger.error("Unable to reach device %s (%s)", name, msg)
 
-    def set_position(self, position: int):
+    def set_position(self, position: int) -> None:
         """Set the current device position."""
         self.current_position = position
         self.schedule_update_ha_state()
