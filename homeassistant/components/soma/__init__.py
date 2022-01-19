@@ -1,9 +1,10 @@
 """Support for Soma Smartshades."""
-from api.soma_api import SomaApi
-import voluptuous as vol
 import logging
 
+from api.soma_api import SomaApi
 from requests import RequestException
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
