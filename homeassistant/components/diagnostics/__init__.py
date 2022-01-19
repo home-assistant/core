@@ -35,7 +35,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     websocket_api.async_register_command(hass, handle_info)
     hass.http.register_view(DownloadDiagnosticsView)
-    hass.http.register_view(DownloadDiagnosticsSubConfigEntryView)
 
     return True
 
@@ -91,10 +90,16 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     """Download diagnostics view."""
 
     url = "/api/diagnostics/{d_type}/{d_id}"
+    extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
     async def get(  # pylint: disable=no-self-use
-        self, request: web.Request, d_type: str, d_id: str
+        self,
+        request: web.Request,
+        d_type: str,
+        d_id: str,
+        sub_type: str | None = None,
+        sub_id: str | None = None,
     ) -> web.Response:
         """Download diagnostics."""
         try:
@@ -113,8 +118,30 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if info is None or info[d_type.value] is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        data = await info[d_type.value](hass, config_entry)
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
+
+        if sub_type is None:
+            filename = f"{d_type}-{filename}"
+            data = await info[d_type.value](hass, config_entry)
+        else:
+            try:
+                sub_type = DiagnosticsSubType(sub_type)
+            except ValueError:
+                return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+            dev_reg = async_get(hass)
+            assert sub_id
+            device = dev_reg.async_get(sub_id)
+
+            if device is None:
+                return web.Response(status=HTTPStatus.NOT_FOUND)
+
+            filename += f"-{device.name}-{device.id}"
+
+            if info[sub_type.value] is None:
+                return web.Response(status=HTTPStatus.NOT_FOUND)
+
+            data = await info[sub_type.value](hass, config_entry, sub_id)
 
         try:
             json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
@@ -130,64 +157,5 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         return web.Response(
             body=json_data,
             content_type="application/json",
-            headers={
-                "Content-Disposition": f'attachment; filename="{d_type}-{filename}.json"'
-            },
-        )
-
-
-class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
-    """Download diagnostics from an object underneath config entry view."""
-
-    url = "/api/diagnostics/config_entry/{config_entry_id}/{sub_type}/{sub_id}"
-    name = "api:sub-config-entry-diagnostics"
-
-    async def get(  # pylint: disable=no-self-use
-        self, request: web.Request, config_entry_id: str, sub_type: str, sub_id: str
-    ) -> web.Response:
-        """Download diagnostics from an object underneath config entry."""
-        try:
-            sub_type = DiagnosticsSubType(sub_type)
-        except ValueError:
-            return web.Response(status=HTTPStatus.BAD_REQUEST)
-        hass = request.app["hass"]
-
-        config_entry = hass.config_entries.async_get_entry(config_entry_id)
-
-        if config_entry is None:
-            return web.Response(status=HTTPStatus.NOT_FOUND)
-
-        info = hass.data[DOMAIN].get(config_entry.domain)
-
-        if info is None or info[DiagnosticsSubType.DEVICE] is None:
-            return web.Response(status=404)
-
-        filename = f"{config_entry.domain}-{config_entry.entry_id}"
-        dev_reg = async_get(hass)
-        device = dev_reg.async_get(sub_id)
-
-        if device is None:
-            return web.Response(status=HTTPStatus.NOT_FOUND)
-
-        data = await info[DiagnosticsSubType.DEVICE](hass, device)
-
-        filename += f"-{device.name}-{device.id}"
-
-        try:
-            json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
-        except TypeError:
-            _LOGGER.error(
-                "Failed to serialize to JSON: %s/%s. Bad data at %s",
-                DiagnosticsSubType.DEVICE,
-                sub_id,
-                format_unserializable_data(find_paths_unserializable_data(data)),
-            )
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-        return web.Response(
-            body=json_data,
-            content_type="application/json",
-            headers={
-                "Content-Disposition": f'attachment; filename="{filename}.json"'
-            },
+            headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
         )
