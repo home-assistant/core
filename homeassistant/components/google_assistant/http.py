@@ -13,13 +13,12 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
 
 # Typing imports
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import ENTITY_CATEGORIES
 from homeassistant.util import dt as dt_util
 
 from .const import (

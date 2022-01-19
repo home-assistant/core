@@ -3,10 +3,9 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, ENTITY_CATEGORIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import ENTITY_CATEGORIES
 from homeassistant.helpers.typing import ConfigType
 
 from .auth import Auth

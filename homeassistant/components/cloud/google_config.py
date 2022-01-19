@@ -8,10 +8,9 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
-from homeassistant.helpers.entity import ENTITY_CATEGORIES
 from homeassistant.setup import async_setup_component
 
 from .const import (
