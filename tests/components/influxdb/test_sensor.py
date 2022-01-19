@@ -144,6 +144,7 @@ def _set_query_mock_v1(
     query_api = mock_influx_client.return_value.query
     if side_effect:
         query_api.side_effect = side_effect
+    
     else:
         if return_value is None:
             return_value = []
@@ -469,8 +470,7 @@ async def test_state_matches_query_result(
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
 
-    for sensor_test in sensors:
-        assert sensor_test.state == "42"
+    assert sensors[0].state == "42"
 
 
 @pytest.mark.parametrize(
