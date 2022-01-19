@@ -74,7 +74,7 @@ async def async_reconnect_client(hass, data) -> None:
         ):
             continue
 
-        await controller.api.clients.async_reconnect(mac)
+        await controller.api.clients.reconnect(mac)
 
 
 async def async_remove_clients(hass, data) -> None:
