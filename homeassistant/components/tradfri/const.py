@@ -33,7 +33,7 @@ PLATFORMS = [
     Platform.FAN,
     #    Platform.LIGHT,
     #    Platform.SENSOR,
-    #    Platform.SWITCH,
+    Platform.SWITCH,
 ]
 TIMEOUT_API = 30
 ATTR_MAX_FAN_STEPS = 49
