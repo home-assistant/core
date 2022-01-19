@@ -60,12 +60,12 @@ SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
         key="next_launch",
         icon="mdi:rocket-launch",
         name="Next launch",
-        value_fn=lambda next_launch: next_launch.name,
-        attributes_fn=lambda next_launch: {
-            "provider": next_launch.launch_service_provider.name,
-            "pad": next_launch.pad.name,
-            "facility": next_launch.pad.location.name,
-            "provider_country_code": next_launch.pad.location.country_code,
+        value_fn=lambda nl: nl.name,
+        attributes_fn=lambda nl: {
+            "provider": nl.launch_service_provider.name,
+            "pad": nl.pad.name,
+            "facility": nl.pad.location.name,
+            "provider_country_code": nl.pad.location.country_code,
         },
     ),
     NextLaunchSensorEntityDescription(
@@ -73,11 +73,11 @@ SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
         icon="mdi:clock-outline",
         name="Launch time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda next_launch: parse_datetime(next_launch.net),
-        attributes_fn=lambda next_launch: {
-            "window_start": next_launch.window_start,
-            "window_end": next_launch.window_end,
-            "stream_live": next_launch.webcast_live,
+        value_fn=lambda nl: parse_datetime(nl.net),
+        attributes_fn=lambda nl: {
+            "window_start": nl.window_start,
+            "window_end": nl.window_end,
+            "stream_live": nl.webcast_live,
         },
     ),
     NextLaunchSensorEntityDescription(
@@ -85,31 +85,25 @@ SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
         icon="mdi:dice-multiple",
         name="Launch Probability",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda next_launch: next_launch.probability
-        if next_launch.probability != -1
-        else None,
-        attributes_fn=lambda next_launch: None,
+        value_fn=lambda nl: None if nl.probability == -1 else nl.probability,
+        attributes_fn=lambda nl: None,
     ),
     NextLaunchSensorEntityDescription(
         key="launch_status",
         icon="mdi:rocket-launch",
         name="Launch status",
-        value_fn=lambda next_launch: next_launch.status.name,
-        attributes_fn=lambda next_launch: {
-            "reason": next_launch.holdreason,
-        }
-        if next_launch.inhold
-        else None,
+        value_fn=lambda nl: nl.status.name,
+        attributes_fn=lambda nl: {"reason": nl.holdreason} if nl.inhold else None,
     ),
     NextLaunchSensorEntityDescription(
         key="launch_mission",
         icon="mdi:orbit",
         name="Launch mission",
-        value_fn=lambda next_launch: next_launch.mission.name,
-        attributes_fn=lambda next_launch: {
-            "mission_type": next_launch.mission.type,
-            "target_orbit": next_launch.mission.orbit.name,
-            "description": next_launch.mission.description,
+        value_fn=lambda nl: nl.mission.name,
+        attributes_fn=lambda nl: {
+            "mission_type": nl.mission.type,
+            "target_orbit": nl.mission.orbit.name,
+            "description": nl.mission.description,
         },
     ),
 )
