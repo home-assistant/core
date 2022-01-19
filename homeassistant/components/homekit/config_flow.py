@@ -486,6 +486,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if ent_reg_ent := ent_reg.async_get(entity_id):
                     if ent_reg_ent.entity_category in ENTITY_CATEGORIES:
                         entity_cat_entities.add(entity_id)
+            # Remove entity category entities since we will exclude them anyways
             all_supported_entities = {
                 k: v
                 for k, v in all_supported_entities.items()
