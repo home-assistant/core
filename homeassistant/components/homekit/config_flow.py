@@ -6,7 +6,7 @@ from copy import deepcopy
 import random
 import re
 import string
-from typing import Final
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -126,6 +126,22 @@ _EMPTY_ENTITY_FILTER: Final = {
     CONF_INCLUDE_ENTITIES: [],
     CONF_EXCLUDE_ENTITIES: [],
 }
+
+
+@callback
+def _async_build_entites_filter(
+    domains: list[str], entities: list[str]
+) -> dict[str, Any]:
+    """Build an entities filter from domains and entities."""
+    entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
+    entity_filter[CONF_INCLUDE_ENTITIES] = entities
+    # Include all of the domain if there are no entities
+    # explicitly included as the user selected the domain
+    domains_with_entities_selected = _domains_set_from_entities(entities)
+    entity_filter[CONF_INCLUDE_DOMAINS] = [
+        domain for domain in domains if domain not in domains_with_entities_selected
+    ]
+    return entity_filter
 
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
@@ -399,23 +415,53 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         return self.async_show_form(step_id="cameras", data_schema=data_schema)
 
-    async def async_step_include(self, user_input=None):
-        """Choose entities to include from the domain."""
-        hk_mode = self.hk_options[CONF_HOMEKIT_MODE]
+    async def async_step_accessory(self, user_input=None):
+        """Choose entity for the accessory."""
         domains = self.hk_options[CONF_DOMAINS]
 
         if user_input is not None:
-            entity_filter = _EMPTY_ENTITY_FILTER.copy()
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter[CONF_INCLUDE_ENTITIES] = entities
-            # Include all of the domain if there are no entities
-            # explicitly included as the user selected the domain
-            domains_with_entities_selected = _domains_set_from_entities(entities)
-            entity_filter[CONF_INCLUDE_DOMAINS] = [
-                domain
-                for domain in domains
-                if domain not in domains_with_entities_selected
-            ]
+            entity_filter = _async_build_entites_filter(domains, entities)
+            self.included_cameras = {
+                entity_id
+                for entity_id in entities
+                if entity_id.startswith(CAMERA_ENTITY_PREFIX)
+            }
+            self.hk_options[CONF_FILTER] = entity_filter
+            if self.included_cameras:
+                return await self.async_step_cameras()
+            return await self.async_step_advanced()
+
+        entity_filter = self.hk_options.get(CONF_FILTER, {})
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        all_supported_entities = _async_get_matching_entities(self.hass, domains)
+        # In accessory mode we can only have one
+        default_value = next(
+            iter(
+                entity_id
+                for entity_id in entities
+                if entity_id in all_supported_entities
+            ),
+            None,
+        )
+
+        return self.async_show_form(
+            step_id="include",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ENTITIES, default=default_value): vol.In(
+                        all_supported_entities
+                    )
+                }
+            ),
+        )
+
+    async def async_step_include(self, user_input=None):
+        """Choose entities to include from the domain."""
+        domains = self.hk_options[CONF_DOMAINS]
+        if user_input is not None:
+            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entity_filter = _async_build_entites_filter(domains, entities)
             self.included_cameras = {
                 entity_id
                 for entity_id in entities
@@ -430,38 +476,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
 
         all_supported_entities = _async_get_matching_entities(self.hass, domains)
-        if hk_mode == HOMEKIT_MODE_ACCESSORY:
-            # In accessory mode we can only have one
-            default_value = next(
-                iter(
-                    entity_id
-                    for entity_id in entities
-                    if entity_id in all_supported_entities
-                ),
-                None,
-            )
-            entity_schema = vol.In
-            entities_schema_required = vol.Required
-        else:
-            # Bridge mode
-            entities_schema_required = vol.Optional
-            if not entities:
-                entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
-            entity_schema = cv.multi_select
-            # Strip out entities that no longer exist to prevent error in the UI
-            default_value = [
-                entity_id
-                for entity_id in entities
-                if entity_id in all_supported_entities
-            ]
+        # Bridge mode
+        if not entities:
+            entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
+        # Strip out entities that no longer exist to prevent error in the UI
+        default_value = [
+            entity_id for entity_id in entities if entity_id in all_supported_entities
+        ]
 
         return self.async_show_form(
             step_id="include",
             data_schema=vol.Schema(
                 {
-                    entities_schema_required(
-                        CONF_ENTITIES, default=default_value
-                    ): entity_schema(all_supported_entities)
+                    vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
+                        all_supported_entities
+                    )
                 }
             ),
         )
@@ -471,7 +500,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         domains = self.hk_options[CONF_DOMAINS]
 
         if user_input is not None:
-            entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter[CONF_INCLUDE_DOMAINS] = domains
             entity_filter[CONF_EXCLUDE_ENTITIES] = entities
@@ -530,11 +559,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_yaml(user_input)
 
         if user_input is not None:
-            homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
-            if homekit_mode == HOMEKIT_MODE_ACCESSORY:
-                user_input[CONF_INCLUDE_EXCLUDE_MODE] = MODE_INCLUDE
             self.hk_options.update(user_input)
-            if self.hk_options[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE:
+            if self.hk_options.get(CONF_HOMEKIT_MODE) == HOMEKIT_MODE_ACCESSORY:
+                return await self.async_step_accessory()
+            if user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE:
                 return await self.async_step_include()
             return await self.async_step_exclude()
 

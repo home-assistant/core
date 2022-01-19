@@ -19,6 +19,12 @@
     },
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entities"
+                },
+                "title": "Select the entity for the accessory"
+            },
             "advanced": {
                 "data": {
                     "auto_start": "Autostart (disable if you are calling the homekit.start service manually)",
@@ -39,15 +45,15 @@
                 "data": {
                     "entities": "Entities"
                 },
-                "description": "All entities in the domain will be included except for the excluded entities and categorized entities.",
-                "title": "Select entities to be excluded"
+                "description": "All entities in the selected domains will be included except for the excluded entities and categorized entities.",
+                "title": "Select the entities to be excluded"
             },
             "include": {
                 "data": {
                     "entities": "Entities"
                 },
-                "description": "In accessory mode, only a single entity is included. In bridge mode, all entities in the domain will be included unless specific entities are selected.",
-                "title": "Select entities to be included"
+                "description": "All entities in the selected domains will be included unless specific entities are selected.",
+                "title": "Select the entities to be included"
             },
             "init": {
                 "data": {
