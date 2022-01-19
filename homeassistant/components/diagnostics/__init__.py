@@ -117,7 +117,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
 
         try:
-            json_data = json.dumps(data, indent=4, cls=ExtendedJSONEncoder)
+            json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
         except TypeError:
             _LOGGER.error(
                 "Failed to serialize to JSON: %s/%s. Bad data at %s",
@@ -174,7 +174,7 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
         filename += f"-{device.name}-{device.id}"
 
         try:
-            json_data = json.dumps(data, indent=4, cls=ExtendedJSONEncoder)
+            json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
         except TypeError:
             _LOGGER.error(
                 "Failed to serialize to JSON: %s/%s. Bad data at %s",
