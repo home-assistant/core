@@ -55,7 +55,6 @@ class HWEnergySwitchEntity(CoordinatorEntity, SwitchEntity):
         self.entry = entry
 
         # Config attributes
-        self.api = coordinator.api
         self._attr_unique_id = f"{entry.unique_id}_{key}"
 
     @property
@@ -85,12 +84,12 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.api.state.set(power_on=True)
+        await self.coordinator.api.state.set(power_on=True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.api.state.set(power_on=False)
+        await self.coordinator.api.state.set(power_on=False)
         await self.coordinator.async_refresh()
 
     @property
@@ -100,12 +99,12 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
         This switch becomes unavailable when switch_lock is enabled.
         """
-        return super().available and not self.api.state.switch_lock
+        return super().available and not self.coordinator.api.state.switch_lock
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return bool(self.api.state.power_on)
+        return bool(self.coordinator.api.state.power_on)
 
 
 class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
@@ -130,15 +129,15 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
-        await self.api.state.set(switch_lock=True)
+        await self.coordinator.api.state.set(switch_lock=True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
-        await self.api.state.set(switch_lock=False)
+        await self.coordinator.api.state.set(switch_lock=False)
         await self.coordinator.async_refresh()
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return bool(self.api.state.switch_lock)
+        return bool(self.coordinator.api.state.switch_lock)
