@@ -19,6 +19,10 @@
     "device_automation": {
         "trigger_subtype": {
             "bottom_buttons": "\u039a\u03ac\u03c4\u03c9 \u03ba\u03bf\u03c5\u03bc\u03c0\u03b9\u03ac",
+            "button_5": "\u03a0\u03ad\u03bc\u03c0\u03c4\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
+            "button_6": "\u0388\u03ba\u03c4\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
+            "button_7": "\u0388\u03b2\u03b4\u03bf\u03bc\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
+            "button_8": "\u038c\u03b3\u03b4\u03bf\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
             "top_buttons": "\u03a0\u03ac\u03bd\u03c9 \u03ba\u03bf\u03c5\u03bc\u03c0\u03b9\u03ac"
         }
     },

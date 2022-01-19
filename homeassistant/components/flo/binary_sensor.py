@@ -23,7 +23,7 @@ async def async_setup_entry(
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for device in devices:
         if device.device_type == "puck_oem":
             # Flo "pucks" (leak detectors) *do* support pending alerts.

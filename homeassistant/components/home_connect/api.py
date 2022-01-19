@@ -2,6 +2,7 @@
 
 from asyncio import run_coroutine_threadsafe
 import logging
+from typing import Any
 
 import homeconnect
 from homeconnect.api import HomeConnectError
@@ -54,7 +55,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             hass, config_entry, implementation
         )
         super().__init__(self.session.token)
-        self.devices = []
+        self.devices: list[dict[str, Any]] = []
 
     def refresh_tokens(self) -> dict:
         """Refresh and return new Home Connect tokens using Home Assistant OAuth2 session."""
@@ -79,6 +80,8 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = FridgeFreezer(self.hass, app)
             elif app.type == "Refrigerator":
                 device = Refrigerator(self.hass, app)
+            elif app.type == "Freezer":
+                device = Freezer(self.hass, app)
             elif app.type == "Oven":
                 device = Oven(self.hass, app)
             elif app.type == "CoffeeMaker":
@@ -140,7 +143,7 @@ class HomeConnectDevice:
 class DeviceWithPrograms(HomeConnectDevice):
     """Device with programs."""
 
-    PROGRAMS = []
+    PROGRAMS: list[dict[str, str]] = []
 
     def get_programs_available(self):
         """Get the available programs."""
@@ -507,6 +510,15 @@ class FridgeFreezer(DeviceWithDoor):
 
 class Refrigerator(DeviceWithDoor):
     """Refrigerator class."""
+
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        door_entity = self.get_door_entity()
+        return {"binary_sensor": [door_entity]}
+
+
+class Freezer(DeviceWithDoor):
+    """Freezer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""

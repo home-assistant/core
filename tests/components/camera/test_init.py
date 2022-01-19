@@ -279,8 +279,7 @@ async def test_snapshot_service(hass, mock_camera):
     mopen = mock_open()
 
     with patch("homeassistant.components.camera.open", mopen, create=True), patch(
-        "homeassistant.components.camera.os.path.exists",
-        Mock(spec="os.path.exists", return_value=True),
+        "homeassistant.components.camera.os.makedirs",
     ), patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             camera.DOMAIN,

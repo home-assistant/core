@@ -5,8 +5,8 @@
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "invalid_auth": "Invalid authentication",
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "reauth_confirm": {
@@ -15,9 +15,8 @@
                     "name": "Name",
                     "password": "Password",
                     "username": "Username"
-                    }
                 }
-        },
+            },
             "user": {
                 "data": {
                     "area_id": "Area ID",
@@ -26,6 +25,7 @@
                     "username": "Username"
                 }
             }
+        }
     },
     "options": {
         "error": {

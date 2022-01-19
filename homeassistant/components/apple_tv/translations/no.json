@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_configured_device": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "backoff": "Enheten godtar ikke parringsanmodninger for \u00f8yeblikket (du har kanskje angitt en ugyldig PIN-kode for mange ganger), pr\u00f8v igjen senere.",
+            "backoff": "Enheten godtar ikke sammenkoblingsforesp\u00f8rsler for \u00f8yeblikket (du kan ha skrevet inn en ugyldig PIN-kode for mange ganger), pr\u00f8v igjen senere.",
             "device_did_not_pair": "Ingen fors\u00f8k p\u00e5 \u00e5 fullf\u00f8re paringsprosessen ble gjort fra enheten",
             "device_not_found": "Enheten ble ikke funnet under oppdagelsen. Pr\u00f8v \u00e5 legge den til p\u00e5 nytt.",
             "inconsistent_device": "Forventede protokoller ble ikke funnet under oppdagelsen. Dette indikerer vanligvis et problem med multicast DNS (Zeroconf). Pr\u00f8v \u00e5 legge til enheten p\u00e5 nytt.",

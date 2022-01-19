@@ -336,6 +336,7 @@ tests/components/geonetnz_volcano/* @exxamalte
 homeassistant/components/gios/* @bieniu
 tests/components/gios/* @bieniu
 homeassistant/components/github/* @timmo001 @ludeeus
+tests/components/github/* @timmo001 @ludeeus
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 tests/components/glances/* @fabaff @engrbm87

@@ -109,9 +109,12 @@ async def async_setup_sdm_platform(
     if structures:
         for structure in structures.values():
             device_manager.add_structure(structure)
+    platforms = []
+    if platform:
+        platforms = [platform]
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", [platform]), patch(
+    ), patch("homeassistant.components.nest.PLATFORMS", platforms), patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber",
         return_value=subscriber,
     ):
