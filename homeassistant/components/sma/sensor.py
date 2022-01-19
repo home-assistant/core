@@ -39,7 +39,7 @@ async def async_setup_entry(
         entities.append(
             SMAsensor(
                 coordinator,
-                config_entry.unique_id,
+                device_info["serial"],
                 device_info,
                 sensor,
             )
