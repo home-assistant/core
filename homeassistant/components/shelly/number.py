@@ -107,7 +107,8 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     async def _set_state_full_path(self, path: str, params: Any) -> Any:
         """Set block state (HTTP request)."""
 
-        if self.description.rest_channel and self.block is not None:
+        blocktype = self.unique_id.split("-")[-2]
+        if blocktype != "device" and self.block:
             path = f"{path}/{self.block.channel}"
 
         _LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
