@@ -158,6 +158,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             try:
                 await client.connect()
             except WEBOSTV_EXCEPTIONS:
+                if tries == 0:
+                    _LOGGER.warning(
+                        "Please make sure webOS TV %s is turned on to complete "
+                        "the migration of configuration.yaml to the UI",
+                        entity_id,
+                    )
                 wait_time = 2 ** min(tries, 4) * 5
                 tries += 1
                 await asyncio.sleep(wait_time)
