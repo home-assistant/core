@@ -68,7 +68,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.point.*",
     "homeassistant.components.profiler.*",
     "homeassistant.components.rachio.*",
-    "homeassistant.components.ring.*",
     "homeassistant.components.ruckus_unleashed.*",
     "homeassistant.components.screenlogic.*",
     "homeassistant.components.search.*",
