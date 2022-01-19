@@ -3,8 +3,17 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.airvisual.const import DOMAIN
-from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.components.airvisual.const import (
+    CONF_INTEGRATION_TYPE,
+    DOMAIN,
+    INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+)
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -16,7 +25,7 @@ def config_entry_fixture(hass, config, config_entry_version, unique_id):
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=unique_id,
-        data=config,
+        data={CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS, **config},
         options={CONF_SHOW_ON_MAP: True},
         version=config_entry_version,
     )
@@ -33,7 +42,11 @@ def config_entry_version_fixture():
 @pytest.fixture(name="config")
 def config_fixture(hass):
     """Define a config entry data fixture."""
-    return {}
+    return {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 51.528308,
+        CONF_LONGITUDE: -0.3817765,
+    }
 
 
 @pytest.fixture(name="setup_airvisual")
