@@ -31,7 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
-ICON_POWER = "mdi:flash"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
@@ -47,13 +46,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # A=1: Electricity
     # C=0: General purpose objects
     # D=0: Free ID-numbers for utilities
-    SensorEntityDescription(key="1-0:0.0.9*255", name="Electricity ID"),
+    SensorEntityDescription(
+        key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
+    ),
     # D=2: Program entries
     SensorEntityDescription(
-        key="1-0:0.2.0*0",
-        name="Configuration program version number",
+        key="1-0:0.2.0*0", name="Configuration program version number", icon="mdi:flash"
     ),
-    SensorEntityDescription(key="1-0:0.2.0*1", name="Firmware version number"),
+    SensorEntityDescription(
+        key="1-0:0.2.0*1", name="Firmware version number", icon="mdi:flash"
+    ),
     # C=1: Active power +
     # D=8: Time integral 1
     # E=0: Total
@@ -109,7 +111,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # C=14: Supply frequency
     # D=7: Instantaneous value
     # E=0: Total
-    SensorEntityDescription(key="1-0:14.7.0*255", name="Supply frequency"),
+    SensorEntityDescription(
+        key="1-0:14.7.0*255", name="Supply frequency", icon="mdi:sine-wave"
+    ),
     # C=15: Active power absolute
     # D=7: Instantaneous value
     # E=0: Total
@@ -149,7 +153,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # C=36: Active power L1
     # D=7: Instantaneous value
     # E=0: Total
-    SensorEntityDescription(key="1-0:36.7.0*255", name="L1 active instantaneous power"),
+    SensorEntityDescription(
+        key="1-0:36.7.0*255",
+        name="L1 active instantaneous power",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
     # C=51: Active amperage L2
     # D=7: Instantaneous value
     # E=0: Total
@@ -209,12 +218,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=4:  U(L1) x I(L1)
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
-    SensorEntityDescription(key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle"),
-    SensorEntityDescription(key="1-0:81.7.15*255", name="U(L2)/I(L2) phase angle"),
-    SensorEntityDescription(key="1-0:81.7.26*255", name="U(L3)/I(L3) phase angle"),
+    SensorEntityDescription(
+        key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
+    ),
+    SensorEntityDescription(
+        key="1-0:81.7.15*255", name="U(L2)/I(L2) phase angle", icon="mdi:sine-wave"
+    ),
+    SensorEntityDescription(
+        key="1-0:81.7.26*255", name="U(L3)/I(L3) phase angle", icon="mdi:sine-wave"
+    ),
     # C=96: Electricity-related service entries
-    SensorEntityDescription(key="1-0:96.1.0*255", name="Metering point ID 1"),
-    SensorEntityDescription(key="1-0:96.5.0*255", name="Internal operating status"),
+    SensorEntityDescription(
+        key="1-0:96.1.0*255", name="Metering point ID 1", icon="mdi:flash"
+    ),
+    SensorEntityDescription(
+        key="1-0:96.5.0*255", name="Internal operating status", icon="mdi:flash"
+    ),
 )
 
 SENSORS = {desc.key: desc for desc in SENSOR_TYPES}
@@ -417,8 +436,3 @@ class EDL21Entity(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._telegram.get("unit")
-
-    @property
-    def icon(self):
-        """Return an icon."""
-        return ICON_POWER
