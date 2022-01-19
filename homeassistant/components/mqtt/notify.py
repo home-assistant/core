@@ -10,6 +10,7 @@ from homeassistant.const import CONF_NAME, CONF_SERVICE, CONF_SERVICE_DATA, CONF
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from .. import mqtt
 from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DEFAULT_RETAIN, DOMAIN
@@ -53,11 +54,18 @@ async def async_get_service(
     hass.data.setdefault(
         MQTT_NOTIFY_CONFIG, {CONF_SERVICE: None, CONF_SERVICE_DATA: {}}
     )
-    target = config[CONF_MESSAGE_COMMAND_TOPIC]
-    if hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA].get(
-        config[CONF_MESSAGE_COMMAND_TOPIC]
+    if (
+        CONF_SIREN_ENTITY in config
+        and config[CONF_SIREN_ENTITY].target
+        in hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA]
     ):
-        raise ValueError(f"A notify service for target {target} is already setup.")
+        # Remove the old target and trigger a service reload
+        del hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA][
+            config[CONF_SIREN_ENTITY].target
+        ]
+        await hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE].async_register_services()
+
+    target = config[CONF_MESSAGE_COMMAND_TOPIC]
     hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA][target] = {
         CONF_ENCODING: config[CONF_ENCODING],
         CONF_TARGET: target,
@@ -72,6 +80,9 @@ async def async_get_service(
         CONF_RETAIN: config[CONF_RETAIN],
         CONF_TITLE: config[CONF_TITLE],
     }
+    if CONF_SIREN_ENTITY in config:
+        config[CONF_SIREN_ENTITY].target = target
+
     discovery_info[CONF_NAME] = DOMAIN
     return hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE] or MqttNotificationService(hass)
 
@@ -98,16 +109,23 @@ class MqttNotificationService(notify.BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs):
         """Build and send a MQTT message to a target."""
-        for target in kwargs.get(notify.ATTR_TARGET, []):
-            if (target_config := self._config.get(target)) is None:
+        target = kwargs.get(notify.ATTR_TARGET, [])
+        for key, target_config in self._config.items():
+            if (
+                key not in target
+                and target_config[CONF_NAME] not in target
+                and slugify(target_config[CONF_NAME]) not in target
+            ):
                 continue
             variables = {
                 "data": kwargs.get(notify.ATTR_DATA),
                 "message": message,
                 "target_name": target_config[CONF_NAME],
-                "target_id": target,
+                "target_id": key,
                 "title": kwargs.get(notify.ATTR_TITLE, target_config[CONF_TITLE]),
             }
+            if kwargs.get(notify.ATTR_DATA):
+                variables.update(kwargs[notify.ATTR_DATA])
             payload = target_config[CONF_MESSAGE_COMMAND_TEMPLATE](
                 message, variables=variables
             )

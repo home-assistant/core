@@ -514,7 +514,7 @@ async def test_command_templates(hass, mqtt_mock, caplog):
 
 async def test_notify_integration(hass, mqtt_mock, caplog):
     """Test siren with notify."""
-    message_command_template = "{{ target_id }},{{ target_name }},{{ name }}[{{ entity_id }}] {{ title }}: {{ message }}"
+    message_command_template = "{{ target_id }},{{ target_name }},{{ name }}[{{ entity_id }}] {{ title }}: {{ message }}|{{ part1 }}"
     config1 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
     config1["name"] = "Milk"
     config1["message_command_topic"] = "siren/bla/milk/message"
@@ -541,31 +541,94 @@ async def test_notify_integration(hass, mqtt_mock, caplog):
     assert state2.state == STATE_OFF
     assert state1.attributes.get(ATTR_ASSUMED_STATE)
 
+    # test without command template
     data = {
         "message": "The milk is almost finished!",
     }
     await hass.services.async_call("notify", "mqtt_milk", data, blocking=True)
     mqtt_mock.async_publish.assert_any_call(
         "siren/bla/milk/message",
-        "siren/bla/milk/message,Milk,Milk[siren.milk] Home Assistant: The milk is almost finished!",
+        "siren/bla/milk/message,Milk,Milk[siren.milk] Home Assistant: The milk is almost finished!|",
         0,
         False,
     )
     mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
 
+    # test with command template and configured title
     data = {
         "message": "The beer is almost finished!",
     }
     await hass.services.async_call("notify", "mqtt_beer_alarm", data, blocking=True)
     mqtt_mock.async_publish.assert_any_call(
         "siren/bla/beer/message",
-        "siren/bla/beer/message,Beer alarm,Beer[siren.beer] Serious warning: The beer is almost finished!",
+        "siren/bla/beer/message,Beer alarm,Beer[siren.beer] Serious warning: The beer is almost finished!|",
         0,
         False,
     )
     mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
+
+    # test with command template and configured title, title override and custom data
+    data = {
+        "message": "The beer is almost finished!",
+        "title": "Important data",
+        "data": {"part1": "very important data"},
+    }
+    await hass.services.async_call("notify", "mqtt_beer_alarm", data, blocking=True)
+    mqtt_mock.async_publish.assert_any_call(
+        "siren/bla/beer/message",
+        "siren/bla/beer/message,Beer alarm,Beer[siren.beer] Important data: The beer is almost finished!|very important data",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.call_count == 1
+    mqtt_mock.reset_mock()
+
+    # test with multiple targets with shared service and slugified name
+    data = {
+        "message": "Drink time is almost finished!",
+        "title": "Important data",
+        "data": {"part1": "very important data"},
+        "target": ["milk", "beer_alarm"],
+    }
+    await hass.services.async_call("notify", "mqtt", data, blocking=True)
+    mqtt_mock.async_publish.assert_any_call(
+        "siren/bla/milk/message",
+        "siren/bla/milk/message,Milk,Milk[siren.milk] Important data: Drink time is almost finished!|very important data",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "siren/bla/beer/message",
+        "siren/bla/beer/message,Beer alarm,Beer[siren.beer] Important data: Drink time is almost finished!|very important data",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.reset_mock()
+
+    # test with multiple targets with shared service with topic of Name
+    data = {
+        "message": "Drink time is almost finished!",
+        "title": "Important data",
+        "data": {"part1": "very important data"},
+        "target": ["siren/bla/milk/message", "Beer alarm"],
+    }
+    await hass.services.async_call("notify", "mqtt", data, blocking=True)
+    mqtt_mock.async_publish.assert_any_call(
+        "siren/bla/milk/message",
+        "siren/bla/milk/message,Milk,Milk[siren.milk] Important data: Drink time is almost finished!|very important data",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "siren/bla/beer/message",
+        "siren/bla/beer/message,Beer alarm,Beer[siren.beer] Important data: Drink time is almost finished!|very important data",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.call_count == 2
 
 
 async def test_discovery_update_unchanged_siren(hass, mqtt_mock, caplog):

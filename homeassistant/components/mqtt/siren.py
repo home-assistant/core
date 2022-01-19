@@ -198,12 +198,13 @@ class MqttSiren(MqttEntity, SirenEntity):
         self._state_on = None
         self._state_off = None
         self._available_tones = None
-        self._target = None
         self._tone = None
         self._duration = None
         self._volume_level = None
         self._optimistic = None
         self._support_tones = None
+
+        self.target = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -214,9 +215,9 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     async def async_removed_from_registry(self):
         """Remove the notify service registration."""
-        if not self._target:
+        if not self.target:
             return
-        del self.hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA][self._target]
+        del self.hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA][self.target]
         await self.hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE].async_register_services()
 
     def _setup_from_config(self, config):
@@ -284,10 +285,6 @@ class MqttSiren(MqttEntity, SirenEntity):
                 async_load_platform(
                     self.hass, notify.DOMAIN, DOMAIN, notify_config, config
                 )
-            )
-            self._target = (
-                notify_config.get(CONF_TARGET)
-                or notify_config[CONF_MESSAGE_COMMAND_TOPIC]
             )
 
     async def _subscribe_topics(self):
