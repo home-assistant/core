@@ -1,6 +1,7 @@
 """Adds config flow for dnsip integration."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 import aiodns
@@ -34,27 +35,23 @@ DATA_SCHEMA = vol.Schema(
 
 
 async def async_validate_url(
-    url: str, resolver_ipv4: str, resolver_ipv6: str, entry_data: dict[str, Any]
+    url: str, resolver_ipv4: str, resolver_ipv6: str
 ) -> dict[str, bool]:
     """Validate url."""
-    result = {}
-    ipv4 = None
-    ipv6 = None
-    if entry_data[CONF_IPV4]:
-        try:
-            ipv4 = await aiodns.DNSResolver(nameservers=[resolver_ipv4]).query(url, "A")
-        except DNSError:
-            ipv4 = None
-    if entry_data[CONF_IPV6]:
-        try:
-            ipv6 = await aiodns.DNSResolver(nameservers=[resolver_ipv6]).query(
-                url, "AAAA"
-            )
-        except DNSError:
-            ipv6 = None
+    result: dict[str, bool] = {}
 
-    result[CONF_IPV4] = bool(ipv4)
-    result[CONF_IPV6] = bool(ipv6)
+    result[CONF_IPV4] = False
+    result[CONF_IPV6] = False
+
+    with contextlib.suppress(DNSError):
+        result[CONF_IPV4] = bool(
+            await aiodns.DNSResolver(nameservers=[resolver_ipv4]).query(url, "A")
+        )
+
+    with contextlib.suppress(DNSError):
+        result[CONF_IPV6] = bool(
+            await aiodns.DNSResolver(nameservers=[resolver_ipv6]).query(url, "AAAA")
+        )
 
     return result
 
@@ -94,13 +91,14 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             resolver = DEFAULT_RESOLVER
             resolver_ipv6 = DEFAULT_RESOLVER_IPV6
 
-            validate = await async_validate_url(
-                hostname, resolver, resolver_ipv6, {CONF_IPV4: True, CONF_IPV6: True}
-            )
+            validate = await async_validate_url(hostname, resolver, resolver_ipv6)
 
             if not validate[CONF_IPV4] and not validate[CONF_IPV6]:
                 errors["base"] = "invalid_hostname"
             else:
+                await self.async_set_unique_id(hostname)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=name,
                     data={
@@ -137,11 +135,8 @@ class DnsIPOptionsFlowHandler(config_entries.OptionsFlow):
                 self.entry.data[CONF_HOSTNAME],
                 user_input[CONF_RESOLVER],
                 user_input[CONF_RESOLVER_IPV6],
-                {
-                    CONF_IPV4: self.entry.data[CONF_IPV4],
-                    CONF_IPV6: self.entry.data[CONF_IPV6],
-                },
             )
+
             if validate[CONF_IPV4] is False and self.entry.data[CONF_IPV4] is True:
                 errors[CONF_RESOLVER] = "invalid_resolver"
             elif validate[CONF_IPV6] is False and self.entry.data[CONF_IPV6] is True:

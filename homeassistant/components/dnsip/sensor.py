@@ -83,13 +83,9 @@ async def async_setup_entry(
     )
     entities = []
     if entry.data[CONF_IPV4]:
-        entities.append(
-            WanIpSensor(name, hostname, resolver_ipv4, False, entry, f"{hostname}_ipv4")
-        )
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
     if entry.data[CONF_IPV6]:
-        entities.append(
-            WanIpSensor(name, hostname, resolver_ipv6, True, entry, f"{hostname}_ipv6")
-        )
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -105,12 +101,10 @@ class WanIpSensor(SensorEntity):
         hostname: str,
         resolver: str,
         ipv6: bool,
-        entry: ConfigEntry,
-        unique_id: str,
     ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = f"{name} IPv6" if ipv6 else name
-        self._attr_unique_id = f"{entry.entry_id}_{unique_id}"
+        self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
