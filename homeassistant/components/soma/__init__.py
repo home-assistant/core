@@ -136,12 +136,14 @@ class SomaEntity(Entity):
                 if self.is_available:
                     self.is_available = False
                     _LOGGER.warning(
-                        f'Device is unreachable ({self.name}). Error while fetching the state: {response_from_api["msg"]}'
+                        "Device is unreachable (%s). Error while fetching the state: %s",
+                        self.name,
+                        response_from_api["msg"],
                     )
             else:
                 if not self.is_available:
                     self.is_available = True
-                    _LOGGER.info(f"Device {self.name} is now reachable")
+                    _LOGGER.info("Device %s is now reachable", self.name)
                 response = response_from_api
 
         return response
