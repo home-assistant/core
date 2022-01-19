@@ -145,12 +145,10 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
         self, request: web.Request, config_entry_id: str, sub_type: str, sub_id: str
     ) -> web.Response:
         """Download diagnostics from an object underneath config entry."""
-        _LOGGER.error("1")
         try:
             sub_type = DiagnosticsSubType(sub_type)
         except ValueError:
             return web.Response(status=404)
-        _LOGGER.error("1")
         hass = request.app["hass"]
 
         config_entry = hass.config_entries.async_get_entry(config_entry_id)
@@ -158,14 +156,10 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
         if config_entry is None:
             return web.Response(status=404)
 
-        _LOGGER.error("3")
-
         info = hass.data[DOMAIN].get(config_entry.domain)
 
         if info is None or info[DiagnosticsSubType.DEVICE] is None:
             return web.Response(status=404)
-
-        _LOGGER.error("4")
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
         dev_reg = async_get(hass)
