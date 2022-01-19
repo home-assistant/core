@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.notify import ATTR_MESSAGE, DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import CONF_ICON, CONF_SERVICE_DATA
-from homeassistant.helpers import discovery
+from homeassistant.setup import async_setup_component
 
 from . import TV_NAME, setup_webostv
 
@@ -93,7 +93,8 @@ async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect,
     await setup_webostv(hass, "fake-uuid")
     assert hass.services.has_service("notify", TV_NAME)
 
-    monkeypatch.setattr(client, "is_connected", Mock(side_effect=side_effect))
+    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
+    monkeypatch.setattr(client, "connect", Mock(side_effect=side_effect))
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         TV_NAME,
@@ -111,11 +112,15 @@ async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect,
     assert error in caplog.text
 
 
-async def test_no_discovery_info(hass):
-    """Test no error when no discovery info."""
+async def test_no_discovery_info(hass, caplog):
+    """Test setup without discovery info."""
     assert NOTIFY_DOMAIN not in hass.config.components
-    await discovery.async_load_platform(
-        hass, NOTIFY_DOMAIN, DOMAIN, None, {"domain": DOMAIN}
+    assert await async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {"notify": {"platform": DOMAIN}},
     )
     await hass.async_block_till_done()
     assert NOTIFY_DOMAIN in hass.config.components
+    assert f"Failed to initialize notification service {DOMAIN}" in caplog.text
+    assert DOMAIN not in hass.services.async_services()
