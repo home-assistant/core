@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import pysma
 
@@ -58,10 +59,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) as exc:
         raise ConfigEntryNotReady from exc
 
+    if TYPE_CHECKING:
+        assert entry.unique_id
+
     # Create DeviceInfo object from sma_device_info
     device_info = DeviceInfo(
         configuration_url=url,
-        identifiers={(DOMAIN, sma_device_info["serial"])},
+        identifiers={(DOMAIN, entry.unique_id)},
         manufacturer=sma_device_info["manufacturer"],
         model=sma_device_info["type"],
         name=sma_device_info["name"],
