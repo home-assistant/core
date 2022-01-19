@@ -39,7 +39,6 @@ ABBREVIATIONS = {
     "cmd_on_tpl": "command_on_template",
     "cmd_t": "command_topic",
     "cmd_tpl": "command_template",
-    "cmd_off_tpl": "command_off_template",
     "cod_arm_req": "code_arm_required",
     "cod_dis_req": "code_disarm_required",
     "cod_trig_req": "code_trigger_required",
