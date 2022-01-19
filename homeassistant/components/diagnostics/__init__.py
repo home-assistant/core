@@ -188,6 +188,6 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
             body=json_data,
             content_type="application/json",
             headers={
-                "Content-Disposition": f'attachment; filename="{sub_type}-{filename}.json"'
+                "Content-Disposition": f'attachment; filename="{filename}.json"'
             },
         )
