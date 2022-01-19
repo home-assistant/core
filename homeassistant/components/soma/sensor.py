@@ -70,13 +70,15 @@ class SomaSensor(SomaEntity, SensorEntity):
             if self.is_available:
                 self.is_available = False
                 _LOGGER.warning(
-                    f'Device is unreachable ({self.name}). Error while fetching the battery state: {response["msg"]}'
+                    "Device is unreachable (%s). Error while fetching the battery state: %s",
+                    self.name,
+                    response["msg"],
                 )
             return
 
         if not self.is_available:
             self.is_available = True
-            _LOGGER.info(f"Device {self.name} is now reachable")
+            _LOGGER.info("Device %s is now reachable", self.name)
 
         # https://support.somasmarthome.com/hc/en-us/articles/360026064234-HTTP-API
         # battery_level response is expected to be min = 360, max 410 for
