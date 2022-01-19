@@ -11,7 +11,6 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -56,11 +55,7 @@ class HWEnergySwitchEntity(CoordinatorEntity, SwitchEntity):
 
         # Config attributes
         self._attr_unique_id = f"{entry.unique_id}_{key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return {
+        self._attr_device_info = {
             "name": self.entry.title,
             "manufacturer": "HomeWizard",
             "sw_version": self.coordinator.data["device"].firmware_version,
