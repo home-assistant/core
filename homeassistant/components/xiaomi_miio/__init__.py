@@ -441,7 +441,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         )
 
 
-async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Xiaomi Miio device component from a config entry."""
     platforms = get_platforms(entry)
     await async_create_miio_device_and_coordinator(hass, entry)
