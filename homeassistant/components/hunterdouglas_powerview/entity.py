@@ -1,4 +1,4 @@
-"""The nexia integration base entity."""
+"""The powerview integration base entity."""
 
 from aiopvapi.resources.shade import ATTR_TYPE
 
@@ -78,7 +78,7 @@ class ShadeEntity(HDEntity):
         )
 
         for shade in self._shade.shade_types:
-            if shade.shade_type == device_info[ATTR_MODEL]:
+            if str(shade.shade_type) == device_info[ATTR_MODEL]:
                 device_info[ATTR_MODEL] = shade.description
                 break
 
