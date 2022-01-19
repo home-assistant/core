@@ -1,4 +1,5 @@
 """Define test fixtures for AirVisual."""
+import json
 from unittest.mock import patch
 
 import pytest
@@ -16,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
@@ -47,6 +48,12 @@ def config_fixture(hass):
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
     }
+
+
+@pytest.fixture(name="data", scope="session")
+def data_fixture():
+    """Define an update coordinator data example."""
+    return json.loads(load_fixture("data.json", "airvisual"))
 
 
 @pytest.fixture(name="setup_airvisual")
