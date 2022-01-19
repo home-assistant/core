@@ -117,30 +117,30 @@ class SomaEntity(Entity):
 
     async def async_get_state_from_api(self) -> dict:
         """Get the latest data from the API."""
-        responseFromApi = {}
+        response = {}
         try:
-            response = await self.hass.async_add_executor_job(
+            responseFromApi = await self.hass.async_add_executor_job(
                 self.api.get_shade_state, self.device["mac"]
             )
-
+        except RequestException:
+            if self.api_is_available:
+                _LOGGER.warning("Connection to SOMA Connect failed")
+                self.api_is_available = False
+        else:
             if not self.api_is_available:
                 self.api_is_available = True
                 _LOGGER.info("Connection to SOMA Connect succeeded")
 
-            if not is_api_response_success(response):
+            if not is_api_response_success(responseFromApi):
                 if self.is_available:
                     self.is_available = False
                     _LOGGER.warning(
-                        f'Device is unreachable ({self.name}). Error while fetching the state: {response["msg"]}'
+                        f'Device is unreachable ({self.name}). Error while fetching the state: {responseFromApi["msg"]}'
                     )
             else:
                 if not self.is_available:
                     self.is_available = True
                     _LOGGER.info(f"Device {self.name} is now reachable")
-                responseFromApi = response
-        except RequestException:
-            if self.api_is_available:
-                _LOGGER.warning("Connection to SOMA Connect failed")
-                self.api_is_available = False
+                response = responseFromApi
 
-        return responseFromApi
+        return response
