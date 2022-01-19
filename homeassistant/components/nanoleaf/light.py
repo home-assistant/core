@@ -62,6 +62,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Nanoleaf light platform."""
+    _LOGGER.warning(
+        "Configuration of the Nanoleaf integration in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,

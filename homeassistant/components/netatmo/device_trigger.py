@@ -26,10 +26,10 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
 from .climate import STATE_NETATMO_AWAY, STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE
 from .const import (
     CLIMATE_TRIGGERS,
+    DOMAIN,
     EVENT_TYPE_THERM_MODE,
     INDOOR_CAMERA_TRIGGERS,
     MODEL_NACAMERA,

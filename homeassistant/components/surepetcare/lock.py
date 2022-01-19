@@ -6,8 +6,9 @@ from typing import Any
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState
 
-from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
+from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

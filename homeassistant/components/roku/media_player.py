@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -12,8 +13,10 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -27,7 +30,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_NAME,
     STATE_HOME,
     STATE_IDLE,
     STATE_ON,
@@ -35,12 +41,21 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
 from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
-from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .const import (
+    ATTR_CONTENT_ID,
+    ATTR_FORMAT,
+    ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
+    DOMAIN,
+    SERVICE_SEARCH,
+)
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
@@ -60,10 +75,29 @@ SUPPORT_ROKU = (
     | SUPPORT_BROWSE_MEDIA
 )
 
+ATTRS_TO_LAUNCH_PARAMS = {
+    ATTR_CONTENT_ID: "contentID",
+    ATTR_MEDIA_TYPE: "MediaType",
+}
+
+PLAY_MEDIA_SUPPORTED_TYPES = (
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
+    FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+)
+
+ATTRS_TO_PLAY_VIDEO_PARAMS = {
+    ATTR_NAME: "videoName",
+    ATTR_FORMAT: "videoFormat",
+}
+
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Roku config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
@@ -239,7 +273,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         media_content_type: str,
         media_content_id: str,
         media_image_id: str | None = None,
-    ) -> tuple[str | None, str | None]:
+    ) -> tuple[bytes | None, str | None]:
         """Fetch media browser image to serve via proxy."""
         if media_content_type == MEDIA_TYPE_APP and media_content_id:
             image_url = self.coordinator.roku.app_icon_url(media_content_id)
@@ -347,19 +381,42 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
-        if media_type not in (MEDIA_TYPE_APP, MEDIA_TYPE_CHANNEL):
+        extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+
+        if media_type not in PLAY_MEDIA_SUPPORTED_TYPES:
             _LOGGER.error(
-                "Invalid media type %s. Only %s and %s are supported",
+                "Invalid media type %s. Only %s, %s, %s, and camera HLS streams are supported",
                 media_type,
                 MEDIA_TYPE_APP,
                 MEDIA_TYPE_CHANNEL,
+                MEDIA_TYPE_URL,
             )
             return
 
         if media_type == MEDIA_TYPE_APP:
-            await self.coordinator.roku.launch(media_id)
+            params = {
+                param: extra[attr]
+                for attr, param in ATTRS_TO_LAUNCH_PARAMS.items()
+                if attr in extra
+            }
+
+            await self.coordinator.roku.launch(media_id, params)
         elif media_type == MEDIA_TYPE_CHANNEL:
             await self.coordinator.roku.tune(media_id)
+        elif media_type == MEDIA_TYPE_URL:
+            params = {
+                param: extra[attr]
+                for (attr, param) in ATTRS_TO_PLAY_VIDEO_PARAMS.items()
+                if attr in extra
+            }
+
+            await self.coordinator.roku.play_video(media_id, params)
+        elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
+            params = {
+                "MediaType": "hls",
+            }
+
+            await self.coordinator.roku.play_video(media_id, params)
 
         await self.coordinator.async_request_refresh()
 

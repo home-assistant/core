@@ -7,6 +7,9 @@ import math
 from pysmartthings import Capability
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -19,7 +22,11 @@ from .const import DATA_BROKERS, DOMAIN
 SPEED_RANGE = (1, 3)  # off is not included
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add fans for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(

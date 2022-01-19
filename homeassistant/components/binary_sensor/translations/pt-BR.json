@@ -10,6 +10,7 @@
         }
     },
     "device_class": {
+        "co": "mon\u00f3xido de carbono",
         "cold": "frio",
         "gas": "g\u00e1s",
         "heat": "calor",
@@ -30,6 +31,13 @@
         "battery": {
             "off": "Normal",
             "on": "Fraca"
+        },
+        "battery_charging": {
+            "off": "N\u00e3o est\u00e1 carregando",
+            "on": "Carregando"
+        },
+        "co": {
+            "on": "Detectado"
         },
         "cold": {
             "off": "Normal",
@@ -55,6 +63,10 @@
             "off": "Normal",
             "on": "Quente"
         },
+        "light": {
+            "off": "Sem luz",
+            "on": "Luz detectada"
+        },
         "lock": {
             "off": "Trancado",
             "on": "Desbloqueado"
@@ -67,13 +79,21 @@
             "off": "Desligado",
             "on": "Detectado"
         },
+        "moving": {
+            "off": "Parado",
+            "on": "Em movimento"
+        },
         "occupancy": {
             "off": "Desocupado",
-            "on": "Detectado"
+            "on": "Ocupado"
         },
         "opening": {
             "off": "Fechado",
             "on": "Aberto"
+        },
+        "plug": {
+            "off": "Desconectado",
+            "on": "Conectado"
         },
         "presence": {
             "off": "Ausente",
@@ -83,20 +103,28 @@
             "off": "OK",
             "on": "Problema"
         },
+        "running": {
+            "off": "Parado",
+            "on": "Executando"
+        },
         "safety": {
             "off": "Seguro",
             "on": "N\u00e3o seguro"
         },
         "smoke": {
-            "off": "Limpo",
+            "off": "N\u00e3o detectado",
             "on": "Detectado"
         },
         "sound": {
-            "off": "Limpo",
+            "off": "N\u00e3o detectado",
             "on": "Detectado"
         },
+        "update": {
+            "off": "Atualizado",
+            "on": "Atualiza\u00e7\u00e3o dispon\u00edvel"
+        },
         "vibration": {
-            "off": "Limpo",
+            "off": "N\u00e3o detectado",
             "on": "Detectado"
         },
         "window": {

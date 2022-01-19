@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_pin": "El pin proporcionat no \u00e9s v\u00e0lid",
             "network_error": "S'ha produ\u00eft un error de xarxa",
             "no_panel_online": "No s'ha trobat cap panell de control d'Elmax en l\u00ednia.",
+            "unknown": "Error inesperat",
             "unknown_error": "S'ha produ\u00eft un error desconegut"
         },
         "step": {

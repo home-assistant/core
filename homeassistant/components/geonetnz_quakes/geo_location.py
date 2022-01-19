@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.geo_location import GeolocationEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TIME,
@@ -11,8 +12,9 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -34,13 +36,15 @@ PARALLEL_UPDATES = 0
 SOURCE = "geonetnz_quakes"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the GeoNet NZ Quakes Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
     def async_add_geolocation(feed_manager, integration_id, external_id):
-        """Add gelocation entity from feed."""
+        """Add geolocation entity from feed."""
         new_entity = GeonetnzQuakesEvent(feed_manager, integration_id, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)

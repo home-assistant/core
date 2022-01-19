@@ -18,10 +18,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_WHITE_VALUE,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,14 +42,14 @@ DOMAIN = "fibaro"
 FIBARO_CONTROLLERS = "fibaro_controllers"
 FIBARO_DEVICES = "fibaro_devices"
 PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "light",
-    "scene",
-    "sensor",
-    "lock",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.LOCK,
+    Platform.SWITCH,
 ]
 
 FIBARO_TYPEMAP = {
@@ -353,7 +356,7 @@ class FibaroController:
                 pass
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Fibaro Component."""
     gateways = base_config[DOMAIN][CONF_GATEWAYS]
     hass.data[FIBARO_CONTROLLERS] = {}

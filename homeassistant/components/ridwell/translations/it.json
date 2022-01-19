@@ -14,7 +14,7 @@
                     "password": "Password"
                 },
                 "description": "Inserisci nuovamente la password per {username}:",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {

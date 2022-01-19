@@ -19,7 +19,7 @@ from homeassistant.components.modbus.const import (
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -62,7 +62,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
-                    CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
                     CONF_LAZY_ERROR: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_DEVICE_CLASS: "battery",

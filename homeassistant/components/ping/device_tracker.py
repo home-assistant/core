@@ -1,9 +1,11 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import subprocess
-import sys
 
 from icmplib import async_multiping
 import voluptuous as vol
@@ -15,8 +17,10 @@ from homeassistant.components.device_tracker.const import (
     SCAN_INTERVAL,
     SOURCE_TYPE_ROUTER,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
@@ -45,10 +49,7 @@ class HostSubProcess:
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
-        if sys.platform == "win32":
-            self._ping_cmd = ["ping", "-n", "1", "-w", "1000", ip_address]
-        else:
-            self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", ip_address]
+        self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", ip_address]
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
@@ -77,7 +78,12 @@ class HostSubProcess:
         return False
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the Host objects and return the update function."""
 
     privileged = hass.data[DOMAIN][PING_PRIVS]

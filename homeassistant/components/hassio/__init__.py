@@ -10,6 +10,7 @@ from typing import Any, NamedTuple
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components import persistent_notification
 from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SHUTDOWN_SERVICES,
@@ -25,9 +26,15 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HASS_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceRegistry,
@@ -419,7 +426,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_load_websocket_api(hass)
 
     host = os.environ["HASSIO"]
-    websession = hass.helpers.aiohttp_client.async_get_clientsession()
+    websession = async_get_clientsession(hass)
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
@@ -488,7 +495,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     await push_config(None)
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
         api_endpoint = MAP_SERVICE_API[service.service]
 
@@ -566,7 +573,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Fetch data
     await update_info_data(None)
 
-    async def async_handle_core_service(call):
+    async def async_handle_core_service(call: ServiceCall) -> None:
         """Service handler for handling core services."""
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass
@@ -592,7 +599,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 call.service,
                 errors,
             )
-            hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                hass,
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{HASS_DOMAIN}.check_config",

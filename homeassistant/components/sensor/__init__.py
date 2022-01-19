@@ -72,6 +72,9 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
 
+    # apparent power (VA)
+    APPARENT_POWER = "apparent_power"
+
     # Air Quality Index
     AQI = "aqi"
 
@@ -137,6 +140,9 @@ class SensorDeviceClass(StrEnum):
 
     # pressure (hPa/mbar)
     PRESSURE = "pressure"
+
+    # reactive power (var)
+    REACTIVE_POWER = "reactive_power"
 
     # signal strength (dB/dBm)
     SIGNAL_STRENGTH = "signal_strength"
@@ -302,15 +308,16 @@ class SensorEntity(Entity):
         """Return state attributes."""
         if last_reset := self.last_reset:
             if (
-                self.state_class == SensorStateClass.MEASUREMENT
+                self.state_class != SensorStateClass.TOTAL
                 and not self._last_reset_reported
             ):
                 self._last_reset_reported = True
                 report_issue = self._suggest_report_issue()
+                # This should raise in Home Assistant Core 2022.5
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
                     "last_reset for entities with state_class other than 'total' is "
-                    "deprecated and will be removed from Home Assistant Core 2021.11. "
+                    "not supported. "
                     "Please update your configuration if state_class is manually "
                     "configured, otherwise %s",
                     self.entity_id,
@@ -319,7 +326,8 @@ class SensorEntity(Entity):
                     report_issue,
                 )
 
-            return {ATTR_LAST_RESET: last_reset.isoformat()}
+            if self.state_class == SensorStateClass.TOTAL:
+                return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
 

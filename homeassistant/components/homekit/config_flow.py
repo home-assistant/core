@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import random
 import re
 import string
+from typing import Final
 
 import voluptuous as vol
 
@@ -85,6 +87,7 @@ SUPPORTED_DOMAINS = [
     "fan",
     "humidifier",
     "input_boolean",
+    "input_button",
     "input_select",
     "light",
     "lock",
@@ -116,7 +119,7 @@ DEFAULT_DOMAINS = [
     "water_heater",
 ]
 
-_EMPTY_ENTITY_FILTER = {
+_EMPTY_ENTITY_FILTER: Final = {
     CONF_INCLUDE_DOMAINS: [],
     CONF_EXCLUDE_DOMAINS: [],
     CONF_INCLUDE_ENTITIES: [],
@@ -151,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Choose specific domains in bridge mode."""
         if user_input is not None:
-            entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
             entity_filter[CONF_INCLUDE_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
             self.hk_data[CONF_FILTER] = entity_filter
             return await self.async_step_pairing()
@@ -446,15 +449,28 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_advanced()
 
         entity_filter = self.hk_options.get(CONF_FILTER, {})
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+
         all_supported_entities = _async_get_matching_entities(
             self.hass,
             domains=self.hk_options[CONF_DOMAINS],
         )
-
         data_schema = {}
-        entity_schema = vol.In
-        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
+        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+            # In accessory mode we can only have one
+            default_value = next(
+                iter(
+                    entity_id
+                    for entity_id in entities
+                    if entity_id in all_supported_entities
+                ),
+                None,
+            )
+            entity_schema = vol.In
+            entities_schema_required = vol.Required
+        else:
+            # Bridge mode
+            entities_schema_required = vol.Optional
             include_exclude_mode = MODE_INCLUDE
             if not entities:
                 include_exclude_mode = MODE_EXCLUDE
@@ -463,15 +479,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode)
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
+            # Strip out entities that no longer exist to prevent error in the UI
+            default_value = [
+                entity_id
+                for entity_id in entities
+                if entity_id in all_supported_entities
+            ]
 
-        # Strip out entities that no longer exist to prevent error in the UI
-        valid_entities = [
-            entity_id for entity_id in entities if entity_id in all_supported_entities
-        ]
         data_schema[
-            vol.Optional(CONF_ENTITIES, default=valid_entities)
+            entities_schema_required(CONF_ENTITIES, default=default_value)
         ] = entity_schema(all_supported_entities)
-
         return self.async_show_form(
             step_id="include_exclude", data_schema=vol.Schema(data_schema)
         )
@@ -485,7 +502,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hk_options.update(user_input)
             return await self.async_step_include_exclude()
 
-        self.hk_options = dict(self.config_entry.options)
+        self.hk_options = deepcopy(dict(self.config_entry.options))
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
@@ -512,7 +529,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 async def _async_get_supported_devices(hass):
     """Return all supported devices."""
-    results = await device_automation.async_get_device_automations(hass, "trigger")
+    results = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.TRIGGER
+    )
     dev_reg = device_registry.async_get(hass)
     unsorted = {
         device_id: dev_reg.async_get(device_id).name or device_id

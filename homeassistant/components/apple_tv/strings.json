@@ -51,7 +51,7 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
-      "backoff": "Device does not accept pairing reqests at this time (you might have entered an invalid PIN code too many times), try again later.",
+      "backoff": "Device does not accept pairing requests at this time (you might have entered an invalid PIN code too many times), try again later.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "setup_failed": "Failed to set up device.",

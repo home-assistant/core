@@ -17,13 +17,13 @@
                     "host": "Host",
                     "port": "Porta"
                 },
-                "title": "Configurare le impostazioni di connessione"
+                "title": "Configura le impostazioni di connessione"
             },
             "user": {
                 "data": {
                     "protocol": "Protocollo"
                 },
-                "title": "Scegliere il protocollo AlarmDecoder"
+                "title": "Scegli il protocollo AlarmDecoder"
             }
         }
     },
@@ -41,14 +41,14 @@
                     "auto_bypass": "Bypass automatico all'attivazione",
                     "code_arm_required": "Codice richiesto per l'attivazione"
                 },
-                "title": "Configurare AlarmDecoder"
+                "title": "Configura AlarmDecoder"
             },
             "init": {
                 "data": {
                     "edit_select": "Modifica"
                 },
                 "description": "Cosa vorresti modificare?",
-                "title": "Configurare AlarmDecoder"
+                "title": "Configura AlarmDecoder"
             },
             "zone_details": {
                 "data": {
@@ -59,15 +59,15 @@
                     "zone_rfid": "Seriale RF",
                     "zone_type": "Tipo di zona"
                 },
-                "description": "Immettere i dettagli per la zona {zone_number}. Per eliminare la zona {zone_number}, lasciare vuoto il campo Nome zona.",
-                "title": "Configurare AlarmDecoder"
+                "description": "Immetti i dettagli per la zona {zone_number}. Per eliminare la zona {zone_number}, lascia vuoto il campo Nome zona.",
+                "title": "Configura AlarmDecoder"
             },
             "zone_select": {
                 "data": {
                     "zone_number": "Numero di zona"
                 },
-                "description": "Immettere il numero di zona che si desidera aggiungere, modificare o rimuovere.",
-                "title": "Configurare AlarmDecoder"
+                "description": "Immettere il numero di zona che desideri aggiungere, modificare o rimuovere.",
+                "title": "Configura AlarmDecoder"
             }
         }
     }

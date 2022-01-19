@@ -723,7 +723,7 @@ SWITCH_SETTINGS_DATA = [
     SwitchData(
         "devices:local",
         "Battery:Strategy",
-        "Battery Strategy:",
+        "Battery Strategy",
         "1",
         "1",
         "Automatic",
