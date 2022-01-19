@@ -23,7 +23,7 @@
             },
             "exclude": {
                 "data": {
-                    "entities": "Entities"
+                    "entities": "[%key:component::homekit::options::step::include::data::entities%]"
                 },
                 "description": "All entities in the domain will be included except for the excluded entities and categorized entities.",
                 "title": "Select entities to be excluded"
