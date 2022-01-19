@@ -1,4 +1,6 @@
 """Support for the World Air Quality Index service."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -18,10 +20,13 @@ from homeassistant.const import (
     ATTR_TIME,
     CONF_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,12 +71,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the requested World Air Quality Index locations."""
 
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     station_filter = config.get(CONF_STATIONS)
-    locations = config.get(CONF_LOCATIONS)
+    locations = config[CONF_LOCATIONS]
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []

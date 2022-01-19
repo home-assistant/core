@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     ELECTRIC_CURRENT_AMPERE,
@@ -28,8 +29,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UV_INDEX,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
@@ -208,10 +210,10 @@ SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 
 async def async_setup_entry(
-    hass,
-    config_entry,
-    async_add_entities,
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up config entry."""
 
     def _supported(event):
@@ -219,7 +221,7 @@ async def async_setup_entry(
 
     def _constructor(
         event: RFXtrxEvent,
-        auto: bool,
+        auto: RFXtrxEvent | None,
         device_id: DeviceTuple,
         entity_info: dict,
     ):

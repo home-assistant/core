@@ -34,10 +34,10 @@ PACKAGES = find_packages(exclude=["tests", "tests.*"])
 REQUIRES = [
     "aiohttp==3.8.1",
     "astral==2.2",
-    "async_timeout==4.0.0",
+    "async_timeout==4.0.2",
     "attrs==21.2.0",
     "atomicwrites==1.4.0",
-    "awesomeversion==21.11.0",
+    "awesomeversion==22.1.0",
     'backports.zoneinfo;python_version<"3.9"',
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",
@@ -51,10 +51,11 @@ REQUIRES = [
     "pip>=8.0.3,<20.3",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
-    "requests==2.26.0",
+    "requests==2.27.1",
+    "typing-extensions>=3.10.0.2,<5.0",
     "voluptuous==0.12.2",
     "voluptuous-serialize==2.5.0",
-    "yarl==1.6.3",
+    "yarl==1.7.2",
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))

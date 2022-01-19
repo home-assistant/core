@@ -1,13 +1,18 @@
 """Platform for solarlog sensors."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SolarlogData
 from .const import DOMAIN, SENSOR_TYPES, SolarLogSensorEntityDescription
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add solarlog entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(

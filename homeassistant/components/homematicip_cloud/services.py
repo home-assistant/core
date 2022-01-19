@@ -114,7 +114,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         return
 
     @verify_domain_control(hass, HMIPC_DOMAIN)
-    async def async_call_hmipc_service(service: ServiceCall):
+    async def async_call_hmipc_service(service: ServiceCall) -> None:
         """Call correct HomematicIP Cloud service."""
         service_name = service.service
 

@@ -4,9 +4,11 @@ import logging
 from aiopvapi.resources.shade import factory as PvShade
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_IMPORT_BATTERY_SENSOR,
@@ -31,7 +33,9 @@ from .entity import ShadeEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the hunter douglas shades sensors."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
@@ -53,14 +57,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if signal_sensors is False:
         _LOGGER.debug("Excluding signal sensors based on config entry")
 
-    entities = []
+    battery_entities = []
+    signal_entities = []
     for raw_shade in shade_data.values():
         shade = PvShade(raw_shade, pv_request)
         name_before_refresh = shade.name
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         if signal_sensors is True:
-            entities.append(
+            signal_entities.append(
                 PowerViewShadeSignalSensor(
                     coordinator, device_info, room_name, shade, name_before_refresh
                 )
@@ -71,12 +76,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if shade.raw_data[SHADE_BATTERY_KIND] in SHADE_BATTERY_KIND_EXCLUDE:
             continue
         if battery_sensors is True:
-            entities.append(
+            battery_entities.append(
                 PowerViewShadeBatterySensor(
                     coordinator, device_info, room_name, shade, name_before_refresh
                 )
             )
-    async_add_entities(entities)
+    async_add_entities(battery_entities)
+    async_add_entities(signal_entities)
 
 
 class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
@@ -128,7 +134,7 @@ class PowerViewShadeSignalSensor(ShadeEntity, SensorEntity):
     """Representation of an shade signal sensor."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 
@@ -148,7 +154,7 @@ class PowerViewShadeSignalSensor(ShadeEntity, SensorEntity):
         return f"{self._unique_id}_signal"
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in percentage."""
         return round(self._shade.raw_data["signalStrength"] / 4 * 100)
 

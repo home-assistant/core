@@ -160,10 +160,8 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        with self._wemo_exception_handler("turn off"):
+        with self._wemo_call_wrapper("turn off"):
             self.wemo.set_state(WEMO_FAN_OFF)
-
-        self.schedule_update_ha_state()
 
     def set_percentage(self, percentage: int | None) -> None:
         """Set the fan_mode of the Humidifier."""
@@ -174,10 +172,8 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
         else:
             named_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
 
-        with self._wemo_exception_handler("set speed"):
+        with self._wemo_call_wrapper("set speed"):
             self.wemo.set_state(named_speed)
-
-        self.schedule_update_ha_state()
 
     def set_humidity(self, target_humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
@@ -192,14 +188,10 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
         elif target_humidity >= 100:
             pywemo_humidity = WEMO_HUMIDITY_100
 
-        with self._wemo_exception_handler("set humidity"):
+        with self._wemo_call_wrapper("set humidity"):
             self.wemo.set_humidity(pywemo_humidity)
-
-        self.schedule_update_ha_state()
 
     def reset_filter_life(self) -> None:
         """Reset the filter life to 100%."""
-        with self._wemo_exception_handler("reset filter life"):
+        with self._wemo_call_wrapper("reset filter life"):
             self.wemo.reset_filter_life()
-
-        self.schedule_update_ha_state()

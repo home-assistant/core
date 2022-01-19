@@ -12,6 +12,7 @@
         "interiorColorCode": "BY3",
         "interiorColorName": "BLACK",
         "exteriorColorCode": "42M",
-        "exteriorColorName": "DEEP CRYSTAL BLUE MICA"
+        "exteriorColorName": "DEEP CRYSTAL BLUE MICA",
+        "isElectric": false
     }
 ]

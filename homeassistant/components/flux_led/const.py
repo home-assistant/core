@@ -28,6 +28,7 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
 }
 
+MULTI_BRIGHTNESS_COLOR_MODES: Final = {COLOR_MODE_RGBWW, COLOR_MODE_RGBW}
 
 API: Final = "flux_api"
 
@@ -50,10 +51,15 @@ STARTUP_SCAN_TIMEOUT: Final = 5
 DISCOVER_SCAN_TIMEOUT: Final = 10
 
 CONF_MODEL: Final = "model"
+CONF_MODEL_NUM: Final = "model_num"
+CONF_MODEL_INFO: Final = "model_info"
+CONF_MODEL_DESCRIPTION: Final = "model_description"
 CONF_MINOR_VERSION: Final = "minor_version"
 CONF_REMOTE_ACCESS_ENABLED: Final = "remote_access_enabled"
 CONF_REMOTE_ACCESS_HOST: Final = "remote_access_host"
 CONF_REMOTE_ACCESS_PORT: Final = "remote_access_port"
+CONF_WHITE_CHANNEL_TYPE: Final = "white_channel_type"
+
 
 TRANSITION_GRADUAL: Final = "gradual"
 TRANSITION_JUMP: Final = "jump"

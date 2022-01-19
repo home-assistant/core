@@ -10,17 +10,18 @@ from typing import Any
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
+from homeassistant.components import persistent_notification, webhook
 from homeassistant.components.alexa import (
     errors as alexa_errors,
-    smart_home as alexa_sh,
+    smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import const as gc, smart_home as ga
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util.aiohttp import MockRequest
+from homeassistant.util.aiohttp import MockRequest, serialize_response
 
-from . import alexa_config, google_config, utils
+from . import alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
 
@@ -42,7 +43,7 @@ class CloudClient(Interface):
         self._websession = websession
         self.google_user_config = google_user_config
         self.alexa_user_config = alexa_user_config
-        self._alexa_config: alexa_config.AlexaConfig | None = None
+        self._alexa_config: alexa_config.CloudAlexaConfig | None = None
         self._google_config: google_config.CloudGoogleConfig | None = None
 
     @property
@@ -81,14 +82,14 @@ class CloudClient(Interface):
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
 
-    async def get_alexa_config(self) -> alexa_config.AlexaConfig:
+    async def get_alexa_config(self) -> alexa_config.CloudAlexaConfig:
         """Return Alexa config."""
         if self._alexa_config is None:
             assert self.cloud is not None
 
             cloud_user = await self._prefs.get_cloud_user()
 
-            self._alexa_config = alexa_config.AlexaConfig(
+            self._alexa_config = alexa_config.CloudAlexaConfig(
                 self._hass, self.alexa_user_config, cloud_user, self._prefs, self.cloud
             )
             await self._alexa_config.async_initialize()
@@ -163,9 +164,7 @@ class CloudClient(Interface):
     @callback
     def user_message(self, identifier: str, title: str, message: str) -> None:
         """Create a message for user to UI."""
-        self._hass.components.persistent_notification.async_create(
-            message, title, identifier
-        )
+        persistent_notification.async_create(self._hass, message, title, identifier)
 
     @callback
     def dispatcher_message(self, identifier: str, data: Any = None) -> None:
@@ -181,7 +180,7 @@ class CloudClient(Interface):
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
         aconfig = await self.get_alexa_config()
-        return await alexa_sh.async_handle_message(
+        return await alexa_smart_home.async_handle_message(
             self._hass,
             aconfig,
             payload,
@@ -221,11 +220,11 @@ class CloudClient(Interface):
             mock_source=DOMAIN,
         )
 
-        response = await self._hass.components.webhook.async_handle_webhook(
-            found["webhook_id"], request
+        response = await webhook.async_handle_webhook(
+            self._hass, found["webhook_id"], request
         )
 
-        response_dict = utils.aiohttp_serialize_response(response)
+        response_dict = serialize_response(response)
         body = response_dict.get("body")
 
         return {

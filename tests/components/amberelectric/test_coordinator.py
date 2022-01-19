@@ -1,7 +1,7 @@
 """Tests for the Amber Electric Data Coordinator."""
 from __future__ import annotations
 
-from typing import Generator
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from amberelectric import ApiException

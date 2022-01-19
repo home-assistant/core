@@ -1,5 +1,7 @@
 """Test the base functions of the media player."""
+import asyncio
 import base64
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.components import media_player
@@ -90,6 +92,37 @@ async def test_get_image_http_remote(hass, hass_client_no_auth):
             content = await resp.read()
 
         assert content == b"image"
+
+
+async def test_get_image_http_log_credentials_redacted(
+    hass, hass_client_no_auth, aioclient_mock, caplog
+):
+    """Test credentials are redacted when logging url when fetching image."""
+    url = "http://vi:pass@example.com/default.jpg"
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        assert "entity_picture_local" not in state.attributes
+
+        aioclient_mock.get(url, exc=asyncio.TimeoutError())
+
+        client = await hass_client_no_auth()
+
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert f"Error retrieving proxied image from {url}" not in caplog.text
+    assert (
+        "Error retrieving proxied image from "
+        f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}"
+    ) in caplog.text
 
 
 async def test_get_async_get_browse_image(hass, hass_client_no_auth, hass_ws_client):

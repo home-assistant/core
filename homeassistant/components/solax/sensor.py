@@ -1,4 +1,6 @@
 """Support for Solax inverter via local API."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 
@@ -13,9 +15,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_PORT = 80
 
@@ -29,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Platform setup."""
     api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
     endpoint = RealTimeDataEndpoint(hass, api)

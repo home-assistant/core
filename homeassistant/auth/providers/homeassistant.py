@@ -18,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-# mypy: disallow-any-generics
-
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
 

@@ -21,14 +21,22 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State, callback
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_per_platform,
     config_validation as cv,
     entity_platform,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.state import async_reproduce_state
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
 
@@ -121,9 +129,9 @@ _LOGGER = logging.getLogger(__name__)
 class SceneConfig(NamedTuple):
     """Object for storing scene config."""
 
-    id: str
+    id: str | None
     name: str
-    icon: str
+    icon: str | None
     states: dict
 
 
@@ -156,7 +164,12 @@ def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(entity.scene_config.states)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Home Assistant scene entries."""
     _process_scenes_config(hass, async_add_entities, config)
 
@@ -167,17 +180,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Store platform for later.
     platform = hass.data[DATA_PLATFORM] = entity_platform.async_get_current_platform()
 
-    async def reload_config(call):
+    async def reload_config(call: ServiceCall) -> None:
         """Reload the scene config."""
         try:
-            conf = await conf_util.async_hass_config_yaml(hass)
+            config = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
 
         integration = await async_get_integration(hass, SCENE_DOMAIN)
 
-        conf = await conf_util.async_process_component_config(hass, conf, integration)
+        conf = await conf_util.async_process_component_config(hass, config, integration)
 
         if not (conf and platform):
             return
@@ -197,7 +210,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         SCENE_DOMAIN, SERVICE_RELOAD, reload_config
     )
 
-    async def apply_service(call):
+    async def apply_service(call: ServiceCall) -> None:
         """Apply a scene."""
         reproduce_options = {}
 
@@ -225,7 +238,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ),
     )
 
-    async def create_service(call):
+    async def create_service(call: ServiceCall) -> None:
         """Create a scene."""
         snapshot = call.data[CONF_SNAPSHOT]
         entities = call.data[CONF_ENTITIES]
@@ -246,7 +259,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         scene_config = SceneConfig(None, call.data[CONF_SCENE_ID], None, entities)
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
         if (old := platform.entities.get(entity_id)) is not None:
-            if not old.from_service:
+            if not isinstance(old, HomeAssistantScene) or not old.from_service:
                 _LOGGER.warning("The scene %s already exists", entity_id)
                 return
             await platform.async_remove_entity(entity_id)

@@ -306,6 +306,7 @@ class ElectricalMeasurementApparentPower(
     """Apparent power measurement."""
 
     SENSOR_ATTR = "apparent_power"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
     _unit = POWER_VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 

@@ -15,8 +15,10 @@ from homeassistant.const import (
 )
 
 CONF_AREA_ID = "area_id"
+CONF_LOCK_CODE_DIGITS = "lock_code_digits"
 DEFAULT_NAME = "Yale Smart Alarm"
 DEFAULT_AREA_ID = "1"
+DEFAULT_LOCK_CODE_DIGITS = 4
 
 MANUFACTURER = "Yale"
 MODEL = "main"
@@ -31,7 +33,7 @@ LOGGER = logging.getLogger(__package__)
 ATTR_ONLINE = "online"
 ATTR_STATUS = "status"
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.LOCK]
 
 STATE_MAP = {
     YALE_STATE_DISARM: STATE_ALARM_DISARMED,

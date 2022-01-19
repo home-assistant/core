@@ -1266,6 +1266,7 @@ async def test_thermostat_hvac_modes_with_heat_only(hass, hk_driver):
     await hass.async_block_till_done()
     hap = acc.char_target_heat_cool.to_HAP()
     assert hap["valid-values"] == [HC_HEAT_COOL_OFF, HC_HEAT_COOL_HEAT]
+    assert acc.char_target_heat_cool.allow_invalid_client_values is True
     assert acc.char_target_heat_cool.value == HC_HEAT_COOL_HEAT
 
     acc.char_target_heat_cool.set_value(HC_HEAT_COOL_HEAT)
@@ -1302,6 +1303,29 @@ async def test_thermostat_hvac_modes_with_heat_only(hass, hk_driver):
     assert call_set_hvac_mode
     assert call_set_hvac_mode[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVAC_MODE_HEAT
+
+    acc.char_target_heat_cool.client_update_value(HC_HEAT_COOL_OFF)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    hass.states.async_set(
+        entity_id, HVAC_MODE_OFF, {ATTR_HVAC_MODES: [HVAC_MODE_HEAT, HVAC_MODE_OFF]}
+    )
+    await hass.async_block_till_done()
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_target_heat_cool_iid,
+                    HAP_REPR_VALUE: HC_HEAT_COOL_AUTO,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_HEAT
 
 
 async def test_thermostat_hvac_modes_with_cool_only(hass, hk_driver):
