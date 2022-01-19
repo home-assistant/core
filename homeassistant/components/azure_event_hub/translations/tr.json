@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "cannot_connect": "configuration.yaml'deki kimlik bilgileriyle ba\u011flant\u0131 kurulamad\u0131, l\u00fctfen yaml'den \u00e7\u0131kar\u0131n ve yap\u0131land\u0131rma ak\u0131\u015f\u0131n\u0131 kullan\u0131n.",
+            "cannot_connect": "Configuration.yaml'deki kimlik bilgileriyle ba\u011flant\u0131 kurulamad\u0131, l\u00fctfen yaml'den kald\u0131r\u0131n ve yap\u0131land\u0131rma ak\u0131\u015f\u0131n\u0131 kullan\u0131n.",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
-            "unknown": "configuration.yaml'deki kimlik bilgileriyle ba\u011flant\u0131, bilinmeyen bir hatayla ba\u015far\u0131s\u0131z oldu, l\u00fctfen yaml'den kald\u0131r\u0131n ve yap\u0131land\u0131rma ak\u0131\u015f\u0131n\u0131 kullan\u0131n."
+            "unknown": "configuration.yaml'deki kimlik bilgileriyle ba\u011flant\u0131 bilinmeyen bir hatayla ba\u015far\u0131s\u0131z oldu, l\u00fctfen yaml'den kald\u0131r\u0131n ve yap\u0131land\u0131rma ak\u0131\u015f\u0131n\u0131 kullan\u0131n."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
