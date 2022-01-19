@@ -1,268 +1,165 @@
-"""Tests for SMHI config flow."""
-from unittest.mock import Mock, patch
+"""Test the Smhi config flow."""
+from __future__ import annotations
 
-from smhi.smhi_lib import Smhi as SmhiApi, SmhiForecastException
+from unittest.mock import patch
 
-from homeassistant.components.smhi import config_flow
+from smhi.smhi_lib import SmhiForecastException
+
+from homeassistant import config_entries
+from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
+
+from tests.common import MockConfigEntry
 
 
-# pylint: disable=protected-access
-async def test_homeassistant_location_exists() -> None:
-    """Test if Home Assistant location exists it should return True."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-    with patch.object(flow, "_check_location", return_value=True):
-        # Test exists
-        hass.config.location_name = "Home"
-        hass.config.latitude = 17.8419
-        hass.config.longitude = 59.3262
+async def test_form(hass: HomeAssistant) -> None:
+    """Test we get the form and create an entry."""
 
-        assert await flow._homeassistant_location_exists() is True
+    hass.config.latitude = 0.0
+    hass.config.longitude = 0.0
 
-        # Test not exists
-        hass.config.location_name = None
-        hass.config.latitude = 0
-        hass.config.longitude = 0
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
 
-        assert await flow._homeassistant_location_exists() is False
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        return_value={"test": "something", "test2": "something else"},
+    ), patch(
+        "homeassistant.components.smhi.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LATITUDE: 0.0,
+                CONF_LONGITUDE: 0.0,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "Home"
+    assert result2["data"] == {
+        "latitude": 0.0,
+        "longitude": 0.0,
+        "name": "Home",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Check title is "Weather" when not home coordinates
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        return_value={"test": "something", "test2": "something else"},
+    ), patch(
+        "homeassistant.components.smhi.async_setup_entry",
+        return_value=True,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {
+                CONF_LATITUDE: 1.0,
+                CONF_LONGITUDE: 1.0,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result4["title"] == "Weather 1.0 1.0"
+    assert result4["data"] == {
+        "latitude": 1.0,
+        "longitude": 1.0,
+        "name": "Weather",
+    }
 
 
-async def test_name_in_configuration_exists() -> None:
-    """Test if home location exists in configuration."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
+async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
+    """Test we handle invalid coordinates."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    # Test exists
-    hass.config.location_name = "Home"
-    hass.config.latitude = 17.8419
-    hass.config.longitude = 59.3262
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        side_effect=SmhiForecastException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LATITUDE: 0.0,
+                CONF_LONGITUDE: 0.0,
+            },
+        )
+        await hass.async_block_till_done()
 
-    # Check not exists
-    with patch.object(
-        config_flow,
-        "smhi_locations",
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "wrong_location"}
+
+    # Continue flow with new coordinates
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        return_value={"test": "something", "test2": "something else"},
+    ), patch(
+        "homeassistant.components.smhi.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LATITUDE: 2.0,
+                CONF_LONGITUDE: 2.0,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"] == "Weather 2.0 2.0"
+    assert result3["data"] == {
+        "latitude": 2.0,
+        "longitude": 2.0,
+        "name": "Weather",
+    }
+
+
+async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
+    """Test we handle unique id already exist."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.0-1.0",
+        data={
+            "latitude": 1.0,
+            "longitude": 1.0,
+            "name": "Weather",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
         return_value={"test": "something", "test2": "something else"},
     ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LATITUDE: 1.0,
+                CONF_LONGITUDE: 1.0,
+            },
+        )
+        await hass.async_block_till_done()
 
-        assert flow._name_in_configuration_exists("no_exist_name") is False
-
-    # Check exists
-    with patch.object(
-        config_flow,
-        "smhi_locations",
-        return_value={"test": "something", "name_exist": "config"},
-    ):
-
-        assert flow._name_in_configuration_exists("name_exist") is True
-
-
-def test_smhi_locations(hass) -> None:
-    """Test return empty set."""
-    locations = config_flow.smhi_locations(hass)
-    assert not locations
-
-
-async def test_show_config_form() -> None:
-    """Test show configuration form."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    result = await flow._show_config_form()
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-
-async def test_show_config_form_default_values() -> None:
-    """Test show configuration form."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    result = await flow._show_config_form(name="test", latitude="65", longitude="17")
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-
-async def test_flow_with_home_location(hass) -> None:
-    """Test config flow .
-
-    Tests the flow when a default location is configured
-    then it should return a form with default values
-    """
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    with patch.object(flow, "_check_location", return_value=True):
-        hass.config.location_name = "Home"
-        hass.config.latitude = 17.8419
-        hass.config.longitude = 59.3262
-
-        result = await flow.async_step_user()
-        assert result["type"] == "form"
-        assert result["step_id"] == "user"
-
-
-async def test_flow_show_form() -> None:
-    """Test show form scenarios first time.
-
-    Test when the form should show when no configurations exists
-    """
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    # Test show form when Home Assistant config exists and
-    # home is already configured, then new config is allowed
-    with patch.object(
-        flow, "_show_config_form", return_value=None
-    ) as config_form, patch.object(
-        flow, "_homeassistant_location_exists", return_value=True
-    ), patch.object(
-        config_flow,
-        "smhi_locations",
-        return_value={"test": "something", "name_exist": "config"},
-    ):
-        await flow.async_step_user()
-        assert len(config_form.mock_calls) == 1
-
-    # Test show form when Home Assistant config not and
-    # home is not configured
-    with patch.object(
-        flow, "_show_config_form", return_value=None
-    ) as config_form, patch.object(
-        flow, "_homeassistant_location_exists", return_value=False
-    ), patch.object(
-        config_flow,
-        "smhi_locations",
-        return_value={"test": "something", "name_exist": "config"},
-    ):
-
-        await flow.async_step_user()
-        assert len(config_form.mock_calls) == 1
-
-
-async def test_flow_show_form_name_exists() -> None:
-    """Test show form if name already exists.
-
-    Test when the form should show when no configurations exists
-    """
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-    test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
-    # Test show form when Home Assistant config exists and
-    # home is already configured, then new config is allowed
-    with patch.object(
-        flow, "_show_config_form", return_value=None
-    ) as config_form, patch.object(
-        flow, "_name_in_configuration_exists", return_value=True
-    ), patch.object(
-        config_flow,
-        "smhi_locations",
-        return_value={"test": "something", "name_exist": "config"},
-    ), patch.object(
-        flow, "_check_location", return_value=True
-    ):
-
-        await flow.async_step_user(user_input=test_data)
-
-        assert len(config_form.mock_calls) == 1
-        assert len(flow._errors) == 1
-
-
-async def test_flow_entry_created_from_user_input() -> None:
-    """Test that create data from user input.
-
-    Test when the form should show when no configurations exists
-    """
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
-
-    # Test that entry created when user_input name not exists
-    with patch.object(
-        flow, "_show_config_form", return_value=None
-    ) as config_form, patch.object(
-        flow, "_name_in_configuration_exists", return_value=False
-    ), patch.object(
-        flow, "_homeassistant_location_exists", return_value=False
-    ), patch.object(
-        config_flow,
-        "smhi_locations",
-        return_value={"test": "something", "name_exist": "config"},
-    ), patch.object(
-        flow, "_check_location", return_value=True
-    ):
-
-        result = await flow.async_step_user(user_input=test_data)
-
-        assert result["type"] == "create_entry"
-        assert result["data"] == test_data
-        assert not config_form.mock_calls
-
-
-async def test_flow_entry_created_user_input_faulty() -> None:
-    """Test that create data from user input and are faulty.
-
-    Test when the form should show when user puts faulty location
-    in the config gui. Then the form should show with error
-    """
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
-
-    # Test that entry created when user_input name not exists
-    with patch.object(flow, "_check_location", return_value=True), patch.object(
-        flow, "_show_config_form", return_value=None
-    ) as config_form, patch.object(
-        flow, "_name_in_configuration_exists", return_value=False
-    ), patch.object(
-        flow, "_homeassistant_location_exists", return_value=False
-    ), patch.object(
-        config_flow,
-        "smhi_locations",
-        return_value={"test": "something", "name_exist": "config"},
-    ), patch.object(
-        flow, "_check_location", return_value=False
-    ):
-
-        await flow.async_step_user(user_input=test_data)
-
-        assert len(config_form.mock_calls) == 1
-        assert len(flow._errors) == 1
-
-
-async def test_check_location_correct() -> None:
-    """Test check location when correct input."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    with patch.object(
-        config_flow.aiohttp_client, "async_get_clientsession"
-    ), patch.object(SmhiApi, "async_get_forecast", return_value=None):
-
-        assert await flow._check_location("58", "17") is True
-
-
-async def test_check_location_faulty() -> None:
-    """Test check location when faulty input."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    with patch.object(
-        config_flow.aiohttp_client, "async_get_clientsession"
-    ), patch.object(SmhiApi, "async_get_forecast", side_effect=SmhiForecastException()):
-
-        assert await flow._check_location("58", "17") is False
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"

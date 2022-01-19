@@ -897,6 +897,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
                 CONF_SOURCE: SOURCE_REAUTH,
                 "entry_id": config_entry.entry_id,
                 "unique_id": config_entry.unique_id,
+                "title_placeholders": {"name": config_entry.title},
             },
             data=config_entry.data,
         )
@@ -925,6 +926,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
                 CONF_SOURCE: SOURCE_REAUTH,
                 "entry_id": config_entry.entry_id,
                 "unique_id": config_entry.unique_id,
+                "title_placeholders": {"name": config_entry.title},
             },
             data=config_entry.data,
         )

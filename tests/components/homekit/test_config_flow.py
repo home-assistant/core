@@ -2,10 +2,17 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.homekit.const import DOMAIN, SHORT_BRIDGE_NAME
+from homeassistant.components.homekit.const import (
+    CONF_FILTER,
+    DOMAIN,
+    SHORT_BRIDGE_NAME,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
+
+from .util import PATH_HOMEKIT, async_init_entry
 
 from tests.common import MockConfigEntry
 
@@ -328,6 +335,8 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
     config_entry.add_to_hass(hass)
 
     hass.states.async_set("climate.old", "off")
+    hass.states.async_set("climate.front_gate", "off")
+
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(
@@ -344,6 +353,12 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "include_exclude"
+    entities = result["data_schema"]({})["entities"]
+    assert entities == ["climate.front_gate"]
+
+    # Inject garbage to ensure the options data
+    # is being deep copied and we cannot mutate it in flight
+    config_entry.options[CONF_FILTER][CONF_INCLUDE_DOMAINS].append("garbage")
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1065,11 +1080,13 @@ async def test_options_flow_blocked_when_from_yaml(hass, mock_get_source_ip):
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_options_flow_include_mode_basic_accessory(hass, mock_get_source_ip):
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+async def test_options_flow_include_mode_basic_accessory(
+    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf
+):
     """Test config flow options in include mode with a single accessory."""
-
     config_entry = _mock_config_entry_with_options_populated()
-    config_entry.add_to_hass(hass)
+    await async_init_entry(hass, config_entry)
 
     hass.states.async_set("media_player.tv", "off")
     hass.states.async_set("media_player.sonos", "off")
@@ -1101,7 +1118,48 @@ async def test_options_flow_include_mode_basic_accessory(hass, mock_get_source_i
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "include_exclude"
-    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
+    assert _get_schema_default(result2["data_schema"].schema, "entities") is None
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={"entities": "media_player.tv"},
+    )
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "mode": "accessory",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_domains": [],
+            "include_entities": ["media_player.tv"],
+        },
+    }
+
+    # Now we check again to make sure the single entity is still
+    # preselected
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        "domains": ["media_player"],
+        "mode": "accessory",
+    }
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": ["media_player"], "mode": "accessory"},
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "include_exclude"
+    assert (
+        _get_schema_default(result2["data_schema"].schema, "entities")
+        == "media_player.tv"
+    )
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],

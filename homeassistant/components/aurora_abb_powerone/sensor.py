@@ -1,4 +1,4 @@
-"""Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
+"""Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,29 +6,21 @@ import logging
 from typing import Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_DEVICE,
-    CONF_NAME,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    TEMP_CELSIUS,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .aurora_device import AuroraEntity
-from .const import DEFAULT_ADDRESS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,29 +49,12 @@ SENSOR_TYPES = [
     ),
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_NAME, default="Solar PV"): cv.string,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up based on configuration.yaml (DEPRECATED)."""
-    _LOGGER.warning(
-        "Loading aurora_abb_powerone via platform config is deprecated; The configuration"
-        " has been migrated to a config entry and can be safely removed from configuration.yaml"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 

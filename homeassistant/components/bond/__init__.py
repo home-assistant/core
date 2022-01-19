@@ -87,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=hub_name,
         model=hub.target,
         sw_version=hub.fw_ver,
+        hw_version=hub.mcu_ver,
         suggested_area=hub.location,
         configuration_url=f"http://{host}",
     )

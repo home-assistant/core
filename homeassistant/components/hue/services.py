@@ -27,7 +27,7 @@ LOGGER = logging.getLogger(__name__)
 def async_register_services(hass: HomeAssistant) -> None:
     """Register services for Hue integration."""
 
-    async def hue_activate_scene(call: ServiceCall, skip_reload=True):
+    async def hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
         """Handle activation of Hue scene."""
         # Get parameters
         group_name = call.data[ATTR_GROUP_NAME]

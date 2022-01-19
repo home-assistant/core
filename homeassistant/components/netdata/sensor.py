@@ -1,4 +1,6 @@
 """Support gathering system information of hosts which are running netdata."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -15,8 +17,11 @@ from homeassistant.const import (
     CONF_RESOURCES,
     PERCENTAGE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,13 +57,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Netdata sensor."""
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    resources = config.get(CONF_RESOURCES)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    resources = config[CONF_RESOURCES]
 
     netdata = NetdataData(Netdata(host, port=port))
     await netdata.async_update()
@@ -66,7 +76,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if netdata.api.metrics is None:
         raise PlatformNotReady
 
-    dev = []
+    dev: list[SensorEntity] = []
     for entry, data in resources.items():
         icon = data[CONF_ICON]
         sensor = data[CONF_DATA_GROUP]

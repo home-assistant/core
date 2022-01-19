@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} est\u00e0 reproduint"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} canvia d'estat",
             "idle": "{entity_name} es torna inactiu",
             "paused": "{entity_name} est\u00e0 en pausa",
             "playing": "{entity_name} comen\u00e7a a reproduir",

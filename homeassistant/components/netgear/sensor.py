@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
@@ -15,25 +16,30 @@ SENSOR_TYPES = {
     "type": SensorEntityDescription(
         key="type",
         name="link type",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "link_rate": SensorEntityDescription(
         key="link_rate",
         name="link rate",
         native_unit_of_measurement="Mbps",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "signal": SensorEntityDescription(
         key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "ssid": SensorEntityDescription(
         key="ssid",
         name="ssid",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "conn_ap_mac": SensorEntityDescription(
         key="conn_ap_mac",
         name="access point mac",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

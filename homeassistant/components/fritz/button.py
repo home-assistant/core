@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from .common import FritzBoxTools
 from .const import DOMAIN
@@ -43,21 +42,28 @@ BUTTONS: Final = [
         name="Firmware Update",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=ENTITY_CATEGORY_CONFIG,
-        press_action=lambda router: router.async_trigger_firmware_update(),
+        press_action=lambda avm_device: avm_device.async_trigger_firmware_update(),
     ),
     FritzButtonDescription(
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=ENTITY_CATEGORY_CONFIG,
-        press_action=lambda router: router.async_trigger_reboot(),
+        press_action=lambda avm_device: avm_device.async_trigger_reboot(),
     ),
     FritzButtonDescription(
         key="reconnect",
         name="Reconnect",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=ENTITY_CATEGORY_CONFIG,
-        press_action=lambda router: router.async_trigger_reconnect(),
+        press_action=lambda avm_device: avm_device.async_trigger_reconnect(),
+    ),
+    FritzButtonDescription(
+        key="cleanup",
+        name="Cleanup",
+        icon="mdi:broom",
+        entity_category=ENTITY_CATEGORY_CONFIG,
+        press_action=lambda avm_device: avm_device.async_trigger_cleanup(),
     ),
 ]
 
@@ -69,9 +75,11 @@ async def async_setup_entry(
 ) -> None:
     """Set buttons for device."""
     _LOGGER.debug("Setting up buttons")
-    router: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    avm_device: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([FritzButton(router, entry.title, button) for button in BUTTONS])
+    async_add_entities(
+        [FritzButton(avm_device, entry.title, button) for button in BUTTONS]
+    )
 
 
 class FritzButton(ButtonEntity):
@@ -81,20 +89,21 @@ class FritzButton(ButtonEntity):
 
     def __init__(
         self,
-        router: FritzBoxTools,
+        avm_device: FritzBoxTools,
         device_friendly_name: str,
         description: FritzButtonDescription,
     ) -> None:
         """Initialize Fritz!Box button."""
         self.entity_description = description
-        self.router = router
+        self.avm_device = avm_device
 
         self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = slugify(self._attr_name)
+        self._attr_unique_id = f"{self.avm_device.unique_id}-{description.key}"
+
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, router.mac)}
+            connections={(CONNECTION_NETWORK_MAC, avm_device.mac)}
         )
 
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
-        await self.entity_description.press_action(self.router)
+        await self.entity_description.press_action(self.avm_device)

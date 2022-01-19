@@ -1,12 +1,9 @@
 """Component to integrate ambilight for TVs exposing the Joint Space API."""
 from __future__ import annotations
 
-from typing import Any
-
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -18,13 +15,15 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
 from . import PhilipsTVDataUpdateCoordinator
-from .const import CONF_SYSTEM, DOMAIN
+from .const import DOMAIN
 
 EFFECT_PARTITION = ": "
 EFFECT_MODE = "Mode"
@@ -35,18 +34,12 @@ EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the configuration entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            PhilipsTVLightEntity(
-                coordinator, config_entry.data[CONF_SYSTEM], config_entry.unique_id
-            )
-        ]
-    )
+    async_add_entities([PhilipsTVLightEntity(coordinator)])
 
 
 def _get_settings(style: AmbilightCurrentConfiguration):
@@ -136,15 +129,11 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
-        system: dict[str, Any],
-        unique_id: str,
     ) -> None:
         """Initialize light."""
         self._tv = coordinator.api
         self._hs = None
         self._brightness = None
-        self._system = system
-        self._coordinator = coordinator
         self._cache_keys = None
         super().__init__(coordinator)
 
@@ -152,17 +141,17 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         self._attr_supported_features = (
             SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         )
-        self._attr_name = self._system["name"]
-        self._attr_unique_id = unique_id
+        self._attr_name = f"{coordinator.system['name']} Ambilight"
+        self._attr_unique_id = coordinator.unique_id
         self._attr_icon = "mdi:television-ambient-light"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, self._attr_unique_id),
             },
             manufacturer="Philips",
-            model=self._system.get("model"),
-            name=self._system["name"],
-            sw_version=self._system.get("softwareversion"),
+            model=coordinator.system.get("model"),
+            name=coordinator.system["name"],
+            sw_version=coordinator.system.get("softwareversion"),
         )
 
         self._update_from_coordinator()

@@ -246,7 +246,7 @@ async def test_options_flow(hass):
 
 
 async def test_step_geography_by_coords(hass):
-    """Test setting up a geopgraphy entry by latitude/longitude."""
+    """Test setting up a geography entry by latitude/longitude."""
     conf = {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
@@ -276,7 +276,7 @@ async def test_step_geography_by_coords(hass):
 
 
 async def test_step_geography_by_name(hass):
-    """Test setting up a geopgraphy entry by city/state/country."""
+    """Test setting up a geography entry by city/state/country."""
     conf = {
         CONF_API_KEY: "abcde12345",
         CONF_CITY: "Beijing",

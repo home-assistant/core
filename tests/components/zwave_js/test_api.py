@@ -629,19 +629,19 @@ async def test_add_node(
         "options": {
             "strategy": InclusionStrategy.SECURITY_S2,
             "provisioning": QRProvisioningInformation(
-                QRCodeVersion.S2,
-                [SecurityClass.S2_UNAUTHENTICATED],
-                "test",
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                "test",
-                None,
-                None,
-                None,
+                version=QRCodeVersion.S2,
+                security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+                dsk="test",
+                generic_device_class=1,
+                specific_device_class=1,
+                installer_icon_type=1,
+                manufacturer_id=1,
+                product_type=1,
+                product_id=1,
+                application_version="test",
+                max_inclusion_request_interval=None,
+                uuid=None,
+                supported_protocols=None,
             ).to_dict(),
         },
     }
@@ -932,19 +932,19 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.provision_smart_start_node",
         "entry": QRProvisioningInformation(
-            QRCodeVersion.SMART_START,
-            [SecurityClass.S2_UNAUTHENTICATED],
-            "test",
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            "test",
-            None,
-            None,
-            None,
+            version=QRCodeVersion.SMART_START,
+            security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+            dsk="test",
+            generic_device_class=1,
+            specific_device_class=1,
+            installer_icon_type=1,
+            manufacturer_id=1,
+            product_type=1,
+            product_id=1,
+            application_version="test",
+            max_inclusion_request_interval=None,
+            uuid=None,
+            supported_protocols=None,
         ).to_dict(),
     }
 
@@ -1263,6 +1263,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
         "max_inclusion_request_interval": 1,
         "uuid": "test",
         "supported_protocols": [Protocols.ZWAVE],
+        "additional_properties": {},
     }
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -1762,19 +1763,19 @@ async def test_replace_failed_node(
         "options": {
             "strategy": InclusionStrategy.SECURITY_S2,
             "provisioning": QRProvisioningInformation(
-                QRCodeVersion.S2,
-                [SecurityClass.S2_UNAUTHENTICATED],
-                "test",
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                "test",
-                None,
-                None,
-                None,
+                version=QRCodeVersion.S2,
+                security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+                dsk="test",
+                generic_device_class=1,
+                specific_device_class=1,
+                installer_icon_type=1,
+                manufacturer_id=1,
+                product_type=1,
+                product_id=1,
+                application_version="test",
+                max_inclusion_request_interval=None,
+                uuid=None,
+                supported_protocols=None,
             ).to_dict(),
         },
     }
@@ -2799,20 +2800,8 @@ async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_c
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_dump_view(integration, hass_client):
-    """Test the HTTP dump view."""
-    client = await hass_client()
-    with patch(
-        "zwave_js_server.dump.dump_msgs",
-        return_value=[{"hello": "world"}, {"second": "msg"}],
-    ):
-        resp = await client.get(f"/api/zwave_js/dump/{integration.entry_id}")
-    assert resp.status == HTTPStatus.OK
-    assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
-
-
 async def test_version_info(hass, integration, hass_ws_client, version_state):
-    """Test the HTTP dump node view."""
+    """Test version info API request."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
@@ -2908,21 +2897,6 @@ async def test_firmware_upload_view_invalid_payload(
 
 @pytest.mark.parametrize(
     "method, url",
-    [("get", "/api/zwave_js/dump/{}")],
-)
-async def test_view_non_admin_user(
-    integration, hass_client, hass_admin_user, method, url
-):
-    """Test config entry level views for non-admin users."""
-    client = await hass_client()
-    # Verify we require admin user
-    hass_admin_user.groups = []
-    resp = await client.request(method, url.format(integration.entry_id))
-    assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
-@pytest.mark.parametrize(
-    "method, url",
     [("post", "/api/zwave_js/firmware/upload/{}/{}")],
 )
 async def test_node_view_non_admin_user(
@@ -2941,7 +2915,6 @@ async def test_node_view_non_admin_user(
 @pytest.mark.parametrize(
     "method, url",
     [
-        ("get", "/api/zwave_js/dump/INVALID"),
         ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
     ],
 )
