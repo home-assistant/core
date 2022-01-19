@@ -668,7 +668,7 @@ class HomeKit:
             if ent_reg_ent := ent_reg.async_get(entity_id):
                 if (
                     ent_reg_ent.entity_category in ENTITY_CATEGORIES
-                    and self._filter.explicitly_included()
+                    and not self._filter.explicitly_included()
                 ):
                     continue
 
