@@ -1,6 +1,8 @@
 """Support for Kaiterra Temperature ahn Humidity Sensors."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -58,6 +60,8 @@ class KaiterraSensor(SensorEntity):
         self._device_id = device_id
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
+        if TYPE_CHECKING:
+            assert description.name is not None
         self._attr_unique_id = f"{device_id}_{description.name.lower()}"
 
     @property
