@@ -1351,12 +1351,15 @@ class ArmDisArmTrait(_Trait):
             _verify_pin_challenge(data, self.state, challenge)
             service = SERVICE_ALARM_DISARM
 
+        pin = data.config.secure_devices_pin
+        if isinstance(pin, list):
+            pin = pin[0]
         await self.hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                ATTR_CODE: data.config.secure_devices_pin,
+                ATTR_CODE: pin,
             },
             blocking=not self.config.should_report_state,
             context=data.context,
@@ -2054,7 +2057,10 @@ def _verify_pin_challenge(data, state, challenge):
     if not challenge:
         raise ChallengeNeeded(CHALLENGE_PIN_NEEDED)
 
-    if challenge.get("pin") != data.config.secure_devices_pin:
+    pins = data.config.secure_devices_pin
+    if not isinstance(pins, list):
+        pins = [pins]
+    if not challenge.get("pin") in pins:
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
