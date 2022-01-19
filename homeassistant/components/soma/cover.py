@@ -1,4 +1,5 @@
 """Support for Soma Covers."""
+from __future__ import annotations
 import logging
 
 from requests import RequestException
@@ -26,8 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import API, DEVICES, DOMAIN, SomaEntity
 from .utils import is_api_response_success
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -38,7 +37,7 @@ async def async_setup_entry(
 
     api = hass.data[DOMAIN][API]
     devices = hass.data[DOMAIN][DEVICES]
-    entities = []
+    entities: list[SomaTilt | SomaShade] = []
 
     for device in devices:
         # Assume a shade device if the type is not present in the api response (Connect <2.2.6)
