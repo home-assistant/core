@@ -253,17 +253,17 @@ async def async_setup_entry(
 
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
+            if coordinator is None:
+                coordinator = TibberDataCoordinator(hass, tibber_connection)
+            for entity_description in SENSORS:
+                entities.append(TibberDataSensor(home, coordinator, entity_description))
+
         if home.has_real_time_consumption:
             await home.rt_subscribe(
                 TibberRtDataCoordinator(
                     async_add_entities, home, hass
                 ).async_set_updated_data
             )
-        if home.has_active_subscription and not home.has_real_time_consumption:
-            if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, tibber_connection)
-            for entity_description in SENSORS:
-                entities.append(TibberDataSensor(home, coordinator, entity_description))
 
         # migrate
         old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
@@ -286,6 +286,7 @@ async def async_setup_entry(
                 device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
             )
 
+    print(entities)
     async_add_entities(entities, True)
 
 
