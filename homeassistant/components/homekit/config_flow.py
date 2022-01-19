@@ -529,14 +529,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if self.config_entry.source == SOURCE_IMPORT:
             return await self.async_step_yaml(user_input)
 
-        entity_filter = self.hk_options.get(CONF_FILTER, {})
-        include_exclude_mode = MODE_INCLUDE
-        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
-            include_exclude_mode = MODE_INCLUDE if entities else MODE_EXCLUDE
-
         if user_input is not None:
-            if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+            homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+            if homekit_mode == HOMEKIT_MODE_ACCESSORY:
                 user_input[CONF_INCLUDE_EXCLUDE_MODE] = MODE_INCLUDE
             self.hk_options.update(user_input)
             if self.hk_options[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE:
@@ -545,6 +540,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         self.hk_options = deepcopy(dict(self.config_entry.options))
         homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+        entity_filter = self.hk_options.get(CONF_FILTER, {})
+        include_exclude_mode = MODE_INCLUDE
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        if homekit_mode != HOMEKIT_MODE_ACCESSORY:
+            include_exclude_mode = MODE_INCLUDE if entities else MODE_EXCLUDE
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
