@@ -53,17 +53,14 @@ BASE_V1_QUERY = {
 BASE_V1_QUERY_MIXED = {
     "queries": [
         {
-            "name": "test1",
+            "name": "test",
             "measurement": "measurement",
             "where": "where",
-            "field": "field",
         }
     ],
-    "queries_raw": [{"name": "test_r", "query": "query", "field": "value"}],
+    "queries_raw": [{"name": "test_r", "query": "query"}],
 }
-BASE_V1_QUERY_RAW = {
-    "queries_raw": [{"name": "test", "query": "query", "field": "value"}]
-}
+BASE_V1_QUERY_RAW = {"queries_raw": [{"name": "test", "query": "query"}]}
 BASE_V2_QUERY = {"queries_flux": [{"name": "test", "query": "query"}]}
 BASE_V2_QUERY_MIXED = {
     "queries_flux": [{"name": "test", "query": "query"}],
@@ -105,16 +102,6 @@ def mock_client_close():
         f"{INFLUXDB_CLIENT_PATH}V2.close"
     ) as close_v2:
         yield (close_v1, close_v2)
-
-
-def _get_sensors(queries):
-    """Get list of expected sensors."""
-    expected_sensors = []
-    for query in queries.values():
-        for influx_sensor in query:
-            sensor_name = "sensor." + influx_sensor.get("name")
-            expected_sensors.append(sensor_name)
-    return expected_sensors
 
 
 def _make_v1_resultset(*args):
@@ -234,15 +221,13 @@ async def _setup(hass, config_ext, queries, expected_sensors):
         (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY, _set_query_mock_v2),
         (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY_RAW, _set_query_mock_v1),
         (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY_RAW, _set_query_mock_v2),
-        (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY_MIXED, _set_query_mock_v1),
-        (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY_MIXED, _set_query_mock_v2),
     ],
     indirect=["mock_client"],
 )
 async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_mock):
     """Test the minimal config and defaults."""
     set_query_mock(mock_client)
-    await _setup(hass, config_ext, queries, _get_sensors(queries))
+    await _setup(hass, config_ext, queries, ["sensor.test"])
 
 
 @pytest.mark.parametrize(
@@ -347,84 +332,8 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                     {
                         "name": "test",
                         "unit_of_measurement": "unit",
-                        "bucket": "bucket2",
-                        "query": "query",
-                        "field": "field",
-                    }
-                ],
-            },
-            _set_query_mock_v2,
-        ),
-        (
-            DEFAULT_API_VERSION,
-            {
-                "ssl": "true",
-                "host": "host",
-                "port": "9000",
-                "path": "path",
-                "username": "user",
-                "password": "pass",
-                "database": "db",
-                "verify_ssl": "true",
-            },
-            {
-                "queries": [
-                    {
-                        "name": "test",
-                        "unit_of_measurement": "unit",
-                        "measurement": "measurement",
-                        "where": "where",
                         "value_template": "value",
-                        "database": "db2",
-                        "group_function": "fn",
-                        "field": "field",
-                    }
-                ],
-                "queries_raw": [
-                    {
-                        "name": "test_r",
-                        "unit_of_measurement": "unit",
                         "query": "query",
-                        "value_template": "value",
-                        "database": "db2",
-                        "field": "field",
-                    }
-                ],
-            },
-            _set_query_mock_v1,
-        ),
-        (
-            API_VERSION_2,
-            {
-                "api_version": "2",
-                "ssl": "true",
-                "host": "host",
-                "port": "9000",
-                "path": "path",
-                "token": "token",
-                "organization": "org",
-                "bucket": "bucket",
-            },
-            {
-                "queries_flux": [
-                    {
-                        "name": "test",
-                        "unit_of_measurement": "unit",
-                        "range_start": "start",
-                        "range_stop": "end",
-                        "group_function": "fn",
-                        "bucket": "bucket2",
-                        "imports": "import",
-                        "query": "query",
-                    }
-                ],
-                "queries_raw": [
-                    {
-                        "name": "test_r",
-                        "unit_of_measurement": "unit",
-                        "bucket": "bucket2",
-                        "query": "query",
-                        "field": "field",
                     }
                 ],
             },
@@ -436,7 +345,23 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
 async def test_full_config(hass, mock_client, config_ext, queries, set_query_mock):
     """Test the full config."""
     set_query_mock(mock_client)
-    await _setup(hass, config_ext, queries, _get_sensors(queries))
+    await _setup(hass, config_ext, queries, ["sensor.test"])
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, queries, set_query_mock",
+    [
+        (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY_MIXED, _set_query_mock_v1),
+        (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY_MIXED, _set_query_mock_v2),
+    ],
+    indirect=["mock_client"],
+)
+async def test_queries_raw_combination(
+    hass, mock_client, config_ext, queries, set_query_mock
+):
+    """Test minimal config of mixed configurations."""
+    set_query_mock(mock_client)
+    await _setup(hass, config_ext, queries, ["sensor.test", "sensor.test_r"])
 
 
 @pytest.mark.parametrize(
@@ -445,13 +370,10 @@ async def test_full_config(hass, mock_client, config_ext, queries, set_query_moc
         (BASE_V1_CONFIG),
         (BASE_V2_CONFIG),
         {
-            "queries_raw": [
-                {
-                    "name": "test",
-                    "bucket": "bad_config",
-                    "query": "query",
-                }
-            ],
+            "api_version": "2",
+            "token": "token",
+            "organization": "org",
+            "queries_raw": [{"name": "test", "query": "query", "field": "bad_config"}],
         },
         {
             "api_version": "2",
@@ -484,25 +406,15 @@ async def test_config_failure(hass, config_ext):
             BASE_V1_CONFIG,
             {
                 "queries_raw": [
-                    {"name": "test", "query": "query", "field": "unconsistent_value"}
+                    {"name": "test", "query": "query", "field": "inconsistent_field"}
                 ],
             },
             _set_query_mock_v1,
         ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            {
-                "queries_raw": [
-                    {"name": "test", "query": "query", "field": "unconsistent_value"}
-                ],
-            },
-            _set_query_mock_v2,
-        ),
     ],
     indirect=["mock_client"],
 )
-async def test_state_for_unconsistent_field(
+async def test_state_for_inconsistent_field(
     hass, caplog, mock_client, config_ext, queries, set_query_mock
 ):
     """Test state of sensor if configuration field doesn't match query result field."""
@@ -546,20 +458,6 @@ async def test_state_for_unconsistent_field(
             _set_query_mock_v2,
             _make_v2_resultset,
         ),
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            BASE_V1_QUERY_MIXED,
-            _set_query_mock_v1,
-            _make_v1_resultset,
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            BASE_V2_QUERY_MIXED,
-            _set_query_mock_v2,
-            _make_v2_resultset,
-        ),
     ],
     indirect=["mock_client"],
 )
@@ -569,7 +467,7 @@ async def test_state_matches_query_result(
     """Test state of sensor matches response from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42))
 
-    sensors = await _setup(hass, config_ext, queries, _get_sensors(queries))
+    sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
 
     for sensor_test in sensors:
         assert sensor_test.state == "42"
@@ -796,30 +694,6 @@ async def test_error_querying_influx(
             _make_v2_resultset,
             "query",
         ),
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            {
-                "queries_raw": [
-                    {
-                        "name": "test",
-                        "query": "{{ illegal.template }}",
-                        "field": "value",
-                    }
-                ]
-            },
-            _set_query_mock_v1,
-            _make_v1_resultset,
-            "query",
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            {"queries_raw": [{"name": "test", "query": "{{ illegal.template }}"}]},
-            _set_query_mock_v2,
-            _make_v2_resultset,
-            "query",
-        ),
     ],
     indirect=["mock_client"],
 )
@@ -887,46 +761,6 @@ async def test_error_rendering_template(
             ApiException(),
             _make_v2_resultset,
         ),
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            BASE_V1_QUERY_RAW,
-            _set_query_mock_v1,
-            OSError("fail"),
-            _make_v1_resultset,
-        ),
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            BASE_V1_QUERY_RAW,
-            _set_query_mock_v1,
-            InfluxDBClientError("fail"),
-            _make_v1_resultset,
-        ),
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            BASE_V1_QUERY_RAW,
-            _set_query_mock_v1,
-            InfluxDBServerError("fail"),
-            _make_v1_resultset,
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            BASE_V2_QUERY_RAW,
-            _set_query_mock_v2,
-            OSError("fail"),
-            _make_v2_resultset,
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            BASE_V2_QUERY_RAW,
-            _set_query_mock_v2,
-            ApiException(),
-            _make_v2_resultset,
-        ),
     ],
     indirect=["mock_client"],
 )
@@ -978,23 +812,6 @@ async def test_connection_error_at_startup(
                 "bucket": "bad_bucket",
             },
             BASE_V2_QUERY,
-            _set_query_mock_v2,
-        ),
-        (
-            DEFAULT_API_VERSION,
-            {"database": "bad_db"},
-            BASE_V1_QUERY_RAW,
-            _set_query_mock_v1,
-        ),
-        (
-            API_VERSION_2,
-            {
-                "api_version": API_VERSION_2,
-                "organization": "org",
-                "token": "token",
-                "bucket": "bad_bucket",
-            },
-            BASE_V2_QUERY_RAW,
             _set_query_mock_v2,
         ),
     ],

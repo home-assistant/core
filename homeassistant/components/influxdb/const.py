@@ -123,9 +123,14 @@ CATCHING_UP_MESSAGE = "Catching up, dropped %d old events."
 RESUMED_MESSAGE = "Resumed, lost %d events."
 WROTE_MESSAGE = "Wrote %d events."
 RUNNING_QUERY_MESSAGE = "Running query: %s."
-QUERIES_RAW_BASE_ERROR = "queries_raw - '%s' : '%s' is not allowed when '%s' is '%s'."
-QUERIES_RAW_CONFIG_ERROR = "queries_raw section invalid configuration."
-QUERY_FIELD_CONSISTENCY = "Query returned no result as '%s'. Check consistency between 'query' and 'field' parameters."
+QUERIES_RAW_DATABASE_ERROR = (
+    f"{CONF_DB_NAME} is not allowed when {CONF_API_VERSION} is {API_VERSION_2}."
+)
+QUERIES_RAW_FIELD_ERROR = (
+    f"{CONF_FIELD} is not allowed when {CONF_API_VERSION} is {API_VERSION_2}."
+)
+QUERY_FIELD_CONSISTENCY = "Query returned no %s field. Please check consistency between 'query' and 'field' parameters."
+QUERY_FIELD_CONSISTENCY_V2 = "Query returned no %s field. Please check your query."
 QUERY_NO_RESULTS_MESSAGE = "Query returned no results, sensor state set to UNKNOWN: %s."
 QUERY_MULTIPLE_RESULTS_MESSAGE = (
     "Query returned multiple results, only value from first one is shown: %s."

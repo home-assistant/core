@@ -55,9 +55,10 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES,
     NO_BUCKET_ERROR,
     NO_DATABASE_ERROR,
-    QUERIES_RAW_BASE_ERROR,
-    QUERIES_RAW_CONFIG_ERROR,
+    QUERIES_RAW_DATABASE_ERROR,
+    QUERIES_RAW_FIELD_ERROR,
     QUERY_FIELD_CONSISTENCY,
+    QUERY_FIELD_CONSISTENCY_V2,
     QUERY_MULTIPLE_RESULTS_MESSAGE,
     QUERY_NO_RESULTS_MESSAGE,
     RENDERING_QUERY_ERROR_MESSAGE,
@@ -84,40 +85,18 @@ def _merge_connection_config_into_query(conf, query):
 
 
 def validate_raw_version_config(conf: dict) -> dict:
-    """Ensure correct config fields are provided for queries_raw based on API version used."""
-
-    def __is_valid(setting):
-        if conf[CONF_API_VERSION] == API_VERSION_2 and CONF_DB_NAME in setting:
-            _LOGGER.error(
-                QUERIES_RAW_BASE_ERROR,
-                setting.get(CONF_NAME),
-                CONF_DB_NAME,
-                CONF_API_VERSION,
-                API_VERSION_2,
-            )
-            return False
-
-        if conf[CONF_API_VERSION] == DEFAULT_API_VERSION and CONF_BUCKET in setting:
-            _LOGGER.error(
-                QUERIES_RAW_BASE_ERROR,
-                setting.get(CONF_NAME),
-                CONF_DB_NAME,
-                CONF_API_VERSION,
-                DEFAULT_API_VERSION,
-            )
-            return False
-
-        return True
-
+    """Ensure correct queries_raw config section based on API version."""
     if CONF_QUERIES_RAW in conf:
-        conf[CONF_QUERIES_RAW][:] = [
-            query for query in conf[CONF_QUERIES_RAW] if __is_valid(query)
-        ]
-
-        if len(conf[CONF_QUERIES_RAW]) == 0:
-            del conf[CONF_QUERIES_RAW]
-            if (CONF_QUERIES_FLUX not in conf) and (CONF_QUERIES not in conf):
-                raise vol.Invalid(QUERIES_RAW_CONFIG_ERROR)
+        if conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
+            for query in conf[CONF_QUERIES_RAW]:
+                if CONF_FIELD not in query:
+                    query[CONF_FIELD] = INFLUX_CONF_VALUE
+        else:
+            for query in conf[CONF_QUERIES_RAW]:
+                if CONF_DB_NAME in query:
+                    raise vol.Invalid(QUERIES_RAW_DATABASE_ERROR)
+                if CONF_FIELD in query:
+                    raise vol.Invalid(QUERIES_RAW_FIELD_ERROR)
 
     return conf
 
@@ -192,9 +171,8 @@ _QUERY_SCHEMA = {
     LANGUAGE_RAW: _QUERY_SENSOR_SCHEMA.extend(
         {
             vol.Optional(CONF_DB_NAME): cv.string,
-            vol.Optional(CONF_BUCKET): cv.string,
             vol.Required(CONF_QUERY): cv.template,
-            vol.Optional(CONF_FIELD, default=INFLUX_CONF_VALUE_V2): cv.string,
+            vol.Optional(CONF_FIELD): cv.string,
         }
     ),
     LANGUAGE_FLUX: _QUERY_SENSOR_SCHEMA.extend(
@@ -256,10 +234,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     _LOGGER.error(NO_DATABASE_ERROR, query[CONF_DB_NAME])
 
             if query[CONF_API_VERSION] == API_VERSION_2:
-                if query[CONF_BUCKET] in influx.data_repositories:
-                    entities.append(InfluxSensor(hass, influx, query))
-                else:
-                    _LOGGER.error(NO_BUCKET_ERROR, query[CONF_BUCKET])
+                entities.append(InfluxSensor(hass, influx, query))
 
     add_entities(entities, update_before_add=True)
 
@@ -499,10 +474,10 @@ class InfluxRawSensorData:
             if not tables:
                 _LOGGER.warning(QUERY_NO_RESULTS_MESSAGE, self.full_query)
                 self.value = None
-            elif self.field not in tables[0].records[0].values:
-                _LOGGER.warning(QUERY_FIELD_CONSISTENCY, self.field)
+            elif INFLUX_CONF_VALUE_V2 not in tables[0].records[0].values:
+                _LOGGER.warning(QUERY_FIELD_CONSISTENCY_V2, INFLUX_CONF_VALUE_V2)
                 self.value = None
             else:
                 if len(tables) > 1 or len(tables[0].records) > 1:
                     _LOGGER.warning(QUERY_MULTIPLE_RESULTS_MESSAGE, self.full_query)
-                self.value = tables[0].records[0].values[self.field]
+                self.value = tables[0].records[0].values[INFLUX_CONF_VALUE_V2]
