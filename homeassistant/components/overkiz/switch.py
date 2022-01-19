@@ -30,12 +30,13 @@ class OverkizSwitchDescriptionMixin:
 
     turn_on: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
     turn_off: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
-    is_on: Callable[[Callable[[str], OverkizStateType]], bool]
 
 
 @dataclass
 class OverkizSwitchDescription(SwitchEntityDescription, OverkizSwitchDescriptionMixin):
     """Class to describe an Overkiz switch."""
+
+    is_on: Callable[[Callable[[str], OverkizStateType]], bool] | None = None
 
 
 SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
@@ -74,18 +75,12 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         key=UIWidget.RTD_INDOOR_SIREN,
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
-        is_on=lambda select_state: (
-            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
-        ),
         icon="mdi:bell",
     ),
     OverkizSwitchDescription(
         key=UIWidget.RTD_OUTDOOR_SIREN,
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
-        is_on=lambda select_state: (
-            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
-        ),
         icon="mdi:bell",
     ),
 ]
@@ -127,7 +122,10 @@ class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.entity_description.is_on(self.executor.select_state)
+        if self.entity_description.is_on:
+            return self.entity_description.is_on(self.executor.select_state)
+
+        return False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
