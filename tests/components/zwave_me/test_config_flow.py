@@ -32,175 +32,159 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        with patch(
-            "homeassistant.components.zwave_me.helpers.get_uuid",
-            return_value="1234567",
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            assert result["type"] == RESULT_TYPE_FORM
-            assert result["errors"] == {}
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "url": "192.168.1.14",
-                    "token": "test-token",
-                },
-            )
-            await hass.async_block_till_done()
+            "homeassistant.components.zwave_me.async_setup_entry",
+            return_value=True,
+    ), patch(
+                "homeassistant.components.zwave_me.helpers.get_uuid",
+                return_value="1234567",
+        ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] == {}
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "192.168.1.14",
+                "token": "test-token",
+            },
+        )
+        await hass.async_block_till_done()
 
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "ws://192.168.1.14"
-        assert result2["data"] == {
-            "url": "ws://192.168.1.14",
-            "token": "test-token",
-        }
-        assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "ws://192.168.1.14"
+    assert result2["data"] == {
+        "url": "ws://192.168.1.14",
+        "token": "test-token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_zeroconf(hass: HomeAssistant):
     """Test starting a flow from zeroconf."""
     with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        with patch(
-            "homeassistant.components.zwave_me.helpers.get_uuid",
-            return_value="1234567",
-        ):
-            result: FlowResult = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_ZEROCONF},
-                data=MOCK_ZEROCONF_DATA,
-            )
-            assert result["type"] == RESULT_TYPE_FORM
-            assert result["step_id"] == "user"
+            "homeassistant.components.zwave_me.async_setup_entry",
+            return_value=True,
+    ), patch(
+                "homeassistant.components.zwave_me.helpers.get_uuid",
+                return_value="1234567",
+        ) as mock_setup_entry:
+        result: FlowResult = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=MOCK_ZEROCONF_DATA,
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
 
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "token": "test-token",
-                },
-            )
-            await hass.async_block_till_done()
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "token": "test-token",
+            },
+        )
+        await hass.async_block_till_done()
 
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "ws://192.168.1.14"
-        assert result2["data"] == {
-            "url": "ws://192.168.1.14",
-            "token": "test-token",
-        }
-        assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "ws://192.168.1.14"
+    assert result2["data"] == {
+        "url": "ws://192.168.1.14",
+        "token": "test-token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_error_handling_zeroconf(hass: HomeAssistant):
     """Test getting proper errors from no uuid."""
     with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
+            "homeassistant.components.zwave_me.helpers.get_uuid",
+            return_value=None
     ):
-        with patch(
-            "homeassistant.components.zwave_me.helpers.get_uuid", return_value=None
-        ):
-            result: FlowResult = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_ZEROCONF},
-                data=MOCK_ZEROCONF_DATA,
-            )
-            assert result["type"] == RESULT_TYPE_ABORT
-            assert result["reason"] == "no_valid_uuid_set"
+        result: FlowResult = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=MOCK_ZEROCONF_DATA,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "no_valid_uuid_set"
 
 
 async def test_handle_error_user(hass: HomeAssistant):
     """Test getting proper errors from no uuid."""
     with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
+            "homeassistant.components.zwave_me.helpers.get_uuid",
+            return_value=None
     ):
-        with patch(
-            "homeassistant.components.zwave_me.helpers.get_uuid", return_value=None
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            assert result["type"] == RESULT_TYPE_FORM
-            assert result["errors"] == {}
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "url": "192.168.1.15",
-                    "token": "test-token",
-                },
-            )
-            assert result2["errors"] == {"base": "no_valid_uuid_set"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] == {}
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "192.168.1.15",
+                "token": "test-token",
+            },
+        )
+        assert result2["errors"] == {"base": "no_valid_uuid_set"}
 
 
 async def test_duplicate_user(hass: HomeAssistant):
     """Test getting proper errors from duplicate uuid."""
+    entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ZWave_me",
+        data={
+            "url": "ws://192.168.1.15",
+            "token": "test-token",
+        },
+        unique_id="1234567890_ws://192.168.1.15",
+    )
+    entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
-    ):
-        with patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
             return_value="1234567890",
-        ):
-            entry: MockConfigEntry = MockConfigEntry(
-                domain=DOMAIN,
-                title="ZWave_me",
-                data={
-                    "url": "ws://192.168.1.15",
-                    "token": "test-token",
-                },
-                unique_id="1234567890_ws://192.168.1.15",
-            )
-            entry.add_to_hass(hass)
-
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            assert result["type"] == RESULT_TYPE_FORM
-            assert result["errors"] == {}
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "url": "192.168.1.15",
-                    "token": "test-token",
-                },
-            )
-            assert result2["type"] == RESULT_TYPE_ABORT
-            assert result2["reason"] == "already_configured"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] == {}
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "192.168.1.15",
+                "token": "test-token",
+            },
+        )
+        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["reason"] == "already_configured"
 
 
 async def test_duplicate_zeroconf(hass: HomeAssistant):
     """Test getting proper errors from duplicate uuid."""
+    entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ZWave_me",
+        data={
+            "url": "ws://192.168.1.14",
+            "token": "test-token",
+        },
+        unique_id="1234567890_ws://192.168.1.14",
+    )
+    entry.add_to_hass(hass)
+
     with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
-    ):
-        with patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
             return_value="1234567890",
-        ):
-            entry: MockConfigEntry = MockConfigEntry(
-                domain=DOMAIN,
-                title="ZWave_me",
-                data={
-                    "url": "ws://192.168.1.14",
-                    "token": "test-token",
-                },
-                unique_id="1234567890_ws://192.168.1.14",
-            )
-            entry.add_to_hass(hass)
+    ):
 
-            result: FlowResult = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_ZEROCONF},
-                data=MOCK_ZEROCONF_DATA,
-            )
-            assert result["type"] == RESULT_TYPE_ABORT
-            assert result["reason"] == "already_configured"
+        result: FlowResult = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=MOCK_ZEROCONF_DATA,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
