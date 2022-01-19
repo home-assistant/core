@@ -612,7 +612,7 @@ class AndroidTVDevice(ADBDevice):
         is_muted = await self.aftv.is_volume_muted()
 
         # `None` indicates that the muted status could not be determined
-        if is_muted is not None and is_muted ^ mute:
+        if is_muted is not None and is_muted != mute:
             await self.aftv.mute_volume()
 
     @adb_decorator()
