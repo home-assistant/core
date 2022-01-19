@@ -29,7 +29,7 @@ def create_group(hass, name):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_NAME: name}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_CREATE_GROUP, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_CREATE_GROUP, data))
 
 
 def delete_group(hass, name):
@@ -38,7 +38,7 @@ def delete_group(hass, name):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_NAME: name}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DELETE_GROUP, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_DELETE_GROUP, data))
 
 
 def train_group(hass, group):
@@ -47,7 +47,7 @@ def train_group(hass, group):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_GROUP: group}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TRAIN_GROUP, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TRAIN_GROUP, data))
 
 
 def create_person(hass, group, name):
@@ -56,7 +56,9 @@ def create_person(hass, group, name):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_GROUP: group, ATTR_NAME: name}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_CREATE_PERSON, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_CREATE_PERSON, data)
+    )
 
 
 def delete_person(hass, group, name):
@@ -65,7 +67,9 @@ def delete_person(hass, group, name):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_GROUP: group, ATTR_NAME: name}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DELETE_PERSON, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_DELETE_PERSON, data)
+    )
 
 
 def face_person(hass, group, person, camera_entity):
@@ -74,7 +78,7 @@ def face_person(hass, group, person, camera_entity):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_GROUP: group, ATTR_PERSON: person, ATTR_CAMERA_ENTITY: camera_entity}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_FACE_PERSON, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_FACE_PERSON, data))
 
 
 CONFIG = {mf.DOMAIN: {"api_key": "12345678abcdef"}}
