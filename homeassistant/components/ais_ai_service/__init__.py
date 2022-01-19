@@ -4044,6 +4044,15 @@ def get_context_suffix(hass):
 async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
     """Process a line of text."""
     global CURR_VIRTUAL_KEYBOARD_VALUE
+
+    # set the query text in sensor
+    if len(text) > 100:
+        hass.states.async_set(
+            "sensor.aisknowledgequery", text[0:100] + "...", {"text": text}
+        )
+    else:
+        hass.states.async_set("sensor.aisknowledgequery", text, {"text": text})
+
     # clear text
     text = text.replace("&", "and")
     text = text.replace("-", " ").lower()

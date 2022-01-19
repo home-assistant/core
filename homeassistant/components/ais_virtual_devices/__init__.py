@@ -61,6 +61,9 @@ async def async_setup(hass, config):
         {"friendly_name": "Kod PIN", "icon": "mdi:textbox-password"},
     )
 
+    # sensor aisknowledgequery
+    hass.states.async_set("sensor.aisknowledgequery", "", {"text": ""})
+
     # create groups for remote
 
     #
