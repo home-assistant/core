@@ -488,7 +488,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         entity_cat_entities.add(entity_id)
             all_supported_entities = {
                 k: v
-                for k, v in entity_cat_entities.items()
+                for k, v in all_supported_entities.items()
                 if k not in entity_cat_entities
             }
             # Strip out entities that no longer exist to prevent error in the UI
