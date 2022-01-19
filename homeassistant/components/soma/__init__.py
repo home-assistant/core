@@ -119,7 +119,7 @@ class SomaEntity(Entity):
         """Get the latest data from the API."""
         response = {}
         try:
-            responseFromApi = await self.hass.async_add_executor_job(
+            response_from_api = await self.hass.async_add_executor_job(
                 self.api.get_shade_state, self.device["mac"]
             )
         except RequestException:
@@ -131,16 +131,16 @@ class SomaEntity(Entity):
                 self.api_is_available = True
                 _LOGGER.info("Connection to SOMA Connect succeeded")
 
-            if not is_api_response_success(responseFromApi):
+            if not is_api_response_success(response_from_api):
                 if self.is_available:
                     self.is_available = False
                     _LOGGER.warning(
-                        f'Device is unreachable ({self.name}). Error while fetching the state: {responseFromApi["msg"]}'
+                        f'Device is unreachable ({self.name}). Error while fetching the state: {response_from_api["msg"]}'
                     )
             else:
                 if not self.is_available:
                     self.is_available = True
                     _LOGGER.info(f"Device {self.name} is now reachable")
-                response = responseFromApi
+                response = response_from_api
 
         return response
