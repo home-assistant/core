@@ -61,7 +61,7 @@ ATTR_PRESSURE = [
     SensorStateClass.MEASUREMENT,
 ]
 
-TEMP_SENSOR_MAP = {
+TEMP_SENSOR_MAP: dict[str, list] = {
     "setpoint": ATTR_TEMPERATURE,
     "temperature": ATTR_TEMPERATURE,
     "intended_boiler_temperature": ATTR_TEMPERATURE,
@@ -71,7 +71,7 @@ TEMP_SENSOR_MAP = {
     "return_temperature": ATTR_TEMPERATURE,
 }
 
-ENERGY_SENSOR_MAP = {
+ENERGY_SENSOR_MAP: dict[str, list] = {
     "electricity_consumed": [
         "Current Consumed Power",
         POWER_WATT,
@@ -194,7 +194,7 @@ ENERGY_SENSOR_MAP = {
     ],
 }
 
-MISC_SENSOR_MAP = {
+MISC_SENSOR_MAP: dict[str, list] = {
     "battery": ATTR_BATTERY_LEVEL,
     "illuminance": ATTR_ILLUMINANCE,
     "modulation_level": [
