@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,33 +28,15 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.dt import parse_datetime
 
-from .const import (
-    ATTR_DESCRIPTION,
-    ATTR_LAUNCH_FACILITY,
-    ATTR_LAUNCH_PAD,
-    ATTR_LAUNCH_PAD_COUNTRY_CODE,
-    ATTR_LAUNCH_PROVIDER,
-    ATTR_ORBIT,
-    ATTR_REASON,
-    ATTR_STREAM_LIVE,
-    ATTR_TYPE,
-    ATTR_WINDOW_END,
-    ATTR_WINDOW_START,
-    ATTRIBUTION,
-    DEFAULT_NAME,
-    DOMAIN,
-    LAUNCH_MISSION,
-    LAUNCH_PROBABILITY,
-    LAUNCH_STATUS,
-    LAUNCH_TIME,
-    NEXT_LAUNCH,
-)
+from .const import DOMAIN
+
+DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+    {vol.Optional(CONF_NAME, default=DEFAULT_NEXT_LAUNCH_NAME): cv.string}
 )
 
 
@@ -75,59 +57,53 @@ class NextLaunchSensorEntityDescription(
 
 SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
     NextLaunchSensorEntityDescription(
-        key=NEXT_LAUNCH,
+        key="next_launch",
         icon="mdi:rocket-launch",
-        name=DEFAULT_NAME,
-        value_fn=lambda next_launch: next_launch.name,
-        attributes_fn=lambda next_launch: {
-            ATTR_LAUNCH_PROVIDER: next_launch.launch_service_provider.name,
-            ATTR_LAUNCH_PAD: next_launch.pad.name,
-            ATTR_LAUNCH_FACILITY: next_launch.pad.location.name,
-            ATTR_LAUNCH_PAD_COUNTRY_CODE: next_launch.pad.location.country_code,
+        name="Next launch",
+        value_fn=lambda nl: nl.name,
+        attributes_fn=lambda nl: {
+            "provider": nl.launch_service_provider.name,
+            "pad": nl.pad.name,
+            "facility": nl.pad.location.name,
+            "provider_country_code": nl.pad.location.country_code,
         },
     ),
     NextLaunchSensorEntityDescription(
-        key=LAUNCH_TIME,
+        key="launch_time",
         icon="mdi:clock-outline",
         name="Launch time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda next_launch: parse_datetime(next_launch.net),
-        attributes_fn=lambda next_launch: {
-            ATTR_WINDOW_START: next_launch.window_start,
-            ATTR_WINDOW_END: next_launch.window_end,
-            ATTR_STREAM_LIVE: next_launch.webcast_live,
+        value_fn=lambda nl: parse_datetime(nl.net),
+        attributes_fn=lambda nl: {
+            "window_start": nl.window_start,
+            "window_end": nl.window_end,
+            "stream_live": nl.webcast_live,
         },
     ),
     NextLaunchSensorEntityDescription(
-        key=LAUNCH_PROBABILITY,
+        key="launch_probability",
         icon="mdi:dice-multiple",
         name="Launch Probability",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda next_launch: next_launch.probability
-        if next_launch.probability != -1
-        else STATE_UNKNOWN,
-        attributes_fn=lambda next_launch: None,
+        value_fn=lambda nl: None if nl.probability == -1 else nl.probability,
+        attributes_fn=lambda nl: None,
     ),
     NextLaunchSensorEntityDescription(
-        key=LAUNCH_STATUS,
+        key="launch_status",
         icon="mdi:rocket-launch",
         name="Launch status",
-        value_fn=lambda next_launch: next_launch.status.name,
-        attributes_fn=lambda next_launch: {
-            ATTR_REASON: next_launch.holdreason,
-        }
-        if next_launch.inhold
-        else None,
+        value_fn=lambda nl: nl.status.name,
+        attributes_fn=lambda nl: {"reason": nl.holdreason} if nl.inhold else None,
     ),
     NextLaunchSensorEntityDescription(
-        key=LAUNCH_MISSION,
+        key="launch_mission",
         icon="mdi:orbit",
         name="Launch mission",
-        value_fn=lambda next_launch: next_launch.mission.name,
-        attributes_fn=lambda next_launch: {
-            ATTR_TYPE: next_launch.mission.type,
-            ATTR_ORBIT: next_launch.mission.orbit.name,
-            ATTR_DESCRIPTION: next_launch.mission.description,
+        value_fn=lambda nl: nl.mission.name,
+        attributes_fn=lambda nl: {
+            "mission_type": nl.mission.type,
+            "target_orbit": nl.mission.orbit.name,
+            "description": nl.mission.description,
         },
     ),
 )
@@ -161,7 +137,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
     coordinator = hass.data[DOMAIN]
 
     async_add_entities(
@@ -169,7 +145,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             entry_id=entry.entry_id,
             description=description,
-            name=name if description.key == NEXT_LAUNCH else None,
+            name=name if description.key == "next_launch" else None,
         )
         for description in SENSOR_DESCRIPTIONS
     )
@@ -178,7 +154,7 @@ async def async_setup_entry(
 class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     """Representation of the next launch sensors."""
 
-    _attr_attribution = ATTRIBUTION
+    _attr_attribution = "Data provided by Launch Library."
     _next_launch: Launch | None = None
     entity_description: NextLaunchSensorEntityDescription
 

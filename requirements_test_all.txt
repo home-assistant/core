@@ -1155,7 +1155,7 @@ pyserial==3.5
 pysiaalarm==3.0.2
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.4
+pysignalclirestapi==0.3.18
 
 # homeassistant.components.sma
 pysma==0.6.10
