@@ -48,6 +48,7 @@ from homeassistant.components.roku.const import (
     DOMAIN,
     SERVICE_SEARCH,
 )
+from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -506,6 +507,25 @@ async def test_services(
             {
                 "videoName": "Sent from HA",
                 "videoFormat": "mp4",
+            },
+        )
+
+    with patch("homeassistant.components.roku.coordinator.Roku.play_video") as pv_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+                ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+            },
+            blocking=True,
+        )
+
+        pv_mock.assert_called_once_with(
+            "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+            {
+                "MediaType": "hls",
             },
         )
 
