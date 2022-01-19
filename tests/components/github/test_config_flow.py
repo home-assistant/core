@@ -90,7 +90,7 @@ async def test_flow_with_registration_failure(
     """Test flow with registration failure of the device."""
     aioclient_mock.post(
         "https://github.com/login/device/code",
-        side_effect=GitHubException("Registration failed"),
+        exc=GitHubException("Registration failed"),
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -118,7 +118,7 @@ async def test_flow_with_activation_failure(
     )
     aioclient_mock.post(
         "https://github.com/login/oauth/access_token",
-        side_effect=GitHubException("Activation failed"),
+        exc=GitHubException("Activation failed"),
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
