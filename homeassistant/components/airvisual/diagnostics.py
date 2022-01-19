@@ -4,6 +4,7 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Any
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
@@ -33,7 +34,7 @@ def _async_redact_data(data: MappingProxyType | dict) -> dict[str, Any]:
             CONF_LONGITUDE,
             CONF_STATE,
         ):
-            redacted[key] = "REDACTED"
+            redacted[key] = REDACTED
         if isinstance(value, dict):
             redacted[key] = _async_redact_data(value)
 
