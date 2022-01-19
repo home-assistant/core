@@ -306,7 +306,8 @@ class InputNumber(RestoreEntity):
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed
-        if self._current_value is not None:
-            self._current_value = min(self._current_value, self._maximum)
-            self._current_value = max(self._current_value, self._minimum)
-            self.async_write_ha_state()
+        if self._current_value is None:
+            return
+        self._current_value = min(self._current_value, self._maximum)
+        self._current_value = max(self._current_value, self._minimum)
+        self.async_write_ha_state()
