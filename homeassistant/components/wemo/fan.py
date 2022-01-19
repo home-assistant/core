@@ -95,7 +95,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
         if self.wemo.fan_mode != FanMode.Off:
             self._last_fan_on_mode = self.wemo.fan_mode
         else:
-            self._last_fan_on_mode = FanMode.Medium
+            self._last_fan_on_mode = FanMode.High
 
     @property
     def icon(self) -> str:

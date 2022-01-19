@@ -162,7 +162,7 @@ async def test_fan_set_percentage(
 
 
 class TestInitialFanMode:
-    """Test that the fan mode is set to medium initially."""
+    """Test that the fan mode is set to high the first time turned on."""
 
     @pytest.fixture
     def pywemo_device(self, pywemo_device):
@@ -170,12 +170,12 @@ class TestInitialFanMode:
         pywemo_device.fan_mode = FanMode.Off
         yield pywemo_device
 
-    async def test_fan_mode_medium_initially(self, hass, pywemo_device, wemo_entity):
-        """Verify the FanMode is set to Medium when turned on."""
+    async def test_fan_mode_high_initially(self, hass, pywemo_device, wemo_entity):
+        """Verify the FanMode is set to High when turned on."""
         assert await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
             blocking=True,
         )
-        pywemo_device.set_state.assert_called_with(FanMode.Medium)
+        pywemo_device.set_state.assert_called_with(FanMode.High)
