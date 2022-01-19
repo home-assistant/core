@@ -171,7 +171,7 @@ class DownloadDiagnosticsSubConfigEntryView(http.HomeAssistantView):
 
         data = await info[DiagnosticsSubType.DEVICE](hass, device)
 
-        filename = f"{config_entry.domain}-{config_entry_id}-{device.name}-{device.id}"
+        filename += f"-{device.name}-{device.id}"
 
         try:
             json_data = json.dumps(data, indent=4, cls=ExtendedJSONEncoder)
