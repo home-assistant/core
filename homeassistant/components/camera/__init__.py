@@ -951,10 +951,11 @@ async def async_handle_snapshot_service(
 
     image = await camera.async_camera_image()
 
-    def _write_image(to_file: str, image_data: bytes | None) -> None:
+    if image is None:
+        return
+
+    def _write_image(to_file: str, image_data: bytes) -> None:
         """Executor helper to write image."""
-        if image_data is None:
-            return
         os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)
