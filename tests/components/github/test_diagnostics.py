@@ -58,6 +58,6 @@ async def test_entry_diagnostics_exception(
     )
 
     assert (
-        result["rate_limit"]
+        result["rate_limit"]["error"]
         == "Unexpected exception for 'https://api.github.com/rate_limit' with - error"
     )
