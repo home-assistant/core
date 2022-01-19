@@ -21,7 +21,7 @@ class OAuth2FlowHandler(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        scopes = ["Xboxlive.signin", "Xboxlive.offline_access"]
+        scopes = ["create"]
         return {"scope": " ".join(scopes)}
 
     async def async_step_user(self, user_input=None):

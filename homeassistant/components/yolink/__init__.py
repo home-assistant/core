@@ -18,8 +18,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
-from .client import YoLinkHttpClient
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .client import HomeEventMQTTSubscription, YoLinkHttpClient, YoLinkMQTTClient
+from .const import DOMAIN, HOME_ID, HOME_SUBSCRIPTION, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 SCAN_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +35,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS = ["sensor"]
 
 
@@ -75,11 +73,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, aiohttp_client.async_get_clientsession(hass), session
     )
     yolinkClient = YoLinkHttpClient(authMgr)
+    yolinkMQTTClient = YoLinkMQTTClient(authMgr, hass)
 
     # If using a requests-based API lib
     # hass.data[DOMAIN][entry.entry_id] = api.ConfigEntryAuth(hass, session)
     hass.data[DOMAIN][entry.entry_id] = {
         "client": yolinkClient,
+        "mqttClient": yolinkMQTTClient,
         "devices": [
             {
                 "deviceId": "Test1",
@@ -93,11 +93,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
         async with async_timeout.timeout(5):
-            testResponse = await yolinkClient.getDeviceList()
-            if not (testResponse.data["list"] is None):
-                hass.data[DOMAIN][entry.entry_id]["devices"] = testResponse.data["list"]
+            homeResponse = await yolinkClient.getGeneralInfo()
+            if not (homeResponse.data["id"] is None):
+                hass.data[DOMAIN][entry.entry_id][HOME_ID] = homeResponse.data["id"]
+                hass.data[DOMAIN][entry.entry_id][
+                    HOME_SUBSCRIPTION
+                ] = HomeEventMQTTSubscription(homeResponse.data["id"])
+                yolinkMQTTClient.subscribeHome(
+                    hass.data[DOMAIN][entry.entry_id][HOME_SUBSCRIPTION]
+                )
+        async with async_timeout.timeout(5):
+            devicesResponse = await yolinkClient.getDeviceList()
+            if not (devicesResponse.data["devices"] is None):
+                hass.data[DOMAIN][entry.entry_id]["devices"] = devicesResponse.data[
+                    "devices"
+                ]
+
+        await yolinkMQTTClient.async_connect()
+        # yolinkMQTTClient.subHomeEvents(hass.data[DOMAIN][entry.entry_id]["homeId"])
     except BaseException as err:
-        _LOGGER.warn("Call yolink api failed:%s", err)
+        _LOGGER.warning("Call yolink api failed %s", err)
+        return False
 
     # If using an aiohttp-based API lib
     # hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(

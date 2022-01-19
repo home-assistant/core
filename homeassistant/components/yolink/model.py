@@ -1,6 +1,6 @@
 """VO."""
 
-from typing import Dict
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
@@ -10,9 +10,11 @@ from .const import YoLinkAPIError
 class BRDP(BaseModel):
     """BRDP of YoLink API."""
 
-    code: str
-    desc: str
+    code: Optional[str]
+    desc: Optional[str]
+    method: Optional[str]
     data: Dict
+    event: Optional[str]
 
     def raise_for_status(self):
         """Check API Response."""
@@ -34,7 +36,6 @@ class BSDPHelper:
 
     def addParams(self, params: Dict):
         """Build params of BSDP."""
-        self._bsdp.update
         self._bsdp["params"].update(params)
         return self
 

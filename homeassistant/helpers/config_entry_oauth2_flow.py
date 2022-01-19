@@ -459,8 +459,9 @@ class OAuth2Session:
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
         if self.valid_token:
+            print("Token Valid")
             return
-
+        print("Token Not Valid")
         new_token = await self.implementation.async_refresh_token(self.token)
 
         self.hass.config_entries.async_update_entry(

@@ -24,10 +24,15 @@ class AuthenticationManager:
         self.httpClientSession: ClientSession = client_session
         self.authSession = oauth_session
 
+    @property
+    def accessToken(self) -> str:
+        """Return the access token."""
+        return self.authSession.token["access_token"]
+
     def httpAuthHeader(self):
         """Build API Request header -> Auth."""
 
-        access_token = self.authSession.token["access_token"]
+        access_token = self.accessToken
         return f"Bearer {access_token}"
 
     async def check_and_refresh_token(self):
@@ -35,7 +40,10 @@ class AuthenticationManager:
 
         if not self.authSession.valid_token:
             await self.authSession.async_ensure_token_valid()
-        return self.authSession.token["access_token"]
+        return self.accessToken
+
+    # async def refresh_token(self):
+    # await self.authSession
 
 
 class ConfigEntryAuth(AuthenticationManager):
