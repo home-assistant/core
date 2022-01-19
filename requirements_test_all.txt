@@ -1155,7 +1155,7 @@ pyserial==3.5
 pysiaalarm==3.0.2
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.4
+pysignalclirestapi==0.3.18
 
 # homeassistant.components.sma
 pysma==0.6.10
@@ -1258,7 +1258,7 @@ pyvesync==1.4.2
 pyvizio==0.1.57
 
 # homeassistant.components.volumio
-pyvolumio==0.1.3
+pyvolumio==0.1.5
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -1453,7 +1453,7 @@ twilio==6.32.0
 uEagle==0.0.2
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.0.0
+unifi-discovery==1.1.1
 
 # homeassistant.components.upb
 upb_lib==0.4.12
@@ -1562,4 +1562,4 @@ zigpy-znp==0.6.4
 zigpy==0.42.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.33.0
+zwave-js-server-python==0.34.0

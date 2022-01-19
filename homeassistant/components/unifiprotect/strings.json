@@ -24,7 +24,6 @@
       "discovery_confirm": {
         "description": "Do you want to setup {name} ({ip_address})?",
         "data": {
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"        
         }

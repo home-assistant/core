@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
-import logging
 
 from aiohttp import ClientError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -26,14 +25,13 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import (
     CONF_HUB,
     DOMAIN,
+    LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
     PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
 )
 from .coordinator import OverkizDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -67,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
         )
     except BadCredentialsException:
-        _LOGGER.error("Invalid authentication")
+        LOGGER.error("Invalid authentication")
         return False
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
@@ -78,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name="device events",
         client=client,
         devices=setup.devices,
@@ -90,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.is_stateless:
-        _LOGGER.debug(
+        LOGGER.debug(
             "All devices have an assumed state. Update interval has been reduced to: %s",
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
@@ -104,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Map Overkiz entities to Home Assistant platform
     for device in coordinator.data.values():
-        _LOGGER.debug(
+        LOGGER.debug(
             "The following device has been retrieved. Report an issue if not supported correctly (%s)",
             device,
         )
@@ -119,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
 
     for gateway in setup.gateways:
-        _LOGGER.debug("Added gateway (%s)", gateway)
+        LOGGER.debug("Added gateway (%s)", gateway)
 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,

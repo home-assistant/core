@@ -968,7 +968,7 @@ life360==4.1.1
 lightify==1.0.7.3
 
 # homeassistant.components.lightwave
-lightwave==0.19
+lightwave==0.20
 
 # homeassistant.components.limitlessled
 limitlessled==1.1.3
@@ -1831,7 +1831,7 @@ pysher==1.0.1
 pysiaalarm==3.0.2
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.4
+pysignalclirestapi==0.3.18
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2039,7 +2039,7 @@ pyvizio==0.1.57
 pyvlx==0.2.19
 
 # homeassistant.components.volumio
-pyvolumio==0.1.3
+pyvolumio==0.1.5
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -2178,7 +2178,7 @@ sharkiqpy==0.1.8
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.26.0
+shodan==1.26.1
 
 # homeassistant.components.sighthound
 simplehound==0.3
@@ -2392,7 +2392,7 @@ twilio==6.32.0
 uEagle==0.0.2
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.0.0
+unifi-discovery==1.1.1
 
 # homeassistant.components.unifiled
 unifiled==0.11
@@ -2555,4 +2555,4 @@ zigpy==0.42.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.33.0
+zwave-js-server-python==0.34.0

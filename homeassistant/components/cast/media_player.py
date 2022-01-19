@@ -737,8 +737,7 @@ class CastDevice(MediaPlayerEntity):
         """
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return None
-        media_status_recevied = self._media_status()[1]
-        return media_status_recevied
+        return self._media_status()[1]
 
     async def _async_cast_discovered(self, discover: ChromecastInfo):
         """Handle discovery of new Chromecast."""

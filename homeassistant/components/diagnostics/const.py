@@ -3,6 +3,8 @@ from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "diagnostics"
 
+REDACTED = "**REDACTED**"
+
 
 class DiagnosticsType(StrEnum):
     """Diagnostics types."""

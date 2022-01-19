@@ -1,7 +1,6 @@
 """Config flow for Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aiohttp import ClientError
@@ -21,9 +20,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_HUB, DEFAULT_HUB, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_HUB, DEFAULT_HUB, DOMAIN, LOGGER
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "server_in_maintenance"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-                _LOGGER.exception(exception)
+                LOGGER.exception(exception)
             else:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -94,7 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         hostname = discovery_info.hostname
         gateway_id = hostname[8:22]
 
-        _LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
+        LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
 
         await self.async_set_unique_id(gateway_id)
         self._abort_if_unique_id_configured()

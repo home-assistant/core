@@ -15,17 +15,20 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
 )
 
-from .const import DOMAIN, DiagnosticsSubType, DiagnosticsType
+from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
+
+__all__ = ["REDACTED"]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Diagnostics from a config entry."""
     hass.data[DOMAIN] = {}
 

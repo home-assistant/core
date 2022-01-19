@@ -32,9 +32,9 @@ from miio import (
 )
 from miio.gateway.gateway import GatewayException
 
-from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -115,9 +115,7 @@ MODEL_TO_CLASS_MAP = {
 }
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Xiaomi Miio components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
@@ -278,8 +276,8 @@ def _async_update_data_vacuum(hass, device: RoborockVacuum):
 
 
 async def async_create_miio_device_and_coordinator(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     """Set up a data coordinator and one miio device to service multiple entities."""
     model: str = entry.data[CONF_MODEL]
     host = entry.data[CONF_HOST]
@@ -370,9 +368,7 @@ async def async_create_miio_device_and_coordinator(
     await coordinator.async_config_entry_first_refresh()
 
 
-async def async_setup_gateway_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up the Xiaomi Gateway component from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
@@ -445,9 +441,7 @@ async def async_setup_gateway_entry(
         )
 
 
-async def async_setup_device_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Xiaomi Miio device component from a config entry."""
     platforms = get_platforms(entry)
     await async_create_miio_device_and_coordinator(hass, entry)
@@ -462,9 +456,7 @@ async def async_setup_device_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     platforms = get_platforms(config_entry)
 
@@ -478,8 +470,6 @@ async def async_unload_entry(
     return unload_ok
 
 
-async def update_listener(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

@@ -1,10 +1,12 @@
 """Train information for departures and delays, provided by Trafikverket."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
+from typing import Any
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.trafikverket_train import TrainStop
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -38,6 +40,7 @@ ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
+STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -102,7 +105,7 @@ async def async_setup_platform(
     async_add_entities(sensors, update_before_add=True)
 
 
-def next_weekday(fromdate, weekday):
+def next_weekday(fromdate: date, weekday: int) -> date:
     """Return the date of the next time a specific weekday happen."""
     days_ahead = weekday - fromdate.weekday()
     if days_ahead <= 0:
@@ -110,7 +113,7 @@ def next_weekday(fromdate, weekday):
     return fromdate + timedelta(days_ahead)
 
 
-def next_departuredate(departure):
+def next_departuredate(departure: list[str]) -> date:
     """Calculate the next departuredate from an array input of short days."""
     today_date = date.today()
     today_weekday = date.weekday(today_date)
@@ -123,55 +126,85 @@ def next_departuredate(departure):
     return next_weekday(today_date, WEEKDAYS.index(departure[0]))
 
 
+def _to_iso_format(traintime: datetime) -> str:
+    """Return isoformatted utc time."""
+    return as_utc(traintime.replace(tzinfo=STOCKHOLM_TIMEZONE)).isoformat()
+
+
 class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
 
+    _attr_icon = ICON
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def __init__(self, train_api, name, from_station, to_station, weekday, time):
+    def __init__(
+        self,
+        train_api: TrafikverketTrain,
+        name: str,
+        from_station: str,
+        to_station: str,
+        weekday: list,
+        departuretime: time,
+    ) -> None:
         """Initialize the sensor."""
         self._train_api = train_api
-        self._name = name
+        self._attr_name = name
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
-        self._time = time
-        self._state = None
-        self._departure_state = None
-        self._delay_in_minutes = None
-        self._timezone = get_time_zone("Europe/Stockholm")
+        self._time = departuretime
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        if self._time is not None:
+        when = datetime.now()
+        _state: TrainStop | None = None
+        if self._time:
             departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time).astimezone(
-                self._timezone
+            when = datetime.combine(departure_day, self._time).replace(
+                tzinfo=STOCKHOLM_TIMEZONE
             )
-            try:
-                self._state = await self._train_api.async_get_train_stop(
+        try:
+            if self._time:
+                _state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
                 )
-            except ValueError as output_error:
-                _LOGGER.error(
-                    "Departure %s encountered a problem: %s", when, output_error
-                )
-        else:
-            when = datetime.now()
-            self._state = await self._train_api.async_get_next_train_stop(
-                self._from_station, self._to_station, when
-            )
-        self._departure_state = self._state.get_state().name
-        self._delay_in_minutes = self._state.get_delay_time()
+            else:
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if not self._state:
-            return None
-        attributes = {
-            ATTR_DEPARTURE_STATE: self._departure_state,
-            ATTR_CANCELED: self._state.canceled,
+                _state = await self._train_api.async_get_next_train_stop(
+                    self._from_station, self._to_station, when
+                )
+        except ValueError as output_error:
+            _LOGGER.error("Departure %s encountered a problem: %s", when, output_error)
+
+        if not _state:
+            self._attr_available = False
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
+
+        self._attr_available = True
+
+        # The original datetime doesn't provide a timezone so therefore attaching it here.
+        self._attr_native_value = _state.advertised_time_at_location.replace(
+            tzinfo=STOCKHOLM_TIMEZONE
+        )
+        if _state.time_at_location:
+            self._attr_native_value = _state.time_at_location.replace(
+                tzinfo=STOCKHOLM_TIMEZONE
+            )
+        if _state.estimated_time_at_location:
+            self._attr_native_value = _state.estimated_time_at_location.replace(
+                tzinfo=STOCKHOLM_TIMEZONE
+            )
+
+        self._update_attributes(_state)
+
+    def _update_attributes(self, state: TrainStop) -> None:
+        """Return extra state attributes."""
+
+        attributes: dict[str, Any] = {
+            ATTR_DEPARTURE_STATE: state.get_state().name,
+            ATTR_CANCELED: state.canceled,
             ATTR_DELAY_TIME: None,
             ATTR_PLANNED_TIME: None,
             ATTR_ESTIMATED_TIME: None,
@@ -179,45 +212,23 @@ class TrainSensor(SensorEntity):
             ATTR_OTHER_INFORMATION: None,
             ATTR_DEVIATIONS: None,
         }
-        if self._state.other_information:
-            attributes[ATTR_OTHER_INFORMATION] = ", ".join(
-                self._state.other_information
-            )
-        if self._state.deviations:
-            attributes[ATTR_DEVIATIONS] = ", ".join(self._state.deviations)
-        if self._delay_in_minutes:
-            attributes[ATTR_DELAY_TIME] = self._delay_in_minutes.total_seconds() / 60
-        if self._state.advertised_time_at_location:
-            attributes[ATTR_PLANNED_TIME] = as_utc(
-                self._state.advertised_time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        if self._state.estimated_time_at_location:
-            attributes[ATTR_ESTIMATED_TIME] = as_utc(
-                self._state.estimated_time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        if self._state.time_at_location:
-            attributes[ATTR_ACTUAL_TIME] = as_utc(
-                self._state.time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        return attributes
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        if delay_in_minutes := state.get_delay_time():
+            attributes[ATTR_DELAY_TIME] = delay_in_minutes.total_seconds() / 60
 
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
+        if advert_time := state.advertised_time_at_location:
+            attributes[ATTR_PLANNED_TIME] = _to_iso_format(advert_time)
 
-    @property
-    def native_value(self):
-        """Return the departure state."""
-        if (state := self._state) is not None:
-            if state.time_at_location is not None:
-                return state.time_at_location.astimezone(self._timezone)
-            if state.estimated_time_at_location is not None:
-                return state.estimated_time_at_location.astimezone(self._timezone)
-            return state.advertised_time_at_location.astimezone(self._timezone)
-        return None
+        if est_time := state.estimated_time_at_location:
+            attributes[ATTR_ESTIMATED_TIME] = _to_iso_format(est_time)
+
+        if time_location := state.time_at_location:
+            attributes[ATTR_ACTUAL_TIME] = _to_iso_format(time_location)
+
+        if other_info := state.other_information:
+            attributes[ATTR_OTHER_INFORMATION] = ", ".join(other_info)
+
+        if deviation := state.deviations:
+            attributes[ATTR_DEVIATIONS] = ", ".join(deviation)
+
+        self._attr_extra_state_attributes = attributes
