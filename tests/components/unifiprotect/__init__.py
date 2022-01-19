@@ -16,6 +16,14 @@ UNIFI_DISCOVERY = UnifiDevice(
     platform=DEVICE_HOSTNAME,
     hostname=DEVICE_HOSTNAME,
     services={UnifiService.Protect: True},
+    direct_connect_domain="x.ui.direct",
+)
+
+
+UNIFI_DISCOVERY_PARTIAL = UnifiDevice(
+    source_ip=DEVICE_IP_ADDRESS,
+    hw_addr=DEVICE_MAC_ADDRESS,
+    services={UnifiService.Protect: True},
 )
 
 
