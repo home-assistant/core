@@ -80,7 +80,7 @@ STATE_COLORMODE = "colormode"
 STATE_HUE = "hue"
 STATE_SATURATION = "sat"
 STATE_COLOR_TEMP = "ct"
-STATE_TRANSITON = "tt"
+STATE_TRANSITION = "tt"
 STATE_XY = "xy"
 
 # Hue API states, defined separately in case they change
@@ -358,7 +358,7 @@ class HueOneLightChangeView(HomeAssistantView):
             STATE_SATURATION: None,
             STATE_COLOR_TEMP: None,
             STATE_XY: None,
-            STATE_TRANSITON: None,
+            STATE_TRANSITION: None,
         }
 
         if HUE_API_STATE_ON in request_json:
@@ -374,7 +374,7 @@ class HueOneLightChangeView(HomeAssistantView):
             (HUE_API_STATE_HUE, STATE_HUE),
             (HUE_API_STATE_SAT, STATE_SATURATION),
             (HUE_API_STATE_CT, STATE_COLOR_TEMP),
-            (HUE_API_STATE_TRANSITION, STATE_TRANSITON),
+            (HUE_API_STATE_TRANSITION, STATE_TRANSITION),
         ):
             if key in request_json:
                 try:
@@ -469,9 +469,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
                 if (
                     entity_features & SUPPORT_TRANSITION
-                    and parsed[STATE_TRANSITON] is not None
+                    and parsed[STATE_TRANSITION] is not None
                 ):
-                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITON] / 10
+                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
@@ -590,7 +590,7 @@ class HueOneLightChangeView(HomeAssistantView):
             (STATE_SATURATION, HUE_API_STATE_SAT),
             (STATE_COLOR_TEMP, HUE_API_STATE_CT),
             (STATE_XY, HUE_API_STATE_XY),
-            (STATE_TRANSITON, HUE_API_STATE_TRANSITION),
+            (STATE_TRANSITION, HUE_API_STATE_TRANSITION),
         ):
             if parsed[key] is not None:
                 json_response.append(
