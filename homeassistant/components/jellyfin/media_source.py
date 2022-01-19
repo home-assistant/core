@@ -238,7 +238,13 @@ class JellyfinSource(MediaSource):
     async def _build_tracks(self, album_id: str) -> list[BrowseMediaSource]:
         """Return all tracks of a single album as browsable media sources."""
         tracks = await self._get_children(album_id, ITEM_TYPE_AUDIO)
-        tracks = sorted(tracks, key=lambda k: k[ITEM_KEY_INDEX_NUMBER])  # type: ignore[no-any-return]
+        tracks = sorted(
+            tracks,
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER, None),
+            ),
+        )
         return [self._build_track(track) for track in tracks]
 
     def _build_track(self, track: dict[str, Any]) -> BrowseMediaSource:
@@ -310,7 +316,6 @@ class JellyfinSource(MediaSource):
                 "MaxStreamingBitrate": MAX_STREAMING_BITRATE,
             }
         )
-
         return f"{self.url}Audio/{item_id}/universal?{params}"
 
 
