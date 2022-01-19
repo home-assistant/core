@@ -1263,7 +1263,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
         "max_inclusion_request_interval": 1,
         "uuid": "test",
         "supported_protocols": [Protocols.ZWAVE],
-        # "additional_properties": {},
+        "additional_properties": {},
     }
 
     assert len(client.async_send_command.call_args_list) == 1
