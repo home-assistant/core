@@ -200,7 +200,7 @@ class InputNumber(RestoreEntity):
         """Initialize an input number."""
         self._config = config
         self.editable = True
-        self._current_value = config.get(CONF_INITIAL)
+        self._current_value: float | None = config.get(CONF_INITIAL)
 
     @classmethod
     def from_yaml(cls, config: dict) -> InputNumber:
@@ -306,6 +306,8 @@ class InputNumber(RestoreEntity):
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed
+        if self._current_value is None:
+            return
         self._current_value = min(self._current_value, self._maximum)
         self._current_value = max(self._current_value, self._minimum)
         self.async_write_ha_state()

@@ -29,17 +29,21 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util.dt import parse_datetime
 
 from .const import (
+    ATTR_DESCRIPTION,
     ATTR_LAUNCH_FACILITY,
     ATTR_LAUNCH_PAD,
     ATTR_LAUNCH_PAD_COUNTRY_CODE,
     ATTR_LAUNCH_PROVIDER,
+    ATTR_ORBIT,
     ATTR_REASON,
     ATTR_STREAM_LIVE,
+    ATTR_TYPE,
     ATTR_WINDOW_END,
     ATTR_WINDOW_START,
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
+    LAUNCH_MISSION,
     LAUNCH_PROBABILITY,
     LAUNCH_STATUS,
     LAUNCH_TIME,
@@ -114,6 +118,17 @@ SENSOR_DESCRIPTIONS: tuple[NextLaunchSensorEntityDescription, ...] = (
         }
         if next_launch.inhold
         else None,
+    ),
+    NextLaunchSensorEntityDescription(
+        key=LAUNCH_MISSION,
+        icon="mdi:orbit",
+        name="Launch mission",
+        value_fn=lambda next_launch: next_launch.mission.name,
+        attributes_fn=lambda next_launch: {
+            ATTR_TYPE: next_launch.mission.type,
+            ATTR_ORBIT: next_launch.mission.orbit.name,
+            ATTR_DESCRIPTION: next_launch.mission.description,
+        },
     ),
 )
 
