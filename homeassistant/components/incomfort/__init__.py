@@ -74,7 +74,8 @@ class IncomfortEntity(Entity):
 
     def __init__(self) -> None:
         """Initialize the class."""
-        self._unique_id = self._name = None
+        self._name: str | None = None
+        self._unique_id: str | None = None
 
     @property
     def unique_id(self) -> str | None:
