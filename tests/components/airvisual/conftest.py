@@ -1,8 +1,11 @@
 """Define test fixtures for AirVisual."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.airvisual.const import DOMAIN
 from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -24,6 +27,23 @@ def config_entry_fixture(hass, config, unique_id):
 def config_fixture(hass):
     """Define a config entry data fixture."""
     return {}
+
+
+@pytest.fixture(name="setup_airvisual")
+async def setup_airvisual_fixture(hass, config):
+    """Define a fixture to set up AirVisual."""
+    with patch("pyairvisual.air_quality.AirQuality.city"), patch(
+        "pyairvisual.air_quality.AirQuality.nearest_city"
+    ), patch("pyairvisual.node.NodeSamba.async_connect"), patch(
+        "pyairvisual.node.NodeSamba.async_get_latest_measurements"
+    ), patch(
+        "pyairvisual.node.NodeSamba.async_disconnect"
+    ), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()
+        yield
 
 
 @pytest.fixture(name="unique_id")

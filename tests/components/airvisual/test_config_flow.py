@@ -30,7 +30,6 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
-from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
@@ -150,16 +149,8 @@ async def test_errors(hass, data, exc, errors, integration_type):
         )
     ],
 )
-async def test_migration(hass, config, config_entry, unique_id):
+async def test_migration(hass, config, config_entry, setup_airvisual, unique_id):
     """Test migrating from version 1 to the current version."""
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    with patch("pyairvisual.air_quality.AirQuality.city"), patch(
-        "pyairvisual.air_quality.AirQuality.nearest_city"
-    ), patch.object(hass.config_entries, "async_forward_entry_setup"):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
-        await hass.async_block_till_done()
-
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 2
 
@@ -215,92 +206,100 @@ async def test_options_flow(hass, config_entry):
         assert config_entry.options == {CONF_SHOW_ON_MAP: False}
 
 
-async def test_step_geography_by_coords(hass):
+@pytest.mark.parametrize(
+    "config",
+    [
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_LATITUDE: 51.528308,
+                CONF_LONGITUDE: -0.3817765,
+            }
+        )
+    ],
+)
+async def test_step_geography_by_coords(hass, config, setup_airvisual):
     """Test setting up a geography entry by latitude/longitude."""
-    conf = {
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Cloud API (51.528308, -0.3817765)"
+    assert result["data"] == {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     }
 
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.air_quality.AirQuality.nearest_city"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_CITY: "Beijing",
+                CONF_STATE: "Beijing",
+                CONF_COUNTRY: "China",
+            }
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=conf
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Cloud API (51.528308, -0.3817765)"
-        assert result["data"] == {
-            CONF_API_KEY: "abcde12345",
-            CONF_LATITUDE: 51.528308,
-            CONF_LONGITUDE: -0.3817765,
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
-        }
-
-
-async def test_step_geography_by_name(hass):
+    ],
+)
+async def test_step_geography_by_name(hass, config, setup_airvisual):
     """Test setting up a geography entry by city/state/country."""
-    conf = {
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={"type": INTEGRATION_TYPE_GEOGRAPHY_NAME},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Cloud API (Beijing, Beijing, China)"
+    assert result["data"] == {
         CONF_API_KEY: "abcde12345",
         CONF_CITY: "Beijing",
         CONF_STATE: "Beijing",
         CONF_COUNTRY: "China",
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_NAME,
     }
 
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.air_quality.AirQuality.city"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"type": INTEGRATION_TYPE_GEOGRAPHY_NAME},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=conf
-        )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Cloud API (Beijing, Beijing, China)"
-        assert result["data"] == {
-            CONF_API_KEY: "abcde12345",
-            CONF_CITY: "Beijing",
-            CONF_STATE: "Beijing",
-            CONF_COUNTRY: "China",
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_NAME,
-        }
-
-
-async def test_step_node_pro(hass):
+@pytest.mark.parametrize(
+    "config",
+    [
+        (
+            {
+                CONF_IP_ADDRESS: "192.168.1.100",
+                CONF_PASSWORD: "my_password",
+            }
+        ),
+    ],
+)
+async def test_step_node_pro(hass, config, setup_airvisual):
     """Test the Node/Pro step."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
-
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.node.NodeSamba.async_connect"), patch(
-        "pyairvisual.node.NodeSamba.async_get_latest_measurements"
-    ), patch(
-        "pyairvisual.node.NodeSamba.async_disconnect"
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=conf
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Node/Pro (192.168.1.100)"
-        assert result["data"] == {
-            CONF_IP_ADDRESS: "192.168.1.100",
-            CONF_PASSWORD: "my_password",
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Node/Pro (192.168.1.100)"
+    assert result["data"] == {
+        CONF_IP_ADDRESS: "192.168.1.100",
+        CONF_PASSWORD: "my_password",
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
+    }
 
 
 @pytest.mark.parametrize(
