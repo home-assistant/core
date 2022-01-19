@@ -38,7 +38,10 @@ async def test_entry_diagnostics(
     assert result["rate_limit"] == {
         "resources": {"core": {"remaining": 100, "limit": 100}}
     }
-    assert result["repositories"]["home-assistant/core"] == {}
+    assert (
+        result["repositories"]["home-assistant/core"]["full_name"]
+        == "home-assistant/core"
+    )
 
 
 async def test_entry_diagnostics_exception(
