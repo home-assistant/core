@@ -8,18 +8,18 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
         "entry": {
             "title": "Mock Title",
             "data": {
-                "api_key": "REDACTED",
+                "api_key": "**REDACTED**",
                 "integration_type": "Geographical Location by Latitude/Longitude",
-                "latitude": "REDACTED",
-                "longitude": "REDACTED",
+                "latitude": "**REDACTED**",
+                "longitude": "**REDACTED**",
             },
             "options": {
                 "show_on_map": True,
             },
         },
         "data": {
-            "city": "REDACTED",
-            "country": "REDACTED",
+            "city": "**REDACTED**",
+            "country": "**REDACTED**",
             "current": {
                 "weather": {
                     "ts": "2021-09-03T21:00:00.000Z",
@@ -39,9 +39,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
                 },
             },
             "location": {
-                "coordinates": "REDACTED",
+                "coordinates": "**REDACTED**",
                 "type": "Point",
             },
-            "state": "REDACTED",
+            "state": "**REDACTED**",
         },
     }
