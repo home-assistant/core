@@ -38,7 +38,7 @@ async def async_get_config_entry_diagnostics(
 
 def get_device_data(device: Device) -> dict[str, Any]:
     """Return diagnostic information about a device."""
-    # Return a simplified view of the API object, but skipping and id fields or
+    # Return a simplified view of the API object, but skipping any id fields or
     # traits that include unique identifiers or personally identifiable information.
     # See https://developers.google.com/nest/device-access/traits for API details
     return {
