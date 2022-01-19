@@ -131,7 +131,7 @@ async def test_errors(hass, data, exc, errors, integration_type):
 
 
 @pytest.mark.parametrize(
-    "config,unique_id",
+    "config,config_entry_version,unique_id",
     [
         (
             {
@@ -145,6 +145,7 @@ async def test_errors(hass, data, exc, errors, integration_type):
                     },
                 ],
             },
+            1,
             "abcde12345",
         )
     ],
@@ -175,17 +176,8 @@ async def test_migration(hass, config, config_entry, setup_airvisual, unique_id)
 
 
 @pytest.mark.parametrize(
-    "config,unique_id",
-    [
-        (
-            {
-                CONF_API_KEY: "abcde12345",
-                CONF_LATITUDE: 51.528308,
-                CONF_LONGITUDE: -0.3817765,
-            },
-            "51.528308, -0.3817765",
-        )
-    ],
+    "unique_id",
+    [("51.528308, -0.3817765",)],
 )
 async def test_options_flow(hass, config_entry):
     """Test config flow options."""
@@ -206,18 +198,6 @@ async def test_options_flow(hass, config_entry):
         assert config_entry.options == {CONF_SHOW_ON_MAP: False}
 
 
-@pytest.mark.parametrize(
-    "config",
-    [
-        (
-            {
-                CONF_API_KEY: "abcde12345",
-                CONF_LATITUDE: 51.528308,
-                CONF_LONGITUDE: -0.3817765,
-            }
-        )
-    ],
-)
 async def test_step_geography_by_coords(hass, config, setup_airvisual):
     """Test setting up a geography entry by latitude/longitude."""
     result = await hass.config_entries.flow.async_init(
@@ -302,20 +282,6 @@ async def test_step_node_pro(hass, config, setup_airvisual):
     }
 
 
-@pytest.mark.parametrize(
-    "config,unique_id",
-    [
-        (
-            {
-                CONF_API_KEY: "abcde12345",
-                CONF_LATITUDE: 51.528308,
-                CONF_LONGITUDE: -0.3817765,
-                CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
-            },
-            "51.528308, -0.3817765",
-        )
-    ],
-)
 async def test_step_reauth(hass, config_entry):
     """Test that the reauth step works."""
     result = await hass.config_entries.flow.async_init(
@@ -329,9 +295,9 @@ async def test_step_reauth(hass, config_entry):
 
     new_api_key = "defgh67890"
 
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.air_quality.AirQuality.nearest_city", return_value=True):
+    with patch("homeassistant.config_entries.ConfigEntries.async_reload"), patch(
+        "pyairvisual.air_quality.AirQuality.nearest_city"
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: new_api_key}
         )
