@@ -1114,13 +1114,6 @@ async def test_services_androidtv(hass):
             await _test_service(
                 hass,
                 entity_id,
-                SERVICE_VOLUME_MUTE,
-                "mute_volume",
-                {ATTR_MEDIA_VOLUME_MUTED: False},
-            )
-            await _test_service(
-                hass,
-                entity_id,
                 SERVICE_VOLUME_SET,
                 "set_volume_level",
                 {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
@@ -1150,6 +1143,49 @@ async def test_services_firetv(hass):
             await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
             await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
             await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+
+
+async def test_volume_mute(hass):
+    """Test the volume mute service."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+    config_entry.add_to_hass(hass)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+            service_data = {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_MUTED: True}
+            with patch(
+                "androidtv.androidtv.androidtv_async.AndroidTVAsync.mute_volume",
+                return_value=None,
+            ) as mute_volume:
+                # Don't send the mute key if the volume is already muted
+                with patch(
+                    "androidtv.androidtv.androidtv_async.AndroidTVAsync.is_volume_muted",
+                    return_value=True,
+                ):
+                    await hass.services.async_call(
+                        MP_DOMAIN,
+                        SERVICE_VOLUME_MUTE,
+                        service_data=service_data,
+                        blocking=True,
+                    )
+                    assert not mute_volume.called
+
+                # Send the mute key because the volume is not already muted
+                with patch(
+                    "androidtv.androidtv.androidtv_async.AndroidTVAsync.is_volume_muted",
+                    return_value=False,
+                ):
+                    await hass.services.async_call(
+                        MP_DOMAIN,
+                        SERVICE_VOLUME_MUTE,
+                        service_data=service_data,
+                        blocking=True,
+                    )
+                    assert mute_volume.called
 
 
 async def test_connection_closed_on_ha_stop(hass):

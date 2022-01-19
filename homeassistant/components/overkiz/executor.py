@@ -1,16 +1,14 @@
 """Class for helpers and communication with the OverKiz API."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 from urllib.parse import urlparse
 
 from pyoverkiz.models import Command, Device
 from pyoverkiz.types import StateType as OverkizStateType
 
+from .const import LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OverkizExecutor:
@@ -67,7 +65,7 @@ class OverkizExecutor:
                 "Home Assistant",
             )
         except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.error(exception)
+            LOGGER.error(exception)
             return
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here

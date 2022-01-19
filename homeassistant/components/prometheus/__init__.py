@@ -11,6 +11,7 @@ from homeassistant import core as hacore
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
@@ -391,6 +392,20 @@ class PrometheusMetrics:
             for action in CURRENT_HVAC_ACTIONS:
                 metric.labels(**dict(self._labels(state), action=action)).set(
                     float(action == current_action)
+                )
+
+        current_mode = state.state
+        available_modes = state.attributes.get(ATTR_HVAC_MODES)
+        if current_mode and available_modes:
+            metric = self._metric(
+                "climate_mode",
+                self.prometheus_cli.Gauge,
+                "HVAC mode",
+                ["mode"],
+            )
+            for mode in available_modes:
+                metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == current_mode)
                 )
 
     def _handle_humidifier(self, state):

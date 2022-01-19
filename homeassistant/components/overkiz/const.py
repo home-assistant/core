@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Final
 
 from pyoverkiz.enums import UIClass
@@ -10,6 +11,7 @@ from pyoverkiz.enums.ui import UIWidget
 from homeassistant.const import Platform
 
 DOMAIN: Final = "overkiz"
+LOGGER: logging.Logger = logging.getLogger(__package__)
 
 CONF_HUB: Final = "hub"
 DEFAULT_HUB: Final = "somfy_europe"
