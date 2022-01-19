@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -49,9 +49,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             serial = await validate_input(self.hass, user_input[CONF_HOST])
         except (ConnectionError, ClientConnectionError):
             errors["base"] = "cannot_connect"
-        except Exception as exception:  # pylint: disable=broad-except
-            LOGGER.exception(exception)
-            errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(serial)
             self._abort_if_unique_id_configured(
