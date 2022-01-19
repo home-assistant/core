@@ -79,6 +79,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             if (
                 entity_entry.config_entry_id == config_entry.entry_id
                 and entity_entry.domain == Platform.DEVICE_TRACKER
+                and entity_entry.device_id
             ):
                 mac = entity_entry.unique_id.partition("_")[0]
                 if mac not in keep_devices:
