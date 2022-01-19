@@ -557,6 +557,7 @@ omit =
     homeassistant/components/knx/__init__.py
     homeassistant/components/knx/climate.py
     homeassistant/components/knx/cover.py
+    homeassistant/components/knx/diagnostics.py
     homeassistant/components/knx/expose.py
     homeassistant/components/knx/knx_entity.py
     homeassistant/components/knx/light.py
