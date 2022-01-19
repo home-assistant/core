@@ -968,7 +968,7 @@ life360==4.1.1
 lightify==1.0.7.3
 
 # homeassistant.components.lightwave
-lightwave==0.19
+lightwave==0.20
 
 # homeassistant.components.limitlessled
 limitlessled==1.1.3
