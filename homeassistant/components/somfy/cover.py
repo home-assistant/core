@@ -1,4 +1,8 @@
 """Support for Somfy Covers."""
+from __future__ import annotations
+
+from typing import cast
+
 from pymfy.api.devices.blind import Blind
 from pymfy.api.devices.category import Category
 
@@ -16,6 +20,7 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.components.somfy.coordinator import SomfyDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
@@ -68,7 +73,9 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
 
     def _create_device(self) -> Blind:
         """Update the device with the latest data."""
-        self._cover = Blind(self.device, self.coordinator.client)
+        self._cover = Blind(
+            self.device, cast(SomfyDataUpdateCoordinator, self.coordinator).client
+        )
 
     @property
     def supported_features(self) -> int:
@@ -155,7 +162,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         return self._is_closing
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         is_closed = None
         if self.has_state("position"):
@@ -165,7 +172,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         return is_closed
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
         None is unknown, 0 is closed, 100 is fully open.
