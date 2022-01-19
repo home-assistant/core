@@ -12,10 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CITY, CONF_COUNTRY, DOMAIN
 
-ATTR_DATA = "data"
-ATTR_OPTIONS = "options"
-ATTR_TITLE = "title"
-
 CONF_COORDINATES = "coordinates"
 
 
