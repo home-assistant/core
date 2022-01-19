@@ -28,6 +28,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizSwitchDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
+    is_on: Callable[[Callable[[str], OverkizStateType]], bool]
     turn_on: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
     turn_off: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
 
@@ -35,8 +36,6 @@ class OverkizSwitchDescriptionMixin:
 @dataclass
 class OverkizSwitchDescription(SwitchEntityDescription, OverkizSwitchDescriptionMixin):
     """Class to describe an Overkiz switch."""
-
-    is_on: Callable[[Callable[[str], OverkizStateType]], bool] | None = None
 
 
 SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
@@ -76,12 +75,14 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
         icon="mdi:bell",
+        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
     ),
     OverkizSwitchDescription(
         key=UIWidget.RTD_OUTDOOR_SIREN,
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
         icon="mdi:bell",
+        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
     ),
 ]
 
@@ -122,10 +123,7 @@ class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        if self.entity_description.is_on:
-            return self.entity_description.is_on(self.executor.select_state)
-
-        return False
+        return self.entity_description.is_on(self.executor.select_state)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
