@@ -150,10 +150,9 @@ class SeventeenTrackSummarySensor(SensorEntity):
                 }
             )
 
-        if package_data:
-            self._attr_extra_state_attributes[ATTR_PACKAGES] = package_data
-        else:
-            self._attr_extra_state_attributes[ATTR_PACKAGES] = None
+        self._attr_extra_state_attributes[ATTR_PACKAGES] = (
+            package_data if package_data else None
+        )
 
         self._state = self._data.summary.get(self._status)
 
