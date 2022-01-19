@@ -123,8 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DEVICE_INFO: device_info,
     }
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -170,15 +168,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def update_listener(hass, entry):
-    """Handle options update."""
-    changes = len(entry.options) > 0 and entry.data != entry.options
-    if changes:
-        _LOGGER.debug(
-            "Config entry update with %s and unique_id: %s",
-            entry.options,
-            entry.unique_id,
-        )
-        await hass.config_entries.async_reload(entry.entry_id)
