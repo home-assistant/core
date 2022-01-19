@@ -45,8 +45,8 @@ async def setup_airvisual_fixture(hass, config):
         "pyairvisual.node.NodeSamba.async_get_latest_measurements"
     ), patch(
         "pyairvisual.node.NodeSamba.async_disconnect"
-    ), patch.object(
-        hass.config_entries, "async_forward_entry_setup"
+    ), patch(
+        "homeassistant.components.airvisual.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
