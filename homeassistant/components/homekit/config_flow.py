@@ -486,7 +486,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if ent_reg_ent := ent_reg.async_get(entity_id):
                     if ent_reg_ent.entity_category in ENTITY_CATEGORIES:
                         entity_cat_entities.add(entity_id)
-            all_supported_entities -= entity_cat_entities
+            all_supported_entities = {
+                k: v
+                for k, v in entity_cat_entities.items()
+                if k not in entity_cat_entities
+            }
             # Strip out entities that no longer exist to prevent error in the UI
             default_value = [
                 entity_id
@@ -548,7 +552,9 @@ async def _async_get_supported_devices(hass):
     return dict(sorted(unsorted.items(), key=lambda item: item[1]))
 
 
-def _async_get_matching_entities(hass, domains=None):
+def _async_get_matching_entities(
+    hass: HomeAssistant, domains: list[str] | None = None
+) -> dict[str, str]:
     """Fetch all entities or entities in the given domains."""
     return {
         state.entity_id: f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"
