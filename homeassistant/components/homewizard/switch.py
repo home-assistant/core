@@ -3,14 +3,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
-    SwitchEntity,
-)
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -113,6 +109,7 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(
         self, coordinator: HWEnergyDeviceUpdateCoordinator, entry: ConfigEntry
     ) -> None:
