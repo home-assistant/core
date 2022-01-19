@@ -57,10 +57,10 @@ def data_fixture():
 
 
 @pytest.fixture(name="setup_airvisual")
-async def setup_airvisual_fixture(hass, config):
+async def setup_airvisual_fixture(hass, config, data):
     """Define a fixture to set up AirVisual."""
     with patch("pyairvisual.air_quality.AirQuality.city"), patch(
-        "pyairvisual.air_quality.AirQuality.nearest_city"
+        "pyairvisual.air_quality.AirQuality.nearest_city", return_value=data
     ), patch("pyairvisual.node.NodeSamba.async_connect"), patch(
         "pyairvisual.node.NodeSamba.async_get_latest_measurements"
     ), patch(

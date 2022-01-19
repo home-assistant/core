@@ -1,6 +1,7 @@
 """Diagnostics support for AirVisual."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,28 +15,29 @@ ATTR_DATA = "data"
 ATTR_OPTIONS = "options"
 ATTR_TITLE = "title"
 
+CONF_COORDINATES = "coordinates"
+
 
 @callback
-def _async_get_redacted_entry_info(entry: ConfigEntry) -> dict[str, Any]:
-    """Get redacted config entry data/options/etc."""
-    info = {
-        ATTR_TITLE: entry.title,
-        ATTR_DATA: {**entry.data},
-        ATTR_OPTIONS: {**entry.options},
-    }
+def _async_redact_data(data: MappingProxyType | dict) -> dict[str, Any]:
+    """Redact sensitive data in a dict."""
+    redacted = {**data}
 
-    for field in (
-        CONF_API_KEY,
-        CONF_CITY,
-        CONF_COUNTRY,
-        CONF_LATITUDE,
-        CONF_LONGITUDE,
-        CONF_STATE,
-    ):
-        if field not in info["data"]:
-            info["data"][field] = "REDACTED"
+    for key, value in redacted.items():
+        if key in (
+            CONF_API_KEY,
+            CONF_CITY,
+            CONF_COORDINATES,
+            CONF_COUNTRY,
+            CONF_LATITUDE,
+            CONF_LONGITUDE,
+            CONF_STATE,
+        ):
+            redacted[key] = "REDACTED"
+        if isinstance(value, dict):
+            redacted[key] = _async_redact_data(value)
 
-    return info
+    return redacted
 
 
 async def async_get_config_entry_diagnostics(
@@ -44,8 +46,11 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    print(coordinator)
     return {
-        "entry": _async_get_redacted_entry_info(entry),
-        "data": {**coordinator.data},
+        "entry": {
+            "title": entry.title,
+            "data": _async_redact_data(entry.data),
+            "options": _async_redact_data(entry.options),
+        },
+        "data": _async_redact_data(coordinator.data["data"]),
     }
