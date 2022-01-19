@@ -1,7 +1,9 @@
 """Support for Soma Smartshades."""
 from api.soma_api import SomaApi
 import voluptuous as vol
+import logging
 
+from requests import RequestException
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -11,6 +13,9 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API, DOMAIN, HOST, PORT
+from .utils import is_api_response_success
+
+_LOGGER = logging.getLogger(__name__)
 
 DEVICES = "devices"
 
@@ -109,3 +114,33 @@ class SomaEntity(Entity):
         """Set the current device position."""
         self.current_position = position
         self.schedule_update_ha_state()
+
+    async def async_get_state_from_api(self) -> dict:
+        """Get the latest data from the API."""
+        responseFromApi = {}
+        try:
+            response = await self.hass.async_add_executor_job(
+                self.api.get_shade_state, self.device["mac"]
+            )
+
+            if not self.api_is_available:
+                self.api_is_available = True
+                _LOGGER.info("Connection to SOMA Connect succeeded")
+
+            if not is_api_response_success(response):
+                if self.is_available:
+                    self.is_available = False
+                    _LOGGER.warning(
+                        f'Device is unreachable ({self.name}). Error while fetching the state: {response["msg"]}'
+                    )
+            else:
+                if not self.is_available:
+                    self.is_available = True
+                    _LOGGER.info(f"Device {self.name} is now reachable")
+                responseFromApi = response
+        except RequestException:
+            if self.api_is_available:
+                _LOGGER.warning("Connection to SOMA Connect failed")
+                self.api_is_available = False
+
+        return responseFromApi

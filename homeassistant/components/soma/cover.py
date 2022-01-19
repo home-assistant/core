@@ -1,8 +1,6 @@
 """Support for Soma Covers."""
 import logging
 
-import logging
-
 from requests import RequestException
 
 from homeassistant.components.cover import (
@@ -120,31 +118,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 
     async def async_update(self):
         """Update the entity with the latest data."""
-        try:
-            _LOGGER.debug("Soma Tilt Update")
-            response = await self.hass.async_add_executor_job(
-                self.api.get_shade_state, self.device["mac"]
-            )
-            if not self.api_is_available:
-                self.api_is_available = True
-                _LOGGER.info("Connection to SOMA Connect succeeded")
-        except RequestException:
-            if self.api_is_available:
-                _LOGGER.warning("Connection to SOMA Connect failed")
-                self.api_is_available = False
-            return
-
-        if not is_api_response_success(response):
-            if self.is_available:
-                self.is_available = False
-                _LOGGER.warning(
-                    f'Device is unreachable ({self.name}). Error while fetching the state: {response["msg"]}'
-                )
-            return
-
-        if not self.is_available:
-            self.is_available = True
-            _LOGGER.info(f"Device {self.name} is now reachable")
+        response = await self.async_get_state_from_api()
 
         api_position = int(response["position"])
 
@@ -212,30 +186,6 @@ class SomaShade(SomaEntity, CoverEntity):
 
     async def async_update(self):
         """Update the cover with the latest data."""
-        try:
-            _LOGGER.debug("Soma Shade Update")
-            response = await self.hass.async_add_executor_job(
-                self.api.get_shade_state, self.device["mac"]
-            )
-            if not self.api_is_available:
-                self.api_is_available = True
-                _LOGGER.info("Connection to SOMA Connect succeeded")
-        except RequestException:
-            if self.api_is_available:
-                _LOGGER.warning("Connection to SOMA Connect failed")
-                self.api_is_available = False
-            return
-
-        if not is_api_response_success(response):
-            if self.is_available:
-                self.is_available = False
-                _LOGGER.warning(
-                    f'Device is unreachable ({self.name}). Error while fetching the state: {response["msg"]}'
-                )
-            return
-
-        if not self.is_available:
-            self.is_available = True
-            _LOGGER.info(f"Device {self.name} is now reachable")
+        response = await self.async_get_state_from_api()
 
         self.current_position = 100 - int(response["position"])
