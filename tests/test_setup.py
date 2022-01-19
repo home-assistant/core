@@ -429,7 +429,6 @@ async def test_disable_component_if_invalid_return(hass):
 
 async def test_all_work_done_before_start(hass):
     """Test all init work done till start."""
-    # hass = HomeAssistant()
     call_order = []
 
     async def component1_setup(hass, config):
