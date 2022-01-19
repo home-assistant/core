@@ -38,7 +38,6 @@ NUMBERS: Final = {
         mode=NumberMode("slider"),
         rest_path="thermostat/0",
         rest_arg="pos",
-        rest_channel=False,
     ),
 }
 
