@@ -234,7 +234,7 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
-    entities = []
+    entities: list[SmileSensor] = []
     all_devices = api.get_all_devices()
     single_thermostat = api.single_master_thermostat()
     for dev_id, device_properties in all_devices.items():
