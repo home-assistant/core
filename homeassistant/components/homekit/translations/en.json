@@ -35,12 +35,19 @@
                 "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single board computers.",
                 "title": "Camera Configuration"
             },
-            "include_exclude": {
+            "exclude": {
                 "data": {
                     "entities": "Entities"
                 },
-                "description": "In accessory mode, only a single entity is included. In bridge include mode, all entities in the domain will be included unless specific entities are selected. In bridge exclude mode, all entities in the domain will be included except for the excluded entities and categorized entities. For best performance, a separate HomeKit accessory will be created for each tv media player, activity based remote, lock, and camera.",
-                "title": "Select {include_exclude_mode} entities"
+                "description": "All entities in the domain will be included except for the excluded entities and categorized entities.",
+                "title": "Select entities"
+            },
+            "include": {
+                "data": {
+                    "entities": "Entities"
+                },
+                "description": "In accessory mode, only a single entity is included. In bridge mode, all entities in the domain will be included unless specific entities are selected.",
+                "title": "Select entities"
             },
             "init": {
                 "data": {
