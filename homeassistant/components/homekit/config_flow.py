@@ -401,6 +401,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_include_exclude(self, user_input=None):
         """Choose entities to include or exclude from the domain."""
+        include_exclude_mode = self.hk_options[CONF_INCLUDE_EXCLUDE_MODE]
+
         if user_input is not None:
             entity_filter = _EMPTY_ENTITY_FILTER.copy()
             if isinstance(user_input[CONF_ENTITIES], list):
@@ -410,7 +412,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             if (
                 self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY
-                or user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE
+                or include_exclude_mode == MODE_INCLUDE
             ):
                 entity_filter[CONF_INCLUDE_ENTITIES] = entities
                 # Include all of the domain if there are no entities
@@ -449,7 +451,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return await self.async_step_advanced()
 
-        include_exclude_mode = self.hk_options[CONF_INCLUDE_EXCLUDE_MODE]
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
 
