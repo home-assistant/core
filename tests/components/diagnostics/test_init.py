@@ -34,8 +34,8 @@ async def mock_diagnostics_integration(hass):
     assert await async_setup_component(hass, "diagnostics", {})
 
 
-async def test_websocket_info(hass, hass_ws_client):
-    """Test camera_thumbnail websocket command."""
+async def test_websocket(hass, hass_ws_client):
+    """Test websocket command."""
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "diagnostics/list"})
 
@@ -51,9 +51,23 @@ async def test_websocket_info(hass, hass_ws_client):
         }
     ]
 
+    await client.send_json(
+        {"id": 6, "type": "diagnostics/get", "domain": "fake_integration"}
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 6
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "domain": "fake_integration",
+        "handlers": {"config_entry": True, "device": True},
+    }
+
 
 async def test_download_diagnostics(hass, hass_client):
-    """Test record service."""
+    """Test download diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, "fake_integration"
     ) == {"config_entry": "info"}

@@ -37,6 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, handle_info)
+    websocket_api.async_register_command(hass, handle_get)
     hass.http.register_view(DownloadDiagnosticsView)
 
     return True
@@ -86,6 +87,36 @@ def handle_info(
             }
             for domain, info in hass.data[DOMAIN].items()
         ],
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "diagnostics/get",
+        vol.Required("domain"): str,
+    }
+)
+@callback
+def handle_get(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+):
+    """List all possible diagnostic handlers."""
+    domain = msg["domain"]
+    info = hass.data[DOMAIN].get(domain)
+
+    if info is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "domain": domain,
+            "handlers": {key: val is not None for key, val in info.items()},
+        },
     )
 
 
