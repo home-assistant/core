@@ -6,9 +6,10 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_TOKEN, CONF_URL
 
 from . import helpers
-from .const import CONF_TOKEN, CONF_URL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +42,9 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if self.url is None:
-                self.url = user_input["url"]
+                self.url = user_input[CONF_URL]
 
-            self.token = user_input["token"]
+            self.token = user_input[CONF_TOKEN]
             if not self.url.startswith(("ws://", "wss://")):
                 self.url = f"ws://{self.url}"
             self.url = url_normalize(self.url, default_scheme="ws")
@@ -58,7 +59,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     title=self.url,
-                    data={"url": self.url, "token": self.token},
+                    data={CONF_URL: self.url, CONF_TOKEN: self.token},
                 )
 
         return self.async_show_form(

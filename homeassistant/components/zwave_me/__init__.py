@@ -5,6 +5,7 @@ import logging
 from zwave_me_ws import ZWaveMe, ZWaveMeData
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -47,8 +48,8 @@ class ZWaveMeController:
             on_device_create=self.on_device_create,
             on_device_update=self.on_device_update,
             on_new_device=self.add_device,
-            token=self.config.data["token"],
-            url=self.config.data["url"],
+            token=self.config.data[CONF_TOKEN],
+            url=self.config.data[CONF_URL],
             platforms=ZWAVE_PLATFORMS,
         )
         self.platforms_inited = False

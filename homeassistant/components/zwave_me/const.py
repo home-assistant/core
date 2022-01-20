@@ -12,7 +12,3 @@ ZWAVE_PLATFORMS = [
 PLATFORMS = [
     Platform.NUMBER,
 ]
-
-# Configuration and options
-CONF_URL = "url"
-CONF_TOKEN = "token"
