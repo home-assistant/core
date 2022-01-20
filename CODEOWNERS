@@ -444,6 +444,8 @@ homeassistant/components/insteon/* @teharris1
 tests/components/insteon/* @teharris1
 homeassistant/components/integration/* @dgomes
 tests/components/integration/* @dgomes
+homeassistant/components/intellifire/* @jeeftor
+tests/components/intellifire/* @jeeftor
 homeassistant/components/intent/* @home-assistant/core
 tests/components/intent/* @home-assistant/core
 homeassistant/components/intesishome/* @jnimmo
