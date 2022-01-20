@@ -23,7 +23,7 @@ class RkiCovidDataUpdateCoordinator(DataUpdateCoordinator):
 
     parser: RkiCovidParser
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize global data update coordinator."""
 
         session = async_get_clientsession(hass)

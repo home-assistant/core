@@ -4,7 +4,8 @@ import logging
 from typing import Any
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
+from homeassistant.data_entry_flow import FlowResult
+from .coordinator import RkiCovidDataUpdateCoordinator
 
 
 from .const import ATTR_COUNTY, DOMAIN
@@ -19,7 +20,9 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _options: dict[str, Any] | None = None
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         _LOGGER.debug(f"User triggered configuration flow: {user_input}")
 
@@ -28,11 +31,9 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._options is None:
             self._options = {}
 
-            # add items from coordinator
+            # add items from rki-covid-parser
             coordinator = RkiCovidDataUpdateCoordinator(self.hass)
             await coordinator.async_config_entry_first_refresh()
-
-            _LOGGER.debug(f"Coordinator: {coordinator}")
 
             for case in coordinator.data.values():
                 self._options[case.county] = case.county
@@ -42,7 +43,6 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             # User is done adding sensors, create the config entry.
-            _LOGGER.debug("Create entry from Configuration UI")
             return self.async_create_entry(
                 title=self._options[user_input[ATTR_COUNTY]], data=user_input
             )
