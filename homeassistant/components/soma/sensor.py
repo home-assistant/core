@@ -1,8 +1,5 @@
 """Support for Soma sensors."""
 from datetime import timedelta
-import logging
-
-from requests import RequestException
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,11 +10,8 @@ from homeassistant.util import Throttle
 
 from . import DEVICES, SomaEntity
 from .const import API, DOMAIN
-from .utils import is_api_response_success
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -53,32 +47,7 @@ class SomaSensor(SomaEntity, SensorEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update the sensor with the latest data."""
-        try:
-            _LOGGER.debug("Soma Sensor Update")
-            response = await self.hass.async_add_executor_job(
-                self.api.get_battery_level, self.device["mac"]
-            )
-            if not self.api_is_available:
-                self.api_is_available = True
-                _LOGGER.info("Connection to SOMA Connect succeeded")
-        except RequestException:
-            if self.api_is_available:
-                _LOGGER.warning("Connection to SOMA Connect failed")
-                self.api_is_available = False
-            return
-        if not is_api_response_success(response):
-            if self.is_available:
-                self.is_available = False
-                _LOGGER.warning(
-                    "Device is unreachable (%s). Error while fetching the battery state: %s",
-                    self.name,
-                    response["msg"],
-                )
-            return
-
-        if not self.is_available:
-            self.is_available = True
-            _LOGGER.info("Device %s is now reachable", self.name)
+        response = await self.get_battery_level_from_api()
 
         # https://support.somasmarthome.com/hc/en-us/articles/360026064234-HTTP-API
         # battery_level response is expected to be min = 360, max 410 for

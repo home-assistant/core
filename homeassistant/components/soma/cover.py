@@ -1,6 +1,5 @@
 """Support for Soma Covers."""
 from __future__ import annotations
-import logging
 
 from requests import RequestException
 
@@ -113,7 +112,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 
     async def async_update(self):
         """Update the entity with the latest data."""
-        response = await self.async_get_state_from_api()
+        response = await self.get_shade_state_from_api()
 
         api_position = int(response["position"])
 
@@ -180,6 +179,6 @@ class SomaShade(SomaEntity, CoverEntity):
 
     async def async_update(self):
         """Update the cover with the latest data."""
-        response = await self.async_get_state_from_api()
+        response = await self.get_shade_state_from_api()
 
         self.current_position = 100 - int(response["position"])

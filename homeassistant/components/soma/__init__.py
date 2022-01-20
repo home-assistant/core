@@ -68,6 +68,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+def soma_api_call(api_call):
+    """Soma api call decorator."""
+
+    async def inner(self) -> dict:
+        response = {}
+        try:
+            response_from_api = await api_call(self)
+        except RequestException:
+            if self.api_is_available:
+                _LOGGER.warning("Connection to SOMA Connect failed")
+                self.api_is_available = False
+        else:
+            if not self.api_is_available:
+                self.api_is_available = True
+                _LOGGER.info("Connection to SOMA Connect succeeded")
+
+            if not is_api_response_success(response_from_api):
+                if self.is_available:
+                    self.is_available = False
+                    _LOGGER.warning(
+                        "Device is unreachable (%s). Error while fetching the state: %s",
+                        self.name,
+                        response_from_api["msg"],
+                    )
+            else:
+                if not self.is_available:
+                    self.is_available = True
+                    _LOGGER.info("Device %s is now reachable", self.name)
+                response = response_from_api
+        return response
+
+    return inner
+
+
 class SomaEntity(Entity):
     """Representation of a generic Soma device."""
 
@@ -116,34 +150,16 @@ class SomaEntity(Entity):
         self.current_position = position
         self.schedule_update_ha_state()
 
-    async def async_get_state_from_api(self) -> dict:
-        """Get the latest data from the API."""
-        response = {}
-        try:
-            response_from_api = await self.hass.async_add_executor_job(
-                self.api.get_shade_state, self.device["mac"]
-            )
-        except RequestException:
-            if self.api_is_available:
-                _LOGGER.warning("Connection to SOMA Connect failed")
-                self.api_is_available = False
-        else:
-            if not self.api_is_available:
-                self.api_is_available = True
-                _LOGGER.info("Connection to SOMA Connect succeeded")
+    @soma_api_call
+    async def get_shade_state_from_api(self) -> dict:
+        """Return the shade state from the api."""
+        return await self.hass.async_add_executor_job(
+            self.api.get_shade_state, self.device["mac"]
+        )
 
-            if not is_api_response_success(response_from_api):
-                if self.is_available:
-                    self.is_available = False
-                    _LOGGER.warning(
-                        "Device is unreachable (%s). Error while fetching the state: %s",
-                        self.name,
-                        response_from_api["msg"],
-                    )
-            else:
-                if not self.is_available:
-                    self.is_available = True
-                    _LOGGER.info("Device %s is now reachable", self.name)
-                response = response_from_api
-
-        return response
+    @soma_api_call
+    async def get_battery_level_from_api(self) -> dict:
+        """Return the battery level from the api."""
+        return await self.hass.async_add_executor_job(
+            self.api.get_battery_level, self.device["mac"]
+        )
