@@ -17,6 +17,7 @@ env:
 jobs:
   upload:
     name: Upload
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -35,7 +36,7 @@ jobs:
   download:
     name: Download
     needs: upload
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.repository_owner == 'home-assistant' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
