@@ -37,6 +37,11 @@ ZEROCONF = {
             }
         }
     ],
+    "_airport._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -76,6 +81,11 @@ ZEROCONF = {
     "_bond._tcp.local.": [
         {
             "domain": "bond"
+        }
+    ],
+    "_companion-link._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_daap._tcp.local.": [
@@ -300,6 +310,11 @@ ZEROCONF = {
             "properties": {
                 "mdl": "ecobee*"
             }
+        }
+    ],
+    "_sleep-proxy._udp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_sonos._tcp.local.": [
