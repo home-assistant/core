@@ -21,20 +21,24 @@ MEDIA_DIAGNOSTIC_ATTRIBUTES = (
     "source_name",
     "title",
     "uri",
-    "_last_event_variables",
 )
 SPEAKER_DIAGNOSTIC_ATTRIBUTES = (
     "available",
     "battery_info",
+    "hardware_version",
     "household_id",
     "is_coordinator",
     "model_name",
+    "model_number",
+    "software_version",
     "sonos_group_entities",
     "subscription_address",
     "subscriptions_failed",
+    "version",
     "zone_name",
     "_group_members_missing",
     "_last_activity",
+    "_last_event_cache",
 )
 
 
@@ -52,8 +56,7 @@ async def async_get_config_entry_diagnostics(
             continue
         for key, value in data.items():
             if isinstance(value, SonosSpeaker):
-                speaker_info = await async_generate_speaker_info(hass, value)
-                payload[section][key] = speaker_info
+                payload[section][key] = await async_generate_speaker_info(hass, value)
             else:
                 payload[section][key] = value
 
@@ -66,21 +69,8 @@ async def async_generate_media_info(
     """Generate a diagnostic payload for current media metadata."""
     payload = {}
 
-    def get_contents(item):
-        if isinstance(item, (int, float, str)):
-            return item
-        if isinstance(item, dict):
-            payload = {}
-            for key, value in item.items():
-                payload[key] = get_contents(value)
-            return payload
-        if hasattr(item, "__dict__"):
-            return vars(item)
-        return item
-
     for attrib in MEDIA_DIAGNOSTIC_ATTRIBUTES:
-        value = getattr(speaker.media, attrib)
-        payload[attrib] = get_contents(value)
+        payload[attrib] = getattr(speaker.media, attrib)
 
     def poll_current_track_info():
         return speaker.soco.avTransport.GetPositionInfo(
@@ -99,7 +89,22 @@ async def async_generate_speaker_info(
 ) -> dict[str, Any]:
     """Generate the diagnostic payload for a specific speaker."""
     payload = {}
+
+    def get_contents(item):
+        if isinstance(item, (int, float, str)):
+            return item
+        if isinstance(item, dict):
+            payload = {}
+            for key, value in item.items():
+                payload[key] = get_contents(value)
+            return payload
+        if hasattr(item, "__dict__"):
+            return vars(item)
+        return item
+
     for attrib in SPEAKER_DIAGNOSTIC_ATTRIBUTES:
-        payload[attrib] = getattr(speaker, attrib)
+        value = getattr(speaker, attrib)
+        payload[attrib] = get_contents(value)
+
     payload["media"] = await async_generate_media_info(hass, speaker)
     return payload
