@@ -252,8 +252,6 @@ async def async_setup_entry(
     sensors = [
         LektricoSensor(
             sensor_desc,
-            _lektrico_device.serial_number,
-            _lektrico_device.board_revision,
             _lektrico_device,
             entry.data[CONF_FRIENDLY_NAME],
         )
@@ -271,20 +269,18 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         description: LektricoSensorEntityDescription,
-        serial_number: str,
-        board_revision: str,
         _lektrico_device: LektricoDevice,
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
         super().__init__(_lektrico_device.coordinator)
         self.friendly_name = friendly_name
-        self.serial_number = serial_number
-        self.board_revision = board_revision
+        self.serial_number = _lektrico_device.serial_number
+        self.board_revision = _lektrico_device.board_revision
         self.entity_description = description
 
         self._attr_name = f"{self.friendly_name} {description.name}"
-        self._attr_unique_id = f"{serial_number}_{description.name}"
+        self._attr_unique_id = f"{self.serial_number}_{description.name}"
         # ex: 500006_Led Brightness
 
         self._lektrico_device = _lektrico_device
