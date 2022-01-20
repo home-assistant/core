@@ -51,13 +51,13 @@
                     "multicast_group": "Multicast group used for routing and discovery",
                     "multicast_port": "Multicast port used for routing and discovery",
                     "rate_limit": "Maximum outgoing telegrams per second",
-                    "state_updater": "Globally enable reading states from the KNX Bus"
+                    "state_updater": "Globally enable reading states from the KNX Bus",
+                    "threaded": "EXPERIMENTAL: \n Use an extra thread for the KNX communication"
                 }
             },
             "tunnel": {
                 "data": {
                     "host": "Host",
-                    "local_ip": "Local IP (leave empty if unsure)",
                     "port": "Port",
                     "route_back": "Route Back / NAT Mode"
                 }

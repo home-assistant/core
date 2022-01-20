@@ -22,6 +22,7 @@ from .const import (
     CONF_KNX_INITIAL_CONNECTION_TYPES,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_KNX_USE_THREADING,
     DOMAIN,
 )
 from .schema import ConnectionSchema
@@ -407,6 +408,15 @@ class KNXOptionsFlowHandler(OptionsFlow):
                     default=self.current_config.get(
                         ConnectionSchema.CONF_KNX_STATE_UPDATER,
                         ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
+                    ),
+                )
+            ] = bool
+            data_schema[
+                vol.Required(
+                    CONF_KNX_USE_THREADING,
+                    default=self.current_config.get(
+                        CONF_KNX_USE_THREADING,
+                        False,
                     ),
                 )
             ] = bool

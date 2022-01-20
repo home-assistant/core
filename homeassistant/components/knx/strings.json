@@ -51,7 +51,8 @@
           "multicast_port": "Multicast port used for routing and discovery",
           "local_ip": "Local IP of Home Assistant (use 0.0.0.0 for automatic detection)",
           "state_updater": "Globally enable reading states from the KNX Bus",
-          "rate_limit": "Maximum outgoing telegrams per second"
+          "rate_limit": "Maximum outgoing telegrams per second",
+          "threaded": "EXPERIMENTAL: Use an extra thread for the KNX communication"
         }
       },
       "tunnel": {

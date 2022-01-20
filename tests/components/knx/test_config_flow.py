@@ -19,6 +19,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_KNX_USE_THREADING,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -674,6 +675,7 @@ async def test_tunneling_options_flow(
                 ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
                 ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,
                 ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
+                CONF_KNX_USE_THREADING: False,
                 ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
             },
         ),
@@ -685,6 +687,7 @@ async def test_tunneling_options_flow(
                 ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
                 ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,
                 ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
+                CONF_KNX_USE_THREADING: True,
                 ConnectionSchema.CONF_KNX_LOCAL_IP: CONF_DEFAULT_LOCAL_IP,
             },
             {
@@ -696,6 +699,7 @@ async def test_tunneling_options_flow(
                 ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,
                 ConnectionSchema.CONF_KNX_STATE_UPDATER: False,
                 ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_KNX_USE_THREADING: True,
             },
         ),
     ],

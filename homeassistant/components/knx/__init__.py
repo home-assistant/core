@@ -45,6 +45,7 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_KNX_USE_THREADING,
     DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
@@ -393,6 +394,7 @@ class KNXModule:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
                 local_ip=self.config.get(ConnectionSchema.CONF_KNX_LOCAL_IP),
+                threaded=self.config.get(CONF_KNX_USE_THREADING, False),
                 auto_reconnect=True,
             )
         if _conn_type == CONF_KNX_TUNNELING:
@@ -402,9 +404,13 @@ class KNXModule:
                 gateway_port=self.config[CONF_PORT],
                 local_ip=self.config.get(ConnectionSchema.CONF_KNX_LOCAL_IP),
                 route_back=self.config.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False),
+                threaded=self.config.get(CONF_KNX_USE_THREADING, False),
                 auto_reconnect=True,
             )
-        return ConnectionConfig(auto_reconnect=True)
+        return ConnectionConfig(
+            auto_reconnect=True,
+            threaded=self.config.get(CONF_KNX_USE_THREADING, False),
+        )
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
