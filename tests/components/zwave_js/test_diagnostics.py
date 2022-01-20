@@ -35,6 +35,7 @@ async def test_device_diagnostics(
     multisensor_6,
     integration,
     hass_client,
+    version_state,
 ):
     """Test the device level diagnostics data dump."""
     dev_reg = async_get(hass)
@@ -67,9 +68,15 @@ async def test_device_diagnostics(
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, integration, device
     )
+    assert diagnostics_data["versionInfo"] == {
+        "driverVersion": version_state["driverVersion"],
+        "serverVersion": version_state["serverVersion"],
+        "minSchemaVersion": 0,
+        "maxSchemaVersion": 0,
+    }
 
     # Assert that the data returned doesn't match the stale node state data
-    assert diagnostics_data != multisensor_6.data
+    assert diagnostics_data["state"] != multisensor_6.data
 
     # Replace data for the value we updated and assert the new node data is the same
     # as what's returned
@@ -79,7 +86,7 @@ async def test_device_diagnostics(
             updated_node_data["values"][idx] = multisensor_6.values[
                 value_id
             ].data.copy()
-    assert diagnostics_data == updated_node_data
+    assert diagnostics_data["state"] == updated_node_data
 
 
 async def test_device_diagnostics_error(hass, integration):
