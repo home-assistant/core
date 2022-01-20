@@ -215,11 +215,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-        self.context["title_placeholders"] = {
-            CONF_NAME: device[CONF_NAME],
-            CONF_HOST: device[CONF_HOST],
-        }
-
         self.discovery_schema = {
             vol.Required(CONF_HOST, default=device[CONF_HOST]): str,
             vol.Required(CONF_USERNAME): str,
