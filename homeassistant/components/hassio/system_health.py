@@ -4,7 +4,7 @@ import os
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .. import hassio
+from . import get_host_info, get_info, get_os_info, get_supervisor_info
 
 SUPERVISOR_PING = f"http://{os.environ['HASSIO']}/supervisor/ping"
 OBSERVER_URL = f"http://{os.environ['HASSIO']}:4357"
@@ -20,9 +20,9 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant):
     """Get info for the info page."""
-    info = hassio.get_info(hass)
-    host_info = hassio.get_host_info(hass)
-    supervisor_info = hassio.get_supervisor_info(hass)
+    info = get_info(hass)
+    host_info = get_host_info(hass)
+    supervisor_info = get_supervisor_info(hass)
 
     if supervisor_info.get("healthy"):
         healthy = True
@@ -54,7 +54,7 @@ async def system_health_info(hass: HomeAssistant):
     }
 
     if info.get("hassos") is not None:
-        os_info = hassio.get_os_info(hass)
+        os_info = get_os_info(hass)
         information["board"] = os_info.get("board")
 
     information["supervisor_api"] = system_health.async_check_can_reach_url(
