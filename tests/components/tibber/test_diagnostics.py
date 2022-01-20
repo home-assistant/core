@@ -27,21 +27,7 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
     ):
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
-    result["info"].pop("entry_id")
-
     assert result == {
-        "info": {
-            "version": 1,
-            "domain": "tibber",
-            "title": "Mock Title",
-            "data": {"access_token": "REDACTED"},
-            "options": {},
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "source": "user",
-            "unique_id": "tibber",
-            "disabled_by": None,
-        },
         "homes": {},
     }
 
@@ -51,21 +37,7 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
     ):
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
-    result["info"].pop("entry_id")
-
     assert result == {
-        "info": {
-            "version": 1,
-            "domain": "tibber",
-            "title": "Mock Title",
-            "data": {"access_token": "REDACTED"},
-            "options": {},
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "source": "user",
-            "unique_id": "tibber",
-            "disabled_by": None,
-        },
         "homes": {
             "home_id": {
                 "last_data_timestamp": "2016-01-01T12:48:57",

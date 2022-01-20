@@ -3,13 +3,10 @@ from __future__ import annotations
 
 import tibber
 
-from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-
 
 
 async def async_get_config_entry_diagnostics(
@@ -18,12 +15,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     tibber_connection: tibber.Tibber = hass.data[DOMAIN]
 
-    diagnostics_data = {
-        "info": {
-            **config_entry.data,
-            CONF_ACCESS_TOKEN: REDACTED,
-        },
-    }
+    diagnostics_data = {}
 
     homes = {}
     for home in tibber_connection.get_homes(only_active=False):
