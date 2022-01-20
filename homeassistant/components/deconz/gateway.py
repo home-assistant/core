@@ -25,6 +25,7 @@ from .const import (
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_ALLOW_NEW_DEVICES,
     DOMAIN as DECONZ_DOMAIN,
+    HASSIO_CONFIGURATION_URL,
     LOGGER,
     PLATFORMS,
 )
@@ -152,7 +153,7 @@ class DeconzGateway:
         # Gateway service
         configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
         if self.config_entry.source == SOURCE_HASSIO:
-            configuration_url = "homeassistant://hassio/ingress/core_deconz"
+            configuration_url = HASSIO_CONFIGURATION_URL
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             configuration_url=configuration_url,

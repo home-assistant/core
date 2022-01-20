@@ -33,6 +33,7 @@ from .const import (
     CONF_BRIDGE_ID,
     DEFAULT_PORT,
     DOMAIN,
+    HASSIO_CONFIGURATION_URL,
     LOGGER,
 )
 from .gateway import DeconzGateway, get_gateway_from_config_entry
@@ -255,6 +256,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_API_KEY: discovery_info.config[CONF_API_KEY],
             }
         )
+
+        self.context["configuration_url"] = HASSIO_CONFIGURATION_URL
 
         self._hassio_discovery = discovery_info.config
 

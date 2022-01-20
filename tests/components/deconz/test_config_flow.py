@@ -17,6 +17,7 @@ from homeassistant.components.deconz.const import (
     CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
+    HASSIO_CONFIGURATION_URL,
 )
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
@@ -561,6 +562,12 @@ async def test_flow_hassio_discovery(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "hassio_confirm"
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert (
+        flows[0].get("context", {}).get("configuration_url") == HASSIO_CONFIGURATION_URL
+    )
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
