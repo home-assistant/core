@@ -114,7 +114,7 @@ async def websocket_supervisor_api(
         )
 
         if result.get(ATTR_RESULT) == "error":
-            raise hassio.HassioAPIError(hass, result.get("message"))
+            raise hassio.HassioAPIError(result.get("message"))
     except hassio.HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(
