@@ -39,8 +39,6 @@ from .const import DOMAIN
 class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
-    # value_fn: str | int | float | bool | None = None
-
     @classmethod
     def get_native_value(cls, data: Any) -> float | str | int | bool | None:
         """Return None."""
@@ -171,13 +169,11 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ChargerStateSensorEntityDescription(
         key="charger_state",
         name="Charger State",
-        # value_fn=LektricoSensorEntityDescription.charger_state(x),
     ),
     ChargingTimeSensorEntityDescription(
         key="charging_time",
         name="Charging Time",
         native_unit_of_measurement=TIME_SECONDS,
-        # value_fn=lambda x: LektricoSensorEntityDescription.charging_time(x),
     ),
     CurrentSensorEntityDescription(
         key="current",
@@ -185,8 +181,6 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        # value_fn=lambda x: LektricoSensorEntityDescription.current(x),
-        # value_fn=lambda x: LektricoSensorEntityDescription.current(x),
     ),
     InstantPowerSensorEntityDescription(
         key="instant_power",
@@ -194,14 +188,12 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        # value_fn=LektricoSensorEntityDescription.instant_power,
     ),
     SessionEnergySensorEntityDescription(
         key="session_energy",
         name="Session Energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        # value_fn=LektricoSensorEntityDescription.session_energy,
     ),
     TemperatureSensorEntityDescription(
         key="temperature",
@@ -209,7 +201,6 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        # value_fn=LektricoSensorEntityDescription.temperature,
     ),
     TotalChargedEnergySensorEntityDescription(
         key="total_charged_energy",
@@ -217,28 +208,24 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        # value_fn=LektricoSensorEntityDescription.total_charged_energy,
     ),
     VoltageSensorEntityDescription(
         key="voltage",
         name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        # value_fn=LektricoSensorEntityDescription.voltage,
     ),
     InstallCurrentSensorEntityDescription(
         key="install_current",
         name="Install Current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        # value_fn=LektricoSensorEntityDescription.install_current,
     ),
     DynamicCurrentSensorEntityDescription(
         key="dynamic_current",
         name="Dynamic Current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        # value_fn=LektricoSensorEntityDescription.dynamic_current,
     ),
     LedMaxBrightnessSensorEntityDescription(
         key="led_max_brightness",
@@ -246,12 +233,10 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=PERCENTAGE,
-        # value_fn=LektricoSensorEntityDescription.led_max_brightness,
     ),
     HeadlessSensorEntityDescription(
         key="headless",
         name="No Authentication",
-        # value_fn=LektricoSensorEntityDescription.headless,
     ),
 )
 
@@ -311,47 +296,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         return self.entity_description.get_native_value(
             self._lektrico_device.coordinator.data
         )
-        # if self.entity_description.name == "Charger State":
-        #     return cast(
-        #         str,
-        #         self.entity_description.value_fn(
-        #             self._lektrico_device.coordinator.data
-        #         ),
-        #     )
-        # if self.entity_description.name in (
-        #     "Current",
-        #     "Instant Power",
-        #     "Session Energy",
-        #     "Temperature",
-        #     "Voltage",
-        # ):
-        #     return cast(
-        #         float,
-        #         self.entity_description.value_fn(
-        #             self._lektrico_device.coordinator.data
-        #         ),
-        #     )
-        # if self.entity_description.name in (
-        #     "Charging Time",
-        #     "Total Charged Energy",
-        #     "Install Current",
-        #     "Dynamic Current",
-        #     "Led Brightness",
-        # ):
-        #     return cast(
-        #         int,
-        #         self.entity_description.value_fn(
-        #             self._lektrico_device.coordinator.data
-        #         ),
-        #     )
-        # if self.entity_description.name == "No Authentication":
-        #     return cast(
-        #         bool,
-        #         self.entity_description.value_fn(
-        #             self._lektrico_device.coordinator.data
-        #         ),
-        #     )
-        # return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
