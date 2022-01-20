@@ -128,6 +128,14 @@ _EMPTY_ENTITY_FILTER: Final = {
 }
 
 
+async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
+    """Build a list of integration names from domains."""
+    name_to_type_map = await _async_name_to_type_map(hass)
+    return ", ".join(
+        [name for domain, name in name_to_type_map.items() if domain in domains]
+    )
+
+
 @callback
 def _async_build_entites_filter(
     domains: list[str], entities: list[str]
@@ -488,7 +496,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="include",
-            description_placeholders={"domains": " ,".join(domains)},
+            description_placeholders={
+                "domains": await _async_domain_names(self.hass, domains)
+            },
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
@@ -547,7 +557,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="exclude",
-            description_placeholders={"domains": " ,".join(domains)},
+            description_placeholders={
+                "domains": await _async_domain_names(self.hass, domains)
+            },
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
