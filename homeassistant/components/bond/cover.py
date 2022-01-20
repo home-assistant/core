@@ -70,25 +70,6 @@ class BondCover(BondEntity, CoverEntity):
                 supported_features |= SUPPORT_STOP_TILT
         self._attr_supported_features = supported_features
 
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        supported_features = 0
-        if self._device.supports_open():
-            supported_features |= SUPPORT_OPEN
-        if self._device.supports_close():
-            supported_features |= SUPPORT_CLOSE
-        if self._device.supports_tilt_open():
-            supported_features |= SUPPORT_OPEN_TILT
-        if self._device.supports_tilt_close():
-            supported_features |= SUPPORT_CLOSE_TILT
-        if self._device.supports_hold():
-            if self._device.supports_open() or self._device.supports_close():
-                supported_features |= SUPPORT_STOP
-            if self._device.supports_tilt_open() or self._device.supports_tilt_close():
-                supported_features |= SUPPORT_STOP_TILT
-        return supported_features
-
     def _apply_state(self, state: dict) -> None:
         cover_open = state.get("open")
         self._attr_is_closed = (
