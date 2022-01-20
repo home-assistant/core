@@ -60,7 +60,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.*",
     "homeassistant.components.ozw.*",
     "homeassistant.components.philips_js.*",
-    "homeassistant.components.plaato.*",
     "homeassistant.components.plex.*",
     "homeassistant.components.plugwise.*",
     "homeassistant.components.profiler.*",
