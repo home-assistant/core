@@ -11,6 +11,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]
 CONF_MYDEVOLO = "mydevolo_url"

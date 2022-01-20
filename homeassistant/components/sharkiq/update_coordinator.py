@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, API_TIMEOUT, DOMAIN, UPDATE_INTERVAL
+from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
 class SharkIqUpdateCoordinator(DataUpdateCoordinator):
@@ -36,9 +36,9 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
         }
         self._config_entry = config_entry
-        self._online_dsns = set()
+        self._online_dsns: set[str] = set()
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     @property
     def online_dsns(self) -> set[str]:
@@ -53,7 +53,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_vacuum(sharkiq: SharkIqVacuum) -> None:
         """Asynchronously update the data for a single vacuum."""
         dsn = sharkiq.serial_number
-        _LOGGER.debug("Updating sharkiq data for device DSN %s", dsn)
+        LOGGER.debug("Updating sharkiq data for device DSN %s", dsn)
         async with timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
@@ -67,7 +67,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
                 if v["connection_status"] == "Online" and v["dsn"] in self.shark_vacs
             }
 
-            _LOGGER.debug("Updating sharkiq data")
+            LOGGER.debug("Updating sharkiq data")
             online_vacs = (self.shark_vacs[dsn] for dsn in self.online_dsns)
             await asyncio.gather(*(self._async_update_vacuum(v) for v in online_vacs))
         except (
@@ -75,10 +75,10 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             SharkIqNotAuthedError,
             SharkIqAuthExpiringError,
         ) as err:
-            _LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
+            LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
             raise ConfigEntryAuthFailed from err
         except Exception as err:
-            _LOGGER.exception("Unexpected error updating SharkIQ")
+            LOGGER.exception("Unexpected error updating SharkIQ")
             raise UpdateFailed(err) from err
 
         return True

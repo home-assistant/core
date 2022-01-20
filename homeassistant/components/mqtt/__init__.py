@@ -53,7 +53,7 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import ConfigType, ServiceDataType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -401,16 +401,6 @@ class MqttServiceInfo(BaseServiceInfo):
             error_if_core=False,
         )
         return getattr(self, name)
-
-
-def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
-    """Build the arguments for the publish service without the payload."""
-    data = {ATTR_TOPIC: topic}
-    if qos is not None:
-        data[ATTR_QOS] = qos
-    if retain is not None:
-        data[ATTR_RETAIN] = retain
-    return data
 
 
 def publish(

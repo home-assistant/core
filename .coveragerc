@@ -205,7 +205,6 @@ omit =
     homeassistant/components/devolo_home_control/climate.py
     homeassistant/components/devolo_home_control/const.py
     homeassistant/components/devolo_home_control/cover.py
-    homeassistant/components/devolo_home_control/devolo_multi_level_switch.py
     homeassistant/components/devolo_home_control/light.py
     homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/subscriber.py
@@ -379,7 +378,6 @@ omit =
     homeassistant/components/fritz/sensor.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
-    homeassistant/components/fritz/wrapper.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
     homeassistant/components/fritzbox_callmonitor/const.py
     homeassistant/components/fritzbox_callmonitor/base.py
@@ -512,6 +510,9 @@ omit =
     homeassistant/components/insteon/schemas.py
     homeassistant/components/insteon/switch.py
     homeassistant/components/insteon/utils.py
+    homeassistant/components/intellifire/__init__.py
+    homeassistant/components/intellifire/coordinator.py
+    homeassistant/components/intellifire/binary_sensor.py
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
     homeassistant/components/ios/*

@@ -41,6 +41,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
@@ -63,7 +64,6 @@ CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_PAYLOAD_TRIGGER = "payload_trigger"
-CONF_COMMAND_TEMPLATE = "command_template"
 
 MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
     {

@@ -90,7 +90,7 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             port = self._hassio_discovery[CONF_PORT]
             url = f"http://{host}:{port}"
             if error_code := await self._test_connection(url):
-                errors = {"base": error_code}
+                return self.async_abort(reason=error_code)
 
         if user_input is None or errors:
             # Show initial confirmation or errors from server validation
