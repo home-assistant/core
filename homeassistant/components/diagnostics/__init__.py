@@ -1,6 +1,7 @@
 """The Diagnostics integration."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import json
 import logging
 from typing import Protocol
@@ -12,6 +13,7 @@ from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
+from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import (
@@ -19,7 +21,7 @@ from homeassistant.util.json import (
     format_unserializable_data,
 )
 
-from .const import DOMAIN, REDACTED
+from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
 
 __all__ = ["REDACTED"]
 
@@ -35,6 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, handle_info)
+    websocket_api.async_register_command(hass, handle_get)
     hass.http.register_view(DownloadDiagnosticsView)
 
     return True
@@ -48,13 +51,23 @@ class DiagnosticsProtocol(Protocol):
     ) -> dict:
         """Return diagnostics for a config entry."""
 
+    async def async_get_device_diagnostics(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+    ) -> dict:
+        """Return diagnostics for a device."""
+
 
 async def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ):
     """Register a diagnostics platform."""
     hass.data[DOMAIN][integration_domain] = {
-        "config_entry": getattr(platform, "async_get_config_entry_diagnostics", None)
+        DiagnosticsType.CONFIG_ENTRY.value: getattr(
+            platform, "async_get_config_entry_diagnostics", None
+        ),
+        DiagnosticsSubType.DEVICE.value: getattr(
+            platform, "async_get_device_diagnostics", None
+        ),
     }
 
 
@@ -77,50 +90,123 @@ def handle_info(
     )
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "diagnostics/get",
+        vol.Required("domain"): str,
+    }
+)
+@callback
+def handle_get(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+):
+    """List all possible diagnostic handlers."""
+    domain = msg["domain"]
+    info = hass.data[DOMAIN].get(domain)
+
+    if info is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "domain": domain,
+            "handlers": {key: val is not None for key, val in info.items()},
+        },
+    )
+
+
+def _get_json_file_response(
+    data: dict | list,
+    filename: str,
+    d_type: DiagnosticsType,
+    d_id: str,
+    sub_type: DiagnosticsSubType | None = None,
+    sub_id: str | None = None,
+) -> web.Response:
+    """Return JSON file from dictionary."""
+    try:
+        json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
+    except TypeError:
+        _LOGGER.error(
+            "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
+            d_type.value,
+            d_id,
+            f"/{sub_type.value}/{sub_id}" if sub_type is not None else "",
+            format_unserializable_data(find_paths_unserializable_data(data)),
+        )
+        return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    return web.Response(
+        body=json_data,
+        content_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
+    )
+
+
 class DownloadDiagnosticsView(http.HomeAssistantView):
     """Download diagnostics view."""
 
     url = "/api/diagnostics/{d_type}/{d_id}"
+    extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
     async def get(  # pylint: disable=no-self-use
-        self, request: web.Request, d_type: str, d_id: str
+        self,
+        request: web.Request,
+        d_type: str,
+        d_id: str,
+        sub_type: str | None = None,
+        sub_id: str | None = None,
     ) -> web.Response:
         """Download diagnostics."""
-        if d_type != "config_entry":
-            return web.Response(status=404)
+        # t_type handling
+        try:
+            d_type = DiagnosticsType(d_type)
+        except ValueError:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
         config_entry = hass.config_entries.async_get_entry(d_id)
 
         if config_entry is None:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         info = hass.data[DOMAIN].get(config_entry.domain)
 
         if info is None:
-            return web.Response(status=404)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        if info["config_entry"] is None:
-            return web.Response(status=404)
+        filename = f"{config_entry.domain}-{config_entry.entry_id}"
 
-        data = await info["config_entry"](hass, config_entry)
+        if sub_type is None:
+            if info[d_type.value] is None:
+                return web.Response(status=HTTPStatus.NOT_FOUND)
+            data = await info[d_type.value](hass, config_entry)
+            filename = f"{d_type}-{filename}"
+            return _get_json_file_response(data, filename, d_type.value, d_id)
 
+        # sub_type handling
         try:
-            json_data = json.dumps(data, indent=4, cls=ExtendedJSONEncoder)
-        except TypeError:
-            _LOGGER.error(
-                "Failed to serialize to JSON: %s/%s. Bad data at %s",
-                d_type,
-                d_id,
-                format_unserializable_data(find_paths_unserializable_data(data)),
-            )
-            return web.Response(status=500)
+            sub_type = DiagnosticsSubType(sub_type)
+        except ValueError:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        return web.Response(
-            body=json_data,
-            content_type="application/json",
-            headers={
-                "Content-Disposition": f'attachment; filename="{config_entry.domain}-{config_entry.entry_id}.json"'
-            },
-        )
+        dev_reg = async_get(hass)
+        assert sub_id
+        device = dev_reg.async_get(sub_id)
+
+        if device is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        filename += f"-{device.name}-{device.id}"
+
+        if info[sub_type.value] is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        data = await info[sub_type.value](hass, config_entry, sub_id)
+        return _get_json_file_response(data, filename, d_type, d_id, sub_type, sub_id)
