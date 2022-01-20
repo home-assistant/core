@@ -9,7 +9,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def config_entry(hass):
-    """Evil genius labs config entry."""
+    """Tibber config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_ACCESS_TOKEN: "token"},
