@@ -83,26 +83,6 @@ async def test_form_good(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_unknwon_error(hass: HomeAssistant) -> None:
-    """Test for an Unknown Error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.intellifire.config_flow.validate_input",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
-
-
 async def test_validate_input(hass: HomeAssistant) -> None:
     """Test for the ideal case."""
     # Define a mock object
