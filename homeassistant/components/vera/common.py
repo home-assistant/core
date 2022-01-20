@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Sequence
 from typing import NamedTuple
 
 import pyvera as pv
@@ -26,7 +25,7 @@ class ControllerData(NamedTuple):
 
 def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
     """Get configured platforms for a controller."""
-    platforms: Sequence[Platform] = []
+    platforms: list[Platform] = []
     for platform in controller_data.devices:
         platforms.append(platform)
 
