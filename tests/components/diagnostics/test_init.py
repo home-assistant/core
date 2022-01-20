@@ -4,11 +4,12 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.helpers.device_registry import async_get
 from homeassistant.setup import async_setup_component
 
 from . import get_diagnostics_for_config_entry, get_diagnostics_for_device
 
-from tests.common import mock_platform
+from tests.common import MockConfigEntry, mock_platform
 
 
 @pytest.fixture(autouse=True)
@@ -68,10 +69,18 @@ async def test_websocket(hass, hass_ws_client):
 
 async def test_download_diagnostics(hass, hass_client):
     """Test download diagnostics."""
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, "fake_integration"
-    ) == {"config_entry": "info"}
+    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry.add_to_hass(hass)
 
-    assert await get_diagnostics_for_device(hass, hass_client, "fake_integration") == {
-        "device": "info"
+    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+        "config_entry": "info"
     }
+
+    dev_reg = async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "test")}
+    )
+
+    assert await get_diagnostics_for_device(
+        hass, hass_client, config_entry, device
+    ) == {"device": "info"}

@@ -1,20 +1,11 @@
 """Tests for the Diagnostics integration."""
 from http import HTTPStatus
 
-from homeassistant.helpers.device_registry import async_get
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
 
-
-async def get_diagnostics_for_config_entry(hass, hass_client, domain_or_config_entry):
+async def get_diagnostics_for_config_entry(hass, hass_client, config_entry):
     """Return the diagnostics config entry for the specified domain."""
-    if isinstance(domain_or_config_entry, str):
-        config_entry = MockConfigEntry(domain=domain_or_config_entry)
-        config_entry.add_to_hass(hass)
-    else:
-        config_entry = domain_or_config_entry
-
     assert await async_setup_component(hass, "diagnostics", {})
 
     client = await hass_client()
@@ -25,26 +16,11 @@ async def get_diagnostics_for_config_entry(hass, hass_client, domain_or_config_e
     return await response.json()
 
 
-async def get_diagnostics_for_device(
-    hass, hass_client, domain_or_config_entry, device_id=None
-):
+async def get_diagnostics_for_device(hass, hass_client, config_entry, device):
     """Return the diagnostics for the specified device."""
-    if isinstance(domain_or_config_entry, str):
-        config_entry = MockConfigEntry(domain=domain_or_config_entry)
-        config_entry.add_to_hass(hass)
-    else:
-        config_entry = domain_or_config_entry
-
-    dev_reg = async_get(hass)
-    if device_id is None:
-        device = dev_reg.async_get_or_create(
-            config_entry_id=config_entry.entry_id, identifiers={("test", "test")}
-        )
-        device_id = device.id
-
     client = await hass_client()
     response = await client.get(
-        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/{device_id}"
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/{device.id}"
     )
     assert response.status == HTTPStatus.OK
     return await response.json()
