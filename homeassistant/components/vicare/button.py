@@ -42,16 +42,6 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(name, vicare_api, device_config, sensor):
-    """Create a ViCare button entity."""
-    return ViCareButton(
-        name,
-        vicare_api,
-        device_config,
-        sensor,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -64,8 +54,7 @@ async def async_setup_entry(
     entities = []
 
     for description in BUTTON_DESCRIPTIONS:
-        entity = await hass.async_add_executor_job(
-            _build_entity,
+        entity = ViCareButton(
             f"{name} {description.name}",
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
