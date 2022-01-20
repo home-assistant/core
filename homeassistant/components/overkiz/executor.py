@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 from urllib.parse import urlparse
 
+from pyoverkiz.enums.command import OverkizCommand
 from pyoverkiz.models import Command, Device
 from pyoverkiz.types import StateType as OverkizStateType
 
@@ -76,7 +77,9 @@ class OverkizExecutor:
 
         await self.coordinator.async_refresh()
 
-    async def async_cancel_command(self, commands_to_cancel: list[str]) -> bool:
+    async def async_cancel_command(
+        self, commands_to_cancel: list[OverkizCommand]
+    ) -> bool:
         """Cancel running execution by command."""
 
         # Cancel a running execution
