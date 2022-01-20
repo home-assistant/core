@@ -70,7 +70,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.rachio.*",
     "homeassistant.components.ring.*",
     "homeassistant.components.ruckus_unleashed.*",
-    "homeassistant.components.screenlogic.*",
     "homeassistant.components.search.*",
     "homeassistant.components.sense.*",
     "homeassistant.components.sharkiq.*",
