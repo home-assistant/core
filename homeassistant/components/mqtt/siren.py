@@ -48,6 +48,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
@@ -66,7 +67,6 @@ DEFAULT_OPTIMISTIC = False
 ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
 
 CONF_AVAILABLE_TONES = "available_tones"
-CONF_COMMAND_TEMPLATE = "command_template"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
 CONF_DURATION_COMMAND_TEMPLATE = "duration_command_template"
 CONF_DURATION_COMMAND_TOPIC = "duration_command_topic"
