@@ -34,6 +34,5 @@ async def async_get_config_entry_diagnostics(
             "country": home.country,
         }
     diagnostics_data["homes"] = homes
-    diagnostics_data["info"]["data"][CONF_ACCESS_TOKEN] = REDACTED
 
     return diagnostics_data
