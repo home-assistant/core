@@ -1,17 +1,16 @@
 """RKI Covid numbers data coordinator."""
 
-from rki_covid_parser.model.district import District
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from rki_covid_parser.parser import RkiCovidParser, Country, State
+from rki_covid_parser.parser import RkiCovidParser
 import logging
 from .const import DOMAIN
 from datetime import timedelta
 import aiohttp
 import asyncio
 import async_timeout
-from .data import DistrictData, StateData
+from .data import accumulate_country, accumulate_state, accumulate_district
 from homeassistant.helpers import update_coordinator
 
 
@@ -46,7 +45,7 @@ class RkiCovidDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Fetch data from rki-covid-parser finished successfully")
 
                 # country
-                items["Deutschland"] = self._accumulate_country(self.parser.country)
+                items["Deutschland"] = accumulate_country(self.parser.country)
 
                 # states
                 for s in sorted(
@@ -54,12 +53,12 @@ class RkiCovidDataUpdateCoordinator(DataUpdateCoordinator):
                 ):
                     st = self.parser.states[s.name]
                     name = "BL " + st.name
-                    items[name] = self._accumulate_state(name, st)
+                    items[name] = accumulate_state(name, st)
 
                 # districts
                 for d in sorted(self.parser.districts.values(), key=lambda di: di.name):
                     district = self.parser.districts[d.id]
-                    items[district.county] = self._accumulate_district(district)
+                    items[district.county] = accumulate_district(district)
 
                 _LOGGER.debug("Parsing data finished")
 
@@ -73,69 +72,3 @@ class RkiCovidDataUpdateCoordinator(DataUpdateCoordinator):
             )
 
         return items
-
-    def _accumulate_country(self, country: Country) -> DistrictData:
-        return DistrictData(
-            "Deutschland",
-            "Deutschland",
-            None,
-            country.population,
-            country.cases,
-            country.deaths,
-            country.casesPerWeek,
-            country.recovered,
-            country.weekIncidence,
-            country.casesPer100k,
-            country.newCases,
-            country.newDeaths,
-            country.newRecovered,
-            country.lastUpdate,
-        )
-
-    def _accumulate_state(self, name: str, state: State) -> StateData:
-        return StateData(
-            name,
-            name,
-            None,
-            state.population,
-            state.cases,
-            state.deaths,
-            state.casesPerWeek,
-            state.recovered,
-            state.weekIncidence,
-            state.casesPer100k,
-            state.newCases,
-            state.newDeaths,
-            state.newRecovered,
-            state.lastUpdate,
-            state.hospitalizationCasesBaby,
-            state.hospitalizationIncidenceBaby,
-            state.hospitalizationCasesChildren,
-            state.hospitalizationIncidenceChildren,
-            state.hospitalizationCasesTeen,
-            state.hospitalizationIncidenceTeen,
-            state.hospitalizationCasesGrown,
-            state.hospitalizationIncidenceGrown,
-            state.hospitalizationCasesSenior,
-            state.hospitalizationIncidenceSenior,
-            state.hospitalizationCasesOld,
-            state.hospitalizationIncidenceOld,
-        )
-
-    def _accumulate_district(self, district: District) -> DistrictData:
-        return DistrictData(
-            district.name,
-            district.county,
-            district.state,
-            district.population,
-            district.cases,
-            district.deaths,
-            district.casesPerWeek,
-            district.recovered,
-            district.weekIncidence,
-            district.casesPer100k,
-            district.newCases,
-            district.newDeaths,
-            district.newRecovered,
-            district.lastUpdate,
-        )

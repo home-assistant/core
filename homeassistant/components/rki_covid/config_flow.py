@@ -3,10 +3,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 import voluptuous as vol
+from .data import accumulate_country, accumulate_state, accumulate_district
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
-from .coordinator import RkiCovidDataUpdateCoordinator
-
+import aiohttp
+import asyncio
+import async_timeout
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from rki_covid_parser.parser import RkiCovidParser
 
 from .const import ATTR_COUNTY, DOMAIN
 
@@ -32,11 +36,42 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._options = {}
 
             # add items from rki-covid-parser
-            coordinator = RkiCovidDataUpdateCoordinator(self.hass)
-            await coordinator.async_config_entry_first_refresh()
+            session = async_get_clientsession(self.hass)
+            parser = RkiCovidParser(session)
 
-            for case in coordinator.data.values():
-                self._options[case.county] = case.county
+            items = {}
+            try:
+                with async_timeout.timeout(30):
+                    await parser.load_data()
+
+                    # country
+                    items["Deutschland"] = accumulate_country(parser.country)
+                    _LOGGER.debug(f"Deutschland {accumulate_country(parser.country)}")
+
+                    # states
+                    for s in sorted(
+                        parser.states.values(), key=lambda state: state.name
+                    ):
+                        st = parser.states[s.name]
+                        name = "BL " + st.name
+                        items[name] = accumulate_state(name, st)
+
+                    # districts
+                    for d in sorted(parser.districts.values(), key=lambda di: di.name):
+                        district = parser.districts[d.id]
+                        items[district.county] = accumulate_district(district)
+
+                    _LOGGER.debug(f"{len(items)} counties")
+                    for case in items.values():
+                        self._options[case.county] = case.county
+
+            except asyncio.TimeoutError as err:
+                _LOGGER.error(f"Timeout: {err}")
+                errors["base"] = "timeout_error"
+
+            except aiohttp.ClientError as err:
+                _LOGGER.error(f"ClientError: {err}")
+                errors["base"] = "client_error"
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[ATTR_COUNTY])
