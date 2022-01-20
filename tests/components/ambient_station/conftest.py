@@ -46,3 +46,9 @@ async def setup_ambient_station_fixture(hass, config, devices):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture(name="station_data", scope="session")
+def station_data_fixture():
+    """Define devices data."""
+    return json.loads(load_fixture("station_data.json", "ambient_station"))
