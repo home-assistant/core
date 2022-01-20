@@ -1,8 +1,6 @@
 """Support for Soma Covers."""
 from __future__ import annotations
 
-from requests import RequestException
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
