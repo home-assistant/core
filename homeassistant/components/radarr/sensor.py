@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 import time
 from typing import Any
@@ -29,9 +30,11 @@ from homeassistant.const import (
     DATA_TERABYTES,
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
-    HTTP_OK,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,7 +130,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Radarr platform."""
     conditions = config[CONF_MONITORED_CONDITIONS]
     entities = [
@@ -215,7 +223,7 @@ class RadarrSensor(SensorEntity):
             self._attr_native_value = None
             return
 
-        if res.status_code == HTTP_OK:
+        if res.status_code == HTTPStatus.OK:
             if sensor_type in ("upcoming", "movies", "commands"):
                 self.data = res.json()
                 self._attr_native_value = len(self.data)

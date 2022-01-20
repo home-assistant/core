@@ -67,13 +67,39 @@ def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
 
 
 @callback
-def get_home_and_node_id_from_device_id(device_id: tuple[str, ...]) -> list[str]:
+def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] | None:
+    """Get extended device registry identifier for Z-Wave node."""
+    if None in (node.manufacturer_id, node.product_type, node.product_id):
+        return None
+
+    domain, dev_id = get_device_id(client, node)
+    return (
+        domain,
+        f"{dev_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}",
+    )
+
+
+@callback
+def get_home_and_node_id_from_device_entry(
+    device_entry: dr.DeviceEntry,
+) -> tuple[str, int] | None:
     """
     Get home ID and node ID for Z-Wave device registry entry.
 
-    Returns [home_id, node_id]
+    Returns (home_id, node_id) or None if not found.
     """
-    return device_id[1].split("-")
+    device_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    if device_id is None:
+        return None
+    id_ = device_id.split("-")
+    return (id_[0], int(id_[1]))
 
 
 @callback
@@ -87,9 +113,8 @@ def async_get_node_from_device_id(
     """
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
 
-    if not device_entry:
+    if not (device_entry := dev_reg.async_get(device_id)):
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Use device config entry ID's to validate that this is a valid zwave_js device
@@ -116,16 +141,9 @@ def async_get_node_from_device_id(
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
-    identifier = next(
-        (
-            get_home_and_node_id_from_device_id(identifier)
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN
-        ),
-        None,
-    )
+    identifiers = get_home_and_node_id_from_device_entry(device_entry)
 
-    node_id = int(identifier[1]) if identifier is not None else None
+    node_id = identifiers[1] if identifiers else None
 
     if node_id is None or node_id not in client.driver.controller.nodes:
         raise ValueError(f"Node for device {device_id} can't be found")
@@ -230,8 +248,7 @@ def async_get_node_status_sensor_entity_id(
         ent_reg = er.async_get(hass)
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(device_id)
-    if not device:
+    if not (device := dev_reg.async_get(device_id)):
         raise HomeAssistantError("Invalid Device ID provided")
 
     entry_id = next(entry_id for entry_id in device.config_entries)

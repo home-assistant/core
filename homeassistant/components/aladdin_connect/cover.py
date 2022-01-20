@@ -7,9 +7,10 @@ from typing import Any, Final
 from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.const import (
@@ -55,7 +56,8 @@ def setup_platform(
         )
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
@@ -65,7 +67,7 @@ def setup_platform(
 class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
-    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
 
     def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:

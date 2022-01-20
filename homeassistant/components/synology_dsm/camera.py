@@ -89,20 +89,20 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     f"{self._api.information.serial}_{self.camera_data.id}",
                 )
             },
-            "name": self.camera_data.name,
-            "model": self.camera_data.model,
-            "via_device": (
+            name=self.camera_data.name,
+            model=self.camera_data.model,
+            via_device=(
                 DOMAIN,
                 f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
             ),
-        }
+        )
 
     @property
     def available(self) -> bool:

@@ -6,8 +6,9 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
@@ -62,12 +63,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.discovered_ip = discovery_info[IP_ADDRESS]
-        await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
+        self.discovered_ip = discovery_info.ip
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.discovered_ip})
-        name = name_short_mac(short_mac(discovery_info[MAC_ADDRESS]))
+        name = name_short_mac(short_mac(discovery_info.macaddress))
         self.context["title_placeholders"] = {"name": name}
         try:
             self.discovered_info = await fetch_mac_and_title(
@@ -81,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
-        """Attempt to confim."""
+        """Attempt to confirm."""
         if user_input is not None:
             return self.async_create_entry(
                 title=self.discovered_info["title"],

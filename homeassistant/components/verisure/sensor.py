@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
@@ -50,8 +50,9 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -104,8 +105,9 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
-    _attr_device_class = DEVICE_CLASS_HUMIDITY
+    _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str

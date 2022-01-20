@@ -41,8 +41,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
 
     async def async_update(self, now: datetime | None = None) -> None:

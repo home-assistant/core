@@ -4,17 +4,27 @@ from __future__ import annotations
 from xknx import XKNX
 from xknx.devices import Device as XknxDevice, RawValue
 
+from homeassistant import config_entries
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_PAYLOAD,
+    CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
+    DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
 )
@@ -22,21 +32,16 @@ from .knx_entity import KnxEntity
 from .schema import SelectSchema
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up select entities for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-    platform_config = discovery_info["platform_config"]
+    """Set up select(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SELECT]
 
-    async_add_entities(
-        KNXSelect(xknx, entity_config) for entity_config in platform_config
-    )
+    async_add_entities(KNXSelect(xknx, entity_config) for entity_config in config)
 
 
 def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
@@ -44,7 +49,7 @@ def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
     return RawValue(
         xknx,
         name=config[CONF_NAME],
-        payload_length=config[SelectSchema.CONF_PAYLOAD_LENGTH],
+        payload_length=config[CONF_PAYLOAD_LENGTH],
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS),
         respond_to_read=config[CONF_RESPOND_TO_READ],
@@ -61,11 +66,12 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
         """Initialize a KNX select."""
         super().__init__(_create_raw_value(xknx, config))
         self._option_payloads: dict[str, int] = {
-            option[SelectSchema.CONF_OPTION]: option[SelectSchema.CONF_PAYLOAD]
+            option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
             for option in config[SelectSchema.CONF_OPTIONS]
         }
         self._attr_options = list(self._option_payloads)
         self._attr_current_option = None
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.remote_value.group_address)
 
     async def async_added_to_hass(self) -> None:

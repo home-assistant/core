@@ -9,9 +9,9 @@ from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
 from pytile.tile import Tile
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,7 +19,7 @@ from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN, LOGGER
 
-PLATFORMS = ["device_tracker"]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 DEVICE_TYPES = ["PHONE", "TILE"]
 
 DEFAULT_INIT_TASK_LIMIT = 2
@@ -30,8 +30,6 @@ CONF_SHOW_INACTIVE = "show_inactive"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tile as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
@@ -70,9 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             session=websession,
         )
         tiles = await client.async_get_tiles()
-    except InvalidAuthError:
-        LOGGER.error("Invalid credentials provided")
-        return False
+    except InvalidAuthError as err:
+        raise ConfigEntryAuthFailed("Invalid credentials") from err
     except TileError as err:
         raise ConfigEntryNotReady("Error during integration setup") from err
 
@@ -80,6 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update the Tile."""
         try:
             await tile.async_update()
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed("Invalid credentials") from err
         except SessionExpiredError:
             LOGGER.info("Tile session expired; creating a new one")
             await client.async_init()
@@ -100,8 +99,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator_init_tasks.append(coordinator.async_refresh())
 
     await gather_with_concurrency(DEFAULT_INIT_TASK_LIMIT, *coordinator_init_tasks)
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
-    hass.data[DOMAIN][entry.entry_id][DATA_TILE] = tiles
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_COORDINATOR: coordinators,
+        DATA_TILE: tiles,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

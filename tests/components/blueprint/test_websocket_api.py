@@ -48,7 +48,7 @@ async def test_list_blueprints_non_existing_domain(hass, hass_ws_client):
     """Test listing blueprints."""
     client = await hass_ws_client(hass)
     await client.send_json(
-        {"id": 5, "type": "blueprint/list", "domain": "not_existsing"}
+        {"id": 5, "type": "blueprint/list", "domain": "not_existing"}
     )
 
     msg = await client.receive_json()

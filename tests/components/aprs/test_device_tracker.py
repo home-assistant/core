@@ -4,9 +4,6 @@ from unittest.mock import Mock, patch
 import aprslib
 
 import homeassistant.components.aprs.device_tracker as device_tracker
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-
-from tests.common import get_test_home_assistant
 
 DEFAULT_PORT = 14580
 
@@ -299,25 +296,23 @@ def test_aprs_listener_rx_msg_no_position():
         see.assert_not_called()
 
 
-def test_setup_scanner():
+async def test_setup_scanner(hass):
     """Test setup_scanner."""
     with patch(
         "homeassistant.components.aprs.device_tracker.AprsListenerThread"
     ) as listener:
-        hass = get_test_home_assistant()
-        hass.start()
-
         config = {
             "username": TEST_CALLSIGN,
             "password": TEST_PASSWORD,
             "host": TEST_HOST,
             "callsigns": ["XX0FOO*", "YY0BAR-1"],
+            "timeout": device_tracker.DEFAULT_TIMEOUT,
         }
 
         see = Mock()
-        res = device_tracker.setup_scanner(hass, config, see)
-        hass.bus.fire(EVENT_HOMEASSISTANT_START)
-        hass.stop()
+        res = await hass.async_add_executor_job(
+            device_tracker.setup_scanner, hass, config, see
+        )
 
         assert res
         listener.assert_called_with(
@@ -325,21 +320,18 @@ def test_setup_scanner():
         )
 
 
-def test_setup_scanner_timeout():
+async def test_setup_scanner_timeout(hass):
     """Test setup_scanner failure from timeout."""
-    hass = get_test_home_assistant()
-    hass.start()
+    with patch("aprslib.IS.connect", side_effect=TimeoutError):
+        config = {
+            "username": TEST_CALLSIGN,
+            "password": TEST_PASSWORD,
+            "host": "localhost",
+            "timeout": 0.01,
+            "callsigns": ["XX0FOO*", "YY0BAR-1"],
+        }
 
-    config = {
-        "username": TEST_CALLSIGN,
-        "password": TEST_PASSWORD,
-        "host": "localhost",
-        "timeout": 0.01,
-        "callsigns": ["XX0FOO*", "YY0BAR-1"],
-    }
-
-    see = Mock()
-    try:
-        assert not device_tracker.setup_scanner(hass, config, see)
-    finally:
-        hass.stop()
+        see = Mock()
+        assert not await hass.async_add_executor_job(
+            device_tracker.setup_scanner, hass, config, see
+        )

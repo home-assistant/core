@@ -1,4 +1,6 @@
 """Support for LG soundbars."""
+from __future__ import annotations
+
 import temescal
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -9,6 +11,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_LG = (
     SUPPORT_VOLUME_SET
@@ -18,7 +23,12 @@ SUPPORT_LG = (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the LG platform."""
     if discovery_info is not None:
         add_entities([LGDevice(discovery_info)])

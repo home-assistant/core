@@ -208,7 +208,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
-    async def dynalite_service(service_call: ServiceCall):
+    async def dynalite_service(service_call: ServiceCall) -> None:
         data = service_call.data
         host = data.get(ATTR_HOST, "")
         bridges = []

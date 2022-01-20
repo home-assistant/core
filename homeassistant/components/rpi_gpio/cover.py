@@ -1,4 +1,6 @@
 """Support for controlling a Raspberry Pi cover."""
+from __future__ import annotations
+
 from time import sleep
 
 import voluptuous as vol
@@ -6,8 +8,11 @@ import voluptuous as vol
 from homeassistant.components import rpi_gpio
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_COVERS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -46,16 +51,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the RPi cover platform."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    relay_time = config.get(CONF_RELAY_TIME)
-    state_pull_mode = config.get(CONF_STATE_PULL_MODE)
-    invert_state = config.get(CONF_INVERT_STATE)
-    invert_relay = config.get(CONF_INVERT_RELAY)
+    relay_time = config[CONF_RELAY_TIME]
+    state_pull_mode = config[CONF_STATE_PULL_MODE]
+    invert_state = config[CONF_INVERT_STATE]
+    invert_relay = config[CONF_INVERT_RELAY]
     covers = []
-    covers_conf = config.get(CONF_COVERS)
+    covers_conf = config[CONF_COVERS]
 
     for cover in covers_conf:
         covers.append(

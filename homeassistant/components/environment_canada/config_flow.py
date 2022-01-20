@@ -1,13 +1,12 @@
 """Config flow for Environment Canada integration."""
-from functools import partial
 import logging
 import xml.etree.ElementTree as et
 
 import aiohttp
-from env_canada import ECData
+from env_canada import ECWeather, ec_exc
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
@@ -16,19 +15,18 @@ from .const import CONF_LANGUAGE, CONF_STATION, CONF_TITLE, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass, data):
+async def validate_input(data):
     """Validate the user input allows us to connect."""
     lat = data.get(CONF_LATITUDE)
     lon = data.get(CONF_LONGITUDE)
     station = data.get(CONF_STATION)
-    lang = data.get(CONF_LANGUAGE)
+    lang = data.get(CONF_LANGUAGE).lower()
 
-    weather_init = partial(
-        ECData, station_id=station, coordinates=(lat, lon), language=lang.lower()
-    )
-    weather_data = await hass.async_add_executor_job(weather_init)
-    if weather_data.metadata.get("location") is None:
-        raise TooManyAttempts
+    if station:
+        weather_data = ECWeather(station_id=station, language=lang)
+    else:
+        weather_data = ECWeather(coordinates=(lat, lon), language=lang)
+    await weather_data.update()
 
     if lat is None or lon is None:
         lat = weather_data.lat
@@ -52,10 +50,8 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-            except TooManyAttempts:
-                errors["base"] = "too_many_attempts"
-            except et.ParseError:
+                info = await validate_input(user_input)
+            except (et.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId):
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
@@ -98,11 +94,3 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
-
-    async def async_step_import(self, import_data):
-        """Import entry from configuration.yaml."""
-        return await self.async_step_user(import_data)
-
-
-class TooManyAttempts(exceptions.HomeAssistantError):
-    """Error to indicate station ID is missing, invalid, or not in EC database."""

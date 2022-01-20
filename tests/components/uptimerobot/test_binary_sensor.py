@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pyuptimerobot import UptimeRobotAuthenticationException
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.uptimerobot.const import (
     ATTRIBUTION,
     COORDINATOR_UPDATE_INTERVAL,
@@ -29,7 +29,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
     entity = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
 
     assert entity.state == STATE_ON
-    assert entity.attributes["device_class"] == DEVICE_CLASS_CONNECTIVITY
+    assert entity.attributes["device_class"] == BinarySensorDeviceClass.CONNECTIVITY
     assert entity.attributes["attribution"] == ATTRIBUTION
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 

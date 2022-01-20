@@ -8,8 +8,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "shiftr"
 
@@ -28,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Shiftr.io MQTT consumer."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)

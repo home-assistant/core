@@ -19,7 +19,7 @@
                 "title": "Automatikus csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
             },
             "link": {
-                "description": "Nyomja meg \u00e9s tartsa lenyomva a(z) {name} Kezd\u0151lap (Home) gombot, am\u00edg az eszk\u00f6z hangot ad (kb. K\u00e9t m\u00e1sodperc), majd engedje el 30 m\u00e1sodpercen bel\u00fcl.",
+                "description": "Nyomja meg \u00e9s tartsa lenyomva a {name} Home gombj\u00e1t, am\u00edg az eszk\u00f6z hangot ad (kb. k\u00e9t m\u00e1sodperc), majd engedje el 30 m\u00e1sodpercen bel\u00fcl.",
                 "title": "Jelsz\u00f3 lek\u00e9r\u00e9se"
             },
             "link_manual": {

@@ -1,4 +1,5 @@
 """Tests for Plex media browser."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.components.media_player.const import (
@@ -359,7 +360,8 @@ async def test_browse_media(
     # Browse into a non-existent TV season
     unknown_key = 99999999999999
     requests_mock.get(
-        f"{mock_plex_server.url_in_use}/library/metadata/{unknown_key}", status_code=404
+        f"{mock_plex_server.url_in_use}/library/metadata/{unknown_key}",
+        status_code=HTTPStatus.NOT_FOUND,
     )
 
     msg_id += 1

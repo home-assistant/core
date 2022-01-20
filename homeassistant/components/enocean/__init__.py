@@ -1,11 +1,11 @@
 """Support for EnOcean devices."""
-
 import voluptuous as vol
 
-from homeassistant import config_entries, core
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
 from .dongle import EnOceanDongle
@@ -15,7 +15,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the EnOcean component."""
     # support for text-based configuration (legacy)
     if DOMAIN not in config:
@@ -35,9 +35,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up an EnOcean dongle for the given entry."""
     enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
@@ -47,7 +45,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ENOcean config entry."""
 
     enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]

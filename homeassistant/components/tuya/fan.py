@@ -31,12 +31,13 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
     "kj",  # Air Purifier
+    "fsd",  # Fan with Light
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up tuya fan dynamically through tuya discovery."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
@@ -160,9 +161,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         return self.ha_preset_modes
 
     @property
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> str | None:
         """Return the current preset_mode."""
-        return self.device.status[DPCode.MODE]
+        return self.device.status.get(DPCode.MODE)
 
     @property
     def percentage(self) -> int | None:

@@ -1,5 +1,6 @@
 """Google config for Cloud."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 from hass_nabucasa import Cloud, cloud_api
@@ -7,12 +8,7 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    HTTP_OK,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.setup import async_setup_component
@@ -69,16 +65,11 @@ class CloudGoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self.enabled and self._prefs.google_report_state
 
-    @property
-    def local_sdk_webhook_id(self):
-        """Return the local SDK webhook.
-
-        Return None to disable the local SDK.
-        """
+    def get_local_webhook_id(self, agent_user_id):
+        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id
 
-    @property
-    def local_sdk_user_id(self):
+    def get_local_agent_user_id(self, webhook_id):
         """Return the user ID to be used for actions received via the local SDK."""
         return self._user
 
@@ -97,7 +88,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         start.async_at_start(self.hass, hass_started)
 
-        # Remove old/wrong user agent ids
+        # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
         for agent_user_id in self._store.agent_user_ids:
             if agent_user_id != self.agent_user_id:
@@ -132,12 +123,8 @@ class CloudGoogleConfig(AbstractConfig):
             return entity_expose
 
         entity_registry = er.async_get(self.hass)
-        registry_entry = entity_registry.async_get(entity_id)
-        if registry_entry:
-            auxiliary_entity = registry_entry.entity_category in (
-                ENTITY_CATEGORY_CONFIG,
-                ENTITY_CATEGORY_DIAGNOSTIC,
-            )
+        if registry_entry := entity_registry.async_get(entity_id):
+            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
         else:
             auxiliary_entity = False
 
@@ -179,7 +166,7 @@ class CloudGoogleConfig(AbstractConfig):
     async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
-            return HTTP_OK
+            return HTTPStatus.OK
 
         async with self._sync_entities_lock:
             resp = await cloud_api.async_google_actions_request_sync(self._cloud)

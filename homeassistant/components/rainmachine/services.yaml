@@ -45,8 +45,26 @@ pause_watering:
       selector:
         number:
           min: 1
-          max: 86400
+          max: 43200
           unit_of_measurement: seconds
+restrict_watering:
+  name: Restrict All Watering
+  description: Restrict all watering activities from starting for a time period
+  fields:
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be restricted
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    duration:
+      name: Duration
+      description: The time period to restrict watering activities from starting
+      required: true
+      default: "01:00:00"
+      selector:
+        text:
 start_program:
   name: Start Program
   description: Start a program
@@ -241,3 +259,14 @@ push_weather_data:
           max: 40
           step: 0.1
           unit_of_measurement: '°C'
+unrestrict_watering:
+  name: Unrestrict All Watering
+  description: Unrestrict all watering activities
+  fields:
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be unrestricted
+      required: true
+      selector:
+        device:
+          integration: rainmachine

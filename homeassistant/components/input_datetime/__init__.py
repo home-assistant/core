@@ -87,19 +87,16 @@ def valid_initial(conf):
         return conf
 
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
-        parsed_value = dt_util.parse_datetime(initial)
-        if parsed_value is not None:
+        if dt_util.parse_datetime(initial) is not None:
             return conf
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
 
     if conf[CONF_HAS_DATE]:
-        parsed_value = dt_util.parse_date(initial)
-        if parsed_value is not None:
+        if dt_util.parse_date(initial) is not None:
             return conf
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
-    parsed_value = dt_util.parse_time(initial)
-    if parsed_value is not None:
+    if dt_util.parse_time(initial) is not None:
         return conf
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
@@ -270,8 +267,7 @@ class InputDatetime(RestoreEntity):
         default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
 
         # Priority 2: Old state
-        old_state = await self.async_get_last_state()
-        if old_state is None:
+        if (old_state := await self.async_get_last_state()) is None:
             self._current_datetime = dt_util.parse_datetime(default_value)
             return
 
@@ -283,15 +279,13 @@ class InputDatetime(RestoreEntity):
                 current_datetime = date_time
 
         elif self.has_date:
-            date = dt_util.parse_date(old_state.state)
-            if date is None:
+            if (date := dt_util.parse_date(old_state.state)) is None:
                 current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
         else:
-            time = dt_util.parse_time(old_state.state)
-            if time is None:
+            if (time := dt_util.parse_time(old_state.state)) is None:
                 current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = py_datetime.datetime.combine(

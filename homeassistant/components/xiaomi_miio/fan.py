@@ -1,7 +1,6 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 from abc import abstractmethod
 import asyncio
-from enum import Enum
 import logging
 import math
 
@@ -25,9 +24,11 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -173,7 +174,11 @@ FAN_DIRECTIONS_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Fan from a config entry."""
     entities = []
 
@@ -223,7 +228,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities.append(entity)
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Map services to methods on XiaomiAirPurifier."""
         method = SERVICE_TO_METHOD[service.service]
         params = {
@@ -362,14 +367,6 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
             return preset_mode if preset_mode in self._preset_modes else None
 
         return None
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     @callback
     def _handle_coordinator_update(self):

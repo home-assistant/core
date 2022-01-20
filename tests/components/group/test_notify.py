@@ -1,5 +1,4 @@
 """The tests for the notify.group platform."""
-from os import path
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config as hass_config
@@ -8,6 +7,8 @@ from homeassistant.components.group import SERVICE_RELOAD
 import homeassistant.components.group.notify as group
 import homeassistant.components.notify as notify
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 async def test_send_message_with_data(hass):
@@ -110,11 +111,8 @@ async def test_reload_notify(hass):
     assert hass.services.has_service(notify.DOMAIN, "demo2")
     assert hass.services.has_service(notify.DOMAIN, "group_notify")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "group/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "group")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "group",
@@ -128,7 +126,3 @@ async def test_reload_notify(hass):
     assert hass.services.has_service(notify.DOMAIN, "demo2")
     assert not hass.services.has_service(notify.DOMAIN, "group_notify")
     assert hass.services.has_service(notify.DOMAIN, "new_group_notify")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

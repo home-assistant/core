@@ -15,9 +15,6 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_CONTROL
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.camera import DOMAIN as CAMERA
-from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_AUTHENTICATION,
@@ -28,10 +25,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     HTTP_BASIC_AUTHENTICATION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import Unauthorized, UnknownUser
@@ -56,6 +55,7 @@ from .const import (
 )
 from .helpers import service_signal
 from .sensor import SENSOR_KEYS
+from .switch import SWITCH_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,6 +110,9 @@ AMCREST_SCHEMA = vol.Schema(
             [vol.In(BINARY_SENSOR_KEYS)],
             vol.Unique(),
             check_binary_sensors,
+        ),
+        vol.Optional(CONF_SWITCHES): vol.All(
+            cv.ensure_list, [vol.In(SWITCH_KEYS)], vol.Unique()
         ),
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)], vol.Unique()
@@ -273,6 +276,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
         binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
+        switches = device.get(CONF_SWITCHES)
         stream_source = device[CONF_STREAM_SOURCE]
         control_light = device.get(CONF_CONTROL_LIGHT)
 
@@ -294,13 +298,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             control_light,
         )
 
-        discovery.load_platform(hass, CAMERA, DOMAIN, {CONF_NAME: name}, config)
+        discovery.load_platform(
+            hass, Platform.CAMERA, DOMAIN, {CONF_NAME: name}, config
+        )
 
         event_codes = set()
         if binary_sensors:
             discovery.load_platform(
                 hass,
-                BINARY_SENSOR,
+                Platform.BINARY_SENSOR,
                 DOMAIN,
                 {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
                 config,
@@ -317,7 +323,20 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if sensors:
             discovery.load_platform(
-                hass, SENSOR, DOMAIN, {CONF_NAME: name, CONF_SENSORS: sensors}, config
+                hass,
+                Platform.SENSOR,
+                DOMAIN,
+                {CONF_NAME: name, CONF_SENSORS: sensors},
+                config,
+            )
+
+        if switches:
+            discovery.load_platform(
+                hass,
+                Platform.SWITCH,
+                DOMAIN,
+                {CONF_NAME: name, CONF_SWITCHES: switches},
+                config,
             )
 
     if not hass.data[DATA_AMCREST][DEVICES]:

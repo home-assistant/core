@@ -27,6 +27,14 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
             name="Siren",
         ),
     ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
+    "sp": (
+        SirenEntityDescription(
+            key=DPCode.SIREN_SWITCH,
+            name="Siren",
+        ),
+    ),
 }
 
 
@@ -44,10 +52,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaSirenEntity(
                                 device, hass_data.device_manager, description

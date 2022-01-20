@@ -10,7 +10,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import ExtendedJSONEncoder
@@ -22,6 +22,7 @@ from homeassistant.helpers.trace import (
     trace_id_set,
     trace_set_child_id,
 )
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 import homeassistant.util.uuid as uuid_util
 
@@ -47,7 +48,7 @@ TRACE_CONFIG_SCHEMA = {
 }
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the trace integration."""
     hass.data[DATA_TRACE] = {}
     websocket_api.async_setup(hass)
@@ -132,8 +133,7 @@ async def async_list_traces(hass, wanted_domain, wanted_key):
 
 def async_store_trace(hass, trace, stored_traces):
     """Store a trace if its key is valid."""
-    key = trace.key
-    if key:
+    if key := trace.key:
         traces = hass.data[DATA_TRACE]
         if key not in traces:
             traces[key] = LimitedSizeDict(size_limit=stored_traces)

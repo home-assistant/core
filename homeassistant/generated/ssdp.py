@@ -83,6 +83,20 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "dlna_dmr": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
+        }
+    ],
     "fritz": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -171,6 +185,12 @@ SSDP = {
             "manufacturer": "NETGEAR, Inc."
         }
     ],
+    "octoprint": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "The OctoPrint Project"
+        }
+    ],
     "roku": [
         {
             "deviceType": "urn:roku-com:device:player:1-0",
@@ -208,14 +228,30 @@ SSDP = {
     ],
     "unifi": [
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine"
         },
         {
-            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
+        }
+    ],
+    "unifiprotect": [
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        },
+        {
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine SE"
         }
     ],
     "upnp": [
@@ -224,6 +260,11 @@ SSDP = {
         },
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+        }
+    ],
+    "webostv": [
+        {
+            "st": "urn:lge-com:service:webos-second-screen:1"
         }
     ],
     "wemo": [

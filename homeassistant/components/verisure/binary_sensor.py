@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_OPENING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -39,7 +38,7 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
-    _attr_device_class = DEVICE_CLASS_OPENING
+    _attr_device_class = BinarySensorDeviceClass.OPENING
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -86,7 +85,8 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     coordinator: VerisureDataUpdateCoordinator
 
     _attr_name = "Verisure Ethernet status"
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def unique_id(self) -> str:

@@ -7,9 +7,12 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "{name} - {model} ( {host} ) kurulumunu yapmak istiyor musunuz?"
+            },
             "user": {
                 "data": {
-                    "host": "Twinkly cihaz\u0131n\u0131z\u0131n ana bilgisayar\u0131 (veya IP adresi)"
+                    "host": "Sunucu"
                 },
                 "description": "Twinkly led dizinizi ayarlay\u0131n",
                 "title": "Twinkly"

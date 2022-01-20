@@ -15,7 +15,8 @@
             "user": {
                 "data": {
                     "host": "Ana Bilgisayar"
-                }
+                },
+                "description": "Roon sunucusu bulunamad\u0131, l\u00fctfen Ana Bilgisayar Ad\u0131n\u0131z\u0131 veya IP'nizi girin."
             }
         }
     }

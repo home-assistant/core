@@ -38,5 +38,15 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure WattTime",
+        "data": {
+          "show_on_map": "Show monitored location on the map"
+        }
+      }
+    }
   }
 }

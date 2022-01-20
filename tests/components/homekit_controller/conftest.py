@@ -10,6 +10,8 @@ import homeassistant.util.dt as dt_util
 
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
+pytest.register_assert_rewrite("tests.components.homekit_controller.common")
+
 
 @pytest.fixture
 def utcnow(request):
@@ -30,5 +32,5 @@ def controller(hass):
 
 
 @pytest.fixture(autouse=True)
-def homekit_mock_zeroconf(mock_zeroconf):
-    """Mock zeroconf in all homekit tests."""
+def hk_mock_async_zeroconf(mock_async_zeroconf):
+    """Auto mock zeroconf."""

@@ -1,5 +1,6 @@
 """The Bond integration."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
+from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -11,7 +12,7 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
-    HTTP_UNAUTHORIZED,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -22,7 +23,12 @@ from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 from .const import BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
 from .utils import BondHub
 
-PLATFORMS = ["cover", "fan", "light", "switch"]
+PLATFORMS = [
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SWITCH,
+]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,11 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         timeout=ClientTimeout(total=_API_TIMEOUT),
         session=async_get_clientsession(hass),
     )
-    hub = BondHub(bond)
+    hub = BondHub(bond, host)
     try:
         await hub.setup()
     except ClientResponseError as ex:
-        if ex.status == HTTP_UNAUTHORIZED:
+        if ex.status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("Bond token no longer valid: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
@@ -73,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     assert hub.bond_id is not None
     hub_name = hub.name or hub.bond_id
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, hub.bond_id)},
@@ -81,7 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=hub_name,
         model=hub.target,
         sw_version=hub.fw_ver,
+        hw_version=hub.mcu_ver,
         suggested_area=hub.location,
+        configuration_url=f"http://{host}",
     )
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)

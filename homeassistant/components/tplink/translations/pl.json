@@ -8,9 +8,13 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
+        "flow_title": "{name} {model} ({host})",
         "step": {
             "confirm": {
                 "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
+            },
+            "discovery_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} {model} ({host})?"
             },
             "pick_device": {
                 "data": {
@@ -20,7 +24,8 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
-                }
+                },
+                "description": "Je\u015bli nie podasz IP lub nazwy hosta, zostanie u\u017cyte wykrywanie do odnalezienia urz\u0105dze\u0144."
             }
         }
     }

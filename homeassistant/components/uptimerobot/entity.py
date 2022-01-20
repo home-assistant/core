@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from pyuptimerobot import UptimeRobotMonitor
 
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -27,14 +28,14 @@ class UptimeRobotEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._monitor = monitor
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(self.monitor.id))},
-            "name": self.monitor.friendly_name,
-            "manufacturer": "UptimeRobot Team",
-            "entry_type": "service",
-            "model": self.monitor.type.name,
-            "configuration_url": f"https://uptimerobot.com/dashboard#{self.monitor.id}",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(self.monitor.id))},
+            name=self.monitor.friendly_name,
+            manufacturer="UptimeRobot Team",
+            entry_type=DeviceEntryType.SERVICE,
+            model=self.monitor.type.name,
+            configuration_url=f"https://uptimerobot.com/dashboard#{self.monitor.id}",
+        )
         self._attr_extra_state_attributes = {
             ATTR_TARGET: self.monitor.url,
         }

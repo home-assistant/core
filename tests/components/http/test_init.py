@@ -1,5 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
 from datetime import timedelta
+from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 from unittest.mock import Mock, patch
@@ -72,7 +73,7 @@ async def test_not_log_password(hass, hass_client_no_auth, caplog, legacy_auth):
 
     resp = await client.get("/api/", params={"api_password": "test-password"})
 
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     logs = caplog.text
 
     # Ensure we don't log API passwords

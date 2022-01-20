@@ -25,6 +25,7 @@
                 "data": {
                     "fallback": "Aktifkan mode alternatif."
                 },
+                "description": "Mode fallback akan beralih ke Smart Schedule pada pergantian jadwal berikutnya setelah menyesuaikan zona secara manual.",
                 "title": "Sesuaikan opsi Tado."
             }
         }

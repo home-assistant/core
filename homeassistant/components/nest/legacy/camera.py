@@ -7,6 +7,7 @@ import logging
 import requests
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_NEST, DOMAIN
@@ -61,14 +62,14 @@ class NestCamera(Camera):
         return self.device.device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": self.device.name_long,
-            "manufacturer": "Nest Labs",
-            "model": "Camera",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.device_id)},
+            manufacturer="Nest Labs",
+            model="Camera",
+            name=self.device.name_long,
+        )
 
     @property
     def should_poll(self):

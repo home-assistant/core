@@ -1,4 +1,5 @@
 """Tests for the Sonarr component."""
+from http import HTTPStatus
 from socket import gaierror as SocketGIAError
 from unittest.mock import patch
 
@@ -148,13 +149,13 @@ def mock_connection_invalid_auth(
     """Mock Sonarr invalid auth errors."""
     sonarr_url = f"http://{host}:{port}{base_path}"
 
-    aioclient_mock.get(f"{sonarr_url}/system/status", status=403)
-    aioclient_mock.get(f"{sonarr_url}/diskspace", status=403)
-    aioclient_mock.get(f"{sonarr_url}/calendar", status=403)
-    aioclient_mock.get(f"{sonarr_url}/command", status=403)
-    aioclient_mock.get(f"{sonarr_url}/queue", status=403)
-    aioclient_mock.get(f"{sonarr_url}/series", status=403)
-    aioclient_mock.get(f"{sonarr_url}/missing/wanted", status=403)
+    aioclient_mock.get(f"{sonarr_url}/system/status", status=HTTPStatus.FORBIDDEN)
+    aioclient_mock.get(f"{sonarr_url}/diskspace", status=HTTPStatus.FORBIDDEN)
+    aioclient_mock.get(f"{sonarr_url}/calendar", status=HTTPStatus.FORBIDDEN)
+    aioclient_mock.get(f"{sonarr_url}/command", status=HTTPStatus.FORBIDDEN)
+    aioclient_mock.get(f"{sonarr_url}/queue", status=HTTPStatus.FORBIDDEN)
+    aioclient_mock.get(f"{sonarr_url}/series", status=HTTPStatus.FORBIDDEN)
+    aioclient_mock.get(f"{sonarr_url}/missing/wanted", status=HTTPStatus.FORBIDDEN)
 
 
 def mock_connection_server_error(
@@ -166,13 +167,21 @@ def mock_connection_server_error(
     """Mock Sonarr server errors."""
     sonarr_url = f"http://{host}:{port}{base_path}"
 
-    aioclient_mock.get(f"{sonarr_url}/system/status", status=500)
-    aioclient_mock.get(f"{sonarr_url}/diskspace", status=500)
-    aioclient_mock.get(f"{sonarr_url}/calendar", status=500)
-    aioclient_mock.get(f"{sonarr_url}/command", status=500)
-    aioclient_mock.get(f"{sonarr_url}/queue", status=500)
-    aioclient_mock.get(f"{sonarr_url}/series", status=500)
-    aioclient_mock.get(f"{sonarr_url}/missing/wanted", status=500)
+    aioclient_mock.get(
+        f"{sonarr_url}/system/status", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{sonarr_url}/diskspace", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{sonarr_url}/calendar", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(f"{sonarr_url}/command", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(f"{sonarr_url}/queue", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(f"{sonarr_url}/series", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(
+        f"{sonarr_url}/missing/wanted", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
 
 
 async def setup_integration(

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Geslo"
+                },
+                "description": "Ponovno vnesite geslo za {username} :"
+            }
+        }
+    }
+}

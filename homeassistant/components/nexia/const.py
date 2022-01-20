@@ -1,6 +1,13 @@
 """Nexia constants."""
+from homeassistant.const import Platform
 
-PLATFORMS = ["sensor", "binary_sensor", "climate", "scene"]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SCENE,
+    Platform.SWITCH,
+]
 
 ATTRIBUTION = "Data provided by mynexia.com"
 
@@ -17,6 +24,8 @@ DEFAULT_ENTITY_NAMESPACE = "nexia"
 ATTR_DESCRIPTION = "description"
 
 ATTR_AIRCLEANER_MODE = "aircleaner_mode"
+
+ATTR_RUN_MODE = "run_mode"
 
 ATTR_ZONE_STATUS = "zone_status"
 ATTR_HUMIDIFY_SUPPORTED = "humidify_supported"

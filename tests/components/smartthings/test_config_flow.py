@@ -355,9 +355,11 @@ async def test_entry_created_with_cloudhook(
     request.refresh_token = refresh_token
 
     with patch.object(
-        hass.components.cloud, "async_active_subscription", Mock(return_value=True)
+        smartapp.cloud,
+        "async_active_subscription",
+        Mock(return_value=True),
     ), patch.object(
-        hass.components.cloud,
+        smartapp.cloud,
         "async_create_cloudhook",
         AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:
@@ -551,7 +553,10 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=422
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
     )
     error.is_target_error = Mock(return_value=True)
     smartthings_mock.apps.side_effect = error
@@ -591,7 +596,10 @@ async def test_api_error_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=400
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.BAD_REQUEST,
     )
     smartthings_mock.apps.side_effect = error
 

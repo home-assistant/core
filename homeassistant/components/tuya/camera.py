@@ -50,6 +50,9 @@ async def async_setup_entry(
 class TuyaCameraEntity(TuyaEntity, CameraEntity):
     """Tuya Camera Entity."""
 
+    _attr_supported_features = SUPPORT_STREAM
+    _attr_brand = "Tuya"
+
     def __init__(
         self,
         device: TuyaDevice,
@@ -58,21 +61,12 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         """Init Tuya Camera."""
         super().__init__(device, device_manager)
         CameraEntity.__init__(self)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_STREAM
+        self._attr_model = device.product_name
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self.device.status.get(DPCode.RECORD_SWITCH, False)
-
-    @property
-    def brand(self) -> str | None:
-        """Return the camera brand."""
-        return "Tuya"
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -81,26 +75,11 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-
-        def _stream_source() -> str | None:
-            # This method can be replaced by the following snippet, once
-            # upstream changes have been merged.
-            #
-            #   return self.device_manager.get_device_stream_allocate(
-            #       self.device.id, stream_type="rtsp"
-            #   )
-            #
-            # https://github.com/tuya/tuya-iot-python-sdk/pull/28
-
-            response = self.device_manager.api.post(
-                f"/v1.0/devices/{self.device.id}/stream/actions/allocate",
-                {"type": "rtsp"},
-            )
-            if response["success"]:
-                return response["result"]["url"]
-            return None
-
-        return await self.hass.async_add_executor_job(_stream_source)
+        return await self.hass.async_add_executor_job(
+            self.device_manager.get_device_stream_allocate,
+            self.device.id,
+            "rtsp",
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -115,11 +94,6 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             width=width,
             height=height,
         )
-
-    @property
-    def model(self) -> str | None:
-        """Return the camera model."""
-        return self.device.product_name
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""

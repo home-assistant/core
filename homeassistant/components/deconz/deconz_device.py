@@ -1,9 +1,10 @@
 """Base class for deCONZ devices."""
+from __future__ import annotations
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
 
@@ -30,20 +31,20 @@ class DeconzBase:
         return self._device.unique_id.split("-", 1)[0]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.serial is None:
             return None
 
-        return {
-            "connections": {(CONNECTION_ZIGBEE, self.serial)},
-            "identifiers": {(DECONZ_DOMAIN, self.serial)},
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.model_id,
-            "name": self._device.name,
-            "sw_version": self._device.software_version,
-            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, self.serial)},
+            identifiers={(DECONZ_DOMAIN, self.serial)},
+            manufacturer=self._device.manufacturer,
+            model=self._device.model_id,
+            name=self._device.name,
+            sw_version=self._device.software_version,
+            via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
+        )
 
 
 class DeconzDevice(DeconzBase, Entity):

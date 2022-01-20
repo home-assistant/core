@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.rachio.const import (
     CONF_CUSTOM_URL,
     CONF_MANUAL_RUN_MINS,
@@ -111,7 +112,14 @@ async def test_form_homekit(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -128,7 +136,14 @@ async def test_form_homekit(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"

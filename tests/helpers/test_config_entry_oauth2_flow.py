@@ -220,7 +220,9 @@ async def test_step_discovery(hass, flow_handler, local_impl):
     )
 
     result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+        TEST_DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=data_entry_flow.BaseServiceInfo(),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -235,14 +237,18 @@ async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
     )
 
     result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+        TEST_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=data_entry_flow.BaseServiceInfo(),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "pick_implementation"
 
     result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+        TEST_DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=data_entry_flow.BaseServiceInfo(),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -263,7 +269,9 @@ async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+        TEST_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=data_entry_flow.BaseServiceInfo(),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

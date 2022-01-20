@@ -10,8 +10,9 @@ from tesla_powerwall import (
     PowerwallUnreachableError,
 )
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
@@ -23,6 +24,7 @@ from .const import (
     POWERWALL_API_CHANGED,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
+    POWERWALL_API_GRID_SERVICES_ACTIVE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
     POWERWALL_API_SERIAL_NUMBERS,
@@ -35,9 +37,9 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +79,8 @@ async def _async_handle_api_changed_error(
 ):
     # The error might include some important information about what exactly changed.
     _LOGGER.error(str(error))
-    hass.components.persistent_notification.async_create(
+    persistent_notification.async_create(
+        hass,
         "It seems like your powerwall uses an unsupported version. "
         "Please update the software of your powerwall or if it is "
         "already the newest consider reporting this issue.\nSee logs for more information",
@@ -225,6 +228,7 @@ def _fetch_powerwall_data(power_wall):
         POWERWALL_API_CHARGE: power_wall.get_charge(),
         POWERWALL_API_SITEMASTER: power_wall.get_sitemaster(),
         POWERWALL_API_METERS: power_wall.get_meters(),
+        POWERWALL_API_GRID_SERVICES_ACTIVE: power_wall.is_grid_services_active(),
         POWERWALL_API_GRID_STATUS: power_wall.get_grid_status(),
     }
 

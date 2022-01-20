@@ -18,15 +18,17 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_WHITE_VALUE,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"
 
 CONF_COLOR = "color"
@@ -39,14 +41,14 @@ DOMAIN = "fibaro"
 FIBARO_CONTROLLERS = "fibaro_controllers"
 FIBARO_DEVICES = "fibaro_devices"
 PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "light",
-    "scene",
-    "sensor",
-    "lock",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.LOCK,
+    Platform.SWITCH,
 ]
 
 FIBARO_TYPEMAP = {
@@ -187,11 +189,13 @@ class FibaroController:
             except (ValueError, KeyError):
                 pass
         for item in callback_set:
-            self._callbacks[item]()
+            for callback in self._callbacks[item]:
+                callback()
 
     def register(self, device_id, callback):
         """Register device with a callback for updates."""
-        self._callbacks[device_id] = callback
+        self._callbacks.setdefault(device_id, [])
+        self._callbacks[device_id].append(callback)
 
     def get_children(self, device_id):
         """Get a list of child devices."""
@@ -353,7 +357,7 @@ class FibaroController:
                 pass
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Fibaro Component."""
     gateways = base_config[DOMAIN][CONF_GATEWAYS]
     hass.data[FIBARO_CONTROLLERS] = {}
@@ -519,10 +523,6 @@ class FibaroDevice(Entity):
             if "power" in self.fibaro_device.interfaces:
                 attr[ATTR_CURRENT_POWER_W] = convert(
                     self.fibaro_device.properties.power, float, 0.0
-                )
-            if "energy" in self.fibaro_device.interfaces:
-                attr[ATTR_CURRENT_ENERGY_KWH] = convert(
-                    self.fibaro_device.properties.energy, float, 0.0
                 )
         except (ValueError, KeyError):
             pass

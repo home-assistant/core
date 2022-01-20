@@ -15,6 +15,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -65,7 +66,7 @@ class KulerskyLight(LightEntity):
     def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
-        self._available = None
+        self._available = False
         self._attr_supported_color_modes = {COLOR_MODE_RGBW}
         self._attr_color_mode = COLOR_MODE_RGBW
 
@@ -97,13 +98,13 @@ class KulerskyLight(LightEntity):
         return self._light.address
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for this light."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Brightech",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Brightech",
+            name=self.name,
+        )
 
     @property
     def is_on(self):

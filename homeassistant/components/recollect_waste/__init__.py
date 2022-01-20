@@ -2,28 +2,27 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from typing import Any
 
 from aiorecollect.client import Client, PickupEvent
 from aiorecollect.errors import RecollectError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     session = aiohttp_client.async_get_clientsession(hass)
     client = Client(
         entry.data[CONF_PLACE_ID], entry.data[CONF_SERVICE_ID], session=session
@@ -49,7 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -70,3 +70,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    version = entry.version
+
+    LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Update unique ID of existing, single sensor entity to be consistent with
+    # common format for platforms going forward:
+    if version == 1:
+        version = entry.version = 2
+
+        @callback
+        def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
+            """Migrate the unique ID to a new format."""
+            return {
+                "new_unique_id": (
+                    f"{entry.data[CONF_PLACE_ID]}_"
+                    f"{entry.data[CONF_SERVICE_ID]}_"
+                    "current_pickup"
+                )
+            }
+
+        await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
+
+    LOGGER.info("Migration to version %s successful", version)
+
+    return True

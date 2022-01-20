@@ -6,11 +6,10 @@ from screenlogicpy.const import (
     EQUIPMENT,
 )
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
@@ -34,8 +33,6 @@ SUPPORTED_CHEM_SENSORS = (
 )
 
 SUPPORTED_SCG_SENSORS = (
-    "scg_level1",
-    "scg_level2",
     "scg_salt_ppm",
     "scg_super_chlor_timer",
 )
@@ -43,12 +40,16 @@ SUPPORTED_SCG_SENSORS = (
 SUPPORTED_PUMP_SENSORS = ("currentWatts", "currentRPM", "currentGPM")
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
-    DEVICE_TYPE.TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
-    DEVICE_TYPE.ENERGY: DEVICE_CLASS_POWER,
+    DEVICE_TYPE.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    DEVICE_TYPE.ENERGY: SensorDeviceClass.POWER,
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
     entities = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]

@@ -1,4 +1,6 @@
 """Support for Swisscom routers (Internet-Box)."""
+from __future__ import annotations
+
 from contextlib import suppress
 import logging
 
@@ -12,7 +14,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +27,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Return the Swisscom device scanner."""
     scanner = SwisscomDeviceScanner(config[DOMAIN])
 
@@ -65,8 +69,7 @@ class SwisscomDeviceScanner(DeviceScanner):
             return False
 
         _LOGGER.info("Loading data from Swisscom Internet Box")
-        data = self.get_swisscom_data()
-        if not data:
+        if not (data := self.get_swisscom_data()):
             return False
 
         active_clients = [client for client in data.values() if client["status"]]

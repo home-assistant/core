@@ -1,4 +1,5 @@
 """AirTouch 4 component to control of AirTouch 4 Climate Devices."""
+from __future__ import annotations
 
 import logging
 
@@ -19,8 +20,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -62,14 +66,21 @@ HA_FAN_SPEED_TO_AT = {value: key for key, value in AT_TO_HA_FAN_SPEED.items()}
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Airtouch 4."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     info = coordinator.data
-    entities = [
+    entities: list[ClimateEntity] = [
         AirtouchGroup(coordinator, group["group_number"], info)
         for group in info["groups"]
-    ] + [AirtouchAC(coordinator, ac["ac_number"], info) for ac in info["acs"]]
+    ]
+    entities.extend(
+        AirtouchAC(coordinator, ac["ac_number"], info) for ac in info["acs"]
+    )
 
     _LOGGER.debug(" Found entities %s", entities)
 
@@ -96,14 +107,14 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         return super()._handle_coordinator_update()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Airtouch",
-            "model": "Airtouch 4",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self.name,
+            manufacturer="Airtouch",
+            model="Airtouch 4",
+        )
 
     @property
     def unique_id(self):
@@ -211,14 +222,14 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         return super()._handle_coordinator_update()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Airtouch",
-            "model": "Airtouch 4",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Airtouch",
+            model="Airtouch 4",
+            name=self.name,
+        )
 
     @property
     def unique_id(self):

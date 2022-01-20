@@ -44,7 +44,7 @@ def async_register_info(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the System Health component."""
-    hass.components.websocket_api.async_register_command(handle_info)
+    websocket_api.async_register_command(hass, handle_info)
     hass.data.setdefault(DOMAIN, {})
 
     await integration_platform.async_process_integration_platforms(
@@ -64,7 +64,7 @@ async def get_integration_info(
 ):
     """Get integration system health."""
     try:
-        with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
+        async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
             data = await registration.info_callback(hass)
     except asyncio.TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}

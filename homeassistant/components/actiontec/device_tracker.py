@@ -71,8 +71,7 @@ class ActiontecDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        actiontec_data = self.get_actiontec_data()
-        if actiontec_data is None:
+        if (actiontec_data := self.get_actiontec_data()) is None:
             return False
         self.last_results = [
             device for device in actiontec_data if device.timevalid > -60

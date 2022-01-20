@@ -10,7 +10,7 @@ from pytile.tile import Tile
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import DATA_COORDINATOR, DATA_TILE, DOMAIN
+from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ ATTR_RING_STATE = "ring_state"
 ATTR_TILE_NAME = "tile_name"
 ATTR_VOIP_STATE = "voip_state"
 
-DEFAULT_ATTRIBUTION = "Data provided by Tile"
 DEFAULT_ICON = "mdi:view-grid"
 
 
@@ -89,7 +88,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_name = tile.name
         self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{tile.uuid}"
         self._entry = entry

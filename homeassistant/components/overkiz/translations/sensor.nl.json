@@ -1,0 +1,12 @@
+{
+    "state": {
+        "overkiz__priority_lock_originator": {
+            "rain": "Regen",
+            "temperature": "Temperatuur"
+        },
+        "overkiz__sensor_room": {
+            "clean": "Schoon",
+            "dirty": "Vuil"
+        }
+    }
+}

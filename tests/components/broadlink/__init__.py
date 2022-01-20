@@ -71,9 +71,9 @@ BROADLINK_DEVICES = {
     "Kitchen": (  # Not supported.
         "192.168.0.64",
         "34ea34b61d2c",
-        "LB1",
+        "SB800TD",
         "Broadlink",
-        "LB1",
+        "SB800TD",
         0x504E,
         57,
         5,

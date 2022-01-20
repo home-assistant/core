@@ -12,6 +12,7 @@ from bleak.backends.scanner import AdvertisementData
 from fjaraskupan import UUID_SERVICE, Device, State, device_filter
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -23,7 +24,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DISPATCH_DETECTION, DOMAIN
 
-PLATFORMS = ["binary_sensor", "fan", "light", "sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,11 +96,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             coordinator.async_set_updated_data(device.state)
 
-            device_info: DeviceInfo = {
-                "identifiers": {(DOMAIN, ble_device.address)},
-                "manufacturer": "Fjäråskupan",
-                "name": "Fjäråskupan",
-            }
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, ble_device.address)},
+                manufacturer="Fjäråskupan",
+                name="Fjäråskupan",
+            )
             device_state = DeviceState(device, coordinator, device_info)
             state.devices[ble_device.address] = device_state
             async_dispatcher_send(

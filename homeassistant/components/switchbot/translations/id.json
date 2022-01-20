@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured_device": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
+            "no_unconfigured_devices": "Tidak ditemukan perangkat yang tidak dikonfigurasi.",
             "switchbot_unsupported_type": "Jenis Switchbot yang tidak didukung.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },

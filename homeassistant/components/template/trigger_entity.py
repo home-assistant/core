@@ -21,7 +21,7 @@ from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 class TriggerEntity(update_coordinator.CoordinatorEntity):
     """Template entity based on trigger data."""
 
-    domain = ""
+    domain: str
     extra_template_keys: tuple | None = None
     extra_template_keys_complex: tuple | None = None
 

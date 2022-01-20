@@ -1,4 +1,5 @@
 """Platform for the KEF Wireless Speakers."""
+from __future__ import annotations
 
 from datetime import timedelta
 from functools import partial
@@ -32,9 +33,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +100,12 @@ def get_ip_mode(host):
         return "hostname"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the KEF platform."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}

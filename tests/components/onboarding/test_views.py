@@ -1,5 +1,6 @@
 """Test the onboarding views."""
 import asyncio
+from http import HTTPStatus
 import os
 from unittest.mock import patch
 
@@ -7,7 +8,6 @@ import pytest
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
-from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
@@ -130,7 +130,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, hass_client_no_a
         },
     )
 
-    assert resp.status == HTTP_FORBIDDEN
+    assert resp.status == HTTPStatus.FORBIDDEN
 
 
 async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
@@ -247,7 +247,7 @@ async def test_onboarding_user_race(hass, hass_storage, hass_client_no_auth):
 
     res1, res2 = await asyncio.gather(resp1, resp2)
 
-    assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
+    assert sorted([res1.status, res2.status]) == [HTTPStatus.OK, HTTPStatus.FORBIDDEN]
 
 
 async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admin_user):
