@@ -34,10 +34,10 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.zwave_me.async_setup_entry",
         return_value=True,
-    ), patch(
+    ) as mock_setup_entry, patch(
         "homeassistant.components.zwave_me.helpers.get_uuid",
         return_value="test_uuid",
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -66,10 +66,10 @@ async def test_zeroconf(hass: HomeAssistant):
     with patch(
         "homeassistant.components.zwave_me.async_setup_entry",
         return_value=True,
-    ), patch(
+    ) as mock_setup_entry, patch(
         "homeassistant.components.zwave_me.helpers.get_uuid",
         return_value="test_uuid",
-    ) as mock_setup_entry:
+    ):
         result: FlowResult = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
