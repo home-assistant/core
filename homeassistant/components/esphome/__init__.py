@@ -27,7 +27,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant import const
-from homeassistant.components import zeroconf
+from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
     noise_psk = entry.data.get(CONF_NOISE_PSK)
-    device_id = None
+    device_id: str | None = None
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -181,11 +181,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return
 
             # Call native tag scan
-            if service_name == "tag_scanned":
+            if service_name == "tag_scanned" and device_id is not None:
                 tag_id = service_data["tag_id"]
-                hass.async_create_task(
-                    hass.components.tag.async_scan_tag(tag_id, device_id)
-                )
+                hass.async_create_task(tag.async_scan_tag(hass, tag_id, device_id))
                 return
 
             hass.bus.async_fire(service.service, service_data)

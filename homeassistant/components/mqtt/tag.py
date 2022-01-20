@@ -4,6 +4,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components import tag
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -173,7 +174,7 @@ class MQTTTagScanner:
             if not tag_id:  # No output from template, ignore
                 return
 
-            await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
+            await tag.async_scan_tag(self.hass, tag_id, self.device_id)
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass,
