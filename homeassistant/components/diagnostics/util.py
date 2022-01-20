@@ -1,8 +1,8 @@
 """Diagnostic utilities."""
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, Iterable
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from homeassistant.core import callback
 
