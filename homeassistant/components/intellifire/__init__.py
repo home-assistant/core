@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Define the API Object
-    api_object = IntellifireAsync(entry.data["host"])
+    api_object = IntellifireAsync(entry.data[CONF_HOST])
 
     # Define the update coordinator
     coordinator = IntellifireDataUpdateCoordinator(
