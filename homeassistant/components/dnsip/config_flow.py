@@ -1,6 +1,7 @@
 """Adds config flow for dnsip integration."""
 from __future__ import annotations
 
+import asyncio
 import contextlib
 from typing import Any
 
@@ -38,20 +39,24 @@ async def async_validate_url(
     url: str, resolver_ipv4: str, resolver_ipv6: str
 ) -> dict[str, bool]:
     """Validate url."""
+
+    async def async_check(url: str, resolver: str, qtype: str) -> bool:
+        """Return if able to resolve url."""
+        result = False
+        with contextlib.suppress(DNSError):
+            result = bool(
+                await aiodns.DNSResolver(nameservers=[resolver]).query(url, qtype)
+            )
+        return result
+
     result: dict[str, bool] = {}
 
-    result[CONF_IPV4] = False
-    result[CONF_IPV6] = False
+    tasks = await asyncio.gather(
+        async_check(url, resolver_ipv4, "A"), async_check(url, resolver_ipv6, "AAAA")
+    )
 
-    with contextlib.suppress(DNSError):
-        result[CONF_IPV4] = bool(
-            await aiodns.DNSResolver(nameservers=[resolver_ipv4]).query(url, "A")
-        )
-
-    with contextlib.suppress(DNSError):
-        result[CONF_IPV6] = bool(
-            await aiodns.DNSResolver(nameservers=[resolver_ipv6]).query(url, "AAAA")
-        )
+    result[CONF_IPV4] = tasks[0]
+    result[CONF_IPV6] = tasks[1]
 
     return result
 
