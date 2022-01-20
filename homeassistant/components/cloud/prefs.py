@@ -30,6 +30,7 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_OVERRIDE_NAME,
+    PREF_REMOTE_DOMAIN,
     PREF_SHOULD_EXPOSE,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
@@ -85,6 +86,7 @@ class CloudPreferences:
         alexa_default_expose=UNDEFINED,
         google_default_expose=UNDEFINED,
         tts_default_voice=UNDEFINED,
+        remote_domain=UNDEFINED,
     ):
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -103,6 +105,7 @@ class CloudPreferences:
             (PREF_ALEXA_DEFAULT_EXPOSE, alexa_default_expose),
             (PREF_GOOGLE_DEFAULT_EXPOSE, google_default_expose),
             (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
+            (PREF_REMOTE_DOMAIN, remote_domain),
         ):
             if value is not UNDEFINED:
                 prefs[key] = value
@@ -207,6 +210,11 @@ class CloudPreferences:
             return False
 
         return True
+
+    @property
+    def remote_domain(self):
+        """Return remote domain."""
+        return self._prefs.get(PREF_REMOTE_DOMAIN)
 
     @property
     def alexa_enabled(self):
@@ -321,5 +329,6 @@ class CloudPreferences:
             PREF_GOOGLE_ENTITY_CONFIGS: {},
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
+            PREF_REMOTE_DOMAIN: None,
             PREF_USERNAME: username,
         }
