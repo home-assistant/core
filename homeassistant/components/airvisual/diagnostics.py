@@ -31,7 +31,7 @@ def _async_redact_data(data: MappingProxyType | dict) -> dict[str, Any]:
             CONF_STATE,
         ):
             redacted[key] = REDACTED
-        if isinstance(value, dict):
+        elif isinstance(value, dict):
             redacted[key] = _async_redact_data(value)
 
     return redacted
