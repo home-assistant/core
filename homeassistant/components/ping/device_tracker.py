@@ -11,7 +11,9 @@ from icmplib import async_multiping
 import voluptuous as vol
 
 from homeassistant import const, util
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+)
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     SCAN_INTERVAL,
@@ -32,7 +34,7 @@ PARALLEL_UPDATES = 0
 CONF_PING_COUNT = "count"
 CONCURRENT_PING_LIMIT = 6
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(const.CONF_HOSTS): {cv.slug: cv.string},
         vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,

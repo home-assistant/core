@@ -74,19 +74,15 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         key=UIWidget.RTD_INDOOR_SIREN,
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
-        is_on=lambda select_state: (
-            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
-        ),
         icon="mdi:bell",
+        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
     ),
     OverkizSwitchDescription(
         key=UIWidget.RTD_OUTDOOR_SIREN,
         turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
         turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
-        is_on=lambda select_state: (
-            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
-        ),
         icon="mdi:bell",
+        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
     ),
 ]
 

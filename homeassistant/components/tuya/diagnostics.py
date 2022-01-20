@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from tuya_iot import TuyaDevice
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -75,7 +76,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
     for dpcode, value in device.status.items():
         # These statuses may contain sensitive information, redact these..
         if dpcode in {DPCode.ALARM_MESSAGE, DPCode.MOVEMENT_DETECT_PIC}:
-            data["status"][dpcode] = "**REDACTED**"
+            data["status"][dpcode] = REDACTED
             continue
 
         with suppress(ValueError, TypeError):
@@ -133,7 +134,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
                 if "entity_picture" in state_dict["attributes"]:
                     state_dict["attributes"] = {
                         **state_dict["attributes"],
-                        "entity_picture": "**REDACTED**",
+                        "entity_picture": REDACTED,
                     }
 
                 # The context doesn't provide useful information in this case.
