@@ -4,7 +4,7 @@ from __future__ import annotations
 from intellifire4py import IntellifireAsync
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, LOGGER
