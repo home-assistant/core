@@ -1044,6 +1044,7 @@ omit =
     homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/__init__.py
     homeassistant/components/sonos/alarms.py
+    homeassistant/components/sonos/diagnostics.py
     homeassistant/components/sonos/entity.py
     homeassistant/components/sonos/favorites.py
     homeassistant/components/sonos/helpers.py
