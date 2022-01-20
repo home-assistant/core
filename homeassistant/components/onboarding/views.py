@@ -162,6 +162,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
+            # pylint: disable=import-outside-toplevel
             from homeassistant.components.auth import create_auth_code
 
             auth_code = create_auth_code(hass, data["client_id"], credentials)
@@ -191,6 +192,7 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 "met", context={"source": "onboarding"}
             )
 
+            # pylint: disable=import-outside-toplevel
             from homeassistant.components import hassio
 
             if (
@@ -242,6 +244,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 )
 
             # Return authorization code so we can redirect user and log them in
+            # pylint: disable=import-outside-toplevel
             from homeassistant.components.auth import create_auth_code
 
             auth_code = create_auth_code(
