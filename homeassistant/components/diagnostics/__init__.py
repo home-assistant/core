@@ -208,5 +208,5 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if info[sub_type.value] is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        data = await info[sub_type.value](hass, config_entry, sub_id)
+        data = await info[sub_type.value](hass, config_entry, device)
         return _get_json_file_response(data, filename, d_type, d_id, sub_type, sub_id)
