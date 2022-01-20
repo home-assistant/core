@@ -35,11 +35,13 @@ def data_cdc_fixture():
 
 
 @pytest.fixture(name="setup_flunearyou")
-async def setup_flunearyou_fixture(hass, config, data_cdc):
+async def setup_flunearyou_fixture(hass, data_cdc, data_user, config, data_cdc):
     """Define a fixture to set up Flu Near You."""
     with patch(
         "pyflunearyou.cdc.CdcReport.status_by_coordinates", return_value=data_cdc
-    ), patch("pyflunearyou.user.UserReport.status_by_coordinates"), patch(
+    ), patch(
+        "pyflunearyou.user.UserReport.status_by_coordinates", return_value=data_user
+    ), patch(
         "homeassistant.components.flunearyou.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)
