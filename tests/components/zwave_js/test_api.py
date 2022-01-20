@@ -2716,57 +2716,6 @@ async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_c
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_version_info(hass, integration, hass_ws_client, version_state):
-    """Test version info API request."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-
-    version_info = {
-        "driver_version": version_state["driverVersion"],
-        "server_version": version_state["serverVersion"],
-        "min_schema_version": 0,
-        "max_schema_version": 0,
-    }
-
-    await ws_client.send_json(
-        {
-            ID: 3,
-            TYPE: "zwave_js/version_info",
-            ENTRY_ID: entry.entry_id,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["result"] == version_info
-
-    # Test getting non-existent entry fails
-    await ws_client.send_json(
-        {
-            ID: 4,
-            TYPE: "zwave_js/version_info",
-            ENTRY_ID: "INVALID",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
-
-    # Test sending command with not loaded entry fails
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    await ws_client.send_json(
-        {
-            ID: 5,
-            TYPE: "zwave_js/version_info",
-            ENTRY_ID: entry.entry_id,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_LOADED
-
-
 async def test_firmware_upload_view(
     hass, multisensor_6, integration, hass_client, firmware_file
 ):
