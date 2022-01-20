@@ -117,6 +117,10 @@ pytest_asyncio==1000000000.0.0
 # https://github.com/jkeljo/sisyphus-control/issues/6
 python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
+
+# Resolve a dependency conflict with cachetools.
+# Version 2.4.0 bumps the allowed dependency range.
+google-auth>=2.4.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
