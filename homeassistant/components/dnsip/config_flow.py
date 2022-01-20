@@ -1,6 +1,7 @@
 """Adds config flow for dnsip integration."""
 from __future__ import annotations
 
+import asyncio
 import contextlib
 from typing import Any
 
@@ -34,24 +35,29 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_url(
-    url: str, resolver_ipv4: str, resolver_ipv6: str
+async def async_validate_hostname(
+    hostname: str, resolver_ipv4: str, resolver_ipv6: str
 ) -> dict[str, bool]:
-    """Validate url."""
+    """Validate hostname."""
+
+    async def async_check(hostname: str, resolver: str, qtype: str) -> bool:
+        """Return if able to resolve hostname."""
+        result = False
+        with contextlib.suppress(DNSError):
+            result = bool(
+                await aiodns.DNSResolver(nameservers=[resolver]).query(hostname, qtype)
+            )
+        return result
+
     result: dict[str, bool] = {}
 
-    result[CONF_IPV4] = False
-    result[CONF_IPV6] = False
+    tasks = await asyncio.gather(
+        async_check(hostname, resolver_ipv4, "A"),
+        async_check(hostname, resolver_ipv6, "AAAA"),
+    )
 
-    with contextlib.suppress(DNSError):
-        result[CONF_IPV4] = bool(
-            await aiodns.DNSResolver(nameservers=[resolver_ipv4]).query(url, "A")
-        )
-
-    with contextlib.suppress(DNSError):
-        result[CONF_IPV6] = bool(
-            await aiodns.DNSResolver(nameservers=[resolver_ipv6]).query(url, "AAAA")
-        )
+    result[CONF_IPV4] = tasks[0]
+    result[CONF_IPV6] = tasks[1]
 
     return result
 
@@ -91,7 +97,7 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             resolver = DEFAULT_RESOLVER
             resolver_ipv6 = DEFAULT_RESOLVER_IPV6
 
-            validate = await async_validate_url(hostname, resolver, resolver_ipv6)
+            validate = await async_validate_hostname(hostname, resolver, resolver_ipv6)
 
             if not validate[CONF_IPV4] and not validate[CONF_IPV6]:
                 errors["base"] = "invalid_hostname"
@@ -131,7 +137,7 @@ class DnsIPOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            validate = await async_validate_url(
+            validate = await async_validate_hostname(
                 self.entry.data[CONF_HOSTNAME],
                 user_input[CONF_RESOLVER],
                 user_input[CONF_RESOLVER_IPV6],
