@@ -96,15 +96,18 @@ async def test_failure_scenarios(hass, hass_client):
     """Test failure scenarios."""
     client = await hass_client()
 
+    # test wrong d_type
     response = await client.get("/api/diagnostics/wrong_type/fake_id")
     assert response.status == HTTPStatus.BAD_REQUEST
 
+    # test wrong d_id
     response = await client.get("/api/diagnostics/config_entry/fake_id")
     assert response.status == HTTPStatus.NOT_FOUND
 
     config_entry = MockConfigEntry(domain="integration_without_diagnostics")
     config_entry.add_to_hass(hass)
 
+    # test valid d_type and d_id but no config entry diagnostics
     response = await client.get(
         f"/api/diagnostics/config_entry/{config_entry.entry_id}"
     )
@@ -113,12 +116,14 @@ async def test_failure_scenarios(hass, hass_client):
     config_entry = MockConfigEntry(domain="fake_integration")
     config_entry.add_to_hass(hass)
 
-    response = await client.get(
-        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/fake_id"
-    )
-    assert response.status == HTTPStatus.NOT_FOUND
-
+    # test invalid sub_type
     response = await client.get(
         f"/api/diagnostics/config_entry/{config_entry.entry_id}/wrong_type/id"
     )
     assert response.status == HTTPStatus.BAD_REQUEST
+
+    # test invalid sub_id
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/fake_id"
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
