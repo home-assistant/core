@@ -176,8 +176,8 @@ class MinutPointClient:
         self, hass: HomeAssistant, config_entry: ConfigEntry, session: PointSession
     ) -> None:
         """Initialize the Minut data object."""
-        self._known_devices: set = set()
-        self._known_homes: set = set()
+        self._known_devices: set[str] = set()
+        self._known_homes: set[str] = set()
         self._hass = hass
         self._config_entry = config_entry
         self._is_available = True
