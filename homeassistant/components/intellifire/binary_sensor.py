@@ -70,9 +70,7 @@ async def async_setup_entry(
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        IntellifireBinarySensor(
-            coordinator=coordinator, entry_id=entry.entry_id, description=description
-        )
+        IntellifireBinarySensor(coordinator=coordinator, description=description)
         for description in INTELLIFIRE_BINARY_SENSORS
     )
 
@@ -87,7 +85,6 @@ class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: IntellifireDataUpdateCoordinator,
-        entry_id: str,
         description: IntellifireBinarySensorEntityDescription,
     ) -> None:
         """Class initializer."""
