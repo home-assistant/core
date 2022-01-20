@@ -30,7 +30,7 @@ async def test_async_setup_entry(hass):
     stats = await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        dt_util.parse_datetime(_CONSUMPTION_DATA_1[0]["from"]),
+        dt_util.parse_datetime(CONSUMPTION_DATA_1[0]["from"]),
         None,
         [statistic_id],
         "hour",
@@ -41,14 +41,14 @@ async def test_async_setup_entry(hass):
     assert len(stats[statistic_id]) == 3
     _sum = 0
     for k, stat in enumerate(stats[statistic_id]):
-        assert stat["start"] == dt_util.parse_datetime(_CONSUMPTION_DATA_1[k]["from"])
-        assert stat["state"] == _CONSUMPTION_DATA_1[k]["consumption"]
+        assert stat["start"] == dt_util.parse_datetime(CONSUMPTION_DATA_1[k]["from"])
+        assert stat["state"] == CONSUMPTION_DATA_1[k]["consumption"]
         assert stat["mean"] is None
         assert stat["min"] is None
         assert stat["max"] is None
         assert stat["last_reset"] is None
 
-        _sum += _CONSUMPTION_DATA_1[k]["consumption"]
+        _sum += CONSUMPTION_DATA_1[k]["consumption"]
         assert stat["sum"] == _sum
 
     # Validate cost
@@ -57,7 +57,7 @@ async def test_async_setup_entry(hass):
     stats = await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        dt_util.parse_datetime(_CONSUMPTION_DATA_1[0]["from"]),
+        dt_util.parse_datetime(CONSUMPTION_DATA_1[0]["from"]),
         None,
         [statistic_id],
         "hour",
@@ -68,12 +68,12 @@ async def test_async_setup_entry(hass):
     assert len(stats[statistic_id]) == 3
     _sum = 0
     for k, stat in enumerate(stats[statistic_id]):
-        assert stat["start"] == dt_util.parse_datetime(_CONSUMPTION_DATA_1[k]["from"])
-        assert stat["state"] == _CONSUMPTION_DATA_1[k]["totalCost"]
+        assert stat["start"] == dt_util.parse_datetime(CONSUMPTION_DATA_1[k]["from"])
+        assert stat["state"] == CONSUMPTION_DATA_1[k]["totalCost"]
         assert stat["mean"] is None
         assert stat["min"] is None
         assert stat["max"] is None
         assert stat["last_reset"] is None
 
-        _sum += _CONSUMPTION_DATA_1[k]["totalCost"]
+        _sum += CONSUMPTION_DATA_1[k]["totalCost"]
         assert stat["sum"] == _sum
