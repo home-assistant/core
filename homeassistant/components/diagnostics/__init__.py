@@ -129,10 +129,8 @@ def _get_json_file_response(
     sub_id: str | None = None,
 ) -> web.Response:
     """Return JSON file from dictionary."""
-    _LOGGER.error(data)
     try:
         json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
-        _LOGGER.error(json_data)
     except TypeError:
         _LOGGER.error(
             "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
