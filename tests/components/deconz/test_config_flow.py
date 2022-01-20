@@ -425,6 +425,10 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0].get("context", {}).get("configuration_url") == "http://1.2.3.4:80"
+
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],

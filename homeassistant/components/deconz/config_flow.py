@@ -227,7 +227,12 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: hostname, CONF_PORT: port}
         )
 
-        self.context["title_placeholders"] = {"host": hostname}
+        self.context.update(
+            {
+                "title_placeholders": {"host": hostname},
+                "configuration_url": f"http://{hostname}:{port}",
+            }
+        )
 
         self.deconz_config = {CONF_HOST: hostname, CONF_PORT: port}
 
