@@ -1,4 +1,4 @@
-"""Test helpers for Evil Genius Labs."""
+"""Test helpers for Tibber."""
 import pytest
 
 from homeassistant.components.tibber.const import DOMAIN
