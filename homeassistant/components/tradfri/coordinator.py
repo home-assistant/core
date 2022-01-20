@@ -31,6 +31,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize device coordinator."""
         self.api = api
         self.device = device
+        self._hub_available = True
         self._exception: Exception | None = None
 
         super().__init__(
@@ -39,6 +40,14 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             name=f"Update coordinator for {device}",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
+
+    @callback
+    def set_hub_available(self, available: bool) -> None:
+        """Set status of hub."""
+        if available != self._hub_available:
+            self._hub_available = available
+            self.last_update_success = False
+            self.hass.async_create_task(self._async_update_data())
 
     @callback
     def _observe_update(self, device: Device) -> None:
