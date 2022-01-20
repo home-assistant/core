@@ -1,6 +1,9 @@
 """Test the HomeKit config flow."""
 from unittest.mock import patch
 
+import pytest
+import voluptuous
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.homekit.const import (
     CONF_FILTER,
@@ -9,6 +12,8 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
@@ -1320,3 +1325,81 @@ def _get_schema_default(schema, key_name):
         if schema_key == key_name:
             return schema_key.default()
     raise KeyError(f"{key_name} not found in schema")
+
+
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+async def test_options_flow_exclude_mode_skips_category_entities(
+    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf, entity_reg
+):
+    """Ensure exclude mode does not offer category entities."""
+    config_entry = _mock_config_entry_with_options_populated()
+    await async_init_entry(hass, config_entry)
+
+    hass.states.async_set("media_player.tv", "off")
+    hass.states.async_set("media_player.sonos", "off")
+    hass.states.async_set("switch.other", "off")
+
+    sonos_config_switch: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "sonos",
+        "config",
+        device_id="1234",
+        entity_category=EntityCategory.CONFIG,
+    )
+    hass.states.async_set(sonos_config_switch.entity_id, "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        "domains": [
+            "fan",
+            "humidifier",
+            "vacuum",
+            "media_player",
+            "climate",
+            "alarm_control_panel",
+        ],
+        "mode": "bridge",
+        "include_exclude_mode": "exclude",
+    }
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["media_player", "switch"],
+            "mode": "bridge",
+            "include_exclude_mode": "exclude",
+        },
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "exclude"
+    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
+
+    # sonos_config_switch.entity_id is a config category entity
+    # so it should not be selectable since it will always be excluded
+    with pytest.raises(voluptuous.error.MultipleInvalid):
+        await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={"entities": [sonos_config_switch.entity_id]},
+        )
+
+    result4 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={"entities": ["media_player.tv", "switch.other"]},
+    )
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "mode": "bridge",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": ["media_player.tv", "switch.other"],
+            "include_domains": ["media_player", "switch"],
+            "include_entities": [],
+        },
+    }
