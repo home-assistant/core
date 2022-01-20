@@ -19,7 +19,8 @@ async def async_get_config_entry_diagnostics(
 
     diagnostics_data = {
         "info": {
-            **config_entry.as_dict(),
+            **config_entry.data,
+            CONF_ACCESS_TOKEN: REDACTED,
         },
     }
 
