@@ -1,6 +1,7 @@
 """Test Renault diagnostics."""
 import pytest
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.renault import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,7 +15,7 @@ from tests.components.diagnostics import (
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
 VEHICLE_DETAILS = {
-    "vin": "**REDACTED**",
+    "vin": REDACTED,
     "registrationDate": "2017-08-01",
     "firstRegistrationDate": "2017-08-01",
     "engineType": "5AQ",
@@ -52,7 +53,7 @@ VEHICLE_DETAILS = {
     },
     "version": {"code": "INT MB 10R"},
     "energy": {"code": "ELEC", "label": "ELECTRIQUE", "group": "019"},
-    "registrationNumber": "**REDACTED**",
+    "registrationNumber": REDACTED,
     "vcd": "SYTINC/SKTPOU/SAND41/FDIU1/SSESM/MAPSUP/SSCALL/SAND88/SAND90/SQKDRO/SDIFPA/FACBA2/PRLEX1/SSRCAR/CABDO2/TCU0G2/SWALBO/EVTEC1/STANDA/X10/B10/EA2/MB/ELEC/DG/TEMP/TR4X2/RV/ABS/CAREG/LAC/VT003/CPE/RET03/SPROJA/RALU16/CEAVRH/AIRBA1/SERIE/DRA/DRAP08/HARM02/ATAR/TERQG/SFBANA/KM/DPRPN/AVREPL/SSDECA/ASRESP/RDAR02/ALEVA/CACBL2/SOP02C/CTHAB2/TRNOR/LVAVIP/LVAREL/SASURV/KTGREP/SGSCHA/APL03/ALOUCC/CMAR3P/NAV3G5/RAD37A/BVEL/AUTAUG/RNORM/ISOFIX/EQPEUR/HRGM01/SDPCLV/TLFRAN/SPRODI/SAN613/SSAPEX/GENEV1/ELC1/SANCML/PE2012/PHAS1/SAN913/045KWH/BT4AR1/VEC153/X101VE/NBT017/5AQ",
     "assets": [
         {
@@ -130,7 +131,7 @@ VEHICLE_DETAILS = {
     "deliveryDate": "2017-08-11",
     "retrievedFromDhs": False,
     "engineEnergyType": "ELEC",
-    "radioCode": "**REDACTED**",
+    "radioCode": REDACTED,
 }
 
 
@@ -146,10 +147,10 @@ async def test_entry_diagnostics(
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "data": {
-                "kamereon_account_id": "**REDACTED**",
+                "kamereon_account_id": REDACTED,
                 "locale": "fr_FR",
-                "password": "**REDACTED**",
-                "username": "**REDACTED**",
+                "password": REDACTED,
+                "username": REDACTED,
             },
             "title": "Mock Title",
         },

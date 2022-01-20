@@ -1,13 +1,12 @@
 """Diagnostics support for Ambient PWS."""
 from __future__ import annotations
 
-from types import MappingProxyType
 from typing import Any
 
-from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from . import AmbientStation
 from .const import CONF_APP_KEY, DOMAIN
@@ -20,31 +19,17 @@ CONF_MAC_ADDRESS = "mac_address"
 CONF_MAC_ADDRESS_CAMEL = "macAddress"
 CONF_TZ = "tz"
 
-
-@callback
-def _async_redact_data(data: MappingProxyType | dict) -> dict[str, Any]:
-    """Redact sensitive data in a dict."""
-    redacted = {**data}
-
-    for key, value in redacted.items():
-        if key in (
-            CONF_API_KEY,
-            CONF_API_KEY_CAMEL,
-            CONF_APP_KEY,
-            CONF_APP_KEY_CAMEL,
-            CONF_DEVICE_ID_CAMEL,
-            CONF_LOCATION,
-            CONF_MAC_ADDRESS,
-            CONF_MAC_ADDRESS_CAMEL,
-            CONF_TZ,
-        ):
-            redacted[key] = REDACTED
-        elif isinstance(value, dict):
-            redacted[key] = _async_redact_data(value)
-        elif isinstance(value, list):
-            redacted[key] = [_async_redact_data(item) for item in value]
-
-    return redacted
+TO_REDACT = {
+    CONF_API_KEY,
+    CONF_API_KEY_CAMEL,
+    CONF_APP_KEY,
+    CONF_APP_KEY_CAMEL,
+    CONF_DEVICE_ID_CAMEL,
+    CONF_LOCATION,
+    CONF_MAC_ADDRESS,
+    CONF_MAC_ADDRESS_CAMEL,
+    CONF_TZ,
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -56,7 +41,7 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry": {
             "title": entry.title,
-            "data": _async_redact_data(entry.data),
+            "data": async_redact_data(entry.data, TO_REDACT),
         },
-        "stations": _async_redact_data(ambient.stations),
+        "stations": async_redact_data(ambient.stations, TO_REDACT),
     }
