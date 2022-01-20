@@ -90,7 +90,7 @@ def get_home_and_node_id_from_device_entry(
     """
     device_id = next(
         (
-            identifier
+            identifier[1]
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         ),
@@ -98,7 +98,7 @@ def get_home_and_node_id_from_device_entry(
     )
     if device_id is None:
         return None
-    id_ = device_id[1].split("-")
+    id_ = device_id.split("-")
     return (id_[0], int(id_[1]))
 
 
