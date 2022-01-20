@@ -97,6 +97,13 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PRESSURE_HPA,
     ),
+    CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY,
+        name="Real Time Energy",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_WATT,
+    ),
     CharacteristicsTypes.TEMPERATURE_CURRENT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.TEMPERATURE_CURRENT,
         name="Current Temperature",
