@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
             return_value=True,
     ), patch(
                 "homeassistant.components.zwave_me.helpers.get_uuid",
-                return_value="1234567",
+                return_value="test_uuid",
         ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -68,7 +68,7 @@ async def test_zeroconf(hass: HomeAssistant):
             return_value=True,
     ), patch(
                 "homeassistant.components.zwave_me.helpers.get_uuid",
-                return_value="1234567",
+                return_value="test_uuid",
         ) as mock_setup_entry:
         result: FlowResult = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -140,12 +140,12 @@ async def test_duplicate_user(hass: HomeAssistant):
             "url": "ws://192.168.1.15",
             "token": "test-token",
         },
-        unique_id="1234567890_ws://192.168.1.15",
+        unique_id="test_uuid",
     )
     entry.add_to_hass(hass)
     with patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
-            return_value="1234567890",
+            return_value="test_uuid",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -172,13 +172,13 @@ async def test_duplicate_zeroconf(hass: HomeAssistant):
             "url": "ws://192.168.1.14",
             "token": "test-token",
         },
-        unique_id="1234567890_ws://192.168.1.14",
+        unique_id="test_uuid",
     )
     entry.add_to_hass(hass)
 
     with patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
-            return_value="1234567890",
+            return_value="test_uuid",
     ):
 
         result: FlowResult = await hass.config_entries.flow.async_init(
