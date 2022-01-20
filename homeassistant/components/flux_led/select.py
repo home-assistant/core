@@ -1,9 +1,15 @@
 """Support for Magic Home select."""
 from __future__ import annotations
 
+import asyncio
+
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.base_device import DeviceType
-from flux_led.const import DEFAULT_WHITE_CHANNEL_TYPE, WhiteChannelType
+from flux_led.const import (
+    DEFAULT_WHITE_CHANNEL_TYPE,
+    STATE_CHANGE_LATENCY,
+    WhiteChannelType,
+)
 from flux_led.protocol import PowerRestoreState, RemoteConfig
 
 from homeassistant import config_entries
@@ -21,6 +27,14 @@ from .util import _human_readable_option
 NAME_TO_POWER_RESTORE_STATE = {
     _human_readable_option(option.name): option for option in PowerRestoreState
 }
+
+
+async def _async_delayed_reload(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    """Reload after making a change that will effect the operation of the device."""
+    await asyncio.sleep(STATE_CHANGE_LATENCY)
+    hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 async def async_setup_entry(
@@ -137,10 +151,7 @@ class FluxICTypeSelect(FluxConfigSelect):
     async def async_select_option(self, option: str) -> None:
         """Change the ic type."""
         await self._device.async_set_device_config(ic_type=option)
-        # reload since we need to reinit the device
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.coordinator.entry.entry_id)
-        )
+        await _async_delayed_reload(self.hass, self.coordinator.entry)
 
 
 class FluxWiringsSelect(FluxConfigSelect):
@@ -181,10 +192,7 @@ class FluxOperatingModesSelect(FluxConfigSelect):
     async def async_select_option(self, option: str) -> None:
         """Change the ic type."""
         await self._device.async_set_device_config(operating_mode=option)
-        # reload since we need to reinit the device
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.coordinator.entry.entry_id)
-        )
+        await _async_delayed_reload(self.hass, self.coordinator.entry)
 
 
 class FluxRemoteConfigSelect(FluxConfigSelect):
@@ -244,10 +252,8 @@ class FluxWhiteChannelSelect(FluxConfigAtStartSelect):
 
     async def async_select_option(self, option: str) -> None:
         """Change the white channel type."""
-        entry = self.entry
-        hass = self.hass
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_WHITE_CHANNEL_TYPE: option.lower()}
+        self.hass.config_entries.async_update_entry(
+            self.entry,
+            data={**self.entry.data, CONF_WHITE_CHANNEL_TYPE: option.lower()},
         )
-        # reload since we need to reinit the device
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        await _async_delayed_reload(self.hass, self.entry)
