@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COORDINATOR, DOMAIN
+from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 
@@ -20,16 +20,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
+    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if hass.data[DOMAIN][entry.entry_id][COORDINATOR].api.state:
+    if coordinator.api.state:
         async_add_entities(
             [
-                HWEnergyMainSwitchEntity(
-                    hass.data[DOMAIN][entry.entry_id][COORDINATOR], entry
-                ),
-                HWEnergySwitchLockEntity(
-                    hass.data[DOMAIN][entry.entry_id][COORDINATOR], entry
-                ),
+                HWEnergyMainSwitchEntity(coordinator, entry),
+                HWEnergySwitchLockEntity(coordinator, entry),
             ]
         )
 

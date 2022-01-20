@@ -11,7 +11,6 @@ from homeassistant.const import Platform
 from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
-COORDINATOR = "coordinator"
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 # Platform config.
