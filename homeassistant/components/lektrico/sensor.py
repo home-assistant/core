@@ -294,13 +294,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor, if any."""
-        if self.entity_description.native_unit_of_measurement is not None:
-            return self.entity_description.native_unit_of_measurement
-        return super().native_unit_of_measurement
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Lektrico charger."""
         return {
