@@ -39,93 +39,219 @@ from .const import DOMAIN
 class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
-    value_fn: Any | None = None
+    # value_fn: str | int | float | bool | None = None
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> float | str | int | bool | None:
+        """Return None."""
+        return None
+
+
+@dataclass
+class ChargerStateSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Charger State sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> str:
+        """Get the charger_state."""
+        return str(data.charger_state)
+
+
+@dataclass
+class ChargingTimeSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Charging Time sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> int:
+        """Get the charging_time."""
+        return int(data.charging_time)
+
+
+@dataclass
+class CurrentSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Current sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> float:
+        """Get the current."""
+        return float(data.current)
+
+
+@dataclass
+class InstantPowerSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Instant Power sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> float:
+        """Get the instant_power."""
+        return float(data.instant_power)
+
+
+@dataclass
+class SessionEnergySensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Session Energy sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> float:
+        """Get the session_energy."""
+        return float(data.session_energy)
+
+
+@dataclass
+class TemperatureSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Temperature sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> float:
+        """Get the temperature."""
+        return float(data.temperature)
+
+
+@dataclass
+class TotalChargedEnergySensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Total Charged Energy sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> int:
+        """Get the total_charged_energy."""
+        return int(data.total_charged_energy)
+
+
+@dataclass
+class VoltageSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Voltage sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> float:
+        """Get the voltage."""
+        return float(data.voltage)
+
+
+@dataclass
+class InstallCurrentSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Install Current sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> int:
+        """Get the install_current."""
+        return int(data.install_current)
+
+
+@dataclass
+class DynamicCurrentSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Dynamic Current sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> int:
+        """Get the dynamic_current."""
+        return int(data.dynamic_current)
+
+
+@dataclass
+class LedMaxBrightnessSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico Led Max Brightness sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> int:
+        """Get the led_max_brightness."""
+        return int(data.led_max_brightness)
+
+
+@dataclass
+class HeadlessSensorEntityDescription(LektricoSensorEntityDescription):
+    """A class that describes the Lektrico No Authentication sensor entity."""
+
+    @classmethod
+    def get_native_value(cls, data: Any) -> bool:
+        """Get the headless."""
+        return bool(data.headless)
 
 
 SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
-    LektricoSensorEntityDescription(
+    ChargerStateSensorEntityDescription(
         key="charger_state",
         name="Charger State",
-        value_fn=lambda x: x.charger_state,
+        # value_fn=LektricoSensorEntityDescription.charger_state(x),
     ),
-    LektricoSensorEntityDescription(
+    ChargingTimeSensorEntityDescription(
         key="charging_time",
         name="Charging Time",
         native_unit_of_measurement=TIME_SECONDS,
-        value_fn=lambda x: x.charging_time,
+        # value_fn=lambda x: LektricoSensorEntityDescription.charging_time(x),
     ),
-    LektricoSensorEntityDescription(
+    CurrentSensorEntityDescription(
         key="current",
         name="Current",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        value_fn=lambda x: x.current,
+        # value_fn=lambda x: LektricoSensorEntityDescription.current(x),
+        # value_fn=lambda x: LektricoSensorEntityDescription.current(x),
     ),
-    LektricoSensorEntityDescription(
+    InstantPowerSensorEntityDescription(
         key="instant_power",
         name="Instant Power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        value_fn=lambda x: x.instant_power,
+        # value_fn=LektricoSensorEntityDescription.instant_power,
     ),
-    LektricoSensorEntityDescription(
+    SessionEnergySensorEntityDescription(
         key="session_energy",
         name="Session Energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_fn=lambda x: x.session_energy,
+        # value_fn=LektricoSensorEntityDescription.session_energy,
     ),
-    LektricoSensorEntityDescription(
+    TemperatureSensorEntityDescription(
         key="temperature",
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        value_fn=lambda x: x.temperature,
+        # value_fn=LektricoSensorEntityDescription.temperature,
     ),
-    LektricoSensorEntityDescription(
+    TotalChargedEnergySensorEntityDescription(
         key="total_charged_energy",
         name="Total Charged Energy",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_fn=lambda x: x.total_charged_energy,
+        # value_fn=LektricoSensorEntityDescription.total_charged_energy,
     ),
-    LektricoSensorEntityDescription(
+    VoltageSensorEntityDescription(
         key="voltage",
         name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        value_fn=lambda x: x.voltage,
+        # value_fn=LektricoSensorEntityDescription.voltage,
     ),
-    LektricoSensorEntityDescription(
+    InstallCurrentSensorEntityDescription(
         key="install_current",
         name="Install Current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        value_fn=lambda x: x.install_current,
+        # value_fn=LektricoSensorEntityDescription.install_current,
     ),
-    LektricoSensorEntityDescription(
+    DynamicCurrentSensorEntityDescription(
         key="dynamic_current",
         name="Dynamic Current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        value_fn=lambda x: x.dynamic_current,
+        # value_fn=LektricoSensorEntityDescription.dynamic_current,
     ),
-    LektricoSensorEntityDescription(
+    LedMaxBrightnessSensorEntityDescription(
         key="led_max_brightness",
         name="Led Brightness",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda x: x.led_max_brightness,
+        # value_fn=LektricoSensorEntityDescription.led_max_brightness,
     ),
-    LektricoSensorEntityDescription(
+    HeadlessSensorEntityDescription(
         key="headless",
         name="No Authentication",
-        value_fn=lambda x: x.headless,
+        # value_fn=LektricoSensorEntityDescription.headless,
     ),
 )
 
@@ -179,13 +305,53 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         self._lektrico_device = _lektrico_device
 
     @property
-    def native_value(self) -> float | str | Any | None:
+    def native_value(self) -> float | str | int | bool | None:
         """Return the state of the sensor."""
-        if self.entity_description.value_fn is not None:
-            return self.entity_description.value_fn(
-                self._lektrico_device.coordinator.data
-            )
-        return None
+
+        return self.entity_description.get_native_value(
+            self._lektrico_device.coordinator.data
+        )
+        # if self.entity_description.name == "Charger State":
+        #     return cast(
+        #         str,
+        #         self.entity_description.value_fn(
+        #             self._lektrico_device.coordinator.data
+        #         ),
+        #     )
+        # if self.entity_description.name in (
+        #     "Current",
+        #     "Instant Power",
+        #     "Session Energy",
+        #     "Temperature",
+        #     "Voltage",
+        # ):
+        #     return cast(
+        #         float,
+        #         self.entity_description.value_fn(
+        #             self._lektrico_device.coordinator.data
+        #         ),
+        #     )
+        # if self.entity_description.name in (
+        #     "Charging Time",
+        #     "Total Charged Energy",
+        #     "Install Current",
+        #     "Dynamic Current",
+        #     "Led Brightness",
+        # ):
+        #     return cast(
+        #         int,
+        #         self.entity_description.value_fn(
+        #             self._lektrico_device.coordinator.data
+        #         ),
+        #     )
+        # if self.entity_description.name == "No Authentication":
+        #     return cast(
+        #         bool,
+        #         self.entity_description.value_fn(
+        #             self._lektrico_device.coordinator.data
+        #         ),
+        #     )
+        # return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:

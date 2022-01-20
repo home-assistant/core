@@ -1,8 +1,6 @@
 """Config flow for Lektrico Charging Station."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -23,7 +21,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     serial_number: str
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
