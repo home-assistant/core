@@ -260,7 +260,7 @@ async def async_setup_entry(
         for sensor_desc in SENSORS
     ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors, False)
 
 
 class LektricoSensor(CoordinatorEntity, SensorEntity):
