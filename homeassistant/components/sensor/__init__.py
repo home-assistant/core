@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 import inspect
 import logging
+from math import log10
 from typing import Any, Final, cast, final
 
 import voluptuous as vol
@@ -201,6 +202,11 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
     SensorDeviceClass.PRESSURE: pressure_util.convert,
     SensorDeviceClass.TEMPERATURE: temperature_util.convert,
+}
+
+VALID_UNITS: dict[str, tuple[str, ...]] = {
+    SensorDeviceClass.PRESSURE: pressure_util.VALID_UNITS,
+    SensorDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
 }
 
 
@@ -430,12 +436,16 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                value = UNIT_CONVERSIONS[self.device_class](
-                    float(value),  # type: ignore
+                value_f = float(value)  # type: ignore
+                value_f_new = UNIT_CONVERSIONS[self.device_class](
+                    value_f,
                     native_unit_of_measurement,  # type: ignore
                     unit_of_measurement,  # type: ignore
                 )
-                value = round(value) if prec == 0 else round(value, prec)
+                # Scale the precision when converting to a larger unit
+                ratio_log = max(0, round(log10(value_f / value_f_new)))
+                prec = prec + round(ratio_log)
+                value = round(value_f_new) if prec == 0 else round(value_f_new, prec)
 
         units = self.hass.config.units
         if (
@@ -489,6 +499,8 @@ class SensorEntity(Entity):
             (sensor_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := sensor_options.get("unit"))
             and self.device_class in UNIT_CONVERSIONS
+            and (device_class := self.device_class) in UNIT_CONVERSIONS
+            and self.native_unit_of_measurement in VALID_UNITS[device_class]
         ):
             self._sensor_option_unit_of_measurement = custom_unit
             return
