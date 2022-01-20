@@ -23,7 +23,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     DOMAIN,
-    DATA_CONFIG_ENTRY,
     ATTR_COUNTY,
     ATTRIBUTION,
     CONF_DISTRICT_NAME,
@@ -99,7 +98,7 @@ async def async_setup_entry(
 ):
     """Create sensors from a config entry in the integrations UI."""
     _LOGGER.debug(f"create sensor from config entry {config_entry.data}")
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     if coordinator is None or coordinator.data is None:
         raise PlatformNotReady("Data coordinator could not be initialized!")

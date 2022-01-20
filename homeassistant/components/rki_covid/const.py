@@ -5,8 +5,6 @@ from typing import Final
 
 DOMAIN: Final = "rki_covid"
 
-DATA_CONFIG_ENTRY: Final = "config_entry"
-
 ATTRIBUTION: Final = "Data provided by Robert Koch-Institut"
 DEFAULT_SCAN_INTERVAL = 3  # hours
 
