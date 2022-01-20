@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-REDACTED = "REDACTED"
 
 
 async def async_get_config_entry_diagnostics(
