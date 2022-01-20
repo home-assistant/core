@@ -319,6 +319,7 @@ class Dishwasher(
         {"name": "Dishcare.Dishwasher.Program.Normal65"},
         {"name": "Dishcare.Dishwasher.Program.Glas40"},
         {"name": "Dishcare.Dishwasher.Program.GlassCare"},
+        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
         {"name": "Dishcare.Dishwasher.Program.NightWash"},
         {"name": "Dishcare.Dishwasher.Program.Quick65"},
         {"name": "Dishcare.Dishwasher.Program.Normal45"},
