@@ -36,7 +36,7 @@ def data_cdc_fixture():
 
 @pytest.fixture(name="setup_flunearyou")
 async def setup_flunearyou_fixture(hass, config, data_cdc):
-    """Define a fixture to set up AirVisual."""
+    """Define a fixture to set up Flu Near You."""
     with patch(
         "pyflunearyou.cdc.CdcReport.status_by_coordinates", side_effect=data_cdc
     ), patch("pyflunearyou.user.UserReport.status_by_coordinates"), patch(
