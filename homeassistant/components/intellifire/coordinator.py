@@ -24,11 +24,10 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
-            update_method=self._async_update_data,
         )
         self._api = api
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> IntellifirePollData:
         LOGGER.debug("Calling update loop on IntelliFire")
         async with timeout(100):
             try:
@@ -38,12 +37,12 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         return self._api.data
 
     @property
-    def api(self):
+    def api(self) -> IntellifireAsync:
         """Return the API pointer."""
         return self._api
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
             manufacturer="Hearth and Home",
