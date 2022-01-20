@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import tibber
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
