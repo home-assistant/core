@@ -65,9 +65,9 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
+        speed: str | None = None,
         percentage: int | None = None,
-        preset_mode: str = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn the fan on."""
