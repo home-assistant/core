@@ -69,7 +69,7 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
         super().__init__(coordinator, entry, "power_on")
 
         # Config attributes
-        self._attr_name = entry.title
+        self._attr_name = f"{entry.title} Switch"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
