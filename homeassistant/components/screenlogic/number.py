@@ -1,5 +1,6 @@
 """Support for a ScreenLogic number entity."""
 import logging
+from typing import cast
 
 from screenlogicpy.const import BODY_TYPE, DATA as SL_DATA, EQUIPMENT, SCG
 
@@ -8,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenlogicEntity
+from . import ScreenlogicDataUpdateCoordinator, ScreenlogicEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,14 +58,16 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
+        coordinator = cast(ScreenlogicDataUpdateCoordinator, self.coordinator)
+
         # Need to set both levels at the same time, so we gather
         # both existing level values and override the one that changed.
         levels = {}
         for level in SUPPORTED_SCG_NUMBERS:
-            levels[level] = self.coordinator.data[SL_DATA.KEY_SCG][level]["value"]
+            levels[level] = coordinator.data[SL_DATA.KEY_SCG][level]["value"]
         levels[self._data_key] = int(value)
 
-        if await self.coordinator.gateway.async_set_scg_config(
+        if await coordinator.gateway.async_set_scg_config(
             levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.POOL]],
             levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.SPA]],
         ):
