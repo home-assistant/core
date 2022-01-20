@@ -75,7 +75,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.url = discovery_info.host
-        self.uuid = await helpers.get_uuid(self.url, self.token)
+        self.uuid = await helpers.get_uuid(self.url)
         if self.uuid is None:
             return self.async_abort(reason="no_valid_uuid_set")
 
