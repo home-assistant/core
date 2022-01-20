@@ -24,7 +24,6 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
-            update_method=self._async_update_data,
         )
         self._api = api
 
