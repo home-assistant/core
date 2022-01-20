@@ -47,11 +47,10 @@ async def test_entry_diagnostics(
 async def test_entry_diagnostics_exception(
     hass: HomeAssistant,
     hass_client: ClientSession,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test config entry diagnostics with exception for ratelimit."""
-    await setup_github_integration(hass, mock_config_entry, aioclient_mock)
     aioclient_mock.get(
         "https://api.github.com/rate_limit",
         exc=GitHubException("error"),
@@ -60,7 +59,7 @@ async def test_entry_diagnostics_exception(
     result = await get_diagnostics_for_config_entry(
         hass,
         hass_client,
-        mock_config_entry,
+        init_integration,
     )
 
     assert (

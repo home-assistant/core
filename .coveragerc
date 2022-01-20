@@ -217,6 +217,7 @@ omit =
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/switch.py
+    homeassistant/components/dnsip/__init__.py
     homeassistant/components/dnsip/sensor.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
@@ -1032,6 +1033,7 @@ omit =
     homeassistant/components/soma/__init__.py
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/sensor.py
+    homeassistant/components/soma/utils.py
     homeassistant/components/somfy/__init__.py
     homeassistant/components/somfy/api.py
     homeassistant/components/somfy/climate.py
@@ -1042,6 +1044,7 @@ omit =
     homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/__init__.py
     homeassistant/components/sonos/alarms.py
+    homeassistant/components/sonos/diagnostics.py
     homeassistant/components/sonos/entity.py
     homeassistant/components/sonos/favorites.py
     homeassistant/components/sonos/helpers.py

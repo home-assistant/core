@@ -301,7 +301,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_status)
-    websocket_api.async_register_command(hass, websocket_node_state)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_ping_node)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -335,7 +334,6 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_update_data_collection_preference
     )
     websocket_api.async_register_command(hass, websocket_data_collection_status)
-    websocket_api.async_register_command(hass, websocket_version_info)
     websocket_api.async_register_command(hass, websocket_abort_firmware_update)
     websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
@@ -465,29 +463,6 @@ async def websocket_node_status(
     connection.send_result(
         msg[ID],
         data,
-    )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/node_state",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
-    }
-)
-@websocket_api.async_response
-@async_get_node
-async def websocket_node_state(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    node: Node,
-) -> None:
-    """Get the state data of a Z-Wave JS node."""
-    connection.send_result(
-        msg[ID],
-        {**node.data, "values": [value.data for value in node.values.values()]},
     )
 
 
@@ -1774,35 +1749,6 @@ async def websocket_data_collection_status(
         ENABLED: await client.driver.async_is_statistics_enabled(),
     }
     connection.send_result(msg[ID], result)
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/version_info",
-        vol.Required(ENTRY_ID): str,
-    },
-)
-@websocket_api.async_response
-@async_get_entry
-async def websocket_version_info(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-) -> None:
-    """Get version info from the Z-Wave JS server."""
-    version_info = {
-        "driver_version": client.version.driver_version,
-        "server_version": client.version.server_version,
-        "min_schema_version": client.version.min_schema_version,
-        "max_schema_version": client.version.max_schema_version,
-    }
-    connection.send_result(
-        msg[ID],
-        version_info,
-    )
 
 
 @websocket_api.require_admin

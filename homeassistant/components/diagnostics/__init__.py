@@ -22,8 +22,9 @@ from homeassistant.util.json import (
 )
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
+from .util import async_redact_data
 
-__all__ = ["REDACTED"]
+__all__ = ["REDACTED", "async_redact_data"]
 
 _LOGGER = logging.getLogger(__name__)
 

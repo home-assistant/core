@@ -1,4 +1,5 @@
 """Support for monitoring a Sense energy sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -296,6 +297,11 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return round(self._data.get_trend(self._sensor_type, self._variant_id), 1)
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset, if any."""
+        return self._data.trend_start(self._sensor_type)
 
 
 class SenseEnergyDevice(SensorEntity):
