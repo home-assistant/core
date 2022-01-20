@@ -4,7 +4,7 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components import hassio, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -14,6 +14,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
+from .. import hassio
 from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,

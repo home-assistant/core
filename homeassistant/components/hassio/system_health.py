@@ -1,8 +1,10 @@
 """Provide info to system health."""
 import os
 
-from homeassistant.components import hassio, system_health
+from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
+
+from .. import hassio
 
 SUPERVISOR_PING = f"http://{os.environ['HASSIO']}/supervisor/ping"
 OBSERVER_URL = f"http://{os.environ['HASSIO']}:4357"
