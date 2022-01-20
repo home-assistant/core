@@ -50,7 +50,10 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
             "data": _async_redact_data(entry.data),
         },
-        "vehicles": len(renault_hub.vehicles),
+        "vehicles": [
+            _async_redact_data(vehicle.details.raw_data)
+            for vehicle in renault_hub.vehicles.values()
+        ],
     }
 
 
