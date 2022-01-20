@@ -35,4 +35,15 @@ async def async_get_device_diagnostics(
     if node_id is None or node_id not in client.driver.controller.nodes:
         raise ValueError(f"Node for device {device.id} can't be found")
     node = client.driver.controller.nodes[node_id]
-    return {**node.data, "values": [value.data for value in node.values.values()]}
+    return {
+        "versionInfo": {
+            "driverVersion": client.version.driver_version,
+            "serverVersion": client.version.server_version,
+            "minSchemaVersion": client.version.min_schema_version,
+            "maxSchemaVersion": client.version.max_schema_version,
+        },
+        "state": {
+            **node.data,
+            "values": [value.data for value in node.values.values()],
+        },
+    }
