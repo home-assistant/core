@@ -34,4 +34,5 @@ async def async_get_device_diagnostics(
     node_id = identifiers[1] if identifiers else None
     if node_id is None or node_id not in client.driver.controller.nodes:
         raise ValueError(f"Node for device {device.id} can't be found")
-    return client.driver.controller.nodes[node_id].data
+    node = client.driver.controller.nodes[node_id]
+    return {**node.data, "values": [value.data for value in node.values.values()]}
