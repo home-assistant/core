@@ -119,7 +119,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.6.0
+aioesphomeapi==10.7.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -186,7 +186,7 @@ aiorecollect==1.0.8
 aioridwell==2021.12.2
 
 # homeassistant.components.senseme
-aiosenseme==0.6.0
+aiosenseme==0.6.1
 
 # homeassistant.components.shelly
 aioshelly==1.0.7
@@ -584,6 +584,9 @@ influxdb-client==1.24.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
+
+# homeassistant.components.intellifire
+intellifire4py==0.4.3
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1453,7 +1456,7 @@ twilio==6.32.0
 uEagle==0.0.2
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.1
+unifi-discovery==1.1.2
 
 # homeassistant.components.upb
 upb_lib==0.4.12
