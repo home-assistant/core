@@ -5,7 +5,7 @@ from homeassistant.components.recorder.statistics import statistics_during_perio
 from homeassistant.components.tibber.sensor import TibberDataCoordinator
 from homeassistant.util import dt as dt_util
 
-from .test_common import _CONSUMPTION_DATA_1, mock_get_homes
+from .test_common import CONSUMPTION_DATA_1, mock_get_homes
 
 from tests.common import async_init_recorder_component
 from tests.components.recorder.common import async_wait_recording_done_without_instance

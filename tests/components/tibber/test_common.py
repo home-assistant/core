@@ -2,7 +2,7 @@
 import datetime as dt
 from unittest.mock import AsyncMock
 
-_CONSUMPTION_DATA_1 = [
+CONSUMPTION_DATA_1 = [
     {
         "from": "2022-01-03T00:00:00.000+01:00",
         "totalCost": 1.1,
@@ -32,5 +32,5 @@ def mock_get_homes(only_active=True):
     tibber_home.country = "NO"
     tibber_home.last_cons_data_timestamp = dt.datetime(2016, 1, 1, 12, 44, 57)
     tibber_home.last_data_timestamp = dt.datetime(2016, 1, 1, 12, 48, 57)
-    tibber_home.get_historic_data.return_value = _CONSUMPTION_DATA_1
+    tibber_home.get_historic_data.return_value = CONSUMPTION_DATA_1
     return [tibber_home]
