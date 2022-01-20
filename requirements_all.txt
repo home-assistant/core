@@ -1986,9 +1986,6 @@ python-twitch-client==0.6.0
 # homeassistant.components.vlc
 python-vlc==1.1.2
 
-# homeassistant.components.whois
-python-whois==0.7.3
-
 # homeassistant.components.awair
 python_awair==0.2.1
 
@@ -2467,6 +2464,9 @@ webexteamssdk==1.1.1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.15.1
+
+# homeassistant.components.whois
+whois==0.9.13
 
 # homeassistant.components.wiffi
 wiffi==1.1.0
