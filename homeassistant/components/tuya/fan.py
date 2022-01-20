@@ -31,6 +31,7 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
     "kj",  # Air Purifier
+    "fsd",  # Fan with Light
 }
 
 

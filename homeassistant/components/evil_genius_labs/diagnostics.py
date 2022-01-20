@@ -1,6 +1,7 @@
 """Diagnostics support for Evil Genius Labs."""
 from __future__ import annotations
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -17,8 +18,8 @@ async def async_get_config_entry_diagnostics(
     return {
         "info": {
             **coordinator.info,
-            "wiFiSsidDefault": "REDACTED",
-            "wiFiSSID": "REDACTED",
+            "wiFiSsidDefault": REDACTED,
+            "wiFiSSID": REDACTED,
         },
         "data": coordinator.data,
     }

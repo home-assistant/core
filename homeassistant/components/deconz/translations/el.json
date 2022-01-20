@@ -24,6 +24,9 @@
             "button_7": "\u0388\u03b2\u03b4\u03bf\u03bc\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
             "button_8": "\u038c\u03b3\u03b4\u03bf\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af",
             "top_buttons": "\u03a0\u03ac\u03bd\u03c9 \u03ba\u03bf\u03c5\u03bc\u03c0\u03b9\u03ac"
+        },
+        "trigger_type": {
+            "remote_button_rotated_fast": "\u03a4\u03bf \u03ba\u03bf\u03c5\u03bc\u03c0\u03af \u03c0\u03b5\u03c1\u03b9\u03c3\u03c4\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5 \u03b3\u03c1\u03ae\u03b3\u03bf\u03c1\u03b1 \"{subtype}\""
         }
     },
     "options": {

@@ -558,6 +558,7 @@ omit =
     homeassistant/components/knx/__init__.py
     homeassistant/components/knx/climate.py
     homeassistant/components/knx/cover.py
+    homeassistant/components/knx/diagnostics.py
     homeassistant/components/knx/expose.py
     homeassistant/components/knx/knx_entity.py
     homeassistant/components/knx/light.py
@@ -818,6 +819,7 @@ omit =
     homeassistant/components/overkiz/binary_sensor.py
     homeassistant/components/overkiz/button.py
     homeassistant/components/overkiz/coordinator.py
+    homeassistant/components/overkiz/diagnostics.py
     homeassistant/components/overkiz/entity.py
     homeassistant/components/overkiz/executor.py
     homeassistant/components/overkiz/light.py
