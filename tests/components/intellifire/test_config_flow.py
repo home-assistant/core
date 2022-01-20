@@ -27,7 +27,6 @@ async def test_form(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.intellifire.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        print("mock_setup_entry", mock_setup_entry)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -39,6 +38,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Fireplace"
     assert result2["data"] == {"host": "1.1.1.1"}
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
