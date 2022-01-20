@@ -306,7 +306,7 @@ class NestFlowHandler(
             data.update(self._data)
         if user_input:
             data.update(user_input)
-        cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "")
+        cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "").strip()
 
         errors = {}
         config = self.hass.data[DOMAIN][DATA_NEST_CONFIG]
