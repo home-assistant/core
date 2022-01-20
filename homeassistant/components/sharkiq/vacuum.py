@@ -90,6 +90,8 @@ async def async_setup_entry(
 class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     """Shark IQ vacuum entity."""
 
+    coordinator: SharkIqUpdateCoordinator
+
     def __init__(
         self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
     ) -> None:
@@ -222,7 +224,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         await self.sharkiq.async_find_device()
 
     @property
-    def fan_speed(self) -> str:
+    def fan_speed(self) -> str | None:
         """Return the current fan speed."""
         fan_speed = None
         speed_level = self.sharkiq.get_property_value(Properties.POWER_MODE)
