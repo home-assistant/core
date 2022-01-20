@@ -31,6 +31,7 @@ async def test_setup_component(hass):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_service_say(hass):
@@ -41,6 +42,7 @@ async def test_service_say(hass):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.marytts.tts.MaryTTS.speak",
@@ -71,6 +73,7 @@ async def test_service_say_with_effect(hass):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.marytts.tts.MaryTTS.speak",
@@ -101,6 +104,7 @@ async def test_service_say_http_error(hass):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.marytts.tts.MaryTTS.speak",

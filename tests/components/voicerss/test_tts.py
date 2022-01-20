@@ -42,6 +42,7 @@ async def test_setup_component(hass):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_component_without_api_key(hass):
@@ -50,6 +51,7 @@ async def test_setup_component_without_api_key(hass):
 
     with assert_setup_component(0, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_service_say(hass, aioclient_mock):
@@ -62,6 +64,7 @@ async def test_service_say(hass, aioclient_mock):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -96,6 +99,7 @@ async def test_service_say_german_config(hass, aioclient_mock):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -123,6 +127,7 @@ async def test_service_say_german_service(hass, aioclient_mock):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -150,6 +155,7 @@ async def test_service_say_error(hass, aioclient_mock):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -176,6 +182,7 @@ async def test_service_say_timeout(hass, aioclient_mock):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -207,6 +214,7 @@ async def test_service_say_error_msg(hass, aioclient_mock):
 
     with assert_setup_component(1, tts.DOMAIN):
         await async_setup_component(hass, tts.DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
