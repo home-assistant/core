@@ -4,7 +4,7 @@ from __future__ import annotations
 from intellifire4py import IntellifireAsync
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, LOGGER
@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Define the API Object
-    api_object = IntellifireAsync(entry.data["host"])
+    api_object = IntellifireAsync(entry.data[CONF_HOST])
 
     # Define the update coordinator
     coordinator = IntellifireDataUpdateCoordinator(
