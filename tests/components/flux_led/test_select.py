@@ -31,6 +31,13 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def no_wait_on_state_change():
+    """Disable waiting for state change in tests."""
+    with patch("homeassistant.components.flux_led.select.STATE_CHANGE_LATENCY", 0):
+        yield
+
+
 async def test_switch_power_restore_state(hass: HomeAssistant) -> None:
     """Test a smart plug power restore state."""
     config_entry = MockConfigEntry(
