@@ -58,10 +58,10 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
-        # Need to set both levels at the same time, so we gather
-        # both existing level values and override the one that changed.
         coordinator = cast(ScreenlogicDataUpdateCoordinator, self.coordinator)
 
+        # Need to set both levels at the same time, so we gather
+        # both existing level values and override the one that changed.
         levels = {}
         for level in SUPPORTED_SCG_NUMBERS:
             levels[level] = coordinator.data[SL_DATA.KEY_SCG][level]["value"]
