@@ -1,4 +1,4 @@
-"""Test evil genius labs diagnostics."""
+"""Test AirVisual diagnostics."""
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
