@@ -1005,7 +1005,9 @@ class SonosSpeaker:
 
         if variables:
             # Store for diagnostics
-            self.media._last_event_variables = variables
+            self.media._last_event_variables = (  # pylint: disable=protected-access
+                variables
+            )
 
         self.media.clear()
         update_position = new_status != self.media.playback_status
