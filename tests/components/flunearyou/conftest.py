@@ -34,11 +34,18 @@ def data_cdc_fixture():
     return json.loads(load_fixture("cdc_data.json", "flunearyou"))
 
 
+@pytest.fixture(name="cdc_status_by_coordinates")
+def cdc_status_by_coordinates_fixture(data_cdc):
+    """Define a patched call to CdcReport.status_by_coordinates."""
+    return data_cdc
+
+
 @pytest.fixture(name="setup_flunearyou")
-async def setup_flunearyou_fixture(hass, config, data_cdc):
+async def setup_flunearyou_fixture(hass, cdc_status_by_coordinates, config, data_cdc):
     """Define a fixture to set up Flu Near You."""
     with patch(
-        "pyflunearyou.cdc.CdcReport.status_by_coordinates", side_effect=data_cdc
+        "pyflunearyou.cdc.CdcReport.status_by_coordinates",
+        side_effect=cdc_status_by_coordinates,
     ), patch("pyflunearyou.user.UserReport.status_by_coordinates"), patch(
         "homeassistant.components.flunearyou.PLATFORMS", []
     ):
