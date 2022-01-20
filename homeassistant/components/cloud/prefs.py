@@ -77,7 +77,10 @@ class CloudPreferencesStore(storage.Store):
                 old_data[PREF_GOOGLE_SECURE_DEVICES_PIN] = old_data.get(
                     PREF_GOOGLE_SECURE_DEVICES_PIN
                 )
-                old_data[PREF_TTS_DEFAULT_VOICE] = old_data.get(PREF_TTS_DEFAULT_VOICE)
+                old_data[PREF_TTS_DEFAULT_VOICE] = old_data.get(
+                    PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE
+                )
+                old_data[PREF_USERNAME] = old_data.get(PREF_USERNAME)
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -218,7 +221,7 @@ class CloudPreferences:
                 await self._save_prefs({**self._prefs, PREF_CLOUD_USER: None})
             return False
 
-        cur_username = self._prefs.get(PREF_USERNAME)
+        cur_username = self._prefs[PREF_USERNAME]
 
         if cur_username == username:
             return False
@@ -316,7 +319,7 @@ class CloudPreferences:
     @property
     def tts_default_voice(self):
         """Return the default TTS voice."""
-        return self._prefs[PREF_TTS_DEFAULT_VOICE] or DEFAULT_TTS_DEFAULT_VOICE
+        return self._prefs[PREF_TTS_DEFAULT_VOICE]
 
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
@@ -367,6 +370,6 @@ class CloudPreferences:
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_GOOGLE_REPORT_STATE: DEFAULT_GOOGLE_REPORT_STATE,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
-            PREF_TTS_DEFAULT_VOICE: None,
+            PREF_TTS_DEFAULT_VOICE: DEFAULT_TTS_DEFAULT_VOICE,
             PREF_USERNAME: username,
         }

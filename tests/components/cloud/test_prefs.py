@@ -110,7 +110,7 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
 
-    # Test data was loaded and mmigrated
+    # Test data was loaded and migrated
     assert prefs._prefs == {
         const.PREF_ALEXA_DEFAULT_EXPOSE: None,
         const.PREF_ALEXA_ENTITY_CONFIGS: {},
@@ -125,7 +125,7 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
         const.PREF_GOOGLE_LOCAL_WEBHOOK_ID: "abc",
         const.PREF_GOOGLE_REPORT_STATE: True,
         const.PREF_GOOGLE_SECURE_DEVICES_PIN: None,
-        const.PREF_TTS_DEFAULT_VOICE: None,
+        const.PREF_TTS_DEFAULT_VOICE: const.DEFAULT_TTS_DEFAULT_VOICE,
         const.PREF_USERNAME: None,
     }
 
@@ -152,7 +152,7 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
             const.PREF_GOOGLE_LOCAL_WEBHOOK_ID: "abc",
             const.PREF_GOOGLE_REPORT_STATE: True,
             const.PREF_GOOGLE_SECURE_DEVICES_PIN: None,
-            const.PREF_TTS_DEFAULT_VOICE: None,
+            const.PREF_TTS_DEFAULT_VOICE: list(const.DEFAULT_TTS_DEFAULT_VOICE),
             const.PREF_USERNAME: None,
         },
     }
