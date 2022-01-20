@@ -9,10 +9,11 @@
       }
     },
     "error": {
-      "no_valid_uuid_set": "No Valid UUID set"
+      "no_valid_uuid_set": "No valid UUID set"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_valid_uuid_set": "No valid UUID set"
     }
   }
 }
