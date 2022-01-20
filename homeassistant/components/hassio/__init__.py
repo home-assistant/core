@@ -10,7 +10,7 @@ from typing import Any, NamedTuple
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import persistent_notification
+from homeassistant.components import panel_custom, persistent_notification
 from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SHUTDOWN_SERVICES,
@@ -467,7 +467,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     hass.http.register_view(HassIOView(host, websession))
 
-    await hass.components.panel_custom.async_register_panel(
+    await panel_custom.async_register_panel(
+        hass,
         frontend_url_path="hassio",
         webcomponent_name="hassio-main",
         js_url="/api/hassio/app/entrypoint.js",
