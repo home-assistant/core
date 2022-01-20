@@ -145,8 +145,6 @@ class LocalSource(MediaSource):
             return None
 
         title = path.name
-        if is_dir:
-            title += "/"
 
         media_class = MEDIA_CLASS_DIRECTORY
         if mime_type:
