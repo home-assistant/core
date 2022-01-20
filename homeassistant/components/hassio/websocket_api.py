@@ -4,7 +4,7 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import hassio, websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -114,8 +114,8 @@ async def websocket_supervisor_api(
         )
 
         if result.get(ATTR_RESULT) == "error":
-            raise hass.components.hassio.HassioAPIError(result.get("message"))
-    except hass.components.hassio.HassioAPIError as err:
+            raise hassio.HassioAPIError(hass, result.get("message"))
+    except hassio.HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
