@@ -67,7 +67,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.plum_lightpad.*",
     "homeassistant.components.point.*",
     "homeassistant.components.profiler.*",
-    "homeassistant.components.search.*",
     "homeassistant.components.sense.*",
     "homeassistant.components.sharkiq.*",
     "homeassistant.components.smartthings.*",
