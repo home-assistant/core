@@ -36,7 +36,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
         }
         self._config_entry = config_entry
-        self._online_dsns = set()
+        self._online_dsns: set[str] = set()
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
