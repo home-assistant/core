@@ -1,10 +1,13 @@
 """Preference management for cloud."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
 from homeassistant.core import callback
+from homeassistant.helpers import storage
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -37,6 +40,48 @@ from .const import (
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
+
+
+class CloudPreferencesStore(storage.Store):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                # From version 1.1
+                old_data[PREF_ALEXA_DEFAULT_EXPOSE] = old_data.get(
+                    PREF_ALEXA_DEFAULT_EXPOSE
+                )
+                old_data[PREF_ALEXA_ENTITY_CONFIGS] = (
+                    old_data.get(PREF_ALEXA_ENTITY_CONFIGS) or {}
+                )
+                old_data[PREF_ALEXA_REPORT_STATE] = old_data.get(
+                    PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE
+                )
+                old_data[PREF_CLOUD_USER] = old_data.get(PREF_CLOUD_USER)
+                old_data[PREF_CLOUDHOOKS] = old_data.get(PREF_CLOUDHOOKS) or {}
+                old_data[PREF_ENABLE_REMOTE] = old_data.get(PREF_ENABLE_REMOTE, False)
+                old_data[PREF_GOOGLE_DEFAULT_EXPOSE] = old_data.get(
+                    PREF_GOOGLE_DEFAULT_EXPOSE
+                )
+                old_data[PREF_GOOGLE_ENTITY_CONFIGS] = (
+                    old_data.get(PREF_GOOGLE_ENTITY_CONFIGS) or {}
+                )
+                old_data[PREF_GOOGLE_REPORT_STATE] = old_data.get(
+                    PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE
+                )
+                old_data[PREF_GOOGLE_SECURE_DEVICES_PIN] = old_data.get(
+                    PREF_GOOGLE_SECURE_DEVICES_PIN
+                )
+                old_data[PREF_TTS_DEFAULT_VOICE] = old_data.get(PREF_TTS_DEFAULT_VOICE)
+
+        if old_major_version > 1:
+            raise NotImplementedError
+        return old_data
 
 
 class CloudPreferences:
@@ -45,7 +90,9 @@ class CloudPreferences:
     def __init__(self, hass):
         """Initialize cloud prefs."""
         self._hass = hass
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = CloudPreferencesStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
         self._prefs = None
         self._listeners = []
 
@@ -203,10 +250,7 @@ class CloudPreferences:
     @property
     def remote_enabled(self):
         """Return if remote is enabled on start."""
-        if not self._prefs.get(PREF_ENABLE_REMOTE, False):
-            return False
-
-        return True
+        return self._prefs[PREF_ENABLE_REMOTE]
 
     @property
     def alexa_enabled(self):
@@ -216,7 +260,7 @@ class CloudPreferences:
     @property
     def alexa_report_state(self):
         """Return if Alexa report state is enabled."""
-        return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)
+        return self._prefs[PREF_ALEXA_REPORT_STATE]
 
     @property
     def alexa_default_expose(self) -> list[str] | None:
@@ -224,12 +268,12 @@ class CloudPreferences:
 
         Can return None, in which case for backwards should be interpreted as allow all domains.
         """
-        return self._prefs.get(PREF_ALEXA_DEFAULT_EXPOSE)
+        return self._prefs[PREF_ALEXA_DEFAULT_EXPOSE]
 
     @property
     def alexa_entity_configs(self):
         """Return Alexa Entity configurations."""
-        return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})
+        return self._prefs[PREF_ALEXA_ENTITY_CONFIGS]
 
     @property
     def google_enabled(self):
@@ -239,17 +283,17 @@ class CloudPreferences:
     @property
     def google_report_state(self):
         """Return if Google report state is enabled."""
-        return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)
+        return self._prefs[PREF_GOOGLE_REPORT_STATE]
 
     @property
     def google_secure_devices_pin(self):
         """Return if Google is allowed to unlock locks."""
-        return self._prefs.get(PREF_GOOGLE_SECURE_DEVICES_PIN)
+        return self._prefs[PREF_GOOGLE_SECURE_DEVICES_PIN]
 
     @property
     def google_entity_configs(self):
         """Return Google Entity configurations."""
-        return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})
+        return self._prefs[PREF_GOOGLE_ENTITY_CONFIGS]
 
     @property
     def google_local_webhook_id(self):
@@ -262,17 +306,17 @@ class CloudPreferences:
 
         Can return None, in which case for backwards should be interpreted as allow all domains.
         """
-        return self._prefs.get(PREF_GOOGLE_DEFAULT_EXPOSE)
+        return self._prefs[PREF_GOOGLE_DEFAULT_EXPOSE]
 
     @property
     def cloudhooks(self):
         """Return the published cloud webhooks."""
-        return self._prefs.get(PREF_CLOUDHOOKS, {})
+        return self._prefs[PREF_CLOUDHOOKS]
 
     @property
     def tts_default_voice(self):
         """Return the default TTS voice."""
-        return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)
+        return self._prefs[PREF_TTS_DEFAULT_VOICE] or DEFAULT_TTS_DEFAULT_VOICE
 
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
@@ -290,7 +334,7 @@ class CloudPreferences:
 
     async def _load_cloud_user(self) -> User | None:
         """Load cloud user if available."""
-        if (user_id := self._prefs.get(PREF_CLOUD_USER)) is None:
+        if (user_id := self._prefs[PREF_CLOUD_USER]) is None:
             return None
 
         # Fetch the user. It can happen that the user no longer exists if
@@ -312,6 +356,7 @@ class CloudPreferences:
         return {
             PREF_ALEXA_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_ALEXA_ENTITY_CONFIGS: {},
+            PREF_ALEXA_REPORT_STATE: DEFAULT_ALEXA_REPORT_STATE,
             PREF_CLOUD_USER: None,
             PREF_CLOUDHOOKS: {},
             PREF_ENABLE_ALEXA: True,
@@ -320,6 +365,8 @@ class CloudPreferences:
             PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_GOOGLE_ENTITY_CONFIGS: {},
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+            PREF_GOOGLE_REPORT_STATE: DEFAULT_GOOGLE_REPORT_STATE,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
+            PREF_TTS_DEFAULT_VOICE: None,
             PREF_USERNAME: username,
         }
