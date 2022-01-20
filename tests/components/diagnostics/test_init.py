@@ -1,4 +1,5 @@
 """Test the Diagnostics integration."""
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -31,6 +32,11 @@ async def mock_diagnostics_integration(hass):
                 }
             ),
         ),
+    )
+    mock_platform(
+        hass,
+        "integration_without_diagnostics.diagnostics",
+        Mock(),
     )
     assert await async_setup_component(hass, "diagnostics", {})
 
@@ -84,3 +90,35 @@ async def test_download_diagnostics(hass, hass_client):
     assert await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     ) == {"device": "info"}
+
+
+async def test_failure_scenarios(hass, hass_client):
+    """Test failure scenarios."""
+    client = await hass_client()
+
+    response = await client.get("/api/diagnostics/wrong_type/fake_id")
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    response = await client.get("/api/diagnostics/config_entry/fake_id")
+    assert response.status == HTTPStatus.NOT_FOUND
+
+    config_entry = MockConfigEntry(domain="integration_without_diagnostics")
+    config_entry.add_to_hass(hass)
+
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}"
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+
+    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry.add_to_hass(hass)
+
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/fake_id"
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}/wrong_type/id"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
