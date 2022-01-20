@@ -45,14 +45,14 @@
                 "data": {
                     "entities": "Entities"
                 },
-                "description": "All entities in the \u201c{domains}\u201d domains will be included except for the excluded entities and categorized entities.",
+                "description": "All \u201c{domains}\u201d entities will be included except for the excluded entities and categorized entities.",
                 "title": "Select the entities to be excluded"
             },
             "include": {
                 "data": {
                     "entities": "Entities"
                 },
-                "description": "All entities in the \u201c{domains}\u201d domains will be included unless specific entities are selected.",
+                "description": "All \u201c{domains}\u201d entities will be included unless specific entities are selected.",
                 "title": "Select the entities to be included"
             },
             "init": {

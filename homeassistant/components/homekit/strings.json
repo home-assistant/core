@@ -24,14 +24,14 @@
                 "data": {
                     "entities": "Entities"
                 },
-                "description": "All entities in the “{domains}” domains will be included unless specific entities are selected.",
+                "description": "All “{domains}” entities will be included unless specific entities are selected.",
                 "title": "Select the entities to be included"
             },
             "exclude": {
                 "data": {
                     "entities": "[%key:component::homekit::options::step::include::data::entities%]"
                 },
-                "description": "All entities in the “{domains}” domains will be included except for the excluded entities and categorized entities.",
+                "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
                 "title": "Select the entities to be excluded"
             },            
             "cameras": {
