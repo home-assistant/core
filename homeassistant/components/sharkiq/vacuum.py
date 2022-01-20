@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import logging
-from typing import cast
 
 from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
 
@@ -91,6 +90,8 @@ async def async_setup_entry(
 class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     """Shark IQ vacuum entity."""
 
+    coordinator: SharkIqUpdateCoordinator
+
     def __init__(
         self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
     ) -> None:
@@ -109,9 +110,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def is_online(self) -> bool:
         """Tell us if the device is online."""
-        return cast(SharkIqUpdateCoordinator, self.coordinator).device_is_online(
-            self.sharkiq.serial_number
-        )
+        return self.coordinator.device_is_online(self.sharkiq.serial_number)
 
     @property
     def name(self) -> str:
