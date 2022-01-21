@@ -23,7 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import device_registry, entity, entity_registry
+from homeassistant.helpers import device_registry, entity_registry, update_coordinator
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -106,12 +106,13 @@ async def async_restore_climate_entities(
         _LOGGER.debug("Setup sleeping climate device %s", wrapper.name)
         _LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
         async_add_entities([BlockSleepingClimate(wrapper, None, None, entry)])
+        break
 
 
 class BlockSleepingClimate(
+    update_coordinator.CoordinatorEntity,
     RestoreEntity,
     ClimateEntity,
-    entity.Entity,
 ):
     """Representation of a Shelly climate device."""
 
@@ -123,7 +124,6 @@ class BlockSleepingClimate(
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = TEMP_CELSIUS
 
-    # pylint: disable=super-init-not-called
     def __init__(
         self,
         wrapper: BlockDeviceWrapper,
@@ -132,6 +132,8 @@ class BlockSleepingClimate(
         entry: entity_registry.RegistryEntry | None = None,
     ) -> None:
         """Initialize climate."""
+
+        super().__init__(wrapper)
 
         self.wrapper = wrapper
         self.block: Block | None = sensor_block
@@ -143,9 +145,10 @@ class BlockSleepingClimate(
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.wrapper.mac}-{self.block.description}"
+            assert self.block.channel
             self._preset_modes = [
                 PRESET_NONE,
-                *wrapper.device.settings["thermostats"][cast(int, self.block.channel)][
+                *wrapper.device.settings["thermostats"][int(self.block.channel)][
                     "schedule_profile_names"
                 ],
             ]
@@ -163,11 +166,6 @@ class BlockSleepingClimate(
     def name(self) -> str:
         """Name of entity."""
         return self.wrapper.name
-
-    @property
-    def should_poll(self) -> bool:
-        """If device should be polled."""
-        return False
 
     @property
     def target_temperature(self) -> float | None:
@@ -275,10 +273,10 @@ class BlockSleepingClimate(
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        if not self._attr_preset_modes:
+        if not self._preset_modes:
             return
 
-        preset_index = self._attr_preset_modes.index(preset_mode)
+        preset_index = self._preset_modes.index(preset_mode)
 
         if preset_index == 0:
             await self.set_state_full_path(schedule=0)
@@ -300,14 +298,10 @@ class BlockSleepingClimate(
                 list, self.last_state.attributes.get("preset_modes")
             )
 
-        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
-
-    async def async_update(self) -> None:
-        """Update entity with latest info."""
-        await self.wrapper.async_request_refresh()
+        await super().async_added_to_hass()
 
     @callback
-    def _update_callback(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Handle device update."""
         if not self.wrapper.device.initialized:
             self.async_write_ha_state()

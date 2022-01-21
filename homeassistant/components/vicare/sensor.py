@@ -30,7 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 
 from . import ViCareRequiredKeysMixin
 from .const import (
@@ -79,6 +78,11 @@ SENSOR_POWER_PRODUCTION_TODAY = "power_production_today"
 SENSOR_POWER_PRODUCTION_THIS_WEEK = "power_production_this_week"
 SENSOR_POWER_PRODUCTION_THIS_MONTH = "power_production_this_month"
 SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
+
+# solar sensors
+SENSOR_COLLECTOR_TEMPERATURE = "collector temperature"
+SENSOR_SOLAR_STORAGE_TEMPERATURE = "solar storage temperature"
+SENSOR_SOLAR_POWER_PRODUCTION = "solar power production"
 
 
 @dataclass
@@ -219,6 +223,28 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Power production this year",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerProductionThisYear(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_SOLAR_STORAGE_TEMPERATURE,
+        name="Solar Storage Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getSolarStorageTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COLLECTOR_TEMPERATURE,
+        name="Solar Collector Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getSolarCollectorTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_SOLAR_POWER_PRODUCTION,
+        name="Solar Power Production",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getSolarPowerProduction(),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -425,7 +451,6 @@ class ViCareSensor(SensorEntity):
         self._api = api
         self._device_config = device_config
         self._state = None
-        self._last_reset = dt_util.utcnow()
 
     @property
     def device_info(self):
@@ -457,14 +482,8 @@ class ViCareSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    @property
-    def last_reset(self):
-        """Return the time when the sensor was last reset."""
-        return self._last_reset
-
     def update(self):
         """Update state of sensor."""
-        self._last_reset = dt_util.start_of_local_day()
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._state = self.entity_description.value_getter(self._api)

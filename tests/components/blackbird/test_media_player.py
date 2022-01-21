@@ -1,6 +1,5 @@
 """The tests for the Monoprice Blackbird media player platform."""
 from collections import defaultdict
-import unittest
 from unittest import mock
 
 import pytest
@@ -18,8 +17,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-
-import tests.common
 
 
 class AttrDict(dict):
@@ -60,283 +57,301 @@ class MockBlackbird:
         self.zones[3].av = source_idx
 
 
-class TestBlackbirdSchema(unittest.TestCase):
-    """Test Blackbird schema."""
+def test_valid_serial_schema():
+    """Test valid schema."""
+    valid_schema = {
+        "platform": "blackbird",
+        "port": "/dev/ttyUSB0",
+        "zones": {
+            1: {"name": "a"},
+            2: {"name": "a"},
+            3: {"name": "a"},
+            4: {"name": "a"},
+            5: {"name": "a"},
+            6: {"name": "a"},
+            7: {"name": "a"},
+            8: {"name": "a"},
+        },
+        "sources": {
+            1: {"name": "a"},
+            2: {"name": "a"},
+            3: {"name": "a"},
+            4: {"name": "a"},
+            5: {"name": "a"},
+            6: {"name": "a"},
+            7: {"name": "a"},
+            8: {"name": "a"},
+        },
+    }
+    PLATFORM_SCHEMA(valid_schema)
 
-    def test_valid_serial_schema(self):
-        """Test valid schema."""
-        valid_schema = {
+
+def test_valid_socket_schema():
+    """Test valid schema."""
+    valid_schema = {
+        "platform": "blackbird",
+        "host": "192.168.1.50",
+        "zones": {
+            1: {"name": "a"},
+            2: {"name": "a"},
+            3: {"name": "a"},
+            4: {"name": "a"},
+            5: {"name": "a"},
+        },
+        "sources": {
+            1: {"name": "a"},
+            2: {"name": "a"},
+            3: {"name": "a"},
+            4: {"name": "a"},
+        },
+    }
+    PLATFORM_SCHEMA(valid_schema)
+
+
+def test_invalid_schemas():
+    """Test invalid schemas."""
+    schemas = (
+        {},  # Empty
+        None,  # None
+        # Port and host used concurrently
+        {
             "platform": "blackbird",
             "port": "/dev/ttyUSB0",
-            "zones": {
-                1: {"name": "a"},
-                2: {"name": "a"},
-                3: {"name": "a"},
-                4: {"name": "a"},
-                5: {"name": "a"},
-                6: {"name": "a"},
-                7: {"name": "a"},
-                8: {"name": "a"},
-            },
-            "sources": {
-                1: {"name": "a"},
-                2: {"name": "a"},
-                3: {"name": "a"},
-                4: {"name": "a"},
-                5: {"name": "a"},
-                6: {"name": "a"},
-                7: {"name": "a"},
-                8: {"name": "a"},
-            },
-        }
-        PLATFORM_SCHEMA(valid_schema)
-
-    def test_valid_socket_schema(self):
-        """Test valid schema."""
-        valid_schema = {
-            "platform": "blackbird",
             "host": "192.168.1.50",
-            "zones": {
-                1: {"name": "a"},
-                2: {"name": "a"},
-                3: {"name": "a"},
-                4: {"name": "a"},
-                5: {"name": "a"},
-            },
-            "sources": {
-                1: {"name": "a"},
-                2: {"name": "a"},
-                3: {"name": "a"},
-                4: {"name": "a"},
-            },
-        }
-        PLATFORM_SCHEMA(valid_schema)
-
-    def test_invalid_schemas(self):
-        """Test invalid schemas."""
-        schemas = (
-            {},  # Empty
-            None,  # None
-            # Port and host used concurrently
-            {
-                "platform": "blackbird",
-                "port": "/dev/ttyUSB0",
-                "host": "192.168.1.50",
-                "name": "Name",
-                "zones": {1: {"name": "a"}},
-                "sources": {1: {"name": "b"}},
-            },
-            # Port or host missing
-            {
-                "platform": "blackbird",
-                "name": "Name",
-                "zones": {1: {"name": "a"}},
-                "sources": {1: {"name": "b"}},
-            },
-            # Invalid zone number
-            {
-                "platform": "blackbird",
-                "port": "/dev/ttyUSB0",
-                "name": "Name",
-                "zones": {11: {"name": "a"}},
-                "sources": {1: {"name": "b"}},
-            },
-            # Invalid source number
-            {
-                "platform": "blackbird",
-                "port": "/dev/ttyUSB0",
-                "name": "Name",
-                "zones": {1: {"name": "a"}},
-                "sources": {9: {"name": "b"}},
-            },
-            # Zone missing name
-            {
-                "platform": "blackbird",
-                "port": "/dev/ttyUSB0",
-                "name": "Name",
-                "zones": {1: {}},
-                "sources": {1: {"name": "b"}},
-            },
-            # Source missing name
-            {
-                "platform": "blackbird",
-                "port": "/dev/ttyUSB0",
-                "name": "Name",
-                "zones": {1: {"name": "a"}},
-                "sources": {1: {}},
-            },
-        )
-        for value in schemas:
-            with pytest.raises(vol.MultipleInvalid):
-                PLATFORM_SCHEMA(value)
+            "name": "Name",
+            "zones": {1: {"name": "a"}},
+            "sources": {1: {"name": "b"}},
+        },
+        # Port or host missing
+        {
+            "platform": "blackbird",
+            "name": "Name",
+            "zones": {1: {"name": "a"}},
+            "sources": {1: {"name": "b"}},
+        },
+        # Invalid zone number
+        {
+            "platform": "blackbird",
+            "port": "/dev/ttyUSB0",
+            "name": "Name",
+            "zones": {11: {"name": "a"}},
+            "sources": {1: {"name": "b"}},
+        },
+        # Invalid source number
+        {
+            "platform": "blackbird",
+            "port": "/dev/ttyUSB0",
+            "name": "Name",
+            "zones": {1: {"name": "a"}},
+            "sources": {9: {"name": "b"}},
+        },
+        # Zone missing name
+        {
+            "platform": "blackbird",
+            "port": "/dev/ttyUSB0",
+            "name": "Name",
+            "zones": {1: {}},
+            "sources": {1: {"name": "b"}},
+        },
+        # Source missing name
+        {
+            "platform": "blackbird",
+            "port": "/dev/ttyUSB0",
+            "name": "Name",
+            "zones": {1: {"name": "a"}},
+            "sources": {1: {}},
+        },
+    )
+    for value in schemas:
+        with pytest.raises(vol.MultipleInvalid):
+            PLATFORM_SCHEMA(value)
 
 
-class TestBlackbirdMediaPlayer(unittest.TestCase):
-    """Test the media_player module."""
+@pytest.fixture
+def mock_blackbird():
+    """Return a mock blackbird instance."""
+    return MockBlackbird()
 
-    def setUp(self):
-        """Set up the test case."""
-        self.blackbird = MockBlackbird()
-        self.hass = tests.common.get_test_home_assistant()
-        self.hass.start()
-        # Note, source dictionary is unsorted!
-        with mock.patch(
-            "homeassistant.components.blackbird.media_player.get_blackbird",
-            new=lambda *a: self.blackbird,
-        ):
-            setup_platform(
-                self.hass,
-                {
-                    "platform": "blackbird",
-                    "port": "/dev/ttyUSB0",
-                    "zones": {3: {"name": "Zone name"}},
-                    "sources": {
-                        1: {"name": "one"},
-                        3: {"name": "three"},
-                        2: {"name": "two"},
-                    },
+
+@pytest.fixture
+async def setup_blackbird(hass, mock_blackbird):
+    """Set up blackbird."""
+    with mock.patch(
+        "homeassistant.components.blackbird.media_player.get_blackbird",
+        new=lambda *a: mock_blackbird,
+    ):
+        await hass.async_add_executor_job(
+            setup_platform,
+            hass,
+            {
+                "platform": "blackbird",
+                "port": "/dev/ttyUSB0",
+                "zones": {3: {"name": "Zone name"}},
+                "sources": {
+                    1: {"name": "one"},
+                    3: {"name": "three"},
+                    2: {"name": "two"},
                 },
-                lambda *args, **kwargs: None,
-                {},
-            )
-            self.hass.block_till_done()
-        self.media_player = self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
-        self.media_player.hass = self.hass
-        self.media_player.entity_id = "media_player.zone_3"
-        self.addCleanup(self.tear_down_cleanup)
-
-    def tear_down_cleanup(self):
-        """Tear down the test case."""
-        self.hass.stop()
-
-    def test_setup_platform(self, *args):
-        """Test setting up platform."""
-        # One service must be registered
-        assert self.hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
-        assert len(self.hass.data[DATA_BLACKBIRD]) == 1
-        assert self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"].name == "Zone name"
-
-    def test_setallzones_service_call_with_entity_id(self):
-        """Test set all zone source service call with entity id."""
-        self.media_player.update()
-        assert self.media_player.name == "Zone name"
-        assert self.media_player.state == STATE_ON
-        assert self.media_player.source == "one"
-
-        # Call set all zones service
-        self.hass.services.call(
-            DOMAIN,
-            SERVICE_SETALLZONES,
-            {"entity_id": "media_player.zone_3", "source": "three"},
-            blocking=True,
+            },
+            lambda *args, **kwargs: None,
+            {},
         )
+        await hass.async_block_till_done()
 
-        # Check that source was changed
-        assert self.blackbird.zones[3].av == 3
-        self.media_player.update()
-        assert self.media_player.source == "three"
 
-    def test_setallzones_service_call_without_entity_id(self):
-        """Test set all zone source service call without entity id."""
-        self.media_player.update()
-        assert self.media_player.name == "Zone name"
-        assert self.media_player.state == STATE_ON
-        assert self.media_player.source == "one"
+@pytest.fixture
+def media_player_entity(hass, setup_blackbird):
+    """Return the media player entity."""
+    media_player = hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
+    media_player.hass = hass
+    media_player.entity_id = "media_player.zone_3"
+    return media_player
 
-        # Call set all zones service
-        self.hass.services.call(
-            DOMAIN, SERVICE_SETALLZONES, {"source": "three"}, blocking=True
-        )
 
-        # Check that source was changed
-        assert self.blackbird.zones[3].av == 3
-        self.media_player.update()
-        assert self.media_player.source == "three"
+async def test_setup_platform(hass, setup_blackbird):
+    """Test setting up platform."""
+    # One service must be registered
+    assert hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
+    assert len(hass.data[DATA_BLACKBIRD]) == 1
+    assert hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"].name == "Zone name"
 
-    def test_update(self):
-        """Test updating values from blackbird."""
-        assert self.media_player.state is None
-        assert self.media_player.source is None
 
-        self.media_player.update()
+async def test_setallzones_service_call_with_entity_id(
+    hass, media_player_entity, mock_blackbird
+):
+    """Test set all zone source service call with entity id."""
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.name == "Zone name"
+    assert media_player_entity.state == STATE_ON
+    assert media_player_entity.source == "one"
 
-        assert self.media_player.state == STATE_ON
-        assert self.media_player.source == "one"
+    # Call set all zones service
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SETALLZONES,
+        {"entity_id": "media_player.zone_3", "source": "three"},
+        blocking=True,
+    )
 
-    def test_name(self):
-        """Test name property."""
-        assert self.media_player.name == "Zone name"
+    # Check that source was changed
+    assert mock_blackbird.zones[3].av == 3
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.source == "three"
 
-    def test_state(self):
-        """Test state property."""
-        assert self.media_player.state is None
 
-        self.media_player.update()
-        assert self.media_player.state == STATE_ON
+async def test_setallzones_service_call_without_entity_id(
+    mock_blackbird, hass, media_player_entity
+):
+    """Test set all zone source service call without entity id."""
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.name == "Zone name"
+    assert media_player_entity.state == STATE_ON
+    assert media_player_entity.source == "one"
 
-        self.blackbird.zones[3].power = False
-        self.media_player.update()
-        assert self.media_player.state == STATE_OFF
+    # Call set all zones service
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SETALLZONES, {"source": "three"}, blocking=True
+    )
 
-    def test_supported_features(self):
-        """Test supported features property."""
-        assert (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
-            == self.media_player.supported_features
-        )
+    # Check that source was changed
+    assert mock_blackbird.zones[3].av == 3
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.source == "three"
 
-    def test_source(self):
-        """Test source property."""
-        assert self.media_player.source is None
-        self.media_player.update()
-        assert self.media_player.source == "one"
 
-    def test_media_title(self):
-        """Test media title property."""
-        assert self.media_player.media_title is None
-        self.media_player.update()
-        assert self.media_player.media_title == "one"
+async def test_update(hass, media_player_entity):
+    """Test updating values from blackbird."""
+    assert media_player_entity.state is None
+    assert media_player_entity.source is None
 
-    def test_source_list(self):
-        """Test source list property."""
-        # Note, the list is sorted!
-        assert self.media_player.source_list == ["one", "two", "three"]
+    await hass.async_add_executor_job(media_player_entity.update)
 
-    def test_select_source(self):
-        """Test source selection methods."""
-        self.media_player.update()
+    assert media_player_entity.state == STATE_ON
+    assert media_player_entity.source == "one"
 
-        assert self.media_player.source == "one"
 
-        self.media_player.select_source("two")
-        assert self.blackbird.zones[3].av == 2
-        self.media_player.update()
-        assert self.media_player.source == "two"
+async def test_name(media_player_entity):
+    """Test name property."""
+    assert media_player_entity.name == "Zone name"
 
-        # Trying to set unknown source.
-        self.media_player.select_source("no name")
-        assert self.blackbird.zones[3].av == 2
-        self.media_player.update()
-        assert self.media_player.source == "two"
 
-    def test_turn_on(self):
-        """Testing turning on the zone."""
-        self.blackbird.zones[3].power = False
-        self.media_player.update()
-        assert self.media_player.state == STATE_OFF
+async def test_state(hass, media_player_entity, mock_blackbird):
+    """Test state property."""
+    assert media_player_entity.state is None
 
-        self.media_player.turn_on()
-        assert self.blackbird.zones[3].power
-        self.media_player.update()
-        assert self.media_player.state == STATE_ON
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.state == STATE_ON
 
-    def test_turn_off(self):
-        """Testing turning off the zone."""
-        self.blackbird.zones[3].power = True
-        self.media_player.update()
-        assert self.media_player.state == STATE_ON
+    mock_blackbird.zones[3].power = False
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.state == STATE_OFF
 
-        self.media_player.turn_off()
-        assert not self.blackbird.zones[3].power
-        self.media_player.update()
-        assert self.media_player.state == STATE_OFF
+
+async def test_supported_features(media_player_entity):
+    """Test supported features property."""
+    assert (
+        SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+        == media_player_entity.supported_features
+    )
+
+
+async def test_source(hass, media_player_entity):
+    """Test source property."""
+    assert media_player_entity.source is None
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.source == "one"
+
+
+async def test_media_title(hass, media_player_entity):
+    """Test media title property."""
+    assert media_player_entity.media_title is None
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.media_title == "one"
+
+
+async def test_source_list(media_player_entity):
+    """Test source list property."""
+    # Note, the list is sorted!
+    assert media_player_entity.source_list == ["one", "two", "three"]
+
+
+async def test_select_source(hass, media_player_entity, mock_blackbird):
+    """Test source selection methods."""
+    await hass.async_add_executor_job(media_player_entity.update)
+
+    assert media_player_entity.source == "one"
+
+    await media_player_entity.async_select_source("two")
+    assert mock_blackbird.zones[3].av == 2
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.source == "two"
+
+    # Trying to set unknown source.
+    await media_player_entity.async_select_source("no name")
+    assert mock_blackbird.zones[3].av == 2
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.source == "two"
+
+
+async def test_turn_on(hass, media_player_entity, mock_blackbird):
+    """Testing turning on the zone."""
+    mock_blackbird.zones[3].power = False
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.state == STATE_OFF
+
+    await media_player_entity.async_turn_on()
+    assert mock_blackbird.zones[3].power
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.state == STATE_ON
+
+
+async def test_turn_off(hass, media_player_entity, mock_blackbird):
+    """Testing turning off the zone."""
+    mock_blackbird.zones[3].power = True
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.state == STATE_ON
+
+    await media_player_entity.async_turn_off()
+    assert not mock_blackbird.zones[3].power
+    await hass.async_add_executor_job(media_player_entity.update)
+    assert media_player_entity.state == STATE_OFF

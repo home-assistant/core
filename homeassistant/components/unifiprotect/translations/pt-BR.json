@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "discovery_started": "Descoberta iniciada"
+        },
+        "flow_title": "{nome} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verificar certificado SSL"
+                },
+                "description": "Deseja configurar {name} ({ip_address})?"
+            }
+        }
+    }
+}

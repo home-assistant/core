@@ -70,7 +70,6 @@ async def camera_fixture(
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
-    camera_obj.feature_flags.has_chime = True
     camera_obj.feature_flags.can_optical_zoom = True
     camera_obj.feature_flags.has_mic = True
     # has_wdr is an the inverse of has HDR
@@ -78,7 +77,6 @@ async def camera_fixture(
     camera_obj.isp_settings.wdr = 0
     camera_obj.mic_volume = 0
     camera_obj.isp_settings.zoom_position = 0
-    camera_obj.chime_duration = 0
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
@@ -88,7 +86,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.NUMBER, 4, 4)
+    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
 
     yield camera_obj
 
@@ -152,7 +150,6 @@ async def test_number_setup_camera_none(
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
-    camera_obj.feature_flags.has_chime = False
     camera_obj.feature_flags.can_optical_zoom = False
     camera_obj.feature_flags.has_mic = False
     # has_wdr is an the inverse of has HDR
@@ -217,7 +214,7 @@ async def test_number_light_sensitivity(hass: HomeAssistant, light: Light):
 
 
 async def test_number_light_duration(hass: HomeAssistant, light: Light):
-    """Test chime duration number entity for lights."""
+    """Test auto-shutoff duration number entity for lights."""
 
     description = LIGHT_NUMBERS[1]
 

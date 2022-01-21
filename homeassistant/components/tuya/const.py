@@ -121,6 +121,7 @@ class DPCode(StrEnum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALARM_MESSAGE = "alarm_message"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -224,6 +225,7 @@ class DPCode(StrEnum):
     MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
     MOTION_TRACKING = "motion_tracking"
+    MOVEMENT_DETECT_PIC = "movement_detect_pic"
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     PAUSE = "pause"

@@ -24,7 +24,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper, ShellyDeviceRestWrapper
+from . import (
+    BlockDeviceWrapper,
+    RpcDeviceWrapper,
+    RpcPollingWrapper,
+    ShellyDeviceRestWrapper,
+)
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
     BLOCK,
@@ -32,6 +37,7 @@ from .const import (
     DOMAIN,
     REST,
     RPC,
+    RPC_POLL,
 )
 from .utils import (
     async_remove_shelly_entity,
@@ -160,6 +166,10 @@ async def async_setup_entry_rpc(
         config_entry.entry_id
     ][RPC]
 
+    polling_wrapper: RpcPollingWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][RPC_POLL]
+
     entities = []
     for sensor_id in sensors:
         description = sensors[sensor_id]
@@ -178,17 +188,17 @@ async def async_setup_entry_rpc(
                 unique_id = f"{wrapper.mac}-{key}-{sensor_id}"
                 await async_remove_shelly_entity(hass, domain, unique_id)
             else:
-                entities.append((key, sensor_id, description))
+                if description.should_poll:
+                    entities.append(
+                        sensor_class(polling_wrapper, key, sensor_id, description)
+                    )
+                else:
+                    entities.append(sensor_class(wrapper, key, sensor_id, description))
 
     if not entities:
         return
 
-    async_add_entities(
-        [
-            sensor_class(wrapper, key, sensor_id, description)
-            for key, sensor_id, description in entities
-        ]
-    )
+    async_add_entities(entities)
 
 
 async def async_setup_entry_rest(
@@ -257,6 +267,7 @@ class RpcAttributeDescription:
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     entity_category: EntityCategory | None = None
+    should_poll: bool = False
 
 
 @dataclass
@@ -343,7 +354,11 @@ class ShellyBlockEntity(entity.Entity):
 class ShellyRpcEntity(entity.Entity):
     """Helper class to represent a rpc entity."""
 
-    def __init__(self, wrapper: RpcDeviceWrapper, key: str) -> None:
+    def __init__(
+        self,
+        wrapper: RpcDeviceWrapper | RpcPollingWrapper,
+        key: str,
+    ) -> None:
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.key = key

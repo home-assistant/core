@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
+from homeassistant.components import webhook
 from homeassistant.core import callback
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.logging import async_create_catching_coro
@@ -59,7 +60,7 @@ class CloudPreferences:
             await self._save_prefs(
                 {
                     **self._prefs,
-                    PREF_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+                    PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
                 }
             )
 
@@ -274,7 +275,7 @@ class CloudPreferences:
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)
 
     async def get_cloud_user(self) -> str:
-        """Return ID from Home Assistant Cloud system user."""
+        """Return ID of Home Assistant Cloud system user."""
         user = await self._load_cloud_user()
 
         if user:
@@ -305,7 +306,8 @@ class CloudPreferences:
             self._hass.async_create_task(async_create_catching_coro(listener(self)))
 
     @callback
-    def _empty_config(self, username):
+    @staticmethod
+    def _empty_config(username):
         """Return an empty config."""
         return {
             PREF_ALEXA_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
@@ -317,7 +319,7 @@ class CloudPreferences:
             PREF_ENABLE_REMOTE: False,
             PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_GOOGLE_ENTITY_CONFIGS: {},
-            PREF_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+            PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
             PREF_USERNAME: username,
         }

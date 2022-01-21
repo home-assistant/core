@@ -3,7 +3,10 @@ Support to use FortiOS device like FortiGate as device tracker.
 
 This component is part of the device_tracker platform.
 """
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
@@ -11,17 +14,19 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): cv.string,
@@ -30,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a FortiOSDeviceScanner."""
     host = config[DOMAIN][CONF_HOST]
     verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
@@ -67,8 +72,8 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def __init__(self, fgt) -> None:
         """Initialize the scanner."""
-        self._clients = {}
-        self._clients_json = {}
+        self._clients: list[str] = []
+        self._clients_json: dict[str, Any] = {}
         self._fgt = fgt
 
     def update(self):

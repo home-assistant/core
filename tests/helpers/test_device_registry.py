@@ -782,6 +782,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
         identifiers={("hue", "abc")},
         manufacturer="manufacturer",
         model="light",
+        entry_type=device_registry.DeviceEntryType.SERVICE,
     )
 
     assert orig_light4.id == orig_light3.id
@@ -820,6 +821,15 @@ async def test_loading_saving_data(hass, registry, area_registry):
     assert orig_via == new_via
     assert orig_light == new_light
     assert orig_light4 == new_light4
+
+    # Ensure enums converted
+    for (old, new) in (
+        (orig_via, new_via),
+        (orig_light, new_light),
+        (orig_light4, new_light4),
+    ):
+        assert old.disabled_by is new.disabled_by
+        assert old.entry_type is new.entry_type
 
     # Ensure a save/load cycle does not keep suggested area
     new_kitchen_light = registry2.async_get_device({("hue", "999")})

@@ -48,6 +48,38 @@
             "on": "Sees",
             "power_off": "V\u00e4ljas",
             "power_on": "Sees"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Suletud",
+            "high": "K\u00f5rge",
+            "low": "Madal",
+            "middle": "Keskmine"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Suur",
+            "middle": "Keskmine",
+            "small": "V\u00e4ike"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Kaar",
+            "chargego": "Tagasi kaadimisjaama",
+            "left_bow": "Keera vasakule",
+            "left_spiral": "Spiraal vasakule",
+            "mop": "Mopp",
+            "part": "Osaline",
+            "partial_bow": "Osaline kaar",
+            "pick_zone": "Vali ala",
+            "point": "Punkt",
+            "pose": "Avalda",
+            "random": "Juhuslik",
+            "right_bow": "Kaar paremale",
+            "right_spiral": "Spiraal paremale",
+            "single": "\u00dchekordne",
+            "smart": "Nutikas",
+            "spiral": "Spiraalne",
+            "standby": "Ootel",
+            "wall_follow": "J\u00e4rgi seina",
+            "zone": "Ala"
         }
     }
 }

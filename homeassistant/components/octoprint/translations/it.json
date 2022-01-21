@@ -21,7 +21,8 @@
                     "path": "Percorso dell'applicazione",
                     "port": "Numero porta",
                     "ssl": "Utilizza SSL",
-                    "username": "Nome utente"
+                    "username": "Nome utente",
+                    "verify_ssl": "Verifica certificato SSL"
                 }
             }
         }

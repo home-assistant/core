@@ -7,11 +7,14 @@ from elgato import Elgato, ElgatoError, Info
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HomeAssistantElgatoData
 from .const import DOMAIN
+from .entity import ElgatoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,18 +25,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato button based on a config entry."""
-    elgato: Elgato = hass.data[DOMAIN][entry.entry_id]
-    info = await elgato.info()
-    async_add_entities([ElgatoIdentifyButton(elgato, info)])
+    data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [ElgatoIdentifyButton(data.client, data.info, entry.data.get(CONF_MAC))]
+    )
 
 
-class ElgatoIdentifyButton(ButtonEntity):
+class ElgatoIdentifyButton(ElgatoEntity, ButtonEntity):
     """Defines an Elgato identify button."""
 
-    def __init__(self, elgato: Elgato, info: Info) -> None:
+    def __init__(self, client: Elgato, info: Info, mac: str | None) -> None:
         """Initialize the button entity."""
-        self.elgato = elgato
-        self._info = info
+        super().__init__(client, info, mac)
         self.entity_description = ButtonEntityDescription(
             key="identify",
             name="Identify",
@@ -42,20 +45,9 @@ class ElgatoIdentifyButton(ButtonEntity):
         )
         self._attr_unique_id = f"{info.serial_number}_{self.entity_description.key}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Elgato Light."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._info.serial_number)},
-            manufacturer="Elgato",
-            model=self._info.product_name,
-            name=self._info.product_name,
-            sw_version=f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-        )
-
     async def async_press(self) -> None:
         """Identify the light, will make it blink."""
         try:
-            await self.elgato.identify()
+            await self.client.identify()
         except ElgatoError:
             _LOGGER.exception("An error occurred while identifying the Elgato Light")

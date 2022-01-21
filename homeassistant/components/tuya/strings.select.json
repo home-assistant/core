@@ -48,6 +48,38 @@
     "tuya__fingerbot_mode": {
       "click": "Push",
       "switch": "Switch"
+    },
+    "tuya__vacuum_cistern": {
+        "low": "Low",
+        "middle": "Middle",
+        "high": "High",
+        "closed": "Closed"
+    },
+    "tuya__vacuum_collection": {
+        "small": "Small",
+        "middle": "Middle",
+        "large": "Large"
+    },
+    "tuya__vacuum_mode": {
+        "standby": "Standby",
+        "random": "Random",
+        "smart": "Smart",
+        "wall_follow": "Follow Wall",
+        "mop": "Mop",
+        "spiral": "Spiral",
+        "left_spiral": "Spiral Left",
+        "right_spiral": "Spiral Right",
+        "bow": "Bow",
+        "left_bow": "Bow Left",
+        "right_bow": "Bow Right",
+        "partial_bow": "Bow Partially",
+        "chargego": "Return to dock",
+        "single": "Single",
+        "zone": "Zone",
+        "pose": "Pose",
+        "point": "Point",
+        "part": "Part",
+        "pick_zone": "Pick Zone"
     }
   }
 }

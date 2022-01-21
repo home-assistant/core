@@ -20,7 +20,7 @@ from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 from openzwavemqtt.util.mqtt_client import MQTTClient
 
-from homeassistant.components import mqtt
+from homeassistant.components import hassio, mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -75,9 +75,7 @@ async def async_setup_entry(  # noqa: C901
     if entry.data.get(CONF_USE_ADDON):
         # Do not use MQTT integration. Use own MQTT client.
         # Retrieve discovery info from the OpenZWave add-on.
-        discovery_info = await hass.components.hassio.async_get_addon_discovery_info(
-            "core_zwave"
-        )
+        discovery_info = await hassio.async_get_addon_discovery_info(hass, "core_zwave")
 
         if not discovery_info:
             _LOGGER.error("Failed to get add-on discovery info")
@@ -326,12 +324,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     try:
-        await hass.components.hassio.async_stop_addon("core_zwave")
+        await hassio.async_stop_addon(hass, "core_zwave")
     except HassioAPIError as err:
         _LOGGER.error("Failed to stop the OpenZWave add-on: %s", err)
         return
     try:
-        await hass.components.hassio.async_uninstall_addon("core_zwave")
+        await hassio.async_uninstall_addon(hass, "core_zwave")
     except HassioAPIError as err:
         _LOGGER.error("Failed to uninstall the OpenZWave add-on: %s", err)
 

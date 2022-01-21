@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from py17track.package import Package
 import pytest
@@ -301,12 +301,14 @@ async def test_delivered_not_shown(hass):
     )
     ProfileMock.package_list = [package]
 
-    hass.components.persistent_notification = MagicMock()
-    await _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
-    await _goto_future(hass)
+    with patch(
+        "homeassistant.components.seventeentrack.sensor.persistent_notification"
+    ) as persistent_notification_mock:
+        await _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
+        await _goto_future(hass)
 
-    assert not hass.states.async_entity_ids()
-    hass.components.persistent_notification.create.assert_called()
+        assert not hass.states.async_entity_ids()
+        persistent_notification_mock.create.assert_called()
 
 
 async def test_delivered_shown(hass):
@@ -324,12 +326,14 @@ async def test_delivered_shown(hass):
     )
     ProfileMock.package_list = [package]
 
-    hass.components.persistent_notification = MagicMock()
-    await _setup_seventeentrack(hass, VALID_CONFIG_FULL)
+    with patch(
+        "homeassistant.components.seventeentrack.sensor.persistent_notification"
+    ) as persistent_notification_mock:
+        await _setup_seventeentrack(hass, VALID_CONFIG_FULL)
 
-    assert hass.states.get("sensor.seventeentrack_package_456") is not None
-    assert len(hass.states.async_entity_ids()) == 1
-    hass.components.persistent_notification.create.assert_not_called()
+        assert hass.states.get("sensor.seventeentrack_package_456") is not None
+        assert len(hass.states.async_entity_ids()) == 1
+        persistent_notification_mock.create.assert_not_called()
 
 
 async def test_becomes_delivered_not_shown_notification(hass):
@@ -364,21 +368,48 @@ async def test_becomes_delivered_not_shown_notification(hass):
     )
     ProfileMock.package_list = [package_delivered]
 
-    hass.components.persistent_notification = MagicMock()
-    await _goto_future(hass)
+    with patch(
+        "homeassistant.components.seventeentrack.sensor.persistent_notification"
+    ) as persistent_notification_mock:
+        await _goto_future(hass)
 
-    hass.components.persistent_notification.create.assert_called()
-    assert not hass.states.async_entity_ids()
+        persistent_notification_mock.create.assert_called()
+        assert not hass.states.async_entity_ids()
 
 
 async def test_summary_correctly_updated(hass):
     """Ensure summary entities are not duplicated."""
+    package = Package(
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
+        status=30,
+    )
+    ProfileMock.package_list = [package]
+
     await _setup_seventeentrack(hass, summary_data=DEFAULT_SUMMARY)
 
-    assert len(hass.states.async_entity_ids()) == 7
+    assert len(hass.states.async_entity_ids()) == 8
     for state in hass.states.async_all():
+        if state.entity_id == "sensor.seventeentrack_package_456":
+            break
         assert state.state == "0"
 
+    assert (
+        len(
+            hass.states.get(
+                "sensor.seventeentrack_packages_ready_to_be_picked_up"
+            ).attributes["packages"]
+        )
+        == 1
+    )
+
+    ProfileMock.package_list = []
     ProfileMock.summary_data = NEW_SUMMARY_DATA
 
     await _goto_future(hass)
@@ -386,6 +417,13 @@ async def test_summary_correctly_updated(hass):
     assert len(hass.states.async_entity_ids()) == 7
     for state in hass.states.async_all():
         assert state.state == "1"
+
+    assert (
+        hass.states.get(
+            "sensor.seventeentrack_packages_ready_to_be_picked_up"
+        ).attributes["packages"]
+        is None
+    )
 
 
 async def test_utc_timestamp(hass):

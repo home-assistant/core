@@ -10,11 +10,12 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: 3.8
+  DEFAULT_PYTHON: 3.9
 
 jobs:
   init:
     name: Initialize build
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
@@ -62,7 +63,7 @@ jobs:
     name: Build PyPi package
     needs: init
     runs-on: ubuntu-latest
-    if: needs.init.outputs.publish == 'true'
+    if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2.4.0
@@ -88,6 +89,7 @@ jobs:
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
+    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -143,6 +145,7 @@ jobs:
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
+    if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     strategy:
@@ -206,6 +209,7 @@ jobs:
 
   publish_ha:
     name: Publish version files
+    if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
     steps:
@@ -238,6 +242,7 @@ jobs:
 
   publish_container:
     name: Publish meta container
+    if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     steps:

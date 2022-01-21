@@ -6,7 +6,6 @@ from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -14,6 +13,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
+from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity

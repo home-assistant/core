@@ -88,7 +88,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         start.async_at_start(self.hass, hass_started)
 
-        # Remove old/wrong user agent ids
+        # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
         for agent_user_id in self._store.agent_user_ids:
             if agent_user_id != self.agent_user_id:

@@ -4,7 +4,6 @@ import logging
 from arcam.fmj import SourceCodes
 from arcam.fmj.state import State
 
-from homeassistant import config_entries
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -21,9 +20,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .config_flow import get_entry_client
 from .const import (
@@ -39,9 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the configuration entry."""
 
     client = get_entry_client(hass, config_entry)
@@ -57,8 +58,6 @@ async def async_setup_entry(
         ],
         True,
     )
-
-    return True
 
 
 class ArcamFmj(MediaPlayerEntity):

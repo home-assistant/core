@@ -886,7 +886,7 @@ async def test_setup_raise_not_ready(hass, caplog):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
@@ -921,7 +921,7 @@ async def test_setup_raise_not_ready_from_exception(hass, caplog):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
@@ -939,7 +939,7 @@ async def test_setup_retrying_during_unload(hass):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
@@ -2739,6 +2739,7 @@ async def test_setup_raise_auth_failed(hass, caplog):
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
 
     caplog.clear()
     entry.state = config_entries.ConfigEntryState.NOT_LOADED

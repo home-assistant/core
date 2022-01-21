@@ -3,6 +3,8 @@ import json
 from socket import gaierror
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.androidtv.config_flow import (
     APPS_NEW_ID,
@@ -92,7 +94,8 @@ class MockConfigDevice:
         self.available = False
 
 
-async def _test_user(hass, config):
+@pytest.mark.parametrize("config", [CONFIG_PYTHON_ADB, CONFIG_ADB_SERVER])
+async def test_user(hass, config):
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
@@ -115,16 +118,6 @@ async def _test_user(hass, config):
         assert result["data"] == config
 
         assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_python_adb(hass):
-    """Test user config for Python ADB."""
-    await _test_user(hass, CONFIG_PYTHON_ADB)
-
-
-async def test_user_adb_server(hass):
-    """Test user config for ADB server."""
-    await _test_user(hass, CONFIG_ADB_SERVER)
 
 
 async def test_import(hass):
@@ -179,7 +172,6 @@ async def test_import_data(hass):
     config_data[CONF_PLATFORM] = DOMAIN
     config_data[CONF_ADBKEY] = ADBKEY
     config_data[CONF_TURN_OFF_COMMAND] = "off"
-    config_data[CONF_STATE_DETECTION_RULES] = {"a": "b"}
     platform_data = {MP_DOMAIN: config_data}
 
     with patch(
@@ -278,7 +270,7 @@ async def test_error_invalid_host(hass):
 
 
 async def test_invalid_serial(hass):
-    """Test for invallid serialno."""
+    """Test for invalid serialno."""
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(eth_mac=""), None),
