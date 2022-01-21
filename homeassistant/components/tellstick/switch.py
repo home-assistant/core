@@ -1,8 +1,8 @@
 """Support for Tellstick switches."""
 from __future__ import annotations
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -39,7 +39,7 @@ def setup_platform(
     )
 
 
-class TellstickSwitch(TellstickDevice, ToggleEntity):
+class TellstickSwitch(TellstickDevice, SwitchEntity):
     """Representation of a Tellstick switch."""
 
     def _parse_ha_data(self, kwargs):
