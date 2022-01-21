@@ -1,4 +1,6 @@
 """Test Flu Near You diagnostics."""
+from homeassistant.components.diagnostics import REDACTED
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
@@ -8,8 +10,8 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_fluneary
         "entry": {
             "title": "Mock Title",
             "data": {
-                "latitude": "**REDACTED**",
-                "longitude": "**REDACTED**",
+                "latitude": REDACTED,
+                "longitude": REDACTED,
             },
         },
         "data": {
@@ -27,8 +29,8 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_fluneary
                     "place_id": "49377",
                     "zip": "72934",
                     "contained_by": "610",
-                    "latitude": "**REDACTED**",
-                    "longitude": "**REDACTED**",
+                    "latitude": REDACTED,
+                    "longitude": REDACTED,
                     "none": 1,
                     "symptoms": 0,
                     "flu": 0,
@@ -43,8 +45,8 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_fluneary
                     "place_id": "23818",
                     "zip": "90046",
                     "contained_by": "204",
-                    "latitude": "**REDACTED**",
-                    "longitude": "**REDACTED**",
+                    "latitude": REDACTED,
+                    "longitude": REDACTED,
                     "none": 2,
                     "symptoms": 0,
                     "flu": 0,
@@ -59,8 +61,8 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_fluneary
                     "place_id": "21462",
                     "zip": "97330",
                     "contained_by": "239",
-                    "latitude": "**REDACTED**",
-                    "longitude": "**REDACTED**",
+                    "latitude": REDACTED,
+                    "longitude": REDACTED,
                     "none": 3,
                     "symptoms": 0,
                     "flu": 0,
