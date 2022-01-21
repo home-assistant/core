@@ -20,12 +20,10 @@ ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
 
 COMMANDS_STOP: list[OverkizCommand] = [
     OverkizCommand.STOP,
-    OverkizCommand.STOP_IDENTIFY,
     OverkizCommand.MY,
 ]
 COMMANDS_STOP_TILT: list[OverkizCommand] = [
     OverkizCommand.STOP,
-    OverkizCommand.STOP_IDENTIFY,
     OverkizCommand.MY,
 ]
 COMMANDS_OPEN: list[OverkizCommand] = [
@@ -104,30 +102,12 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.async_cancel_or_stop_cover(
-            COMMANDS_OPEN + [OverkizCommand.SET_CLOSURE] + COMMANDS_CLOSE,
-            COMMANDS_STOP,
-        )
+        if command := self.executor.select_command(*COMMANDS_STOP):
+            await self.executor.async_execute_command(command)
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
-        await self.async_cancel_or_stop_cover(
-            COMMANDS_OPEN_TILT + COMMANDS_SET_TILT_POSITION + COMMANDS_CLOSE_TILT,
-            COMMANDS_STOP_TILT,
-        )
-
-    async def async_cancel_or_stop_cover(
-        self, cancel_commands: list[OverkizCommand], stop_commands: list[OverkizCommand]
-    ) -> None:
-        """Cancel running execution or send stop command."""
-        success = await self.executor.async_cancel_command(cancel_commands)
-
-        if success:
-            return
-
-        if command := self.executor.select_command(*stop_commands):
-            # Fallback to available stop commands when no executions are found
-            # Stop commands don't work with all devices, due to a bug in Somfy service
+        if command := self.executor.select_command(*COMMANDS_STOP_TILT):
             await self.executor.async_execute_command(command)
 
     @property
