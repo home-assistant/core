@@ -20,10 +20,17 @@ async def async_get_config_entry_diagnostics(
 
     if BLOCK in data:
         wrapper = data.get(BLOCK)
+        assert isinstance(wrapper, BlockDeviceWrapper)
+        device_settings = {
+            k: v for k, v in wrapper.device.settings.items() if k in ["cloud", "coiot"]
+        }
+
     else:
         wrapper = data.get(RPC)
-
-    assert isinstance(wrapper, (BlockDeviceWrapper, RpcDeviceWrapper))
+        assert isinstance(wrapper, RpcDeviceWrapper)
+        device_settings = {
+            k: v for k, v in wrapper.device.config.items() if k in ["cloud"]
+        }
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
@@ -32,4 +39,5 @@ async def async_get_config_entry_diagnostics(
             "model": wrapper.model,
             "sw_version": wrapper.sw_version,
         },
+        "device_settings": device_settings,
     }
