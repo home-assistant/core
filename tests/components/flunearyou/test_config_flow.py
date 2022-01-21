@@ -1,6 +1,7 @@
 """Define tests for the flunearyou config flow."""
+from unittest.mock import patch
+
 from pyflunearyou.errors import FluNearYouError
-import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.flunearyou import DOMAIN
@@ -17,13 +18,15 @@ async def test_duplicate_error(hass, config, config_entry, setup_flunearyou):
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("data_cdc", [FluNearYouError])
-async def test_errors(hass, config, data_cdc, setup_flunearyou):
+async def test_errors(hass, config):
     """Test that exceptions show the appropriate error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
-    )
-    assert result["errors"] == {"base": "unknown"}
+    with patch(
+        "pyflunearyou.cdc.CdcReport.status_by_coordinates", side_effect=FluNearYouError
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=config
+        )
+        assert result["errors"] == {"base": "unknown"}
 
 
 async def test_show_form(hass):
