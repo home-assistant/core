@@ -24,14 +24,13 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -159,7 +158,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
         self._attr_device_info = device_info
         self._attr_entity_category = (
-            ENTITY_CATEGORY_DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None
+            EntityCategory.DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None
         )
         self.entity_description = _DESCRIPTIONS.get(sensor.unit, DIAG_SENSOR)
         if not self.entity_description.native_unit_of_measurement:
