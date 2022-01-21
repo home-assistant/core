@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import Any
+from typing import Any, Callable
 
 import voluptuous as vol
 
@@ -70,7 +70,7 @@ async def _async_setup_notify(
 ):
     """Set up the MQTT notify service with auto discovery."""
 
-    await _async_setup_service(hass, config)
+    await _async_prerare_service_setup(hass, config)
     notify_config = hass.data.setdefault(
         MQTT_NOTIFY_TARGET_CONFIG,
         {CONF_TARGET: {}, CONF_SERVICE: None},
@@ -79,7 +79,7 @@ async def _async_setup_notify(
     await notify_config[CONF_SERVICE].async_add_updater(discovery_data)
 
 
-async def _async_setup_service(
+async def _async_prerare_service_setup(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -89,7 +89,7 @@ async def _async_setup_service(
         MQTT_NOTIFY_TARGET_CONFIG,
         {CONF_TARGET: {}, CONF_SERVICE: None},
     )
-    if notify_config[CONF_TARGET].get(config[CONF_TARGET]):
+    if config[CONF_TARGET] in notify_config[CONF_TARGET]:
         raise ValueError(
             f"Target {config[CONF_TARGET]} in config {dict(config)} is not unique, a notify service for this target has already been setup",
         )
@@ -117,7 +117,7 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MqttNotificationService | None:
     """Prepare the MQTT notification service."""
-    await _async_setup_service(hass, config)
+    await _async_prerare_service_setup(hass, config)
     config[CONF_NAME] = DOMAIN
     return hass.data[MQTT_NOTIFY_TARGET_CONFIG][CONF_SERVICE]
 
@@ -133,40 +133,42 @@ class MqttNotificationServiceUpdater:
         ) -> None:
             """Handle discovery update."""
             async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(self._discovery_hash), None
+                hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
             )
             if not discovery_payload:
                 # remove notify service
-                del hass.data[MQTT_NOTIFY_TARGET_CONFIG][CONF_TARGET][self._target]
-                clear_discovery_hash(hass, self._discovery_hash)
+                del hass.data[MQTT_NOTIFY_TARGET_CONFIG][CONF_TARGET][self.target]
+                clear_discovery_hash(hass, self.discovery_hash)
                 self._remove_discovery()
                 await hass.data[MQTT_NOTIFY_TARGET_CONFIG][
                     CONF_SERVICE
                 ].async_register_services()
                 _LOGGER.info(
                     "Notify service %s for target %s has been removed",
-                    self._discovery_hash,
-                    self._target,
+                    self.discovery_hash,
+                    self.target,
                 )
                 return
 
             # validate the schema
-            config = DISCOVERY_SCHEMA(
-                discovery_payload["discovery_data"][ATTR_DISCOVERY_PAYLOAD]
-            )
-            await async_get_service(hass, config)
+            config = DISCOVERY_SCHEMA(discovery_payload)
+            if config[CONF_TARGET] in hass.data[MQTT_NOTIFY_TARGET_CONFIG][CONF_TARGET]:
+                # remove the current old configuration and process the updated config
+                del hass.data[MQTT_NOTIFY_TARGET_CONFIG][CONF_TARGET][self.target]
+                self._target = config[CONF_TARGET]
+            await _async_prerare_service_setup(hass, config)
             await hass.data[MQTT_NOTIFY_TARGET_CONFIG][
                 CONF_SERVICE
             ].async_register_services()
             _LOGGER.debug(
                 "Notify service %s for target %s has been updated",
-                self._discovery_hash,
-                self._target,
+                self.discovery_hash,
+                self.target,
             )
 
         self._discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
         self._target = discovery_info[ATTR_DISCOVERY_PAYLOAD][CONF_TARGET]
-        self._remove_discovery = async_dispatcher_connect(
+        self._remove_discovery: Callable = async_dispatcher_connect(
             hass,
             MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
             async_discovery_update,
@@ -177,9 +179,19 @@ class MqttNotificationServiceUpdater:
             self._target,
         )
 
+    @property
+    def target(self) -> str:
+        """Return the target name."""
+        return self._target
+
+    @property
+    def discovery_hash(self) -> str:
+        """Return the discovery hash."""
+        return self._discovery_hash
+
 
 class MqttNotificationService(notify.BaseNotificationService):
-    """Implement the notification service for E-mail messages."""
+    """Implement the notification service for MQTT."""
 
     def __init__(
         self,
