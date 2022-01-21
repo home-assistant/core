@@ -141,15 +141,17 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or discovery_info["platform"]
             or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
             "ip_address": discovery_info["source_ip"],
-            "local_user_documentation_url": await async_local_user_documentation_url(
-                self.hass
-            ),
         }
         self.context["title_placeholders"] = placeholders
         user_input = user_input or {}
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders=placeholders,
+            description_placeholders={
+                **placeholders,
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                ),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(
