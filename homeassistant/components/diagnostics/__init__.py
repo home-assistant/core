@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import (
     find_paths_unserializable_data,
@@ -121,7 +122,8 @@ def handle_get(
     )
 
 
-def _get_json_file_response(
+async def _async_get_json_file_response(
+    hass: HomeAssistant,
     data: dict | list,
     filename: str,
     d_type: DiagnosticsType,
@@ -130,8 +132,13 @@ def _get_json_file_response(
     sub_id: str | None = None,
 ) -> web.Response:
     """Return JSON file from dictionary."""
+    hass_sys_info = await async_get_system_info(hass)
     try:
-        json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
+        json_data = json.dumps(
+            {"home-assistant": hass_sys_info, "diagnostics-data": data},
+            indent=2,
+            cls=ExtendedJSONEncoder,
+        )
     except TypeError:
         _LOGGER.error(
             "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
@@ -189,7 +196,9 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
                 return web.Response(status=HTTPStatus.NOT_FOUND)
             data = await info[d_type.value](hass, config_entry)
             filename = f"{d_type}-{filename}"
-            return _get_json_file_response(data, filename, d_type.value, d_id)
+            return await _async_get_json_file_response(
+                hass, data, filename, d_type.value, d_id
+            )
 
         # sub_type handling
         try:
@@ -210,4 +219,6 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         data = await info[sub_type.value](hass, config_entry, device)
-        return _get_json_file_response(data, filename, d_type, d_id, sub_type, sub_id)
+        return await _async_get_json_file_response(
+            hass, data, filename, d_type, d_id, sub_type, sub_id
+        )
