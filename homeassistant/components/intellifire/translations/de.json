@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
