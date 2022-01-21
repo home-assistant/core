@@ -845,7 +845,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.27.0
+pyRFXtrx==0.27.1
 
 # homeassistant.components.tibber
 pyTibber==0.21.7
