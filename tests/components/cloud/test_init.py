@@ -171,6 +171,7 @@ async def test_remote_ui_url(hass, mock_cloud_fixture):
         with pytest.raises(cloud.CloudNotAvailable):
             cloud.async_remote_ui_url(hass)
 
-        cl.remote._instance_domain = "example.com"
+        # Remote finished initializing
+        cl.client.prefs._prefs["remote_domain"] = "example.com"
 
         assert cloud.async_remote_ui_url(hass) == "https://example.com"
