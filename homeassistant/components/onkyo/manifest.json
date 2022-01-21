@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
   "iot_class": "local_push",
   "loggers": ["eiscp"],
-  "requirements": ["pyeiscp==0.0.6"]
+  "requirements": ["pyeiscp==0.0.7"]
 }

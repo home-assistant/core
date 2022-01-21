@@ -1152,7 +1152,7 @@ pyefergy==22.1.1
 pyeight==0.3.2
 
 # homeassistant.components.onkyo
-pyeiscp==0.0.6
+pyeiscp==0.0.7
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
