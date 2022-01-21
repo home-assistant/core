@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
     """Gather data for the energy device."""
 
-    api: aiohwenergy
+    api: aiohwenergy.HomeWizardEnergy
 
     def __init__(
         self,
