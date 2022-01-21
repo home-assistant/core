@@ -34,6 +34,12 @@ def data_cdc_fixture():
     return json.loads(load_fixture("cdc_data.json", "flunearyou"))
 
 
+@pytest.fixture(name="data_user", scope="session")
+def data_user_fixture():
+    """Define user data."""
+    return json.loads(load_fixture("user_data.json", "flunearyou"))
+
+
 @pytest.fixture(name="setup_flunearyou")
 async def setup_flunearyou_fixture(hass, data_cdc, data_user, config):
     """Define a fixture to set up Flu Near You."""

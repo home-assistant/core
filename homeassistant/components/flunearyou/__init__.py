@@ -39,10 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = await client.cdc_reports.status_by_coordinates(
                     latitude, longitude
                 )
+                print(f"RECEIVED DATA: {data}")
             else:
                 data = await client.user_reports.status_by_coordinates(
                     latitude, longitude
                 )
+                print(f"RECEIVED DATA: {data}")
         except FluNearYouError as err:
             raise UpdateFailed(err) from err
 
