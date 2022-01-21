@@ -1,7 +1,7 @@
 """Support for Overkiz Vertical Covers."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Union, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizState, UIClass, UIWidget
 
@@ -80,17 +80,20 @@ class VerticalCover(OverkizGenericCover):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        position = self.executor.select_state(
-            OverkizState.CORE_CLOSURE,
-            OverkizState.CORE_CLOSURE_OR_ROCKER_POSITION,
-            OverkizState.CORE_PEDESTRIAN_POSITION,
+        position = cast(
+            Union[int, None],
+            self.executor.select_state(
+                OverkizState.CORE_CLOSURE,
+                OverkizState.CORE_CLOSURE_OR_ROCKER_POSITION,
+                OverkizState.CORE_PEDESTRIAN_POSITION,
+            ),
         )
 
         # Uno devices can have a position not in 0 to 100 range when unknown
-        if position is None or cast(int, position) < 0 or cast(int, position) > 100:
+        if position is None or position < 0 or position > 100:
             return None
 
-        return 100 - cast(int, position)
+        return 100 - position
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
