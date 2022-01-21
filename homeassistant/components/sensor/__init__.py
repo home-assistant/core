@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 import inspect
 import logging
-from math import log10
+from math import floor, log10
 from typing import Any, Final, cast, final
 
 import voluptuous as vol
@@ -45,6 +45,7 @@ from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_VOLTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -202,6 +203,15 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
     SensorDeviceClass.PRESSURE: pressure_util.convert,
     SensorDeviceClass.TEMPERATURE: temperature_util.convert,
+}
+
+UNIT_RATIOS: dict[str, dict[str, float]] = {
+    SensorDeviceClass.PRESSURE: pressure_util.UNIT_CONVERSION,
+    SensorDeviceClass.TEMPERATURE: {
+        TEMP_CELSIUS: 1.0,
+        TEMP_FAHRENHEIT: 1.8,
+        TEMP_KELVIN: 1.0,
+    },
 }
 
 VALID_UNITS: dict[str, tuple[str, ...]] = {
@@ -432,19 +442,33 @@ class SensorEntity(Entity):
             and self.device_class in UNIT_CONVERSIONS
             and native_unit_of_measurement != unit_of_measurement
         ):
+            assert unit_of_measurement
+            assert native_unit_of_measurement
+
             value_s = str(value)
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+
+            # Scale the precision when converting to a larger unit
+            # For example 1.1 kWh should be rendered as 0.0011 kWh, not 0.0 kWh
+            ratio_log = max(
+                0,
+                log10(
+                    UNIT_RATIOS[self.device_class][native_unit_of_measurement]
+                    / UNIT_RATIOS[self.device_class][unit_of_measurement]
+                ),
+            )
+            prec = prec + floor(ratio_log)
+
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 value_f = float(value)  # type: ignore
                 value_f_new = UNIT_CONVERSIONS[self.device_class](
                     value_f,
-                    native_unit_of_measurement,  # type: ignore
-                    unit_of_measurement,  # type: ignore
+                    native_unit_of_measurement,
+                    unit_of_measurement,
                 )
-                # Scale the precision when converting to a larger unit
-                ratio_log = max(0, round(log10(value_f / value_f_new)))
-                prec = prec + round(ratio_log)
+
+                # Round to the wanted precision
                 value = round(value_f_new) if prec == 0 else round(value_f_new, prec)
 
         units = self.hass.config.units
