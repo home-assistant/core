@@ -87,7 +87,7 @@ class VerticalCover(OverkizGenericCover):
         )
 
         # Uno devices can have a position not in 0 to 100 range when unknown
-        if position is None or position < 0 or position > 100:
+        if position is None or cast(int, position) < 0 or cast(int, position) > 100:
             return None
 
         return 100 - cast(int, position)

@@ -8,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN
+from .cover_entities.generic_cover import OverkizGenericCover
 from .cover_entities.awning import Awning
 from .cover_entities.vertical_cover import VerticalCover
 
@@ -18,7 +19,7 @@ async def async_setup_entry(
     """Set up the Overkiz covers from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    entities: list[OverkizGenericCover] = [
         Awning(device.device_url, data.coordinator)
         for device in data.platforms[Platform.COVER]
         if device.ui_class == UIClass.AWNING

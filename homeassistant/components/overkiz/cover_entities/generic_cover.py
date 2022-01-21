@@ -1,7 +1,8 @@
 """Base class for Overkiz covers, shutters, awnings, etc."""
 from __future__ import annotations
 
-from typing import Any, Mapping, cast
+from collections.abc import Mapping
+from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -146,19 +147,17 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         ):
             return True
 
-        return None
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
 
-        # is_moving = self.device.states.get(OverkizState.CORE_MOVING)
-        # current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
-        # target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
-
-        # return (
-        #     is_moving
-        #     and is_moving.value
-        #     and current_closure
-        #     and target_closure
-        #     and current_closure.value > target_closure.value
-        # )
+        return (
+            is_moving
+            and is_moving.value
+            and current_closure
+            and target_closure
+            and cast(int, current_closure.value) > cast(int, target_closure.value)
+        )
 
     @property
     def is_closing(self) -> bool | None:
@@ -174,18 +173,17 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         ):
             return True
 
-        return None
-        # is_moving = self.device.states.get(OverkizState.CORE_MOVING)
-        # current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
-        # target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
 
-        # return (
-        #     is_moving
-        #     and is_moving.value
-        #     and current_closure
-        #     and target_closure
-        #     and current_closure.value < target_closure.value
-        # )
+        return (
+            is_moving
+            and is_moving.value
+            and current_closure
+            and target_closure
+            and cast(int, current_closure.value) < cast(int, target_closure.value)
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
