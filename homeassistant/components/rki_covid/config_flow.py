@@ -31,7 +31,7 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
-        _LOGGER.debug(f"User triggered configuration flow: {user_input}")
+        _LOGGER.debug("User triggered configuration flow: %s", user_input)
 
         errors: dict[str, str] = {}
 
@@ -49,31 +49,29 @@ class RKICovidNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     # country
                     items["Deutschland"] = accumulate_country(parser.country)
-                    _LOGGER.debug(f"Deutschland {accumulate_country(parser.country)}")
 
                     # states
-                    for s in sorted(
+                    for stat in sorted(
                         parser.states.values(), key=lambda state: state.name
                     ):
-                        st = parser.states[s.name]
-                        name = "BL " + st.name
-                        items[name] = accumulate_state(name, st)
+                        state = parser.states[stat.name]
+                        name = "BL " + state.name
+                        items[name] = accumulate_state(name, state)
 
                     # districts
-                    for d in sorted(parser.districts.values(), key=lambda di: di.name):
-                        district = parser.districts[d.id]
+                    for dist in sorted(
+                        parser.districts.values(), key=lambda di: di.name
+                    ):
+                        district = parser.districts[dist.id]
                         items[district.county] = accumulate_district(district)
 
-                    _LOGGER.debug(f"{len(items)} counties")
                     for case in items.values():
-                        self._options[case.county] = case.county
+                        self._options[str(case.county)] = case.county
 
-            except asyncio.TimeoutError as err:
-                _LOGGER.error(f"Timeout: {err}")
+            except asyncio.TimeoutError:
                 errors["base"] = "timeout_error"
 
-            except aiohttp.ClientError as err:
-                _LOGGER.error(f"ClientError: {err}")
+            except aiohttp.ClientError:
                 errors["base"] = "client_error"
 
         if user_input is not None:

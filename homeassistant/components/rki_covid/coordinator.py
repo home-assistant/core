@@ -50,16 +50,18 @@ class RkiCovidDataUpdateCoordinator(DataUpdateCoordinator):
                 items["Deutschland"] = accumulate_country(self.parser.country)
 
                 # states
-                for s in sorted(
+                for stat in sorted(
                     self.parser.states.values(), key=lambda state: state.name
                 ):
-                    st = self.parser.states[s.name]
-                    name = "BL " + st.name
-                    items[name] = accumulate_state(name, st)
+                    state = self.parser.states[stat.name]
+                    name = "BL " + state.name
+                    items[name] = accumulate_state(name, state)
 
                 # districts
-                for d in sorted(self.parser.districts.values(), key=lambda di: di.name):
-                    district = self.parser.districts[d.id]
+                for dist in sorted(
+                    self.parser.districts.values(), key=lambda di: di.name
+                ):
+                    district = self.parser.districts[dist.id]
                     items[district.county] = accumulate_district(district)
 
                 _LOGGER.debug("Parsing data finished")

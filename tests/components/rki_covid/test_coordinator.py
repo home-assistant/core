@@ -44,40 +44,40 @@ async def test_fetch_districts(hass: HomeAssistant) -> None:
     assert result["SK Amberg"].population == 45678
     assert result["SK Amberg"].count == 12345
     assert result["SK Amberg"].deaths == 23456
-    assert result["SK Amberg"].casesPerWeek == 34567
+    assert result["SK Amberg"].cases_per_week == 34567
     assert result["SK Amberg"].recovered == 0
-    assert result["SK Amberg"].weekIncidence == 75675.4
-    assert result["SK Amberg"].casesPer100k == 27026.14
-    assert result["SK Amberg"].newCases == 0
-    assert result["SK Amberg"].newDeaths == 0
-    assert result["SK Amberg"].newRecovered == 0
-    assert result["SK Amberg"].lastUpdate == "01.01.2022, 00:00 Uhr"
+    assert result["SK Amberg"].week_incidence == 75675.4
+    assert result["SK Amberg"].cases_per100k == 27026.14
+    assert result["SK Amberg"].new_cases == 0
+    assert result["SK Amberg"].new_deaths == 0
+    assert result["SK Amberg"].new_recovered == 0
+    assert result["SK Amberg"].last_update == "01.01.2022, 00:00 Uhr"
 
     # State
     assert result["BL Bayern"].population == 99
     assert result["BL Bayern"].count == 88
     assert result["BL Bayern"].deaths == 77
-    assert result["BL Bayern"].casesPerWeek == 66
+    assert result["BL Bayern"].cases_per_week == 66
     assert result["BL Bayern"].recovered == 55
-    assert result["BL Bayern"].weekIncidence == 66666.7
-    assert result["BL Bayern"].casesPer100k == 88888.89
-    assert result["BL Bayern"].newCases == 33
-    assert result["BL Bayern"].newDeaths == 22
-    assert result["BL Bayern"].newRecovered == 11
-    assert result["BL Bayern"].lastUpdate == "01.01.2022, 00:00 Uhr"
+    assert result["BL Bayern"].week_incidence == 66666.7
+    assert result["BL Bayern"].cases_per100k == 88888.89
+    assert result["BL Bayern"].new_cases == 33
+    assert result["BL Bayern"].new_deaths == 22
+    assert result["BL Bayern"].new_recovered == 11
+    assert result["BL Bayern"].last_update == "01.01.2022, 00:00 Uhr"
 
     # Country
     assert result["Deutschland"].population == 83129285
     assert result["Deutschland"].count == 7835451
     assert result["Deutschland"].deaths == 115337
-    assert result["Deutschland"].casesPerWeek == 94227
+    assert result["Deutschland"].cases_per_week == 94227
     assert result["Deutschland"].recovered == 6914679
-    assert result["Deutschland"].weekIncidence == 113.3
-    assert result["Deutschland"].casesPer100k == 9425.62
-    assert result["Deutschland"].newCases == 192
-    assert result["Deutschland"].newDeaths == 386
-    assert result["Deutschland"].newRecovered == 182
-    assert result["Deutschland"].lastUpdate == "01.01.2022, 00:00 Uhr"
+    assert result["Deutschland"].week_incidence == 113.3
+    assert result["Deutschland"].cases_per100k == 9425.62
+    assert result["Deutschland"].new_cases == 192
+    assert result["Deutschland"].new_deaths == 386
+    assert result["Deutschland"].new_recovered == 182
+    assert result["Deutschland"].last_update == "01.01.2022, 00:00 Uhr"
 
 
 async def test_update_timeout(hass: HomeAssistant) -> None:
