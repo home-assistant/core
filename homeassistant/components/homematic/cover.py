@@ -89,10 +89,7 @@ class HMCover(HMDevice, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if "LEVEL_2" not in self._data:
-            return None
-
-        if (position := self._data.get("LEVEL_2", 0)) is None or position == "":
+        if not (position := self._data.get("LEVEL_2", 0)):
             return None
         return int(position * 100)
 
