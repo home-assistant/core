@@ -14,7 +14,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_ALBUM,
 )
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.sonos.speaker import SonosMedia, SonosSpeaker
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
@@ -32,13 +31,14 @@ from .const import (
     SONOS_TYPES_MAPPING,
 )
 from .exception import UnknownMediaType
+from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
 GetBrowseImageUrlType = Callable[[str, str, "str | None"], str]
 
 
-def get_thumbnail_url(
+def get_thumbnail_url_full(
     media: SonosMedia,
     is_internal: bool,
     get_browse_image_url: GetBrowseImageUrlType,
@@ -76,9 +76,6 @@ async def async_browse_media(
     media_content_type: str | None,
 ):
     """Browse media."""
-    _get_thumbnail_url = partial(
-        get_thumbnail_url, media, is_internal_request(hass), get_browse_image_url
-    )
 
     if media_content_id is None:
         return await root_payload(
@@ -95,7 +92,14 @@ async def async_browse_media(
 
     if media_content_type == "library":
         return await hass.async_add_executor_job(
-            library_payload, media.library, _get_thumbnail_url
+            library_payload,
+            media.library,
+            partial(
+                get_thumbnail_url_full,
+                media,
+                is_internal_request(hass),
+                get_browse_image_url,
+            ),
         )
 
     if media_content_type == "favorites":
@@ -119,7 +123,12 @@ async def async_browse_media(
         build_item_response,
         media.library,
         payload,
-        _get_thumbnail_url,
+        partial(
+            get_thumbnail_url_full,
+            media,
+            is_internal_request(hass),
+            get_browse_image_url,
+        ),
     )
     if response is None:
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
