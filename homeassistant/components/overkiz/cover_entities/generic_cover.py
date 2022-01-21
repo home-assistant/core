@@ -122,12 +122,13 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         """Cancel running execution or send stop command."""
         success = await self.executor.async_cancel_command(cancel_commands)
 
-        if not success and stop_commands:
+        if success:
+            return
+
+        if command := self.executor.select_command(*stop_commands):
             # Fallback to available stop commands when no executions are found
             # Stop commands don't work with all devices, due to a bug in Somfy service
-            await self.executor.async_execute_command(
-                self.executor.select_command(*stop_commands)
-            )
+            await self.executor.async_execute_command(command)
 
     @property
     def is_opening(self) -> bool | None:
