@@ -1403,6 +1403,9 @@ pyatome==0.1.1
 # homeassistant.components.apple_tv
 pyatv==0.9.8
 
+# homeassistant.components.aussie_broadband
+pyaussiebb==0.0.9
+
 # homeassistant.components.balboa
 pybalboa==0.13
 

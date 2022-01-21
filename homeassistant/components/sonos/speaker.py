@@ -123,7 +123,6 @@ class SonosMedia:
 
         self.position: float | None = None
         self.position_updated_at: datetime.datetime | None = None
-        self._last_event_variables: dict[str, Any] | None = None
 
     def clear(self) -> None:
         """Clear basic media info."""
@@ -1009,10 +1008,6 @@ class SonosSpeaker:
         # Ignore transitions, we should get the target state soon
         if new_status == SONOS_STATE_TRANSITIONING:
             return
-
-        if variables:
-            # Store for diagnostics
-            self.media._last_event_variables = variables
 
         self.media.clear()
         update_position = new_status != self.media.playback_status

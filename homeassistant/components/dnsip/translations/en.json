@@ -1,17 +1,20 @@
 {
     "config": {
+        "error": {
+            "invalid_hostname": "Invalid hostname"
+        },
         "step": {
             "user": {
                 "data": {
                     "hostname": "The hostname for which to perform the DNS query"
                 }
             }
-        },
-        "error": {
-            "invalid_hostname": "Invalid hostname"
         }
     },
     "options": {
+        "error": {
+            "invalid_resolver": "Invalid IP address for resolver"
+        },
         "step": {
             "init": {
                 "data": {
@@ -19,9 +22,6 @@
                     "resolver_ipv6": "Resolver for IPV6 lookup"
                 }
             }
-        },
-        "error": {
-            "invalid_resolver": "Invalid IP address for resolver"
         }
     }
 }
