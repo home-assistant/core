@@ -7,14 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import notify, siren
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TARGET,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-)
+from homeassistant.components import siren
 from homeassistant.components.siren import SirenEntity
 from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
@@ -33,14 +26,10 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_SERVICE,
-    CONF_SERVICE_DATA,
-    CONF_TARGET,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -70,21 +59,16 @@ CONF_AVAILABLE_TONES = "available_tones"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
 CONF_DURATION_COMMAND_TEMPLATE = "duration_command_template"
 CONF_DURATION_COMMAND_TOPIC = "duration_command_topic"
-CONF_MESSAGE_COMMAND_TEMPLATE = "message_command_template"
-CONF_MESSAGE_COMMAND_TOPIC = "message_command_topic"
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
 CONF_SUPPORT_DURATION = "supported_duration"
 CONF_SUPPORT_TURN_OFF = "supported_turn_off"
 CONF_SUPPORT_TURN_ON = "supported_turn_on"
 CONF_SUPPORT_VOLUME_SET = "supported_volume_set"
-CONF_TITLE = "title"
 CONF_TONE_COMMAND_TEMPLATE = "tone_command_template"
 CONF_TONE_COMMAND_TOPIC = "tone_command_topic"
 CONF_VOLUME_COMMAND_TEMPLATE = "volume_command_template"
 CONF_VOLUME_COMMAND_TOPIC = "volume_command_topic"
-
-MQTT_NOTIFY_CONFIG = "mqtt_notify_config"
 
 SIREN_ENTITY = "siren_entity"
 
@@ -105,8 +89,6 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
         vol.Optional(CONF_DURATION_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_DURATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_MESSAGE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_MESSAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
@@ -117,8 +99,6 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SUPPORT_TURN_OFF, default=True): cv.boolean,
         vol.Optional(CONF_SUPPORT_TURN_ON, default=True): cv.boolean,
         vol.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
-        vol.Optional(CONF_TARGET): cv.string,
-        vol.Optional(CONF_TITLE): cv.string,
         vol.Optional(CONF_TONE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_TONE_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -138,12 +118,7 @@ DISCOVERY_SCHEMA = vol.All(
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
         ATTR_AVAILABLE_TONES,
-        ATTR_DATA,
         ATTR_DURATION,
-        ATTR_MESSAGE,
-        ATTR_TARGET,
-        ATTR_TITLE,
-        ATTR_TITLE_DEFAULT,
         ATTR_TONE,
         ATTR_VOLUME_LEVEL,
     }
@@ -214,13 +189,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    async def async_removed_from_registry(self):
-        """Remove the notify service registration."""
-        if not self.target:
-            return
-        del self.hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE_DATA][self.target]
-        await self.hass.data[MQTT_NOTIFY_CONFIG][CONF_SERVICE].async_register_services()
-
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
 
@@ -262,31 +230,6 @@ class MqttSiren(MqttEntity, SirenEntity):
             config.get(CONF_VALUE_TEMPLATE),
             entity=self,
         ).async_render_with_possible_json_value
-
-        # integration notify platform
-        if config.get(CONF_MESSAGE_COMMAND_TOPIC):
-            notify_config = {
-                SIREN_ENTITY: self,
-                CONF_MESSAGE_COMMAND_TOPIC: config[CONF_MESSAGE_COMMAND_TOPIC],
-                CONF_RETAIN: config[CONF_RETAIN],
-                CONF_QOS: config[CONF_QOS],
-                CONF_ENCODING: config[CONF_ENCODING],
-            }
-            if CONF_MESSAGE_COMMAND_TEMPLATE in config:
-                notify_config[CONF_MESSAGE_COMMAND_TEMPLATE] = config[
-                    CONF_MESSAGE_COMMAND_TEMPLATE
-                ].template
-            if CONF_NAME in config:
-                notify_config[CONF_NAME] = config[CONF_NAME]
-            if CONF_TARGET in config:
-                notify_config[CONF_TARGET] = config[CONF_TARGET]
-            if CONF_TITLE in config:
-                notify_config[CONF_TITLE] = config[CONF_TITLE]
-            self.hass.async_create_task(
-                async_load_platform(
-                    self.hass, notify.DOMAIN, DOMAIN, notify_config, config
-                )
-            )
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
