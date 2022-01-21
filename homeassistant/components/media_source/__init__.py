@@ -95,7 +95,7 @@ def _get_media_item(
 @bind_hass
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_id: str,
+    media_content_id: str | None,
     *,
     content_filter: Callable[[BrowseMedia], bool] | None = None,
 ) -> BrowseMediaSource:
