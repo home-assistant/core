@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
-    ENTITY_CATEGORIES,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -369,9 +368,13 @@ def async_extract_referenced_entity_ids(
     if not selector.area_ids and not selected.referenced_devices:
         return selected
 
+    # pylint: disable=import-outside-top-level
+    from .entity import EntityCategory
+
     for ent_entry in ent_reg.entities.values():
         # Do not add config or diagnostic entities referenced by areas or devices
-        if ent_entry.entity_category in ENTITY_CATEGORIES:
+
+        if ent_entry.entity_category in EntityCategory:
             continue
 
         if (
