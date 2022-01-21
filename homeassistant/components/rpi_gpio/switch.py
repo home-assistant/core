@@ -4,11 +4,10 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -49,7 +48,7 @@ def setup_platform(
     add_entities(switches)
 
 
-class RPiGPIOSwitch(ToggleEntity):
+class RPiGPIOSwitch(SwitchEntity):
     """Representation of a  Raspberry Pi GPIO."""
 
     def __init__(self, name, port, invert_logic):
