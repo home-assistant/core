@@ -2,13 +2,14 @@
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
-
-from homeassistant.core import HomeAssistant
-from tests.common import MockConfigEntry
-from homeassistant.components.rki_covid.const import DOMAIN
 from rki_covid_parser.model.country import Country
 
+from homeassistant.components.rki_covid.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
 from . import MOCK_DISTRICTS
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
