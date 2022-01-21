@@ -107,6 +107,7 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
     # Define types
     coordinator: IntellifireDataUpdateCoordinator
     entity_description: IntellifireSensorEntityDescription
+    _attr_attribution = "Data provided by unpublished Intellifire API"
 
     def __init__(
         self,
