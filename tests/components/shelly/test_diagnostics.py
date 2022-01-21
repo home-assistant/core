@@ -32,6 +32,7 @@ async def test_block_config_entry_diagnostics(
             "model": coap_wrapper.model,
             "sw_version": coap_wrapper.sw_version,
         },
+        "device_settings": {"coiot": {"update_period": 15}},
     }
 
 
@@ -58,4 +59,5 @@ async def test_rpc_config_entry_diagnostics(
             "model": rpc_wrapper.model,
             "sw_version": rpc_wrapper.sw_version,
         },
+        "device_settings": {},
     }
