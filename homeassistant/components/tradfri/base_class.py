@@ -39,6 +39,8 @@ def handle_error(
 class TradfriBaseEntity(CoordinatorEntity):
     """Base Tradfri device."""
 
+    coordinator: TradfriDeviceDataUpdateCoordinator
+
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,

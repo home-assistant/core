@@ -18,7 +18,7 @@ from .const import SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Coordinator to manage data for a specific Tradfri device."""
 
     def __init__(
@@ -31,7 +31,6 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize device coordinator."""
         self.api = api
         self.device = device
-        self._hub_available = True
         self._exception: Exception | None = None
 
         super().__init__(
@@ -41,13 +40,12 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
-    @callback
-    def set_hub_available(self, available: bool) -> None:
+    async def set_hub_available(self, available: bool) -> None:
         """Set status of hub."""
-        if available != self._hub_available:
-            self._hub_available = available
-            self.last_update_success = False
-            self.hass.async_create_task(self._async_update_data())
+        if available != self.last_update_success:
+            if not available:
+                self.last_update_success = False
+            await self.async_request_refresh()
 
     @callback
     def _observe_update(self, device: Device) -> None:
