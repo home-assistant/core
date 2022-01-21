@@ -1,8 +1,8 @@
 """Tests for RKI Covid numbers sensor."""
 
+from rki_covid_parser.model.country import Country
 from rki_covid_parser.model.district import District
 from rki_covid_parser.model.state import State
-from rki_covid_parser.model.country import Country
 
 MOCK_DISTRICTS = {
     "01234": District(

@@ -1,15 +1,16 @@
 """Test the RKI Covid numbers integration config flow."""
+from unittest.mock import AsyncMock, patch
+
+from rki_covid_parser.parser import RkiCovidParser
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.rki_covid.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from unittest.mock import patch
-from unittest.mock import AsyncMock
-from tests.common import MockConfigEntry
-
 from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
-from rki_covid_parser.parser import RkiCovidParser
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from tests.components.rki_covid import MOCK_DISTRICTS, MOCK_STATES, MOCK_COUNTRY
+
+from tests.common import MockConfigEntry
+from tests.components.rki_covid import MOCK_COUNTRY, MOCK_DISTRICTS, MOCK_STATES
 
 
 async def test_successful_config_flow_with_district(hass: HomeAssistant) -> None:

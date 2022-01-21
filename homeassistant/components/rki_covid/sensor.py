@@ -5,9 +5,9 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
+from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import (
@@ -16,18 +16,11 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
     CoordinatorEntity,
+    DataUpdateCoordinator,
 )
 
-
-from .const import (
-    DOMAIN,
-    ATTR_COUNTY,
-    ATTRIBUTION,
-    CONF_DISTRICT_NAME,
-    CONF_DISTRICTS,
-)
+from .const import ATTR_COUNTY, ATTRIBUTION, CONF_DISTRICT_NAME, CONF_DISTRICTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

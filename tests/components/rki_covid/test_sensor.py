@@ -1,21 +1,22 @@
 """Test the RKI Covide numbers integration sensor."""
-from tests.common import load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from aiohttp import ClientError
+from rki_covid_parser.const import (
+    DISTRICTS_URL,
+    DISTRICTS_URL_NEW_CASES,
+    DISTRICTS_URL_NEW_DEATHS,
+    DISTRICTS_URL_NEW_RECOVERED,
+    DISTRICTS_URL_RECOVERED,
+    HOSPITALIZATION_URL,
+    VACCINATIONS_URL,
+)
+
 from homeassistant.components.rki_covid.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from tests.common import MockConfigEntry
-from rki_covid_parser.const import (
-    DISTRICTS_URL,
-    DISTRICTS_URL_RECOVERED,
-    DISTRICTS_URL_NEW_CASES,
-    DISTRICTS_URL_NEW_RECOVERED,
-    DISTRICTS_URL_NEW_DEATHS,
-    HOSPITALIZATION_URL,
-    VACCINATIONS_URL,
-)
-from aiohttp import ClientError
+
+from tests.common import MockConfigEntry, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensor_with_data(

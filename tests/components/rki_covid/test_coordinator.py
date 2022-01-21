@@ -1,16 +1,20 @@
 """Tests for the RKI Covid numbers Data Coordinator."""
 from __future__ import annotations
+
+from asyncio import TimeoutError
 from datetime import timedelta
 from unittest.mock import AsyncMock
-import pytest
-from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
-from rki_covid_parser.parser import RkiCovidParser
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.core import HomeAssistant
+
 from aiohttp import ClientError
-from asyncio import TimeoutError
+import pytest
+from rki_covid_parser.parser import RkiCovidParser
+
+from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
-from tests.components.rki_covid import MOCK_DISTRICTS, MOCK_STATES, MOCK_COUNTRY
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from tests.components.rki_covid import MOCK_COUNTRY, MOCK_DISTRICTS, MOCK_STATES
 
 
 async def test_coordinator_update_interval(hass: HomeAssistant) -> None:

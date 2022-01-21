@@ -1,10 +1,12 @@
 """Represents a district."""
 from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
+
+from rki_covid_parser.model.country import Country
 from rki_covid_parser.model.district import District
 from rki_covid_parser.model.state import State
-from rki_covid_parser.model.country import Country
 
 
 def accumulate_district(district: District) -> DistrictData:
