@@ -21,6 +21,10 @@ TO_REDACT = {
     "lon_sw",
     "coordinates",
     "name",
+    "timetable",
+    "zones",
+    "pseudo",
+    "url",
 }
 
 
