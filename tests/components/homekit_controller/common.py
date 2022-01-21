@@ -6,7 +6,7 @@ from datetime import timedelta
 import json
 import logging
 import os
-from typing import Any
+from typing import Any, Final
 from unittest import mock
 
 from aiohomekit.model import Accessories, Accessory
@@ -38,6 +38,10 @@ from tests.common import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Root device in test harness always has an accessory id of this
+HUB_TEST_ACCESSORY_ID: Final[str] = "00:00:00:00:00:00"
 
 
 @dataclass
