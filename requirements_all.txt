@@ -992,7 +992,7 @@ logi_circle==0.2.2
 london-tube-status==0.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.7.1
+luftdaten==0.7.2
 
 # homeassistant.components.lupusec
 lupupy==0.0.24
