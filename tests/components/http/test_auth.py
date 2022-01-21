@@ -10,9 +10,12 @@ import jwt
 import pytest
 import yarl
 
+from homeassistant.auth.const import GROUP_ID_READ_ONLY
+from homeassistant.auth.models import User
 from homeassistant.auth.providers import trusted_networks
 from homeassistant.components import websocket_api
 from homeassistant.components.http.auth import (
+    CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
     STORAGE_KEY,
     async_setup_auth,
@@ -438,3 +441,25 @@ async def test_async_user_not_allowed_do_auth(hass, app):
             async_user_not_allowed_do_auth(hass, user, trusted_request)
             == "User is local only"
         )
+
+
+async def test_create_user_once(hass):
+    """Test that we reuse the user."""
+    cur_users = len(await hass.auth.async_get_users())
+    app = web.Application()
+    await async_setup_auth(hass, app)
+    users = await hass.auth.async_get_users()
+    assert len(users) == cur_users + 1
+
+    user: User = next((user for user in users if user.name == CONTENT_USER_NAME), None)
+    assert user is not None, users
+
+    assert len(user.groups) == 1
+    assert user.groups[0].id == GROUP_ID_READ_ONLY
+    assert len(user.refresh_tokens) == 1
+    assert user.system_generated
+
+    await async_setup_auth(hass, app)
+
+    # test it did not create a user
+    assert len(await hass.auth.async_get_users()) == cur_users + 1
