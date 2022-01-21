@@ -138,7 +138,7 @@ async def _async_get_json_file_response(
     integration: Integration = hass.data[DATA_INTEGRATIONS][domain]
     custom_components = {
         ccmp: hass.data[DATA_INTEGRATIONS][ccmp].manifest
-        for ccmp in list(hass.data[DATA_CUSTOM_COMPONENTS].keys())
+        for ccmp in hass.data[DATA_CUSTOM_COMPONENTS]
     }
     try:
         json_data = json.dumps(

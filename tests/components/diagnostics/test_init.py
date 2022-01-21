@@ -82,7 +82,7 @@ async def test_download_diagnostics(hass, hass_client):
     hass_sys_info = await async_get_system_info(hass)
     custom_components = {
         ccmp: hass.data[DATA_INTEGRATIONS][ccmp].manifest
-        for ccmp in list(hass.data[DATA_CUSTOM_COMPONENTS].keys())
+        for ccmp in hass.data[DATA_CUSTOM_COMPONENTS]
     }
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
