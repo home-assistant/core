@@ -118,7 +118,6 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
 
-        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         # Set the Display name the User will see
         self._attr_name = f"Fireplace {description.name}"
         self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
