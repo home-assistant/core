@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.guardian.const import DOMAIN
+from homeassistant.components.guardian import CONF_UID, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.setup import async_setup_component
 
@@ -14,7 +14,11 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config, unique_id):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        data={CONF_UID: "3456", **config},
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -28,19 +32,97 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_ping", scope="session")
-def data_ping_fixture():
-    """Define data from a successful ping response."""
-    return json.loads(load_fixture("ping_data.json", "guardian"))
+@pytest.fixture(name="data_sensor_pair_dump", scope="session")
+def data_sensor_pair_dump_fixture():
+    """Define data from a successful sensor_pair_dump response."""
+    return json.loads(load_fixture("sensor_pair_dump_data.json", "guardian"))
+
+
+@pytest.fixture(name="data_sensor_pair_sensor", scope="session")
+def data_sensor_pair_sensor_fixture():
+    """Define data from a successful sensor_pair_sensor response."""
+    return json.loads(load_fixture("sensor_pair_sensor_data.json", "guardian"))
+
+
+@pytest.fixture(name="data_sensor_paired_sensor_status", scope="session")
+def data_sensor_paired_sensor_status_fixture():
+    """Define data from a successful sensor_paired_sensor_status response."""
+    return json.loads(load_fixture("sensor_paired_sensor_status_data.json", "guardian"))
+
+
+@pytest.fixture(name="data_system_diagnostics", scope="session")
+def data_system_diagnostics_fixture():
+    """Define data from a successful system_diagnostics response."""
+    return json.loads(load_fixture("system_diagnostics_data.json", "guardian"))
+
+
+@pytest.fixture(name="data_system_onboard_sensor_status", scope="session")
+def data_system_onboard_sensor_status_fixture():
+    """Define data from a successful system_onboard_sensor_status response."""
+    return json.loads(
+        load_fixture("system_onboard_sensor_status_data.json", "guardian")
+    )
+
+
+@pytest.fixture(name="data_system_ping", scope="session")
+def data_system_ping_fixture():
+    """Define data from a successful system_ping response."""
+    return json.loads(load_fixture("system_ping_data.json", "guardian"))
+
+
+@pytest.fixture(name="data_valve_status", scope="session")
+def data_valve_status_fixture():
+    """Define data from a successful valve_status response."""
+    return json.loads(load_fixture("valve_status_data.json", "guardian"))
+
+
+@pytest.fixture(name="data_wifi_status", scope="session")
+def data_wifi_status_fixture():
+    """Define data from a successful wifi_status response."""
+    return json.loads(load_fixture("wifi_status_data.json", "guardian"))
 
 
 @pytest.fixture(name="setup_guardian")
-async def setup_guardian_fixture(hass, config, data_ping):
+async def setup_guardian_fixture(
+    hass,
+    config,
+    data_sensor_pair_dump,
+    data_sensor_pair_sensor,
+    data_sensor_paired_sensor_status,
+    data_system_diagnostics,
+    data_system_onboard_sensor_status,
+    data_system_ping,
+    data_valve_status,
+    data_wifi_status,
+):
     """Define a fixture to set up Guardian."""
     with patch("aioguardian.client.Client.connect"), patch(
+        "aioguardian.commands.sensor.SensorCommands.pair_dump",
+        return_value=data_sensor_pair_dump,
+    ), patch(
+        "aioguardian.commands.sensor.SensorCommands.pair_sensor",
+        return_value=data_sensor_pair_sensor,
+    ), patch(
+        "aioguardian.commands.sensor.SensorCommands.paired_sensor_status",
+        return_value=data_sensor_paired_sensor_status,
+    ), patch(
+        "aioguardian.commands.system.SystemCommands.diagnostics",
+        return_value=data_system_diagnostics,
+    ), patch(
+        "aioguardian.commands.system.SystemCommands.onboard_sensor_status",
+        return_value=data_system_onboard_sensor_status,
+    ), patch(
         "aioguardian.commands.system.SystemCommands.ping",
-        return_value=data_ping,
-    ), patch("aioguardian.client.Client.disconnect"), patch(
+        return_value=data_system_ping,
+    ), patch(
+        "aioguardian.commands.valve.ValveCommands.status",
+        return_value=data_valve_status,
+    ), patch(
+        "aioguardian.commands.wifi.WiFiCommands.status",
+        return_value=data_wifi_status,
+    ), patch(
+        "aioguardian.client.Client.disconnect"
+    ), patch(
         "homeassistant.components.guardian.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)

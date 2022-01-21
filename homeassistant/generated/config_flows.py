@@ -34,6 +34,7 @@ FLOWS = [
     "august",
     "aurora",
     "aurora_abb_powerone",
+    "aussie_broadband",
     "awair",
     "axis",
     "azure_devops",
