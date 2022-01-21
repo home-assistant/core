@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] | None = None
         if user_input is not None:
-            if not (errors := await self.auth(user_input)):
+            if not (errors := await self.async_auth(user_input)):
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
 
@@ -118,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
-            if not (errors := await self.auth(data)):
+            if not (errors := await self.async_auth(data)):
                 entry = await self.async_set_unique_id(self._reauth_username)
                 if entry:
                     self.hass.config_entries.async_update_entry(
