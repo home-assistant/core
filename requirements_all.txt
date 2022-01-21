@@ -611,7 +611,7 @@ elkm1-lib==1.0.0
 elmax_api==0.0.2
 
 # homeassistant.components.mobile_app
-emoji==1.5.0
+emoji==1.6.3
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
