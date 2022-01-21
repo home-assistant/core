@@ -37,6 +37,7 @@ from . import DATA_KEY
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VALVE_POSITION = "valve_position"
+ATTR_BATTERY = "battery"
 PRESET_ON = "on"
 
 # There are two magic temperature values, which indicate:
@@ -234,8 +235,8 @@ class MaxCubeClimate(ClimateEntity):
     def extra_state_attributes(self):
         """Return the optional state attributes."""
         if not self._device.is_thermostat():
-            return {}
-        return {ATTR_VALVE_POSITION: self._device.valve_position}
+            return {ATTR_BATTERY: self._device.battery}
+        return {ATTR_VALVE_POSITION: self._device.valve_position, ATTR_BATTERY: self._device.battery}
 
     def update(self):
         """Get latest data from MAX! Cube."""
