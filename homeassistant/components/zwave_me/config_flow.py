@@ -51,7 +51,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.uuid is None:
                 self.uuid = await helpers.get_uuid(self.url, self.token)
                 if self.uuid is not None:
-                    await self.async_set_unique_id(self.uuid)
+                    await self.async_set_unique_id(self.uuid, raise_on_progress=False)
                     self._abort_if_unique_id_configured()
                 else:
                     errors["base"] = "no_valid_uuid_set"
