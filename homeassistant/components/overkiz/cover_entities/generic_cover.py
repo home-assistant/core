@@ -95,16 +95,12 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if command := self.executor.select_command(*COMMANDS_OPEN_TILT):
-            await self.executor.async_execute_command(
-                self.executor.select_command(command)
-            )
+            await self.executor.async_execute_command(command)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if command := self.executor.select_command(*COMMANDS_CLOSE_TILT):
-            await self.executor.async_execute_command(
-                self.executor.select_command(command)
-            )
+            await self.executor.async_execute_command(command)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
