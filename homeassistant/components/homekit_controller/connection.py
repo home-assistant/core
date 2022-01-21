@@ -25,6 +25,8 @@ from .const import (
     ENTITY_MAP,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
+    IDENTIFIER_LEGACY_ACCESSORY_ID,
+    IDENTIFIER_LEGACY_SERIAL_NUMBER,
     IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
@@ -242,6 +244,78 @@ class HKDevice:
         return device_info
 
     @callback
+    def async_migrate_devices(self):
+        """Migrate legacy device entries from 3-tuples to 2-tuples."""
+        _LOGGER.debug(
+            "Migrating device registry entries for pairing %s", self.unique_id
+        )
+
+        device_registry = dr.async_get(self.hass)
+
+        for accessory in self.entity_map.accessories:
+            info = accessory.services.first(
+                service_type=ServicesTypes.ACCESSORY_INFORMATION,
+            )
+
+            identifiers = {
+                (
+                    DOMAIN,
+                    IDENTIFIER_LEGACY_ACCESSORY_ID,
+                    f"{self.unique_id}_{accessory.aid}",
+                ),
+            }
+
+            if accessory.aid == 1:
+                identifiers.add(
+                    (DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, self.unique_id)
+                )
+
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+            if valid_serial_number(serial_number):
+                identifiers.add(
+                    (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, serial_number)
+                )
+
+            device = device_registry.async_get_device(identifiers=identifiers)
+            if not device:
+                continue
+
+            if self.config_entry.entry_id not in device.config_entries:
+                _LOGGER.info(
+                    "Found candidate device for %s:aid:%s, but owned by a different config entry, skipping",
+                    self.unique_id,
+                    accessory.aid,
+                )
+                continue
+
+            _LOGGER.info(
+                "Migrating device identifiers for %s:aid:%s",
+                self.unique_id,
+                accessory.aid,
+            )
+
+            new_identifiers = {
+                (
+                    IDENTIFIER_ACCESSORY_ID,
+                    f"{self.unique_id}:aid:{accessory.aid}",
+                )
+            }
+
+            if not self.unreliable_serial_numbers:
+                serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+                new_identifiers.add((IDENTIFIER_SERIAL_NUMBER, serial_number))
+            else:
+                _LOGGER.debug(
+                    "Not migrating serial number identifier for %s:aid:%s (it is wrong, not unique or unreliable)",
+                    self.unique_id,
+                    accessory.aid,
+                )
+
+            device_registry.async_update_device(
+                device.id, new_identifiers=new_identifiers
+            )
+
+    @callback
     def async_create_devices(self):
         """
         Build device registry entries for all accessories paired with the bridge.
@@ -324,6 +398,9 @@ class HKDevice:
         self.pairing.pairing_data["accessories"] = self.accessories
 
         self.async_detect_workarounds()
+
+        # Migrate to new device ids
+        self.async_migrate_devices()
 
         await self.async_load_platforms()
 
