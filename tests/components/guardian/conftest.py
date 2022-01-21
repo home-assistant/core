@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.guardian.const import CONF_UID, DOMAIN
+from homeassistant.components.guardian import CONF_UID, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.setup import async_setup_component
 
