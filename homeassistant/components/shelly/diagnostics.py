@@ -5,7 +5,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
@@ -35,7 +34,6 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "home_assistant": await async_get_system_info(hass),
         "device_info": {
             "name": wrapper.name,
             "model": wrapper.model,
