@@ -88,8 +88,5 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
         "webhook_registered": False,
     }
 
-    assert result["data"]["AsyncClimate-111111111111111111111401"] is None
-    assert (
-        result["data"]["AsyncClimate-91763b24c43d3e344f424e8b"]["repr"]
-        == "AsyncClimate(home_id=91763b24c43d3e344f424e8b)"
-    )
+    for home in result["data"]["AsyncClimateTopology"]["homes"]:
+        assert home["coordinates"] == REDACTED
