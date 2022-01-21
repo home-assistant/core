@@ -18,14 +18,14 @@ def accumulate_district(district: District) -> DistrictData:
         population=district.population,
         count=district.cases,
         deaths=district.deaths,
-        casesPerWeek=district.casesPerWeek,
+        cases_per_week=district.casesPerWeek,
         recovered=district.recovered,
-        weekIncidence=district.weekIncidence,
-        casesPer100k=district.casesPer100k,
-        newCases=district.newCases,
-        newDeaths=district.newDeaths,
-        newRecovered=district.newRecovered,
-        lastUpdate=district.lastUpdate,
+        week_incidence=district.weekIncidence,
+        cases_per100k=district.casesPer100k,
+        new_cases=district.newCases,
+        new_deaths=district.newDeaths,
+        new_recovered=district.newRecovered,
+        last_update=district.lastUpdate,
     )
 
 
@@ -38,14 +38,14 @@ def accumulate_country(country: Country) -> DistrictData:
         population=country.population,
         count=country.cases,
         deaths=country.deaths,
-        casesPerWeek=country.casesPerWeek,
+        cases_per_week=country.casesPerWeek,
         recovered=country.recovered,
-        weekIncidence=country.weekIncidence,
-        casesPer100k=country.casesPer100k,
-        newCases=country.newCases,
-        newDeaths=country.newDeaths,
-        newRecovered=country.newRecovered,
-        lastUpdate=country.lastUpdate,
+        week_incidence=country.weekIncidence,
+        cases_per100k=country.casesPer100k,
+        new_cases=country.newCases,
+        new_deaths=country.newDeaths,
+        new_recovered=country.newRecovered,
+        last_update=country.lastUpdate,
     )
 
 
@@ -58,26 +58,26 @@ def accumulate_state(name: str, state: State) -> StateData:
         population=state.population,
         count=state.cases,
         deaths=state.deaths,
-        casesPerWeek=state.casesPerWeek,
+        cases_per_week=state.casesPerWeek,
         recovered=state.recovered,
-        weekIncidence=state.weekIncidence,
-        casesPer100k=state.casesPer100k,
-        newCases=state.newCases,
-        newDeaths=state.newDeaths,
-        newRecovered=state.newRecovered,
-        lastUpdate=state.lastUpdate,
-        hospitalizationCasesBaby=state.hospitalizationCasesBaby,
-        hospitalizationIncidenceBaby=state.hospitalizationIncidenceBaby,
-        hospitalizationCasesChildren=state.hospitalizationCasesChildren,
-        hospitalizationIncidenceChildren=state.hospitalizationIncidenceChildren,
-        hospitalizationCasesTeen=state.hospitalizationCasesTeen,
-        hospitalizationIncidenceTeen=state.hospitalizationIncidenceTeen,
-        hospitalizationCasesGrown=state.hospitalizationCasesGrown,
-        hospitalizationIncidenceGrown=state.hospitalizationIncidenceGrown,
-        hospitalizationCasesSenior=state.hospitalizationCasesSenior,
-        hospitalizationIncidenceSenior=state.hospitalizationIncidenceSenior,
-        hospitalizationCasesOld=state.hospitalizationCasesOld,
-        hospitalizationIncidenceOld=state.hospitalizationIncidenceOld,
+        week_incidence=state.weekIncidence,
+        cases_per100k=state.casesPer100k,
+        new_cases=state.newCases,
+        new_deaths=state.newDeaths,
+        new_recovered=state.newRecovered,
+        last_update=state.lastUpdate,
+        hospitalization_cases_baby=state.hospitalizationCasesBaby,
+        hospitalization_incidence_baby=state.hospitalizationIncidenceBaby,
+        hospitalization_cases_children=state.hospitalizationCasesChildren,
+        hospitalization_incidence_children=state.hospitalizationIncidenceChildren,
+        hospitalization_cases_teen=state.hospitalizationCasesTeen,
+        hospitalization_incidence_teen=state.hospitalizationIncidenceTeen,
+        hospitalization_cases_grown=state.hospitalizationCasesGrown,
+        hospitalization_incidence_grown=state.hospitalizationIncidenceGrown,
+        hospitalization_cases_senior=state.hospitalizationCasesSenior,
+        hospitalization_incidence_senior=state.hospitalizationIncidenceSenior,
+        hospitalization_cases_old=state.hospitalizationCasesOld,
+        hospitalization_incidence_old=state.hospitalizationIncidenceOld,
     )
 
 
@@ -87,33 +87,33 @@ class DistrictData:
 
     name: str
     county: str | None
-    state: str
+    state: str | None
     population: str
     count: int
     deaths: int
-    casesPerWeek: int
+    cases_per_week: int
     recovered: int
-    weekIncidence: float
-    casesPer100k: float
-    newCases: int
-    newDeaths: int
-    newRecovered: int
-    lastUpdate: datetime
+    week_incidence: float
+    cases_per100k: float
+    new_cases: int
+    new_deaths: int
+    new_recovered: int
+    last_update: datetime
 
 
 @dataclass
 class StateData(DistrictData):
     """State representation class."""
 
-    hospitalizationCasesBaby: int | None
-    hospitalizationIncidenceBaby: float | None
-    hospitalizationCasesChildren: int | None
-    hospitalizationIncidenceChildren: float | None
-    hospitalizationCasesTeen: int | None
-    hospitalizationIncidenceTeen: float | None
-    hospitalizationCasesGrown: int | None
-    hospitalizationIncidenceGrown: float | None
-    hospitalizationCasesSenior: int | None
-    hospitalizationIncidenceSenior: float | None
-    hospitalizationCasesOld: int | None
-    hospitalizationIncidenceOld: float | None
+    hospitalization_cases_baby: int | None
+    hospitalization_incidence_baby: float | None
+    hospitalization_cases_children: int | None
+    hospitalization_incidence_children: float | None
+    hospitalization_cases_teen: int | None
+    hospitalization_incidence_teen: float | None
+    hospitalization_cases_grown: int | None
+    hospitalization_incidence_grown: float | None
+    hospitalization_cases_senior: int | None
+    hospitalization_incidence_senior: float | None
+    hospitalization_cases_old: int | None
+    hospitalization_incidence_old: float | None

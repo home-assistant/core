@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from homeassistant import config_entries, core
-from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
+from .coordinator import RkiCovidDataUpdateCoordinator
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,26 +28,26 @@ SENSORS = {
     "count": "mdi:virus",
     "deaths": "mdi:cross",
     "recovered": "mdi:bottle-tonic-plus-outline",
-    "weekIncidence": "mdi:clipboard-pulse",
-    "casesPer100k": "mdi:home-group",
-    "newCases": "mdi:shield-bug",
-    "newDeaths": "mdi:shield-cross",
-    "newRecovered": "mdi:shield-sync",
+    "week_incidence": "mdi:clipboard-pulse",
+    "cases_per100k": "mdi:home-group",
+    "new_cases": "mdi:shield-bug",
+    "new_deaths": "mdi:shield-cross",
+    "new_recovered": "mdi:shield-sync",
 }
 
 DISTRICT_SENSORS = {
-    "hospitalizationCasesBaby": "mdi:baby-face-outline",
-    "hospitalizationIncidenceBaby": "mdi:baby-face",
-    "hospitalizationCasesChildren": "mdi:account-child-outline",
-    "hospitalizationIncidenceChildren": "mdi:account-child",
-    "hospitalizationCasesTeen": "mdi:face-woman",
-    "hospitalizationIncidenceTeen": "mdi:face-woman-outline",
-    "hospitalizationCasesGrown": "mdi:face-man",
-    "hospitalizationIncidenceGrown": "mdi:face-man-outline",
-    "hospitalizationCasesSenior": "mdi:account-cowboy-hat-outline",
-    "hospitalizationIncidenceSenior": "mdi:account-cowboy-hat",
-    "hospitalizationCasesOld": "mdi:human-white-cane",
-    "hospitalizationIncidenceOld": "mdi:human-cane",
+    "hospitalization_cases_baby": "mdi:baby-face-outline",
+    "hospitalization_incidence_baby": "mdi:baby-face",
+    "hospitalization_cases_children": "mdi:account-child-outline",
+    "hospitalization_incidence_children": "mdi:account-child",
+    "hospitalization_cases_teen": "mdi:face-woman",
+    "hospitalization_incidence_teen": "mdi:face-woman-outline",
+    "hospitalization_cases_grown": "mdi:face-man",
+    "hospitalization_incidence_grown": "mdi:face-man-outline",
+    "hospitalization_cases_senior": "mdi:account-cowboy-hat-outline",
+    "hospitalization_incidence_senior": "mdi:account-cowboy-hat",
+    "hospitalization_cases_old": "mdi:human-white-cane",
+    "hospitalization_incidence_old": "mdi:human-cane",
 }
 
 
@@ -90,7 +90,7 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Create sensors from a config entry in the integrations UI."""
-    _LOGGER.debug(f"create sensor from config entry {config_entry.data}")
+    _LOGGER.debug("create sensor from config entry %s", config_entry.data)
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     if coordinator is None or coordinator.data is None:
@@ -124,7 +124,7 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
         info_type: str,
     ) -> None:
         """Initialize a new sensor."""
-        _LOGGER.debug(f"initialize {info_type} sensor for {district}")
+        _LOGGER.debug("initialize %s sensor for %s", info_type, district)
         super().__init__(coordinator)
 
         data = coordinator.data[district]
@@ -158,15 +158,15 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
         """Return unit of measurement."""
         if self.info_type in ("count", "deaths", "recovered"):
             return "people"
-        elif self.info_type in (
-            "weekIncidence",
-            "hospitalizationIncidenceBaby",
-            "hospitalizationIncidenceChildren",
-            "hospitalizationIncidenceTeen",
-            "hospitalizationIncidenceGrown",
-            "hospitalizationIncidenceSenior",
-            "hospitalizationIncidenceOld",
+
+        if self.info_type in (
+            "week_incidence",
+            "hospitalization_incidence_baby",
+            "hospitalization_incidence_children",
+            "hospitalization_incidence_teen",
+            "hospitalization_incidence_grown",
+            "hospitalization_incidence_senior",
+            "hospitalization_incidence_old",
         ):
             return "nb"
-        else:
-            return "cases"
+        return "cases"
