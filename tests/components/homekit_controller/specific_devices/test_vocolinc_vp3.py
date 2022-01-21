@@ -32,7 +32,7 @@ async def test_vocolinc_vp3_setup(hass):
                 EntityTestInfo(
                     entity_id="switch.vocolinc_vp3_123456",
                     friendly_name="VOCOlinc-VP3-123456",
-                    unique_id="homekit-EU0121203xxxxx07-7",
+                    unique_id="homekit-EU0121203xxxxx07-48",
                     state="off",
                 ),
                 EntityTestInfo(
