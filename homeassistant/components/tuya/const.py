@@ -192,6 +192,7 @@ class DPCode(StrEnum):
     ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
+    FAN_SPEED = "fan_speed"  # Fan speed
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
