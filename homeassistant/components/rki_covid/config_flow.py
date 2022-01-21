@@ -1,18 +1,21 @@
 """Make the component configurable via the UI."""
 from __future__ import annotations
+
+import asyncio
 import logging
 from typing import Any
+
+import aiohttp
+import async_timeout
+from rki_covid_parser.parser import RkiCovidParser
 import voluptuous as vol
-from .data import accumulate_country, accumulate_state, accumulate_district
+
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
-import aiohttp
-import asyncio
-import async_timeout
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from rki_covid_parser.parser import RkiCovidParser
 
 from .const import ATTR_COUNTY, DOMAIN
+from .data import accumulate_country, accumulate_district, accumulate_state
 
 _LOGGER = logging.getLogger(__name__)
 
