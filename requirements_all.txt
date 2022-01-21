@@ -902,7 +902,7 @@ ifaddr==0.1.7
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.7.0
+ihcsdk==2.7.5
 
 # homeassistant.components.incomfort
 incomfort-client==0.4.4
