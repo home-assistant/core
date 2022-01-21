@@ -81,11 +81,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         #
         # for FSD based fans, Enums are also used, under DPCode.FAN_SPEED
 
-        if (self.device.category == "fsd" or self.device.category == "kj") and (
-            DPCode.FAN_SPEED_ENUM in self.device.function
-            or DPCode.SPEED in self.device.function
-            or DPCode.FAN_SPEED in self.device.function
-        ):
+        if self.supported_features & SUPPORT_SET_SPEED:
             if DPCode.FAN_SPEED in self.device.function:
                 self.dp_code_speed_enum = DPCode.FAN_SPEED
             elif DPCode.FAN_SPEED_ENUM in self.device.function:
@@ -180,29 +176,22 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             return 0
 
         if (
-            (self.device.category == "kj" or self.device.category == "fsd")
+            self.supported_features & SUPPORT_SET_SPEED
             and self.fan_speed_range_len > 1
             and not self.fan_speed_range_enum
         ):
-            if DPCode.FAN_SPEED_ENUM in self.device.status:
-                # if air-purifier speed enumeration is supported we will prefer it.
-                return ordered_list_item_to_percentage(
-                    self.fan_speed_range_enum,
-                    self.device.status[DPCode.FAN_SPEED_ENUM],
-                )
-            elif DPCode.FAN_SPEED in self.device.status:
-                return ordered_list_item_to_percentage(
-                    self.fan_speed_range_enum,
-                    self.device.status[DPCode.FAN_SPEED],
-                )
-
+            # if air-purifier speed enumeration is supported we will prefer it.
+            return ordered_list_item_to_percentage(
+                self.fan_speed_range_enum,
+                self.device.status[self.dp_code_speed_enum],
+            )
         # some type may not have the fan_speed_percent key
         return self.device.status.get(DPCode.FAN_SPEED_PERCENT)
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        if self.device.category == "kj":
+        if self.supported_features & SUPPORT_SET_SPEED:
             return self.fan_speed_range_len
         return super().speed_count
 
