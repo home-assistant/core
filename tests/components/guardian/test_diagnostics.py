@@ -24,12 +24,12 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian
             "data": {
                 "ip_address": "192.168.1.100",
                 "port": 7777,
-                "uid": "3456",
+                "uid": REDACTED,
             },
         },
         "data": {
             "valve_controller": {
-                "sensor_pair_dump": {"pair_count": 1, "paired_uids": ["6309FB799CDE"]},
+                "sensor_pair_dump": {"pair_count": 1, "paired_uids": REDACTED},
                 "system_diagnostics": {
                     "codename": "gvc1",
                     "uid": "ABCDEF123456",
@@ -64,7 +64,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian
             },
             "paired_sensors": {
                 "AABBCCDDEEFF": {
-                    "uid": "AABBCCDDEEFF",
+                    "uid": REDACTED,
                     "codename": "gld1",
                     "temperature": 68,
                     "wet": False,

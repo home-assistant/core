@@ -7,7 +7,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_COORDINATOR, DATA_COORDINATOR_PAIRED_SENSOR, DOMAIN
+from .const import CONF_UID, DATA_COORDINATOR, DATA_COORDINATOR_PAIRED_SENSOR, DOMAIN
 from .util import GuardianDataUpdateCoordinator
 
 CONF_BSSID = "bssid"
@@ -16,6 +16,7 @@ CONF_SSID = "ssid"
 TO_REDACT = {
     CONF_BSSID,
     CONF_SSID,
+    CONF_UID,
 }
 
 
