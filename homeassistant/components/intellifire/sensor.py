@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from intellifire4py import IntellifirePollData
 
-from homeassistant.components.intellifire import IntellifireDataUpdateCoordinator
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -23,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
 
 
