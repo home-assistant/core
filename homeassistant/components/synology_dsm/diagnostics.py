@@ -3,11 +3,15 @@ from __future__ import annotations
 
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import SynoApi
-from .const import DOMAIN, SYNO_API, SYSTEM_LOADED
+from .const import CONF_DEVICE_TOKEN, DOMAIN, SYNO_API, SYSTEM_LOADED
+
+TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_TOKEN]
 
 
 async def async_get_config_entry_diagnostics(
@@ -19,14 +23,7 @@ async def async_get_config_entry_diagnostics(
     dsm_info = syno_api.dsm.information
 
     diag_data = {
-        "entry": {
-            "title": entry.title,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-            "disable_new_entities": entry.pref_disable_new_entities,
-            "disable_polling": entry.pref_disable_polling,
-            "options": {k: v for k, v in entry.options.items()},
-        },
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": {
             "model": dsm_info.model,
             "version": dsm_info.version_string,
