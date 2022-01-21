@@ -269,3 +269,47 @@ async def test_zeroconf_flow_already_configured(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_success(hass):
+    """Test reauthentication flow."""
+    with patch(
+        "pyoverkiz.client.OverkizClient.login", side_effect=BadCredentialsException
+    ):
+        mock_entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=TEST_GATEWAY_ID,
+            data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB2},
+        )
+        mock_entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "unique_id": mock_entry.unique_id,
+                "entry_id": mock_entry.entry_id,
+            },
+            data=mock_entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways",
+        return_value=MOCK_GATEWAY_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD2,
+                "hub": TEST_HUB2,
+            },
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
+        assert mock_entry.data["username"] == TEST_EMAIL
+        assert mock_entry.data["password"] == TEST_PASSWORD2
