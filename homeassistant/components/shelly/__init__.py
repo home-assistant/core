@@ -292,7 +292,6 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.hass = hass
         self.entry = entry
         self.device = device
-        self.sw_version: str | None = None
 
         self._debounced_reload = Debouncer(
             hass,
@@ -429,12 +428,14 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
+    @property
+    def sw_version(self) -> str:
+        """Firmware version of the device."""
+        return self.device.firmware_version if self.device.initialized else ""
+
     def async_setup(self) -> None:
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
-        self.sw_version = (
-            self.device.firmware_version if self.device.initialized else ""
-        )
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
@@ -631,7 +632,6 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.entry = entry
         self.device = device
-        self.sw_version: str | None = None
 
         self._debounced_reload = Debouncer(
             hass,
@@ -717,12 +717,14 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
+    @property
+    def sw_version(self) -> str:
+        """Firmware version of the device."""
+        return self.device.firmware_version if self.device.initialized else ""
+
     def async_setup(self) -> None:
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
-        self.sw_version = (
-            self.device.firmware_version if self.device.initialized else ""
-        )
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
