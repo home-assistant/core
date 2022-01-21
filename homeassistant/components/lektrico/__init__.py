@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Unable to connect") from exception
 
     settings = await charger.charger_config()
-    _lektrico_device = LektricoDevice(
+    _lektrico_device = LektricoDeviceDataUpdateCoordinator(
         charger, hass, entry.data[CONF_FRIENDLY_NAME], settings
     )
 
@@ -62,7 +62,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class LektricoDevice(DataUpdateCoordinator):
+class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """The device class for Lektrico charger."""
 
     _last_client_refresh = datetime.min

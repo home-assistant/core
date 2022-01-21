@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LektricoDevice
+from . import LektricoDeviceDataUpdateCoordinator
 from .const import DOMAIN
 
 
@@ -247,7 +247,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    _lektrico_device: LektricoDevice = hass.data[DOMAIN][entry.entry_id]
+    _lektrico_device: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
 
     sensors = [
         LektricoSensor(
@@ -269,7 +271,7 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         description: LektricoSensorEntityDescription,
-        _lektrico_device: LektricoDevice,
+        _lektrico_device: LektricoDeviceDataUpdateCoordinator,
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
