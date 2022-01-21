@@ -7,7 +7,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import DATA_PAIRED_SENSOR_MANAGER, PairedSensorManager
 from .const import DATA_COORDINATOR, DATA_COORDINATOR_PAIRED_SENSOR, DOMAIN
 from .util import GuardianDataUpdateCoordinator
 
@@ -30,10 +29,6 @@ async def async_get_config_entry_diagnostics(
     paired_sensor_coordinators: dict[str, GuardianDataUpdateCoordinator] = data[
         DATA_COORDINATOR_PAIRED_SENSOR
     ]
-    paired_sensor_manager: PairedSensorManager = data[DATA_PAIRED_SENSOR_MANAGER]
-
-    # Simulate the pairing of a paired sensor:
-    await paired_sensor_manager.async_pair_sensor("AABBCCDDEEFF")
 
     return {
         "entry": {
