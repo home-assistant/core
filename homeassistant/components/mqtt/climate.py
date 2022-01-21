@@ -125,6 +125,8 @@ CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
 
+PAYLOAD_NONE = "None"
+
 MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
     {
         climate.ATTR_AUX_HEAT,
@@ -441,6 +443,12 @@ class MqttClimate(MqttEntity, ClimateEntity):
             if payload in CURRENT_HVAC_ACTIONS:
                 self._action = payload
                 self.async_write_ha_state()
+            elif not payload or payload == PAYLOAD_NONE:
+                _LOGGER.debug(
+                    "Invalid %s action: %s, ignoring",
+                    CURRENT_HVAC_ACTIONS,
+                    payload,
+                )
             else:
                 _LOGGER.warning(
                     "Invalid %s action: %s",
