@@ -40,7 +40,12 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_TIMEOUT = 8
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import the yaml config to a config flow."""
     data = {
         CONF_NAME: config[CONF_NAME],
