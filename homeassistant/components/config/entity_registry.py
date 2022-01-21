@@ -86,6 +86,8 @@ def websocket_get_entity(hass, connection, msg):
                 er.RegistryEntryHider.USER.value,
             ),
         ),
+        vol.Inclusive("options_domain", "entity_option"): str,
+        vol.Inclusive("options", "entity_option"): vol.Any(None, dict),
     }
 )
 @callback
@@ -96,7 +98,8 @@ def websocket_update_entity(hass, connection, msg):
     """
     registry = er.async_get(hass)
 
-    if msg["entity_id"] not in registry.entities:
+    entity_id = msg["entity_id"]
+    if entity_id not in registry.entities:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )
@@ -108,7 +111,7 @@ def websocket_update_entity(hass, connection, msg):
         if key in msg:
             changes[key] = msg[key]
 
-    if "new_entity_id" in msg and msg["new_entity_id"] != msg["entity_id"]:
+    if "new_entity_id" in msg and msg["new_entity_id"] != entity_id:
         changes["new_entity_id"] = msg["new_entity_id"]
         if hass.states.get(msg["new_entity_id"]) is not None:
             connection.send_message(
@@ -122,7 +125,7 @@ def websocket_update_entity(hass, connection, msg):
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
-        entity = registry.entities[msg["entity_id"]]
+        entity = registry.entities[entity_id]
         if entity.device_id:
             device_registry = dr.async_get(hass)
             device = device_registry.async_get(entity.device_id)
@@ -136,12 +139,28 @@ def websocket_update_entity(hass, connection, msg):
 
     try:
         if changes:
-            entry = registry.async_update_entity(msg["entity_id"], **changes)
+            registry.async_update_entity(entity_id, **changes)
     except ValueError as err:
         connection.send_message(
             websocket_api.error_message(msg["id"], "invalid_info", str(err))
         )
         return
+
+    if "new_entity_id" in msg:
+        entity_id = msg["new_entity_id"]
+
+    try:
+        if "options_domain" in msg:
+            registry.async_update_entity_options(
+                entity_id, msg["options_domain"], msg["options"]
+            )
+    except ValueError as err:
+        connection.send_message(
+            websocket_api.error_message(msg["id"], "invalid_info", str(err))
+        )
+        return
+
+    entry = registry.async_get(entity_id)
     result = {"entity_entry": _entry_ext_dict(entry)}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         # Enabling an entity requires a config entry reload, or HA restart
@@ -201,6 +220,7 @@ def _entry_ext_dict(entry):
     data = _entry_dict(entry)
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
+    data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
     data["original_name"] = entry.original_name
