@@ -76,8 +76,6 @@ async def _process_media_source_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a media source platform."""
-    if not hasattr(platform, "async_get_media_source"):
-        return
     hass.data[DOMAIN][domain] = await platform.async_get_media_source(hass)
 
 
@@ -168,7 +166,6 @@ async def websocket_resolve_media(
                 hass,
                 quote(url),
                 timedelta(seconds=msg["expires"]),
-                refresh_token_id=connection.refresh_token_id,
             )
 
         connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
