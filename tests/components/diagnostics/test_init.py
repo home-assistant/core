@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.setup import async_setup_component
 
 from . import get_diagnostics_for_config_entry, get_diagnostics_for_device
@@ -77,9 +78,19 @@ async def test_download_diagnostics(hass, hass_client):
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
     config_entry.add_to_hass(hass)
+    hass_sys_info = await async_get_system_info(hass)
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "config_entry": "info"
+        "home-assistant": hass_sys_info,
+        "integration-manifest": {
+            "codeowners": [],
+            "dependencies": [],
+            "domain": "fake_integration",
+            "is_built_in": True,
+            "name": "fake_integration",
+            "requirements": [],
+        },
+        "diagnostics-data": {"config_entry": "info"},
     }
 
     dev_reg = async_get(hass)
@@ -89,7 +100,18 @@ async def test_download_diagnostics(hass, hass_client):
 
     assert await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
-    ) == {"device": "info"}
+    ) == {
+        "home-assistant": hass_sys_info,
+        "integration-manifest": {
+            "codeowners": [],
+            "dependencies": [],
+            "domain": "fake_integration",
+            "is_built_in": True,
+            "name": "fake_integration",
+            "requirements": [],
+        },
+        "diagnostics-data": {"device": "info"},
+    }
 
 
 async def test_failure_scenarios(hass, hass_client):
