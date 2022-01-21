@@ -64,26 +64,6 @@ def _doors_open(data):
     )
 
 
-def _trunk_open(data):
-    """Determine if the vehicle trunk is open."""
-    return data["status"]["doors"]["trunkOpen"]
-
-
-def _hood_open(data):
-    """Determine if the vehicle hood is open."""
-    return data["status"]["doors"]["hoodOpen"]
-
-
-def _vehicle_is_plugged_in(data):
-    """Determine if vehicle is plugged in."""
-    return data["evStatus"]["chargeInfo"]["pluggedIn"]
-
-
-def _vehicle_is_charging(data):
-    """Determine if vehicle is charging."""
-    return data["evStatus"]["chargeInfo"]["charging"]
-
-
 def _doors_state_attributes(data):
     """Get state attributes for the vehicle doors."""
     door_status = data["status"]["doors"]
@@ -110,28 +90,28 @@ BINARY_SENSOR_ENTITIES = [
         name_suffix="Trunk",
         icon="mdi:car-back",
         device_class=BinarySensorDeviceClass.DOOR,
-        value=_trunk_open,
+        value=lambda data: data["status"]["doors"]["trunkOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="hood",
         name_suffix="Hood",
         icon="mdi:car",
         device_class=BinarySensorDeviceClass.DOOR,
-        value=_hood_open,
+        value=lambda data: data["status"]["doors"]["hoodOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="ev_plugged_in",
         name_suffix="Plugged In",
         device_class=BinarySensorDeviceClass.PLUG,
         is_supported=_plugged_in_supported,
-        value=_vehicle_is_plugged_in,
+        value=lambda data: data["evStatus"]["chargeInfo"]["pluggedIn"],
     ),
     MazdaBinarySensorEntityDescription(
         key="ev_charging",
         name_suffix="Charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         is_supported=_charging_supported,
-        value=_vehicle_is_charging,
+        value=lambda data: data["evStatus"]["chargeInfo"]["charging"],
     ),
 ]
 
