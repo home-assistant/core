@@ -12,7 +12,7 @@ from tests.components.homekit_controller.common import (
 )
 
 
-async def test_koogeek_p1eu_setup(hass):
+async def test_vocolinc_vp3_setup(hass):
     """Test that a VOCOlinc VP3 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "vocolinc_vp3.json")
     await setup_test_accessories(hass, accessories)
@@ -25,7 +25,7 @@ async def test_koogeek_p1eu_setup(hass):
             model="VP3",
             manufacturer="VOCOlinc",
             sw_version="1.101.2",
-            hw_version="",
+            hw_version="1.0.3",
             serial_number="EU0121203xxxxx07",
             devices=[],
             entities=[
