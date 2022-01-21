@@ -1,19 +1,9 @@
 """Switches for AVM Fritz!Box functions."""
 from __future__ import annotations
 
-from collections import OrderedDict
-from functools import partial
 import logging
 from typing import Any
 
-from fritzconnection.core.exceptions import (
-    FritzActionError,
-    FritzActionFailedError,
-    FritzConnectionException,
-    FritzLookUpError,
-    FritzSecurityError,
-    FritzServiceError,
-)
 import xmltodict
 
 from homeassistant.components.network import async_get_source_ip
@@ -47,92 +37,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_service_call_action(
-    avm_wrapper: AvmWrapper,
-    service_name: str,
-    service_suffix: str | None,
-    action_name: str,
-    **kwargs: Any,
-) -> None | dict:
-    """Return service details."""
-    return await avm_wrapper.hass.async_add_executor_job(
-        partial(
-            service_call_action,
-            avm_wrapper,
-            service_name,
-            service_suffix,
-            action_name,
-            **kwargs,
-        )
-    )
-
-
-def service_call_action(
-    avm_wrapper: AvmWrapper,
-    service_name: str,
-    service_suffix: str | None,
-    action_name: str,
-    **kwargs: Any,
-) -> dict | None:
-    """Return service details."""
-
-    if f"{service_name}{service_suffix}" not in avm_wrapper.connection.services:
-        return None
-
-    try:
-        return avm_wrapper.connection.call_action(  # type: ignore[no-any-return]
-            f"{service_name}:{service_suffix}",
-            action_name,
-            **kwargs,
-        )
-    except FritzSecurityError:
-        _LOGGER.error(
-            "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
-            exc_info=True,
-        )
-        return None
-    except (
-        FritzActionError,
-        FritzActionFailedError,
-        FritzServiceError,
-        FritzLookUpError,
-    ):
-        _LOGGER.error(
-            "Service/Action Error: cannot execute service %s with action %s",
-            service_name,
-            action_name,
-            exc_info=True,
-        )
-        return None
-    except FritzConnectionException:
-        _LOGGER.error(
-            "Connection Error: Please check the device is properly configured for remote login",
-            exc_info=True,
-        )
-        return None
-
-
-def get_deflections(
-    avm_wrapper: AvmWrapper, service_name: str
-) -> list[OrderedDict[Any, Any]] | None:
-    """Get deflection switch info."""
-
-    deflection_list = service_call_action(
-        avm_wrapper,
-        service_name,
-        "1",
-        "GetDeflections",
-    )
-
-    if not deflection_list:
-        return []
-
-    items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
-    if not isinstance(items, list):
-        return [items]
-    return items
-
-
 def deflection_entities_list(
     avm_wrapper: AvmWrapper, device_friendly_name: str
 ) -> list[FritzBoxDeflectionSwitch]:
@@ -140,10 +44,7 @@ def deflection_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
-    service_name = "X_AVM-DE_OnTel"
-    deflections_response = service_call_action(
-        avm_wrapper, service_name, "1", "GetNumberOfDeflections"
-    )
+    deflections_response = avm_wrapper.get_ontel_num_deflections()
     if not deflections_response:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
@@ -158,13 +59,18 @@ def deflection_entities_list(
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
-    deflection_list = get_deflections(avm_wrapper, service_name)
-    if deflection_list is None:
+    deflection_list = avm_wrapper.get_ontel_deflections()
+
+    if not deflection_list:
         return []
+
+    items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
+    if not isinstance(items, list):
+        items = [items]
 
     return [
         FritzBoxDeflectionSwitch(avm_wrapper, device_friendly_name, dict_of_deflection)
-        for dict_of_deflection in deflection_list
+        for dict_of_deflection in items
     ]
 
 
@@ -175,10 +81,7 @@ def port_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
     entities_list: list[FritzBoxPortSwitch] = []
-    service_name = "Layer3Forwarding"
-    connection_type = service_call_action(
-        avm_wrapper, service_name, "1", "GetDefaultConnectionService"
-    )
+    connection_type = avm_wrapper.get_default_connection()
     if not connection_type:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
         return []
@@ -187,9 +90,7 @@ def port_entities_list(
     con_type: str = connection_type["NewDefaultConnectionService"][2:][:-2]
 
     # Query port forwardings and setup a switch for each forward for the current device
-    resp = service_call_action(
-        avm_wrapper, con_type, "1", "GetPortMappingNumberOfEntries"
-    )
+    resp = avm_wrapper.get_num_port_mapping(con_type)
     if not resp:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
@@ -206,14 +107,7 @@ def port_entities_list(
 
     for i in range(port_forwards_count):
 
-        portmap = service_call_action(
-            avm_wrapper,
-            con_type,
-            "1",
-            "GetGenericPortMappingEntry",
-            NewPortMappingIndex=i,
-        )
-
+        portmap = avm_wrapper.get_port_mapping(con_type, i)
         if not portmap:
             _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
             continue
@@ -260,9 +154,7 @@ def wifi_entities_list(
         if not ("WLANConfiguration" + str(i)) in avm_wrapper.connection.services:
             continue
 
-        network_info = service_call_action(
-            avm_wrapper, "WLANConfiguration", str(i), "GetInfo"
-        )
+        network_info = avm_wrapper.get_wlan_configuration(i)
         if network_info:
             ssid = network_info["NewSSID"]
             _LOGGER.debug("SSID from device: <%s>", ssid)
@@ -462,24 +354,20 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             icon="mdi:check-network",
             type=SWITCH_TYPE_PORTFORWARD,
             callback_update=self._async_fetch_update,
-            callback_switch=self._async_handle_port_switch_on_off,
+            callback_switch=self._async_switch_on_off_executor,
         )
         super().__init__(avm_wrapper, device_friendly_name, switch_info)
 
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
-        self.port_mapping = await async_service_call_action(
-            self._avm_wrapper,
-            self.connection_type,
-            "1",
-            "GetGenericPortMappingEntry",
-            NewPortMappingIndex=self._idx,
+        self.port_mapping = await self._avm_wrapper.async_get_port_mapping(
+            self.connection_type, self._idx
         )
         _LOGGER.debug(
             "Specific %s response: %s", SWITCH_TYPE_PORTFORWARD, self.port_mapping
         )
-        if self.port_mapping is None:
+        if not self.port_mapping:
             self._is_available = False
             return
 
@@ -497,21 +385,16 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         for key, attr in attributes_dict.items():
             self._attributes[attr] = self.port_mapping[key]
 
-    async def _async_handle_port_switch_on_off(self, turn_on: bool) -> bool:
+    async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
 
         if self.port_mapping is None:
             return False
 
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
 
-        resp = await async_service_call_action(
-            self._avm_wrapper,
-            self.connection_type,
-            "1",
-            "AddPortMapping",
-            **self.port_mapping,
+        resp = await self._avm_wrapper.async_add_port_mapping(
+            self.connection_type, self.port_mapping
         )
-
         return bool(resp is not None)
 
 
@@ -545,9 +428,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
-        resp = await async_service_call_action(
-            self._avm_wrapper, "X_AVM-DE_OnTel", "1", "GetDeflections"
-        )
+        resp = await self._avm_wrapper.async_get_ontel_deflections()
         if not resp:
             self._is_available = False
             return
@@ -579,14 +460,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle deflection switch."""
-        await async_service_call_action(
-            self._avm_wrapper,
-            "X_AVM-DE_OnTel",
-            "1",
-            "SetDeflectionEnable",
-            NewDeflectionId=self.id,
-            NewEnable="1" if turn_on else "0",
-        )
+        await self._avm_wrapper.async_set_deflection_enable(self.id, turn_on)
 
 
 class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
@@ -632,20 +506,11 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
-        await self._async_switch_on_off(turn_on)
+        if not self.ip_address:
+            return False
+        await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
         self.async_write_ha_state()
         return True
-
-    async def _async_switch_on_off(self, turn_on: bool) -> None:
-        """Handle parental control switch."""
-        await async_service_call_action(
-            self._avm_wrapper,
-            "X_AVM-DE_HostFilter",
-            "1",
-            "DisallowWANAccessByIP",
-            NewIPv4Address=self.ip_address,
-            NewDisallow="0" if turn_on else "1",
-        )
 
 
 class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
@@ -678,17 +543,14 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
-        wifi_info = await async_service_call_action(
-            self._avm_wrapper,
-            "WLANConfiguration",
-            str(self._network_num),
-            "GetInfo",
+        wifi_info = await self._avm_wrapper.async_get_wlan_configuration(
+            self._network_num
         )
         _LOGGER.debug(
             "Specific %s response: GetInfo=%s", SWITCH_TYPE_WIFINETWORK, wifi_info
         )
 
-        if wifi_info is None:
+        if not wifi_info:
             self._is_available = False
             return
 
@@ -704,10 +566,4 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle wifi switch."""
-        await async_service_call_action(
-            self._avm_wrapper,
-            "WLANConfiguration",
-            str(self._network_num),
-            "SetEnable",
-            NewEnable="1" if turn_on else "0",
-        )
+        await self._avm_wrapper.async_set_wlan_configuration(self._network_num, turn_on)
