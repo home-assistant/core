@@ -17,7 +17,6 @@ from homeassistant.components.upnp.const import (
     WAN_STATUS,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from .conftest import MockIgdDevice
 
@@ -26,6 +25,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEntry):
     """Test normal sensors."""
+    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][
+        setup_integration.entry_id
+    ]
     # First poll.
     b_received_state = hass.states.get("sensor.mock_name_b_received")
     b_sent_state = hass.states.get("sensor.mock_name_b_sent")
@@ -55,9 +57,8 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
         ROUTER_UPTIME: 100,
         ROUTER_IP: "",
     }
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
-    )
+    now = coordinator.data[TIMESTAMP]
+    async_fire_time_changed(hass, now + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     await hass.async_block_till_done()
 
     b_received_state = hass.states.get("sensor.mock_name_b_received")
@@ -105,9 +106,7 @@ async def test_derived_upnp_sensors(
             PACKETS_RECEIVED: int(30 * DEFAULT_SCAN_INTERVAL),
             PACKETS_SENT: int(40 * DEFAULT_SCAN_INTERVAL),
         }
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
-        )
+        async_fire_time_changed(hass, now + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
         await hass.async_block_till_done()
 
         kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")
