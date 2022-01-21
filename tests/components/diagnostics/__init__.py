@@ -13,7 +13,8 @@ async def get_diagnostics_for_config_entry(hass, hass_client, config_entry):
         f"/api/diagnostics/config_entry/{config_entry.entry_id}"
     )
     assert response.status == HTTPStatus.OK
-    return await response.json()
+    data = await response.json()
+    return data["diagnostics-data"]
 
 
 async def get_diagnostics_for_device(hass, hass_client, config_entry, device):
@@ -25,4 +26,5 @@ async def get_diagnostics_for_device(hass, hass_client, config_entry, device):
         f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/{device.id}"
     )
     assert response.status == HTTPStatus.OK
-    return await response.json()
+    data = await response.json()
+    return data["diagnostics-data"]
