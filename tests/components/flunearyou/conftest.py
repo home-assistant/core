@@ -38,7 +38,7 @@ def data_cdc_fixture():
 async def setup_flunearyou_fixture(hass, config, data_cdc):
     """Define a fixture to set up Flu Near You."""
     with patch(
-        "pyflunearyou.cdc.CdcReport.status_by_coordinates", side_effect=data_cdc
+        "pyflunearyou.cdc.CdcReport.status_by_coordinates", return_value=data_cdc
     ), patch("pyflunearyou.user.UserReport.status_by_coordinates"), patch(
         "homeassistant.components.flunearyou.PLATFORMS", []
     ):
