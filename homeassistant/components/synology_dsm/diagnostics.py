@@ -25,6 +25,7 @@ async def async_get_config_entry_diagnostics(
             "unique_id": entry.unique_id,
             "disable_new_entities": entry.pref_disable_new_entities,
             "disable_polling": entry.pref_disable_polling,
+            "options": {k: v for k, v in entry.options.items()},
         },
         "device_info": {
             "model": dsm_info.model,
