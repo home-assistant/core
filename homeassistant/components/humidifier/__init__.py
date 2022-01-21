@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -42,6 +42,8 @@ from .const import (  # noqa: F401
     SERVICE_SET_MODE,
     SUPPORT_MODES,
 )
+
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE"]
 
 _LOGGER = logging.getLogger(__name__)
 

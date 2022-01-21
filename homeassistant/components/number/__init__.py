@@ -12,7 +12,7 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -31,6 +31,8 @@ from .const import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
+
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE"]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

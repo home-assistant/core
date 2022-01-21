@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -25,6 +25,8 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE"]
 
 DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)

@@ -56,7 +56,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     datetime,
@@ -127,6 +127,8 @@ from .const import (
     SUPPORT_VOLUME_STEP,
 )
 from .errors import BrowseError
+
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE", "datetime"]
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

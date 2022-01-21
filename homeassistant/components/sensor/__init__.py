@@ -47,7 +47,7 @@ from homeassistant.const import (  # noqa: F401
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -56,6 +56,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import CONF_STATE_CLASS  # noqa: F401
+
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE"]
 
 _LOGGER: Final = logging.getLogger(__name__)
 

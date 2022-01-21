@@ -20,7 +20,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
@@ -35,6 +35,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE", "make_entity_service_schema"]
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
