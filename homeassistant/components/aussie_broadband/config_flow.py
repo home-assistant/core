@@ -21,7 +21,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aussie Broadband."""
 
     VERSION = 1
-    _reauth_username: str
 
     def __init__(self):
         """Initialize the config flow."""
@@ -29,8 +28,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.options: dict = {CONF_SERVICES: []}
         self.services: list[dict[str]] = []
         self.client: AussieBB | None = None
+        self._reauth_username = str | None = None
 
-    async def auth(self, user_input: dict[str, str]) -> dict[str, str] | None:
+    async def async_auth(self, user_input: dict[str, str]) -> dict[str, str] | None:
         """Reusable Auth Helper."""
         self.client = AussieBB(
             user_input[CONF_USERNAME],
