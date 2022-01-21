@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,6 +28,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
     VERSION = 1
+
+    _config_entry: ConfigEntry | None = None
+    _default_user: None | str = None
+    _default_hub: str = DEFAULT_HUB
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate user credentials."""
@@ -67,7 +72,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
             else:
+                if self._config_entry:
+                    # Update existing entry during reauth
+                    self.hass.config_entries.async_update_entry(
+                        self._config_entry,
+                        data={
+                            **self._config_entry.data,
+                            **user_input,
+                        },
+                    )
+
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self._config_entry.entry_id
+                        )
+                    )
+
+                    return self.async_abort(reason="reauth_successful")
+
+                # Create new entry
                 self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -76,9 +101,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_USERNAME, default=self._default_user): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_HUB, default=DEFAULT_HUB): vol.In(
+                    vol.Required(CONF_HUB, default=self._default_hub): vol.In(
                         {key: hub.name for key, hub in SUPPORTED_SERVERS.items()}
                     ),
                 }
@@ -113,3 +138,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return await self.async_step_user()
+
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle reauth."""
+        self._config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+
+        if self._config_entry:
+            self._default_user = self._config_entry.data[CONF_USERNAME]
+            self._default_hub = self._config_entry.data[CONF_HUB]
+
+        return await self.async_step_user(user_input)
