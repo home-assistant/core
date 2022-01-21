@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Host"
                 },
-                "description": "No se ha descubierto ning\u00fan dispositivo Roomba ni Braava en tu red. El BLID es la parte del nombre de host del dispositivo despu\u00e9s de 'iRobot-'. Por favor, sigue los pasos descritos en la documentaci\u00f3n en: {auth_help_url}",
+                "description": "No se ha descubierto ning\u00fan dispositivo Roomba ni Braava en tu red.",
                 "title": "Conectar manualmente con el dispositivo"
             },
             "user": {

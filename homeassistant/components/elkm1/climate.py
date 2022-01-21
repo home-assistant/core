@@ -1,4 +1,6 @@
 """Support for control of Elk-M1 connected thermostats."""
+from __future__ import annotations
+
 from elkm1_lib.const import ThermostatFan, ThermostatMode, ThermostatSetting
 
 from homeassistant.components.climate import ClimateEntity
@@ -14,7 +16,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_WHOLE, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
@@ -28,10 +33,14 @@ SUPPORT_HVAC = [
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Create the Elk-M1 thermostat platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
+    entities: list[ElkThermostat] = []
     elk = elk_data["elk"]
     create_elk_entities(
         elk_data, elk.thermostats, "thermostat", ElkThermostat, entities
@@ -65,8 +74,9 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we are trying to reach."""
-        if (self._element.mode == ThermostatMode.HEAT.value) or (
-            self._element.mode == ThermostatMode.EMERGENCY_HEAT.value
+        if self._element.mode in (
+            ThermostatMode.HEAT.value,
+            ThermostatMode.EMERGENCY_HEAT.value,
         ):
             return self._element.heat_setpoint
         if self._element.mode == ThermostatMode.COOL.value:

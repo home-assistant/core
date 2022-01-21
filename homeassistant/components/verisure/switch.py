@@ -42,21 +42,22 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._change_timestamp = 0
+        self._change_timestamp: float = 0
         self._state = False
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["smart_plugs"][self.serial_number]["area"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": "SmartPlug",
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model="SmartPlug",
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def is_on(self) -> bool:

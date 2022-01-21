@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "kamereon_no_account": "Kan ikke finne Kamereon -kontoen."
+            "kamereon_no_account": "Finner ikke Kamereon-konto",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "invalid_credentials": "Ugyldig godkjenning"
@@ -14,11 +15,18 @@
                 },
                 "title": "Velg Kamereon -konto -ID"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Oppdater passordet ditt for {username}",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "locale": "Lokal",
                     "password": "Passord",
-                    "username": "E-Post"
+                    "username": "E-post"
                 },
                 "title": "Angi Renault-legitimasjon"
             }

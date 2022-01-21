@@ -1,4 +1,4 @@
-"""Standard conversastion implementation for Home Assistant."""
+"""Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
 import re
@@ -66,9 +66,7 @@ class DefaultAgent(AbstractConversationAgent):
         intents = self.hass.data.setdefault(DOMAIN, {})
 
         for intent_type, utterances in config.get("intents", {}).items():
-            conf = intents.get(intent_type)
-
-            if conf is None:
+            if (conf := intents.get(intent_type)) is None:
                 conf = intents[intent_type] = []
 
             conf.extend(create_matcher(utterance) for utterance in utterances)
@@ -120,9 +118,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         for intent_type, matchers in intents.items():
             for matcher in matchers:
-                match = matcher.match(text)
-
-                if not match:
+                if not (match := matcher.match(text)):
                     continue
 
                 return await intent.async_handle(

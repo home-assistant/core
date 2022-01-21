@@ -44,14 +44,16 @@ async def setup_entry(hass, entry):
 
 async def test_setup_entry_fails(hass):
     """Test setup entry fails if deCONZ is not available."""
-    with patch("pydeconz.DeconzSession.initialize", side_effect=Exception):
+    with patch("pydeconz.DeconzSession.refresh_state", side_effect=Exception):
         await setup_deconz_integration(hass)
     assert not hass.data[DECONZ_DOMAIN]
 
 
 async def test_setup_entry_no_available_bridge(hass):
     """Test setup entry fails if deCONZ is not available."""
-    with patch("pydeconz.DeconzSession.initialize", side_effect=asyncio.TimeoutError):
+    with patch(
+        "pydeconz.DeconzSession.refresh_state", side_effect=asyncio.TimeoutError
+    ):
         await setup_deconz_integration(hass)
     assert not hass.data[DECONZ_DOMAIN]
 

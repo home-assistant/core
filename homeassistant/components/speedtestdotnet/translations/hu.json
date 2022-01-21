@@ -6,7 +6,7 @@
         },
         "step": {
             "user": {
-                "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?"
+                "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?"
             }
         }
     },
@@ -16,7 +16,7 @@
                 "data": {
                     "manual": "Automatikus friss\u00edt\u00e9s letilt\u00e1sa",
                     "scan_interval": "Friss\u00edt\u00e9si gyakoris\u00e1g (perc)",
-                    "server_name": "V\u00e1laszd ki a teszt szervert"
+                    "server_name": "V\u00e1lassza ki a teszt szervert"
                 }
             }
         }

@@ -10,15 +10,11 @@ from sqlalchemy import and_, bindparam, func
 from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.models import (
-    States,
-    process_timestamp_to_utc_isoformat,
-)
-from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .models import LazyState
+from .models import LazyState, States, process_timestamp_to_utc_isoformat
+from .util import execute, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -61,12 +57,12 @@ def async_setup(hass):
 
 
 def get_significant_states(hass, *args, **kwargs):
-    """Wrap _get_significant_states with a sql session."""
+    """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
-        return _get_significant_states(hass, session, *args, **kwargs)
+        return get_significant_states_with_session(hass, session, *args, **kwargs)
 
 
-def _get_significant_states(
+def get_significant_states_with_session(
     hass,
     session,
     start_time,
@@ -79,6 +75,11 @@ def _get_significant_states(
 ):
     """
     Return states changes during UTC period start_time - end_time.
+
+    entity_ids is an optional iterable of entities to include in the results.
+
+    filters is an optional SQLAlchemy filter which will be applied to the database
+    queries unless entity_ids is given, in which case its ignored.
 
     Significant states are all states where there is a state change,
     as well as all states from certain domains (for instance
@@ -240,47 +241,63 @@ def _get_states_with_session(
         if run is None:
             return []
 
-    # We have more than one entity to look at (most commonly we want
-    # all entities,) so we need to do a search on all states since the
-    # last recorder run started.
+    # We have more than one entity to look at so we need to do a query on states
+    # since the last recorder run started.
     query = session.query(*QUERY_STATES)
 
-    most_recent_states_by_date = session.query(
-        States.entity_id.label("max_entity_id"),
-        func.max(States.last_updated).label("max_last_updated"),
-    ).filter(
-        (States.last_updated >= run.start) & (States.last_updated < utc_point_in_time)
-    )
-
     if entity_ids:
-        most_recent_states_by_date.filter(States.entity_id.in_(entity_ids))
-
-    most_recent_states_by_date = most_recent_states_by_date.group_by(States.entity_id)
-
-    most_recent_states_by_date = most_recent_states_by_date.subquery()
-
-    most_recent_state_ids = session.query(
-        func.max(States.state_id).label("max_state_id")
-    ).join(
-        most_recent_states_by_date,
-        and_(
-            States.entity_id == most_recent_states_by_date.c.max_entity_id,
-            States.last_updated == most_recent_states_by_date.c.max_last_updated,
-        ),
-    )
-
-    most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
-
-    most_recent_state_ids = most_recent_state_ids.subquery()
-
-    query = query.join(
-        most_recent_state_ids,
-        States.state_id == most_recent_state_ids.c.max_state_id,
-    )
-
-    if entity_ids is not None:
-        query = query.filter(States.entity_id.in_(entity_ids))
+        # We got an include-list of entities, accelerate the query by filtering already
+        # in the inner query.
+        most_recent_state_ids = (
+            session.query(
+                func.max(States.state_id).label("max_state_id"),
+            )
+            .filter(
+                (States.last_updated >= run.start)
+                & (States.last_updated < utc_point_in_time)
+            )
+            .filter(States.entity_id.in_(entity_ids))
+        )
+        most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
+        most_recent_state_ids = most_recent_state_ids.subquery()
+        query = query.join(
+            most_recent_state_ids,
+            States.state_id == most_recent_state_ids.c.max_state_id,
+        )
     else:
+        # We did not get an include-list of entities, query all states in the inner
+        # query, then filter out unwanted domains as well as applying the custom filter.
+        # This filtering can't be done in the inner query because the domain column is
+        # not indexed and we can't control what's in the custom filter.
+        most_recent_states_by_date = (
+            session.query(
+                States.entity_id.label("max_entity_id"),
+                func.max(States.last_updated).label("max_last_updated"),
+            )
+            .filter(
+                (States.last_updated >= run.start)
+                & (States.last_updated < utc_point_in_time)
+            )
+            .group_by(States.entity_id)
+            .subquery()
+        )
+        most_recent_state_ids = (
+            session.query(func.max(States.state_id).label("max_state_id"))
+            .join(
+                most_recent_states_by_date,
+                and_(
+                    States.entity_id == most_recent_states_by_date.c.max_entity_id,
+                    States.last_updated
+                    == most_recent_states_by_date.c.max_last_updated,
+                ),
+            )
+            .group_by(States.entity_id)
+            .subquery()
+        )
+        query = query.join(
+            most_recent_state_ids,
+            States.state_id == most_recent_state_ids.c.max_state_id,
+        )
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
         if filters:
             query = filters.apply(query)

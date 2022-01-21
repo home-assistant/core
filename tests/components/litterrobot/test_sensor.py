@@ -2,8 +2,8 @@
 from unittest.mock import Mock
 
 from homeassistant.components.litterrobot.sensor import LitterRobotSleepTimeSensor
-from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, SensorDeviceClass
+from homeassistant.const import PERCENTAGE
 
 from .conftest import create_mock_robot, setup_integration
 
@@ -30,7 +30,7 @@ async def test_sleep_time_sensor_with_none_state(hass):
 
     assert sensor
     assert sensor.state is None
-    assert sensor.device_class == DEVICE_CLASS_TIMESTAMP
+    assert sensor.device_class is SensorDeviceClass.TIMESTAMP
 
 
 async def test_gauge_icon():

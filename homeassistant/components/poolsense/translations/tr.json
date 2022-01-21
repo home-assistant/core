@@ -11,7 +11,9 @@
                 "data": {
                     "email": "E-posta",
                     "password": "Parola"
-                }
+                },
+                "description": "Kuruluma ba\u015flamak ister misiniz?",
+                "title": "PoolSense"
             }
         }
     }

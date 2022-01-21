@@ -4,10 +4,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TEMPERATURE,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
@@ -15,6 +16,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .account import StarlineAccount, StarlineDevice
@@ -50,13 +53,13 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
     StarlineSensorEntityDescription(
         key="ctemp",
         name_="Interior Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     StarlineSensorEntityDescription(
         key="etemp",
         name_="Engine Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     StarlineSensorEntityDescription(
@@ -83,14 +86,17 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the StarLine sensors."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = [
         sensor
         for device in account.api.devices.values()
         for description in SENSOR_TYPES
-        if (sensor := StarlineSensor(account, device, description)).state is not None
+        if (sensor := StarlineSensor(account, device, description)).native_value
+        is not None
     ]
     async_add_entities(entities)
 

@@ -1,4 +1,5 @@
 """LlamaLab Automate notification service."""
+from http import HTTPStatus
 import logging
 
 import requests
@@ -9,7 +10,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE, HTTP_OK
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,5 +67,5 @@ class AutomateNotificationService(BaseNotificationService):
         }
 
         response = requests.post(_RESOURCE, json=data)
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.error("Error sending message: %s", response)

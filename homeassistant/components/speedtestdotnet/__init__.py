@@ -5,18 +5,11 @@ from datetime import timedelta
 import logging
 
 import speedtest
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STARTED,
-)
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -26,56 +19,10 @@ from .const import (
     DEFAULT_SERVER,
     DOMAIN,
     PLATFORMS,
-    SENSOR_TYPES,
     SPEED_TEST_SERVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        # Deprecated in Home Assistant 2021.6
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Optional(CONF_SERVER_ID): cv.positive_int,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
-                    ): cv.positive_time_period,
-                    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
-                    vol.Optional(
-                        CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                    ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-def server_id_valid(server_id: str) -> bool:
-    """Check if server_id is valid."""
-    try:
-        api = speedtest.Speedtest()
-        api.get_servers([int(server_id)])
-    except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers):
-        return False
-
-    return True
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import integration from config."""
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-            )
-        )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -136,6 +83,11 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             update_method=self.async_update,
         )
 
+    def initialize(self) -> None:
+        """Initialize speedtest api."""
+        self.api = speedtest.Speedtest()
+        self.update_servers()
+
     def update_servers(self):
         """Update list of test servers."""
         test_servers = self.api.get_servers()
@@ -143,18 +95,17 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         for servers in test_servers.values():
             for server in servers:
                 test_servers_list.append(server)
-        if test_servers_list:
-            for server in sorted(
-                test_servers_list,
-                key=lambda server: (
-                    server["country"],
-                    server["name"],
-                    server["sponsor"],
-                ),
-            ):
-                self.servers[
-                    f"{server['country']} - {server['sponsor']} - {server['name']}"
-                ] = server
+        for server in sorted(
+            test_servers_list,
+            key=lambda server: (
+                server["country"],
+                server["name"],
+                server["sponsor"],
+            ),
+        ):
+            self.servers[
+                f"{server['country']} - {server['sponsor']} - {server['name']}"
+            ] = server
 
     def update_data(self):
         """Get the latest data from speedtest.net."""
@@ -182,32 +133,16 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         except speedtest.SpeedtestException as err:
             raise UpdateFailed(err) from err
 
-    async def async_set_options(self):
-        """Set options for entry."""
-        if not self.config_entry.options:
-            data = {**self.config_entry.data}
-            options = {
-                CONF_SCAN_INTERVAL: data.pop(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                CONF_MANUAL: data.pop(CONF_MANUAL, False),
-                CONF_SERVER_ID: str(data.pop(CONF_SERVER_ID, "")),
-            }
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, options=options
-            )
-
     async def async_setup(self) -> None:
         """Set up SpeedTest."""
         try:
-            self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
-            await self.hass.async_add_executor_job(self.update_servers)
+            await self.hass.async_add_executor_job(self.initialize)
         except speedtest.SpeedtestException as err:
             raise ConfigEntryNotReady from err
 
-        async def request_update(call):
+        async def request_update(call: ServiceCall) -> None:
             """Request update."""
             await self.async_request_refresh()
-
-        await self.async_set_options()
 
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 

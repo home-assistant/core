@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum
-from functools import wraps
+from functools import partialmethod, wraps
 import logging
 from typing import Any
 
 import zigpy.exceptions
+from zigpy.zcl.foundation import Status
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -23,13 +24,15 @@ from ..const import (
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,
+    REPORT_CONFIG_ATTR_PER_REQ,
     SIGNAL_ATTR_UPDATED,
     ZHA_CHANNEL_MSG,
     ZHA_CHANNEL_MSG_BIND,
     ZHA_CHANNEL_MSG_CFG_RPT,
     ZHA_CHANNEL_MSG_DATA,
+    ZHA_CHANNEL_READS_PER_REQ,
 )
-from ..helpers import LogMixin, safe_read
+from ..helpers import LogMixin, retryable_req, safe_read
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,29 +90,33 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    REPORT_CONFIG = ()
+    REPORT_CONFIG: tuple[dict[int | str, tuple[int, int, int | float]]] = ()
     BIND: bool = True
+
+    # Dict of attributes to read on channel initialization.
+    # Dict keys -- attribute ID or names, with bool value indicating whether a cached
+    # attribute read is acceptable.
+    ZCL_INIT_ATTRS: dict[int | str, bool] = {}
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize ZigbeeChannel."""
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
-        self._channel_name = getattr(cluster, "ep_attribute", self._generic_id)
         self._ch_pool = ch_pool
         self._cluster = cluster
         self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
         unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
-        self._report_config = self.REPORT_CONFIG
-        if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
-            attr = self._report_config[0].get("attr")
+        if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
+            attr = self.REPORT_CONFIG[0].get("attr")
             if isinstance(attr, str):
                 self.value_attribute = self.cluster.attridx.get(attr)
             else:
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
+        self.data_cache = {}
 
     @property
     def id(self) -> str:
@@ -134,12 +141,16 @@ class ZigbeeChannel(LogMixin):
     @property
     def name(self) -> str:
         """Return friendly name."""
-        return self._channel_name
+        return self.cluster.ep_attribute or self._generic_id
 
     @property
     def status(self):
         """Return the status of the channel."""
         return self._status
+
+    def __hash__(self) -> int:
+        """Make this a hashable."""
+        return hash(self._unique_id)
 
     @callback
     def async_send_signal(self, signal: str, *args: Any) -> None:
@@ -195,42 +206,42 @@ class ZigbeeChannel(LogMixin):
         if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
             kwargs["manufacturer"] = self._ch_pool.manufacturer_code
 
-        for report in self._report_config:
-            attr = report["attr"]
+        for attr_report in self.REPORT_CONFIG:
+            attr, config = attr_report["attr"], attr_report["config"]
             attr_name = self.cluster.attributes.get(attr, [attr])[0]
-            min_report_int, max_report_int, reportable_change = report["config"]
             event_data[attr_name] = {
-                "min": min_report_int,
-                "max": max_report_int,
+                "min": config[0],
+                "max": config[1],
                 "id": attr,
                 "name": attr_name,
-                "change": reportable_change,
+                "change": config[2],
+                "success": False,
             }
 
+        to_configure = [*self.REPORT_CONFIG]
+        chunk, rest = (
+            to_configure[:REPORT_CONFIG_ATTR_PER_REQ],
+            to_configure[REPORT_CONFIG_ATTR_PER_REQ:],
+        )
+        while chunk:
+            reports = {rec["attr"]: rec["config"] for rec in chunk}
             try:
-                res = await self.cluster.configure_reporting(
-                    attr, min_report_int, max_report_int, reportable_change, **kwargs
-                )
-                self.debug(
-                    "reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
-                    attr_name,
-                    self.cluster.ep_attribute,
-                    min_report_int,
-                    max_report_int,
-                    reportable_change,
-                    res,
-                )
-                event_data[attr_name]["success"] = (
-                    res[0][0].status == 0 or res[0][0].status == 134
-                )
+                res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
+                self._configure_reporting_status(reports, res[0])
+                # if we get a response, then it's a success
+                for attr_stat in event_data.values():
+                    attr_stat["success"] = True
             except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
-                    "failed to set reporting for '%s' attr on '%s' cluster: %s",
-                    attr_name,
+                    "failed to set reporting on '%s' cluster for: %s",
                     self.cluster.ep_attribute,
                     str(ex),
                 )
-                event_data[attr_name]["success"] = False
+                break
+            chunk, rest = (
+                rest[:REPORT_CONFIG_ATTR_PER_REQ],
+                rest[REPORT_CONFIG_ATTR_PER_REQ:],
+            )
 
         async_dispatcher_send(
             self._ch_pool.hass,
@@ -243,6 +254,46 @@ class ZigbeeChannel(LogMixin):
                     "attributes": event_data,
                 },
             },
+        )
+
+    def _configure_reporting_status(
+        self, attrs: dict[int | str, tuple], res: list | tuple
+    ) -> None:
+        """Parse configure reporting result."""
+        if not isinstance(res, list):
+            # assume default response
+            self.debug(
+                "attr reporting for '%s' on '%s': %s",
+                attrs,
+                self.name,
+                res,
+            )
+            return
+        if res[0].status == Status.SUCCESS and len(res) == 1:
+            self.debug(
+                "Successfully configured reporting for '%s' on '%s' cluster: %s",
+                attrs,
+                self.name,
+                res,
+            )
+            return
+
+        failed = [
+            self.cluster.attributes.get(r.attrid, [r.attrid])[0]
+            for r in res
+            if r.status != Status.SUCCESS
+        ]
+        attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+        self.debug(
+            "Successfully configured reporting for '%s' on '%s' cluster",
+            attrs - set(failed),
+            self.name,
+        )
+        self.debug(
+            "Failed to configure reporting for '%s' on '%s' cluster: %s",
+            failed,
+            self.name,
+            res,
         )
 
     async def async_configure(self) -> None:
@@ -260,6 +311,7 @@ class ZigbeeChannel(LogMixin):
             self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
+    @retryable_req(delays=(1, 1, 3))
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         if not from_cache and self._ch_pool.skip_configuration:
@@ -267,15 +319,20 @@ class ZigbeeChannel(LogMixin):
             return
 
         self.debug("initializing channel: from_cache: %s", from_cache)
-        attributes = [cfg["attr"] for cfg in self._report_config]
-        if attributes:
-            await self.get_attributes(attributes, from_cache=from_cache)
+        cached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if cached]
+        uncached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if not cached]
+        uncached.extend([cfg["attr"] for cfg in self.REPORT_CONFIG])
+
+        if cached:
+            await self._get_attributes(True, cached, from_cache=True)
+        if uncached:
+            await self._get_attributes(True, uncached, from_cache=from_cache)
 
         ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
         if ch_specific_init:
             await ch_specific_init(from_cache=from_cache)
 
-        self.debug("finished channel configuration")
+        self.debug("finished channel initialization")
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -326,28 +383,43 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
-    async def get_attributes(self, attributes, from_cache=True):
+    async def _get_attributes(
+        self,
+        raise_exceptions: bool,
+        attributes: list[int | str],
+        from_cache: bool = True,
+    ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
         if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
-        try:
-            result, _ = await self.cluster.read_attributes(
-                attributes,
-                allow_cache=from_cache,
-                only_cache=from_cache and not self._ch_pool.is_mains_powered,
-                manufacturer=manufacturer,
-            )
-            return result
-        except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
-            self.debug(
-                "failed to get attributes '%s' on '%s' cluster: %s",
-                attributes,
-                self.cluster.ep_attribute,
-                str(ex),
-            )
-            return {}
+        chunk = attributes[:ZHA_CHANNEL_READS_PER_REQ]
+        rest = attributes[ZHA_CHANNEL_READS_PER_REQ:]
+        result = {}
+        while chunk:
+            try:
+                read, _ = await self.cluster.read_attributes(
+                    attributes,
+                    allow_cache=from_cache,
+                    only_cache=from_cache and not self._ch_pool.is_mains_powered,
+                    manufacturer=manufacturer,
+                )
+                result.update(read)
+            except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
+                self.debug(
+                    "failed to get attributes '%s' on '%s' cluster: %s",
+                    attributes,
+                    self.cluster.ep_attribute,
+                    str(ex),
+                )
+                if raise_exceptions:
+                    raise
+            chunk = rest[:ZHA_CHANNEL_READS_PER_REQ]
+            rest = rest[ZHA_CHANNEL_READS_PER_REQ:]
+        return result
+
+    get_attributes = partialmethod(_get_attributes, False)
 
     def log(self, level, msg, *args):
         """Log a message."""

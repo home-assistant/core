@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "invalid_host": "Nome host o indirizzo IP non valido"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vuoi aggiungere {device} a Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Configura l'indirizzo IP o il nome host locale del proprio dispositivo Fronius.",
+                "title": "Fronius SolarNet"
+            }
+        }
+    }
+}

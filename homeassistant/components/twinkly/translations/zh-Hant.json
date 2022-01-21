@@ -7,9 +7,12 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} - {model} ({host})\uff1f"
+            },
             "user": {
                 "data": {
-                    "host": "Twinkly \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31\uff08\u6216 IP \u4f4d\u5740\uff09"
+                    "host": "\u4e3b\u6a5f\u7aef"
                 },
                 "description": "\u8a2d\u5b9a Twinkly LED \u71c8\u4e32",
                 "title": "Twinkly"

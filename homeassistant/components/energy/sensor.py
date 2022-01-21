@@ -1,31 +1,50 @@
 """Helper sensor for calculating utility costs."""
 from __future__ import annotations
 
+import asyncio
+import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, TypeVar, cast
+from typing import Any, Final, Literal, cast
 
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_MONETARY,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
 
+SUPPORTED_STATE_CLASSES = [
+    SensorStateClass.MEASUREMENT,
+    SensorStateClass.TOTAL,
+    SensorStateClass.TOTAL_INCREASING,
+]
+VALID_ENERGY_UNITS = [ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR]
+VALID_ENERGY_UNITS_GAS = [VOLUME_CUBIC_METERS] + VALID_ENERGY_UNITS
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -38,9 +57,6 @@ async def async_setup_platform(
     """Set up the energy sensors."""
     sensor_manager = SensorManager(await async_get_manager(hass), async_add_entities)
     await sensor_manager.async_start()
-
-
-T = TypeVar("T")
 
 
 @dataclass
@@ -107,12 +123,13 @@ class SensorManager:
 
     async def _process_manager_data(self) -> None:
         """Process manager data."""
-        to_add: list[SensorEntity] = []
+        to_add: list[EnergyCostSensor] = []
         to_remove = dict(self.current_entities)
 
         async def finish() -> None:
             if to_add:
                 self.async_add_entities(to_add)
+                await asyncio.gather(*(ent.add_finished.wait() for ent in to_add))
 
             for key, entity in to_remove.items():
                 self.current_entities.pop(key)
@@ -153,7 +170,7 @@ class SensorManager:
         self,
         adapter: SourceAdapter,
         config: dict,
-        to_add: list[SensorEntity],
+        to_add: list[EnergyCostSensor],
         to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
     ) -> None:
         """Process sensor data."""
@@ -165,14 +182,17 @@ class SensorManager:
 
         # Make sure the right data is there
         # If the entity existed, we don't pop it from to_remove so it's removed
-        if config.get(adapter.entity_energy_key) is None or (
-            config.get("entity_energy_price") is None
-            and config.get("number_energy_price") is None
+        if (
+            config.get(adapter.entity_energy_key) is None
+            or not valid_entity_id(config[adapter.entity_energy_key])
+            or (
+                config.get("entity_energy_price") is None
+                and config.get("number_energy_price") is None
+            )
         ):
             return
 
-        current_entity = to_remove.pop(key, None)
-        if current_entity:
+        if current_entity := to_remove.pop(key, None):
             current_entity.update_config(config)
             return
 
@@ -190,6 +210,7 @@ class EnergyCostSensor(SensorEntity):
     utility.
     """
 
+    _attr_entity_category = EntityCategory.SYSTEM
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
@@ -205,16 +226,18 @@ class EnergyCostSensor(SensorEntity):
         self.entity_id = (
             f"{config[adapter.entity_energy_key]}_{adapter.entity_id_suffix}"
         )
-        self._attr_device_class = DEVICE_CLASS_MONETARY
-        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        self._attr_device_class = SensorDeviceClass.MONETARY
+        self._attr_state_class = SensorStateClass.TOTAL
         self._config = config
-        self._last_energy_sensor_state: StateType | None = None
-        self._cur_value = 0.0
+        self._last_energy_sensor_state: State | None = None
+        # add_finished is set when either of async_added_to_hass or add_to_platform_abort
+        # is called
+        self.add_finished = asyncio.Event()
 
-    def _reset(self, energy_state: StateType) -> None:
+    def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
         self._attr_native_value = 0.0
-        self._cur_value = 0.0
+        self._attr_last_reset = dt_util.utcnow()
         self._last_energy_sensor_state = energy_state
         self.async_write_ha_state()
 
@@ -228,9 +251,8 @@ class EnergyCostSensor(SensorEntity):
         if energy_state is None:
             return
 
-        if (
-            state_class := energy_state.attributes.get(ATTR_STATE_CLASS)
-        ) != STATE_CLASS_TOTAL_INCREASING:
+        state_class = energy_state.attributes.get(ATTR_STATE_CLASS)
+        if state_class not in SUPPORTED_STATE_CLASSES:
             if not self._wrong_state_class_reported:
                 self._wrong_state_class_reported = True
                 _LOGGER.warning(
@@ -238,6 +260,13 @@ class EnergyCostSensor(SensorEntity):
                     state_class,
                     energy_state.entity_id,
                 )
+            return
+
+        # last_reset must be set if the sensor is SensorStateClass.MEASUREMENT
+        if (
+            state_class == SensorStateClass.MEASUREMENT
+            and ATTR_LAST_RESET not in energy_state.attributes
+        ):
             return
 
         try:
@@ -259,13 +288,15 @@ class EnergyCostSensor(SensorEntity):
             except ValueError:
                 return
 
-            if (
-                self._adapter.source_type == "grid"
-                and energy_price_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT, ""
-                ).endswith(f"/{ENERGY_WATT_HOUR}")
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_WATT_HOUR}"
             ):
                 energy_price *= 1000.0
+
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_MEGA_WATT_HOUR}"
+            ):
+                energy_price /= 1000.0
 
         else:
             energy_price_state = None
@@ -273,20 +304,23 @@ class EnergyCostSensor(SensorEntity):
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
-            self._reset(energy_state.state)
+            self._reset(energy_state)
             return
 
         energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if self._adapter.source_type == "grid":
-            if energy_unit == ENERGY_WATT_HOUR:
-                energy_price /= 1000
-            elif energy_unit != ENERGY_KILO_WATT_HOUR:
+            if energy_unit not in VALID_ENERGY_UNITS:
                 energy_unit = None
 
         elif self._adapter.source_type == "gas":
-            if energy_unit != VOLUME_CUBIC_METERS:
+            if energy_unit not in VALID_ENERGY_UNITS_GAS:
                 energy_unit = None
+
+        if energy_unit == ENERGY_WATT_HOUR:
+            energy_price /= 1000
+        elif energy_unit == ENERGY_MEGA_WATT_HOUR:
+            energy_price *= 1000
 
         if energy_unit is None:
             if not self._wrong_unit_reported:
@@ -298,20 +332,32 @@ class EnergyCostSensor(SensorEntity):
                 )
             return
 
-        if reset_detected(
+        if (
+            state_class != SensorStateClass.TOTAL_INCREASING
+            and energy_state.attributes.get(ATTR_LAST_RESET)
+            != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
+        ):
+            # Energy meter was reset, reset cost sensor too
+            energy_state_copy = copy.copy(energy_state)
+            energy_state_copy.state = "0.0"
+            self._reset(energy_state_copy)
+        elif state_class == SensorStateClass.TOTAL_INCREASING and reset_detected(
             self.hass,
             cast(str, self._config[self._adapter.entity_energy_key]),
             energy,
-            float(self._last_energy_sensor_state),
+            float(self._last_energy_sensor_state.state),
+            self._last_energy_sensor_state,
         ):
             # Energy meter was reset, reset cost sensor too
-            self._reset(0)
+            energy_state_copy = copy.copy(energy_state)
+            energy_state_copy.state = "0.0"
+            self._reset(energy_state_copy)
         # Update with newly incurred cost
-        old_energy_value = float(self._last_energy_sensor_state)
-        self._cur_value += (energy - old_energy_value) * energy_price
-        self._attr_native_value = round(self._cur_value, 2)
+        old_energy_value = float(self._last_energy_sensor_state.state)
+        cur_value = cast(float, self._attr_native_value)
+        self._attr_native_value = cur_value + (energy - old_energy_value) * energy_price
 
-        self._last_energy_sensor_state = energy_state.state
+        self._last_energy_sensor_state = energy_state
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -347,6 +393,12 @@ class EnergyCostSensor(SensorEntity):
                 async_state_changed_listener,
             )
         )
+        self.add_finished.set()
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        self.add_finished.set()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""

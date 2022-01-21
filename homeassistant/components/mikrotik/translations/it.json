@@ -18,7 +18,7 @@
                     "username": "Nome utente",
                     "verify_ssl": "Usa SSL"
                 },
-                "title": "Configurare il router Mikrotik"
+                "title": "Configura il router Mikrotik"
             }
         }
     },
@@ -26,8 +26,8 @@
         "step": {
             "device_tracker": {
                 "data": {
-                    "arp_ping": "Attivare il ping ARP",
-                    "detection_time": "Considerare in casa nell'intervallo di",
+                    "arp_ping": "Attiva il ping ARP",
+                    "detection_time": "Considera in casa nell'intervallo di",
                     "force_dhcp": "Scansione forzata con DHCP"
                 }
             }

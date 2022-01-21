@@ -14,20 +14,14 @@ from .gateway import AugustGateway
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_validate_input(
-    data,
-    august_gateway,
-):
+async def async_validate_input(data, august_gateway):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
 
     Request configuration steps from the user.
     """
-
-    code = data.get(VERIFICATION_CODE_KEY)
-
-    if code is not None:
+    if (code := data.get(VERIFICATION_CODE_KEY)) is not None:
         result = await august_gateway.authenticator.async_validate_verification_code(
             code
         )

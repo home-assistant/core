@@ -21,7 +21,7 @@ from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 class TriggerEntity(update_coordinator.CoordinatorEntity):
     """Template entity based on trigger data."""
 
-    domain = ""
+    domain: str
     extra_template_keys: tuple | None = None
     extra_template_keys_complex: tuple | None = None
 
@@ -69,7 +69,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
-        self._parse_result = set()
+        self._parse_result = {CONF_AVAILABILITY}
 
     @property
     def name(self):

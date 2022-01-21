@@ -30,13 +30,12 @@ class NestDeviceInfo:
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            {
-                # The API "name" field is a unique device identifier.
-                "identifiers": {(DOMAIN, self._device.name)},
-                "name": self.device_name,
-                "manufacturer": self.device_brand,
-                "model": self.device_model,
-            }
+            # The API "name" field is a unique device identifier.
+            identifiers={(DOMAIN, self._device.name)},
+            manufacturer=self.device_brand,
+            model=self.device_model,
+            name=self.device_name,
+            suggested_area=self.suggested_area,
         )
 
     @property
@@ -45,14 +44,10 @@ class NestDeviceInfo:
         if InfoTrait.NAME in self._device.traits:
             trait: InfoTrait = self._device.traits[InfoTrait.NAME]
             if trait.custom_name:
-                return trait.custom_name
-        # Build a name from the room/structure.  Note: This room/structure name
-        # is not associated with a home assistant Area.
-        parent_relations = self._device.parent_relations
-        if parent_relations:
-            items = sorted(parent_relations.items())
-            names = [name for id, name in items]
-            return " ".join(names)
+                return str(trait.custom_name)
+        # Build a name from the room/structure if not set explicitly
+        if area := self.suggested_area:
+            return area
         return self.device_model
 
     @property
@@ -62,3 +57,12 @@ class NestDeviceInfo:
         # devices, instead relying on traits, but we can infer a generic model
         # name based on the type
         return DEVICE_TYPE_MAP.get(self._device.type)
+
+    @property
+    def suggested_area(self) -> str | None:
+        """Return device suggested area based on the Google Home room."""
+        if parent_relations := self._device.parent_relations:
+            items = sorted(parent_relations.items())
+            names = [name for id, name in items]
+            return " ".join(names)
+        return None

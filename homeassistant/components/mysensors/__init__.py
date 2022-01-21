@@ -2,19 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from functools import partial
 import logging
-from typing import Callable
 
 from mysensors import BaseAsyncGateway
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_OPTIMISTIC
+from homeassistant.const import CONF_OPTIMISTIC, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -62,8 +60,7 @@ DEFAULT_VERSION = "1.4"
 def set_default_persistence_file(value: dict) -> dict:
     """Set default persistence file."""
     for idx, gateway in enumerate(value):
-        fil = gateway.get(CONF_PERSISTENCE_FILE)
-        if fil is not None:
+        if gateway.get(CONF_PERSISTENCE_FILE) is not None:
             continue
         new_name = f"mysensors{idx + 1}.pickle"
         gateway[CONF_PERSISTENCE_FILE] = new_name
@@ -210,7 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Allow loading device tracker platform via discovery
     # until refactor to config entry is done.
 
-    for platform in (DEVICE_TRACKER_DOMAIN, NOTIFY_DOMAIN):
+    for platform in (Platform.DEVICE_TRACKER, Platform.NOTIFY):
         load_discovery_platform = partial(
             async_load_platform,
             hass,
@@ -270,7 +267,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def setup_mysensors_platform(
     hass: HomeAssistant,
-    domain: str,  # hass platform name
+    domain: Platform,  # hass platform name
     discovery_info: DiscoveryInfo,
     device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsDevice]],
     device_args: (

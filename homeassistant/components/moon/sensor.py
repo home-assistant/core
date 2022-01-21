@@ -1,10 +1,15 @@
 """Support for tracking the moon phases."""
+from __future__ import annotations
+
 from astral import moon
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 DEFAULT_NAME = "Moon"
@@ -34,7 +39,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Moon sensor."""
     name = config.get(CONF_NAME)
 
@@ -62,19 +72,19 @@ class MoonSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        if self._state == 0:
+        if self._state < 0.5 or self._state > 27.5:
             return STATE_NEW_MOON
-        if self._state < 7:
+        if self._state < 6.5:
             return STATE_WAXING_CRESCENT
-        if self._state == 7:
+        if self._state < 7.5:
             return STATE_FIRST_QUARTER
-        if self._state < 14:
+        if self._state < 13.5:
             return STATE_WAXING_GIBBOUS
-        if self._state == 14:
+        if self._state < 14.5:
             return STATE_FULL_MOON
-        if self._state < 21:
+        if self._state < 20.5:
             return STATE_WANING_GIBBOUS
-        if self._state == 21:
+        if self._state < 21.5:
             return STATE_LAST_QUARTER
         return STATE_WANING_CRESCENT
 

@@ -1,0 +1,13 @@
+fan:
+  - platform: group
+    name: Upstairs Fans
+    entities:
+      - fan.living_room_fan
+      - fan.percentage_full_fan
+
+notify:
+  - platform: group
+    name: new_group_notify
+    services:
+      - service: demo1
+      - service: demo2

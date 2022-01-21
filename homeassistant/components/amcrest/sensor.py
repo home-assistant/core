@@ -1,9 +1,10 @@
 """Support for Amcrest IP camera sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from amcrest import AmcrestError
 
@@ -77,6 +78,7 @@ class AmcrestSensor(SensorEntity):
         self.entity_description = description
         self._signal_name = name
         self._api = device.api
+        self._channel = device.channel
         self._unsub_dispatcher: Callable[[], None] | None = None
 
         self._attr_name = f"{name} {description.name}"
@@ -94,7 +96,15 @@ class AmcrestSensor(SensorEntity):
         _LOGGER.debug("Updating %s sensor", self.name)
 
         sensor_type = self.entity_description.key
+        if self._attr_unique_id is None and (serial_number := self._api.serial_number):
+            self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
+
         try:
+            if self._attr_unique_id is None and (
+                serial_number := self._api.serial_number
+            ):
+                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
+
             if sensor_type == SENSOR_PTZ_PRESET:
                 self._attr_native_value = self._api.ptz_presets_count
 

@@ -1,6 +1,7 @@
 """The tests for the Foobot sensor platform."""
 
 import asyncio
+from http import HTTPStatus
 import re
 from unittest.mock import MagicMock
 
@@ -12,8 +13,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    HTTP_FORBIDDEN,
-    HTTP_INTERNAL_SERVER_ERROR,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -33,10 +32,11 @@ async def test_default_setup(hass, aioclient_mock):
     """Test the default setup."""
     aioclient_mock.get(
         re.compile("api.foobot.io/v2/owner/.*"),
-        text=load_fixture("foobot_devices.json"),
+        text=load_fixture("devices.json", "foobot"),
     )
     aioclient_mock.get(
-        re.compile("api.foobot.io/v2/device/.*"), text=load_fixture("foobot_data.json")
+        re.compile("api.foobot.io/v2/device/.*"),
+        text=load_fixture("data.json", "foobot"),
     )
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
     await hass.async_block_till_done()
@@ -73,7 +73,7 @@ async def test_setup_permanent_error(hass, aioclient_mock):
     """Expected failures caused by permanent errors in API response."""
     fake_async_add_entities = MagicMock()
 
-    errors = [400, 401, HTTP_FORBIDDEN]
+    errors = [HTTPStatus.BAD_REQUEST, HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN]
     for error in errors:
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         result = await foobot.async_setup_platform(
@@ -86,7 +86,7 @@ async def test_setup_temporary_error(hass, aioclient_mock):
     """Expected failures caused by temporary errors in API response."""
     fake_async_add_entities = MagicMock()
 
-    errors = [429, HTTP_INTERNAL_SERVER_ERROR]
+    errors = [HTTPStatus.TOO_MANY_REQUESTS, HTTPStatus.INTERNAL_SERVER_ERROR]
     for error in errors:
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         with pytest.raises(PlatformNotReady):

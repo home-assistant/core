@@ -12,7 +12,7 @@ async def mock_cloud(hass, config=None):
     assert await async_setup_component(hass, cloud.DOMAIN, {"cloud": config or {}})
     cloud_inst = hass.data["cloud"]
     with patch("hass_nabucasa.Cloud.run_executor", AsyncMock(return_value=None)):
-        await cloud_inst.start()
+        await cloud_inst.initialize()
 
 
 def mock_cloud_prefs(hass, prefs={}):

@@ -6,8 +6,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "snips"
 CONF_INTENTS = "intents"
@@ -87,25 +88,20 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
 
-    @callback
-    def async_set_feedback(site_ids, state):
+    async def async_set_feedback(site_ids, state):
         """Set Feedback sound state."""
         site_ids = site_ids if site_ids else config[DOMAIN].get(CONF_SITE_IDS)
         topic = FEEDBACK_ON_TOPIC if state else FEEDBACK_OFF_TOPIC
         for site_id in site_ids:
             payload = json.dumps({"siteId": site_id})
-            hass.components.mqtt.async_publish(
-                FEEDBACK_ON_TOPIC, "", qos=0, retain=False
-            )
-            hass.components.mqtt.async_publish(
-                topic, payload, qos=int(state), retain=state
-            )
+            await mqtt.async_publish(hass, FEEDBACK_ON_TOPIC, "", qos=0, retain=False)
+            await mqtt.async_publish(hass, topic, payload, qos=int(state), retain=state)
 
     if CONF_FEEDBACK in config[DOMAIN]:
-        async_set_feedback(None, config[DOMAIN][CONF_FEEDBACK])
+        await async_set_feedback(None, config[DOMAIN][CONF_FEEDBACK])
 
     async def message_received(msg):
         """Handle new messages on MQTT."""
@@ -153,7 +149,7 @@ async def async_setup(hass, config):
                 notification["text"] = intent_response.speech["plain"]["speech"]
 
             _LOGGER.debug("send_response %s", json.dumps(notification))
-            mqtt.async_publish(
+            await mqtt.async_publish(
                 hass, "hermes/dialogueManager/endSession", json.dumps(notification)
             )
         except intent.UnknownIntent:
@@ -163,21 +159,21 @@ async def async_setup(hass, config):
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s", intent_type)
 
-    await hass.components.mqtt.async_subscribe(INTENT_TOPIC, message_received)
+    await mqtt.async_subscribe(hass, INTENT_TOPIC, message_received)
 
-    async def snips_say(call):
+    async def snips_say(call: ServiceCall) -> None:
         """Send a Snips notification message."""
         notification = {
             "siteId": call.data.get(ATTR_SITE_ID, "default"),
             "customData": call.data.get(ATTR_CUSTOM_DATA, ""),
             "init": {"type": "notification", "text": call.data.get(ATTR_TEXT)},
         }
-        mqtt.async_publish(
+        await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
         return
 
-    async def snips_say_action(call):
+    async def snips_say_action(call: ServiceCall) -> None:
         """Send a Snips action message."""
         notification = {
             "siteId": call.data.get(ATTR_SITE_ID, "default"),
@@ -189,18 +185,18 @@ async def async_setup(hass, config):
                 "intentFilter": call.data.get(ATTR_INTENT_FILTER, []),
             },
         }
-        mqtt.async_publish(
+        await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
         return
 
-    async def feedback_on(call):
+    async def feedback_on(call: ServiceCall) -> None:
         """Turn feedback sounds on."""
-        async_set_feedback(call.data.get(ATTR_SITE_ID), True)
+        await async_set_feedback(call.data.get(ATTR_SITE_ID), True)
 
-    async def feedback_off(call):
+    async def feedback_off(call: ServiceCall) -> None:
         """Turn feedback sounds off."""
-        async_set_feedback(call.data.get(ATTR_SITE_ID), False)
+        await async_set_feedback(call.data.get(ATTR_SITE_ID), False)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SAY, snips_say, schema=SERVICE_SCHEMA_SAY

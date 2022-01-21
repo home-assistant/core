@@ -44,6 +44,7 @@ def state_1_fixture(client):
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (0, 0)
     state.get_mute.return_value = None
+    state.get_decode_modes.return_value = []
     return state
 
 
@@ -58,6 +59,7 @@ def state_2_fixture(client):
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (0, 0)
     state.get_mute.return_value = None
+    state.get_decode_modes.return_value = []
     return state
 
 

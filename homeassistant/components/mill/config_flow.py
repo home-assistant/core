@@ -1,16 +1,13 @@
 """Adds config flow for Mill integration."""
 from mill import Mill
+from mill_local import Mill as MillLocal
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-)
+from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
 
 
 class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -20,10 +17,68 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONNECTION_TYPE, default=CLOUD): vol.In(
+                    (
+                        CLOUD,
+                        LOCAL,
+                    )
+                )
+            }
+        )
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=DATA_SCHEMA,
+                data_schema=data_schema,
+            )
+
+        if user_input[CONNECTION_TYPE] == LOCAL:
+            return await self.async_step_local()
+        return await self.async_step_cloud()
+
+    async def async_step_local(self, user_input=None):
+        """Handle the local step."""
+        data_schema = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
+        if user_input is None:
+            return self.async_show_form(
+                step_id="local",
+                data_schema=data_schema,
+            )
+
+        mill_data_connection = MillLocal(
+            user_input[CONF_IP_ADDRESS],
+            websession=async_get_clientsession(self.hass),
+        )
+
+        await self.async_set_unique_id(mill_data_connection.device_ip)
+        self._abort_if_unique_id_configured()
+
+        if not await mill_data_connection.connect():
+            return self.async_show_form(
+                step_id="local",
+                data_schema=data_schema,
+                errors={"base": "cannot_connect"},
+            )
+
+        return self.async_create_entry(
+            title=user_input[CONF_IP_ADDRESS],
+            data={
+                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                CONNECTION_TYPE: LOCAL,
+            },
+        )
+
+    async def async_step_cloud(self, user_input=None):
+        """Handle the cloud step."""
+        data_schema = vol.Schema(
+            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        )
+        if user_input is None:
+            return self.async_show_form(
+                step_id="cloud",
+                data_schema=data_schema,
                 errors={},
             )
 
@@ -39,10 +94,10 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if not await mill_data_connection.connect():
-            errors["cannot_connect"] = "cannot_connect"
+            errors["base"] = "cannot_connect"
             return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
+                step_id="cloud",
+                data_schema=data_schema,
                 errors=errors,
             )
 
@@ -53,5 +108,9 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=unique_id,
-            data={CONF_USERNAME: username, CONF_PASSWORD: password},
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONNECTION_TYPE: CLOUD,
+            },
         )

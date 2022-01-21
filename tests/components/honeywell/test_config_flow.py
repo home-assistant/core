@@ -5,7 +5,7 @@ import somecomfort
 
 from homeassistant import data_entry_flow
 from homeassistant.components.honeywell.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
 FAKE_CONFIG = {
@@ -46,18 +46,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
-
-
-async def test_async_step_import(hass: HomeAssistant) -> None:
-    """Test that the import step works."""
-    with patch(
-        "somecomfort.SomeComfort",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=FAKE_CONFIG
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG

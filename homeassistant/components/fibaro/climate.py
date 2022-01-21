@@ -1,4 +1,6 @@
 """Support for Fibaro thermostats."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.climate import ClimateEntity
@@ -16,6 +18,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -93,7 +98,12 @@ HA_OPMODES_HVAC = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Fibaro controller devices."""
     if discovery_info is None:
         return
@@ -136,7 +146,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                     "value" in device.properties
                     or "heatingThermostatSetpoint" in device.properties
                 )
-                and (device.properties.unit == "C" or device.properties.unit == "F")
+                and device.properties.unit in ("C", "F")
             ):
                 self._temp_sensor_device = FibaroDevice(device)
                 tempunit = device.properties.unit

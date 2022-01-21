@@ -8,14 +8,13 @@ from goalzero import Yeti, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,13 +26,13 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize a Goal Zero Yeti flow."""
-        self.ip_address = None
+        self.ip_address: str | None = None
 
-    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.ip_address = discovery_info[IP_ADDRESS]
+        self.ip_address = discovery_info.ip
 
-        await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
+        await self.async_set_unique_id(discovery_info.macaddress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
@@ -48,7 +47,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(
-                title="Goal Zero",
+                title=MANUFACTURER,
                 data={
                     CONF_HOST: self.ip_address,
                     CONF_NAME: DEFAULT_NAME,
@@ -104,14 +103,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host: str) -> tuple[str | None, str | None]:
         """Try connecting to Goal Zero Yeti."""
         try:
-            session = async_get_clientsession(self.hass)
-            api = Yeti(host, self.hass.loop, session)
+            api = Yeti(host, async_get_clientsession(self.hass))
             await api.sysinfo()
         except exceptions.ConnectError:
-            _LOGGER.error("Error connecting to device at %s", host)
             return None, "cannot_connect"
         except exceptions.InvalidHost:
-            _LOGGER.error("Invalid host at %s", host)
             return None, "invalid_host"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")

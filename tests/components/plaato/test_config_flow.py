@@ -4,7 +4,7 @@ from unittest.mock import patch
 from pyplaato.models.device import PlaatoDeviceType
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.plaato.const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
@@ -34,7 +34,7 @@ def mock_webhook_id():
 
 async def test_show_config_form(hass):
     """Test show configuration form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

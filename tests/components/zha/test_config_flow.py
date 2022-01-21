@@ -7,12 +7,9 @@ import serial.tools.list_ports
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant import config_entries, setup
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_MANUFACTURER_URL,
-    ATTR_UPNP_SERIAL,
-)
+from homeassistant import config_entries
+from homeassistant.components import ssdp, usb, zeroconf
+from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
@@ -52,12 +49,14 @@ def com_port():
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_discovery(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
-    service_info = {
-        "host": "192.168.1.200",
-        "port": 6053,
-        "hostname": "_tube_zb_gw._tcp.local.",
-        "properties": {"name": "tube_123456"},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.200",
+        hostname="_tube_zb_gw._tcp.local.",
+        name="mock_name",
+        port=6053,
+        properties={"name": "tube_123456"},
+        type="mock_type",
+    )
     flow = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
     )
@@ -94,12 +93,14 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
     )
     entry.add_to_hass(hass)
 
-    service_info = {
-        "host": "192.168.1.22",
-        "port": 6053,
-        "hostname": "tube_zb_gw_cc2652p2_poe.local.",
-        "properties": {"address": "tube_zb_gw_cc2652p2_poe.local"},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.22",
+        hostname="tube_zb_gw_cc2652p2_poe.local.",
+        name="mock_name",
+        port=6053,
+        properties={"address": "tube_zb_gw_cc2652p2_poe.local"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
     )
@@ -113,17 +114,47 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
     }
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
+    """Test zeroconf flow that was ignored gets updated."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="tube_zb_gw_cc2652p2_poe",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.22",
+        hostname="tube_zb_gw_cc2652p2_poe.local.",
+        name="mock_name",
+        port=6053,
+        properties={"address": "tube_zb_gw_cc2652p2_poe.local"},
+        type="mock_type",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
+    }
+
+
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_discovery_via_usb(detect_mock, hass):
     """Test usb flow -- radio detected."""
-    discovery_info = {
-        "device": "/dev/ttyZIGBEE",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
-    }
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
@@ -152,14 +183,14 @@ async def test_discovery_via_usb(detect_mock, hass):
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
 async def test_discovery_via_usb_no_radio(detect_mock, hass):
     """Test usb flow -- no radio detected."""
-    discovery_info = {
-        "device": "/dev/null",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
-    }
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/null",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
@@ -180,19 +211,19 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_discovery_via_usb_already_setup(detect_mock, hass):
     """Test usb flow -- already setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
 
-    discovery_info = {
-        "device": "/dev/ttyZIGBEE",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
-    }
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
@@ -205,7 +236,7 @@ async def test_discovery_via_usb_already_setup(detect_mock, hass):
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_discovery_via_usb_path_changes(hass):
     """Test usb flow already setup and the path changes."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AAAA:AAAA_1234_test_zigbee radio",
@@ -219,14 +250,14 @@ async def test_discovery_via_usb_path_changes(hass):
     )
     entry.add_to_hass(hass)
 
-    discovery_info = {
-        "device": "/dev/ttyZIGBEE",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
-    }
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
@@ -246,22 +277,26 @@ async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
     """Test usb flow -- deconz discovered."""
     result = await hass.config_entries.flow.async_init(
         "deconz",
-        data={
-            ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
-            ATTR_UPNP_MANUFACTURER_URL: "http://www.dresden-elektronik.de",
-            ATTR_UPNP_SERIAL: "0000000000000000",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:80/",
+            upnp={
+                ATTR_UPNP_MANUFACTURER_URL: "http://www.dresden-elektronik.de",
+                ATTR_UPNP_SERIAL: "0000000000000000",
+            },
+        ),
         context={"source": SOURCE_SSDP},
     )
     await hass.async_block_till_done()
-    discovery_info = {
-        "device": "/dev/ttyZIGBEE",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
-    }
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
@@ -276,14 +311,14 @@ async def test_discovery_via_usb_deconz_already_setup(detect_mock, hass):
     """Test usb flow -- deconz setup."""
     MockConfigEntry(domain="deconz", data={}).add_to_hass(hass)
     await hass.async_block_till_done()
-    discovery_info = {
-        "device": "/dev/ttyZIGBEE",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
-    }
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
@@ -300,14 +335,14 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
         domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
     ).add_to_hass(hass)
     await hass.async_block_till_done()
-    discovery_info = {
-        "device": "/dev/ttyZIGBEE",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
-    }
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
@@ -317,17 +352,50 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
     assert result["step_id"] == "confirm"
 
 
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_zha_ignored_updates(detect_mock, hass):
+    """Test usb flow that was ignored gets updated."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+        unique_id="AAAA:AAAA_1234_test_zigbee radio",
+    )
+    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
+    }
+
+
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_discovery_already_setup(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
-    service_info = {
-        "host": "192.168.1.200",
-        "port": 6053,
-        "hostname": "_tube_zb_gw._tcp.local.",
-        "properties": {"name": "tube_123456"},
-    }
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.200",
+        hostname="_tube_zb_gw._tcp.local.",
+        name="mock_name",
+        port=6053,
+        properties={"name": "tube_123456"},
+        type="mock_type",
+    )
+
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
@@ -439,7 +507,7 @@ async def test_user_flow_existing_config_entry(hass):
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
@@ -447,7 +515,7 @@ async def test_user_flow_existing_config_entry(hass):
     assert result["type"] == "abort"
 
 
-@patch("zigpy_cc.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
 @patch(
     "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
 )
@@ -455,7 +523,7 @@ async def test_user_flow_existing_config_entry(hass):
     "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
 )
 @patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
-async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, hass):
+async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, znp_probe, hass):
     """Test detect radios."""
     app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
@@ -468,6 +536,7 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
     with p1 as probe_mock:
         res = await config_flow.detect_radios("/dev/null")
         assert probe_mock.await_count == 1
+        assert znp_probe.await_count == 1  # ZNP appears earlier in the radio list
         assert res[CONF_RADIO_TYPE] == "ezsp"
         assert zigpy.config.CONF_DEVICE in res
         assert (
@@ -479,10 +548,10 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
         assert xbee_probe.await_count == 1
         assert zigate_probe.await_count == 1
         assert deconz_probe.await_count == 1
-        assert cc_probe.await_count == 1
+        assert znp_probe.await_count == 2
 
 
-@patch("zigpy_cc.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
 @patch(
     "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
 )
@@ -490,7 +559,7 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
     "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
 )
 @patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
-async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, cc_probe, hass):
+async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, znp_probe, hass):
     """Test detect radios."""
     app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
@@ -539,7 +608,6 @@ async def test_user_port_config_fail(probe_mock, hass):
 @patch("bellows.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_user_port_config(probe_mock, hass):
     """Test port config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -560,3 +628,38 @@ async def test_user_port_config(probe_mock, hass):
     )
     assert result["data"][CONF_RADIO_TYPE] == "ezsp"
     assert probe_mock.await_count == 1
+
+
+@pytest.mark.parametrize(
+    "old_type,new_type",
+    [
+        ("ezsp", "ezsp"),
+        ("ti_cc", "znp"),  # only one that should change
+        ("znp", "znp"),
+        ("deconz", "deconz"),
+    ],
+)
+async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
+    """Test zigpy-cc to zigpy-znp config migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=old_type + new_type,
+        data={
+            CONF_RADIO_TYPE: old_type,
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "/dev/ttyUSB1",
+                CONF_BAUDRATE: 115200,
+                CONF_FLOWCONTROL: None,
+            },
+        },
+    )
+
+    config_entry.version = 2
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.version > 2
+    assert config_entry.data[CONF_RADIO_TYPE] == new_type

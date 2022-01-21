@@ -1,4 +1,5 @@
 """Rocket.Chat notification service."""
+from http import HTTPStatus
 import logging
 
 from rocketchat_API.APIExceptions.RocketExceptions import (
@@ -13,13 +14,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_ROOM,
-    CONF_URL,
-    CONF_USERNAME,
-    HTTP_OK,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_ROOM, CONF_URL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,9 +63,8 @@ class RocketChatNotificationService(BaseNotificationService):
         """Send a message to Rocket.Chat."""
         data = kwargs.get(ATTR_DATA) or {}
         resp = self._server.chat_post_message(message, channel=self._room, **data)
-        if resp.status_code == HTTP_OK:
-            success = resp.json()["success"]
-            if not success:
+        if resp.status_code == HTTPStatus.OK:
+            if not resp.json()["success"]:
                 _LOGGER.error("Unable to post Rocket.Chat message")
         else:
             _LOGGER.error(

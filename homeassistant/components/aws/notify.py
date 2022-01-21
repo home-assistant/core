@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def get_available_regions(hass, service):
     """Get available regions for a service."""
-    session = aiobotocore.get_session()
+    session = aiobotocore.session.get_session()
     return await session.get_available_regions(service)
 
 
@@ -82,12 +82,11 @@ async def async_get_service(hass, config, discovery_info=None):
             del aws_config[CONF_CREDENTIAL_NAME]
 
     if session is None:
-        profile = aws_config.get(CONF_PROFILE_NAME)
-        if profile is not None:
-            session = aiobotocore.AioSession(profile=profile)
+        if (profile := aws_config.get(CONF_PROFILE_NAME)) is not None:
+            session = aiobotocore.session.AioSession(profile=profile)
             del aws_config[CONF_PROFILE_NAME]
         else:
-            session = aiobotocore.AioSession()
+            session = aiobotocore.session.AioSession()
 
     aws_config[CONF_REGION] = region_name
 

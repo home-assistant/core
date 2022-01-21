@@ -1,4 +1,4 @@
-"""Test the Uptime Robot init."""
+"""Test the UptimeRobot init."""
 from unittest.mock import patch
 
 from pytest import LogCaptureFixture

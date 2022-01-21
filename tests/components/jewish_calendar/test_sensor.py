@@ -538,7 +538,6 @@ async def test_shabbat_times_sensor(
 
     for sensor_type, result_value in result.items():
         if not sensor_type.startswith(language):
-            print(f"Not checking {sensor_type} for {language}")
             continue
 
         sensor_type = sensor_type.replace(f"{language}_", "")

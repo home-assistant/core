@@ -22,7 +22,7 @@ async def test_tracking_home(hass, mock_weather):
     entry = registry.async_get("weather.test_home_hourly")
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test we track config
     await hass.config.async_update(latitude=10, longitude=20)

@@ -4,13 +4,13 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port"
                 },
                 "title": "\u00c1ll\u00edtsa be az Agent DVR-t"

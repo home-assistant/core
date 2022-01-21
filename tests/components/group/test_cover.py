@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -96,10 +97,11 @@ async def setup_comp(hass, config_count):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_attributes(hass, setup_comp):
-    """Test handling of state attributes."""
+async def test_state(hass, setup_comp):
+    """Test handling of state."""
     state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_CLOSED
+    # No entity has a valid state -> group state unknown
+    assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
     assert state.attributes[ATTR_ENTITY_ID] == [
         DEMO_COVER,
@@ -111,6 +113,133 @@ async def test_attributes(hass, setup_comp):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+    # Set all entities as closed -> group state closed
+    hass.states.async_set(DEMO_COVER, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_CLOSED
+
+    # Set all entities as open -> group state open
+    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_OPEN, {})
+    hass.states.async_set(DEMO_TILT, STATE_OPEN, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPEN
+
+    # Set first entity as open -> group state open
+    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPEN
+
+    # Set last entity as open -> group state open
+    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPEN
+
+    # Set conflicting valid states -> opening state has priority
+    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_OPENING, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSING, {})
+    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPENING
+
+    # Set all entities to unknown state -> group state unknown
+    hass.states.async_set(DEMO_COVER, STATE_UNKNOWN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_UNKNOWN, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_UNKNOWN, {})
+    hass.states.async_set(DEMO_TILT, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_UNKNOWN
+
+    # Set one entity to unknown state -> open state has priority
+    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_UNKNOWN, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
+    hass.states.async_set(DEMO_TILT, STATE_OPEN, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPEN
+
+    # Set one entity to unknown state -> opening state has priority
+    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_OPENING, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_UNKNOWN, {})
+    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPENING
+
+    # Set one entity to unknown state -> closing state has priority
+    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_UNKNOWN, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSING, {})
+    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_CLOSING
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
+async def test_attributes(hass, setup_comp):
+    """Test handling of state attributes."""
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert state.attributes[ATTR_ENTITY_ID] == [
+        DEMO_COVER,
+        DEMO_COVER_POS,
+        DEMO_COVER_TILT,
+        DEMO_TILT,
+    ]
+    assert ATTR_ASSUMED_STATE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+    # Set entity as closed
+    hass.states.async_set(DEMO_COVER, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_CLOSED
+
+    # Set entity as opening
+    hass.states.async_set(DEMO_COVER, STATE_OPENING, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPENING
+
+    # Set entity as closing
+    hass.states.async_set(DEMO_COVER, STATE_CLOSING, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_CLOSING
+
+    # Set entity as unknown again
+    hass.states.async_set(DEMO_COVER, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_UNKNOWN
 
     # Add Entity that supports open / close / stop
     hass.states.async_set(DEMO_COVER, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 11})
@@ -167,7 +296,7 @@ async def test_attributes(hass, setup_comp):
     # ### Test assumed state ###
     # ##########################
 
-    # For covers
+    # For covers - assumed state set true if position differ
     hass.states.async_set(
         DEMO_COVER, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 4, ATTR_CURRENT_POSITION: 100}
     )
@@ -191,7 +320,7 @@ async def test_attributes(hass, setup_comp):
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
 
-    # For tilts
+    # For tilts - assumed state set true if tilt position differ
     hass.states.async_set(
         DEMO_TILT,
         STATE_OPEN,
@@ -223,6 +352,7 @@ async def test_attributes(hass, setup_comp):
     state = hass.states.get(COVER_GROUP)
     assert state.attributes[ATTR_ASSUMED_STATE] is True
 
+    # Test entity registry integration
     entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(COVER_GROUP)
     assert entry

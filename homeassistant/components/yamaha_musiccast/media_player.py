@@ -33,6 +33,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -48,7 +49,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
@@ -86,7 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config,
+    config: ConfigType,
     async_add_devices: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
@@ -161,7 +162,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await super().async_added_to_hass()
         self.coordinator.entities.append(self)
         # Sensors should also register callbacks to HA when their state changes
-        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
         self.coordinator.musiccast.register_group_update_callback(
             self.update_all_mc_entities
         )
@@ -172,7 +172,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await super().async_will_remove_from_hass()
         self.coordinator.entities.remove(self)
         # The opposite of async_added_to_hass. Remove any registered call backs here.
-        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
         self.coordinator.musiccast.remove_group_update_callback(
             self.update_all_mc_entities
         )
@@ -288,6 +287,14 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await self.coordinator.musiccast.set_volume_level(self._zone_id, volume)
         self.async_write_ha_state()
 
+    async def async_volume_up(self):
+        """Turn volume up for media player."""
+        await self.coordinator.musiccast.volume_up(self._zone_id)
+
+    async def async_volume_down(self):
+        """Turn volume down for media player."""
+        await self.coordinator.musiccast.volume_down(self._zone_id)
+
     async def async_media_play(self):
         """Send play command."""
         if self._is_netusb:
@@ -309,7 +316,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_media_stop(self):
         """Send stop command."""
         if self._is_netusb:
-            await self.coordinator.musiccast.netusb_pause()
+            await self.coordinator.musiccast.netusb_stop()
         else:
             raise HomeAssistantError(
                 "Service stop is not supported for non NetUSB sources."
@@ -333,9 +340,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             parts = media_id.split(":")
 
             if parts[0] == "list":
-                index = parts[3]
-
-                if index == "-1":
+                if (index := parts[3]) == "-1":
                     index = "0"
 
                 await self.coordinator.musiccast.play_list_media(index, self._zone_id)
@@ -460,7 +465,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if ZoneFeature.POWER in zone.features:
             supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         if ZoneFeature.VOLUME in zone.features:
-            supported_features |= SUPPORT_VOLUME_SET
+            supported_features |= SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
         if ZoneFeature.MUTE in zone.features:
             supported_features |= SUPPORT_VOLUME_MUTE
 
@@ -664,8 +669,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """Return all media players of the current group, if the media player is server."""
         if self.is_client:
             # If we are a client we can still share group information, but we will take them from the server.
-            server = self.group_server
-            if server != self:
+            if (server := self.group_server) != self:
                 return server.musiccast_group
 
             return [self]

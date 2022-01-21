@@ -5,11 +5,7 @@ from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.climate import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    ClimateEntity,
-)
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_ON,
@@ -21,7 +17,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
@@ -45,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraThermostat(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.CLIMATE]
         ],
         True,
     )
@@ -62,7 +63,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def supported_features(self) -> int | None:
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
@@ -92,8 +93,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        mode = self.vera_device.get_fan_mode()
-        if mode == "ContinuousOn":
+        if self.vera_device.get_fan_mode() == "ContinuousOn":
             return FAN_ON
         return FAN_AUTO
 
@@ -114,9 +114,9 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     @property
     def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
+        if power := self.vera_device.power:
             return convert(power, float, 0.0)
+        return None
 
     @property
     def temperature_unit(self) -> str:

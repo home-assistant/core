@@ -2,6 +2,7 @@
 from ipaddress import ip_address, ip_network
 from unittest.mock import Mock, patch
 
+from hass_nabucasa import remote
 import pytest
 import voluptuous as vol
 
@@ -167,6 +168,27 @@ async def test_validate_access_proxy(hass, provider):
         provider.async_validate_access(ip_address("192.168.128.1"))
     with pytest.raises(tn_auth.InvalidAuthError):
         provider.async_validate_access(ip_address("fd00::1"))
+
+
+async def test_validate_access_cloud(hass, provider):
+    """Test validate access from trusted networks are blocked from cloud."""
+    await async_setup_component(
+        hass,
+        "http",
+        {
+            "http": {
+                CONF_TRUSTED_PROXIES: ["192.168.128.0/31", "fd00::1"],
+                CONF_USE_X_FORWARDED_FOR: True,
+            }
+        },
+    )
+    hass.config.components.add("cloud")
+
+    provider.async_validate_access(ip_address("192.168.128.2"))
+
+    remote.is_cloud_request.set(True)
+    with pytest.raises(tn_auth.InvalidAuthError):
+        provider.async_validate_access(ip_address("192.168.128.2"))
 
 
 async def test_validate_refresh_token(provider):

@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from requests.exceptions import ConnectTimeout
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.plum_lightpad.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -11,7 +11,6 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -70,8 +69,6 @@ async def test_form_one_entry_per_email_allowed(hass):
         data={"username": "test-plum-username", "password": "test-plum-password"},
     ).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -94,7 +91,6 @@ async def test_form_one_entry_per_email_allowed(hass):
 
 async def test_import(hass):
     """Test configuring the flow using configuration.yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"

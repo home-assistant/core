@@ -10,12 +10,12 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}({host})-t?",
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} ({host})?",
                 "title": "A Logitech Harmony Hub be\u00e1ll\u00edt\u00e1sa"
             },
             "user": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "name": "Hub neve"
                 },
                 "title": "A Logitech Harmony Hub be\u00e1ll\u00edt\u00e1sa"

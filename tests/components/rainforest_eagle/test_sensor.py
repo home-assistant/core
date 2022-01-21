@@ -114,17 +114,17 @@ async def test_sensors_200(hass, setup_rainforest_200):
     """Test the sensors."""
     assert len(hass.states.async_all()) == 3
 
-    demand = hass.states.get("sensor.meter_power_demand")
+    demand = hass.states.get("sensor.eagle_200_meter_power_demand")
     assert demand is not None
     assert demand.state == "1.152000"
     assert demand.attributes["unit_of_measurement"] == "kW"
 
-    delivered = hass.states.get("sensor.total_meter_energy_delivered")
+    delivered = hass.states.get("sensor.eagle_200_total_meter_energy_delivered")
     assert delivered is not None
     assert delivered.state == "45251.285000"
     assert delivered.attributes["unit_of_measurement"] == "kWh"
 
-    received = hass.states.get("sensor.total_meter_energy_received")
+    received = hass.states.get("sensor.eagle_200_total_meter_energy_received")
     assert received is not None
     assert received.state == "232.232000"
     assert received.attributes["unit_of_measurement"] == "kWh"
@@ -147,17 +147,17 @@ async def test_sensors_100(hass, setup_rainforest_100):
     """Test the sensors."""
     assert len(hass.states.async_all()) == 3
 
-    demand = hass.states.get("sensor.meter_power_demand")
+    demand = hass.states.get("sensor.eagle_200_meter_power_demand")
     assert demand is not None
     assert demand.state == "1.152000"
     assert demand.attributes["unit_of_measurement"] == "kW"
 
-    delivered = hass.states.get("sensor.total_meter_energy_delivered")
+    delivered = hass.states.get("sensor.eagle_200_total_meter_energy_delivered")
     assert delivered is not None
     assert delivered.state == "45251.285000"
     assert delivered.attributes["unit_of_measurement"] == "kWh"
 
-    received = hass.states.get("sensor.total_meter_energy_received")
+    received = hass.states.get("sensor.eagle_200_total_meter_energy_received")
     assert received is not None
     assert received.state == "232.232000"
     assert received.attributes["unit_of_measurement"] == "kWh"

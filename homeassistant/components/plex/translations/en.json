@@ -22,7 +22,7 @@
                     "host": "Host",
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
-                    "token": "Token (Optional)",
+                    "token": "Token (optional)",
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "title": "Manual Plex Configuration"

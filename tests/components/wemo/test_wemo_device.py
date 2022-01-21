@@ -1,6 +1,7 @@
 """Tests for wemo_device.py."""
 import asyncio
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import call, patch
 
 import async_timeout
 import pytest
@@ -14,16 +15,19 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from .conftest import MOCK_HOST
+from .conftest import MOCK_FIRMWARE_VERSION, MOCK_HOST, MOCK_SERIAL_NUMBER
+
+from tests.common import async_fire_time_changed
 
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(True))
 
 
 @pytest.fixture
 def pywemo_model():
-    """Pywemo Dimmer models use the light platform (WemoDimmer class)."""
-    return "Dimmer"
+    """Pywemo LightSwitch models use the switch platform."""
+    return "LightSwitchLongPress"
 
 
 async def test_async_register_device_longpress_fails(hass, pywemo_device):
@@ -148,3 +152,67 @@ async def test_async_update_data_subscribed(
     pywemo_device.get_state.reset_mock()
     await device._async_update_data()
     pywemo_device.get_state.assert_not_called()
+
+
+async def test_device_info(hass, wemo_entity):
+    """Verify the DeviceInfo data is set properly."""
+    dr = device_registry.async_get(hass)
+    device_entries = list(dr.devices.values())
+
+    assert len(device_entries) == 1
+    assert device_entries[0].connections == {
+        ("upnp", f"uuid:LightSwitch-1_0-{MOCK_SERIAL_NUMBER}")
+    }
+    assert device_entries[0].manufacturer == "Belkin"
+    assert device_entries[0].model == "LightSwitch"
+    assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
+
+
+class TestInsight:
+    """Tests specific to the WeMo Insight device."""
+
+    @pytest.fixture
+    def pywemo_model(self):
+        """Pywemo Dimmer models use the light platform (WemoDimmer class)."""
+        return "Insight"
+
+    @pytest.fixture(name="pywemo_device")
+    def pywemo_device_fixture(self, pywemo_device):
+        """Fixture for WeMoDevice instances."""
+        pywemo_device.insight_params = {
+            "currentpower": 1.0,
+            "todaymw": 200000000.0,
+            "state": 0,
+            "onfor": 0,
+            "ontoday": 0,
+            "ontotal": 0,
+            "powerthreshold": 0,
+        }
+        yield pywemo_device
+
+    @pytest.mark.parametrize(
+        "subscribed,state,expected_calls",
+        [
+            (False, 0, [call(), call(True), call(), call()]),
+            (False, 1, [call(), call(True), call(), call()]),
+            (True, 0, [call(), call(True), call(), call()]),
+            (True, 1, [call(), call(), call()]),
+        ],
+    )
+    async def test_should_poll(
+        self,
+        hass,
+        subscribed,
+        state,
+        expected_calls,
+        wemo_entity,
+        pywemo_device,
+        pywemo_registry,
+    ):
+        """Validate the should_poll returns the correct value."""
+        pywemo_registry.is_subscribed.return_value = subscribed
+        pywemo_device.get_state.reset_mock()
+        pywemo_device.get_state.return_value = state
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+        await hass.async_block_till_done()
+        pywemo_device.get_state.assert_has_calls(expected_calls)

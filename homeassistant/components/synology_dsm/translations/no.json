@@ -39,6 +39,13 @@
                 "description": "\u00c5rsak: {details}",
                 "title": "Synology DSM Godkjenne integrering p\u00e5 nytt"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Synology DSM Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "host": "Vert",

@@ -1,6 +1,6 @@
 """Base classes for ONVIF entities."""
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 from .device import ONVIFDevice
@@ -21,14 +21,14 @@ class ONVIFBaseEntity(Entity):
         return self.device.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        device_info = {
-            "manufacturer": self.device.info.manufacturer,
-            "model": self.device.info.model,
-            "name": self.device.name,
-            "sw_version": self.device.info.fw_version,
-            "identifiers": {
+        connections = None
+        if self.device.info.mac:
+            connections = {(CONNECTION_NETWORK_MAC, self.device.info.mac)}
+        return DeviceInfo(
+            connections=connections,
+            identifiers={
                 # MAC address is not always available, and given the number
                 # of non-conformant ONVIF devices we have historically supported,
                 # we can not guarantee serial number either.  Due to this, we have
@@ -37,11 +37,9 @@ class ONVIFBaseEntity(Entity):
                 # See: https://github.com/home-assistant/core/issues/35883
                 (DOMAIN, self.device.info.mac or self.device.info.serial_number)
             },
-        }
-
-        if self.device.info.mac:
-            device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, self.device.info.mac)
-            }
-
-        return device_info
+            manufacturer=self.device.info.manufacturer,
+            model=self.device.info.model,
+            name=self.device.name,
+            sw_version=self.device.info.fw_version,
+            configuration_url=f"http://{self.device.host}:{self.device.port}",
+        )

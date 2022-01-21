@@ -14,11 +14,11 @@
                     "one": "\u00dcres",
                     "other": "\u00dcres"
                 },
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}-t?"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
             },
             "user": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 }
             }
         }

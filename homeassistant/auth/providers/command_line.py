@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import collections
 from collections.abc import Mapping
 import logging
 import os
@@ -16,8 +15,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
-
-# mypy: disallow-any-generics
 
 CONF_ARGS = "args"
 CONF_META = "meta"
@@ -148,10 +145,13 @@ class CommandLineLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: dict[str, type] = collections.OrderedDict()
-        schema["username"] = str
-        schema["password"] = str
-
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
         )

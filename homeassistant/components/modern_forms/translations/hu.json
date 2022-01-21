@@ -10,16 +10,16 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?"
+                "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?"
             },
             "user": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
-                "description": "\u00c1ll\u00edtsa be a Modern Forms-t, hogy integr\u00e1l\u00f3djon a Home Assistant programba."
+                "description": "Integr\u00e1lja \u00f6ssze Modern Formst Home Assistanttal."
             },
             "zeroconf_confirm": {
-                "description": "Hozz\u00e1 szeretn\u00e9 adni a(z) {name} `nev\u0171 Modern Forms rajong\u00f3t a Home Assistanthoz?",
+                "description": "Hozz\u00e1 szeretn\u00e9 adni `{name}`nev\u0171 Modern Forms rajong\u00f3t Home Assistanthoz?",
                 "title": "Felfedezte a Modern Forms rajong\u00f3i eszk\u00f6zt"
             }
         }

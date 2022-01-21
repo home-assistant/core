@@ -28,8 +28,9 @@ The following cases will never be passed to your function:
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from types import MappingProxyType
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
@@ -95,25 +96,55 @@ def either_one_none(val1: Any | None, val2: Any | None) -> bool:
     return (val1 is None and val2 is not None) or (val1 is not None and val2 is None)
 
 
-def check_numeric_changed(
+def _check_numeric_change(
+    old_state: int | float | None,
+    new_state: int | float | None,
+    change: int | float,
+    metric: Callable[[int | float, int | float], int | float],
+) -> bool:
+    """Check if two numeric values have changed."""
+    if old_state is None and new_state is None:
+        return False
+
+    if either_one_none(old_state, new_state):
+        return True
+
+    assert old_state is not None
+    assert new_state is not None
+
+    if metric(old_state, new_state) >= change:
+        return True
+
+    return False
+
+
+def check_absolute_change(
     val1: int | float | None,
     val2: int | float | None,
     change: int | float,
 ) -> bool:
     """Check if two numeric values have changed."""
-    if val1 is None and val2 is None:
-        return False
+    return _check_numeric_change(
+        val1, val2, change, lambda val1, val2: abs(val1 - val2)
+    )
 
-    if either_one_none(val1, val2):
-        return True
 
-    assert val1 is not None
-    assert val2 is not None
+def check_percentage_change(
+    old_state: int | float | None,
+    new_state: int | float | None,
+    change: int | float,
+) -> bool:
+    """Check if two numeric values have changed."""
 
-    if abs(val1 - val2) >= change:
-        return True
+    def percentage_change(old_state: int | float, new_state: int | float) -> float:
+        if old_state == new_state:
+            return 0
+        try:
+            return (abs(new_state - old_state) / old_state) * 100.0
+        except ZeroDivisionError:
+            return float("inf")
 
-    return False
+    return _check_numeric_change(old_state, new_state, change, percentage_change)
 
 
 class SignificantlyChangedChecker:

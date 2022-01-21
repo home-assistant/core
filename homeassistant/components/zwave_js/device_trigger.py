@@ -6,7 +6,10 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -46,6 +49,7 @@ from .const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
+from .device_automation_helpers import CONF_SUBTYPE, NODE_STATUSES
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
@@ -61,8 +65,6 @@ from .triggers.value_updated import (
     ATTR_TO,
     PLATFORM_TYPE as VALUE_UPDATED_PLATFORM_TYPE,
 )
-
-CONF_SUBTYPE = "subtype"
 
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.notification.entry_control"
@@ -150,8 +152,6 @@ BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
-
 NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): NODE_STATUS,
@@ -236,8 +236,7 @@ def get_trigger_platform_from_type(trigger_type: str) -> str:
     trigger_split = trigger_type.split(".")
     # Our convention for trigger types is to have the trigger type at the beginning
     # delimited by a `.`. For zwave_js triggers, there is a `.` in the name
-    trigger_platform = trigger_split[0]
-    if trigger_platform == DOMAIN:
+    if (trigger_platform := trigger_split[0]) == DOMAIN:
         return ".".join(trigger_split[:2])
     return trigger_platform
 
@@ -358,7 +357,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]
@@ -416,7 +415,7 @@ async def async_attach_trigger(
         else:
             raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
-        state_config = state.TRIGGER_SCHEMA(state_config)
+        state_config = await state.async_validate_trigger_config(hass, state_config)
         return await state.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )

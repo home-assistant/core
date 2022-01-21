@@ -2,6 +2,7 @@
 from homeassistant.helpers.entityfilter import (
     FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA,
+    EntityFilter,
     generate_filter,
 )
 
@@ -205,6 +206,24 @@ def test_no_domain_case4c():
     assert testfilter("sun.sun") is False
 
 
+def test_filter_schema_empty():
+    """Test filter schema."""
+    conf = {}
+    filt = FILTER_SCHEMA(conf)
+    conf.update(
+        {
+            "include_domains": [],
+            "include_entities": [],
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_entity_globs": [],
+            "exclude_entity_globs": [],
+        }
+    )
+    assert filt.config == conf
+    assert filt.empty_filter
+
+
 def test_filter_schema():
     """Test filter schema."""
     conf = {
@@ -216,6 +235,7 @@ def test_filter_schema():
     filt = FILTER_SCHEMA(conf)
     conf.update({"include_entity_globs": [], "exclude_entity_globs": []})
     assert filt.config == conf
+    assert not filt.empty_filter
 
 
 def test_filter_schema_with_globs():
@@ -230,6 +250,7 @@ def test_filter_schema_with_globs():
     }
     filt = FILTER_SCHEMA(conf)
     assert filt.config == conf
+    assert not filt.empty_filter
 
 
 def test_filter_schema_include_exclude():
@@ -247,4 +268,38 @@ def test_filter_schema_include_exclude():
         },
     }
     filt = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
-    assert filt.config == conf
+    assert filt.config == {
+        "include_domains": ["light"],
+        "include_entity_globs": ["sensor.kitchen_*"],
+        "include_entities": ["switch.kitchen"],
+        "exclude_domains": ["cover"],
+        "exclude_entity_globs": ["sensor.weather_*"],
+        "exclude_entities": ["light.kitchen"],
+    }
+    assert not filt.empty_filter
+
+
+def test_exlictly_included():
+    """Test if an entity is explicitly included."""
+    conf = {
+        "include": {
+            "domains": ["light"],
+            "entity_globs": ["sensor.kitchen_*"],
+            "entities": ["switch.kitchen"],
+        },
+        "exclude": {
+            "domains": ["cover"],
+            "entity_globs": ["sensor.weather_*"],
+            "entities": ["light.kitchen"],
+        },
+    }
+    filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
+    assert not filt.explicitly_included("light.any")
+    assert not filt.explicitly_included("switch.other")
+    assert filt.explicitly_included("sensor.kitchen_4")
+    assert filt.explicitly_included("switch.kitchen")
+
+    assert not filt.explicitly_excluded("light.any")
+    assert not filt.explicitly_excluded("switch.other")
+    assert filt.explicitly_excluded("sensor.weather_5")
+    assert filt.explicitly_excluded("light.kitchen")

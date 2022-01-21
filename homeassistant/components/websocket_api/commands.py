@@ -9,9 +9,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
-from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED,
+    MATCH_ALL,
+    SIGNAL_BOOTSTRAP_INTEGRATONS,
+)
 from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -33,6 +36,7 @@ from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
+from .const import ERR_NOT_FOUND
 
 
 @callback
@@ -44,6 +48,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
+    async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
@@ -353,7 +358,9 @@ async def handle_render_template(
             return
 
     @callback
-    def _template_listener(event: Event, updates: list[TrackTemplateResult]) -> None:
+    def _template_listener(
+        event: Event | None, updates: list[TrackTemplateResult]
+    ) -> None:
         nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
@@ -420,9 +427,7 @@ def handle_entity_source(
                 perm_category=CAT_ENTITIES,
             )
 
-        source = raw_sources.get(entity_id)
-
-        if source is None:
+        if (source := raw_sources.get(entity_id)) is None:
             connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
             return
 
@@ -497,7 +502,11 @@ async def handle_test_condition(
     # pylint: disable=import-outside-toplevel
     from homeassistant.helpers import condition
 
-    check_condition = await condition.async_from_config(hass, msg["condition"])
+    # Do static + dynamic validation of the condition
+    config = cv.CONDITION_SCHEMA(msg["condition"])
+    config = await condition.async_validate_condition_config(hass, config)
+    # Test the condition
+    check_condition = await condition.async_from_config(hass, config)
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )
@@ -524,3 +533,22 @@ async def handle_execute_script(
     script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
     await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_message(messages.result_message(msg["id"], {"context": context}))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "fire_event",
+        vol.Required("event_type"): str,
+        vol.Optional("event_data"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_fire_event(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle fire event command."""
+    context = connection.context(msg)
+
+    hass.bus.async_fire(msg["event_type"], msg.get("event_data"), context=context)
+    connection.send_result(msg["id"], {"context": context})

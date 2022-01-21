@@ -4,24 +4,19 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CoreState,
-    HomeAssistant,
-    State,
-    callback,
-    valid_entity_id,
-)
+from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
+
+from . import start
+from .entity import Entity
+from .event import async_track_time_interval
+from .json import JSONEncoder
+from .singleton import singleton
+from .storage import Store
 
 DATA_RESTORE_STATE_TASK = "restore_state_task"
 
@@ -35,6 +30,8 @@ STATE_DUMP_INTERVAL = timedelta(minutes=15)
 
 # How long should a saved state be preserved if the entity no longer exists
 STATE_EXPIRATION = timedelta(days=7)
+
+_StoredStateT = TypeVar("_StoredStateT", bound="StoredState")
 
 
 class StoredState:
@@ -50,55 +47,49 @@ class StoredState:
         return {"state": self.state.as_dict(), "last_seen": self.last_seen}
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> StoredState:
+    def from_dict(cls: type[_StoredStateT], json_dict: dict) -> _StoredStateT:
         """Initialize a stored state from a dict."""
         last_seen = json_dict["last_seen"]
 
         if isinstance(last_seen, str):
             last_seen = dt_util.parse_datetime(last_seen)
 
-        return cls(State.from_dict(json_dict["state"]), last_seen)
+        return cls(cast(State, State.from_dict(json_dict["state"])), last_seen)
 
 
 class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
-    @classmethod
-    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
+    @staticmethod
+    @singleton(DATA_RESTORE_STATE_TASK)
+    async def async_get_instance(hass: HomeAssistant) -> RestoreStateData:
         """Get the singleton instance of this data helper."""
+        data = RestoreStateData(hass)
 
-        @singleton(DATA_RESTORE_STATE_TASK)
-        async def load_instance(hass: HomeAssistant) -> RestoreStateData:
-            """Get the singleton instance of this data helper."""
-            data = cls(hass)
+        try:
+            stored_states = await data.store.async_load()
+        except HomeAssistantError as exc:
+            _LOGGER.error("Error loading last states", exc_info=exc)
+            stored_states = None
 
-            try:
-                stored_states = await data.store.async_load()
-            except HomeAssistantError as exc:
-                _LOGGER.error("Error loading last states", exc_info=exc)
-                stored_states = None
+        if stored_states is None:
+            _LOGGER.debug("Not creating cache - no saved states found")
+            data.last_states = {}
+        else:
+            data.last_states = {
+                item["state"]["entity_id"]: StoredState.from_dict(item)
+                for item in stored_states
+                if valid_entity_id(item["state"]["entity_id"])
+            }
+            _LOGGER.debug("Created cache with %s", list(data.last_states))
 
-            if stored_states is None:
-                _LOGGER.debug("Not creating cache - no saved states found")
-                data.last_states = {}
-            else:
-                data.last_states = {
-                    item["state"]["entity_id"]: StoredState.from_dict(item)
-                    for item in stored_states
-                    if valid_entity_id(item["state"]["entity_id"])
-                }
-                _LOGGER.debug("Created cache with %s", list(data.last_states))
+        async def hass_start(hass: HomeAssistant) -> None:
+            """Start the restore state task."""
+            data.async_setup_dump()
 
-            if hass.state == CoreState.running:
-                data.async_setup_dump()
-            else:
-                hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, data.async_setup_dump
-                )
+        start.async_at_start(hass, hass_start)
 
-            return data
-
-        return cast(RestoreStateData, await load_instance(hass))
+        return data
 
     @classmethod
     async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
@@ -129,7 +120,7 @@ class RestoreStateData:
         current_entity_ids = {
             state.entity_id
             for state in all_states
-            if not state.attributes.get(entity_registry.ATTR_RESTORED)
+            if not state.attributes.get(ATTR_RESTORED)
         }
 
         # Start with the currently registered states
@@ -138,7 +129,7 @@ class RestoreStateData:
             for state in all_states
             if state.entity_id in self.entity_ids and
             # Ignore all states that are entity registry placeholders
-            not state.attributes.get(entity_registry.ATTR_RESTORED)
+            not state.attributes.get(ATTR_RESTORED)
         ]
         expiration_time = now - STATE_EXPIRATION
 
@@ -269,7 +260,9 @@ class RestoreEntity(Entity):
             # Return None if this entity isn't added to hass yet
             _LOGGER.warning("Cannot get last state. Entity not added to hass")  # type: ignore[unreachable]
             return None
-        data = await RestoreStateData.async_get_instance(self.hass)
+        data = cast(
+            RestoreStateData, await RestoreStateData.async_get_instance(self.hass)
+        )
         if self.entity_id not in data.last_states:
             return None
         return data.last_states[self.entity_id].state

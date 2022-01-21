@@ -1,11 +1,12 @@
-"""Test the Tado config flow."""
+"""Test the Rfxtrx config flow."""
 import os
 from unittest.mock import MagicMock, patch, sentinel
 
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -32,11 +33,8 @@ def com_port():
     return port
 
 
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    return_value=None,
-)
-async def test_setup_network(connect_mock, hass):
+@patch("homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
+async def test_setup_network(transport_mock, hass):
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -170,10 +168,11 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass):
 
 
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
+    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport",
+    autospec=True,
     side_effect=OSError,
 )
-async def test_setup_network_fail(connect_mock, hass):
+async def test_setup_network_fail(transport_mock, hass):
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -277,146 +276,8 @@ async def test_setup_serial_manual_fail(com_mock, hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    serial_connect,
-)
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
-    return_value=None,
-)
-async def test_import_serial(connect_mock, hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "RFXTRX"
-    assert result["data"] == {
-        "host": None,
-        "port": None,
-        "device": "/dev/tty123",
-        "debug": False,
-    }
-
-
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    return_value=None,
-)
-async def test_import_network(connect_mock, hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": "localhost", "port": 1234, "device": None, "debug": False},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "RFXTRX"
-    assert result["data"] == {
-        "host": "localhost",
-        "port": 1234,
-        "device": None,
-        "debug": False,
-    }
-
-
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    side_effect=OSError,
-)
-async def test_import_network_connection_fail(connect_mock, hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": "localhost", "port": 1234, "device": None, "debug": False},
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_update(hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "debug": False,
-            "devices": {},
-        },
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "debug": True,
-            "devices": {},
-        },
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_migrate(hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": None,
-                "port": None,
-                "device": "/dev/tty123",
-                "debug": True,
-                "automatic_add": True,
-                "devices": {},
-            },
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-    assert entry.data["devices"] == {}
-
-
 async def test_options_global(hass):
     """Test if we can set global options."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -449,7 +310,6 @@ async def test_options_global(hass):
 
 async def test_options_add_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -493,7 +353,7 @@ async def test_options_add_device(hass):
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"fire_event": True, "signal_repetitions": 5}
+        result["flow_id"], user_input={"signal_repetitions": 5}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -503,19 +363,17 @@ async def test_options_add_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0b1100cd0213c7f230010f71"]
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
 async def test_options_add_duplicate_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -552,7 +410,6 @@ async def test_options_add_duplicate_device(hass):
 
 async def test_options_add_remove_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -585,7 +442,7 @@ async def test_options_add_remove_device(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"fire_event": True, "signal_repetitions": 5, "off_delay": "4"},
+        user_input={"signal_repetitions": 5, "off_delay": "4"},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -595,13 +452,12 @@ async def test_options_add_remove_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["off_delay"] == 4
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
     device_registry = dr.async_get(hass)
@@ -636,7 +492,6 @@ async def test_options_add_remove_device(hass):
 
 async def test_options_replace_sensor_device(hass):
     """Test we can replace a sensor device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -797,7 +652,6 @@ async def test_options_replace_sensor_device(hass):
 
 async def test_options_replace_control_device(hass):
     """Test we can replace a control device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -906,7 +760,6 @@ async def test_options_replace_control_device(hass):
 
 async def test_options_remove_multiple_devices(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -977,7 +830,6 @@ async def test_options_remove_multiple_devices(hass):
 
 async def test_options_add_and_configure_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1011,7 +863,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "signal_repetitions": 5,
             "data_bits": 4,
             "off_delay": "abcdef",
@@ -1030,7 +881,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
@@ -1046,13 +896,12 @@ async def test_options_add_and_configure_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert not entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
     device_registry = dr.async_get(hass)
@@ -1079,7 +928,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": True,
             "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
@@ -1092,14 +940,12 @@ async def test_options_add_and_configure_device(hass):
     await hass.async_block_till_done()
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
 
 
 async def test_options_configure_rfy_cover_device(hass):
     """Test we can configure the venetion blind mode of an Rfy cover."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1136,7 +982,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "venetian_blind_mode": "EU",
         },
     )
@@ -1169,7 +1014,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "venetian_blind_mode": "EU",
         },
     )

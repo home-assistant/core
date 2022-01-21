@@ -1,4 +1,6 @@
 """Show the amount of records in a user's Discogs collection."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import random
@@ -6,15 +8,22 @@ import random
 import discogs_client
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,36 +43,44 @@ SENSOR_COLLECTION_TYPE = "collection"
 SENSOR_WANTLIST_TYPE = "wantlist"
 SENSOR_RANDOM_RECORD_TYPE = "random_record"
 
-SENSORS = {
-    SENSOR_COLLECTION_TYPE: {
-        "name": "Collection",
-        "icon": ICON_RECORD,
-        "unit_of_measurement": UNIT_RECORDS,
-    },
-    SENSOR_WANTLIST_TYPE: {
-        "name": "Wantlist",
-        "icon": ICON_RECORD,
-        "unit_of_measurement": UNIT_RECORDS,
-    },
-    SENSOR_RANDOM_RECORD_TYPE: {
-        "name": "Random Record",
-        "icon": ICON_PLAYER,
-        "unit_of_measurement": None,
-    },
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_COLLECTION_TYPE,
+        name="Collection",
+        icon=ICON_RECORD,
+        native_unit_of_measurement=UNIT_RECORDS,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_WANTLIST_TYPE,
+        name="Wantlist",
+        icon=ICON_RECORD,
+        native_unit_of_measurement=UNIT_RECORDS,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_RANDOM_RECORD_TYPE,
+        name="Random Record",
+        icon=ICON_PLAYER,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Discogs sensor."""
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
@@ -81,51 +98,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("API token is not valid")
         return
 
-    sensors = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    entities = [
+        DiscogsSensor(discogs_data, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
 
-    add_entities(sensors, True)
+    add_entities(entities, True)
 
 
 class DiscogsSensor(SensorEntity):
     """Create a new Discogs sensor for a specific type."""
 
-    def __init__(self, discogs_data, name, sensor_type):
+    def __init__(self, discogs_data, name, description: SensorEntityDescription):
         """Initialize the Discogs sensor."""
+        self.entity_description = description
         self._discogs_data = discogs_data
-        self._name = name
-        self._type = sensor_type
-        self._state = None
-        self._attrs = {}
+        self._attrs: dict = {}
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {SENSORS[self._type]['name']}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return SENSORS[self._type]["icon"]
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return SENSORS[self._type]["unit_of_measurement"]
+        self._attr_name = f"{name} {description.name}"
 
     @property
     def extra_state_attributes(self):
         """Return the device state attributes of the sensor."""
-        if self._state is None or self._attrs is None:
+        if self._attr_native_value is None or self._attrs is None:
             return None
 
-        if self._type == SENSOR_RANDOM_RECORD_TYPE and self._state is not None:
+        if (
+            self.entity_description.key == SENSOR_RANDOM_RECORD_TYPE
+            and self._attr_native_value is not None
+        ):
             return {
                 "cat_no": self._attrs["labels"][0]["catno"],
                 "cover_image": self._attrs["cover_image"],
@@ -156,9 +159,9 @@ class DiscogsSensor(SensorEntity):
 
     def update(self):
         """Set state to the amount of records in user's collection."""
-        if self._type == SENSOR_COLLECTION_TYPE:
-            self._state = self._discogs_data["collection_count"]
-        elif self._type == SENSOR_WANTLIST_TYPE:
-            self._state = self._discogs_data["wantlist_count"]
+        if self.entity_description.key == SENSOR_COLLECTION_TYPE:
+            self._attr_native_value = self._discogs_data["collection_count"]
+        elif self.entity_description.key == SENSOR_WANTLIST_TYPE:
+            self._attr_native_value = self._discogs_data["wantlist_count"]
         else:
-            self._state = self.get_random_record()
+            self._attr_native_value = self.get_random_record()

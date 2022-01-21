@@ -36,7 +36,7 @@ async def test_list_devices(hass, client, registry):
         manufacturer="manufacturer",
         model="model",
         via_device=("bridgeid", "0123"),
-        entry_type="service",
+        entry_type=helpers_dr.DeviceEntryType.SERVICE,
     )
 
     await client.send_json({"id": 5, "type": "config/device_registry/list"})
@@ -53,11 +53,13 @@ async def test_list_devices(hass, client, registry):
             "model": "model",
             "name": None,
             "sw_version": None,
+            "hw_version": None,
             "entry_type": None,
             "via_device_id": None,
             "area_id": None,
             "name_by_user": None,
             "disabled_by": None,
+            "configuration_url": None,
         },
         {
             "config_entries": ["1234"],
@@ -67,11 +69,13 @@ async def test_list_devices(hass, client, registry):
             "model": "model",
             "name": None,
             "sw_version": None,
-            "entry_type": "service",
+            "hw_version": None,
+            "entry_type": helpers_dr.DeviceEntryType.SERVICE,
             "via_device_id": dev1,
             "area_id": None,
             "name_by_user": None,
             "disabled_by": None,
+            "configuration_url": None,
         },
     ]
 
@@ -95,7 +99,7 @@ async def test_update_device(hass, client, registry):
             "device_id": device.id,
             "area_id": "12345A",
             "name_by_user": "Test Friendly Name",
-            "disabled_by": helpers_dr.DISABLED_USER,
+            "disabled_by": helpers_dr.DeviceEntryDisabler.USER,
             "type": "config/device_registry/update",
         }
     )
@@ -105,5 +109,5 @@ async def test_update_device(hass, client, registry):
     assert msg["result"]["id"] == device.id
     assert msg["result"]["area_id"] == "12345A"
     assert msg["result"]["name_by_user"] == "Test Friendly Name"
-    assert msg["result"]["disabled_by"] == helpers_dr.DISABLED_USER
+    assert msg["result"]["disabled_by"] == helpers_dr.DeviceEntryDisabler.USER
     assert len(registry.devices) == 1

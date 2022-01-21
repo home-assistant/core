@@ -8,9 +8,9 @@ import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
-from homeassistant.components import usb
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.components import usb, zeroconf
+from homeassistant.const import CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -31,7 +31,7 @@ DECONZ_DOMAIN = "deconz"
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self):
         """Initialize flow instance."""
@@ -94,21 +94,21 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
-    async def async_step_usb(self, discovery_info: DiscoveryInfoType):
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
-        vid = discovery_info["vid"]
-        pid = discovery_info["pid"]
-        serial_number = discovery_info["serial_number"]
-        device = discovery_info["device"]
-        manufacturer = discovery_info["manufacturer"]
-        description = discovery_info["description"]
+        vid = discovery_info.vid
+        pid = discovery_info.pid
+        serial_number = discovery_info.serial_number
+        device = discovery_info.device
+        manufacturer = discovery_info.manufacturer
+        description = discovery_info.description
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         if current_entry := await self.async_set_unique_id(unique_id):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: dev_path,
                     },
                 }
@@ -120,9 +120,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If they already have a discovery for deconz
         # we ignore the usb discovery as they probably
         # want to use it there instead
-        for flow in self.hass.config_entries.flow.async_progress():
-            if flow["handler"] == DECONZ_DOMAIN:
-                return self.async_abort(reason="not_zha_device")
+        if self.hass.config_entries.flow.async_progress_by_handler(DECONZ_DOMAIN):
+            return self.async_abort(reason="not_zha_device")
         for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
             if entry.source != config_entries.SOURCE_IGNORE:
                 return self.async_abort(reason="not_zha_device")
@@ -160,19 +159,21 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({}),
         )
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
-        local_name = discovery_info["hostname"][:-1]
+        local_name = discovery_info.hostname[:-1]
         node_name = local_name[: -len(".local")]
-        host = discovery_info[CONF_HOST]
+        host = discovery_info.host
         device_path = f"socket://{host}:6638"
 
         if current_entry := await self.async_set_unique_id(node_name):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: device_path,
                     },
                 }
