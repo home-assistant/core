@@ -11,10 +11,12 @@ from .const import CONF_UID, DATA_COORDINATOR, DATA_COORDINATOR_PAIRED_SENSOR, D
 from .util import GuardianDataUpdateCoordinator
 
 CONF_BSSID = "bssid"
+CONF_PAIRED_UIDS = "paired_uids"
 CONF_SSID = "ssid"
 
 TO_REDACT = {
     CONF_BSSID,
+    CONF_PAIRED_UIDS,
     CONF_SSID,
     CONF_UID,
 }
