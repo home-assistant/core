@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import DATA_INTEGRATIONS, Integration
+from homeassistant.loader import DATA_CUSTOM_COMPONENTS, DATA_INTEGRATIONS, Integration
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -136,10 +136,15 @@ async def _async_get_json_file_response(
     """Return JSON file from dictionary."""
     hass_sys_info = await async_get_system_info(hass)
     integration: Integration = hass.data[DATA_INTEGRATIONS][domain]
+    custom_components = {
+        ccmp: hass.data[DATA_INTEGRATIONS][ccmp].manifest
+        for ccmp in list(hass.data[DATA_CUSTOM_COMPONENTS].keys())
+    }
     try:
         json_data = json.dumps(
             {
                 "home-assistant": hass_sys_info,
+                "custom-components": custom_components,
                 "integration-manifest": integration.manifest,
                 "diagnostics-data": data,
             },
