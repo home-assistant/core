@@ -23,9 +23,10 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import local_source, models
+from . import local_source
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 from .error import MediaSourceError, Unresolvable
+from .models import BrowseMediaSource, MediaSourceItem, PlayMedia
 
 DEFAULT_EXPIRY_TIME = 3600 * 24
 
@@ -36,6 +37,8 @@ __all__ = [
     "async_browse_media",
     "async_resolve_media",
     "BrowseMediaSource",
+    "PlayMedia",
+    "MediaSourceItem",
     "Unresolvable",
     "MediaSourceError",
 ]
@@ -79,14 +82,14 @@ async def _process_media_source_platform(
 @callback
 def _get_media_item(
     hass: HomeAssistant, media_content_id: str | None
-) -> models.MediaSourceItem:
+) -> MediaSourceItem:
     """Return media item."""
     if media_content_id:
-        return models.MediaSourceItem.from_uri(hass, media_content_id)
+        return MediaSourceItem.from_uri(hass, media_content_id)
 
     # We default to our own domain if its only one registered
     domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
-    return models.MediaSourceItem(hass, domain, "")
+    return MediaSourceItem(hass, domain, "")
 
 
 @bind_hass
@@ -95,7 +98,7 @@ async def async_browse_media(
     media_content_id: str,
     *,
     content_filter: Callable[[BrowseMedia], bool] | None = None,
-) -> models.BrowseMediaSource:
+) -> BrowseMediaSource:
     """Return media player browse media results."""
     if DOMAIN not in hass.data:
         raise BrowseError("Media Source not loaded")
@@ -112,9 +115,7 @@ async def async_browse_media(
 
 
 @bind_hass
-async def async_resolve_media(
-    hass: HomeAssistant, media_content_id: str
-) -> models.PlayMedia:
+async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> PlayMedia:
     """Get info to play media."""
     if DOMAIN not in hass.data:
         raise Unresolvable("Media Source not loaded")
