@@ -65,7 +65,7 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
     @property
-    def is_on(self) -> bool | None:  # type: ignore
+    def is_on(self) -> bool | None:
         """Return a boolean for the state of the switch."""
         if self.info.primary_value.value is None:
             # guard missing value
@@ -107,7 +107,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
         self._update_state()
 
     @property
-    def is_on(self) -> bool | None:  # type: ignore
+    def is_on(self) -> bool | None:
         """Return a boolean for the state of the switch."""
         return self._state
 

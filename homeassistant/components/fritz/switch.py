@@ -364,6 +364,8 @@ async def async_setup_entry(
 class FritzBoxBaseSwitch(FritzBoxBaseEntity):
     """Fritz switch base class."""
 
+    _attr_is_on: bool | None = False
+
     def __init__(
         self,
         avm_wrapper: AvmWrapper,
@@ -385,8 +387,6 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
 
         self._attributes: dict[str, str] = {}
         self._is_available = True
-
-        self._attr_is_on = False
 
     @property
     def name(self) -> str:
