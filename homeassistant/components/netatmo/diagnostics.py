@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_HANDLER, DOMAIN
-from .data_handler import NetatmoDataHandler
+from .data_handler import CLIMATE_TOPOLOGY_CLASS_NAME, NetatmoDataHandler
 
 TO_REDACT = {
     "access_token",
@@ -14,11 +14,13 @@ TO_REDACT = {
     "restricted_access_token",
     "restricted_refresh_token",
     "webhook_id",
+    "cloudhook_url",
     "lat_ne",
     "lat_sw",
     "lon_ne",
     "lon_sw",
     "coordinates",
+    "name",
 }
 
 
@@ -39,8 +41,8 @@ async def async_get_config_entry_diagnostics(
             TO_REDACT,
         ),
         "data": {
-            "AsyncClimateTopology": async_redact_data(
-                getattr(data_handler.data["AsyncClimateTopology"], "raw_data"),
+            CLIMATE_TOPOLOGY_CLASS_NAME: async_redact_data(
+                getattr(data_handler.data[CLIMATE_TOPOLOGY_CLASS_NAME], "raw_data"),
                 TO_REDACT,
             )
         },
