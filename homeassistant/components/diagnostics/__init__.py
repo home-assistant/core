@@ -146,7 +146,7 @@ async def _async_get_json_file_response(
                 "home-assistant": hass_sys_info,
                 "custom-components": custom_components,
                 "integration-manifest": integration.manifest,
-                "diagnostics-data": data,
+                "data": data,
             },
             indent=2,
             cls=ExtendedJSONEncoder,

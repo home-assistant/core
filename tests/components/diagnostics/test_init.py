@@ -96,7 +96,7 @@ async def test_download_diagnostics(hass, hass_client):
             "name": "fake_integration",
             "requirements": [],
         },
-        "diagnostics-data": {"config_entry": "info"},
+        "data": {"config_entry": "info"},
     }
 
     dev_reg = async_get(hass)
@@ -117,7 +117,7 @@ async def test_download_diagnostics(hass, hass_client):
             "name": "fake_integration",
             "requirements": [],
         },
-        "diagnostics-data": {"device": "info"},
+        "data": {"device": "info"},
     }
 
 
