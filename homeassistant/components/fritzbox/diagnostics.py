@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_COORDINATOR, DOMAIN
 from .coordinator import FritzboxDataUpdateCoordinator
 
-TO_REDACT = [CONF_USERNAME, CONF_PASSWORD]
+TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
