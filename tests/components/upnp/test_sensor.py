@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.upnp import UpnpDataUpdateCoordinator
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
@@ -112,7 +114,7 @@ async def test_derived_upnp_sensors(
             "sensor.mock_name_packets_s_received"
         )
         packets_s_sent_state = hass.states.get("sensor.mock_name_packets_s_sent")
-        assert kib_s_received_state.state == "10.0"
-        assert kib_s_sent_state.state == "20.0"
-        assert packets_s_received_state.state == "30.0"
-        assert packets_s_sent_state.state == "40.0"
+        assert float(kib_s_received_state.state) == pytest.approx(10.0, rel=0.1)
+        assert float(kib_s_sent_state.state) == pytest.approx(20.0, rel=0.1)
+        assert float(packets_s_received_state.state) == pytest.approx(30.0, rel=0.1)
+        assert float(packets_s_sent_state.state) == pytest.approx(40.0, rel=0.1)
