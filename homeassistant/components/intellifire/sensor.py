@@ -125,6 +125,6 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = self.coordinator.device_info
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.api.data)
