@@ -141,6 +141,9 @@ class HKDevice:
         self._polling_lock_warned = False
         self._poll_failures = 0
 
+        # This is set to True if we can't rely on serial numbers to be unique
+        self.unreliable_serial_numbers = False
+
         self.watchable_characteristics = []
 
         self.pairing.dispatcher_connect(self.process_new_events)
@@ -209,9 +212,7 @@ class HKDevice:
 
         serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
 
-        if valid_serial_number(serial_number):
-            identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
-        else:
+        if self.unreliable_serial_numbers and accessory.aid > 1:
             # Some accessories do not have a serial number
             identifiers = {
                 (
@@ -220,6 +221,8 @@ class HKDevice:
                     f"{self.unique_id}_{accessory.aid}",
                 )
             }
+        else:
+            identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
 
         if accessory.aid == 1:
             # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
@@ -265,8 +268,8 @@ class HKDevice:
         for accessory in sorted(
             self.entity_map.accessories, key=lambda accessory: accessory.aid
         ):
-
             device_info = self.device_info_for_accessory(accessory)
+
             device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 **device_info,
@@ -275,6 +278,46 @@ class HKDevice:
             devices[accessory.aid] = device.id
 
         self.devices = devices
+
+    @callback
+    def async_detect_workarounds(self):
+        """Detect any workarounds that are needed for this pairing."""
+        unreliable_serial_numbers = False
+
+        devices = set()
+
+        for accessory in self.entity_map.accessories:
+            info = accessory.services.first(
+                service_type=ServicesTypes.ACCESSORY_INFORMATION,
+            )
+
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+
+            if not valid_serial_number(serial_number):
+                _LOGGER.debug(
+                    "Serial number %r is not valid, it cannot be used as a unique identifier",
+                    serial_number,
+                )
+                unreliable_serial_numbers = True
+
+            elif serial_number in devices:
+                _LOGGER.debug(
+                    "Serial number %r is duplicated within this pairing, it cannot be used as a unique identifier",
+                    serial_number,
+                )
+                unreliable_serial_numbers = True
+
+            elif serial_number == info.value(CharacteristicsTypes.HARDWARE_REVISION):
+                # This is a known bug with some devices (e.g. RYSE SmartShades)
+                _LOGGER.debug(
+                    "Serial number %r is actually the hardware revision, it cannot be used as a unique identifier",
+                    serial_number,
+                )
+                unreliable_serial_numbers = True
+
+            devices.add(serial_number)
+
+        self.unreliable_serial_numbers = unreliable_serial_numbers
 
     async def async_process_entity_map(self):
         """
@@ -288,6 +331,8 @@ class HKDevice:
         # to map aid/iid to GATT characteristics. So push it to there as well.
 
         self.pairing.pairing_data["accessories"] = self.accessories
+
+        self.async_detect_workarounds()
 
         await self.async_load_platforms()
 
