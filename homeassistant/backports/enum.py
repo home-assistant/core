@@ -12,6 +12,8 @@ class StrEnumMeta(EnumMeta):
 
     def __contains__(cls, member: object) -> bool:
         """Override to allow string comparison."""
+        if member is None:
+            return False
         if isinstance(member, str):
             return member in cls._value2member_map_
         return super().__contains__(member)
