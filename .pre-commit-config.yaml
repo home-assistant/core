@@ -97,9 +97,10 @@ repos:
         files: ^homeassistant/.+\.py$
       - id: pylint
         name: pylint
-        entry: pylint
-        language: system
+        entry: script/run-in-env.sh pylint -j 0
+        language: script
         types: [python]
+        files: ^homeassistant/.+\.py$
       - id: gen_requirements_all
         name: gen_requirements_all
         entry: script/run-in-env.sh python3 -m script.gen_requirements_all
