@@ -27,19 +27,17 @@ from .const import DOMAIN
 
 
 @dataclass
-class IntellifireSensorEntityDescriptionMixin:
+class IntellifireSensorRequireKeysMixin:
     """Mixin for required keys."""
 
     # Although sensors could have a variety of different return values,
     # all the ones below are only returning ints
-    value_fn: Callable[
-        [IntellifirePollData], int
-    ]
+    value_fn: Callable[[IntellifirePollData], int]
 
 
 @dataclass
 class IntellifireSensorEntityDescription(
-    SensorEntityDescription, IntellifireSensorEntityDescriptionMixin
+    SensorEntityDescription, IntellifireSensorRequireKeysMixin
 ):
     """Describes a sensor sensor entity."""
 
