@@ -63,6 +63,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
+    CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY: "sensor",
     CharacteristicsTypes.TEMPERATURE_CURRENT: "sensor",
     CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: "sensor",
     CharacteristicsTypes.AIR_QUALITY: "sensor",
