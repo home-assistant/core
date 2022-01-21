@@ -18,6 +18,7 @@ TO_REDACT = {
     "lat_sw",
     "lon_ne",
     "lon_sw",
+    "coordinates",
 }
 
 
@@ -37,5 +38,10 @@ async def async_get_config_entry_diagnostics(
             },
             TO_REDACT,
         ),
-        "data": async_redact_data(data_handler.data, TO_REDACT),
+        "data": {
+            "AsyncClimateTopology": async_redact_data(
+                getattr(data_handler.data["AsyncClimateTopology"], "raw_data"),
+                TO_REDACT,
+            )
+        },
     }
