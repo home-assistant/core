@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -25,7 +26,7 @@ class MazdaBinarySensorRequiredKeysMixin:
     name_suffix: str
 
     # Function to determine the value for this binary sensor, given the coordinator data
-    value: Callable[[dict], bool]
+    value: Callable[[dict[str, Any]], bool]
 
 
 @dataclass
@@ -35,10 +36,10 @@ class MazdaBinarySensorEntityDescription(
     """Describes a Mazda binary sensor entity."""
 
     # Function to determine whether the vehicle supports this binary sensor, given the coordinator data
-    is_supported: Callable[[dict], bool] = lambda data: True
+    is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
     # Function to return extra state attributes, given the coordinator data
-    state_attributes: Callable[[dict], dict] | None = None
+    state_attributes: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
 
 def _plugged_in_supported(data):
