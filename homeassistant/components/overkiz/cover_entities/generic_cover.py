@@ -137,6 +137,7 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         if self.assumed_state:
             return None
 
+        # Check if cover movement execution is currently running
         if any(
             execution.get("device_url") == self.device.device_url
             and execution.get("command_name") in COMMANDS_OPEN + COMMANDS_OPEN_TILT
@@ -144,17 +145,15 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         ):
             return True
 
+        # Check if cover is moving based on current state
         is_moving = self.device.states.get(OverkizState.CORE_MOVING)
         current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
         target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
 
-        return (
-            is_moving
-            and is_moving.value
-            and current_closure
-            and target_closure
-            and cast(int, current_closure.value) > cast(int, target_closure.value)
-        )
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) > cast(int, target_closure.value)
 
     @property
     def is_closing(self) -> bool | None:
@@ -163,6 +162,7 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         if self.assumed_state:
             return None
 
+        # Check if cover movement execution is currently running
         if any(
             execution.get("device_url") == self.device.device_url
             and execution.get("command_name") in COMMANDS_CLOSE + COMMANDS_CLOSE_TILT
@@ -170,17 +170,15 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         ):
             return True
 
+        # Check if cover is moving based on current state
         is_moving = self.device.states.get(OverkizState.CORE_MOVING)
         current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
         target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
 
-        return (
-            is_moving
-            and is_moving.value
-            and current_closure
-            and target_closure
-            and cast(int, current_closure.value) < cast(int, target_closure.value)
-        )
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) < cast(int, target_closure.value)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
