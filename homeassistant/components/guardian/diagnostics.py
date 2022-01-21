@@ -36,16 +36,16 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry": {
             "title": entry.title,
-            "data": dict(entry.data),
+            "data": async_redact_data(entry.data, TO_REDACT),
         },
         "data": {
             "valve_controller": {
-                uid: async_redact_data(coordinator.data, TO_REDACT)
-                for uid, coordinator in coordinators.items()
+                api_category: async_redact_data(coordinator.data, TO_REDACT)
+                for api_category, coordinator in coordinators.items()
             },
-            "paired_sensors": {
-                uid: async_redact_data(coordinator.data, TO_REDACT)
-                for uid, coordinator in paired_sensor_coordinators.items()
-            },
+            "paired_sensors": [
+                async_redact_data(coordinator.data, TO_REDACT)
+                for coordinator in paired_sensor_coordinators.values()
+            ],
         },
     }

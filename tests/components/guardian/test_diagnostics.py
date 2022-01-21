@@ -32,7 +32,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian
                 "sensor_pair_dump": {"pair_count": 1, "paired_uids": REDACTED},
                 "system_diagnostics": {
                     "codename": "gvc1",
-                    "uid": "ABCDEF123456",
+                    "uid": REDACTED,
                     "uptime": 41,
                     "firmware": "0.20.9-beta+official.ef3",
                     "rf_modem_firmware": "4.0.0",
@@ -62,8 +62,8 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian
                     "ssid": REDACTED,
                 },
             },
-            "paired_sensors": {
-                "AABBCCDDEEFF": {
+            "paired_sensors": [
+                {
                     "uid": REDACTED,
                     "codename": "gld1",
                     "temperature": 68,
@@ -71,6 +71,6 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian
                     "moved": True,
                     "battery_percentage": 79,
                 }
-            },
+            ],
         },
     }
