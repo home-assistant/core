@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
-from typing import Any, Final
+from typing import Any, Final, Generic
 
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
@@ -19,9 +19,7 @@ from pyunifiprotect.data import (
     RecordingMode,
     Viewer,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 from pyunifiprotect.data.devices import Sensor
-from pyunifiprotect.data.nvr import NVR
 from pyunifiprotect.data.types import ChimeType, MountType
 import voluptuous as vol
 
@@ -37,7 +35,7 @@ from homeassistant.util.dt import utcnow
 from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin
+from .models import ProtectSetableKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -104,15 +102,14 @@ SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
 
 
 @dataclass
-class ProtectSelectEntityDescription(ProtectSetableKeysMixin, SelectEntityDescription):
+class ProtectSelectEntityDescription(
+    ProtectSetableKeysMixin, SelectEntityDescription, Generic[T]
+):
     """Describes UniFi Protect Select entity."""
 
     ufp_options: list[dict[str, Any]] | None = None
-    ufp_options_callable: Callable[
-        [ProtectApiClient], list[dict[str, Any]]
-    ] | None = None
+    ufp_options_fn: Callable[[ProtectApiClient], list[dict[str, Any]]] | None = None
     ufp_enum_type: type[Enum] | None = None
-    ufp_set_method: str | None = None
 
 
 def _get_viewer_options(api: ProtectApiClient) -> list[dict[str, Any]]:
@@ -140,13 +137,11 @@ def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     return options
 
 
-def _get_viewer_current(obj: Any) -> str:
-    assert isinstance(obj, Viewer)
+def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
 
 
-def _get_light_motion_current(obj: Any) -> str:
-    assert isinstance(obj, Light)
+def _get_light_motion_current(obj: Light) -> str:
     # a bit of extra to allow On Motion Always/Dark
     if (
         obj.light_mode_settings.mode == LightModeType.MOTION
@@ -156,15 +151,13 @@ def _get_light_motion_current(obj: Any) -> str:
     return obj.light_mode_settings.mode.value
 
 
-def _get_doorbell_current(obj: Any) -> str | None:
-    assert isinstance(obj, Camera)
+def _get_doorbell_current(obj: Camera) -> str | None:
     if obj.lcd_message is None:
         return None
     return obj.lcd_message.text
 
 
-async def _set_light_mode(obj: Any, mode: str) -> None:
-    assert isinstance(obj, Light)
+async def _set_light_mode(obj: Light, mode: str) -> None:
     lightmode, timing = LIGHT_MODE_TO_SETTINGS[mode]
     await obj.set_light_settings(
         LightModeType(lightmode),
@@ -172,10 +165,7 @@ async def _set_light_mode(obj: Any, mode: str) -> None:
     )
 
 
-async def _set_paired_camera(
-    obj: ProtectAdoptableDeviceModel | NVR, camera_id: str
-) -> None:
-    assert isinstance(obj, (Sensor, Light))
+async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
     if camera_id == TYPE_EMPTY_VALUE:
         camera: Camera | None = None
     else:
@@ -183,8 +173,7 @@ async def _set_paired_camera(
     await obj.set_paired_camera(camera)
 
 
-async def _set_doorbell_message(obj: Any, message: str) -> None:
-    assert isinstance(obj, Camera)
+async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
         await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
     elif message == TYPE_EMPTY_VALUE:
@@ -193,8 +182,7 @@ async def _set_doorbell_message(obj: Any, message: str) -> None:
         await obj.set_lcd_text(DoorbellMessageType(message))
 
 
-async def _set_liveview(obj: Any, liveview_id: str) -> None:
-    assert isinstance(obj, Viewer)
+async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
     liveview = obj.api.bootstrap.liveviews[liveview_id]
     await obj.set_liveview(liveview)
 
@@ -221,7 +209,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="isp_settings.ir_led_mode",
         ufp_set_method="set_ir_led_model",
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Camera](
         key="doorbell_text",
         name="Doorbell Text",
         icon="mdi:card-text",
@@ -229,7 +217,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         device_class=DEVICE_CLASS_LCD_MESSAGE,
         ufp_required_field="feature_flags.has_lcd_screen",
         ufp_value_fn=_get_doorbell_current,
-        ufp_options_callable=_get_doorbell_options,
+        ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
     ),
     ProtectSelectEntityDescription(
@@ -246,7 +234,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 )
 
 LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Light](
         key=_KEY_LIGHT_MOTION,
         name="Light Mode",
         icon="mdi:spotlight",
@@ -255,13 +243,13 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value_fn=_get_light_motion_current,
         ufp_set_method_fn=_set_light_mode,
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Light](
         key="paired_camera",
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
-        ufp_options_callable=_get_paired_camera_options,
+        ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
     ),
 )
@@ -277,24 +265,24 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="mount_type",
         ufp_set_method="set_mount_type",
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Sensor](
         key="paired_camera",
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
-        ufp_options_callable=_get_paired_camera_options,
+        ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
     ),
 )
 
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Viewer](
         key="viewer",
         name="Liveview",
         icon="mdi:view-dashboard",
         entity_category=None,
-        ufp_options_callable=_get_viewer_options,
+        ufp_options_fn=_get_viewer_options,
         ufp_value_fn=_get_viewer_current,
         ufp_set_method_fn=_set_liveview,
     ),
@@ -350,7 +338,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         # entities with categories are not exposed for voice and safe to update dynamically
         if (
             self.entity_description.entity_category is not None
-            and self.entity_description.ufp_options_callable is not None
+            and self.entity_description.ufp_options_fn is not None
         ):
             _LOGGER.debug(
                 "Updating dynamic select options for %s", self.entity_description.name
@@ -364,8 +352,8 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         if self.entity_description.ufp_options is not None:
             options = self.entity_description.ufp_options
         else:
-            assert self.entity_description.ufp_options_callable is not None
-            options = self.entity_description.ufp_options_callable(self.data.api)
+            assert self.entity_description.ufp_options_fn is not None
+            options = self.entity_description.ufp_options_fn(self.data.api)
 
         self._attr_options = [item["name"] for item in options]
         self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}

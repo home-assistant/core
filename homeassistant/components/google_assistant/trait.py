@@ -304,9 +304,7 @@ class CameraStreamTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a get camera stream command."""
-        url = await self.hass.components.camera.async_request_stream(
-            self.state.entity_id, "hls"
-        )
+        url = await camera.async_request_stream(self.hass, self.state.entity_id, "hls")
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
             "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,

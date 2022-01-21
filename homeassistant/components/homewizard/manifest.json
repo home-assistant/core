@@ -5,7 +5,7 @@
   "codeowners": ["@DCSBL"],
   "dependencies": [],
   "requirements": [
-    "aiohwenergy==0.6.0"
+    "aiohwenergy==0.7.0"
   ],
   "zeroconf": ["_hwenergy._tcp.local."],
   "config_flow": true,

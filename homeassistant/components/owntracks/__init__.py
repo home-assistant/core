@@ -145,9 +145,7 @@ async def async_connect_mqtt(hass, component):
         message["topic"] = msg.topic
         hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
 
-    await hass.components.mqtt.async_subscribe(
-        context.mqtt_topic, async_handle_mqtt_message, 1
-    )
+    await mqtt.async_subscribe(hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
     return True
 

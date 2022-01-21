@@ -84,12 +84,9 @@ SENSOR_POWER_PRODUCTION_THIS_MONTH = "power_production_this_month"
 SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
 
 # solar sensors
-SENSOR_SOLAR_COLLECTOR_TEMPERATURE = "solar_collector_temperature"
-SENSOR_SOLAR_HOTWATER_TEMPERATURE = "solar_hotwater_temperature"
-SENSOR_SOLAR_POWER_PRODUCTION_TODAY = "solar_power_production_today"
-SENSOR_SOLAR_POWER_PRODUCTION_THIS_WEEK = "solar_power_production_this_week"
-SENSOR_SOLAR_POWER_PRODUCTION_THIS_MONTH = "solar_power_production_this_month"
-SENSOR_SOLAR_POWER_PRODUCTION_THIS_YEAR = "solar_power_production_this_year"
+SENSOR_COLLECTOR_TEMPERATURE = "collector temperature"
+SENSOR_SOLAR_STORAGE_TEMPERATURE = "solar storage temperature"
+SENSOR_SOLAR_POWER_PRODUCTION = "solar power production"
 
 
 @dataclass
@@ -234,88 +231,24 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_COLLECTOR_TEMPERATURE,
+        key=SENSOR_SOLAR_STORAGE_TEMPERATURE,
+        name="Solar Storage Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getSolarStorageTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COLLECTOR_TEMPERATURE,
         name="Solar Collector Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getSolarCollectorTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_HOTWATER_TEMPERATURE,
-        name="Solar Hotwater Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        value_getter=lambda api: api.getSolarStorageTemperature(),
-        device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_TODAY,
-        name="Solar power production today",
+        key=SENSOR_SOLAR_POWER_PRODUCTION,
+        name="Solar Power Production",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getSolarPowerProductionToday(),
-        unit_getter=lambda api: api.getSolarPowerProductionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_THIS_WEEK,
-        name="Solar power production this week",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getSolarPowerProductionThisWeek(),
-        unit_getter=lambda api: api.getSolarPowerProductionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_THIS_MONTH,
-        name="Solar power production this month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getSolarPowerProductionThisMonth(),
-        unit_getter=lambda api: api.getSolarPowerProductionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_SOLAR_POWER_PRODUCTION_THIS_YEAR,
-        name="Solar power production this year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getSolarPowerProductionThisYear(),
-        unit_getter=lambda api: api.getSolarPowerProductionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_TODAY,
-        name="Power consumption today",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerConsumptionToday(),
-        unit_getter=lambda api: api.getPowerConsumptionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_THIS_WEEK,
-        name="Power consumption this week",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerConsumptionThisWeek(),
-        unit_getter=lambda api: api.getPowerConsumptionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_THIS_MONTH,
-        name="Power consumption this month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerConsumptionThisMonth(),
-        unit_getter=lambda api: api.getPowerConsumptionUnit(),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ViCareSensorEntityDescription(
-        key=SENSOR_POWER_CONSUMPTION_THIS_YEAR,
-        name="Power consumption this year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerConsumptionThisYear(),
-        unit_getter=lambda api: api.getPowerConsumptionUnit(),
+        value_getter=lambda api: api.getSolarPowerProduction(),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),

@@ -52,6 +52,7 @@ NO_IOT_CLASS = [
     "default_config",
     "device_automation",
     "device_tracker",
+    "diagnostics",
     "discovery",
     "downloader",
     "fan",

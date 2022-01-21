@@ -1,8 +1,10 @@
 """Test report state."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant import core
-from homeassistant.components.alexa import state_report
+from homeassistant.components.alexa import errors, state_report
 
 from . import TEST_URL, get_default_config
 
@@ -97,6 +99,37 @@ async def test_report_state_unsets_authorized_on_error(hass, aioclient_mock):
     # To trigger event listener
     await hass.async_block_till_done()
     config._store.set_authorized.assert_called_once_with(False)
+
+
+@pytest.mark.parametrize("exc", [errors.NoTokenAvailable, errors.RequireRelink])
+async def test_report_state_unsets_authorized_on_access_token_error(
+    hass, aioclient_mock, exc
+):
+    """Test proactive state unsets authorized on error."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    config = get_default_config()
+
+    await state_report.async_enable_proactive_mode(hass, config)
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    config._store.set_authorized.assert_not_called()
+
+    with patch.object(config, "async_get_access_token", AsyncMock(side_effect=exc)):
+        # To trigger event listener
+        await hass.async_block_till_done()
+        config._store.set_authorized.assert_called_once_with(False)
 
 
 async def test_report_state_instance(hass, aioclient_mock):

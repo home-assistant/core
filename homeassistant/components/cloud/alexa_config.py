@@ -75,7 +75,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._prefs.alexa_report_state
+        return self._prefs.alexa_report_state and self.authorized
 
     @property
     def endpoint(self):
@@ -159,7 +159,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         if resp.status == HTTPStatus.BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
-                    await self._prefs.async_update(alexa_report_state=False)
                     persistent_notification.async_create(
                         self.hass,
                         f"There was an error reporting state to Alexa ({body['reason']}). "
@@ -193,7 +192,10 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
-                await self.async_enable_proactive_mode()
+                with suppress(
+                    alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink
+                ):
+                    await self.async_enable_proactive_mode()
             else:
                 await self.async_disable_proactive_mode()
 

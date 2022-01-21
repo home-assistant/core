@@ -7,9 +7,10 @@ from pyunifiprotect import NotAuthorized, NvrError
 from pyunifiprotect.data import NVR
 
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import _patch_discovery
 from .conftest import MockBootstrap, MockEntityFixture
 
 from tests.common import MockConfigEntry
@@ -156,3 +157,21 @@ async def test_setup_failed_auth(hass: HomeAssistant, mock_entry: MockEntityFixt
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     assert mock_entry.entry.state == ConfigEntryState.SETUP_ERROR
     assert not mock_entry.api.update.called
+
+
+async def test_setup_starts_discovery(
+    hass: HomeAssistant, mock_ufp_config_entry: ConfigEntry, mock_client
+):
+    """Test setting up will start discovery."""
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.ProtectApiClient"
+    ) as mock_api:
+        mock_ufp_config_entry.add_to_hass(hass)
+        mock_api.return_value = mock_client
+        mock_entry = MockEntityFixture(mock_ufp_config_entry, mock_client)
+
+        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_entry.entry.state == ConfigEntryState.LOADED
+        await hass.async_block_till_done()
+        assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1

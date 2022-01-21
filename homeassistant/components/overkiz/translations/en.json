@@ -7,7 +7,7 @@
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "server_in_maintenance": "Server is down for maintenance",
-            "too_many_requests": "Too many requests, try again later.",
+            "too_many_requests": "Too many requests, try again later",
             "unknown": "Unexpected error"
         },
         "step": {

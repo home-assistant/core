@@ -6,7 +6,7 @@ import secrets
 
 from toonapi import Status, Toon, ToonError
 
-from homeassistant.components import cloud
+from homeassistant.components import cloud, webhook
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -69,8 +69,8 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             else:
                 webhook_url = self.entry.data[CONF_CLOUDHOOK_URL]
         else:
-            webhook_url = self.hass.components.webhook.async_generate_url(
-                self.entry.data[CONF_WEBHOOK_ID]
+            webhook_url = webhook.async_generate_url(
+                self.hass, self.entry.data[CONF_WEBHOOK_ID]
             )
 
         # Ensure the webhook is not registered already

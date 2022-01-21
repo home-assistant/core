@@ -73,7 +73,7 @@ class HASensemeFan(SensemeEntity, FanEntity):
         else:
             self._attr_percentage = None
         whoosh = self._device.fan_whoosh_mode
-        self._attr_preset_mode = whoosh if whoosh else None
+        self._attr_preset_mode = PRESET_MODE_WHOOSH if whoosh else None
         super()._async_update_attrs()
 
     async def async_set_percentage(self, percentage: int) -> None:
