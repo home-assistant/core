@@ -13,35 +13,24 @@ from homeassistant.components.guardian.config_flow import (
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
-from tests.common import MockConfigEntry
 
-
-async def test_duplicate_error(hass, ping_client):
+async def test_duplicate_error(hass, config, config_entry, setup_guardian):
     """Test that errors are shown when duplicate entries are added."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
-
-    MockConfigEntry(domain=DOMAIN, unique_id="guardian_3456", data=conf).add_to_hass(
-        hass
-    )
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
+        DOMAIN, context={"source": SOURCE_USER}, data=config
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_connect_error(hass):
+async def test_connect_error(hass, config):
     """Test that the config entry errors out if the device cannot connect."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
-
     with patch(
         "aioguardian.client.Client.connect",
         side_effect=GuardianError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
+            DOMAIN, context={"source": SOURCE_USER}, data=config
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
@@ -59,10 +48,8 @@ async def test_get_pin_from_uid():
     assert pin == "3456"
 
 
-async def test_step_user(hass, ping_client):
+async def test_step_user(hass, config, setup_guardian):
     """Test the user step."""
-    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -70,7 +57,7 @@ async def test_step_user(hass, ping_client):
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
+        DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "ABCDEF123456"
@@ -81,7 +68,7 @@ async def test_step_user(hass, ping_client):
     }
 
 
-async def test_step_zeroconf(hass, ping_client):
+async def test_step_zeroconf(hass, setup_guardian):
     """Test the zeroconf step."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.100",
@@ -134,7 +121,7 @@ async def test_step_zeroconf_already_in_progress(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_step_dhcp(hass, ping_client):
+async def test_step_dhcp(hass, setup_guardian):
     """Test the dhcp step."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip="192.168.1.100",
