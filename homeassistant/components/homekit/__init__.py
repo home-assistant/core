@@ -35,7 +35,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
-    ENTITY_CATEGORIES,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
@@ -44,6 +43,7 @@ from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
     FILTER_SCHEMA,
@@ -667,7 +667,7 @@ class HomeKit:
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
                 if (
-                    ent_reg_ent.entity_category in ENTITY_CATEGORIES
+                    ent_reg_ent.entity_category in EntityCategory
                     and not self._filter.explicitly_included(entity_id)
                 ):
                     continue
