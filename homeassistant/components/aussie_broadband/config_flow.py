@@ -52,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
         if user_input is not None:
             if not (errors := await self.async_auth(user_input)):
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
                 self._abort_if_unique_id_configured()
 
                 self.data = user_input
@@ -119,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
 
             if not (errors := await self.async_auth(data)):
-                entry = await self.async_set_unique_id(self._reauth_username)
+                entry = await self.async_set_unique_id(self._reauth_username.lower())
                 if entry:
                     self.hass.config_entries.async_update_entry(
                         entry,
