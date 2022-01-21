@@ -62,7 +62,6 @@ async def async_setup_platform(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=data
         )
     )
-    return True
 
 
 async def async_setup_entry(
