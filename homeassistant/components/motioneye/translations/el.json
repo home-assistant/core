@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "\u03a0\u03c1\u03cc\u03c4\u03c5\u03c0\u03bf URL \u03c1\u03bf\u03ae\u03c2"
+                }
+            }
+        }
+    }
+}

@@ -7,12 +7,11 @@ There are two different types of discoveries that can be fired/listened for.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, TypedDict
 
 from homeassistant import core, setup
 from homeassistant.const import Platform
-from homeassistant.core import CALLBACK_TYPE
 from homeassistant.loader import bind_hass
 
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send
@@ -37,7 +36,7 @@ class DiscoveryDict(TypedDict):
 def async_listen(
     hass: core.HomeAssistant,
     service: str,
-    callback: CALLBACK_TYPE,
+    callback: Callable[[str, DiscoveryInfoType | None], Awaitable[None] | None],
 ) -> None:
     """Set up listener for discovery of specific service.
 

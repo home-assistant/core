@@ -120,19 +120,60 @@ def item_payload(item, get_thumbnail_url=None):
     )
 
 
+def root_payload(media_library, favorites, get_thumbnail_url):
+    """Return root payload for Sonos."""
+    has_local_library = bool(
+        media_library.browse_by_idstring(
+            "tracks",
+            "",
+            max_items=1,
+        )
+    )
+
+    if not (favorites or has_local_library):
+        raise BrowseError("No media available")
+
+    if not has_local_library:
+        return favorites_payload(favorites)
+    if not favorites:
+        return library_payload(media_library, get_thumbnail_url)
+
+    children = [
+        BrowseMedia(
+            title="Favorites",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="favorites",
+            can_play=False,
+            can_expand=True,
+        ),
+        BrowseMedia(
+            title="Music Library",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="library",
+            can_play=False,
+            can_expand=True,
+        ),
+    ]
+
+    return BrowseMedia(
+        title="Sonos",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="",
+        media_content_type="root",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
 def library_payload(media_library, get_thumbnail_url=None):
     """
     Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
-    if not media_library.browse_by_idstring(
-        "tracks",
-        "",
-        max_items=1,
-    ):
-        raise BrowseError("Local library not found")
-
     children = []
     for item in media_library.browse():
         with suppress(UnknownMediaType):
@@ -143,6 +184,73 @@ def library_payload(media_library, get_thumbnail_url=None):
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
         media_content_type="library",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
+def favorites_payload(favorites):
+    """
+    Create response payload to describe contents of a specific library.
+
+    Used by async_browse_media.
+    """
+    children = []
+
+    group_types = {fav.reference.item_class for fav in favorites}
+    for group_type in sorted(group_types):
+        media_content_type = SONOS_TYPES_MAPPING[group_type]
+        children.append(
+            BrowseMedia(
+                title=media_content_type.title(),
+                media_class=SONOS_TO_MEDIA_CLASSES[group_type],
+                media_content_id=group_type,
+                media_content_type="favorites_folder",
+                can_play=False,
+                can_expand=True,
+            )
+        )
+
+    return BrowseMedia(
+        title="Favorites",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="",
+        media_content_type="favorites",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
+def favorites_folder_payload(favorites, media_content_id):
+    """Create response payload to describe all items of a type of favorite.
+
+    Used by async_browse_media.
+    """
+    children = []
+    content_type = SONOS_TYPES_MAPPING[media_content_id]
+
+    for favorite in favorites:
+        if favorite.reference.item_class != media_content_id:
+            continue
+        children.append(
+            BrowseMedia(
+                title=favorite.title,
+                media_class=SONOS_TO_MEDIA_CLASSES[favorite.reference.item_class],
+                media_content_id=favorite.item_id,
+                media_content_type="favorite_item_id",
+                can_play=True,
+                can_expand=False,
+                thumbnail=getattr(favorite, "album_art_uri", None),
+            )
+        )
+
+    return BrowseMedia(
+        title=content_type.title(),
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="",
+        media_content_type="favorites",
         can_play=False,
         can_expand=True,
         children=children,

@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name} ({ip_address})",
     "step": {
       "user": {
         "title": "UniFi Protect Setup",
@@ -19,7 +20,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name} ({ip_address})?",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"        
+        }
+      }      
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -27,7 +35,8 @@
       "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_started": "Discovery started"
     }
   },
   "options": {

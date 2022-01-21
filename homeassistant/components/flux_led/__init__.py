@@ -7,7 +7,7 @@ from typing import Any, Final, cast
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
-from flux_led.const import ATTR_ID
+from flux_led.const import ATTR_ID, WhiteChannelType
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +23,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_WHITE_CHANNEL_TYPE,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
@@ -56,6 +57,9 @@ PLATFORMS_BY_TYPE: Final = {
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
+NAME_TO_WHITE_CHANNEL_TYPE: Final = {
+    option.name.lower(): option for option in WhiteChannelType
+}
 
 
 @callback
@@ -95,6 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host, discovery=discovery)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
     device.discovery = discovery
+    if white_channel_type := entry.data.get(CONF_WHITE_CHANNEL_TYPE):
+        device.white_channel_channel_type = NAME_TO_WHITE_CHANNEL_TYPE[
+            white_channel_type
+        ]
 
     @callback
     def _async_state_changed(*_: Any) -> None:

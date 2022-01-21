@@ -45,7 +45,7 @@ async def test_async_browse_media(hass):
     # Test non-media ignored (/media has test.mp3 and not_media.txt)
     media = await media_source.async_browse_media(hass, "")
     assert isinstance(media, media_source.models.BrowseMediaSource)
-    assert media.title == "media/"
+    assert media.title == "media"
     assert len(media.children) == 2
 
     # Test invalid media content

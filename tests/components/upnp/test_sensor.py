@@ -1,18 +1,18 @@
 """Tests for UPnP/IGD sensor."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.upnp import UpnpDataUpdateCoordinator
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
     BYTES_SENT,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     ROUTER_IP,
     ROUTER_UPTIME,
-    TIMESTAMP,
-    UPDATE_INTERVAL,
     WAN_STATUS,
 )
 from homeassistant.core import HomeAssistant
@@ -54,7 +54,8 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
         ROUTER_UPTIME: 100,
         ROUTER_IP: "",
     }
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    now = dt_util.utcnow()
+    async_fire_time_changed(hass, now + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     await hass.async_block_till_done()
 
     b_received_state = hass.states.get("sensor.mock_name_b_received")
@@ -90,19 +91,19 @@ async def test_derived_upnp_sensors(
     assert packets_s_sent_state.state == "unknown"
 
     # Second poll.
-    now = coordinator.data[TIMESTAMP]
+    now = dt_util.utcnow()
     with patch(
         "homeassistant.components.upnp.device.utcnow",
-        return_value=now + UPDATE_INTERVAL,
+        return_value=now + timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     ):
         mock_device: MockIgdDevice = coordinator.device._igd_device
         mock_device.traffic_data = {
-            BYTES_RECEIVED: int(10240 * UPDATE_INTERVAL.total_seconds()),
-            BYTES_SENT: int(20480 * UPDATE_INTERVAL.total_seconds()),
-            PACKETS_RECEIVED: int(30 * UPDATE_INTERVAL.total_seconds()),
-            PACKETS_SENT: int(40 * UPDATE_INTERVAL.total_seconds()),
+            BYTES_RECEIVED: int(10240 * DEFAULT_SCAN_INTERVAL),
+            BYTES_SENT: int(20480 * DEFAULT_SCAN_INTERVAL),
+            PACKETS_RECEIVED: int(30 * DEFAULT_SCAN_INTERVAL),
+            PACKETS_SENT: int(40 * DEFAULT_SCAN_INTERVAL),
         }
-        async_fire_time_changed(hass, now + UPDATE_INTERVAL)
+        async_fire_time_changed(hass, now + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
         await hass.async_block_till_done()
 
         kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")

@@ -52,7 +52,7 @@ def get_api(
     """Get the Netgear API and login to it."""
     api: Netgear = Netgear(password, host, username, port, ssl)
 
-    if not api.login():
+    if not api.login_try_port():
         raise CannotLoginException
 
     return api
@@ -243,6 +243,16 @@ class NetgearRouter:
     def signal_device_update(self) -> str:
         """Event specific per Netgear entry to signal updates in devices."""
         return f"{DOMAIN}-{self._host}-device-update"
+
+    @property
+    def port(self) -> int:
+        """Port used by the API."""
+        return self._api.port
+
+    @property
+    def ssl(self) -> bool:
+        """SSL used by the API."""
+        return self._api.ssl
 
 
 class NetgearDeviceEntity(Entity):

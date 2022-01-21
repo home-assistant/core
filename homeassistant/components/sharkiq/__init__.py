@@ -17,7 +17,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import _LOGGER, API_TIMEOUT, DOMAIN, PLATFORMS
+from .const import API_TIMEOUT, DOMAIN, LOGGER, PLATFORMS
 from .update_coordinator import SharkIqUpdateCoordinator
 
 
@@ -29,13 +29,13 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     """Connect to vacuum."""
     try:
         async with async_timeout.timeout(API_TIMEOUT):
-            _LOGGER.debug("Initialize connection to Ayla networks API")
+            LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except SharkIqAuthError:
-        _LOGGER.error("Authentication error connecting to Shark IQ api")
+        LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
     except asyncio.TimeoutError as exc:
-        _LOGGER.error("Timeout expired")
+        LOGGER.error("Timeout expired")
         raise CannotConnect from exc
 
     return True
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     shark_vacs = await ayla_api.async_get_devices(False)
     device_names = ", ".join(d.name for d in shark_vacs)
-    _LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
+    LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
 
     await coordinator.async_config_entry_first_refresh()
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
     """Disconnect to vacuum."""
-    _LOGGER.debug("Disconnecting from Ayla Api")
+    LOGGER.debug("Disconnecting from Ayla Api")
     async with async_timeout.timeout(5):
         with suppress(
             SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError

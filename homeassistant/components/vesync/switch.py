@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES
+from .const import DOMAIN, VS_DISCOVERY, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,34 +30,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(VS_SWITCHES), async_discover
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SWITCHES), discover)
     )
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    _async_setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    dev_list = []
+    entities = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
-            dev_list.append(VeSyncSwitchHA(dev))
+            entities.append(VeSyncSwitchHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
-            dev_list.append(VeSyncLightSwitch(dev))
+            entities.append(VeSyncLightSwitch(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
 
-    async_add_entities(dev_list, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):

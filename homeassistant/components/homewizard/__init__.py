@@ -1,5 +1,4 @@
 """The Homewizard integration."""
-import asyncio
 import logging
 
 from aiohwenergy import DisabledError
@@ -10,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import COORDINATOR, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,14 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Finalize
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -53,17 +47,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("__init__ async_unload_entry")
 
-    unload_ok = all(
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            )
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.entry_id)
-        await config_data[COORDINATOR].api.close()
+        await config_data.api.close()
 
     return unload_ok

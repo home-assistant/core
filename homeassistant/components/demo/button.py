@@ -1,6 +1,7 @@
 """Demo platform that offers a fake button entity."""
 from __future__ import annotations
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -60,6 +61,6 @@ class DemoButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Send out a persistent notification."""
-        self.hass.components.persistent_notification.async_create(
-            "Button pressed", title="Button"
+        persistent_notification.async_create(
+            self.hass, "Button pressed", title="Button"
         )

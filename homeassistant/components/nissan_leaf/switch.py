@@ -6,8 +6,8 @@ from typing import Any
 
 from pycarwings2.pycarwings2 import Leaf
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -35,7 +35,7 @@ def setup_platform(
     add_entities(entities, True)
 
 
-class LeafClimateSwitch(LeafEntity, ToggleEntity):
+class LeafClimateSwitch(LeafEntity, SwitchEntity):
     """Nissan Leaf Climate Control switch."""
 
     def __init__(self, car: Leaf) -> None:

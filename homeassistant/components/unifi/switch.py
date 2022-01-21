@@ -4,6 +4,8 @@ Support for controlling power supply of clients which are powered over Ethernet 
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 """
+
+import asyncio
 from typing import Any
 
 from aiounifi.api import SOURCE_EVENT
@@ -332,10 +334,56 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
+    def __init__(self, dpi_group, controller):
+        """Set up dpi switch."""
+        super().__init__(dpi_group, controller)
+
+        self._is_enabled = self.calculate_enabled()
+        self._known_app_ids = dpi_group.dpiapp_ids
+
     @property
     def key(self) -> Any:
         """Return item key."""
         return self._item.id
+
+    async def async_added_to_hass(self) -> None:
+        """Register callback to known apps."""
+        await super().async_added_to_hass()
+
+        apps = self.controller.api.dpi_apps
+        for app_id in self._item.dpiapp_ids:
+            apps[app_id].register_callback(self.async_update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove registered callbacks."""
+        apps = self.controller.api.dpi_apps
+        for app_id in self._item.dpiapp_ids:
+            apps[app_id].remove_callback(self.async_update_callback)
+
+        await super().async_will_remove_from_hass()
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the DPI switch state.
+
+        Remove entity when no apps are paired with group.
+        Register callbacks to new apps.
+        Calculate and update entity state if it has changed.
+        """
+        if not self._item.dpiapp_ids:
+            self.hass.async_create_task(self.remove_item({self.key}))
+            return
+
+        if self._known_app_ids != self._item.dpiapp_ids:
+            self._known_app_ids = self._item.dpiapp_ids
+
+            apps = self.controller.api.dpi_apps
+            for app_id in self._item.dpiapp_ids:
+                apps[app_id].register_callback(self.async_update_callback)
+
+        if (enabled := self.calculate_enabled()) != self._is_enabled:
+            self._is_enabled = enabled
+            super().async_update_callback()
 
     @property
     def unique_id(self):
@@ -344,28 +392,46 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the client."""
+        """Return the name of the DPI group."""
         return self._item.name
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        if self._item.enabled:
+        if self._is_enabled:
             return "mdi:network"
         return "mdi:network-off"
 
+    def calculate_enabled(self) -> bool:
+        """Calculate if all apps are enabled."""
+        return all(
+            self.controller.api.dpi_apps[app_id].enabled
+            for app_id in self._item.dpiapp_ids
+            if app_id in self.controller.api.dpi_apps
+        )
+
     @property
     def is_on(self):
-        """Return true if client is allowed to connect."""
-        return self._item.enabled
+        """Return true if DPI group app restriction is enabled."""
+        return self._is_enabled
 
     async def async_turn_on(self, **kwargs):
-        """Turn on connectivity for client."""
-        await self.controller.api.dpi_groups.async_enable(self._item)
+        """Restrict access of apps related to DPI group."""
+        return await asyncio.gather(
+            *[
+                self.controller.api.dpi_apps.async_enable(app_id)
+                for app_id in self._item.dpiapp_ids
+            ]
+        )
 
     async def async_turn_off(self, **kwargs):
-        """Turn off connectivity for client."""
-        await self.controller.api.dpi_groups.async_disable(self._item)
+        """Remove restriction of apps related to DPI group."""
+        return await asyncio.gather(
+            *[
+                self.controller.api.dpi_apps.async_disable(app_id)
+                for app_id in self._item.dpiapp_ids
+            ]
+        )
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

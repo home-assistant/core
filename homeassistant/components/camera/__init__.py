@@ -869,7 +869,7 @@ async def ws_camera_web_rtc_offer(
     """Handle the signal path for a WebRTC stream.
 
     This signal path is used to route the offer created by the client to the
-    camera device through the integration for negitioation on initial setup,
+    camera device through the integration for negotiation on initial setup,
     which returns an answer. The actual streaming is handled entirely between
     the client and camera device.
 
@@ -951,10 +951,11 @@ async def async_handle_snapshot_service(
 
     image = await camera.async_camera_image()
 
-    def _write_image(to_file: str, image_data: bytes | None) -> None:
+    if image is None:
+        return
+
+    def _write_image(to_file: str, image_data: bytes) -> None:
         """Executor helper to write image."""
-        if image_data is None:
-            return
         os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)

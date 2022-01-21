@@ -53,7 +53,9 @@ from .const import (
     REST_SENSORS_UPDATE_INTERVAL,
     RPC,
     RPC_INPUTS_EVENTS_TYPES,
+    RPC_POLL,
     RPC_RECONNECT_INTERVAL,
+    RPC_SENSORS_POLLING_INTERVAL,
     SHBTN_MODELS,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
@@ -252,6 +254,10 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
         RPC
     ] = RpcDeviceWrapper(hass, entry, device)
     device_wrapper.async_setup()
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][RPC_POLL] = RpcPollingWrapper(
+        hass, entry, device
+    )
 
     hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
 
@@ -768,3 +774,45 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Handle Home Assistant stopping."""
         _LOGGER.debug("Stopping RpcDeviceWrapper for %s", self.name)
         await self.shutdown()
+
+
+class RpcPollingWrapper(update_coordinator.DataUpdateCoordinator):
+    """Polling Wrapper for a Shelly RPC based device."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, device: RpcDevice
+    ) -> None:
+        """Initialize the RPC polling coordinator."""
+        self.device_id: str | None = None
+
+        device_name = get_rpc_device_name(device) if device.initialized else entry.title
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=device_name,
+            update_interval=timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL),
+        )
+        self.entry = entry
+        self.device = device
+
+    async def _async_update_data(self) -> None:
+        """Fetch data."""
+        if not self.device.connected:
+            raise update_coordinator.UpdateFailed("Device disconnected")
+
+        try:
+            _LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                await self.device.update_status()
+        except OSError as err:
+            raise update_coordinator.UpdateFailed("Device disconnected") from err
+
+    @property
+    def model(self) -> str:
+        """Model of the device."""
+        return cast(str, self.entry.data["model"])
+
+    @property
+    def mac(self) -> str:
+        """Mac address of the device."""
+        return cast(str, self.entry.unique_id)
