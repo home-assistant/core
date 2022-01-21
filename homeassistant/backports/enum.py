@@ -1,13 +1,23 @@
 """Enum backports from standard lib."""
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, EnumMeta
 from typing import Any, TypeVar
 
 T = TypeVar("T", bound="StrEnum")
 
 
-class StrEnum(str, Enum):
+class StrEnumMeta(EnumMeta):
+    """Use by StrEnum to match strings."""
+
+    def __contains__(cls, member: object) -> bool:
+        """Override to allow string comparison."""
+        if isinstance(member, str):
+            return member in cls._value2member_map_
+        return super().__contains__(member)
+
+
+class StrEnum(str, Enum, metaclass=StrEnumMeta):
     """Partial backport of Python 3.11's StrEnum for our basic use cases."""
 
     def __new__(cls: type[T], value: str, *args: Any, **kwargs: Any) -> T:
