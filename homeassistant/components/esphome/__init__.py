@@ -27,7 +27,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant import const
-from homeassistant.components import tag, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -182,8 +182,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             # Call native tag scan
             if service_name == "tag_scanned" and device_id is not None:
+                # Importing tag via hass.components in case it is overridden
+                # in a custom_components (custom_components.tag)
+                tag = hass.components.tag
                 tag_id = service_data["tag_id"]
-                hass.async_create_task(tag.async_scan_tag(hass, tag_id, device_id))
+                hass.async_create_task(tag.async_scan_tag(tag_id, device_id))
                 return
 
             hass.bus.async_fire(service.service, service_data)
