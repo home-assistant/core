@@ -210,24 +210,16 @@ class HKDevice:
             service_type=ServicesTypes.ACCESSORY_INFORMATION,
         )
 
-        serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        identifiers = {
+            (
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self.unique_id}:aid:{accessory.aid}",
+            )
+        }
 
-        if self.unreliable_serial_numbers and accessory.aid > 1:
-            # Some accessories do not have a serial number
-            identifiers = {
-                (
-                    DOMAIN,
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}_{accessory.aid}",
-                )
-            }
-        else:
-            identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
-
-        if accessory.aid == 1:
-            # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
-            # Link the root device to the pairing id for the connection.
-            identifiers.add((DOMAIN, IDENTIFIER_ACCESSORY_ID, self.unique_id))
+        if not self.unreliable_serial_numbers:
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+            identifiers.add((IDENTIFIER_SERIAL_NUMBER, serial_number))
 
         device_info = DeviceInfo(
             identifiers=identifiers,
@@ -243,9 +235,8 @@ class HKDevice:
             # It *doesn't* have a via_device, as it is the device we are connecting to
             # Every other accessory should use it as its via device.
             device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                IDENTIFIER_SERIAL_NUMBER,
-                self.connection_info["serial-number"],
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self.unique_id}:aid:1",
             )
 
         return device_info
