@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from . import SynoApi
 from .const import CONF_DEVICE_TOKEN, DOMAIN, SYNO_API, SYSTEM_LOADED
 
-TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_TOKEN]
+TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_TOKEN}
 
 
 async def async_get_config_entry_diagnostics(
