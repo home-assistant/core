@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.components.shelly import BlockDeviceWrapper, RpcDeviceWrapper
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}

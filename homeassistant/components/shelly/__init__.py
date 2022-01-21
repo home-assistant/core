@@ -292,6 +292,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.hass = hass
         self.entry = entry
         self.device = device
+        self.sw_version: str | None = None
 
         self._debounced_reload = Debouncer(
             hass,
@@ -630,6 +631,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.entry = entry
         self.device = device
+        self.sw_version: str | None = None
 
         self._debounced_reload = Debouncer(
             hass,
