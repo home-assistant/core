@@ -1049,7 +1049,7 @@ omit =
     homeassistant/components/sonos/favorites.py
     homeassistant/components/sonos/helpers.py
     homeassistant/components/sonos/household_coordinator.py
-    homeassistant/components/sonos/media_browser.py
+    homeassistant/components/sonos/media_source.py
     homeassistant/components/sonos/media_player.py
     homeassistant/components/sonos/speaker.py
     homeassistant/components/sonos/switch.py
