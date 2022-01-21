@@ -62,6 +62,11 @@ def get_thumbnail_url(
     )
 
 
+def media_source_filter(item: BrowseMedia):
+    """Filter media sources."""
+    return item.media_content_type.startswith("audio/")
+
+
 async def async_browse_media(
     hass,
     speaker: SonosSpeaker,
@@ -84,7 +89,9 @@ async def async_browse_media(
         )
 
     if media_source.is_media_source_id(media_content_id):
-        return await media_source.async_browse_media(hass, media_content_id)
+        return await media_source.async_browse_media(
+            hass, media_content_id, content_filter=media_source_filter
+        )
 
     if media_content_type == "library":
         return await hass.async_add_executor_job(
@@ -247,7 +254,9 @@ async def root_payload(
         )
 
     try:
-        item = await media_source.async_browse_media(hass, None)
+        item = await media_source.async_browse_media(
+            hass, None, content_filter=media_source_filter
+        )
         # If domain is None, it's overview of available sources
         if item.domain is None:
             children.extend(item.children)

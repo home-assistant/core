@@ -76,6 +76,8 @@ async def _process_media_source_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a media source platform."""
+    if not hasattr(platform, "async_get_media_source"):
+        return
     hass.data[DOMAIN][domain] = await platform.async_get_media_source(hass)
 
 
