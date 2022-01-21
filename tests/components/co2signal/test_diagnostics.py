@@ -1,4 +1,4 @@
-"""Test the Netatmo diagnostics."""
+"""Test the CO2Signal diagnostics."""
 from unittest.mock import patch
 
 from homeassistant.components.co2signal import DOMAIN
