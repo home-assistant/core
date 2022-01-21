@@ -525,6 +525,7 @@ class SensorEntity(Entity):
             and self.device_class in UNIT_CONVERSIONS
             and (device_class := self.device_class) in UNIT_CONVERSIONS
             and self.native_unit_of_measurement in VALID_UNITS[device_class]
+            and custom_unit in VALID_UNITS[device_class]
         ):
             self._sensor_option_unit_of_measurement = custom_unit
             return

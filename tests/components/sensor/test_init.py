@@ -351,14 +351,11 @@ async def test_restore_sensor_restore_state(
 @pytest.mark.parametrize(
     "native_unit,custom_unit,state_unit,native_value,custom_value",
     [
-        (
-            PRESSURE_HPA,
-            PRESSURE_INHG,
-            1000,
-            29.53,
-        ),  # Smaller to larger -> more decimals
-        (PRESSURE_KPA, PRESSURE_HPA, 1.234, 12.34),
-        (PRESSURE_HPA, "peer_pressure", 1000, 1000),  # Not a supported pressure unit
+        # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
+        (PRESSURE_HPA, PRESSURE_INHG, PRESSURE_INHG, 1000.0, 29.53),
+        (PRESSURE_KPA, PRESSURE_HPA, PRESSURE_HPA, 1.234, 12.34),
+        # Not a supported pressure unit
+        (PRESSURE_HPA, "peer_pressure", PRESSURE_HPA, 1000, 1000),
     ],
 )
 async def test_custom_unit(
