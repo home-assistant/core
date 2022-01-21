@@ -28,7 +28,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.options: dict = {CONF_SERVICES: []}
         self.services: list[dict[str]] = []
         self.client: AussieBB | None = None
-        self._reauth_username = str | None = None
+        self._reauth_username: str | None = None
 
     async def async_auth(self, user_input: dict[str, str]) -> dict[str, str] | None:
         """Reusable Auth Helper."""
@@ -112,7 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input and user_input.get(CONF_USERNAME):
             self._reauth_username = user_input[CONF_USERNAME]
 
-        elif user_input and user_input.get(CONF_PASSWORD):
+        elif self._reauth_username and user_input and user_input.get(CONF_PASSWORD):
             data = {
                 CONF_USERNAME: self._reauth_username,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
