@@ -19,10 +19,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_ALL_UPDATES,
@@ -38,6 +39,12 @@ from .discovery import async_start_discovery
 from .utils import _async_short_mac, _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
+    """Get the documentation url for creating a local user."""
+    integration = await async_get_integration(hass, DOMAIN)
+    return f"{integration.documentation}#local-user"
 
 
 def _host_is_direct_connect(host: str) -> bool:
@@ -139,7 +146,12 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders=placeholders,
+            description_placeholders={
+                **placeholders,
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                ),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(
@@ -269,6 +281,11 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                )
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
