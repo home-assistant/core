@@ -368,7 +368,7 @@ def async_extract_referenced_entity_ids(
     if not selector.area_ids and not selected.referenced_devices:
         return selected
 
-    # pylint: disable=import-outside-top-level
+    # pylint: disable=import-outside-toplevel
     from .entity import EntityCategory
 
     for ent_entry in ent_reg.entities.values():
