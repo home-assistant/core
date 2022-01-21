@@ -431,14 +431,16 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     def async_setup(self) -> None:
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
-        sw_version = self.device.firmware_version if self.device.initialized else ""
+        self.sw_version = (
+            self.device.firmware_version if self.device.initialized else ""
+        )
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
-            sw_version=sw_version,
+            sw_version=self.sw_version,
             hw_version=f"gen{self.device.gen} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
@@ -716,14 +718,16 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     def async_setup(self) -> None:
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
-        sw_version = self.device.firmware_version if self.device.initialized else ""
+        self.sw_version = (
+            self.device.firmware_version if self.device.initialized else ""
+        )
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
-            sw_version=sw_version,
+            sw_version=self.sw_version,
             hw_version=f"gen{self.device.gen} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
