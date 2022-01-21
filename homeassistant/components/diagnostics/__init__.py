@@ -17,6 +17,7 @@ from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import DATA_INTEGRATIONS, Integration
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -126,6 +127,7 @@ async def _async_get_json_file_response(
     hass: HomeAssistant,
     data: dict | list,
     filename: str,
+    domain: str,
     d_type: DiagnosticsType,
     d_id: str,
     sub_type: DiagnosticsSubType | None = None,
@@ -133,9 +135,14 @@ async def _async_get_json_file_response(
 ) -> web.Response:
     """Return JSON file from dictionary."""
     hass_sys_info = await async_get_system_info(hass)
+    integration: Integration = hass.data[DATA_INTEGRATIONS][domain]
     try:
         json_data = json.dumps(
-            {"home-assistant": hass_sys_info, "diagnostics-data": data},
+            {
+                "home-assistant": hass_sys_info,
+                "integration-manifest": integration.manifest,
+                "diagnostics-data": data,
+            },
             indent=2,
             cls=ExtendedJSONEncoder,
         )
@@ -197,7 +204,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             data = await info[d_type.value](hass, config_entry)
             filename = f"{d_type}-{filename}"
             return await _async_get_json_file_response(
-                hass, data, filename, d_type.value, d_id
+                hass, data, filename, config_entry.domain, d_type.value, d_id
             )
 
         # sub_type handling
@@ -220,5 +227,5 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         data = await info[sub_type.value](hass, config_entry, device)
         return await _async_get_json_file_response(
-            hass, data, filename, d_type, d_id, sub_type, sub_id
+            hass, data, filename, config_entry.domain, d_type, d_id, sub_type, sub_id
         )
