@@ -20,7 +20,7 @@ from .const import DOMAIN
 
 
 @dataclass
-class IntellifireSensorEntityDescriptionMixin:
+class IntellifireBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[IntellifirePollData], bool]
@@ -28,7 +28,7 @@ class IntellifireSensorEntityDescriptionMixin:
 
 @dataclass
 class IntellifireBinarySensorEntityDescription(
-    BinarySensorEntityDescription, IntellifireSensorEntityDescriptionMixin
+    BinarySensorEntityDescription, IntellifireBinarySensorEntityDescriptionMixin
 ):
     """Describes a binary sensor entity."""
 

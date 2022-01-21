@@ -1,0 +1,130 @@
+"""Platform for sensor integration."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from intellifire4py import IntellifirePollData
+
+from homeassistant.components.intellifire import IntellifireDataUpdateCoordinator
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TIME_MINUTES,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
+
+
+@dataclass
+class IntellifireSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[
+        [IntellifirePollData], int
+    ]  # Although sensours could have a variety of different return values - all the ones below are only reutrning ints
+
+
+@dataclass
+class IntellifireSensorEntityDescription(
+    SensorEntityDescription, IntellifireSensorEntityDescriptionMixin
+):
+    """Describes a sensor sensor entity."""
+
+
+ATTRIBUTION = "Data provided by unpublished Intellifire API"
+
+
+INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
+    IntellifireSensorEntityDescription(
+        key="flame_height",
+        icon="mdi:fire-circle",
+        name="Flame Height",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.flameheight,
+    ),
+    IntellifireSensorEntityDescription(
+        key="temperature",
+        icon="mdi:car-brake-temperature",
+        name="Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_fn=lambda data: data.temperature_c,
+    ),
+    IntellifireSensorEntityDescription(
+        key="target_temp",
+        icon="mdi:thermometer-lines",
+        name="Target Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_fn=lambda data: data.thermostat_setpoint_c,
+    ),
+    IntellifireSensorEntityDescription(
+        key="fan_speed",
+        icon="mdi:fan",
+        name="Fan Speed",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.fanspeed,
+    ),
+    IntellifireSensorEntityDescription(
+        key="timer_remaining",
+        icon="mdi:timer-sand",
+        name="Timer Time Remaining",
+        native_unit_of_measurement=TIME_MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: round(int(data.timeremaining_s) / 60),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Define setup entry call."""
+
+    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        IntellifireSensor(coordinator=coordinator, description=description)
+        for description in INTELLIFIRE_SENSORS
+    )
+
+
+class IntellifireSensor(CoordinatorEntity, SensorEntity):
+    """Define a generic class for Sensors."""
+
+    # Define types
+    coordinator: IntellifireDataUpdateCoordinator
+    entity_description: IntellifireSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: IntellifireDataUpdateCoordinator,
+        description: IntellifireSensorEntityDescription,
+    ) -> None:
+        """Init the sensor."""
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
+
+        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        # Set the Display name the User will see
+        self._attr_name = f"Fireplace {description.name}"
+        self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
+        # Configure the Device Info
+        self._attr_device_info = self.coordinator.device_info
+
+    @property
+    def native_value(self):
+        """Return the state."""
+        return self.entity_description.value_fn(self.coordinator.api.data)
