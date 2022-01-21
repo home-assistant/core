@@ -52,7 +52,7 @@
                     "multicast_port": "Multicast port used for routing and discovery",
                     "rate_limit": "Maximum outgoing telegrams per second",
                     "state_updater": "Globally enable reading states from the KNX Bus",
-                    "threaded": "EXPERIMENTAL: \n Use an extra thread for the KNX communication"
+                    "threaded": "EXPERIMENTAL: Use an extra thread for the KNX communication"
                 }
             },
             "tunnel": {
