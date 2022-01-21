@@ -11,14 +11,21 @@ from .const import DOMAIN, SYNO_API, SYSTEM_LOADED
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> dict:
     """Return diagnostics for a config entry."""
-    data: dict = hass.data[DOMAIN][config_entry.unique_id]
+    data: dict = hass.data[DOMAIN][entry.unique_id]
     syno_api: SynoApi = data[SYNO_API]
     dsm_info = syno_api.dsm.information
 
     diag_data = {
+        "entry": {
+            "title": entry.title,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+            "disable_new_entities": entry.pref_disable_new_entities,
+            "disable_polling": entry.pref_disable_polling,
+        },
         "device_info": {
             "model": dsm_info.model,
             "version": dsm_info.version_string,
@@ -33,7 +40,7 @@ async def async_get_config_entry_diagnostics(
         "utilisation": {},
         "is_system_loaded": data[SYSTEM_LOADED],
         "api_details": {
-            "fetching_entities": syno_api._fetching_entities,
+            "fetching_entities": syno_api._fetching_entities,  # pylint: disable=protected-access
         },
     }
 
@@ -66,8 +73,8 @@ async def async_get_config_entry_diagnostics(
 
     if syno_api.surveillance_station is not None:
         camera: SynoCamera
-        for cam_id, camera in syno_api.surveillance_station._cameras_by_id.items():
-            diag_data["surveillance_station"]["cameras"][cam_id] = {
+        for camera in syno_api.surveillance_station.get_all_cameras():
+            diag_data["surveillance_station"]["cameras"][camera.id] = {
                 "name": camera.name,
                 "is_enabled": camera.is_enabled,
                 "is_motion_detection_enabled": camera.is_motion_detection_enabled,
