@@ -1,4 +1,4 @@
-"""Define fixtures for Guardian tests."""
+"""Define fixtures for Elexa Guardian tests."""
 import json
 from unittest.mock import patch
 
