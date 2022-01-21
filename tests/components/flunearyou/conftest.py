@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.flunearyou.const import DOMAIN
+from homeassistant.components.flunearyou import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.setup import async_setup_component
 

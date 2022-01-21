@@ -15,7 +15,7 @@ certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==35.0.0
 emoji==1.5.0
-hass-nabucasa==0.51.0
+hass-nabucasa==0.52.0
 home-assistant-frontend==20220118.0
 httpx==0.21.0
 ifaddr==0.1.7
@@ -92,7 +92,3 @@ pytest_asyncio==1000000000.0.0
 # https://github.com/jkeljo/sisyphus-control/issues/6
 python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
-
-# Resolve a dependency conflict with cachetools.
-# Version 2.4.0 bumps the allowed dependency range.
-google-auth>=2.4.0

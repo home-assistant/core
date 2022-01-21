@@ -22,7 +22,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
 from homeassistant.util import ssl as ssl_util
 
-from .auth import setup_auth
+from .auth import async_setup_auth
 from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
@@ -165,12 +165,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_certificate=ssl_certificate,
         ssl_peer_certificate=ssl_peer_certificate,
         ssl_key=ssl_key,
+        trusted_proxies=trusted_proxies,
+        ssl_profile=ssl_profile,
+    )
+    await server.async_initialize(
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
-        trusted_proxies=trusted_proxies,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
-        ssl_profile=ssl_profile,
     )
 
     async def stop_server(event: Event) -> None:
@@ -214,34 +216,11 @@ class HomeAssistantHTTP:
         ssl_key: str | None,
         server_host: list[str] | None,
         server_port: int,
-        cors_origins: list[str],
-        use_x_forwarded_for: bool,
         trusted_proxies: list[str],
-        login_threshold: int,
-        is_ban_enabled: bool,
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(
-            middlewares=[], client_max_size=MAX_CLIENT_SIZE
-        )
-        app[KEY_HASS] = hass
-
-        # Order matters, security filters middle ware needs to go first,
-        # forwarded middleware needs to go second.
-        setup_security_filter(app)
-
-        async_setup_forwarded(app, use_x_forwarded_for, trusted_proxies)
-
-        setup_request_context(app, current_request)
-
-        if is_ban_enabled:
-            setup_bans(hass, app, login_threshold)
-
-        setup_auth(hass, app)
-
-        setup_cors(app, cors_origins)
-
+        self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -249,11 +228,35 @@ class HomeAssistantHTTP:
         self.server_host = server_host
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
-        self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
-        self._handler = None
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
+
+    async def async_initialize(
+        self,
+        *,
+        cors_origins: list[str],
+        use_x_forwarded_for: bool,
+        login_threshold: int,
+        is_ban_enabled: bool,
+    ) -> None:
+        """Initialize the server."""
+        self.app[KEY_HASS] = self.hass
+
+        # Order matters, security filters middleware needs to go first,
+        # forwarded middleware needs to go second.
+        setup_security_filter(self.app)
+
+        async_setup_forwarded(self.app, use_x_forwarded_for, self.trusted_proxies)
+
+        setup_request_context(self.app, current_request)
+
+        if is_ban_enabled:
+            setup_bans(self.hass, self.app, login_threshold)
+
+        await async_setup_auth(self.hass, self.app)
+
+        setup_cors(self.app, cors_origins)
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.

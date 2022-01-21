@@ -1,0 +1,17 @@
+{
+  "command": 32,
+  "status": "ok",
+  "data": {
+    "station_connected": true,
+    "ip_assigned": true,
+    "mqtt_connected": true,
+    "rssi": -63,
+    "channel": 1,
+    "lan_ipv4": "192.168.1.100",
+    "lan_ipv6": "AC10:BD0:FFFF:FFFF:AC10:BD0:FFFF:FFFF",
+    "ap_enabled": true,
+    "ap_clients": 0,
+    "bssid": "ABCDEF123456",
+    "ssid": "My_Network"
+  }
+}

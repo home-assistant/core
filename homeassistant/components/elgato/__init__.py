@@ -1,16 +1,15 @@
 """Support for Elgato Lights."""
-import logging
 from typing import NamedTuple
 
-from elgato import Elgato, ElgatoConnectionError, Info
+from elgato import Elgato, Info, State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 
@@ -18,6 +17,7 @@ PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 class HomeAssistantElgatoData(NamedTuple):
     """Elgato data stored in the Home Assistant data object."""
 
+    coordinator: DataUpdateCoordinator[State]
     client: Elgato
     info: Info
 
@@ -31,15 +31,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    # Ensure we can connect to it
-    try:
-        info = await elgato.info()
-    except ElgatoConnectionError as exception:
-        logging.getLogger(__name__).debug("Unable to connect: %s", exception)
-        raise ConfigEntryNotReady from exception
+    coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
+        update_interval=SCAN_INTERVAL,
+        update_method=elgato.state,
+    )
+    await coordinator.async_config_entry_first_refresh()
 
+    info = await elgato.info()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantElgatoData(
         client=elgato,
+        coordinator=coordinator,
         info=info,
     )
 
