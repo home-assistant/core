@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -21,19 +20,12 @@ from homeassistant.helpers.typing import ConfigType
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
 PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
-DEFAULT_SCAN_INTERVAL: int = 300  # Seconds
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
+            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PASSWORD): cv.string}
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -95,11 +87,6 @@ class VeluxModule:
         _LOGGER.debug("Velux interface started")
         await self.pyvlx.load_scenes()
         await self.pyvlx.load_nodes()
-
-    @property
-    def scan_interval(self):
-        """Scan interval for fetch data."""
-        return self._domain_config.get(CONF_SCAN_INTERVAL)
 
 
 class VeluxEntity(Entity):

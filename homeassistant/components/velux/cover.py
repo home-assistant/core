@@ -1,6 +1,7 @@
 """Support for Velux covers."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
@@ -31,6 +32,8 @@ from . import DATA_VELUX, VeluxEntity
 
 if TYPE_CHECKING:
     from pyvlx.node import Node
+
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,7 +169,7 @@ class VeluxWindow(VeluxCover):
             _LOGGER,
             name=self.unique_id,
             update_method=self.async_update_limitation,
-            update_interval=self._hass.data[DATA_VELUX].scan_interval,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
     async def async_init(self):
