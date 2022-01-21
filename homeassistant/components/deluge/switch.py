@@ -6,7 +6,7 @@ import logging
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -63,7 +62,7 @@ def setup_platform(
     add_entities([DelugeSwitch(deluge_api, name)])
 
 
-class DelugeSwitch(ToggleEntity):
+class DelugeSwitch(SwitchEntity):
     """Representation of a Deluge switch."""
 
     def __init__(self, deluge_client, name):
