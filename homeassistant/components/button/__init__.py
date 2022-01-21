@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -23,6 +23,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_PRESS
 
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE"]
+
+DOMAIN
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

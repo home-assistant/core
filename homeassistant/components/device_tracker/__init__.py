@@ -38,6 +38,8 @@ from .legacy import (  # noqa: F401
     see,
 )
 
+__all__ = ["PLATFORM_SCHEMA", "PLATFORM_SCHEMA_BASE"]
+
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
