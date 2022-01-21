@@ -273,7 +273,8 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        super().__init__(_lektrico_device.coordinator)
+        # super().__init__(_lektrico_device.coordinator)
+        super().__init__(_lektrico_device)
         self.friendly_name = friendly_name
         self.serial_number = _lektrico_device.serial_number
         self.board_revision = _lektrico_device.board_revision
@@ -290,7 +291,8 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the sensor."""
 
         return self.entity_description.get_native_value(
-            self._lektrico_device.coordinator.data
+            # self._lektrico_device.coordinator.data
+            self._lektrico_device.data
         )
 
     @property
@@ -301,5 +303,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
             ATTR_NAME: self.friendly_name,
             ATTR_MANUFACTURER: "Lektrico",
             ATTR_MODEL: f"1P7K {self.serial_number} rev.{self.board_revision}",
-            ATTR_SW_VERSION: self._lektrico_device.coordinator.data.fw_version,
+            # ATTR_SW_VERSION: self._lektrico_device.coordinator.data.fw_version,
+            ATTR_SW_VERSION: self._lektrico_device.data.fw_version,
         }
