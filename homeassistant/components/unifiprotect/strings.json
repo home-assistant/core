@@ -23,6 +23,7 @@
         }
       },
       "discovery_confirm": {
+        "title": "UniFi Protect Discovered",
         "description": "Do you want to setup {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
