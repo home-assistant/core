@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from .co2signal import DOMAIN, CO2SignalCoordinator
+from . import DOMAIN, CO2SignalCoordinator
 
 TO_REDACT = {CONF_API_KEY}
 
