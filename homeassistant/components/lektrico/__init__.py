@@ -43,8 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _lektrico_device = LektricoDevice(
         charger, hass, entry.data[CONF_FRIENDLY_NAME], settings
     )
-    # if not await _lektrico_device.init_device():
-    #     _LOGGER.error("Error initializing Lektrico Device. Name: 1P7K")
 
     await _lektrico_device.async_config_entry_first_refresh()
 
@@ -83,27 +81,12 @@ class LektricoDevice(DataUpdateCoordinator):
         self.serial_number = settings.serial_number
         self.board_revision = settings.board_revision
         self._name = friendly_name
-        # self._coordinator: DataUpdateCoordinator
         self._update_fail_count = 0
         self._info = None
         super().__init__(
             hass, _LOGGER, name=f"{DOMAIN}-{self._name}", update_interval=SCAN_INTERVAL
         )
 
-    # @property
-    # def coordinator(self) -> DataUpdateCoordinator:
-    #     """Return the coordinator of the Lektrico device."""
-    #     return self._coordinator
-
-    # async def init_device(self) -> bool:
-    #     """Init the device status and start coordinator."""
-
-    #     # Create status update coordinator
-    #     await self._create_coordinator()
-
-    #     return True
-
-    # async def async_device_update(self) -> lektricowifi.Info:
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
         a_data = self._device.charger_info()
@@ -117,20 +100,3 @@ class LektricoDevice(DataUpdateCoordinator):
                 if device is not None:
                     dev_reg.async_update_device(device.id, sw_version=data.fw_version)
         return data
-
-    # async def _create_coordinator(self) -> None:
-    #     """Get the coordinator for a specific device."""
-    #     coordinator = DataUpdateCoordinator(
-    #         self._hass,
-    #         _LOGGER,
-    #         name=f"{DOMAIN}-{self._name}",
-    #         update_method=self.async_device_update,
-    #         # Polling interval. Will only be polled if there are subscribers.
-    #         update_interval=SCAN_INTERVAL,
-    #     )
-    #     await coordinator.async_refresh()
-
-    #     if not coordinator.last_update_success:
-    #         raise ConfigEntryNotReady
-
-    #     self._coordinator = coordinator
