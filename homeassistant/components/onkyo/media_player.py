@@ -100,15 +100,13 @@ async def async_setup_entry(
         CONF_RECEIVER
     ]
 
-    max_volume: int = config_entry.options.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
-
     source_mapping: dict[str, str] = config_entry.options.get(
         CONF_SOURCES, DEFAULT_SOURCES
     )
 
     new_zones: list[OnkyoMediaPlayer] = []
     for zone in receiver.zones.values():
-        zone_entity = OnkyoMediaPlayer(zone, max_volume, source_mapping)
+        zone_entity = OnkyoMediaPlayer(zone, source_mapping)
         new_zones.append(zone_entity)
 
     # Register additional services
@@ -133,12 +131,10 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     def __init__(
         self,
         receiver_zone: ReceiverZone,
-        max_volume: int,
         source_mapping: dict[str, str],
     ) -> None:
         """Initialize the MediaPlayer."""
         self._receiver_zone: ReceiverZone = receiver_zone
-        self._max_volume: int = max_volume
         self._source_list: list[str] = list(source_mapping.values())
         self._source_mapping: dict[str, str] = source_mapping
         self._reverse_source_mapping: dict[str, str] = {
@@ -196,7 +192,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     @property
     def volume_level(self) -> float:
         """Return volume level from 0 to 1."""
-        return min(self._receiver_zone.volume / self._max_volume, 1)
+        return self._receiver_zone.volume
 
     @property
     def source(self) -> str:
@@ -252,8 +248,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     async def async_volume_up(self) -> None:
         """Increment volume by 1 step."""
-        if self._receiver_zone.volume < self._max_volume:
-            self._receiver_zone.increase_volume()
+        self._receiver_zone.increase_volume()
 
     async def async_volume_down(self) -> None:
         """Decrement volume by 1 step."""
@@ -261,7 +256,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the receiver zone volume level (0 to 1)."""
-        self._receiver_zone.set_volume(int(volume * self._max_volume))
+        self._receiver_zone.set_volume(volume)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute/Unmute the receiver zone."""

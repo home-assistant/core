@@ -25,6 +25,9 @@ ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_VIDEO_INFORMATION = "video_information"
 ATTR_VIDEO_OUT = "video_out"
 
+MAX_VOLUME_MIN_VALUE = 1.0
+MAX_VOLUME_MAX_VALUE = 200.0
+
 DEFAULT_MAX_VOLUME = 80
 DEFAULT_SOURCES = {
     "tv": "TV",

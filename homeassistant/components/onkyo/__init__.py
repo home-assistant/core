@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_RECEIVER, DOMAIN
 from .receiver import OnkyoNetworkReceiver
 
-PLATFORMS: list[str] = ["media_player"]
+PLATFORMS: list[str] = ["media_player", "number"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

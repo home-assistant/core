@@ -95,9 +95,9 @@ async def test_config_flow_import_success(hass: core.HomeAssistant):
         CONF_IDENTIFIER: TEST_IDENTIFIER_1,
         CONF_HOST: TEST_HOST_1,
         CONF_NAME: TEST_NAME_1,
+        CONF_MAX_VOLUME: TEST_MAX_VOLUME,
     }
     assert result["options"] == {
-        CONF_MAX_VOLUME: TEST_MAX_VOLUME,
         CONF_SOURCES: TEST_CUSTOM_SOURCE_NAMES,
     }
 
@@ -262,7 +262,6 @@ async def test_options_flow(hass: core.HomeAssistant):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_MAX_VOLUME: TEST_MAX_VOLUME,
             CONF_ENABLED_SOURCES: TEST_ENABLED_SOURCES,
         },
     )
@@ -277,6 +276,5 @@ async def test_options_flow(hass: core.HomeAssistant):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        CONF_MAX_VOLUME: TEST_MAX_VOLUME,
         CONF_SOURCES: TEST_CUSTOM_SOURCE_NAMES,
     }

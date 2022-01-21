@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import async_timeout
 from pyeiscp import Connection
@@ -17,7 +18,9 @@ from .const import (
     AUDIO_INFORMATION_MAPPING,
     AUDIO_VIDEO_INFORMATION_UPDATE_INTERVAL,
     CONF_IDENTIFIER,
+    CONF_MAX_VOLUME,
     CONNECT_TIMEOUT,
+    DEFAULT_MAX_VOLUME,
     DEFAULT_PLAYABLE_SOURCES,
     DISCOVER_ZONES_TIMEOUT,
     SOUND_MODE_MAPPING,
@@ -90,18 +93,21 @@ class OnkyoNetworkReceiver:
             connection.identifier = entry.data[CONF_IDENTIFIER]
 
             network_receiver = cls._receivers[entry.data[CONF_HOST]] = cls(
-                hass, connection
+                hass, connection, entry.data.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
             )
 
         return network_receiver
 
-    def __init__(self, hass: HomeAssistant, connection: Connection) -> None:
+    def __init__(
+        self, hass: HomeAssistant, connection: Connection, max_volume: int
+    ) -> None:
         """Initialize the Onkyo Network Receiver object."""
         self._hass: HomeAssistant = hass
         self._connection: Connection = connection
         self._identifier: str = self._connection.identifier
         self._event: asyncio.Event = asyncio.Event()
         self._closing: bool = False
+        self._max_volume: int = max_volume
         self.online: bool = False
         self.name: str = self._connection.name
         self.host: str = self._connection.host
@@ -112,6 +118,7 @@ class OnkyoNetworkReceiver:
                 "main",
                 self.name,
                 self,
+                self._max_volume,
             )
         }
 
@@ -147,7 +154,7 @@ class OnkyoNetworkReceiver:
             self.query_property(zone, "volume")
 
         # Wait for a possible response of available zones to make sure that
-        # the zones are added to the list before the platform is set up.
+        # the zones are added to the list before the platforms are set up.
         await asyncio.sleep(DISCOVER_ZONES_TIMEOUT)
         return True
 
@@ -184,6 +191,7 @@ class OnkyoNetworkReceiver:
                 zone,
                 f"{self.name} {ZONES[zone]}",
                 self,
+                self._max_volume,
             )
 
             # Query the zone when it is first discovered.
@@ -232,15 +240,17 @@ class ReceiverZone:
         zone: str,
         name: str,
         receiver: OnkyoNetworkReceiver,
+        max_volume: int,
     ) -> None:
         """Initialize a receiver zone."""
         self._hass: HomeAssistant = hass
         self._zone: str = zone
         self._identifier: str = identifier
+        self._volume: int = 0
+        self._max_volume: int = max_volume
 
         self.receiver: OnkyoNetworkReceiver = receiver
         self.name: str = name
-        self.volume: int = 0
         self.muted: bool = False
         self.powerstate: str = STATE_UNKNOWN
         self.source: tuple[str, ...] = ("Unknown",)
@@ -259,6 +269,16 @@ class ReceiverZone:
         self._callbacks: set = set()
 
     @property
+    def volume(self) -> float:
+        """Get the normalized volume of the receiver zone."""
+        return min(self._volume / self._max_volume, 1)
+
+    @property
+    def max_volume(self) -> float:
+        """Get the maximum volume of the receiver zone."""
+        return self._max_volume
+
+    @property
     def zone_identifier(self) -> str:
         """ID for Receiver."""
         return self._identifier
@@ -271,6 +291,15 @@ class ReceiverZone:
         if self._supports_volume:
             return SUPPORT_ONKYO_WO_SOUND_MODE
         return SUPPORT_ONKYO_WO_VOLUME
+
+    def set_max_volume(self, max_volume: int) -> None:
+        """Set the max volume of the receiver zone."""
+        self._max_volume = max_volume
+        if self._volume > self._max_volume:
+            self.receiver.update_property(self._zone, "volume", str(self._max_volume))
+
+        for update_callback in self._callbacks:
+            update_callback()
 
     def set_source(self, source: str) -> None:
         """Change receiver zone to the designated source (by name)."""
@@ -292,15 +321,18 @@ class ReceiverZone:
 
     def increase_volume(self) -> None:
         """Increment volume by 1 step."""
-        self.receiver.update_property(self._zone, "volume", "level-up")
+        if self._volume < self._max_volume:
+            self.receiver.update_property(self._zone, "volume", "level-up")
 
     def decrease_volume(self) -> None:
         """Decrement volume by 1 step."""
         self.receiver.update_property(self._zone, "volume", "level-down")
 
-    def set_volume(self, volume: int) -> None:
+    def set_volume(self, volume: float) -> None:
         """Set the receiver zone volume level."""
-        self.receiver.update_property(self._zone, "volume", str(volume))
+        self.receiver.update_property(
+            self._zone, "volume", str(int(volume * self._max_volume))
+        )
 
     def set_mute(self, is_muted: bool) -> None:
         """Mute/Unmute the receiver zone."""
@@ -365,7 +397,7 @@ class ReceiverZone:
             self.powerstate = STATE_ON if value == "on" else STATE_OFF
         elif command in ["volume", "master-volume"] and value != "N/A":
             self._supports_volume = True
-            self.volume = value
+            self._volume = value
         elif command in ["muting", "audio-muting"]:
             self.muted = bool(value == "on")
         elif command in ["selector", "input-selector"]:

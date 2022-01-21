@@ -20,7 +20,6 @@ from .const import (
     CONF_MAX_VOLUME,
     CONF_SOURCES,
     CONNECT_TIMEOUT,
-    DEFAULT_MAX_VOLUME,
     DEFAULT_SOURCE_NAMES,
     DEFAULT_SOURCES,
     DOMAIN,
@@ -69,9 +68,9 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_IDENTIFIER: connection.identifier,
                     CONF_HOST: connection.host,
                     CONF_NAME: import_info[CONF_NAME],
+                    CONF_MAX_VOLUME: import_info[CONF_MAX_VOLUME],
                 },
                 options={
-                    CONF_MAX_VOLUME: import_info[CONF_MAX_VOLUME],
                     CONF_SOURCES: import_info[CONF_SOURCES],
                 },
             )
@@ -208,7 +207,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             # Store the input to update the entry after the next step.
             self._options = {
-                CONF_MAX_VOLUME: user_input[CONF_MAX_VOLUME],
                 CONF_SOURCES: {
                     key: source_name
                     for key, source_name in sources.items()
@@ -219,12 +217,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         settings_schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_MAX_VOLUME,
-                    default=self.config_entry.options.get(
-                        CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1)),
                 vol.Optional(
                     CONF_ENABLED_SOURCES,
                     default=list(
