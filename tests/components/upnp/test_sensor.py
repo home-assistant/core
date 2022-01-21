@@ -114,7 +114,7 @@ async def test_derived_upnp_sensors(
             "sensor.mock_name_packets_s_received"
         )
         packets_s_sent_state = hass.states.get("sensor.mock_name_packets_s_sent")
-        assert float(kib_s_received_state.state) == pytest.approx(10.0)
-        assert float(kib_s_sent_state.state) == pytest.approx(20.0)
-        assert float(packets_s_received_state.state) == pytest.approx(30.0)
-        assert float(packets_s_sent_state.state) == pytest.approx(40.0)
+        assert float(kib_s_received_state.state) == pytest.approx(10.0, rel=0.1)
+        assert float(kib_s_sent_state.state) == pytest.approx(20.0, rel=0.1)
+        assert float(packets_s_received_state.state) == pytest.approx(30.0, rel=0.1)
+        assert float(packets_s_sent_state.state) == pytest.approx(40.0, rel=0.1)
