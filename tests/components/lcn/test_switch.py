@@ -250,5 +250,5 @@ async def test_pushed_relay_status_change(hass, entry, lcn_connection):
 
 async def test_unload_config_entry(hass, entry, lcn_connection):
     """Test the switch is removed when the config entry is unloaded."""
-    await hass.config_entries.async_forward_entry_unload(entry, DOMAIN_SWITCH)
+    await hass.config_entries.async_unload(entry.entry_id)
     assert hass.states.get("switch.switch_output1").state == STATE_UNAVAILABLE
