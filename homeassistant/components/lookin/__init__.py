@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
-    push_coordinator = LookinPushCoordinator()
+    push_coordinator = LookinPushCoordinator(entry.title)
 
     meteo_coordinator: LookinDataUpdateCoordinator = LookinDataUpdateCoordinator(
         hass,
