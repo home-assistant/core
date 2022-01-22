@@ -77,30 +77,30 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
             update_callback()
 
     async def async_set_target_temperature(
-        self, heatarea_id: str, target_temperature: float
+        self, heat_area_id: str, target_temperature: float
     ) -> None:
-        """Set the target temperature of the given heatarea."""
+        """Set the target temperature of the given heat area."""
         _LOGGER.debug(
-            "Setting target temperature of heatarea %s to %0.1f",
-            heatarea_id,
+            "Setting target temperature of heat area %s to %0.1f",
+            heat_area_id,
             target_temperature,
         )
-        await self.base.update_heatarea(heatarea_id, {"T_TARGET": target_temperature})
+        await self.base.update_heatarea(heat_area_id, {"T_TARGET": target_temperature})
         for update_callback in self._listeners:
             update_callback()
 
-    async def async_set_heatarea_mode(
-        self, heatarea_id: str, heatarea_mode: int
+    async def async_set_heat_area_mode(
+        self, heat_area_id: str, heat_area_mode: int
     ) -> None:
-        """Set the mode of the given heatarea."""
+        """Set the mode of the given heat area."""
         # HEATAREA_MODE: 0=Auto, 1=Tag, 2=Nacht
-        if heatarea_mode not in (0, 1, 2):
-            ValueError(f"Invalid heat area mode: {heatarea_mode}")
+        if heat_area_mode not in (0, 1, 2):
+            ValueError(f"Invalid heat area mode: {heat_area_mode}")
         _LOGGER.debug(
-            "Setting mode of heatarea %s to %d",
-            heatarea_id,
-            heatarea_mode,
+            "Setting mode of heat area %s to %d",
+            heat_area_id,
+            heat_area_mode,
         )
-        await self.base.update_heatarea(heatarea_id, {"HEATAREA_MODE": heatarea_mode})
+        await self.base.update_heatarea(heat_area_id, {"HEATAREA_MODE": heat_area_mode})
         for update_callback in self._listeners:
             update_callback()
