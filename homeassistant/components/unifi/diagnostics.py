@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN as UNIFI_DOMAIN
+from .const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
+
+TO_REDACT = {CONF_CONTROLLER, CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
@@ -16,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     diag: dict[str, Any] = {}
 
-    diag["config_entry"] = dict(config_entry.data)
+    diag["config_entry"] = async_redact_data(config_entry.data, TO_REDACT)
     diag["site_role"] = controller.site_role
     diag["entities"] = controller.entities
 

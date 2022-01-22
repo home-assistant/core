@@ -129,7 +129,15 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
     )
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "config_entry": dict(config_entry.data),
+        "config_entry": {
+            "controller": "**REDACTED**",
+            "host": "1.2.3.4",
+            "password": "**REDACTED**",
+            "port": 1234,
+            "site": "site_id",
+            "username": "username",
+            "verify_ssl": False,
+        },
         "site_role": "admin",
         "entities": {
             str(Platform.DEVICE_TRACKER): {
