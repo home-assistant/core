@@ -312,6 +312,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await entry_data.async_update_static_infos(hass, entry, infos)
         await _setup_services(hass, entry_data, services)
 
+        if entry_data.device_info is not None and entry_data.device_info.name:
+            reconnect_logic.name = entry_data.device_info.name
+
         await reconnect_logic.start()
         entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
