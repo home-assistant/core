@@ -35,7 +35,9 @@ CONF_TEXT_TYPE: Final = "text_type"
 SUPPORTED_VOICES: Final[list[str]] = [
     "Aditi",  # Hindi
     "Amy",
+    "Aria",
     "Astrid",  # Swedish
+    "Ayanda",
     "Bianca",  # Italian
     "Brian",
     "Camila",  # Portuguese, Brazilian
@@ -50,6 +52,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Enrique",
     "Ewa",
     "Filiz",  # Turkish
+    "Gabrielle",
     "Geraint",  # English Welsh
     "Giorgio",
     "Gwyneth",  # Welsh
@@ -63,6 +66,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Justin",
     "Karl",
     "Kendra",
+    "Kevin",
     "Kimberly",
     "Lea",  # French
     "Liv",  # Norwegian
@@ -92,6 +96,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Tatyana",  # Russian
     "Vicki",  # German
     "Vitoria",  # Portuguese, Brazilian
+    "Zeina",
     "Zhiyu",  # Chinese
 ]
 
