@@ -121,21 +121,25 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         if action == "alarm_triggering":
             self._state = STATE_ALARM_TRIGGERED
             self.schedule_update_ha_state()
-        self._hass.bus.fire(
+        self.hass.bus.fire(
             f"{DOMAIN}.alarm", {"entity_id": self.entity_id, "action": action}
         )
 
     async def async_added_to_hass(self):
         """Subscribe to push server callbacks and install the callbacks on the gateway."""
-        if self._gateway._push_server is not None:
+        if self._gateway.has_push_server:
             self._gateway.Register_callback(self.unique_id, self.alarm_callback)
-            await self.hass.async_add_executor_job(self._gateway.alarm.install_push_callbacks)
+            await self.hass.async_add_executor_job(
+                self._gateway.alarm.install_push_callbacks
+            )
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe callbacks and remove from gateway memory when removed."""
-        if self._gateway._push_server is not None:
-            await self.hass.async_add_executor_job(self._gateway.alarm.uninstall_push_callbacks)
+        if self._gateway.has_push_server:
+            await self.hass.async_add_executor_job(
+                self._gateway.alarm.uninstall_push_callbacks
+            )
             self._gateway.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
 

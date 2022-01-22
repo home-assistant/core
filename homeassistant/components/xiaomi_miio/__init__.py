@@ -26,15 +26,20 @@ from miio import (
     FanP10,
     FanP11,
     FanZA5,
+    PushServer,
     RoborockVacuum,
     Timer,
     VacuumStatus,
-    PushServer,
 )
 from miio.gateway.gateway import GatewayException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -461,7 +466,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         _LOGGER.debug("Removing callbacks from gateway memory")
         gateway = hass.data[DOMAIN].get(entry.entry_id, {}).get(CONF_GATEWAY)
         if gateway is not None:
-            await hass.async_add_executor_job(gateway.close)
+            gateway.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway_stop)
 
@@ -503,8 +508,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     # Check if there are still gateways configured that could be using the push server
     gateway_configured = False
-    for Key in hass.data[DOMAIN]:
-        gateway_data = hass.data[DOMAIN][Key].get(CONF_GATEWAY)
+    for key in hass.data[DOMAIN]:
+        gateway_data = hass.data[DOMAIN][key].get(CONF_GATEWAY)
         if gateway_data is not None:
             gateway_configured = True
 

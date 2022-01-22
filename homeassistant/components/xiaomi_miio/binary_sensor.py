@@ -18,8 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VacuumCoordinatorDataAttributes
 from .const import (
     CONF_DEVICE,
-    CONF_GATEWAY,
     CONF_FLOW_TYPE,
+    CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
@@ -259,6 +259,7 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             return self.entity_description.value(state)
 
         return state
+
 
 class XiaomiGatewayBinarySensor(XiaomiGatewayDevice, BinarySensorEntity):
     """Representation of a XiaomiGatewayBinarySensor."""

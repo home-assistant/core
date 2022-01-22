@@ -19,9 +19,9 @@ from .const import (
     CONF_CLOUD_USERNAME,
     CONF_TOKEN_ENC,
     DOMAIN,
+    KEY_PUSH_SERVER,
     AuthException,
     SetupException,
-    KEY_PUSH_SERVER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +42,8 @@ class ConnectXiaomiGateway:
         self._cloud_country = None
         self._host = None
         self._token = None
+        self._token_enc = None
+        self._push_server = None
 
     @property
     def gateway_device(self):
@@ -78,7 +80,12 @@ class ConnectXiaomiGateway:
     def connect_gateway(self):
         """Connect the gateway in a way that can called by async_add_executor_job."""
         try:
-            self._gateway_device = Gateway(self._host, self._token, token_enc=self._token_enc, push_server=self._push_server)
+            self._gateway_device = Gateway(
+                self._host,
+                self._token,
+                token_enc=self._token_enc,
+                push_server=self._push_server,
+            )
             # get the gateway info
             self._gateway_info = self._gateway_device.info()
         except DeviceException as error:
@@ -181,20 +188,25 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
         """Push from subdevice."""
         _LOGGER.debug("Got new push_callback: %s, %s", action, params)
         self.schedule_update_ha_state()
-        self._hass.bus.fire(
-            f"{DOMAIN}.{self._sub_device.device_type}", {"entity_id": self.entity_id, "action": action, "params": params}
+        self.hass.bus.fire(
+            f"{DOMAIN}.{self._sub_device.device_type}",
+            {"entity_id": self.entity_id, "action": action, "params": params},
         )
 
     async def async_added_to_hass(self):
         """Subscribe to push server callbacks and install the callbacks on the gateway."""
-        if self._sub_device._gw._push_server is not None:
+        if self._sub_device.has_push_server:
             self._sub_device.Register_callback(self.unique_id, self.push_callback)
-            await self.hass.async_add_executor_job(self._sub_device.install_push_callbacks)
+            await self.hass.async_add_executor_job(
+                self._sub_device.install_push_callbacks
+            )
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe callbacks and remove from gateway memory when removed."""
-        if self._sub_device._gw._push_server is not None:
-            await self.hass.async_add_executor_job(self._sub_device.uninstall_push_callbacks)
+        if self._sub_device.has_push_server:
+            await self.hass.async_add_executor_job(
+                self._sub_device.uninstall_push_callbacks
+            )
             self._sub_device.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()

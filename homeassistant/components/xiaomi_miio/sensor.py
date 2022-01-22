@@ -818,7 +818,6 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id, description):
         """Initialize the entity."""
-
         self._attr_name = f"{gateway_name} {description.name}"
         self._attr_unique_id = f"{gateway_device_id}-{description.key}"
         self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}
