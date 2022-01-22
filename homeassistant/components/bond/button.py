@@ -176,13 +176,13 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         key=Action.INCREASE_FLAME,
         name="Increase Flame",
         icon="mdi:fire",
-        mutually_exclusive=Action.SET_FLAME,
+        mutually_exclusive=None,
     ),
     BondButtonEntityDescription(
         key=Action.DECREASE_FLAME,
         name="Decrease Flame",
         icon="mdi:fire-off",
-        mutually_exclusive=Action.SET_FLAME,
+        mutually_exclusive=None,
     ),
     BondButtonEntityDescription(
         key=Action.TOGGLE_OPEN, name="Toggle Open", mutually_exclusive=Action.OPEN
