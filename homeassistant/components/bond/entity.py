@@ -69,7 +69,7 @@ class BondEntity(Entity):
             configuration_url=f"http://{self._hub.host}",
         )
         if self.name is not None:
-            device_info[ATTR_NAME] = self.name
+            device_info[ATTR_NAME] = self._device.name
         if self._hub.bond_id is not None:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
         if self._device.location is not None:
