@@ -13,7 +13,7 @@
         }
     },
     "error": {
-        "timeout_error": "Einträge konnte nicht zeitnah geladen werden.",
-        "client_error": "Einträge konnten nicht vom RKI geladen werden."
+        "timeout_error": "Could not load entries in time.",
+        "client_error": "Could not load entries from RKI."
     }
 }
