@@ -19,30 +19,30 @@ async def async_get_config_entry_diagnostics(
     data: dict = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
 
     device_settings: str | dict = "not initialized"
-    device_info: str | dict = "not initialized"
     if BLOCK in data:
         block_wrapper: BlockDeviceWrapper = data[BLOCK]
+        device_info = {
+            "name": block_wrapper.name,
+            "model": block_wrapper.model,
+            "sw_version": block_wrapper.sw_version,
+        }
         if block_wrapper.device.initialized:
             device_settings = {
                 k: v
                 for k, v in block_wrapper.device.settings.items()
                 if k in ["cloud", "coiot"]
             }
-            device_info = {
-                "name": block_wrapper.name,
-                "model": block_wrapper.model,
-                "sw_version": block_wrapper.sw_version,
-            }
+
     else:
         rpc_wrapper: RpcDeviceWrapper = data[RPC]
+        device_info = {
+            "name": rpc_wrapper.name,
+            "model": rpc_wrapper.model,
+            "sw_version": rpc_wrapper.sw_version,
+        }
         if rpc_wrapper.device.initialized:
             device_settings = {
                 k: v for k, v in rpc_wrapper.device.config.items() if k in ["cloud"]
-            }
-            device_info = {
-                "name": rpc_wrapper.name,
-                "model": rpc_wrapper.model,
-                "sw_version": rpc_wrapper.sw_version,
             }
 
     return {
