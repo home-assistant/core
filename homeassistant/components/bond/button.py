@@ -226,7 +226,9 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         description: ButtonEntityDescription,
     ) -> None:
         """Init Bond button."""
-        super().__init__(hub, device, bpup_subs, description.name)
+        super().__init__(
+            hub, device, bpup_subs, description.name, f"_{description.key.lower()}"
+        )
         self.entity_description = description
 
     async def async_press(self, **kwargs: Any) -> None:
