@@ -42,8 +42,8 @@ def config_fixture(hass):
 @pytest.fixture(name="setup_openuv")
 async def setup_openuv_fixture(hass, config):
     """Define a fixture to set up OpenUV."""
-    with patch("pyopenuv.client.Client.uv_index"), patch(
-        "pyopenuv.client.Client.uv_protection_window"
+    with patch("homeassistant.components.openuv.Client.uv_index"), patch(
+        "homeassistant.components.openuv.Client.uv_protection_window"
     ), patch("homeassistant.components.openuv.PLATFORMS", []):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

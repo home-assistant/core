@@ -25,7 +25,10 @@ async def test_duplicate_error(hass, config, config_entry):
 
 async def test_invalid_api_key(hass, config):
     """Test that an invalid API key throws an error."""
-    with patch("pyopenuv.client.Client.uv_index", side_effect=InvalidApiKeyError):
+    with patch(
+        "homeassistant.components.openuv.Client.uv_index",
+        side_effect=InvalidApiKeyError,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=config
         )
