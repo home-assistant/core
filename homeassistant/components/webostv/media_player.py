@@ -40,6 +40,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -105,9 +106,11 @@ def cmd(
         try:
             await func(self, *args, **kwargs)
         except WEBOSTV_EXCEPTIONS as exc:
-            # If TV is off, we expect calls to fail.
-            _LOGGER.log(
-                logging.INFO if self.state == STATE_OFF else logging.ERROR,
+            if self.state != STATE_OFF:
+                raise HomeAssistantError(
+                    f"Error calling {func.__name__} on entity {self.entity_id}, state:{self.state}"
+                ) from exc
+            _LOGGER.warning(
                 "Error calling %s on entity %s, state:%s, error: %r",
                 func.__name__,
                 self.entity_id,
