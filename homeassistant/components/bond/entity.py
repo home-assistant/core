@@ -52,8 +52,12 @@ class BondEntity(Entity):
         self._bpup_subs = bpup_subs
         self._update_lock: Lock | None = None
         self._initialized = False
-        if sub_device and not sub_device_id:
+        if sub_device_id:
+            sub_device_id = f"_{sub_device_id}"
+        elif sub_device:
             sub_device_id = f"_{sub_device}"
+        else:
+            sub_device_id = ""
         self._attr_unique_id = f"{hub.bond_id}_{device.device_id}{sub_device_id}"
         if sub_device:
             sub_device_name = sub_device.replace("_", " ").title()

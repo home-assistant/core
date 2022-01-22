@@ -227,7 +227,7 @@ class BondButtonEntity(BondEntity, ButtonEntity):
     ) -> None:
         """Init Bond button."""
         super().__init__(
-            hub, device, bpup_subs, description.name, f"_{description.key.lower()}"
+            hub, device, bpup_subs, description.name, description.key.lower()
         )
         self.entity_description = description
 
