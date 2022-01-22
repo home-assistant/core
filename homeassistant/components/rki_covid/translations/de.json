@@ -11,5 +11,9 @@
                 "description": "Wähle einen Eintrag zum überwachen."
             }
         }
+    },
+    "error": {
+        "timeout_error": "Einträge konnte nicht zeitnah geladen werden.",
+        "client_error": "Einträge konnten nicht vom RKI geladen werden."
     }
 }
