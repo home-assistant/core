@@ -150,7 +150,7 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
         self._sub_device = sub_device
         self._entry = entry
         self._unique_id = sub_device.sid
-        self._name = f"{sub_device.name} ({sub_device.sid})"
+        self._name = sub_device.name
 
     @property
     def unique_id(self):

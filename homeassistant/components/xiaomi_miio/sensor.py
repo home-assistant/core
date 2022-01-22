@@ -137,6 +137,7 @@ class XiaomiMiioSensorDescription(SensorEntityDescription):
 
     attributes: tuple = ()
     parent_key: str | None = None
+    requires_push_server: bool = False
 
 
 SENSOR_TYPES = {
@@ -279,10 +280,12 @@ SENSOR_TYPES = {
     ATTR_LAST_EVENT: XiaomiMiioSensorDescription(
         key=ATTR_LAST_EVENT,
         name="Last Event",
+        requires_push_server = True,
     ),
     ATTR_LAST_PRESS: XiaomiMiioSensorDescription(
         key=ATTR_LAST_PRESS,
         name="Last Press",
+        requires_push_server = True,
     ),
 }
 
@@ -610,6 +613,8 @@ async def async_setup_entry(
         for sub_device in sub_devices.values():
             for sensor, description in SENSOR_TYPES.items():
                 if sensor not in sub_device.status:
+                    continue
+                if description.requires_push_server and not gateway.has_push_server:
                     continue
                 entities.append(
                     XiaomiGatewaySensor(

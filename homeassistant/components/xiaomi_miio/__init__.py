@@ -509,9 +509,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     # Check if there are still gateways configured that could be using the push server
     gateway_configured = False
     for key in hass.data[DOMAIN]:
-        gateway_data = hass.data[DOMAIN][key].get(CONF_GATEWAY)
-        if gateway_data is not None:
-            gateway_configured = True
+        item = hass.data[DOMAIN][key]
+        if type(item) is dict:
+            gateway_data = item.get(CONF_GATEWAY)
+            if gateway_data is not None:
+                gateway_configured = True
 
     if not gateway_configured and KEY_PUSH_SERVER in hass.data[DOMAIN]:
         # No gateways left, stop push server
