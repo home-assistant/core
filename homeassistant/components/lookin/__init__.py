@@ -85,7 +85,7 @@ async def async_stop_udp_listener(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up lookin from a config entry."""
-
+    hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     lookin_protocol = LookInHttpProtocol(
         api_uri=f"http://{host}", session=async_get_clientsession(hass)
@@ -147,7 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LookinData(
+    hass.data[DOMAIN][entry.entry_id] = LookinData(
         lookin_udp_subs=lookin_udp_subs,
         lookin_device=lookin_device,
         meteo_coordinator=meteo_coordinator,
