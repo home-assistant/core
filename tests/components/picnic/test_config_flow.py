@@ -239,3 +239,42 @@ async def test_step_reauth_failed(hass):
     assert result_configure["errors"] == {"base": "invalid_auth"}
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_step_reauth_different_account(hass, picnic_api):
+    """Test the re-auth flow when authentication is done with a different account."""
+    # Create a mocked config entry, unique_id should be different that the user id in the api response
+    conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="3fpawh-ues-af3ho",
+        data=conf,
+    ).add_to_hass(hass)
+
+    # Init a re-auth flow
+    result_init = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
+    )
+    assert result_init["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result_init["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.picnic.async_setup_entry",
+        return_value=True,
+    ):
+        result_configure = await hass.config_entries.flow.async_configure(
+            result_init["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "country_code": "NL",
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Check that the returned flow has type form with error set
+    assert result_configure["type"] == "form"
+    assert result_configure["errors"] == {"base": "different_account"}
+
+    assert len(hass.config_entries.async_entries()) == 1

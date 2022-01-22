@@ -101,15 +101,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             existing_entry = await self.async_set_unique_id(info["unique_id"])
 
-            # Only update the existing entry if one exists, and we're in a re-auth flow
-            if existing_entry and self.source == SOURCE_REAUTH:
+            # Abort if we're adding a new config and the unique id is already in use, else create the entry
+            if self.source != SOURCE_REAUTH:
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["title"], data=data)
+
+            # In case of re-auth, only continue if an exiting account exists with the same unique id
+            if existing_entry:
                 self.hass.config_entries.async_update_entry(existing_entry, data=data)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
-
-            # Abort if we're adding a new config and the unique id is already in use
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=info["title"], data=data)
+            else:
+                errors["base"] = "different_account"
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
