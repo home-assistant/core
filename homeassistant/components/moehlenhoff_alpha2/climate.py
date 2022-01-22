@@ -51,11 +51,11 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]
 
+    coordinator: Alpha2BaseCoordinator
+
     def __init__(self, coordinator: Alpha2BaseCoordinator, heat_area_id: str) -> None:
         """Initialize Alpha2 ClimateEntity."""
         super().__init__(coordinator)
-        # Set the right type for mypy
-        self.coordinator: Alpha2BaseCoordinator = self.coordinator
         self.heat_area_id = heat_area_id
 
     @property
