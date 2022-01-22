@@ -268,6 +268,8 @@ async def async_setup_entry(  # noqa: C901
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
+            if entry_data.device_info.name:
+                reconnect_logic.name = entry_data.device_info.name
             device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
