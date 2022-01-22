@@ -44,14 +44,13 @@ async def async_setup_entry(
 class Alpha2Climate(CoordinatorEntity, ClimateEntity):
     """Alpha2 ClimateEntity."""
 
+    coordinator: Alpha2BaseCoordinator
     target_temperature_step = 0.2
 
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]
-
-    coordinator: Alpha2BaseCoordinator
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, heat_area_id: str) -> None:
         """Initialize Alpha2 ClimateEntity."""
