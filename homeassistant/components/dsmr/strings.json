@@ -11,16 +11,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "dsmr_version": "Select DSMR version",
-          "is_rfxtrx": "RFXtrx with integrated P1 reader"
+          "dsmr_version": "Select DSMR version"
         },
         "title": "Select connection address"
       },
       "setup_serial": {
         "data": {
           "port": "Select device",
-          "dsmr_version": "Select DSMR version",
-          "is_rfxtrx": "RFXtrx with integrated P1 reader"
+          "dsmr_version": "Select DSMR version"
         },
         "title": "Device"
       },
