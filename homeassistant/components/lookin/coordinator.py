@@ -72,7 +72,7 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
         interval = self.update_interval
         if (
             interval is not None
-            and self.last_update_success
+            and self.data
             and self.push_coordinator.active(interval)
         ):
             data = self.data
