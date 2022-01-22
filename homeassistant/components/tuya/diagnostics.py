@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.util import dt as dt_util
 
 from . import HomeAssistantTuyaData
@@ -29,18 +30,17 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    return _async_get_diagnostics(hass, entry)
+    return await _async_get_diagnostics(hass, entry)
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    return _async_get_diagnostics(hass, entry, device)
+    return await _async_get_diagnostics(hass, entry, device)
 
 
-@callback
-def _async_get_diagnostics(
+async def _async_get_diagnostics(
     hass: HomeAssistant,
     entry: ConfigEntry,
     device: DeviceEntry | None = None,
@@ -52,7 +52,14 @@ def _async_get_diagnostics(
     if hass_data.home_manager.mq.client:
         mqtt_connected = hass_data.home_manager.mq.client.is_connected()
 
+    system_info = await async_get_system_info(hass)
+
     data = {
+        "system_info": {
+            "installation_type": system_info["installation_type"],
+            "version": system_info["version"],
+            "python_version": system_info["python_version"],
+        },
         "endpoint": entry.data[CONF_ENDPOINT],
         "auth_type": entry.data[CONF_AUTH_TYPE],
         "country_code": entry.data[CONF_COUNTRY_CODE],
