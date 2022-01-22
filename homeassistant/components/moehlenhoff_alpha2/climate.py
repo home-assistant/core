@@ -45,7 +45,6 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
 
     target_temperature_step = 0.2
 
-    _attr_should_poll = False
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
     _attr_temperature_unit = TEMP_CELSIUS
