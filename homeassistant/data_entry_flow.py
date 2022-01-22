@@ -10,10 +10,9 @@ from typing import Any, TypedDict
 
 import voluptuous as vol
 
-import homeassistant.util.uuid as uuid_util
-
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .util import uuid as uuid_util
 
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
