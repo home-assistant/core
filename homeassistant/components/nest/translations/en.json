@@ -26,7 +26,7 @@
                 "data": {
                     "code": "Access Token"
                 },
-                "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below. ([more info])({more_info_url})",
+                "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below ([more info]({more_info_url})).",
                 "title": "Nest: Link Google Account"
             },
             "cloud_project": {
