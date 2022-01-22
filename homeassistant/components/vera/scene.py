@@ -64,4 +64,4 @@ class VeraScene(Scene):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "vera_scene_"+str(self.vera_scene.scene_id)
+        return "vera_scene_" + str(self.vera_scene.scene_id)
