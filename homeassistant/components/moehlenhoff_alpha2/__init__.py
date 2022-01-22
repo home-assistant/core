@@ -94,7 +94,8 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
     ) -> None:
         """Set the mode of the given heatarea."""
         # HEATAREA_MODE: 0=Auto, 1=Tag, 2=Nacht
-        assert heatarea_mode in (0, 1, 2)
+        if heatarea_mode not in (0, 1, 2):
+            ValueError(f"Invalid heat area mode: {heatarea_mode}")
         _LOGGER.debug(
             "Setting mode of heatarea %s to %d",
             heatarea_id,
