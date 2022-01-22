@@ -135,11 +135,21 @@ async def _async_get_json_file_response(
 ) -> web.Response:
     """Return JSON file from dictionary."""
     hass_sys_info = await async_get_system_info(hass)
+
     integration: Integration = hass.data[DATA_INTEGRATIONS][domain]
-    custom_components = {
-        ccmp: hass.data[DATA_INTEGRATIONS][ccmp].manifest
-        for ccmp in hass.data[DATA_CUSTOM_COMPONENTS]
-    }
+
+    custom_components = {}
+    cc_domain: str
+    cc_obj: Integration
+    for cc_domain, cc_obj in hass.data[DATA_CUSTOM_COMPONENTS].items():
+        custom_components[cc_domain] = {
+            "version": cc_obj.manifest["version"],
+            "requirements": [
+                req
+                for req in cc_obj.manifest["requirements"]
+                if "://" not in req  # ignore url based requirements
+            ],
+        }
     try:
         json_data = json.dumps(
             {
