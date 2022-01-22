@@ -19,6 +19,7 @@ CONF_CLOUD_USERNAME = "cloud_username"
 CONF_CLOUD_PASSWORD = "cloud_password"
 CONF_CLOUD_COUNTRY = "cloud_country"
 CONF_MANUAL = "manual"
+CONF_TOKEN_ENC = "token_encrypted"
 
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
@@ -26,6 +27,7 @@ CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 # Keys
 KEY_COORDINATOR = "coordinator"
 KEY_DEVICE = "device"
+KEY_PUSH_SERVER = "push_server"
 
 # Attributes
 ATTR_AVAILABLE = "available"

@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VacuumCoordinatorDataAttributes
 from .const import (
     CONF_DEVICE,
+    CONF_GATEWAY,
     CONF_FLOW_TYPE,
     CONF_MODEL,
     DOMAIN,
@@ -32,6 +33,7 @@ from .const import (
     MODELS_VACUUM_WITH_SEPARATE_MOP,
 )
 from .device import XiaomiCoordinatedMiioEntity
+from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +73,14 @@ BINARY_SENSOR_TYPES = (
         name="Power Supply",
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key="is_open",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
 )
 
@@ -168,6 +178,20 @@ async def async_setup_entry(
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
 
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        sub_devices = gateway.devices
+        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+        for sub_device in sub_devices.values():
+            for description in BINARY_SENSOR_TYPES:
+                if description.key not in sub_device.status:
+                    continue
+                entities.append(
+                    XiaomiGatewayBinarySensor(
+                        coordinator, sub_device, config_entry, description
+                    )
+                )
+
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
         sensors = []
@@ -235,3 +259,17 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             return self.entity_description.value(state)
 
         return state
+
+class XiaomiGatewayBinarySensor(XiaomiGatewayDevice, BinarySensorEntity):
+    """Representation of a XiaomiGatewayBinarySensor."""
+
+    def __init__(self, coordinator, sub_device, entry, description):
+        """Initialize the XiaomiSensor."""
+        super().__init__(coordinator, sub_device, entry)
+        self._unique_id = f"{sub_device.sid}-{description.key}"
+        self.entity_description = description
+
+    @property
+    def is_on(self):
+        """Return the state of the sensor."""
+        return self._sub_device.status[self.entity_description.key]

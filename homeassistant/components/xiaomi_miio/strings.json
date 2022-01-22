@@ -64,7 +64,8 @@
         "title": "Xiaomi Miio",
         "description": "Specify optional settings",
         "data": {
-          "cloud_subdevices": "Use cloud to get connected subdevices"
+          "cloud_subdevices": "Use cloud to get connected subdevices",
+          "token_encrypted": "Encrypted token for local push"
         }
       }
     }

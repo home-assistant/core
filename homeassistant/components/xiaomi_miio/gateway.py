@@ -4,9 +4,10 @@ import logging
 from construct.core import ChecksumError
 from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
-from miio import DeviceException, gateway
+from miio import DeviceException, Gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -16,9 +17,11 @@ from .const import (
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
+    CONF_TOKEN_ENC,
     DOMAIN,
     AuthException,
     SetupException,
+    KEY_PUSH_SERVER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +63,8 @@ class ConnectXiaomiGateway:
         self._cloud_username = self._config_entry.data.get(CONF_CLOUD_USERNAME)
         self._cloud_password = self._config_entry.data.get(CONF_CLOUD_PASSWORD)
         self._cloud_country = self._config_entry.data.get(CONF_CLOUD_COUNTRY)
+        self._token_enc = self._config_entry.options.get(CONF_TOKEN_ENC)
+        self._push_server = self._hass.data[DOMAIN].get(KEY_PUSH_SERVER)
 
         await self._hass.async_add_executor_job(self.connect_gateway)
 
@@ -73,7 +78,7 @@ class ConnectXiaomiGateway:
     def connect_gateway(self):
         """Connect the gateway in a way that can called by async_add_executor_job."""
         try:
-            self._gateway_device = gateway.Gateway(self._host, self._token)
+            self._gateway_device = Gateway(self._host, self._token, token_enc=self._token_enc, push_server=self._push_server)
             # get the gateway info
             self._gateway_info = self._gateway_device.info()
         except DeviceException as error:
@@ -170,3 +175,26 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
             return False
 
         return self.coordinator.data[self._sub_device.sid][ATTR_AVAILABLE]
+
+    @callback
+    def push_callback(self, action, params):
+        """Push from subdevice."""
+        _LOGGER.debug("Got new push_callback: %s, %s", action, params)
+        self.schedule_update_ha_state()
+        self._hass.bus.fire(
+            f"{DOMAIN}.{self._sub_device.device_type}", {"entity_id": self.entity_id, "action": action, "params": params}
+        )
+
+    async def async_added_to_hass(self):
+        """Subscribe to push server callbacks and install the callbacks on the gateway."""
+        if self._sub_device._gw._push_server is not None:
+            self._sub_device.Register_callback(self.unique_id, self.push_callback)
+            await self.hass.async_add_executor_job(self._sub_device.install_push_callbacks)
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe callbacks and remove from gateway memory when removed."""
+        if self._sub_device._gw._push_server is not None:
+            await self.hass.async_add_executor_job(self._sub_device.uninstall_push_callbacks)
+            self._sub_device.Remove_callback(self.unique_id)
+        await super().async_will_remove_from_hass()

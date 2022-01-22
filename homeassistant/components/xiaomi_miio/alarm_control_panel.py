@@ -13,8 +13,9 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -112,6 +113,31 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
             _LOGGER.debug("Response received from miio device: %s", result)
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
+
+    @callback
+    def alarm_callback(self, action, params):
+        """Push from gateway."""
+        _LOGGER.debug("Got new alarm_callback: %s", action)
+        if action == "alarm_triggering":
+            self._state = STATE_ALARM_TRIGGERED
+            self.schedule_update_ha_state()
+        self._hass.bus.fire(
+            f"{DOMAIN}.alarm", {"entity_id": self.entity_id, "action": action}
+        )
+
+    async def async_added_to_hass(self):
+        """Subscribe to push server callbacks and install the callbacks on the gateway."""
+        if self._gateway._push_server is not None:
+            self._gateway.Register_callback(self.unique_id, self.alarm_callback)
+            await self.hass.async_add_executor_job(self._gateway.alarm.install_push_callbacks)
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe callbacks and remove from gateway memory when removed."""
+        if self._gateway._push_server is not None:
+            await self.hass.async_add_executor_job(self._gateway.alarm.uninstall_push_callbacks)
+            self._gateway.Remove_callback(self.unique_id)
+        await super().async_will_remove_from_hass()
 
     async def async_alarm_arm_away(self, code=None):
         """Turn on."""

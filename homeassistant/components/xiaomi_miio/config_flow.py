@@ -19,6 +19,7 @@ from .const import (
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
+    CONF_TOKEN_ENC,
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
@@ -92,7 +93,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_CLOUD_SUBDEVICES,
                     default=self.config_entry.options.get(CONF_CLOUD_SUBDEVICES, False),
-                ): bool
+                ): bool,
+                vol.Optional(CONF_TOKEN_ENC): vol.All(str, vol.Length(min=32, max=32)),
             }
         )
 

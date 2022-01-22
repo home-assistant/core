@@ -89,7 +89,8 @@
         "step": {
             "init": {
                 "data": {
-                    "cloud_subdevices": "Use cloud to get connected subdevices"
+                    "cloud_subdevices": "Use cloud to get connected subdevices",
+                    "token_encrypted": "Encrypted token for local push"
                 },
                 "description": "Specify optional settings",
                 "title": "Xiaomi Miio"
