@@ -190,6 +190,7 @@ async def async_setup_entry(
                 if description.key not in sub_device.status:
                     continue
                 if description.requires_push_server and not gateway.has_push_server:
+                    _LOGGER.warning("Subdevice %s requires the encrypted token to be configured in the config options", sub_device.name)
                     continue
                 entities.append(
                     XiaomiGatewayBinarySensor(
