@@ -57,7 +57,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name="Alpha2Base",
+            name="alpha2_base",
             update_interval=UPDATE_INTERVAL,
         )
 
