@@ -22,7 +22,7 @@
                 "data": {
                     "exclude": "Vera-Ger\u00e4te-IDs, die vom Home Assistant ausgeschlossen werden sollen.",
                     "lights": "Vera Switch-Ger\u00e4te-IDs, die im Home Assistant als Lichter behandelt werden sollen.",
-                    "scene_exclude": "Vera-Scene-IDs, die vom Home Assistant ausgeschlossen werden sollen.",
+                    "scene_exclude": "Vera-Scene-IDs, die vom Home Assistant ausgeschlossen werden sollen."
                 },
                 "description": "Weitere Informationen zu optionalen Parametern findest du in der Vera-Dokumentation: https://www.home-assistant.io/integrations/vera/. Hinweis: Alle \u00c4nderungen hier erfordern einen Neustart des Home Assistant-Servers. Gib ein Leerzeichen ein, um Werte zu l\u00f6schen.",
                 "title": "Vera Controller Optionen"
