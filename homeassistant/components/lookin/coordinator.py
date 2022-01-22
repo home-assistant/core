@@ -18,18 +18,26 @@ NEVER_TIME = -120.0  # Time that will never match time.monotonic()
 class LookinPushCoordinator:
     """Keep track of when the last push update was."""
 
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
         """Init the push coordininator."""
         self.last_update = NEVER_TIME
+        self.name = name
 
     def update(self) -> None:
         """Remember the last push time."""
         self.last_update = time.monotonic()
 
-    def is_active(self, interval: timedelta) -> bool:
+    def active(self, interval: timedelta) -> bool:
         """Check if the last push update was recently."""
         time_since_last_update = time.monotonic() - self.last_update
-        return time_since_last_update < interval.total_seconds()
+        is_active = time_since_last_update < interval.total_seconds()
+        _LOGGER.debug(
+            "%s: push updates active: %s (time_since_last_update=%s)",
+            self.name,
+            is_active,
+            time_since_last_update,
+        )
+        return is_active
 
 
 class LookinDataUpdateCoordinator(DataUpdateCoordinator):
@@ -61,9 +69,8 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch data if only if we have not been received a push inside the interval."""
-        if self.update_interval is not None and self.push_coordinator.is_active(
-            self.update_interval
-        ):
+        interval = self.update_interval
+        if interval is not None and self.push_coordinator.active(interval):
             data = self.data
         else:
             data = await super()._async_update_data()
