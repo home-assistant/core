@@ -3093,3 +3093,80 @@ async def test_sensorstate(hass):
         )
         is False
     )
+
+
+async def test_appselector(hass):
+    """Test app selector trait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.AppSelectorTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE, None, None
+    )
+
+    trt = trait.AppSelectorTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: [
+                    "media",
+                    "game",
+                    "chromecast",
+                    "plex",
+                ],
+                media_player.ATTR_INPUT_SOURCE: "game",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableApplications": [
+            {"key": "media", "names": [{"name_synonym": ["media"], "lang": "en-US"}]},
+            {"key": "game", "names": [{"name_synonym": ["game"], "lang": "en-US"}]},
+            {
+                "key": "chromecast",
+                "names": [{"name_synonym": ["chromecast"], "lang": "en-US"}],
+            },
+            {"key": "plex", "names": [{"name_synonym": ["plex"], "lang": "en-US"}]},
+        ],
+    }
+
+    assert trt.query_attributes() == {
+        "currentApplication": "game",
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_APP_SELECT,
+        params={"newApplication": "media"},
+    )
+
+    assert trt.can_execute(
+        trait.COMMAND_APP_SELECT,
+        params={"newApplicationName": "chromecast"},
+    )
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        trait.COMMAND_APP_SELECT,
+        BASIC_DATA,
+        {"newApplication": "media"},
+        {},
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+
+    await trt.execute(
+        trait.COMMAND_APP_SELECT,
+        BASIC_DATA,
+        {"newApplicationName": "chromecast"},
+        {},
+    )
+    assert len(calls) == 2
+    assert calls[1].data == {
+        "entity_id": "media_player.living_room",
+        "source": "chromecast",
+    }

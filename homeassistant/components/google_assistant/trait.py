@@ -111,6 +111,7 @@ TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
 TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
 TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
 TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
+TRAIT_APPSELECTOR = f"{PREFIX_TRAITS}AppSelector"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -154,6 +155,9 @@ COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
+COMMAND_APP_INSTALL = f"{PREFIX_COMMANDS}appInstall"
+COMMAND_APP_SEARCH = f"{PREFIX_COMMANDS}appSearch"
+COMMAND_APP_SELECT = f"{PREFIX_COMMANDS}appSelect"
 
 TRAITS = []
 
@@ -1419,7 +1423,6 @@ class FanSpeedTrait(_Trait):
 
     def query_attributes(self):
         """Return speed point and modes query attributes."""
-
         attrs = self.state.attributes
         domain = self.state.domain
         response = {}
@@ -1697,15 +1700,13 @@ class ModesTrait(_Trait):
 
 @register_trait
 class InputSelectorTrait(_Trait):
-    """Trait to set modes.
+    """Trait to select input.
 
     https://developers.google.com/assistant/smarthome/traits/inputselector
     """
 
     name = TRAIT_INPUTSELECTOR
     commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
-
-    SYNONYMS = {}
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -2345,3 +2346,74 @@ class SensorStateTrait(_Trait):
                     {"name": data[0], "rawValue": self.state.state}
                 ]
             }
+
+
+@register_trait
+class AppSelectorTrait(_Trait):
+    """Trait to select apps.
+
+    https://developers.google.com/assistant/smarthome/traits/appselector
+    """
+
+    name = TRAIT_APPSELECTOR
+    commands = [COMMAND_APP_INSTALL, COMMAND_APP_SEARCH, COMMAND_APP_SELECT]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        if domain == media_player.DOMAIN and (
+            features & media_player.SUPPORT_SELECT_SOURCE
+        ):
+            return True
+
+        return False
+
+    def sync_attributes(self):
+        """Return mode attributes for a sync request."""
+        # en-US for the default lang of appselector
+        # https://developers.google.com/assistant/smarthome/traits/appselector only supports en-US
+        attrs = self.state.attributes
+        apps = [
+            {
+                "key": source,
+                "names": [{"name_synonym": [source], "lang": "en-US"}],
+            }
+            for source in attrs.get(media_player.ATTR_INPUT_SOURCE_LIST, [])
+        ]
+
+        payload = {"availableApplications": apps}
+
+        return payload
+
+    def query_attributes(self):
+        """Return current modes."""
+        attrs = self.state.attributes
+        return {"currentApplication": attrs.get(media_player.ATTR_INPUT_SOURCE, "")}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an SetInputSource command."""
+        sources = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
+
+        # in testing app install and app search never triggered, treat them as unsupported currently.
+        if command != COMMAND_APP_SELECT:
+            # COMMAND_APP_INSTALL unused?
+            # COMMAND_APP_SEARCH unused?
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Unsupported command")
+
+        requested_source = params.get("newApplication") or params.get(
+            "newApplicationName"
+        )
+
+        if requested_source not in sources:
+            raise SmartHomeError(ERR_UNSUPPORTED_INPUT, "Unsupported input")
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_SELECT_SOURCE,
+            {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_INPUT_SOURCE: requested_source,
+            },
+            blocking=not self.config.should_report_state,
+            context=data.context,
+        )

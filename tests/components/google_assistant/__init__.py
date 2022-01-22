@@ -216,6 +216,7 @@ DEMO_DEVICES = [
         "name": {"name": "Lounge room"},
         "traits": [
             "action.devices.traits.InputSelector",
+            "action.devices.traits.AppSelector",
             "action.devices.traits.OnOff",
             "action.devices.traits.Modes",
             "action.devices.traits.TransportControl",
