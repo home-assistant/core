@@ -21,7 +21,7 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "\u66f4\u65b0\u95f4\u9694\uff08\u5355\u4f4d\uff1a\u79d2\uff0c\u6700\u77ed 30\u79d2\uff09"
+                    "scan_interval": "\u66f4\u65b0\u95f4\u9694\uff08\u79d2\uff0c\u6700\u77ed 30 \u79d2\uff09"
                 }
             }
         }

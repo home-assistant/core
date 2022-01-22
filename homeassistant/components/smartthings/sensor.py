@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -25,17 +26,19 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 Map = namedtuple(
-    "map", "attribute name default_unit device_class state_class entity_category"
+    "Map", "attribute name default_unit device_class state_class entity_category"
 )
 
-CAPABILITY_TO_SENSORS = {
+CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
     Capability.activity_lighting_mode: [
         Map(
             Attribute.lighting_mode,
@@ -545,21 +548,25 @@ POWER_CONSUMPTION_REPORT_NAMES = [
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add binary sensors for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    sensors = []
+    entities: list[SensorEntity] = []
     for device in broker.devices.values():
         for capability in broker.get_assigned(device.device_id, "sensor"):
             if capability == Capability.three_axis:
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsThreeAxisSensor(device, index)
                         for index in range(len(THREE_AXIS_NAMES))
                     ]
                 )
             elif capability == Capability.power_consumption_report:
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsPowerConsumptionSensor(device, report_name)
                         for report_name in POWER_CONSUMPTION_REPORT_NAMES
@@ -567,7 +574,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             else:
                 maps = CAPABILITY_TO_SENSORS[capability]
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsSensor(
                             device,
@@ -585,7 +592,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if broker.any_assigned(device.device_id, "switch"):
             for capability in (Capability.energy_meter, Capability.power_meter):
                 maps = CAPABILITY_TO_SENSORS[capability]
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsSensor(
                             device,
@@ -600,7 +607,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     ]
                 )
 
-    async_add_entities(sensors)
+    async_add_entities(entities)
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:

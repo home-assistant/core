@@ -83,6 +83,8 @@ async def async_devices_sync(hass, data, payload):
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
+    await data.config.async_connect_agent_user(agent_user_id)
+
     entities = async_get_entities(hass, data.config)
     results = await asyncio.gather(
         *(
@@ -102,8 +104,6 @@ async def async_devices_sync(hass, data, payload):
             devices.append(result)
 
     response = {"agentUserId": agent_user_id, "devices": devices}
-
-    await data.config.async_connect_agent_user(agent_user_id)
 
     _LOGGER.debug("Syncing entities response: %s", response)
 

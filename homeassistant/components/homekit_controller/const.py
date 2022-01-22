@@ -47,6 +47,14 @@ HOMEKIT_ACCESSORY_DISPATCH = {
 }
 
 CHARACTERISTIC_PLATFORMS = {
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_WATT: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS_20: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_KW_HOUR: "sensor",
+    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: "number",
+    CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: "number",
+    CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: "switch",
+    CharacteristicsTypes.Vendor.AQARA_E1_PAIRING_MODE: "switch",
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: "number",
@@ -55,6 +63,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
+    CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY: "sensor",
     CharacteristicsTypes.TEMPERATURE_CURRENT: "sensor",
     CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: "sensor",
     CharacteristicsTypes.AIR_QUALITY: "sensor",

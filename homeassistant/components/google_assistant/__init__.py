@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     if google_config.should_report_state:
         google_config.async_enable_report_state()
 
-    async def request_sync_service_handler(call: ServiceCall):
+    async def request_sync_service_handler(call: ServiceCall) -> None:
         """Handle request sync service calls."""
         agent_user_id = call.data.get("agent_user_id") or call.context.user_id
 

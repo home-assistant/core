@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "invalid_auth_key": "Ge\u00e7ersiz bir API Anahtar\u0131 nedeniyle Coinbase taraf\u0131ndan reddedilen API kimlik bilgileri.",
+            "invalid_auth_secret": "Ge\u00e7ersiz bir API Gizlilik nedeniyle Coinbase taraf\u0131ndan reddedilen API kimlik bilgileri.",
             "unknown": "Beklenmeyen hata"
         },
         "step": {

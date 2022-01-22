@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import DATA_COORDINATOR, DATA_TILE, DOMAIN
+from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -21,7 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)",
+                    "auto_start": "Avvio automatico (disabilita se stai chiamando manualmente il servizio homekit.start)",
                     "devices": "Dispositivi (Attivatori)"
                 },
                 "description": "Gli interruttori programmabili vengono creati per ogni dispositivo selezionato. Quando si attiva un trigger del dispositivo, HomeKit pu\u00f2 essere configurato per eseguire un'automazione o una scena.",
@@ -32,7 +32,7 @@
                     "camera_audio": "Telecamere che supportano l'audio",
                     "camera_copy": "Telecamere che supportano flussi H.264 nativi"
                 },
-                "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette uno stream H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
+                "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette un flusso H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
                 "title": "Configurazione della telecamera"
             },
             "include_exclude": {
@@ -40,7 +40,7 @@
                     "entities": "Entit\u00e0",
                     "mode": "Modalit\u00e0"
                 },
-                "description": "Scegliere le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, ad eccezione delle entit\u00e0 escluse. Per prestazioni ottimali, sar\u00e0 creata una HomeKit separata accessoria per ogni lettore multimediale TV, telecomando basato sulle attivit\u00e0, serratura e videocamera.",
+                "description": "Scegli le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a eccezione delle entit\u00e0 escluse. Per prestazioni ottimali, sar\u00e0 creata una HomeKit separata accessoria per ogni lettore multimediale TV, telecomando basato sulle attivit\u00e0, serratura e videocamera.",
                 "title": "Seleziona le entit\u00e0 da includere"
             },
             "init": {

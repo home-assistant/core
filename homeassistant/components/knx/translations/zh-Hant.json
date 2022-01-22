@@ -12,7 +12,7 @@
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
                     "individual_address": "\u9023\u7dda\u500b\u5225\u4f4d\u5740",
-                    "local_ip": "\u672c\u5730\u7aef IP\uff08\u5047\u5982\u4e0d\u78ba\u5b9a\uff0c\u4fdd\u7559\u7a7a\u767d\uff09",
+                    "local_ip": "Home Assistant \u672c\u5730\u7aef IP\uff08\u4fdd\u7559\u7a7a\u767d\u4ee5\u81ea\u52d5\u5075\u6e2c\uff09",
                     "port": "\u901a\u8a0a\u57e0",
                     "route_back": "\u8def\u7531\u8fd4\u56de / NAT \u6a21\u5f0f"
                 },
@@ -21,7 +21,7 @@
             "routing": {
                 "data": {
                     "individual_address": "\u8def\u7531\u9023\u7dda\u500b\u5225\u4f4d\u5740",
-                    "local_ip": "\u672c\u5730\u7aef IP\uff08\u5047\u5982\u4e0d\u78ba\u5b9a\uff0c\u4fdd\u7559\u7a7a\u767d\uff09",
+                    "local_ip": "Home Assistant \u672c\u5730\u7aef IP\uff08\u4fdd\u7559\u7a7a\u767d\u4ee5\u81ea\u52d5\u5075\u6e2c\uff09",
                     "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u7684 Multicast \u7fa4\u7d44",
                     "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u7684 Multicast \u901a\u8a0a\u57e0"
                 },
@@ -47,7 +47,7 @@
                 "data": {
                     "connection_type": "KNX \u9023\u7dda\u985e\u578b",
                     "individual_address": "\u9810\u8a2d\u500b\u5225\u4f4d\u5740",
-                    "local_ip": "\u672c\u5730\u7aef IP\uff08\u5047\u5982\u4e0d\u78ba\u5b9a\uff0c\u4fdd\u7559\u7a7a\u767d\uff09",
+                    "local_ip": "Home Assistant \u672c\u5730\u7aef IP\uff08\u586b\u5165 0.0.0.0 \u555f\u7528\u81ea\u52d5\u5075\u6e2c\uff09",
                     "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u7fa4\u7d44",
                     "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u901a\u8a0a\u57e0",
                     "rate_limit": "\u6700\u5927\u6bcf\u79d2\u767c\u51fa Telegram",

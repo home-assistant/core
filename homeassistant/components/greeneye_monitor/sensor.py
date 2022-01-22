@@ -1,14 +1,13 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Optional, Union, cast
+from typing import Any, Union
 
 import greeneye
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
-    CONF_SENSOR_TYPE,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     ELECTRIC_POTENTIAL_VOLT,
@@ -17,22 +16,23 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
+    CONF_CHANNELS,
     CONF_COUNTED_QUANTITY,
     CONF_COUNTED_QUANTITY_PER_PULSE,
-    CONF_MONITOR_SERIAL_NUMBER,
+    CONF_MONITORS,
     CONF_NET_METERING,
     CONF_NUMBER,
+    CONF_PULSE_COUNTERS,
+    CONF_SERIAL_NUMBER,
+    CONF_TEMPERATURE_SENSORS,
     CONF_TIME_UNIT,
+    CONF_VOLTAGE_SENSORS,
     DATA_GREENEYE_MONITOR,
-    SENSOR_TYPE_CURRENT,
-    SENSOR_TYPE_PULSE_COUNTER,
-    SENSOR_TYPE_TEMPERATURE,
-    SENSOR_TYPE_VOLTAGE,
 )
 
 DATA_PULSES = "pulses"
@@ -45,27 +45,34 @@ COUNTER_ICON = "mdi:counter"
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a single GEM temperature sensor."""
+    if not discovery_info:
+        return
+
     entities: list[GEMSensor] = []
-    for sensor in discovery_info[CONF_SENSORS]:
-        sensor_type = sensor[CONF_SENSOR_TYPE]
-        if sensor_type == SENSOR_TYPE_CURRENT:
+    for monitor_config in discovery_info[CONF_MONITORS]:
+        monitor_serial_number = monitor_config[CONF_SERIAL_NUMBER]
+
+        channel_configs = monitor_config[CONF_CHANNELS]
+        for sensor in channel_configs:
             entities.append(
                 CurrentSensor(
-                    sensor[CONF_MONITOR_SERIAL_NUMBER],
+                    monitor_serial_number,
                     sensor[CONF_NUMBER],
                     sensor[CONF_NAME],
                     sensor[CONF_NET_METERING],
                 )
             )
-        elif sensor_type == SENSOR_TYPE_PULSE_COUNTER:
+
+        pulse_counter_configs = monitor_config[CONF_PULSE_COUNTERS]
+        for sensor in pulse_counter_configs:
             entities.append(
                 PulseCounter(
-                    sensor[CONF_MONITOR_SERIAL_NUMBER],
+                    monitor_serial_number,
                     sensor[CONF_NUMBER],
                     sensor[CONF_NAME],
                     sensor[CONF_COUNTED_QUANTITY],
@@ -73,19 +80,23 @@ async def async_setup_platform(
                     sensor[CONF_COUNTED_QUANTITY_PER_PULSE],
                 )
             )
-        elif sensor_type == SENSOR_TYPE_TEMPERATURE:
+
+        temperature_sensor_configs = monitor_config[CONF_TEMPERATURE_SENSORS]
+        for sensor in temperature_sensor_configs[CONF_SENSORS]:
             entities.append(
                 TemperatureSensor(
-                    sensor[CONF_MONITOR_SERIAL_NUMBER],
+                    monitor_serial_number,
                     sensor[CONF_NUMBER],
                     sensor[CONF_NAME],
-                    sensor[CONF_TEMPERATURE_UNIT],
+                    temperature_sensor_configs[CONF_TEMPERATURE_UNIT],
                 )
             )
-        elif sensor_type == SENSOR_TYPE_VOLTAGE:
+
+        voltage_sensor_configs = monitor_config[CONF_VOLTAGE_SENSORS]
+        for sensor in voltage_sensor_configs:
             entities.append(
                 VoltageSensor(
-                    sensor[CONF_MONITOR_SERIAL_NUMBER],
+                    monitor_serial_number,
                     sensor[CONF_NUMBER],
                     sensor[CONF_NAME],
                 )
@@ -96,9 +107,9 @@ async def async_setup_platform(
 
 UnderlyingSensorType = Union[
     greeneye.monitor.Channel,
-    greeneye.monitor.Monitor,
     greeneye.monitor.PulseCounter,
     greeneye.monitor.TemperatureSensor,
+    greeneye.monitor.VoltageSensor,
 ]
 
 
@@ -178,7 +189,7 @@ class CurrentSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(Optional[float], self._sensor.watts)
+        return self._sensor.watts
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -229,7 +240,7 @@ class PulseCounter(GEMSensor):
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return cast(float, result)
+        return result
 
     @property
     def _seconds_per_time_unit(self) -> int:
@@ -281,7 +292,7 @@ class TemperatureSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(Optional[float], self._sensor.temperature)
+        return self._sensor.temperature
 
 
 class VoltageSensor(GEMSensor):
@@ -295,9 +306,9 @@ class VoltageSensor(GEMSensor):
         super().__init__(monitor_serial_number, name, "volts", number)
 
     @property
-    def _sensor(self) -> greeneye.monitor.Monitor | None:
+    def _sensor(self) -> greeneye.monitor.VoltageSensor | None:
         """Wire the updates to the monitor itself, since there is no voltage element in the API."""
-        return self._monitor
+        return self._monitor.voltage_sensor if self._monitor else None
 
     @property
     def native_value(self) -> float | None:
@@ -305,4 +316,4 @@ class VoltageSensor(GEMSensor):
         if not self._sensor:
             return None
 
-        return cast(Optional[float], self._sensor.voltage)
+        return self._sensor.voltage

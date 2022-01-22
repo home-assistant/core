@@ -7,6 +7,7 @@ documentation as possible to keep it understandable.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 import functools as ft
 import importlib
@@ -15,7 +16,7 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable, Dict, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -23,18 +24,16 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
-from homeassistant.generated.dhcp import DHCP
-from homeassistant.generated.mqtt import MQTT
-from homeassistant.generated.ssdp import SSDP
-from homeassistant.generated.usb import USB
-from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
-from homeassistant.util.async_ import gather_with_concurrency
+from .generated.dhcp import DHCP
+from .generated.mqtt import MQTT
+from .generated.ssdp import SSDP
+from .generated.usb import USB
+from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-
-# mypy: disallow-any-generics
+    from .core import HomeAssistant
 
 CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
     "CALLABLE_T", bound=Callable[..., Any]
@@ -159,15 +158,15 @@ async def async_get_custom_components(
 
     if isinstance(reg_or_evt, asyncio.Event):
         await reg_or_evt.wait()
-        return cast(Dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
+        return cast(dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
 
-    return cast(Dict[str, "Integration"], reg_or_evt)
+    return cast(dict[str, "Integration"], reg_or_evt)
 
 
 async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
-    from homeassistant.generated.config_flows import FLOWS
+    from .generated.config_flows import FLOWS
 
     flows: set[str] = set()
     flows.update(FLOWS)
@@ -318,7 +317,7 @@ class Integration:
         cls, hass: HomeAssistant, root_module: ModuleType, domain: str
     ) -> Integration | None:
         """Resolve an integration from a root module."""
-        for base in root_module.__path__:  # type: ignore
+        for base in root_module.__path__:
             manifest_path = pathlib.Path(base) / domain / "manifest.json"
 
             if not manifest_path.is_file():
@@ -607,7 +606,7 @@ async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integratio
     if integration := (await async_get_custom_components(hass)).get(domain):
         return integration
 
-    from homeassistant import components  # pylint: disable=import-outside-toplevel
+    from . import components  # pylint: disable=import-outside-toplevel
 
     if integration := await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, components, domain

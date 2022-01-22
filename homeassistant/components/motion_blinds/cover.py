@@ -1,5 +1,4 @@
 """Support for Motion Blinds using their WLAN API."""
-
 import logging
 
 from motionblinds import BlindType
@@ -11,8 +10,11 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -62,7 +64,11 @@ SET_ABSOLUTE_POSITION_SCHEMA = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]

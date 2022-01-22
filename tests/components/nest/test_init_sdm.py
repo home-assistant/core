@@ -10,9 +10,10 @@ import logging
 from unittest.mock import patch
 
 from google_nest_sdm.exceptions import (
+    ApiException,
     AuthException,
     ConfigurationException,
-    GoogleNestException,
+    SubscriberException,
 )
 
 from homeassistant.components.nest import DOMAIN
@@ -66,7 +67,7 @@ async def test_setup_susbcriber_failure(hass, caplog):
     """Test configuration error."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
-        side_effect=GoogleNestException(),
+        side_effect=SubscriberException(),
     ), caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         result = await async_setup_sdm(hass)
         assert result
@@ -83,7 +84,7 @@ async def test_setup_device_manager_failure(hass, caplog):
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
     ), patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
-        side_effect=GoogleNestException(),
+        side_effect=ApiException(),
     ), caplog.at_level(
         logging.ERROR, logger="homeassistant.components.nest"
     ):
@@ -252,7 +253,7 @@ async def test_remove_entry_delete_subscriber_failure(hass, caplog):
 
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
-        side_effect=GoogleNestException(),
+        side_effect=SubscriberException(),
     ):
         assert await hass.config_entries.async_remove(entry.entry_id)
 

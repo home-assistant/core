@@ -286,6 +286,8 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         default_enabled=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        should_poll=True,
     ),
     "rssi": RpcAttributeDescription(
         key="wifi",
@@ -296,6 +298,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         default_enabled=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        should_poll=True,
     ),
     "uptime": RpcAttributeDescription(
         key="sys",
@@ -305,6 +308,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TIMESTAMP,
         default_enabled=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        should_poll=True,
     ),
 }
 

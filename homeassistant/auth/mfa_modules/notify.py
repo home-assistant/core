@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import attr
 import voluptuous as vol
@@ -86,7 +86,7 @@ class NotifySetting:
     target: str | None = attr.ib(default=None)
 
 
-_UsersDict = Dict[str, NotifySetting]
+_UsersDict = dict[str, NotifySetting]
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("notify")

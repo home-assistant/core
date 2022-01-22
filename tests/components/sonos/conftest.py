@@ -99,8 +99,9 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         mock_soco.alarmClock = alarm_clock
         mock_soco.mute = False
         mock_soco.night_mode = True
-        mock_soco.dialog_mode = True
+        mock_soco.dialog_level = True
         mock_soco.volume = 19
+        mock_soco.audio_delay = 2
         mock_soco.bass = 1
         mock_soco.treble = -1
         mock_soco.sub_enabled = False
@@ -205,6 +206,8 @@ def speaker_info_fixture():
         "zone_name": "Zone A",
         "uid": "RINCON_test",
         "model_name": "Model Name",
+        "model_number": "S12",
+        "hardware_version": "1.20.1.6-1.1",
         "software_version": "49.2-64250",
         "mac_address": "00-11-22-33-44-55",
         "display_version": "13.1",
@@ -222,11 +225,12 @@ def battery_info_fixture():
     }
 
 
-@pytest.fixture(name="battery_event")
-def battery_event_fixture(soco):
-    """Create battery_event fixture."""
+@pytest.fixture(name="device_properties_event")
+def device_properties_event_fixture(soco):
+    """Create device_properties_event fixture."""
     variables = {
         "zone_name": "Zone A",
+        "mic_enabled": "1",
         "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
     }
     return SonosMockEvent(soco, soco.deviceProperties, variables)

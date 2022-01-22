@@ -7,7 +7,7 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import websocket_api
+from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -119,7 +119,7 @@ async def async_add_user_device_tracker(
             return
 
         await coll.async_update_item(
-            person[collection.CONF_ID],
+            person[CONF_ID],
             {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
         )
         break
@@ -212,7 +212,7 @@ class PersonStorageCollection(collection.StorageCollection):
                 continue
 
             await self.async_update_item(
-                person[collection.CONF_ID],
+                person[CONF_ID],
                 {
                     CONF_DEVICE_TRACKERS: [
                         devt
@@ -268,17 +268,18 @@ async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dic
         if user_id is not None and await hass.auth.async_get_user(user_id) is None:
             _LOGGER.error(
                 "Invalid user_id detected for person %s",
-                person_conf[collection.CONF_ID],
+                person_conf[CONF_ID],
             )
             person_invalid_user.append(
-                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[collection.CONF_ID]}) points at invalid user {user_id}"
+                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points at invalid user {user_id}"
             )
             continue
 
         filtered.append(person_conf)
 
     if person_invalid_user:
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             f"""
 The following persons point at invalid users:
 
@@ -336,7 +337,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
 
-    async def async_reload_yaml(call: ServiceCall):
+    async def async_reload_yaml(call: ServiceCall) -> None:
         """Reload YAML."""
         conf = await entity_component.async_prepare_reload(skip_reset=True)
         if conf is None:

@@ -18,6 +18,10 @@ class NoTokenAvailable(HomeAssistantError):
     """There is no access token available."""
 
 
+class RequireRelink(Exception):
+    """The skill needs to be relinked."""
+
+
 class AlexaError(Exception):
     """Base class for errors that can be serialized for the Alexa API.
 

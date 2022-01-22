@@ -309,7 +309,7 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
 
     @property
     def cloud_cover(self):
-        """Reteurn the cloud cover."""
+        """Return the cloud cover."""
         return self._get_current_property(CC_ATTR_CLOUD_COVER)
 
     @property
@@ -458,7 +458,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
 
     @property
     def cloud_cover(self):
-        """Reteurn the cloud cover."""
+        """Return the cloud cover."""
         return self._get_cc_value(
             self.coordinator.data[CURRENT], CC_V3_ATTR_CLOUD_COVER
         )

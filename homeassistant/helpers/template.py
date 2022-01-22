@@ -24,7 +24,7 @@ from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 import jinja2
-from jinja2 import pass_context
+from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -45,13 +45,6 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_registry,
-    location as loc_helper,
-)
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import (
     convert,
@@ -61,6 +54,9 @@ from homeassistant.util import (
 )
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
+
+from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -882,9 +878,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     try:
         # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-            config_validation as cv,
-        )
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
         return cv.boolean(template_result)
     except vol.Invalid:
@@ -952,7 +946,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
 
     # fallback to just returning all entities for a domain
     # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers.entity import entity_sources
+    from .entity import entity_sources
 
     return [
         entity_id
@@ -1014,9 +1008,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1054,9 +1046,7 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1535,6 +1525,30 @@ def fail_when_undefined(value):
     return value
 
 
+def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
+    """
+    Convert a built-in min/max Jinja filter to a global function.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+
+    @pass_environment
+    @wraps(builtin_filter)
+    def wrapper(environment: jinja2.Environment, *args: Any, **kwargs: Any) -> Any:
+        if len(args) == 0:
+            raise TypeError(f"{name} expected at least 1 argument, got 0")
+
+        if len(args) == 1:
+            if isinstance(args[0], Iterable):
+                return builtin_filter(environment, args[0], **kwargs)
+
+            raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+
+        return builtin_filter(environment, args, **kwargs)
+
+    return pass_environment(wrapper)
+
+
 def average(*args: Any) -> float:
     """
     Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
@@ -1875,8 +1889,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
-        self.filters["max"] = max
-        self.filters["min"] = min
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
@@ -1919,14 +1931,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
-        self.globals["max"] = max
-        self.globals["min"] = min
+        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
+        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
+        self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

@@ -1,5 +1,4 @@
 """The nuki component."""
-
 from datetime import timedelta
 import logging
 
@@ -9,7 +8,9 @@ from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -25,6 +26,7 @@ from .const import (
     DOMAIN,
     ERROR_STATES,
 )
+from .helpers import parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,10 +50,18 @@ def _update_devices(devices):
                 break
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Nuki entry."""
 
     hass.data.setdefault(DOMAIN, {})
+
+    # Migration of entry unique_id
+    if isinstance(entry.unique_id, int):
+        new_id = parse_id(entry.unique_id)
+        params = {"unique_id": new_id}
+        if entry.title == entry.unique_id:
+            params["title"] = new_id
+        hass.config_entries.async_update_entry(entry, **params)
 
     try:
         bridge = await hass.async_add_executor_job(
@@ -106,7 +116,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Nuki entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

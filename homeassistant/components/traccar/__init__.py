@@ -4,10 +4,14 @@ from http import HTTPStatus
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components import webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, CONF_WEBHOOK_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ACCURACY,
@@ -51,7 +55,7 @@ WEBHOOK_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, hass_config):
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Traccar component."""
     hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
     return True
@@ -88,19 +92,19 @@ async def handle_webhook(hass, webhook_id, request):
     return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.components.webhook.async_register(
-        DOMAIN, "Traccar", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, "Traccar", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

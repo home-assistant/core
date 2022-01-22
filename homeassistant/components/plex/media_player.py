@@ -1,4 +1,6 @@
 """Support to interface with the Plex API."""
+from __future__ import annotations
+
 from functools import wraps
 import json
 import logging
@@ -20,8 +22,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
@@ -29,6 +32,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 
@@ -62,7 +66,11 @@ def needs_session(func):
     return get_session_attribute
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     registry = await async_get_registry(hass)
@@ -565,8 +573,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Get media image from Plex server."""
         image_url = self.plex_server.thumbnail_cache.get(media_content_id)
         if image_url:

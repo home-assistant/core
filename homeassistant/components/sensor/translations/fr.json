@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_apparent_power": "Puissance apparente actuelle de {entity_name}",
             "is_battery_level": "Niveau de la batterie de {entity_name}",
             "is_carbon_dioxide": "Niveau actuel de concentration de dioxyde de carbone {entity_name}",
             "is_carbon_monoxide": "Niveau actuel de concentration de monoxyde de carbone {entity_name}",
@@ -20,6 +21,7 @@
             "is_power": "Puissance de {entity_name}",
             "is_power_factor": "Facteur de puissance actuel pour {entity_name}",
             "is_pressure": "Pression de {entity_name}",
+            "is_reactive_power": "Puissance r\u00e9active actuelle de {entity_name}",
             "is_signal_strength": "Force du signal de {entity_name}",
             "is_sulphur_dioxide": "Niveau de concentration actuel de {entity_name}",
             "is_temperature": "Temp\u00e9rature de {entity_name}",
@@ -28,6 +30,7 @@
             "is_voltage": "Tension actuelle pour {entity_name}"
         },
         "trigger_type": {
+            "apparent_power": "{entity_name} changement de puissance apparente",
             "battery_level": "{entity_name} modification du niveau de batterie",
             "carbon_dioxide": "{entity_name} changements de concentration de dioxyde de carbone",
             "carbon_monoxide": "{entity_name} changements de concentration de monoxyde de carbone",
@@ -47,6 +50,7 @@
             "power": "{entity_name} modification de la puissance",
             "power_factor": "{entity_name} changement de facteur de puissance",
             "pressure": "{entity_name} modification de la pression",
+            "reactive_power": "{entity_name} changements de puissance r\u00e9active",
             "signal_strength": "{entity_name} modification de la force du signal",
             "sulphur_dioxide": "{entity_name} changements de concentration de dioxyde de soufre",
             "temperature": "{entity_name} modification de temp\u00e9rature",

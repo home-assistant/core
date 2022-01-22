@@ -29,6 +29,7 @@
             },
             "user": {
                 "data": {
+                    "event_hub_instance_name": "Event Hub Instance Naam",
                     "use_connection_string": "Gebruik Connection String"
                 },
                 "title": "Stel uw Azure Event Hub integratie in"

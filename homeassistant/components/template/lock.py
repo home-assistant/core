@@ -1,4 +1,6 @@
 """Support for locks which integrates with other components."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.lock import (
@@ -17,10 +19,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNLOCKED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
@@ -53,7 +57,12 @@ async def _async_create_entities(hass, config):
     return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template lock."""
     async_add_entities(await _async_create_entities(hass, config))
 

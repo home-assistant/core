@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Nem siker\u00fclt csatlakozni",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_auth_key": "A Coinbase elutas\u00edtotta az API hiteles\u00edt\u0151 adatokat \u00e9rv\u00e9nytelen API kulcs miatt.",
+            "invalid_auth_secret": "A Coinbase elutas\u00edtotta az API hiteles\u00edt\u0151 adatokat \u00e9rv\u00e9nytelen API jelsz\u00f3 miatt.",
             "unknown": "Ismeretlen hiba"
         },
         "step": {

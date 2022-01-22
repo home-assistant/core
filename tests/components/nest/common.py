@@ -1,7 +1,7 @@
 """Common libraries for test setup."""
 
+from collections.abc import Awaitable, Callable
 import time
-from typing import Awaitable, Callable
 from unittest.mock import patch
 
 from google_nest_sdm.device_manager import DeviceManager
@@ -109,15 +109,15 @@ async def async_setup_sdm_platform(
     if structures:
         for structure in structures.values():
             device_manager.add_structure(structure)
+    platforms = []
+    if platform:
+        platforms = [platform]
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", [platform]), patch(
+    ), patch("homeassistant.components.nest.PLATFORMS", platforms), patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber",
         return_value=subscriber,
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
-    # Disabled to reduce setup burden, and enabled manually by tests that
-    # need to exercise this
-    subscriber.cache_policy.fetch = False
     return subscriber

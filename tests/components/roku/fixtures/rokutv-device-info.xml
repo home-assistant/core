@@ -59,6 +59,7 @@
     <supports-ecs-textedit>true</supports-ecs-textedit>
     <supports-ecs-microphone>true</supports-ecs-microphone>
     <supports-wake-on-wlan>true</supports-wake-on-wlan>
+    <supports-airplay>true</supports-airplay>
     <has-play-on-roku>true</has-play-on-roku>
     <has-mobile-screensaver>true</has-mobile-screensaver>
     <support-url>https://www.onntvsupport.com/</support-url>

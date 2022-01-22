@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
@@ -23,7 +24,7 @@ from .models import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Toon binary sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]

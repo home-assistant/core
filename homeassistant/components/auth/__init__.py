@@ -134,6 +134,7 @@ from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
@@ -186,7 +187,7 @@ def create_auth_code(hass, client_id: str, credential: Credentials) -> str:
     return hass.data[DOMAIN](client_id, credential)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
 
@@ -195,24 +196,26 @@ async def async_setup(hass, config):
     hass.http.register_view(TokenView(retrieve_result))
     hass.http.register_view(LinkUserView(retrieve_result))
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
+    websocket_api.async_register_command(
+        hass, WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
         websocket_create_long_lived_access_token,
         SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
+    websocket_api.async_register_command(
+        hass, WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_DELETE_REFRESH_TOKEN,
         websocket_delete_refresh_token,
         SCHEMA_WS_DELETE_REFRESH_TOKEN,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
+    websocket_api.async_register_command(
+        hass, WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -585,7 +588,6 @@ def websocket_sign_path(
             {
                 "path": async_sign_path(
                     hass,
-                    connection.refresh_token_id,
                     msg["path"],
                     timedelta(seconds=msg["expires"]),
                 )

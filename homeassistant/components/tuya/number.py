@@ -55,6 +55,20 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        NumberEntityDescription(
+            key=DPCode.MANUAL_FEED,
+            name="Feed",
+            icon="mdi:bowl",
+        ),
+        NumberEntityDescription(
+            key=DPCode.VOICE_TIMES,
+            name="Voice Times",
+            icon="mdi:microphone",
+        ),
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
@@ -247,10 +261,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaNumberEntity(
                                 device, hass_data.device_manager, description

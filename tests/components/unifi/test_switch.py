@@ -5,7 +5,6 @@ from unittest.mock import patch
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_EVENT
 
 from homeassistant import config_entries, core
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
@@ -289,7 +288,42 @@ DPI_GROUP_REMOVED_EVENT = {
     "data": [
         {
             "_id": "5f976f4ae3c58f018ec7dff6",
-            "name": "dpi group",
+            "name": "Block Media Streaming",
+            "site_id": "name",
+            "dpiapp_ids": [],
+        }
+    ],
+}
+
+DPI_GROUP_CREATED_EVENT = {
+    "meta": {"rc": "ok", "message": "dpigroup:add"},
+    "data": [
+        {
+            "name": "Block Media Streaming",
+            "site_id": "name",
+            "_id": "5f976f4ae3c58f018ec7dff6",
+        }
+    ],
+}
+
+DPI_GROUP_ADDED_APP = {
+    "meta": {"rc": "ok", "message": "dpigroup:sync"},
+    "data": [
+        {
+            "_id": "5f976f4ae3c58f018ec7dff6",
+            "name": "Block Media Streaming",
+            "site_id": "name",
+            "dpiapp_ids": ["5f976f62e3c58f018ec7e17d"],
+        }
+    ],
+}
+
+DPI_GROUP_REMOVE_APP = {
+    "meta": {"rc": "ok", "message": "dpigroup:sync"},
+    "data": [
+        {
+            "_id": "5f976f4ae3c58f018ec7dff6",
+            "name": "Block Media Streaming",
             "site_id": "name",
             "dpiapp_ids": [],
         }
@@ -600,6 +634,82 @@ async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
+    mock_unifi_websocket(data=DPI_GROUP_REMOVE_APP)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming") is None
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
+
+
+async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_websocket):
+    """Test the update_items function with some clients."""
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=DPI_APPS,
+    )
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
+    second_app_event = {
+        "meta": {"rc": "ok", "message": "dpiapp:add"},
+        "data": [
+            {
+                "apps": [524292],
+                "blocked": False,
+                "cats": [],
+                "enabled": False,
+                "log": False,
+                "site_id": "name",
+                "_id": "61783e89c1773a18c0c61f00",
+            }
+        ],
+    }
+    mock_unifi_websocket(data=second_app_event)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
+    add_second_app_to_group = {
+        "meta": {"rc": "ok", "message": "dpigroup:sync"},
+        "data": [
+            {
+                "_id": "5f976f4ae3c58f018ec7dff6",
+                "name": "Block Media Streaming",
+                "site_id": "name",
+                "dpiapp_ids": ["5f976f62e3c58f018ec7e17d", "61783e89c1773a18c0c61f00"],
+            }
+        ],
+    }
+
+    mock_unifi_websocket(data=add_second_app_to_group)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
+
+    second_app_event_enabled = {
+        "meta": {"rc": "ok", "message": "dpiapp:sync"},
+        "data": [
+            {
+                "apps": [524292],
+                "blocked": False,
+                "cats": [],
+                "enabled": True,
+                "log": False,
+                "site_id": "name",
+                "_id": "61783e89c1773a18c0c61f00",
+            }
+        ],
+    }
+    mock_unifi_websocket(data=second_app_event_enabled)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
 
 async def test_new_client_discovered_on_block_control(
     hass, aioclient_mock, mock_unifi_websocket
@@ -783,8 +893,6 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, aioclient_mock):
         clients_response=POE_SWITCH_CLIENTS,
         devices_response=[DEVICE_1],
     )
-
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
     switch_2 = hass.states.get("switch.poe_client_2")

@@ -2,7 +2,17 @@
 
 from typing import Literal
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
+
+
+class MeshRoles(StrEnum):
+    """Available Mesh roles."""
+
+    NONE = "none"
+    MASTER = "master"
+    SLAVE = "slave"
+
 
 DOMAIN = "fritz"
 

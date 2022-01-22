@@ -1,4 +1,6 @@
 """Support for Template alarm control panels."""
+from __future__ import annotations
+
 from enum import Enum
 import logging
 
@@ -30,11 +32,13 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import TemplateEntity
@@ -112,7 +116,12 @@ async def _async_create_entities(hass, config):
     return alarm_control_panels
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Template Alarm Control Panels."""
     async_add_entities(await _async_create_entities(hass, config))
 

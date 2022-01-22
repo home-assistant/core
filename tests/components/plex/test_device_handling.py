@@ -1,7 +1,7 @@
 """Tests for handling the device registry."""
 
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex.const import DOMAIN
+from homeassistant.const import Platform
 
 
 async def test_cleanup_orphaned_devices(hass, entry, setup_plex_server):
@@ -18,7 +18,7 @@ async def test_cleanup_orphaned_devices(hass, entry, setup_plex_server):
     assert test_device is not None
 
     test_entity = entity_registry.async_get_or_create(
-        MP_DOMAIN, DOMAIN, "entity_unique_id_123", device_id=test_device.id
+        Platform.MEDIA_PLAYER, DOMAIN, "entity_unique_id_123", device_id=test_device.id
     )
     assert test_entity is not None
 
@@ -53,9 +53,9 @@ async def test_migrate_transient_devices(
         identifiers=plexweb_device_id,
         model="Plex Web",
     )
-    # plexweb_entity = entity_registry.async_get_or_create(MP_DOMAIN, DOMAIN, "unique_id_123:plexweb_id", suggested_object_id="plex_plex_web_chrome", device_id=plexweb_device.id)
+
     entity_registry.async_get_or_create(
-        MP_DOMAIN,
+        Platform.MEDIA_PLAYER,
         DOMAIN,
         "unique_id_123:plexweb_id",
         suggested_object_id="plex_plex_web_chrome",
@@ -68,7 +68,7 @@ async def test_migrate_transient_devices(
         model="Plex for Android (TV)",
     )
     entity_registry.async_get_or_create(
-        MP_DOMAIN,
+        Platform.MEDIA_PLAYER,
         DOMAIN,
         "unique_id_123:1234567890123456-com-plexapp-android",
         suggested_object_id="plex_plex_for_android_tv_shield_android_tv",

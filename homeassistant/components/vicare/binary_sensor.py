@@ -17,16 +17,25 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
-from .const import DOMAIN, VICARE_API, VICARE_CIRCUITS, VICARE_DEVICE_CONFIG
+from .const import (
+    DOMAIN,
+    VICARE_API,
+    VICARE_CIRCUITS,
+    VICARE_DEVICE_CONFIG,
+    VICARE_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_CIRCULATION_PUMP_ACTIVE = "circulationpump_active"
 SENSOR_BURNER_ACTIVE = "burner_active"
 SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
+SENSOR_SOLAR_PUMP_ACTIVE = "solar_pump_active"
 
 
 @dataclass
@@ -63,6 +72,15 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ),
 )
 
+GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
+    ViCareBinarySensorEntityDescription(
+        key=SENSOR_SOLAR_PUMP_ACTIVE,
+        name="Solar pump active",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_getter=lambda api: api.getSolarPumpActive(),
+    ),
+)
+
 
 def _build_entity(name, vicare_api, device_config, sensor):
     """Create a ViCare binary sensor entity."""
@@ -85,7 +103,7 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, name, all_devices, sensor_descriptions, iterables, config_entry
+    hass, name, entities, sensor_descriptions, iterables, config_entry
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -101,15 +119,30 @@ async def _entities_from_descriptions(
                 description,
             )
             if entity is not None:
-                all_devices.append(entity)
+                entities.append(entity)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Create the ViCare binary sensor devices."""
-    name = config_entry.data[CONF_NAME]
+    name = VICARE_NAME
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
-    all_devices = []
+    entities = []
+
+    for description in GLOBAL_SENSORS:
+        entity = await hass.async_add_executor_job(
+            _build_entity,
+            f"{name} {description.name}",
+            api,
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            description,
+        )
+        if entity is not None:
+            entities.append(entity)
 
     for description in CIRCUIT_SENSORS:
         for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
@@ -124,23 +157,23 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                 description,
             )
             if entity is not None:
-                all_devices.append(entity)
+                entities.append(entity)
 
     try:
         await _entities_from_descriptions(
-            hass, name, all_devices, BURNER_SENSORS, api.burners, config_entry
+            hass, name, entities, BURNER_SENSORS, api.burners, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No burners found")
 
     try:
         await _entities_from_descriptions(
-            hass, name, all_devices, COMPRESSOR_SENSORS, api.compressors, config_entry
+            hass, name, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No compressors found")
 
-    async_add_devices(all_devices)
+    async_add_entities(entities)
 
 
 class ViCareBinarySensor(BinarySensorEntity):

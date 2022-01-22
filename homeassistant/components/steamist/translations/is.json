@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "T\u00e6ki"
+                }
+            }
+        }
+    }
+}
