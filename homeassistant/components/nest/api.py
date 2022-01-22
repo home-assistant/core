@@ -95,12 +95,12 @@ async def new_subscriber_with_impl(
     # ConfigEntry parameters, so to simplify just merge and check both
     data = {**config, **entry.data}
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    for key in [
+    for key in (
         CONF_CLIENT_ID,
         CONF_CLIENT_SECRET,
         CONF_PROJECT_ID,
         CONF_SUBSCRIBER_ID,
-    ]:
+    ):
         if key not in data:
             _LOGGER.error("Configuration option '%s' required", key)
             return None
