@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Mettre \u00e0 jour le mot de passe pour {username}"
+            },
+            "service": {
+                "data": {
+                    "services": "Services"
+                },
+                "title": "S\u00e9lectionnez les services"
+            },
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Impossible de se connecter",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "services": "Services"
+                },
+                "title": "S\u00e9lectionnez les services"
+            }
+        }
+    }
+}

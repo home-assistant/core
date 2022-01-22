@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.5
+flux_led==0.28.6
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -2127,9 +2127,6 @@ rpi-bad-power==0.1.0
 
 # homeassistant.components.rpi_rf
 # rpi-rf==0.9.7
-
-# homeassistant.components.rtsptowebrtc
-rtsp-to-webrtc==0.2.7
 
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.4.0
