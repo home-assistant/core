@@ -399,8 +399,8 @@ class FibaroDevice(Entity):
         """Initialize the device."""
         self.fibaro_device = fibaro_device
         self.controller = fibaro_device.fibaro_controller
-        self._name = fibaro_device.friendly_name
         self.ha_id = fibaro_device.ha_id
+        self._attr_unique_id = self.fibaro_device.unique_id_str
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -492,16 +492,6 @@ class FibaroDevice(Entity):
         ):
             return True
         return False
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self.fibaro_device.unique_id_str
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the device."""
-        return self._name
 
     @property
     def should_poll(self):

@@ -100,6 +100,7 @@ class FibaroLight(FibaroDevice, LightEntity):
 
         super().__init__(fibaro_device)
         self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self._attr_name = fibaro_device.friendly_name
 
     @property
     def brightness(self):

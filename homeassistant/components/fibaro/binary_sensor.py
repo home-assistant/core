@@ -1,10 +1,13 @@
 """Support for Fibaro binary sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
 from homeassistant.core import HomeAssistant
@@ -38,54 +41,45 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    add_entities(
-        [
-            FibaroBinarySensor(device)
-            for device in hass.data[FIBARO_DEVICES]["binary_sensor"]
-        ],
-        True,
-    )
+    entities: list[FibaroBinarySensor] = []
+    for fibaro_device in hass.data[FIBARO_DEVICES]["binary_sensor"]:
+        device_class = None
+        icon = None
+        if fibaro_device.type in SENSOR_TYPES:
+            device_class = SENSOR_TYPES[fibaro_device.type][2]
+            icon = SENSOR_TYPES[fibaro_device.type][1]
+        elif fibaro_device.baseType in SENSOR_TYPES:
+            device_class = SENSOR_TYPES[fibaro_device.baseType][2]
+            icon = SENSOR_TYPES[fibaro_device.baseType][1]
+
+        # device_config overrides:
+        devconf = fibaro_device.device_config
+        device_class = devconf.get(CONF_DEVICE_CLASS, device_class)
+        icon = devconf.get(CONF_ICON, icon)
+
+        entity_description = BinarySensorEntityDescription(
+            key="binary_sensor",
+            name=fibaro_device.friendly_name,
+            device_class=device_class,
+            icon=icon,
+        )
+
+        entities.append(FibaroBinarySensor(fibaro_device, entity_description))
+
+    add_entities(entities, True)
 
 
 class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
-    def __init__(self, fibaro_device):
+    def __init__(
+        self, fibaro_device: Any, entity_description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize the binary_sensor."""
-        self._state = None
         super().__init__(fibaro_device)
+        self.entity_description = entity_description
         self.entity_id = f"{DOMAIN}.{self.ha_id}"
-        stype = None
-        devconf = fibaro_device.device_config
-        if fibaro_device.type in SENSOR_TYPES:
-            stype = fibaro_device.type
-        elif fibaro_device.baseType in SENSOR_TYPES:
-            stype = fibaro_device.baseType
-        if stype:
-            self._device_class = SENSOR_TYPES[stype][2]
-            self._icon = SENSOR_TYPES[stype][1]
-        else:
-            self._device_class = None
-            self._icon = None
-        # device_config overrides:
-        self._device_class = devconf.get(CONF_DEVICE_CLASS, self._device_class)
-        self._icon = devconf.get(CONF_ICON, self._icon)
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
-        self._state = self.current_binary_state
+        self._attr_is_on = self.current_binary_state

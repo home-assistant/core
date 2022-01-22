@@ -129,6 +129,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         self._hvac_support = []
         self._preset_support = []
         self._fan_support = []
+        self._attr_name = fibaro_device.friendly_name
 
         siblings = fibaro_device.fibaro_controller.get_siblings(fibaro_device)
         _LOGGER.debug("%s siblings: %s", fibaro_device.ha_id, siblings)
