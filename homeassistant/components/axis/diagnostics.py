@@ -5,7 +5,6 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info
 
 from .const import DOMAIN as AXIS_DOMAIN
 
@@ -17,7 +16,6 @@ async def async_get_config_entry_diagnostics(
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     diag: dict[str, Any] = {}
 
-    diag["home_assistant"] = await async_get_system_info(hass)
     diag["config_entry"] = dict(config_entry.data)
 
     if device.api.vapix.api_discovery:

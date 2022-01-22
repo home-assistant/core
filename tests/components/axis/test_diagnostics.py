@@ -20,69 +20,62 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
         config_entry = await setup_axis_integration(hass)
 
-    with patch(
-        "homeassistant.helpers.system_info.async_get_system_info",
-        return_value={"get_system_info": "fake data"},
-    ):
-        assert await get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry
-        ) == {
-            "home_assistant": {"get_system_info": "fake data"},
-            "config_entry": dict(config_entry.data),
-            "api_discovery": [
-                {
-                    "id": "api-discovery",
-                    "name": "API Discovery Service",
-                    "version": "1.0",
-                },
-                {
-                    "id": "param-cgi",
-                    "name": "Legacy Parameter Handling",
-                    "version": "1.0",
-                },
-                {
-                    "id": "basic-device-info",
-                    "name": "Basic Device Information",
-                    "version": "1.1",
-                },
-            ],
-            "basic_device_info": {
-                "ProdNbr": "M1065-LW",
-                "ProdType": "Network Camera",
-                "SerialNumber": "00408C123456",
-                "Version": "9.80.1",
+    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+        "config_entry": dict(config_entry.data),
+        "api_discovery": [
+            {
+                "id": "api-discovery",
+                "name": "API Discovery Service",
+                "version": "1.0",
             },
-            "params": {
-                "root.IOPort": {
-                    "I0.Configurable": "no",
-                    "I0.Direction": "input",
-                    "I0.Input.Name": "PIR sensor",
-                    "I0.Input.Trig": "closed",
-                },
-                "root.Input": {"NbrOfInputs": "1"},
-                "root.Output": {"NbrOfOutputs": "0"},
-                "root.Properties": {
-                    "API.HTTP.Version": "3",
-                    "API.Metadata.Metadata": "yes",
-                    "API.Metadata.Version": "1.0",
-                    "EmbeddedDevelopment.Version": "2.16",
-                    "Firmware.BuildDate": "Feb 15 2019 09:42",
-                    "Firmware.BuildNumber": "26",
-                    "Firmware.Version": "9.10.1",
-                    "Image.Format": "jpeg,mjpeg,h264",
-                    "Image.NbrOfViews": "2",
-                    "Image.Resolution": "1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240",
-                    "Image.Rotation": "0,180",
-                    "System.SerialNumber": "00408C123456",
-                },
-                "root.StreamProfile": {
-                    "MaxGroups": "26",
-                    "S0.Description": "profile_1_description",
-                    "S0.Name": "profile_1",
-                    "S0.Parameters": "videocodec=h264",
-                    "S1.Description": "profile_2_description",
-                    "S1.Name": "profile_2",
-                    "S1.Parameters": "videocodec=h265",
-                },
+            {
+                "id": "param-cgi",
+                "name": "Legacy Parameter Handling",
+                "version": "1.0",
             },
-        }
+            {
+                "id": "basic-device-info",
+                "name": "Basic Device Information",
+                "version": "1.1",
+            },
+        ],
+        "basic_device_info": {
+            "ProdNbr": "M1065-LW",
+            "ProdType": "Network Camera",
+            "SerialNumber": "00408C123456",
+            "Version": "9.80.1",
+        },
+        "params": {
+            "root.IOPort": {
+                "I0.Configurable": "no",
+                "I0.Direction": "input",
+                "I0.Input.Name": "PIR sensor",
+                "I0.Input.Trig": "closed",
+            },
+            "root.Input": {"NbrOfInputs": "1"},
+            "root.Output": {"NbrOfOutputs": "0"},
+            "root.Properties": {
+                "API.HTTP.Version": "3",
+                "API.Metadata.Metadata": "yes",
+                "API.Metadata.Version": "1.0",
+                "EmbeddedDevelopment.Version": "2.16",
+                "Firmware.BuildDate": "Feb 15 2019 09:42",
+                "Firmware.BuildNumber": "26",
+                "Firmware.Version": "9.10.1",
+                "Image.Format": "jpeg,mjpeg,h264",
+                "Image.NbrOfViews": "2",
+                "Image.Resolution": "1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240",
+                "Image.Rotation": "0,180",
+                "System.SerialNumber": "00408C123456",
+            },
+            "root.StreamProfile": {
+                "MaxGroups": "26",
+                "S0.Description": "profile_1_description",
+                "S0.Name": "profile_1",
+                "S0.Parameters": "videocodec=h264",
+                "S1.Description": "profile_2_description",
+                "S1.Name": "profile_2",
+                "S1.Parameters": "videocodec=h265",
+            },
+        },
+    }
