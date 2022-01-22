@@ -108,7 +108,9 @@ class DomainData:
         return ret
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up the esphome component."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
