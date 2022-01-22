@@ -10,7 +10,7 @@ import pyvera as pv
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries, const
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
