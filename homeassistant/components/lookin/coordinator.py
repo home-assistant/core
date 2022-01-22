@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 NEVER_TIME = -120.0  # Time that will never match time.monotonic()
+ACTIVE_UPDATES_INTERVAL = 3  # Consider active for 3x the update interval
 
 
 class LookinPushCoordinator:
@@ -30,7 +31,9 @@ class LookinPushCoordinator:
     def active(self, interval: timedelta) -> bool:
         """Check if the last push update was recently."""
         time_since_last_update = time.monotonic() - self.last_update
-        is_active = time_since_last_update < interval.total_seconds()
+        is_active = (
+            time_since_last_update < interval.total_seconds() * ACTIVE_UPDATES_INTERVAL
+        )
         _LOGGER.debug(
             "%s: push updates active: %s (time_since_last_update=%s)",
             self.name,
