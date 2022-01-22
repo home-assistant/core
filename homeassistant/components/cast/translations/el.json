@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "\u0391\u03b3\u03bd\u03cc\u03b7\u03c3\u03b7 CEC"
+                }
+            }
+        }
+    }
+}
