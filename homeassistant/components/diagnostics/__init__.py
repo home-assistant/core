@@ -155,9 +155,9 @@ async def _async_get_json_file_response(
     try:
         json_data = json.dumps(
             {
-                "home-assistant": hass_sys_info,
-                "custom-components": custom_components,
-                "integration-manifest": integration.manifest,
+                "home_assistant": hass_sys_info,
+                "custom_components": custom_components,
+                "integration_manifest": integration.manifest,
                 "data": data,
             },
             indent=2,

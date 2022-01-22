@@ -89,9 +89,9 @@ async def test_download_diagnostics(hass, hass_client):
     }
 
     assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "home-assistant": hass_sys_info,
-        "custom-components": custom_components,
-        "integration-manifest": {
+        "home_assistant": hass_sys_info,
+        "custom_components": custom_components,
+        "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
             "domain": "fake_integration",
@@ -110,9 +110,9 @@ async def test_download_diagnostics(hass, hass_client):
     assert await _get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     ) == {
-        "home-assistant": hass_sys_info,
-        "custom-components": custom_components,
-        "integration-manifest": {
+        "home_assistant": hass_sys_info,
+        "custom_components": custom_components,
+        "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
             "domain": "fake_integration",
