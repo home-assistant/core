@@ -39,12 +39,12 @@ def fireplace_increase_decrease_only(name: str):
     }
 
 
-def fireplace_set_flame(name: str):
-    """Create a fireplace that can adjust the flame."""
+def light(name: str):
+    """Create a light with a given name."""
     return {
         "name": name,
         "type": DeviceType.LIGHT,
-        "actions": [Action.INCREASE_FLAME, Action.DECREASE_FLAME, Action.SET_FLAME],
+        "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF, Action.SET_BRIGHTNESS],
     }
 
 
@@ -72,7 +72,7 @@ async def test_mutually_exclusive_actions(hass: core.HomeAssistant):
     await setup_platform(
         hass,
         BUTTON_DOMAIN,
-        fireplace_set_flame("name-1"),
+        light("name-1"),
         bond_device_id="test-device-id",
     )
 
