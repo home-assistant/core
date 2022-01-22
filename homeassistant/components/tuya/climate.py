@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from nest import CELSIUS
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
@@ -160,7 +159,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
         if farhenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
-            or (prefered_temperature_unit == CELSIUS and not celsius_type)
+            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
         ):
             self._attr_temperature_unit = TEMP_FAHRENHEIT
             self._current_temperature = farhenheit_type
@@ -177,7 +176,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         )
         if farhenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
-            or (prefered_temperature_unit == CELSIUS and not celsius_type)
+            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
         ):
             self._set_temperature = farhenheit_type
         elif celsius_type:
