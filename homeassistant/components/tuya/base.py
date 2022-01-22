@@ -224,7 +224,8 @@ class TuyaEntity(Entity):
                             dpcode, getattr(self.device, key)[dpcode].values
                         )
 
-                    return dpcode
+                    if dptype not in (DPType.ENUM, DPType.INTEGER):
+                        return dpcode
 
         return None
 
