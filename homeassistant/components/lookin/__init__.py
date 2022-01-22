@@ -23,9 +23,9 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, PLATFORMS, TYPE_TO_PLATFORM
+from .coordinator import LookinDataUpdateCoordinator, LookinPushCoordinator
 from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
@@ -69,9 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
-    meteo_coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    push_coordinator = LookinPushCoordinator()
+
+    meteo_coordinator: LookinDataUpdateCoordinator = LookinDataUpdateCoordinator(
         hass,
-        LOGGER,
+        push_coordinator,
         name=entry.title,
         update_method=lookin_protocol.get_meteo_sensor,
         update_interval=timedelta(
@@ -80,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await meteo_coordinator.async_config_entry_first_refresh()
 
-    device_coordinators: dict[str, DataUpdateCoordinator] = {}
+    device_coordinators: dict[str, LookinDataUpdateCoordinator] = {}
     for remote in devices:
         if (platform := TYPE_TO_PLATFORM.get(remote["Type"])) is None:
             continue
@@ -89,9 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             updater = _async_climate_updater(lookin_protocol, uuid)
         else:
             updater = _async_remote_updater(lookin_protocol, uuid)
-        coordinator = DataUpdateCoordinator(
+        coordinator = LookinDataUpdateCoordinator(
             hass,
-            LOGGER,
+            push_coordinator,
             name=f"{entry.title} {uuid}",
             update_method=updater,
             update_interval=timedelta(
