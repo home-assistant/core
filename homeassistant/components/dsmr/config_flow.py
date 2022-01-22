@@ -308,8 +308,8 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = input_data
 
         try:
+            is_rfxtrx = False
             try:
-                is_rfxtrx = False
                 info = await _validate_dsmr_connection(self.hass, data, is_rfxtrx)
             except CannotCommunicate:
                 is_rfxtrx = True
