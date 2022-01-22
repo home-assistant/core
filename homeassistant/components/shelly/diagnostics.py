@@ -18,26 +18,35 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data: dict = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
 
+    device_settings: str | dict = "not initialized"
+    device_info: str | dict = "not initialized"
     if BLOCK in data:
-        wrapper = data.get(BLOCK)
-        assert isinstance(wrapper, BlockDeviceWrapper)
-        device_settings = {
-            k: v for k, v in wrapper.device.settings.items() if k in ["cloud", "coiot"]
-        }
-
+        block_wrapper: BlockDeviceWrapper = data[BLOCK]
+        if block_wrapper.device.initialized:
+            device_settings = {
+                k: v
+                for k, v in block_wrapper.device.settings.items()
+                if k in ["cloud", "coiot"]
+            }
+            device_info = {
+                "name": block_wrapper.name,
+                "model": block_wrapper.model,
+                "sw_version": block_wrapper.sw_version,
+            }
     else:
-        wrapper = data.get(RPC)
-        assert isinstance(wrapper, RpcDeviceWrapper)
-        device_settings = {
-            k: v for k, v in wrapper.device.config.items() if k in ["cloud"]
-        }
+        rpc_wrapper: RpcDeviceWrapper = data[RPC]
+        if rpc_wrapper.device.initialized:
+            device_settings = {
+                k: v for k, v in rpc_wrapper.device.config.items() if k in ["cloud"]
+            }
+            device_info = {
+                "name": rpc_wrapper.name,
+                "model": rpc_wrapper.model,
+                "sw_version": rpc_wrapper.sw_version,
+            }
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "device_info": {
-            "name": wrapper.name,
-            "model": wrapper.model,
-            "sw_version": wrapper.sw_version,
-        },
+        "device_info": device_info,
         "device_settings": device_settings,
     }
