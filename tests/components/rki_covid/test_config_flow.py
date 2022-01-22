@@ -5,7 +5,6 @@ from rki_covid_parser.parser import RkiCovidParser
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.rki_covid.const import DOMAIN
-from homeassistant.components.rki_covid.coordinator import RkiCovidDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -15,15 +14,14 @@ from tests.components.rki_covid import MOCK_COUNTRY, MOCK_DISTRICTS, MOCK_STATES
 
 async def test_successful_config_flow_with_district(hass: HomeAssistant) -> None:
     """Test a successful config flow with mock data."""
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    coordinator.parser = RkiCovidParser(async_get_clientsession(hass))
-    coordinator.parser.load_data = AsyncMock(return_value=None)
-    coordinator.parser.districts = MOCK_DISTRICTS
-    coordinator.parser.states = MOCK_STATES
-    coordinator.parser.country = MOCK_COUNTRY
+    parser = RkiCovidParser(async_get_clientsession(hass))
+    parser.load_data = AsyncMock(return_value=None)
+    parser.districts = MOCK_DISTRICTS
+    parser.states = MOCK_STATES
+    parser.country = MOCK_COUNTRY
     with patch(
-        "homeassistant.components.rki_covid.coordinator.RkiCovidDataUpdateCoordinator",
-        return_value=coordinator,
+        "rki_covid_parser.parser.RkiCovidParser",
+        return_value=parser,
     ):
         # Initialize a config flow
         result = await hass.config_entries.flow.async_init(
@@ -48,15 +46,14 @@ async def test_successful_config_flow_with_district(hass: HomeAssistant) -> None
 
 async def test_successful_config_flow_with_country(hass: HomeAssistant) -> None:
     """Test a successful config flow with mock data."""
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    coordinator.parser = RkiCovidParser(async_get_clientsession(hass))
-    coordinator.parser.load_data = AsyncMock(return_value=None)
-    coordinator.parser.districts = MOCK_DISTRICTS
-    coordinator.parser.states = MOCK_STATES
-    coordinator.parser.country = MOCK_COUNTRY
+    parser = RkiCovidParser(async_get_clientsession(hass))
+    parser.load_data = AsyncMock(return_value=None)
+    parser.districts = MOCK_DISTRICTS
+    parser.states = MOCK_STATES
+    parser.country = MOCK_COUNTRY
     with patch(
-        "homeassistant.components.rki_covid.coordinator.RkiCovidDataUpdateCoordinator",
-        return_value=coordinator,
+        "rki_covid_parser.parser.RkiCovidParser",
+        return_value=parser,
     ):
         # Initialize a config flow
         result = await hass.config_entries.flow.async_init(
@@ -81,15 +78,14 @@ async def test_successful_config_flow_with_country(hass: HomeAssistant) -> None:
 
 async def test_successful_form(hass: HomeAssistant) -> None:
     """Test a successful form with mock data."""
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    coordinator.parser = RkiCovidParser(async_get_clientsession(hass))
-    coordinator.parser.load_data = AsyncMock(return_value=None)
-    coordinator.parser.districts = MOCK_DISTRICTS
-    coordinator.parser.states = MOCK_STATES
-    coordinator.parser.country = MOCK_COUNTRY
+    parser = RkiCovidParser(async_get_clientsession(hass))
+    parser.load_data = AsyncMock(return_value=None)
+    parser.districts = MOCK_DISTRICTS
+    parser.states = MOCK_STATES
+    parser.country = MOCK_COUNTRY
     with patch(
-        "homeassistant.components.rki_covid.coordinator.RkiCovidDataUpdateCoordinator",
-        return_value=coordinator,
+        "rki_covid_parser.parser.RkiCovidParser",
+        return_value=parser,
     ):
         # Initialize a config flow
         result = await hass.config_entries.flow.async_init(
@@ -115,15 +111,14 @@ async def test_successful_form(hass: HomeAssistant) -> None:
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload configuration."""
-    coordinator = RkiCovidDataUpdateCoordinator(hass)
-    coordinator.parser = RkiCovidParser(async_get_clientsession(hass))
-    coordinator.parser.load_data = AsyncMock(return_value=None)
-    coordinator.parser.districts = MOCK_DISTRICTS
-    coordinator.parser.states = MOCK_STATES
-    coordinator.parser.country = MOCK_COUNTRY
+    parser = RkiCovidParser(async_get_clientsession(hass))
+    parser.load_data = AsyncMock(return_value=None)
+    parser.districts = MOCK_DISTRICTS
+    parser.states = MOCK_STATES
+    parser.country = MOCK_COUNTRY
     with patch(
-        "homeassistant.components.rki_covid.coordinator.RkiCovidDataUpdateCoordinator",
-        return_value=coordinator,
+        "rki_covid_parser.parser.RkiCovidParser",
+        return_value=parser,
     ):
 
         entry = MockConfigEntry(
