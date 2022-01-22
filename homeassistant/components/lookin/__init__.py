@@ -68,7 +68,7 @@ async def async_start_udp_listener(hass: HomeAssistant) -> LookinUDPSubscription
         udp_lock = domain_data[UDP_LOCK]
 
     async with udp_lock:
-        if not domain_data[UDP_LISTENER]:
+        if UDP_LISTENER not in domain_data:
             lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS] = LookinUDPSubscriptions()
             domain_data[UDP_LISTENER] = await start_lookin_udp(lookin_udp_subs, None)
         else:
