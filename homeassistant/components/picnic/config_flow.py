@@ -111,8 +111,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(existing_entry, data=data)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
-            else:
-                errors["base"] = "different_account"
+
+            # Set the error because the account is different
+            errors["base"] = "different_account"
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
