@@ -32,7 +32,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.NUMBER,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

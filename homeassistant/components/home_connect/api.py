@@ -37,11 +37,11 @@ from .const import (
     BSH_POWER_STANDBY,
     FREEZER_SETPOINT_TEMPERATURE,
     FREEZER_SUPER_MODE,
-    FRIDGE_ECO_MODE,
     FRIDGE_FRESH_MODE,
     FRIDGE_SETPOINT_TEMPERATURE,
     FRIDGE_SUPER_MODE,
     FRIDGE_VACATION_MODE,
+    REFRIGERATION_ECO_MODE,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -266,7 +266,7 @@ class DeviceWithRemoteStart(HomeConnectDevice):
 class DeviceWithSettings(HomeConnectDevice):
     """Device with settings."""
 
-    SETTINGS = {}
+    SETTINGS: dict[str, dict[str, str]] = {}
 
     def get_settings_available(self):
         """Get the available settings."""
@@ -625,7 +625,7 @@ class FridgeFreezer(DeviceWithDoor, DeviceWithSettings):
             ATTR_DESC: "Freezer Super Mode",
             ATTR_ICON: "mdi:snowflake",
         },
-        FRIDGE_ECO_MODE: {
+        REFRIGERATION_ECO_MODE: {
             ATTR_SENSOR_TYPE: "switch",
             ATTR_DESC: "Eco Mode",
         },
@@ -664,22 +664,91 @@ class FridgeFreezer(DeviceWithDoor, DeviceWithSettings):
         }
 
 
-class Refrigerator(DeviceWithDoor):
+class Refrigerator(DeviceWithDoor, DeviceWithSettings):
     """Refrigerator class."""
 
+    SETTINGS = {
+        FRIDGE_VACATION_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Vacation Mode",
+            ATTR_ICON: "mdi:bag-suitcase",
+        },
+        FRIDGE_SUPER_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Super Mode",
+            ATTR_ICON: "mdi:snowflake",
+        },
+        REFRIGERATION_ECO_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Eco Mode",
+        },
+        FRIDGE_FRESH_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Fresh Mode",
+        },
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
+        },
+        FRIDGE_SETPOINT_TEMPERATURE: {
+            ATTR_SENSOR_TYPE: "number",
+            ATTR_DESC: "Setpoint",
+            ATTR_ICON: "mdi:thermometer",
+        },
+    }
+
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+
+        setting_switches = self.get_setting_switches()
+        setting_number_entities = self.get_setting_number_entities()
+
+        return {
+            "binary_sensor": [door_entity],
+            "switch": setting_switches,
+            "number": setting_number_entities,
+        }
 
 
-class Freezer(DeviceWithDoor):
+class Freezer(DeviceWithDoor, DeviceWithSettings):
     """Freezer class."""
 
+    SETTINGS = {
+        FREEZER_SUPER_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Super Mode",
+            ATTR_ICON: "mdi:snowflake",
+        },
+        REFRIGERATION_ECO_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Eco Mode",
+        },
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
+        },
+        FREEZER_SETPOINT_TEMPERATURE: {
+            ATTR_SENSOR_TYPE: "number",
+            ATTR_DESC: "Setpoint",
+            ATTR_ICON: "mdi:thermometer",
+        },
+    }
+
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+
+        setting_switches = self.get_setting_switches()
+        setting_number_entities = self.get_setting_number_entities()
+
+        return {
+            "binary_sensor": [door_entity],
+            "switch": setting_switches,
+            "number": setting_number_entities,
+        }
 
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
