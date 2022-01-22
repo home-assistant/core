@@ -350,7 +350,7 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self._async_update_entity(
+            return self.async_update_entity(
                 entity_id,
                 area_id=area_id or UNDEFINED,
                 capabilities=capabilities or UNDEFINED,
