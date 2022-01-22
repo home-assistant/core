@@ -202,12 +202,9 @@ class MqttNotificationService(notify.BaseNotificationService):
         """Update the notify service through auto discovery."""
         config = DISCOVERY_SCHEMA(discovery_payload)
         self._command_topic = config[CONF_COMMAND_TOPIC]
-        if config.get(CONF_COMMAND_TEMPLATE) is not None:
-            template = config[CONF_COMMAND_TEMPLATE]
-            template.hass = self.hass
-            self._command_template._attr_command_template = template
-        else:
-            self._command_template._attr_command_template = None
+        self._command_template = MqttCommandTemplate(
+            config.get(CONF_COMMAND_TEMPLATE), hass=self.hass
+        )
         self._encoding = config[CONF_ENCODING]
         self._name = config.get(CONF_NAME)
         self._qos = config[CONF_QOS]
