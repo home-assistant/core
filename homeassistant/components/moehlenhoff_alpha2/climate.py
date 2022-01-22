@@ -1,8 +1,6 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
 import logging
 
-import aiohttp
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
@@ -16,7 +14,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -108,15 +105,10 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
         if target_temperature is None:
             return
 
-        try:
-            await self.coordinator.async_set_target_temperature(
-                self.coordinator.data[self.heat_area_id]["ID"], target_temperature
-            )
-            self.coordinator.data[self.heat_area_id]["T_TARGET"] = target_temperature
-        except aiohttp.web.HTTPException as http_err:
-            raise HomeAssistantError(
-                "Failed to set target temperature, communication error with alpha2 base"
-            ) from http_err
+        await self.coordinator.async_set_target_temperature(
+            self.coordinator.data[self.heat_area_id]["ID"], target_temperature
+        )
+        self.coordinator.data[self.heat_area_id]["T_TARGET"] = target_temperature
 
     @property
     def preset_mode(self) -> str:
@@ -135,34 +127,29 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
         elif preset_mode == PRESET_NIGHT:
             heat_area_mode = 2
 
-        try:
-            await self.coordinator.async_set_heat_area_mode(
-                self.coordinator.data[self.heat_area_id]["ID"], heat_area_mode
-            )
-        except aiohttp.web.HTTPError as http_err:
-            raise HomeAssistantError(
-                "Failed to set preset mode, communication error with alpha2 base"
-            ) from http_err
-        else:
-            self.coordinator.data[self.heat_area_id]["HEATAREA_MODE"] = heat_area_mode
-            if heat_area_mode == 1:
-                if self.coordinator.get_cooling():
-                    self.coordinator.data[self.heat_area_id][
-                        "T_TARGET"
-                    ] = self.coordinator.data[self.heat_area_id]["T_COOL_DAY"]
-                else:
-                    self.coordinator.data[self.heat_area_id][
-                        "T_TARGET"
-                    ] = self.coordinator.data[self.heat_area_id]["T_HEAT_DAY"]
-            elif heat_area_mode == 2:
-                if self.coordinator.get_cooling():
-                    self.coordinator.data[self.heat_area_id][
-                        "T_TARGET"
-                    ] = self.coordinator.data[self.heat_area_id]["T_COOL_NIGHT"]
-                else:
-                    self.coordinator.data[self.heat_area_id][
-                        "T_TARGET"
-                    ] = self.coordinator.data[self.heat_area_id]["T_HEAT_NIGHT"]
+        await self.coordinator.async_set_heat_area_mode(
+            self.coordinator.data[self.heat_area_id]["ID"], heat_area_mode
+        )
+
+        self.coordinator.data[self.heat_area_id]["HEATAREA_MODE"] = heat_area_mode
+        if heat_area_mode == 1:
+            if self.coordinator.get_cooling():
+                self.coordinator.data[self.heat_area_id][
+                    "T_TARGET"
+                ] = self.coordinator.data[self.heat_area_id]["T_COOL_DAY"]
+            else:
+                self.coordinator.data[self.heat_area_id][
+                    "T_TARGET"
+                ] = self.coordinator.data[self.heat_area_id]["T_HEAT_DAY"]
+        elif heat_area_mode == 2:
+            if self.coordinator.get_cooling():
+                self.coordinator.data[self.heat_area_id][
+                    "T_TARGET"
+                ] = self.coordinator.data[self.heat_area_id]["T_COOL_NIGHT"]
+            else:
+                self.coordinator.data[self.heat_area_id][
+                    "T_TARGET"
+                ] = self.coordinator.data[self.heat_area_id]["T_HEAT_NIGHT"]
 
     @property
     def extra_state_attributes(self):

@@ -3,10 +3,12 @@ from datetime import timedelta
 import logging
 from typing import Dict
 
+import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -85,7 +87,14 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
             heat_area_id,
             target_temperature,
         )
-        await self.base.update_heatarea(heat_area_id, {"T_TARGET": target_temperature})
+        try:
+            await self.base.update_heatarea(
+                heat_area_id, {"T_TARGET": target_temperature}
+            )
+        except aiohttp.web.HTTPError as http_err:
+            raise HomeAssistantError(
+                "Failed to set target temperature, communication error with alpha2 base"
+            ) from http_err
         for update_callback in self._listeners:
             update_callback()
 
@@ -101,6 +110,13 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
             heat_area_id,
             heat_area_mode,
         )
-        await self.base.update_heatarea(heat_area_id, {"HEATAREA_MODE": heat_area_mode})
+        try:
+            await self.base.update_heatarea(
+                heat_area_id, {"HEATAREA_MODE": heat_area_mode}
+            )
+        except aiohttp.web.HTTPException as http_err:
+            raise HomeAssistantError(
+                "Failed to set heat area mode, communication error with alpha2 base"
+            ) from http_err
         for update_callback in self._listeners:
             update_callback()
