@@ -117,6 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             minutes=5
         ),  # Updates are pushed (fallback is polling)
     )
+    meteo_coordinator.last_update_success = False
     await meteo_coordinator.async_config_entry_first_refresh()
 
     device_coordinators: dict[str, LookinDataUpdateCoordinator] = {}
@@ -137,6 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 seconds=60
             ),  # Updates are pushed (fallback is polling)
         )
+        coordinator.last_update_success = False
         await coordinator.async_config_entry_first_refresh()
         device_coordinators[uuid] = coordinator
 
