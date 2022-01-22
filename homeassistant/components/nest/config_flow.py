@@ -287,7 +287,6 @@ class NestFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        _LOGGER.debug("async_step_user")
         if self.config_mode == ConfigMode.LEGACY:
             return await self.async_step_init(user_input)
         self._data[DATA_SDM] = {}
@@ -334,7 +333,6 @@ class NestFlowHandler(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Create a new OAuth implementation from user input."""
-        _LOGGER.debug("async_step_oauth_input")
         if user_input is not None:
             self._data.update(user_input)
             return await self.async_step_device_project()
@@ -362,7 +360,6 @@ class NestFlowHandler(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Collect device access project from user input."""
-        _LOGGER.debug("async_step_device_project")
         errors = {}
         if user_input is not None:
             if user_input[CONF_PROJECT_ID] == self._data[CONF_CLOUD_PROJECT_ID]:
@@ -400,7 +397,6 @@ class NestFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create an entry for auth."""
-        _LOGGER.debug("async_step_auth")
         if self.flow_impl.domain == INSTALLED_AUTH_DOMAIN:
             # The default behavior from the parent class is to redirect the
             # user with an external step. When using installed app auth, we
@@ -454,9 +450,6 @@ class NestFlowHandler(
                 CONF_PROJECT_ID
             ]
         errors = {}
-        _LOGGER.info(
-            f"cloud_project_id={cloud_project_id}, device_access_project_id={device_access_project_id}"
-        )
         if cloud_project_id and cloud_project_id == device_access_project_id:
             _LOGGER.error(
                 "Same ID entered for Cloud Project and Device Access Project, these should not be the same"
