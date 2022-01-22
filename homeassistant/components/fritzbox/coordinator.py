@@ -8,8 +8,8 @@ import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
 
@@ -34,19 +34,19 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator):
     def _update_fritz_devices(self) -> dict[str, FritzhomeDevice]:
         """Update all fritzbox device data."""
         try:
-            devices = self.fritz.get_devices()
+            self.fritz.update_devices()
         except requests.exceptions.ConnectionError as ex:
-            raise ConfigEntryNotReady from ex
+            raise UpdateFailed from ex
         except requests.exceptions.HTTPError:
             # If the device rebooted, login again
             try:
                 self.fritz.login()
             except LoginError as ex:
                 raise ConfigEntryAuthFailed from ex
-            devices = self.fritz.get_devices()
+            self.fritz.update_devices()
 
+        devices = self.fritz.get_devices()
         data = {}
-        self.fritz.update_devices()
         for device in devices:
             # assume device as unavailable, see #55799
             if (
