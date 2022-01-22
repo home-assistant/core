@@ -146,11 +146,7 @@ async def _async_get_json_file_response(
     for cc_domain, cc_obj in hass.data[DATA_CUSTOM_COMPONENTS].items():
         custom_components[cc_domain] = {
             "version": cc_obj.manifest["version"],
-            "requirements": [
-                req
-                for req in cc_obj.manifest["requirements"]
-                if "://" not in req  # ignore url based requirements
-            ],
+            "requirements": cc_obj.manifest["requirements"],
         }
     try:
         json_data = json.dumps(
