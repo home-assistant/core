@@ -1288,7 +1288,6 @@ async def test_identify(hass):
                     "id": "light.ceiling_lights",
                     "customData": {
                         "httpPort": 8123,
-                        "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
                         "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
                     },
@@ -1366,7 +1365,6 @@ async def test_reachable_devices(hass):
                     "id": "light.ceiling_lights",
                     "customData": {
                         "httpPort": 8123,
-                        "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
                         "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
                     },
@@ -1375,7 +1373,6 @@ async def test_reachable_devices(hass):
                     "id": "light.not_expose",
                     "customData": {
                         "httpPort": 8123,
-                        "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
                         "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
                     },
@@ -1384,7 +1381,6 @@ async def test_reachable_devices(hass):
                     "id": "lock.has_2fa",
                     "customData": {
                         "httpPort": 8123,
-                        "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
                         "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
                     },

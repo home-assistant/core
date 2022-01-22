@@ -30,7 +30,7 @@ from tests.common import (
 async def test_google_entity_sync_serialize_with_local_sdk(hass):
     """Test sync serialize attributes of a GoogleEntity."""
     hass.states.async_set("light.ceiling_lights", "off")
-    hass.config.api = Mock(port=1234, use_ssl=True)
+    hass.config.api = Mock(port=1234)
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://hostname:1234"},
@@ -58,7 +58,6 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
         assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
         assert serialized["customData"] == {
             "httpPort": 1234,
-            "httpSSL": True,
             "proxyDeviceId": "mock-user-id",
             "webhookId": "mock-webhook-id",
             "baseUrl": "https://hostname:1234",
