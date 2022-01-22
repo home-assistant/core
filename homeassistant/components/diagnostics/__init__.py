@@ -135,8 +135,8 @@ async def _async_get_json_file_response(
 ) -> web.Response:
     """Return JSON file from dictionary."""
     hass_sys_info = await async_get_system_info(hass)
-    if hass_sys_info.get("user") is not None:
-        hass_sys_info.update({"user": REDACTED})
+    hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
+    del hass_sys_info["user"]
 
     integration: Integration = hass.data[DATA_INTEGRATIONS][domain]
 

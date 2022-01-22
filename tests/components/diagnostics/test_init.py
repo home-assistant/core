@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from homeassistant.components.diagnostics.const import REDACTED
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.system_info import async_get_system_info
@@ -81,8 +80,8 @@ async def test_download_diagnostics(hass, hass_client):
     config_entry = MockConfigEntry(domain="fake_integration")
     config_entry.add_to_hass(hass)
     hass_sys_info = await async_get_system_info(hass)
-    if hass_sys_info.get("user") is not None:
-        hass_sys_info.update({"user": REDACTED})
+    hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
+    del hass_sys_info["user"]
     custom_components = {
         ccmp: hass.data[DATA_INTEGRATIONS][ccmp].manifest
         for ccmp in hass.data[DATA_CUSTOM_COMPONENTS]
