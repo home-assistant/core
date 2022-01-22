@@ -184,7 +184,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.10
+aiohomekit==0.6.11
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -460,7 +460,7 @@ brottsplatskartan==0.0.1
 brunt==1.1.1
 
 # homeassistant.components.bsblan
-bsblan==0.4.0
+bsblan==0.5.0
 
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2.1
@@ -611,7 +611,7 @@ elkm1-lib==1.0.0
 elmax_api==0.0.2
 
 # homeassistant.components.mobile_app
-emoji==1.5.0
+emoji==1.6.3
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.4
+flux_led==0.28.8
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -809,7 +809,7 @@ habitipy==0.2.0
 hangups==0.4.17
 
 # homeassistant.components.cloud
-hass-nabucasa==0.51.0
+hass-nabucasa==0.52.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -902,7 +902,7 @@ ifaddr==0.1.7
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.7.0
+ihcsdk==2.7.6
 
 # homeassistant.components.incomfort
 incomfort-client==0.4.4
@@ -992,7 +992,7 @@ logi_circle==0.2.2
 london-tube-status==0.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.7.1
+luftdaten==0.7.2
 
 # homeassistant.components.lupusec
 lupupy==0.0.24
@@ -1049,7 +1049,7 @@ minio==5.0.10
 mitemp_bt==0.0.5
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.8
+motionblinds==0.5.10
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1353,7 +1353,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.27.0
+pyRFXtrx==0.27.1
 
 # homeassistant.components.switchmate
 # pySwitchmate==0.4.6
@@ -2172,7 +2172,7 @@ sense-hat==2.2.0
 sense_energy==0.9.6
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.2
+sentry-sdk==1.5.3
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2552,10 +2552,10 @@ zigpy-xbee==0.14.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.6.4
+zigpy-znp==0.7.0
 
 # homeassistant.components.zha
-zigpy==0.42.0
+zigpy==0.43.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
