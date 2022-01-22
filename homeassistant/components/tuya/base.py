@@ -12,7 +12,7 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
 
@@ -20,6 +20,7 @@ from .util import remap_value
 class IntegerTypeData:
     """Integer Type Data."""
 
+    dpcode: DPCode
     min: int
     max: int
     scale: float
@@ -71,21 +72,22 @@ class IntegerTypeData:
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, data: str) -> IntegerTypeData:
+    def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData:
         """Load JSON string and return a IntegerTypeData object."""
-        return cls(**json.loads(data))
+        return cls(dpcode, **json.loads(data))
 
 
 @dataclass
 class EnumTypeData:
     """Enum Type Data."""
 
+    dpcode: DPCode
     range: list[str]
 
     @classmethod
-    def from_json(cls, data: str) -> EnumTypeData:
+    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData:
         """Load JSON string and return a EnumTypeData object."""
-        return cls(**json.loads(data))
+        return cls(dpcode, **json.loads(data))
 
 
 @dataclass
@@ -148,6 +150,93 @@ class TuyaEntity(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         return self.device.online
+
+    def find_dpcode(
+        self, dpcodes: DPCode | tuple[DPCode, ...] | None, function: bool = False
+    ) -> DPCode | None:
+        """Find a matching DP code available on for this device."""
+        if dpcodes is None:
+            return None
+
+        if not isinstance(dpcodes, tuple):
+            dpcodes = (dpcodes,)
+
+        for dpcode in dpcodes:
+            # If not a function try to use status
+            if not function and dpcode in self.device.status:
+                return dpcode
+
+            # If a function, or (if status not found), try to use function
+            if dpcode in self.device.function:
+                return dpcode
+
+        return None
+
+    def get_dptype(
+        self, dpcode: DPCode | None, function: bool = False
+    ) -> DPType | None:
+        """Find a matching DPCode data type available on for this device."""
+        if dpcode is None:
+            return None
+
+        order = (
+            ["function", "status_range"] if function else ["status_range", "function"]
+        )
+        for key in order:
+            if dpcode in getattr(self.device, key):
+                return DPType(getattr(self.device, key).get(dpcode).type)
+
+        return None
+
+    def get_integer_type(
+        self, dpcodes: DPCode | tuple[DPCode, ...] | None, function: bool = False
+    ) -> IntegerTypeData | None:
+        """Return IntegerTypeData for a found matching DPCode.
+
+        By default we find anything we can use, however we prefer to use status
+        when function is False and prefer function if function is True.
+        """
+        if (dpcode := self.find_dpcode(dpcodes, function)) is None:
+            return None
+
+        order = (
+            ["function", "status_range"] if function else ["status_range", "function"]
+        )
+        for key in order:
+            if (
+                dpcode in getattr(self.device, key)
+                and getattr(self.device, key).get(dpcode).type == "Integer"
+            ):
+                return IntegerTypeData.from_json(
+                    dpcode, getattr(self.device, key)[dpcode].values
+                )
+
+        return None
+
+    def get_enum_type(
+        self, dpcodes: DPCode | tuple[DPCode, ...] | None, function: bool = False
+    ) -> EnumTypeData | None:
+        """Return EnumTypeData for a found matching DPCode.
+
+        By default we find anything we can use, however we prefer to use status
+        when function is False and prefer function if function is True.
+        """
+        if (dpcode := self.find_dpcode(dpcodes, function)) is None:
+            return None
+
+        order = (
+            ["function", "status_range"] if function else ["status_range", "function"]
+        )
+        for key in order:
+            if (
+                dpcode in getattr(self.device, key)
+                and getattr(self.device, key).get(dpcode).type == "Enum"
+            ):
+                return EnumTypeData.from_json(
+                    dpcode, getattr(self.device, key)[dpcode].values
+                )
+
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""

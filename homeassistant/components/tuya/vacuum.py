@@ -81,48 +81,48 @@ async def async_setup_entry(
 class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     """Tuya Vacuum Device."""
 
-    _fan_speed_type: EnumTypeData | None = None
-    _battery_level_type: IntegerTypeData | None = None
+    _fan_speed: EnumTypeData | None = None
+    _battery_level: IntegerTypeData | None = None
     _supported_features = 0
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
-        if DPCode.PAUSE in self.device.status:
+        if self.find_dpcode(DPCode.PAUSE, function=True):
             self._supported_features |= SUPPORT_PAUSE
 
-        if DPCode.SWITCH_CHARGE in self.device.status:
+        if self.find_dpcode(DPCode.SWITCH_CHARGE, function=True):
             self._supported_features |= SUPPORT_RETURN_HOME
 
-        if DPCode.SEEK in self.device.status:
+        if self.find_dpcode(DPCode.SEEK, function=True):
             self._supported_features |= SUPPORT_LOCATE
 
-        if DPCode.STATUS in self.device.status:
+        if self.find_dpcode(DPCode.STATUS, function=True):
             self._supported_features |= SUPPORT_STATE | SUPPORT_STATUS
 
-        if DPCode.POWER in self.device.status:
+        if self.find_dpcode(DPCode.POWER, function=True):
             self._supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
-        if DPCode.POWER_GO in self.device.status:
+        if self.find_dpcode(DPCode.POWER_GO, function=True):
             self._supported_features |= SUPPORT_STOP | SUPPORT_START
 
-        if function := device.function.get(DPCode.SUCTION):
+        if enum_type := self.get_enum_type(DPCode.SUCTION):
             self._supported_features |= SUPPORT_FAN_SPEED
-            self._fan_speed_type = EnumTypeData.from_json(function.values)
+            self._fan_speed = enum_type
 
-        if status_range := device.status_range.get(DPCode.ELECTRICITY_LEFT):
+        if int_type := self.get_integer_type(DPCode.SUCTION):
             self._supported_features |= SUPPORT_BATTERY
-            self._battery_level_type = IntegerTypeData.from_json(status_range.values)
+            self._battery_level = int_type
 
     @property
     def battery_level(self) -> int | None:
         """Return Tuya device state."""
-        if self._battery_level_type is None or not (
+        if self._battery_level is None or not (
             status := self.device.status.get(DPCode.ELECTRICITY_LEFT)
         ):
             return None
-        return round(self._battery_level_type.scale_value(status))
+        return round(self._battery_level.scale_value(status))
 
     @property
     def fan_speed(self) -> str | None:
@@ -132,9 +132,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     @property
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        if self._fan_speed_type is None:
+        if self._fan_speed is None:
             return []
-        return self._fan_speed_type.range
+        return self._fan_speed.range
 
     @property
     def state(self) -> str | None:
