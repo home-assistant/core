@@ -152,7 +152,7 @@ class TuyaEntity(Entity):
         return self.device.online
 
     def find_dpcode(
-        self, dpcodes: DPCode | tuple[DPCode, ...] | None, function: bool = False
+        self, dpcodes: DPCode | tuple[DPCode, ...] | None, prefer_function: bool = False
     ) -> DPCode | None:
         """Find a matching DP code available on for this device."""
         if dpcodes is None:
@@ -163,7 +163,7 @@ class TuyaEntity(Entity):
 
         for dpcode in dpcodes:
             # If not a function try to use status
-            if not function and dpcode in self.device.status:
+            if not prefer_function and dpcode in self.device.status:
                 return dpcode
 
             # If a function, or (if status not found), try to use function
@@ -173,35 +173,35 @@ class TuyaEntity(Entity):
         return None
 
     def get_dptype(
-        self, dpcode: DPCode | None, function: bool = False
+        self, dpcode: DPCode | None, prefer_function: bool = False
     ) -> DPType | None:
         """Find a matching DPCode data type available on for this device."""
         if dpcode is None:
             return None
 
-        order = (
-            ["function", "status_range"] if function else ["status_range", "function"]
-        )
+        order = ["status_range", "function"]
+        if prefer_function:
+            order = ["function", "status_range"]
         for key in order:
             if dpcode in getattr(self.device, key):
-                return DPType(getattr(self.device, key).get(dpcode).type)
+                return DPType(getattr(self.device, key)[dpcode].type)
 
         return None
 
     def get_integer_type(
-        self, dpcodes: DPCode | tuple[DPCode, ...] | None, function: bool = False
+        self, dpcodes: DPCode | tuple[DPCode, ...] | None, prefer_function: bool = False
     ) -> IntegerTypeData | None:
         """Return IntegerTypeData for a found matching DPCode.
 
         By default we find anything we can use, however we prefer to use status
         when function is False and prefer function if function is True.
         """
-        if (dpcode := self.find_dpcode(dpcodes, function)) is None:
+        if (dpcode := self.find_dpcode(dpcodes, prefer_function)) is None:
             return None
 
-        order = (
-            ["function", "status_range"] if function else ["status_range", "function"]
-        )
+        order = ["status_range", "function"]
+        if prefer_function:
+            order = ["function", "status_range"]
         for key in order:
             if (
                 dpcode in getattr(self.device, key)
@@ -214,19 +214,19 @@ class TuyaEntity(Entity):
         return None
 
     def get_enum_type(
-        self, dpcodes: DPCode | tuple[DPCode, ...] | None, function: bool = False
+        self, dpcodes: DPCode | tuple[DPCode, ...] | None, prefer_function: bool = False
     ) -> EnumTypeData | None:
         """Return EnumTypeData for a found matching DPCode.
 
         By default we find anything we can use, however we prefer to use status
         when function is False and prefer function if function is True.
         """
-        if (dpcode := self.find_dpcode(dpcodes, function)) is None:
+        if (dpcode := self.find_dpcode(dpcodes, prefer_function)) is None:
             return None
 
-        order = (
-            ["function", "status_range"] if function else ["status_range", "function"]
-        )
+        order = ["status_range", "function"]
+        if prefer_function:
+            order = ["function", "status_range"]
         for key in order:
             if (
                 dpcode in getattr(self.device, key)
