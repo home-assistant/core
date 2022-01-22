@@ -63,14 +63,16 @@ async def async_start_udp_listener(hass: HomeAssistant) -> LookinUDPSubscription
     """Start the shared udp listener."""
     domain_data = hass.data[DOMAIN]
     if UDP_LOCK not in domain_data:
-        domain_data[UDP_LOCK] = asyncio.Lock()
+        udp_lock = domain_data[UDP_LOCK] = asyncio.Lock()
+    else:
+        udp_lock = domain_data[UDP_LOCK]
 
-    async with domain_data[UDP_LOCK]:
-        if domain_data[UDP_LISTENER]:
-            lookin_udp_subs: LookinUDPSubscriptions = domain_data[UDP_SUBSCRIPTIONS]
-        else:
+    async with udp_lock:
+        if not domain_data[UDP_LISTENER]:
             lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS] = LookinUDPSubscriptions()
             domain_data[UDP_LISTENER] = await start_lookin_udp(lookin_udp_subs, None)
+        else:
+            lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS]
         return lookin_udp_subs
 
 
