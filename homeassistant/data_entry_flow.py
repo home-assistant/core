@@ -7,9 +7,10 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, TypedDict
-import uuid
 
 import voluptuous as vol
+
+import homeassistant.util.uuid as uuid_util
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -223,7 +224,7 @@ class FlowManager(abc.ABC):
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid.uuid4().hex
+        flow.flow_id = uuid_util.random_uuid_hex()
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
