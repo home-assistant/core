@@ -32,7 +32,7 @@ BUTTONS: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(
         key=Action.TOGGLE_LIGHT,
         name="Toggle Light",
-        icon="mdi:lightbulb-question",
+        icon="mdi:lightbulb",
     ),
     ButtonEntityDescription(
         key=Action.INCREASE_BRIGHTNESS,
@@ -47,12 +47,12 @@ BUTTONS: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(
         key=Action.TOGGLE_UP_LIGHT,
         name="Toggle Up Light",
-        icon="mdi:lightbulb-question",
+        icon="mdi:lightbulb",
     ),
     ButtonEntityDescription(
         key=Action.TOGGLE_DOWN_LIGHT,
         name="Toggle Down Light",
-        icon="mdi:lightbulb-question",
+        icon="mdi:lightbulb",
     ),
     ButtonEntityDescription(
         key=Action.START_UP_LIGHT_DIMMER,
