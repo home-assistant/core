@@ -16,6 +16,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -113,8 +114,10 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
                 self.coordinator.data[self.heatarea_id]["ID"], target_temperature
             )
             self.coordinator.data[self.heatarea_id]["T_TARGET"] = target_temperature
-        except Exception as update_err:  # pylint: disable=broad-except
-            _LOGGER.error("Setting target temperature failed: %s", update_err)
+        except aiohttp.web.HTTPException as http_err:
+            raise HomeAssistantError(
+                "Failed to set target temperature, communication error with alpha2 base"
+            ) from http_err
 
     @property
     def preset_mode(self) -> str:
@@ -137,12 +140,10 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
             await self.coordinator.async_set_heatarea_mode(
                 self.coordinator.data[self.heatarea_id]["ID"], heatarea_mode
             )
-        except aiohttp.web.HTTPRequestTimeout as http_err:
-            _LOGGER.error(
-                "Failed to set target temperature, base is unreachable: %s", http_err
-            )
-        except Exception as update_err:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to set target temperature: %s", update_err)
+        except aiohttp.web.HTTPError as http_err:
+            raise HomeAssistantError(
+                "Failed to set preset mode, communication error with alpha2 base"
+            ) from http_err
         else:
             self.coordinator.data[self.heatarea_id]["HEATAREA_MODE"] = heatarea_mode
             if heatarea_mode == 1:
