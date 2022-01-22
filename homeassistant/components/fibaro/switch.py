@@ -39,7 +39,9 @@ def setup_platform(
 class FibaroSwitch(FibaroDevice, SwitchEntity):
     """Representation of a Fibaro Switch."""
 
-    def __init__(self, fibaro_device: Any, entity_description: SwitchEntityDescription):
+    def __init__(
+        self, fibaro_device: Any, entity_description: SwitchEntityDescription
+    ) -> None:
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
         self.entity_description = entity_description
