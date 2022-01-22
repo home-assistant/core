@@ -32,11 +32,12 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Codi d'autoritzaci\u00f3",
                     "code": "Codi (utilitzat a la UI de Home Assistant)",
                     "password": "Contrasenya",
                     "username": "Correu electr\u00f2nic"
                 },
-                "description": "A partir del 2021, SimpliSafe ha passat a un nou mecanisme d'autenticaci\u00f3 a trav\u00e9s de la seva aplicaci\u00f3 web. A causa de les limitacions t\u00e8cniques, hi ha un pas manual al final d'aquest proc\u00e9s; assegura't de llegir la [documentaci\u00f3](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) abans de comen\u00e7ar. \n\nQuan estiguis a punt, fes clic a [aqu\u00ed]({url}) per obrir l'aplicaci\u00f3 web SimpliSafe i introduir les credencials. Quan el proc\u00e9s s'hagi completat, torna aqu\u00ed i fes clic a Envia.",
+                "description": "SimpliSafe s'autentica amb Home Assistant a trav\u00e9s de la seva aplicaci\u00f3 web. A causa de les limitacions t\u00e8cniques, hi ha un pas manual al final d'aquest proc\u00e9s; assegura't de llegir la [documentaci\u00f3]({docs_url}) abans de comen\u00e7ar.\n\n1. Fes clic [aqu\u00ed]({url}) per obrir l'aplicaci\u00f3 web de SimpliSafe i introdueix les teves credencials.\n\n2. Quan el proc\u00e9s d'inici de sessi\u00f3 s'hagi completat, torna aqu\u00ed i introdueix a sota el codi d'autoritzaci\u00f3.",
                 "title": "Introdueix la teva informaci\u00f3"
             }
         }

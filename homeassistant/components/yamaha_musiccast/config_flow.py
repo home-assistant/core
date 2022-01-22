@@ -82,16 +82,23 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_ssdp(self, discovery_info) -> data_entry_flow.FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle ssdp discoveries."""
         if not await MusicCastDevice.check_yamaha_ssdp(
-            discovery_info[ssdp.ATTR_SSDP_LOCATION], async_get_clientsession(self.hass)
+            discovery_info.ssdp_location, async_get_clientsession(self.hass)
         ):
             return self.async_abort(reason="yxc_control_url_missing")
 
-        self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
-        self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        self.upnp_description = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+        self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        self.upnp_description = discovery_info.ssdp_location
+
+        # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
+        self.host = urlparse(
+            discovery_info.ssdp_location
+        ).hostname  # type: ignore[assignment]
+
         await self.async_set_unique_id(self.serial_number)
         self._abort_if_unique_id_configured(
             {
@@ -102,7 +109,9 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host)
+                    "name": discovery_info.upnp.get(
+                        ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host
+                    )
                 }
             }
         )

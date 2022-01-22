@@ -1,4 +1,6 @@
 """Support to interface with the Plex API."""
+from __future__ import annotations
+
 from functools import wraps
 import json
 import logging
@@ -20,14 +22,17 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 
@@ -61,7 +66,11 @@ def needs_session(func):
     return get_session_attribute
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     registry = await async_get_registry(hass)
@@ -481,9 +490,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if isinstance(src, int):
             src = {"plex_key": src}
 
-        playqueue_id = src.pop("playqueue_id", None)
+        offset = 0
 
-        if playqueue_id:
+        if playqueue_id := src.pop("playqueue_id", None):
             try:
                 playqueue = self.plex_server.get_playqueue(playqueue_id)
             except plexapi.exceptions.NotFound as err:
@@ -492,16 +501,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 ) from err
         else:
             shuffle = src.pop("shuffle", 0)
+            offset = src.pop("offset", 0) * 1000
+            resume = src.pop("resume", False)
             media = self.plex_server.lookup_media(media_type, **src)
 
             if media is None:
                 raise HomeAssistantError(f"Media could not be found: {media_id}")
 
+            if resume and not offset:
+                offset = media.viewOffset
+
             _LOGGER.debug("Attempting to play %s on %s", media, self.name)
             playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
 
         try:
-            self.device.playMedia(playqueue)
+            self.device.playMedia(playqueue, offset=offset)
         except requests.exceptions.ConnectTimeout as exc:
             raise HomeAssistantError(
                 f"Request failed when playing on {self.name}"
@@ -518,8 +532,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "media_summary",
             "username",
         ):
-            value = getattr(self, attr, None)
-            if value:
+            if value := getattr(self, attr, None):
                 attributes[attr] = value
 
         return attributes
@@ -536,7 +549,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 name="Plex Client Service",
                 manufacturer="Plex",
                 model="Plex Clients",
-                entry_type="service",
+                entry_type=DeviceEntryType.SERVICE,
             )
 
         return DeviceInfo(
@@ -560,8 +573,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Get media image from Plex server."""
         image_url = self.plex_server.thumbnail_cache.get(media_content_id)
         if image_url:

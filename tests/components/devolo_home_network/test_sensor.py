@@ -8,9 +8,11 @@ from homeassistant.components.devolo_home_network.const import (
     LONG_UPDATE_INTERVAL,
     SHORT_UPDATE_INTERVAL,
 )
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from . import configure_integration
@@ -46,6 +48,7 @@ async def test_update_connected_wifi_clients(hass: HomeAssistant):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == "1"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     # Emulate device failure
     with patch(
@@ -86,6 +89,9 @@ async def test_update_neighboring_wifi_networks(hass: HomeAssistant):
         assert state is not None
         assert state.state == "1"
 
+        er = entity_registry.async_get(hass)
+        assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
+
         # Emulate device failure
         with patch(
             "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_neighbor_access_points",
@@ -124,6 +130,9 @@ async def test_update_connected_plc_devices(hass: HomeAssistant):
         state = hass.states.get(state_key)
         assert state is not None
         assert state.state == "1"
+
+        er = entity_registry.async_get(hass)
+        assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
 
         # Emulate device failure
         with patch(

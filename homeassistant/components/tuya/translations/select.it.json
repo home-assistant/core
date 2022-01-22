@@ -14,6 +14,10 @@
             "0": "Bassa sensibilit\u00e0",
             "1": "Alta sensibilit\u00e0"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Spingere",
+            "switch": "Interruttore"
+        },
         "tuya__ipc_work_mode": {
             "0": "Modalit\u00e0 a basso consumo",
             "1": "Modalit\u00e0 di lavoro continua"
@@ -44,6 +48,38 @@
             "on": "Acceso",
             "power_off": "Spento",
             "power_on": "Acceso"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Chiusa",
+            "high": "Alto",
+            "low": "Basso",
+            "middle": "Medio"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Grande",
+            "middle": "Medio",
+            "small": "Piccolo"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Arco",
+            "chargego": "Ritorna alla base",
+            "left_bow": "Arco a sinistra",
+            "left_spiral": "Spirale a sinistra",
+            "mop": "Lava",
+            "part": "Parte",
+            "partial_bow": "Arco parziale",
+            "pick_zone": "Scegli zona",
+            "point": "Punto",
+            "pose": "Posa",
+            "random": "Casuale",
+            "right_bow": "Arco a destra",
+            "right_spiral": "Spirale a destra",
+            "single": "Singolo",
+            "smart": "Intelligente",
+            "spiral": "Spirale",
+            "standby": "In attesa",
+            "wall_follow": "Segui il muro",
+            "zone": "Zona"
         }
     }
 }

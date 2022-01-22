@@ -107,10 +107,15 @@ async def test_step_user(hass: HomeAssistant, client_login) -> None:
 
 
 @pytest.mark.parametrize(
-    "client",
-    [AsyncMock(side_effect=InvalidCredentialsError)],
+    "client,error",
+    [
+        (AsyncMock(side_effect=InvalidCredentialsError), "invalid_auth"),
+        (AsyncMock(side_effect=RidwellError), "unknown"),
+    ],
 )
-async def test_step_user_invalid_credentials(hass: HomeAssistant, client_login) -> None:
+async def test_step_user_invalid_credentials(
+    hass: HomeAssistant, client_login, error
+) -> None:
     """Test that invalid credentials are handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -119,20 +124,4 @@ async def test_step_user_invalid_credentials(hass: HomeAssistant, client_login) 
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-@pytest.mark.parametrize(
-    "client",
-    [AsyncMock(side_effect=RidwellError)],
-)
-async def test_step_user_unknown_error(hass: HomeAssistant, client_login) -> None:
-    """Test that an unknown Ridwell error is handled correctly."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"]["base"] == error

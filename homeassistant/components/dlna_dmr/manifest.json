@@ -3,7 +3,7 @@
   "name": "DLNA Digital Media Renderer",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dlna_dmr",
-  "requirements": ["async-upnp-client==0.22.10"],
+  "requirements": ["async-upnp-client==0.23.4"],
   "dependencies": ["ssdp"],
   "ssdp": [
     {
@@ -17,18 +17,6 @@
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
       "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
-    },
-    {
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
-      "nt": "urn:schemas-upnp-org:device:MediaRenderer:1"
-    },
-    {
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
-      "nt": "urn:schemas-upnp-org:device:MediaRenderer:2"
-    },
-    {
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
-      "nt": "urn:schemas-upnp-org:device:MediaRenderer:3"
     }
   ],
   "codeowners": ["@StevenLooman", "@chishm"],

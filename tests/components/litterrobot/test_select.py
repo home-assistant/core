@@ -12,6 +12,8 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
 from .conftest import setup_integration
@@ -27,6 +29,11 @@ async def test_wait_time_select(hass: HomeAssistant, mock_account):
 
     select = hass.states.get(SELECT_ENTITY_ID)
     assert select
+
+    ent_reg = entity_registry.async_get(hass)
+    entity_entry = ent_reg.async_get(SELECT_ENTITY_ID)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     data = {ATTR_ENTITY_ID: SELECT_ENTITY_ID}
 

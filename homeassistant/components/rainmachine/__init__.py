@@ -11,19 +11,23 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -51,9 +55,9 @@ DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 UPDATE_INTERVALS = {
     DATA_PROVISION_SETTINGS: timedelta(minutes=1),
@@ -63,9 +67,9 @@ UPDATE_INTERVALS = {
     DATA_ZONES: timedelta(seconds=15),
 }
 
-# Constants expected by the RainMachine API for Service Data
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
+CONF_DURATION = "duration"
 CONF_ET = "et"
 CONF_MAXRH = "maxrh"
 CONF_MAXTEMP = "maxtemp"
@@ -91,8 +95,10 @@ CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=5.
 
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
+SERVICE_NAME_RESTRICT_WATERING = "restrict_watering"
 SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
+SERVICE_NAME_UNRESTRICT_WATERING = "unrestrict_watering"
 
 SERVICE_SCHEMA = vol.Schema(
     {
@@ -122,6 +128,12 @@ SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
         vol.Optional(CONF_CONDITION): cv.string,
         vol.Optional(CONF_PRESSURE): CV_WX_DATA_VALID_PRESSURE,
         vol.Optional(CONF_DEWPOINT): CV_WX_DATA_VALID_TEMP_RANGE,
+    }
+)
+
+SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Required(CONF_DURATION): cv.time_period,
     }
 )
 
@@ -166,9 +178,6 @@ async def async_update_programs_and_zones(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -184,9 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # regenmaschine can load multiple controllers at once, but we only grab the one
     # we loaded above:
-    controller = hass.data[DOMAIN][entry.entry_id][
-        DATA_CONTROLLER
-    ] = get_client_controller(client)
+    controller = get_client_controller(client)
 
     entry_updates: dict[str, Any] = {}
     if not entry.unique_id or is_ip_address(entry.unique_id):
@@ -244,7 +251,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         controller_init_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*controller_init_tasks)
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CONTROLLER: controller,
+        DATA_COORDINATOR: coordinators,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -271,6 +283,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         )
 
+    async def async_restrict_watering(call: ServiceCall) -> None:
+        """Restrict watering for a time period."""
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.restrictions.restrict(call.data[CONF_DURATION])
+        await async_update_programs_and_zones(hass, entry)
+
     async def async_stop_all(call: ServiceCall) -> None:
         """Stop all watering."""
         controller = async_get_controller_for_service_call(hass, call)
@@ -281,6 +299,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Unpause watering."""
         controller = async_get_controller_for_service_call(hass, call)
         await controller.watering.unpause_all()
+        await async_update_programs_and_zones(hass, entry)
+
+    async def async_unrestrict_watering(call: ServiceCall) -> None:
+        """Unrestrict watering."""
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.restrictions.unrestrict()
         await async_update_programs_and_zones(hass, entry)
 
     for service_name, schema, method in (
@@ -294,8 +318,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_PUSH_WEATHER_DATA_SCHEMA,
             async_push_weather_data,
         ),
+        (
+            SERVICE_NAME_RESTRICT_WATERING,
+            SERVICE_RESTRICT_WATERING_SCHEMA,
+            async_restrict_watering,
+        ),
         (SERVICE_NAME_STOP_ALL, SERVICE_SCHEMA, async_stop_all),
         (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_SCHEMA, async_unpause_watering),
+        (
+            SERVICE_NAME_UNRESTRICT_WATERING,
+            SERVICE_SCHEMA,
+            async_unrestrict_watering,
+        ),
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
@@ -310,18 +344,56 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
-        # If this is the last instance of RainMachine, deregister any services defined
-        # during integration setup:
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        # If this is the last loaded instance of RainMachine, deregister any services
+        # defined during integration setup:
         for service_name in (
             SERVICE_NAME_PAUSE_WATERING,
             SERVICE_NAME_PUSH_WEATHER_DATA,
+            SERVICE_NAME_RESTRICT_WATERING,
             SERVICE_NAME_STOP_ALL,
             SERVICE_NAME_UNPAUSE_WATERING,
+            SERVICE_NAME_UNRESTRICT_WATERING,
         ):
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    version = entry.version
+
+    LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Update unique IDs to be consistent across platform (including removing
+    # the silly removal of colons in the MAC address that was added originally):
+    if version == 1:
+        version = entry.version = 2
+
+        @callback
+        def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
+            """Migrate the unique ID to a new format."""
+            unique_id_pieces = entity_entry.unique_id.split("_")
+            old_mac = unique_id_pieces[0]
+            new_mac = ":".join(old_mac[i : i + 2] for i in range(0, len(old_mac), 2))
+            unique_id_pieces[0] = new_mac
+
+            if entity_entry.entity_id.startswith("switch"):
+                unique_id_pieces[1] = unique_id_pieces[1][11:].lower()
+
+            return {"new_unique_id": "_".join(unique_id_pieces)}
+
+        await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
+
+    LOGGER.info("Migration to version %s successful", version)
+
+    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -354,12 +426,9 @@ class RainMachineEntity(CoordinatorEntity):
             ),
             sw_version=controller.software_version,
         )
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_name = f"{controller.name} {description.name}"
-        # The colons are removed from the device MAC simply because that value
-        # (unnecessarily) makes up the existing unique ID formula and we want to avoid
-        # a breaking change:
-        self._attr_unique_id = f"{controller.mac.replace(':', '')}_{description.key}"
+        self._attr_unique_id = f"{controller.mac}_{description.key}"
         self._controller = controller
         self.entity_description = description
 

@@ -19,12 +19,17 @@ from homeassistant.helpers import (
     entity_registry,
     update_coordinator,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper, ShellyDeviceRestWrapper
+from . import (
+    BlockDeviceWrapper,
+    RpcDeviceWrapper,
+    RpcPollingWrapper,
+    ShellyDeviceRestWrapper,
+)
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
     BLOCK,
@@ -32,6 +37,7 @@ from .const import (
     DOMAIN,
     REST,
     RPC,
+    RPC_POLL,
 )
 from .utils import (
     async_remove_shelly_entity,
@@ -135,7 +141,7 @@ async def async_restore_block_attribute_entities(
             name="",
             icon=entry.original_icon,
             unit=entry.unit_of_measurement,
-            device_class=entry.device_class,
+            device_class=entry.original_device_class,
         )
 
         entities.append(
@@ -160,6 +166,10 @@ async def async_setup_entry_rpc(
         config_entry.entry_id
     ][RPC]
 
+    polling_wrapper: RpcPollingWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][RPC_POLL]
+
     entities = []
     for sensor_id in sensors:
         description = sensors[sensor_id]
@@ -178,17 +188,17 @@ async def async_setup_entry_rpc(
                 unique_id = f"{wrapper.mac}-{key}-{sensor_id}"
                 await async_remove_shelly_entity(hass, domain, unique_id)
             else:
-                entities.append((key, sensor_id, description))
+                if description.should_poll:
+                    entities.append(
+                        sensor_class(polling_wrapper, key, sensor_id, description)
+                    )
+                else:
+                    entities.append(sensor_class(wrapper, key, sensor_id, description))
 
     if not entities:
         return
 
-    async_add_entities(
-        [
-            sensor_class(wrapper, key, sensor_id, description)
-            for key, sensor_id, description in entities
-        ]
-    )
+    async_add_entities(entities)
 
 
 async def async_setup_entry_rest(
@@ -237,7 +247,7 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     extra_state_attributes: Callable[[Block], dict | None] | None = None
-    entity_category: str | None = None
+    entity_category: EntityCategory | None = None
 
 
 @dataclass
@@ -256,7 +266,8 @@ class RpcAttributeDescription:
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
-    entity_category: str | None = None
+    entity_category: EntityCategory | None = None
+    should_poll: bool = False
 
 
 @dataclass
@@ -271,7 +282,7 @@ class RestAttributeDescription:
     state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
-    entity_category: str | None = None
+    entity_category: EntityCategory | None = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -282,9 +293,6 @@ class ShellyBlockEntity(entity.Entity):
         self.wrapper = wrapper
         self.block = block
         self._name = get_block_entity_name(wrapper.device, block)
-        self._attr_device_info = DeviceInfo(
-            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
-        )
 
     @property
     def name(self) -> str:
@@ -295,6 +303,13 @@ class ShellyBlockEntity(entity.Entity):
     def should_poll(self) -> bool:
         """If device should be polled."""
         return False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info."""
+        return {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
+        }
 
     @property
     def available(self) -> bool:
@@ -339,14 +354,18 @@ class ShellyBlockEntity(entity.Entity):
 class ShellyRpcEntity(entity.Entity):
     """Helper class to represent a rpc entity."""
 
-    def __init__(self, wrapper: RpcDeviceWrapper, key: str) -> None:
+    def __init__(
+        self,
+        wrapper: RpcDeviceWrapper | RpcPollingWrapper,
+        key: str,
+    ) -> None:
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.key = key
         self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(
-            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
-        )
+        self._attr_device_info = {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        }
         self._attr_unique_id = f"{wrapper.mac}-{key}"
         self._attr_name = get_rpc_entity_name(wrapper.device, key)
 
@@ -433,9 +452,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        value = getattr(self.block, self.attribute)
-
-        if value is None:
+        if (value := getattr(self.block, self.attribute)) is None:
             return None
 
         return cast(StateType, self.description.value(value))
@@ -469,7 +486,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.extra_state_attributes(self.block)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return category of entity."""
         return self.description.entity_category
 
@@ -490,14 +507,18 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.description = description
         self._name = get_block_entity_name(wrapper.device, None, self.description.name)
         self._last_value = None
-        self._attr_device_info = DeviceInfo(
-            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
-        )
 
     @property
     def name(self) -> str:
         """Name of sensor."""
         return self._name
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info."""
+        return {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
+        }
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -542,7 +563,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return self.description.extra_state_attributes(self.wrapper.device.status)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return category of entity."""
         return self.description.entity_category
 
@@ -608,7 +629,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         )
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return category of entity."""
         return self.description.entity_category
 

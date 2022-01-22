@@ -9,7 +9,7 @@
         "flow_title": "Televisi\u00f3n Samsung: {model}",
         "step": {
             "confirm": {
-                "description": "\u00bfDesea configurar la televisi\u00f3n Samsung {model}? Si nunca conect\u00f3 Home Assistant antes, deber\u00eda ver una ventana emergente en su televisor pidiendo autorizaci\u00f3n. Las configuraciones manuales para este televisor se sobrescribir\u00e1n.",
+                "description": "\u00bfDesea configurar la televisi\u00f3n Samsung {device}? Si nunca conect\u00f3 Home Assistant antes, deber\u00eda ver una ventana emergente en su televisor pidiendo autorizaci\u00f3n. Las configuraciones manuales para este televisor se sobrescribir\u00e1n.",
                 "title": "Samsung TV"
             },
             "user": {

@@ -34,7 +34,9 @@
                 "data": {
                     "name": "Nama layanan notifikasi (perubahan harus dimulai ulang)",
                     "recipient": "Penerima notifikasi SMS",
-                    "track_new_devices": "Lacak perangkat baru"
+                    "track_new_devices": "Lacak perangkat baru",
+                    "track_wired_clients": "Lacak klien jaringan kabel",
+                    "unauthenticated_mode": "Mode tidak diautentikasi (perubahan memerlukan pemuatan ulang)"
                 }
             }
         }

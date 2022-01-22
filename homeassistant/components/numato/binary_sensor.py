@@ -1,4 +1,6 @@
 """Binary sensor platform integration for Numato USB GPIO expanders."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
@@ -6,8 +8,10 @@ from numato_gpio import NumatoGpioError
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_BINARY_SENSORS,
@@ -24,7 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 NUMATO_SIGNAL = "numato_signal_{}_{}"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the configured Numato USB GPIO binary sensor ports."""
     if discovery_info is None:
         return

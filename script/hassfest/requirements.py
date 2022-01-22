@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import deque
 import json
-import operator
 import os
 import re
 import subprocess
@@ -13,7 +12,7 @@ from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from stdlib_list import stdlib_list
 from tqdm import tqdm
 
-from homeassistant.const import REQUIRED_PYTHON_VER
+from homeassistant.const import REQUIRED_NEXT_PYTHON_VER, REQUIRED_PYTHON_VER
 import homeassistant.util.package as pkg_util
 from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
 
@@ -26,10 +25,13 @@ PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
+PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 SUPPORTED_PYTHON_TUPLES = [
     REQUIRED_PYTHON_VER[:2],
-    tuple(map(operator.add, REQUIRED_PYTHON_VER, (0, 1, 0)))[:2],
 ]
+if REQUIRED_PYTHON_VER[0] == REQUIRED_NEXT_PYTHON_VER[0]:
+    for minor in range(REQUIRED_PYTHON_VER[1] + 1, REQUIRED_NEXT_PYTHON_VER[1] + 1):
+        SUPPORTED_PYTHON_TUPLES.append((REQUIRED_PYTHON_VER[0], minor))
 SUPPORTED_PYTHON_VERSIONS = [
     ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
 ]
@@ -95,15 +97,21 @@ def validate_requirements_format(integration: Integration) -> bool:
             )
             continue
 
-        if (
-            version
-            and AwesomeVersion(version).strategy == AwesomeVersionStrategy.UNKNOWN
-        ):
-            integration.add_error(
-                "requirements",
-                f"Unable to parse package version ({version}) for {pkg}.",
-            )
+        if not version:
             continue
+
+        for part in version.split(","):
+            version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
+            if (
+                version_part
+                and AwesomeVersion(version_part.group(2)).strategy
+                == AwesomeVersionStrategy.UNKNOWN
+            ):
+                integration.add_error(
+                    "requirements",
+                    f"Unable to parse package version ({version}) for {pkg}.",
+                )
+                continue
 
     return len(integration.errors) == start_errors
 

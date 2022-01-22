@@ -14,46 +14,25 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_TYPE,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_NITROGEN_MONOXIDE,
-    DEVICE_CLASS_NITROUS_OXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-    DEVICE_CLASS_VOLTAGE,
 )
-from homeassistant.core import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
-from . import DOMAIN
+from . import DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_APPARENT_POWER = "apparent_power"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CURRENT = "current"
 CONF_ENERGY = "energy"
+CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
@@ -67,6 +46,7 @@ CONF_PM25 = "pm25"
 CONF_POWER = "power"
 CONF_POWER_FACTOR = "power_factor"
 CONF_PRESSURE = "pressure"
+CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
@@ -75,31 +55,34 @@ CONF_VOLTAGE = "voltage"
 CONF_VALUE = "value"
 
 ENTITY_TRIGGERS = {
-    DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
-    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_CO}],
-    DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_CO2}],
-    DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_CURRENT}],
-    DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_ENERGY}],
-    DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_GAS}],
-    DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
-    DEVICE_CLASS_ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
-    DEVICE_CLASS_NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
-    DEVICE_CLASS_NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
-    DEVICE_CLASS_NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
-    DEVICE_CLASS_OZONE: [{CONF_TYPE: CONF_OZONE}],
-    DEVICE_CLASS_PM1: [{CONF_TYPE: CONF_PM1}],
-    DEVICE_CLASS_PM10: [{CONF_TYPE: CONF_PM10}],
-    DEVICE_CLASS_PM25: [{CONF_TYPE: CONF_PM25}],
-    DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_POWER}],
-    DEVICE_CLASS_POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
-    DEVICE_CLASS_PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
-    DEVICE_CLASS_SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
-    DEVICE_CLASS_SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
-    DEVICE_CLASS_TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: [
+    SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
+    SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
+    SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
+    SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
+    SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_CURRENT}],
+    SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
+    SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
+    SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
+    SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
+    SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
+    SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
+    SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
+    SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
+    SensorDeviceClass.OZONE: [{CONF_TYPE: CONF_OZONE}],
+    SensorDeviceClass.PM1: [{CONF_TYPE: CONF_PM1}],
+    SensorDeviceClass.PM10: [{CONF_TYPE: CONF_PM10}],
+    SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
+    SensorDeviceClass.POWER: [{CONF_TYPE: CONF_POWER}],
+    SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
+    SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
+    SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
+    SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
+    SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
     ],
-    DEVICE_CLASS_VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
+    SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
 
@@ -110,11 +93,13 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): vol.In(
                 [
+                    CONF_APPARENT_POWER,
                     CONF_BATTERY_LEVEL,
                     CONF_CO,
                     CONF_CO2,
                     CONF_CURRENT,
                     CONF_ENERGY,
+                    CONF_FREQUENCY,
                     CONF_GAS,
                     CONF_HUMIDITY,
                     CONF_ILLUMINANCE,
@@ -128,6 +113,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_POWER,
                     CONF_POWER_FACTOR,
                     CONF_PRESSURE,
+                    CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
@@ -158,7 +144,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
+        hass, numeric_state_config
+    )
     return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )

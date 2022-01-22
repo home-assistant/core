@@ -1094,3 +1094,169 @@ async def test_trigger_entity_available(hass):
 
     state = hass.states.get("sensor.maybe_available")
     assert state.state == "unavailable"
+
+
+async def test_trigger_entity_device_class_parsing_works(hass):
+    """Test trigger entity device class parsing works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "{{ now().date() }}",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "{{ now() }}",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_trigger_entity_device_class_errors_works(hass):
+    """Test trigger entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN
+
+
+async def test_entity_device_class_parsing_works(hass):
+    """Test entity device class parsing works."""
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "sensor": [
+                            {
+                                "name": "Date entity",
+                                "state": "{{ now().date() }}",
+                                "device_class": "date",
+                            },
+                            {
+                                "name": "Timestamp entity",
+                                "state": "{{ now() }}",
+                                "device_class": "timestamp",
+                            },
+                        ],
+                    },
+                ],
+            },
+        )
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_entity_device_class_errors_works(hass):
+    """Test entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN

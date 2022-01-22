@@ -8,20 +8,22 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STATUS,
     SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     StateVacuumEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -93,8 +95,14 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if DPCode.SWITCH_CHARGE in self.device.status:
             self._supported_features |= SUPPORT_RETURN_HOME
 
+        if DPCode.SEEK in self.device.status:
+            self._supported_features |= SUPPORT_LOCATE
+
         if DPCode.STATUS in self.device.status:
             self._supported_features |= SUPPORT_STATE | SUPPORT_STATUS
+
+        if DPCode.POWER in self.device.status:
+            self._supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
         if DPCode.POWER_GO in self.device.status:
             self._supported_features |= SUPPORT_STOP | SUPPORT_START
@@ -103,9 +111,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._supported_features |= SUPPORT_FAN_SPEED
             self._fan_speed_type = EnumTypeData.from_json(function.values)
 
-        if function := device.function.get(DPCode.ELECTRICITY_LEFT):
+        if status_range := device.status_range.get(DPCode.ELECTRICITY_LEFT):
             self._supported_features |= SUPPORT_BATTERY
-            self._battery_level_type = IntegerTypeData.from_json(function.values)
+            self._battery_level_type = IntegerTypeData.from_json(status_range.values)
 
     @property
     def battery_level(self) -> int | None:
@@ -131,7 +139,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     @property
     def state(self) -> str | None:
         """Return Tuya vacuum device state."""
-        if self.device.status.get(DPCode.PAUSE):
+        if self.device.status.get(DPCode.PAUSE) and not (
+            self.device.status.get(DPCode.STATUS)
+        ):
             return STATE_PAUSED
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
@@ -142,24 +152,32 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Flag supported features."""
         return self._supported_features
 
-    def start(self, **kwargs: Any) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+        self._send_command([{"code": DPCode.POWER, "value": True}])
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        self._send_command([{"code": DPCode.POWER, "value": False}])
+
+    def start(self, **kwargs: Any) -> None:
+        """Start the device."""
         self._send_command([{"code": DPCode.POWER_GO, "value": True}])
 
     def stop(self, **kwargs: Any) -> None:
-        """Turn the device off."""
+        """Stop the device."""
         self._send_command([{"code": DPCode.POWER_GO, "value": False}])
 
     def pause(self, **kwargs: Any) -> None:
         """Pause the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": True}])
+        self._send_command([{"code": DPCode.POWER_GO, "value": False}])
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         self._send_command([{"code": DPCode.MODE, "value": "chargego"}])
 
     def locate(self, **kwargs: Any) -> None:
-        """Return device to dock."""
+        """Locate the device."""
         self._send_command([{"code": DPCode.SEEK, "value": True}])
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:

@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -24,12 +25,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +75,7 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
         key="system_temp",
         name="System Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
@@ -80,7 +83,7 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
         key="cpu_temp",
         name="CPU Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="cpu_usage",
@@ -138,7 +141,7 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
         key="drive_temp",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
@@ -193,7 +196,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the QNAP NAS sensor."""
     api = QNAPStatsAPI(config)
     api.update()
@@ -203,7 +211,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    sensors = []
+    sensors: list[QNAPSensor] = []
 
     # Basic sensors
     sensors.extend(

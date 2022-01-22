@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -47,6 +46,8 @@ class DSMRConnection:
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
+        if dsmr_version == "Q3D":
+            self._equipment_identifier = obis_ref.Q3D_EQUIPMENT_IDENTIFIER
 
     def equipment_identifier(self) -> str | None:
         """Equipment identifier."""
@@ -302,31 +303,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_communicate"
 
         return data
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Handle the initial step."""
-        host = import_config.get(CONF_HOST)
-        port = import_config[CONF_PORT]
-
-        status = self._abort_if_host_port_configured(port, host, import_config)
-        if status is not None:
-            return status
-
-        try:
-            info = await _validate_dsmr_connection(self.hass, import_config)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except CannotCommunicate:
-            return self.async_abort(reason="cannot_communicate")
-
-        name = f"{host}:{port}" if host is not None else port
-        data = {**import_config, **info}
-
-        if info[CONF_SERIAL_ID]:
-            await self.async_set_unique_id(info[CONF_SERIAL_ID])
-            self._abort_if_unique_id_configured(data)
-
-        return self.async_create_entry(title=name, data=data)
 
 
 class DSMROptionFlowHandler(config_entries.OptionsFlow):

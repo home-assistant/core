@@ -18,13 +18,17 @@
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
-                }
+                },
+                "description": "FRITZ!Box ditemukan: {name} \n\nSiapkan FRITZ!Box Tools untuk mengontrol {name}",
+                "title": "Siapkan FRITZ!Box Tools."
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
-                }
+                },
+                "description": "Perbarui kredensial FRITZ!Box Tools untuk: {host} . \n\nFRITZ!Box Tools tidak dapat masuk ke FRITZ!Box Anda.",
+                "title": "Memperbarui FRITZ!Box Tools - kredensial"
             },
             "start_config": {
                 "data": {
@@ -32,7 +36,9 @@
                     "password": "Kata Sandi",
                     "port": "Port",
                     "username": "Nama Pengguna"
-                }
+                },
+                "description": "Siapkan FRITZ!Box Tools untuk mengontrol FRITZ!Box Anda.\nDiperlukan minimal: nama pengguna dan kata sandi.",
+                "title": "Siapkan FRITZ!Box Tools - wajib"
             },
             "user": {
                 "data": {
@@ -40,6 +46,17 @@
                     "password": "Kata Sandi",
                     "port": "Port",
                     "username": "Nama Pengguna"
+                },
+                "description": "Siapkan FRITZ!Box Tools untuk mengontrol FRITZ!Box Anda.\nDiperlukan minimal: nama pengguna dan kata sandi.",
+                "title": "Siapkan FRITZ!Box Tools."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Wakti dalam detik untuk mempertimbangkan perangkat sebagai 'di rumah'"
                 }
             }
         }

@@ -7,13 +7,8 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 
-from .const import (
-    ATTR_ADAPTERS,
-    ATTR_CONFIGURED_ADAPTERS,
-    DOMAIN,
-    NETWORK_CONFIG_SCHEMA,
-)
-from .network import Network
+from .const import ATTR_ADAPTERS, ATTR_CONFIGURED_ADAPTERS, NETWORK_CONFIG_SCHEMA
+from .network import async_get_network
 
 
 @callback
@@ -32,7 +27,7 @@ async def websocket_network_adapters(
     msg: dict,
 ) -> None:
     """Return network preferences."""
-    network: Network = hass.data[DOMAIN]
+    network = await async_get_network(hass)
     connection.send_result(
         msg["id"],
         {
@@ -56,7 +51,7 @@ async def websocket_network_adapters_configure(
     msg: dict,
 ) -> None:
     """Update network config."""
-    network: Network = hass.data[DOMAIN]
+    network = await async_get_network(hass)
 
     await network.async_reconfig(msg["config"])
 

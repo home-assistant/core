@@ -8,13 +8,11 @@ from typing import cast
 import attr
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
+from . import device_registry as dr, entity_registry as er
 from .typing import UNDEFINED, UndefinedType
-
-# mypy: disallow-any-generics
 
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
@@ -49,7 +47,9 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback
@@ -73,8 +73,7 @@ class AreaRegistry:
     @callback
     def async_get_or_create(self, name: str) -> AreaEntry:
         """Get or create an area."""
-        area = self.async_get_area_by_name(name)
-        if area:
+        if area := self.async_get_area_by_name(name):
             return area
         return self.async_create(name)
 

@@ -198,6 +198,9 @@ async def test_remove_clients(hass, aioclient_mock):
     """Verify removing different variations of clients work."""
     clients = [
         {
+            "mac": "00:00:00:00:00:00",
+        },
+        {
             "first_seen": 100,
             "last_seen": 500,
             "mac": "00:00:00:00:00:01",
@@ -239,7 +242,7 @@ async def test_remove_clients(hass, aioclient_mock):
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.mock_calls[0][2] == {
         "cmd": "forget-sta",
-        "macs": ["00:00:00:00:00:01"],
+        "macs": ["00:00:00:00:00:00", "00:00:00:00:00:01"],
     }
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)

@@ -23,16 +23,18 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         "virtualenv": is_virtual_env(),
         "python_version": platform.python_version(),
         "docker": False,
-        "user": getuser(),
         "arch": platform.machine(),
         "timezone": str(hass.config.time_zone),
         "os_name": platform.system(),
         "os_version": platform.release(),
     }
 
-    if platform.system() == "Windows":
-        info_object["os_version"] = platform.win32_ver()[0]
-    elif platform.system() == "Darwin":
+    try:
+        info_object["user"] = getuser()
+    except KeyError:
+        info_object["user"] = None
+
+    if platform.system() == "Darwin":
         info_object["os_version"] = platform.mac_ver()[0]
     elif platform.system() == "Linux":
         info_object["docker"] = os.path.isfile("/.dockerenv")

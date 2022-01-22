@@ -11,6 +11,10 @@
   "dhcp": [
     {
       "hostname": "k[lp]*",
+      "macaddress": "60A4B7*"
+    },
+    {
+      "hostname": "k[lp]*",
       "macaddress": "005F67*"
     },
     {

@@ -65,16 +65,11 @@ class CloudGoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self.enabled and self._prefs.google_report_state
 
-    @property
-    def local_sdk_webhook_id(self):
-        """Return the local SDK webhook.
-
-        Return None to disable the local SDK.
-        """
+    def get_local_webhook_id(self, agent_user_id):
+        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id
 
-    @property
-    def local_sdk_user_id(self):
+    def get_local_agent_user_id(self, webhook_id):
         """Return the user ID to be used for actions received via the local SDK."""
         return self._user
 
@@ -93,7 +88,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         start.async_at_start(self.hass, hass_started)
 
-        # Remove old/wrong user agent ids
+        # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
         for agent_user_id in self._store.agent_user_ids:
             if agent_user_id != self.agent_user_id:

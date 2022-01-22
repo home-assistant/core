@@ -8,6 +8,10 @@ from aiohttp.web import Application, Request, StreamResponse, middleware
 
 from homeassistant.core import callback
 
+current_request: ContextVar[Request | None] = ContextVar(
+    "current_request", default=None
+)
+
 
 @callback
 def setup_request_context(

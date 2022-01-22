@@ -9,6 +9,7 @@ import aiohttp
 import async_timeout
 from hass_nabucasa import Cloud, cloud_api
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.alexa import (
     DOMAIN as ALEXA_DOMAIN,
     config as alexa_config,
@@ -23,7 +24,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE, RequireRelink
+from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 SYNC_DELAY = 1
 
 
-class AlexaConfig(alexa_config.AbstractConfig):
+class CloudAlexaConfig(alexa_config.AbstractConfig):
     """Alexa Configuration."""
 
     def __init__(
@@ -74,7 +75,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._prefs.alexa_report_state
+        return self._prefs.alexa_report_state and self.authorized
 
     @property
     def endpoint(self):
@@ -102,6 +103,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def async_initialize(self):
         """Initialize the Alexa config."""
+        await super().async_initialize()
 
         async def hass_started(hass):
             if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
@@ -157,15 +159,15 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if resp.status == HTTPStatus.BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
-                    await self._prefs.async_update(alexa_report_state=False)
-                    self.hass.components.persistent_notification.async_create(
+                    persistent_notification.async_create(
+                        self.hass,
                         f"There was an error reporting state to Alexa ({body['reason']}). "
                         "Please re-link your Alexa skill via the Alexa app to "
                         "continue using it.",
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
-                raise RequireRelink
+                raise alexa_errors.RequireRelink
 
             raise alexa_errors.NoTokenAvailable
 
@@ -190,7 +192,10 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
-                await self.async_enable_proactive_mode()
+                with suppress(
+                    alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink
+                ):
+                    await self.async_enable_proactive_mode()
             else:
                 await self.async_disable_proactive_mode()
 
@@ -313,7 +318,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
             )
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
             return True

@@ -15,6 +15,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
@@ -118,20 +119,28 @@ class MobileAppNotificationService(BaseNotificationService):
         local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
 
         for target in targets:
+            registration = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target].data
+
             if target in local_push_channels:
                 local_push_channels[target].async_send_notification(
-                    data, partial(self._async_send_remote_message_target, target)
+                    data,
+                    partial(
+                        self._async_send_remote_message_target, target, registration
+                    ),
                 )
                 continue
 
-            await self._async_send_remote_message_target(target, data)
+            # Test if local push only.
+            if ATTR_PUSH_URL not in registration[ATTR_APP_DATA]:
+                raise HomeAssistantError(
+                    "Device not connected to local push notifications"
+                )
 
-    async def _async_send_remote_message_target(self, target, data):
+            await self._async_send_remote_message_target(target, registration, data)
+
+    async def _async_send_remote_message_target(self, target, registration, data):
         """Send a message to a target."""
-        entry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
-        entry_data = entry.data
-
-        app_data = entry_data[ATTR_APP_DATA]
+        app_data = registration[ATTR_APP_DATA]
         push_token = app_data[ATTR_PUSH_TOKEN]
         push_url = app_data[ATTR_PUSH_URL]
 
@@ -139,17 +148,17 @@ class MobileAppNotificationService(BaseNotificationService):
         target_data[ATTR_PUSH_TOKEN] = push_token
 
         reg_info = {
-            ATTR_APP_ID: entry_data[ATTR_APP_ID],
-            ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
+            ATTR_APP_ID: registration[ATTR_APP_ID],
+            ATTR_APP_VERSION: registration[ATTR_APP_VERSION],
             ATTR_WEBHOOK_ID: target,
         }
-        if ATTR_OS_VERSION in entry_data:
-            reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
+        if ATTR_OS_VERSION in registration:
+            reg_info[ATTR_OS_VERSION] = registration[ATTR_OS_VERSION]
 
         target_data["registration_info"] = reg_info
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await async_get_clientsession(self._hass).post(
                     push_url, json=target_data
                 )
@@ -160,7 +169,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 HTTPStatus.CREATED,
                 HTTPStatus.ACCEPTED,
             ):
-                log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
+                log_rate_limits(self.hass, registration[ATTR_DEVICE_NAME], result)
                 return
 
             fallback_error = result.get("errorMessage", "Unknown error")
@@ -177,7 +186,7 @@ class MobileAppNotificationService(BaseNotificationService):
             if response.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.warning(message)
                 log_rate_limits(
-                    self.hass, entry_data[ATTR_DEVICE_NAME], result, logging.WARNING
+                    self.hass, registration[ATTR_DEVICE_NAME], result, logging.WARNING
                 )
             else:
                 _LOGGER.error(message)

@@ -84,7 +84,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
-        unique_id="KiB/sent",
+        unique_id="KiB/sec_sent",
         name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
@@ -100,7 +100,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
-        unique_id="packets/sent",
+        unique_id="packets/sec_sent",
         name=f"{DATA_RATE_PACKETS_PER_SECOND} sent",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,

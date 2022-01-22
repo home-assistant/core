@@ -19,14 +19,14 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Password",
-                    "username": "E-mail"
+                    "username": "Email"
                 },
                 "title": "Inserisci le tue informazioni di accesso Abode"
             },
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "E-mail"
+                    "username": "Email"
                 },
                 "title": "Inserisci le tue informazioni di accesso Abode"
             }

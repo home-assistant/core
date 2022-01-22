@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -26,7 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -42,6 +42,7 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
@@ -160,7 +161,7 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(script_entity.script.referenced_areas)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
@@ -170,25 +171,30 @@ async def async_setup(hass, config):
     if not await _async_process_config(hass, config, component):
         await async_get_blueprints(hass).async_populate()
 
-    async def reload_service(service):
+    async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
         if (conf := await component.async_prepare_reload()) is None:
             return
 
         await _async_process_config(hass, conf, component)
 
-    async def turn_on_service(service):
+    async def turn_on_service(service: ServiceCall) -> None:
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
-        for script_entity in await component.async_extract_from_service(service):
+        script_entities: list[ScriptEntity] = cast(
+            list[ScriptEntity], await component.async_extract_from_service(service)
+        )
+        for script_entity in script_entities:
             await script_entity.async_turn_on(
                 variables=variables, context=service.context, wait=False
             )
 
-    async def turn_off_service(service):
+    async def turn_off_service(service: ServiceCall) -> None:
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        script_entities = await component.async_extract_from_service(service)
+        script_entities: list[ScriptEntity] = cast(
+            list[ScriptEntity], await component.async_extract_from_service(service)
+        )
 
         if not script_entities:
             return
@@ -200,9 +206,12 @@ async def async_setup(hass, config):
             ]
         )
 
-    async def toggle_service(service):
+    async def toggle_service(service: ServiceCall) -> None:
         """Toggle a script."""
-        for script_entity in await component.async_extract_from_service(service):
+        script_entities: list[ScriptEntity] = cast(
+            list[ScriptEntity], await component.async_extract_from_service(service)
+        )
+        for script_entity in script_entities:
             await script_entity.async_toggle(context=service.context, wait=False)
 
     hass.services.async_register(
@@ -244,7 +253,7 @@ async def _async_process_config(hass, config, component) -> bool:
                 try:
                     raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
-                        Dict[str, Any],
+                        dict[str, Any],
                         await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:
@@ -266,7 +275,7 @@ async def _async_process_config(hass, config, component) -> bool:
 
     await component.async_add_entities(entities)
 
-    async def service_handler(service):
+    async def service_handler(service: ServiceCall) -> None:
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
         script_entity = component.get_entity(entity_id)

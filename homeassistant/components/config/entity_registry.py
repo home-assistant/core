@@ -10,15 +10,18 @@ from homeassistant.components.websocket_api.decorators import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_registry import DISABLED_USER, async_get_registry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntryDisabler,
+    async_get_registry,
+)
 
 
 async def async_setup(hass):
     """Enable the Entity Registry views."""
-    hass.components.websocket_api.async_register_command(websocket_list_entities)
-    hass.components.websocket_api.async_register_command(websocket_get_entity)
-    hass.components.websocket_api.async_register_command(websocket_update_entity)
-    hass.components.websocket_api.async_register_command(websocket_remove_entity)
+    websocket_api.async_register_command(hass, websocket_list_entities)
+    websocket_api.async_register_command(hass, websocket_get_entity)
+    websocket_api.async_register_command(hass, websocket_update_entity)
+    websocket_api.async_register_command(hass, websocket_remove_entity)
     return True
 
 
@@ -69,12 +72,20 @@ async def websocket_get_entity(hass, connection, msg):
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
-        vol.Optional("name"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("area_id"): vol.Any(str, None),
+        vol.Optional("device_class"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
-        vol.Optional("disabled_by"): vol.Any(DISABLED_USER, None),
+        vol.Optional("disabled_by"): vol.Any(
+            None,
+            vol.All(
+                vol.Coerce(RegistryEntryDisabler), RegistryEntryDisabler.USER.value
+            ),
+        ),
+        vol.Inclusive("options_domain", "entity_option"): str,
+        vol.Inclusive("options", "entity_option"): vol.Any(None, dict),
     }
 )
 async def websocket_update_entity(hass, connection, msg):
@@ -84,7 +95,8 @@ async def websocket_update_entity(hass, connection, msg):
     """
     registry = await async_get_registry(hass)
 
-    if msg["entity_id"] not in registry.entities:
+    entity_id = msg["entity_id"]
+    if entity_id not in registry.entities:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )
@@ -92,11 +104,11 @@ async def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    for key in ("name", "icon", "area_id", "disabled_by"):
+    for key in ("area_id", "device_class", "disabled_by", "icon", "name"):
         if key in msg:
             changes[key] = msg[key]
 
-    if "new_entity_id" in msg and msg["new_entity_id"] != msg["entity_id"]:
+    if "new_entity_id" in msg and msg["new_entity_id"] != entity_id:
         changes["new_entity_id"] = msg["new_entity_id"]
         if hass.states.get(msg["new_entity_id"]) is not None:
             connection.send_message(
@@ -109,7 +121,7 @@ async def websocket_update_entity(hass, connection, msg):
             return
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
-        entity = registry.entities[msg["entity_id"]]
+        entity = registry.entities[entity_id]
         if entity.device_id:
             device_registry = await hass.helpers.device_registry.async_get_registry()
             device = device_registry.async_get(entity.device_id)
@@ -123,12 +135,28 @@ async def websocket_update_entity(hass, connection, msg):
 
     try:
         if changes:
-            entry = registry.async_update_entity(msg["entity_id"], **changes)
+            registry.async_update_entity(entity_id, **changes)
     except ValueError as err:
         connection.send_message(
             websocket_api.error_message(msg["id"], "invalid_info", str(err))
         )
         return
+
+    if "new_entity_id" in msg:
+        entity_id = msg["new_entity_id"]
+
+    try:
+        if "options_domain" in msg:
+            registry.async_update_entity_options(
+                entity_id, msg["options_domain"], msg["options"]
+            )
+    except ValueError as err:
+        connection.send_message(
+            websocket_api.error_message(msg["id"], "invalid_info", str(err))
+        )
+        return
+
+    entry = registry.async_get(entity_id)
     result = {"entity_entry": _entry_ext_dict(entry)}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
@@ -168,15 +196,15 @@ async def websocket_remove_entity(hass, connection, msg):
 def _entry_dict(entry):
     """Convert entry to API format."""
     return {
+        "area_id": entry.area_id,
         "config_entry_id": entry.config_entry_id,
         "device_id": entry.device_id,
-        "area_id": entry.area_id,
         "disabled_by": entry.disabled_by,
-        "entity_id": entry.entity_id,
-        "name": entry.name,
-        "icon": entry.icon,
-        "platform": entry.platform,
         "entity_category": entry.entity_category,
+        "entity_id": entry.entity_id,
+        "icon": entry.icon,
+        "name": entry.name,
+        "platform": entry.platform,
     }
 
 
@@ -184,8 +212,11 @@ def _entry_dict(entry):
 def _entry_ext_dict(entry):
     """Convert entry to API format."""
     data = _entry_dict(entry)
-    data["original_name"] = entry.original_name
-    data["original_icon"] = entry.original_icon
-    data["unique_id"] = entry.unique_id
     data["capabilities"] = entry.capabilities
+    data["device_class"] = entry.device_class
+    data["options"] = entry.options
+    data["original_device_class"] = entry.original_device_class
+    data["original_icon"] = entry.original_icon
+    data["original_name"] = entry.original_name
+    data["unique_id"] = entry.unique_id
     return data

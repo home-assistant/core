@@ -6,9 +6,8 @@ from dataclasses import dataclass
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.humidifier import (
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
+    HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityDescription,
 )
@@ -39,7 +38,7 @@ HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
         humidity=DPCode.DEHUMIDITY_SET_VALUE,
-        device_class=DEVICE_CLASS_DEHUMIDIFIER,
+        device_class=HumidifierDeviceClass.DEHUMIDIFIER,
     ),
     # Humidifier
     # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
@@ -47,7 +46,7 @@ HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
         humidity=DPCode.HUMIDITY_SET,
-        device_class=DEVICE_CLASS_HUMIDIFIER,
+        device_class=HumidifierDeviceClass.HUMIDIFIER,
     ),
 }
 
@@ -165,7 +164,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             [
                 {
                     "code": self.entity_description.humidity,
-                    "value": self._set_humidity_type.scale_value(humidity),
+                    "value": self._set_humidity_type.scale_value_back(humidity),
                 }
             ]
         )

@@ -13,9 +13,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_SOURCES,
@@ -62,7 +65,11 @@ def _get_sources(config_entry):
     return _get_sources_from_dict(data)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config_entry.data[CONF_PORT]
 
@@ -93,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity.restore()
 
     @service.verify_domain_control(hass, DOMAIN)
-    async def async_service_handle(service_call):
+    async def async_service_handle(service_call: core.ServiceCall) -> None:
         """Handle for services."""
         entities = await platform.async_extract_from_service(service_call)
 

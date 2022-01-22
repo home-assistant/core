@@ -77,7 +77,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         super().__init__(hass, config)
         self._users: dict[str, str] | None = None
         self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True
+            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._init_lock = asyncio.Lock()
 

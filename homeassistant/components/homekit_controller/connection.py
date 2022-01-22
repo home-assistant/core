@@ -214,7 +214,11 @@ class HKDevice:
 
         devices = {}
 
-        for accessory in self.entity_map.accessories:
+        # Accessories need to be created in the correct order or setting up
+        # relationships with ATTR_VIA_DEVICE may fail.
+        for accessory in sorted(
+            self.entity_map.accessories, key=lambda accessory: accessory.aid
+        ):
             info = accessory.services.first(
                 service_type=ServicesTypes.ACCESSORY_INFORMATION,
             )
@@ -244,6 +248,7 @@ class HKDevice:
                 manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
                 model=info.value(CharacteristicsTypes.MODEL, ""),
                 sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+                hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
             )
 
             if accessory.aid != 1:

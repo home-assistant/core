@@ -53,6 +53,38 @@ async def test_plug(hass: HomeAssistant) -> None:
     plug.turn_on.reset_mock()
 
 
+async def test_plug_led(hass: HomeAssistant) -> None:
+    """Test a smart plug LED."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    plug = _mocked_plug()
+    with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "switch.my_plug"
+    state = hass.states.get(entity_id)
+
+    led_entity_id = f"{entity_id}_led"
+    led_state = hass.states.get(led_entity_id)
+    assert led_state.state == STATE_ON
+    assert led_state.name == f"{state.name} LED"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    plug.set_led.assert_called_once_with(False)
+    plug.set_led.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    plug.set_led.assert_called_once_with(True)
+    plug.set_led.reset_mock()
+
+
 async def test_plug_unique_id(hass: HomeAssistant) -> None:
     """Test a plug unique id."""
     already_migrated_config_entry = MockConfigEntry(
@@ -122,6 +154,35 @@ async def test_strip(hass: HomeAssistant) -> None:
         )
         strip.children[plug_id].turn_on.assert_called_once()
         strip.children[plug_id].turn_on.reset_mock()
+
+
+async def test_strip_led(hass: HomeAssistant) -> None:
+    """Test a smart strip LED."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    strip = _mocked_strip()
+    with _patch_discovery(device=strip), _patch_single_discovery(device=strip):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    # We should have a LED entity for the strip
+    led_entity_id = "switch.my_strip_led"
+    led_state = hass.states.get(led_entity_id)
+    assert led_state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    strip.set_led.assert_called_once_with(False)
+    strip.set_led.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    strip.set_led.assert_called_once_with(True)
+    strip.set_led.reset_mock()
 
 
 async def test_strip_unique_ids(hass: HomeAssistant) -> None:

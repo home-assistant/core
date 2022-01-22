@@ -25,24 +25,28 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
 
     def __init__(self, linter: PyLinter | None = None) -> None:
         super().__init__(linter)
-        self.current_module: str | None = None
+        self.current_package: str | None = None
 
     def visit_module(self, node: Module) -> None:
-        """Called when a Import node is visited."""
-        self.current_module = node.name
+        """Called when a Module node is visited."""
+        if node.package:
+            self.current_package = node.name
+        else:
+            # Strip name of the current module
+            self.current_package = node.name[: node.name.rfind(".")]
 
     def visit_import(self, node: Import) -> None:
         """Called when a Import node is visited."""
         for module, _alias in node.names:
-            if module.startswith(f"{self.current_module}."):
+            if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
 
     def visit_importfrom(self, node: ImportFrom) -> None:
         """Called when a ImportFrom node is visited."""
         if node.level is not None:
             return
-        if node.modname == self.current_module or node.modname.startswith(
-            f"{self.current_module}."
+        if node.modname == self.current_package or node.modname.startswith(
+            f"{self.current_package}."
         ):
             self.add_message("hass-relative-import", node=node)
 

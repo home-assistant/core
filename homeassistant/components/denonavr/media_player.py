@@ -17,7 +17,6 @@ from denonavr.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
@@ -35,10 +34,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
 from .config_flow import (
@@ -85,9 +86,9 @@ SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities: entity_platform.EntityPlatform.async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -141,7 +142,7 @@ class DenonDevice(MediaPlayerEntity):
         self,
         receiver: DenonAVR,
         unique_id: str,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
@@ -155,7 +156,6 @@ class DenonDevice(MediaPlayerEntity):
             name=config_entry.title,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
-        self._attr_source_list = receiver.input_func_list
 
         self._receiver = receiver
         self._update_audyssey = update_audyssey
@@ -245,6 +245,11 @@ class DenonDevice(MediaPlayerEntity):
     def state(self):
         """Return the state of the device."""
         return self._receiver.state
+
+    @property
+    def source_list(self):
+        """Return a list of available input sources."""
+        return self._receiver.input_func_list
 
     @property
     def is_volume_muted(self):

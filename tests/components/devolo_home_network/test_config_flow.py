@@ -99,14 +99,18 @@ async def test_zeroconf(hass: HomeAssistant):
 
     assert (
         context["title_placeholders"][CONF_NAME]
-        == DISCOVERY_INFO["hostname"].split(".", maxsplit=1)[0]
+        == DISCOVERY_INFO.hostname.split(".", maxsplit=1)[0]
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.devolo_home_network.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
 
     assert result2["title"] == "test"
     assert result2["data"] == {
@@ -131,13 +135,17 @@ async def test_abort_if_configued(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_IP_ADDRESS: IP,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.devolo_home_network.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IP_ADDRESS: IP,
+            },
+        )
+        await hass.async_block_till_done()
 
     # Abort on concurrent user flow
     result = await hass.config_entries.flow.async_init(
@@ -166,7 +174,7 @@ async def test_abort_if_configued(hass: HomeAssistant):
 @pytest.mark.usefixtures("mock_device")
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_validate_input(hass: HomeAssistant):
-    """Test input validaton."""
+    """Test input validation."""
     info = await config_flow.validate_input(hass, {CONF_IP_ADDRESS: IP})
     assert SERIAL_NUMBER in info
     assert TITLE in info

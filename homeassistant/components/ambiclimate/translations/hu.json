@@ -10,7 +10,7 @@
         },
         "error": {
             "follow_link": "K\u00e9rem, k\u00f6vesse a hivatkoz\u00e1st \u00e9s hiteles\u00edtse mag\u00e1t miel\u0151tt megnyomn\u00e1 a K\u00fcld\u00e9s gombot",
-            "no_token": "Nem hiteles\u00edtett Ambiclimate"
+            "no_token": "Ambiclimate-al nem siker\u00fclt a hiteles\u00edt\u00e9s"
         },
         "step": {
             "auth": {

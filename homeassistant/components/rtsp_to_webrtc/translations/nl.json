@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "hassio_confirm": {
+                "title": "RTSPtoWebRTC via Home Assistant add-on"
+            }
+        }
+    }
+}

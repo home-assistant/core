@@ -8,12 +8,14 @@ from aiohomekit.testing import FakePairing
 import pytest
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.homekit_controller.common import (
+    DeviceTestInfo,
+    EntityTestInfo,
     Helper,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -24,35 +26,31 @@ LIGHT_ON = ("lightbulb", "on")
 async def test_koogeek_ls1_setup(hass):
     """Test that a Koogeek LS1 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
-    # Assert that the entity is correctly added to the entity registry
-    entry = entity_registry.async_get("light.koogeek_ls1_20833f")
-    assert entry.unique_id == "homekit-AAAA011111111111-7"
-
-    helper = Helper(
-        hass, "light.koogeek_ls1_20833f", pairing, accessories[0], config_entry
+    await assert_devices_and_entities_created(
+        hass,
+        DeviceTestInfo(
+            unique_id="00:00:00:00:00:00",
+            name="Koogeek-LS1-20833F",
+            model="LS1",
+            manufacturer="Koogeek",
+            sw_version="2.2.15",
+            hw_version="",
+            serial_number="AAAA011111111111",
+            devices=[],
+            entities=[
+                EntityTestInfo(
+                    entity_id="light.koogeek_ls1_20833f",
+                    friendly_name="Koogeek-LS1-20833F",
+                    unique_id="homekit-AAAA011111111111-7",
+                    supported_features=SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+                    capabilities={"supported_color_modes": ["hs"]},
+                    state="off",
+                ),
+            ],
+        ),
     )
-    state = await helper.poll_and_get_state()
-
-    # Assert that the friendly name is detected correctly
-    assert state.attributes["friendly_name"] == "Koogeek-LS1-20833F"
-
-    # Assert that all optional features the LS1 supports are detected
-    assert state.attributes["supported_features"] == (
-        SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-    )
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(entry.device_id)
-    assert device.manufacturer == "Koogeek"
-    assert device.name == "Koogeek-LS1-20833F"
-    assert device.model == "LS1"
-    assert device.sw_version == "2.2.15"
-    assert device.via_device_id is None
 
 
 @pytest.mark.parametrize("failure_cls", [AccessoryDisconnectedError, EncryptionError])

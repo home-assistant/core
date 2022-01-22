@@ -25,6 +25,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_EXCLUDE,
@@ -36,6 +37,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 
@@ -73,8 +75,8 @@ IZONE_SERVICE_AIRFLOW_SCHEMA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigType, async_add_entities
-):
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
 
@@ -207,9 +209,9 @@ class ControllerDevice(ClimateEntity):
             """Handle controller data updates."""
             if ctrl is not self._controller:
                 return
+            if not self.available:
+                return
             self.async_write_ha_state()
-            for zone in self.zones.values():
-                zone.async_schedule_update_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -244,7 +246,8 @@ class ControllerDevice(ClimateEntity):
         self._available = available
         self.async_write_ha_state()
         for zone in self.zones.values():
-            zone.async_schedule_update_ha_state()
+            if zone.hass is not None:
+                zone.async_schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -491,9 +494,26 @@ class ZoneDevice(ClimateEntity):
         """Call on adding to hass."""
 
         @callback
+        def controller_update(ctrl: Controller) -> None:
+            """Handle controller data updates."""
+            if ctrl.device_uid != self._controller.unique_id:
+                return
+            if not self.available:
+                return
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCH_CONTROLLER_UPDATE, controller_update
+            )
+        )
+
+        @callback
         def zone_update(ctrl: Controller, zone: Zone) -> None:
             """Handle zone data updates."""
             if zone is not self._zone:
+                return
+            if not self.available:
                 return
             self._name = zone.name.title()
             self.async_write_ha_state()
@@ -506,11 +526,6 @@ class ZoneDevice(ClimateEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._controller.available
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self._controller.assumed_state
 
     @property
     def unique_id(self):

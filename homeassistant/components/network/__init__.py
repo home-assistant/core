@@ -5,27 +5,29 @@ from ipaddress import IPv4Address, IPv6Address, ip_interface
 import logging
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import util
-from .const import DOMAIN, IPV4_BROADCAST_ADDR
+from .const import IPV4_BROADCAST_ADDR, PUBLIC_TARGET_IP
 from .models import Adapter
-from .network import Network
+from .network import Network, async_get_network
 
-ZEROCONF_DOMAIN = "zeroconf"  # cannot import from zeroconf due to circular dep
 _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
 async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
-    network: Network = hass.data[DOMAIN]
+    network: Network = await async_get_network(hass)
     return network.adapters
 
 
 @bind_hass
-async def async_get_source_ip(hass: HomeAssistant, target_ip: str) -> str:
+async def async_get_source_ip(
+    hass: HomeAssistant, target_ip: str = PUBLIC_TARGET_IP
+) -> str:
     """Get the source ip for a target ip."""
     adapters = await async_get_adapters(hass)
     all_ipv4s = []
@@ -34,6 +36,16 @@ async def async_get_source_ip(hass: HomeAssistant, target_ip: str) -> str:
             all_ipv4s.extend([ipv4["address"] for ipv4 in ipv4s])
 
     source_ip = util.async_get_source_ip(target_ip)
+    if not all_ipv4s:
+        _LOGGER.warning(
+            "Because the system does not have any enabled IPv4 addresses, source address detection may be inaccurate"
+        )
+        if source_ip is None:
+            raise HomeAssistantError(
+                "Could not determine source ip because the system does not have any enabled IPv4 addresses and creating a socket failed"
+            )
+        return source_ip
+
     return source_ip if source_ip in all_ipv4s else all_ipv4s[0]
 
 
@@ -88,20 +100,10 @@ async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Add
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up network for Home Assistant."""
-
-    hass.data[DOMAIN] = network = Network(hass)
-    await network.async_setup()
-    if ZEROCONF_DOMAIN in config:
-        await network.async_migrate_from_zeroconf(config[ZEROCONF_DOMAIN])
-    network.async_configure()
-
-    _LOGGER.debug("Adapters: %s", network.adapters)
-
     # Avoid circular issue: http->network->websocket_api->http
     from .websocket import (  # pylint: disable=import-outside-toplevel
         async_register_websocket_commands,
     )
 
     async_register_websocket_commands(hass)
-
     return True

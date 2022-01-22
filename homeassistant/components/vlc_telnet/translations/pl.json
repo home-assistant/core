@@ -14,6 +14,9 @@
         },
         "flow_title": "{host}",
         "step": {
+            "hassio_confirm": {
+                "description": "Czy chcesz si\u0119 po\u0142\u0105czy\u0107 z dodatkiem {addon}?"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Has\u0142o"

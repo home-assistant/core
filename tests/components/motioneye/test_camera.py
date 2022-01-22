@@ -75,7 +75,7 @@ async def test_setup_camera(hass: HomeAssistant) -> None:
 
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
-    assert entity_state.state == "idle"
+    assert entity_state.state == "streaming"
     assert entity_state.attributes.get("friendly_name") == TEST_CAMERA_NAME
 
 
@@ -192,7 +192,7 @@ async def test_setup_camera_new_data_without_streaming(hass: HomeAssistant) -> N
     await setup_mock_motioneye_config_entry(hass, client=client)
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
-    assert entity_state.state == "idle"
+    assert entity_state.state == "streaming"
 
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_VIDEO_STREAMING] = False
@@ -414,9 +414,9 @@ async def test_set_text_overlay_bad_entity_identifier(hass: HomeAssistant) -> No
     }
 
     client.reset_mock()
-    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
-    await hass.async_block_till_done()
-    assert not client.async_set_camera.called
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+        await hass.async_block_till_done()
 
 
 async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:

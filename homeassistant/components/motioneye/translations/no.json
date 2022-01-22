@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Stream URL-mal",
                     "webhook_set": "Konfigurer motionEye webhooks for \u00e5 rapportere hendelser til Home Assistant",
                     "webhook_set_overwrite": "Overskriv ukjente webhooks"
                 }

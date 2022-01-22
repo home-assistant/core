@@ -13,6 +13,7 @@ from homeassistant.components.number import (
     DEFAULT_STEP,
     NumberEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -21,13 +22,22 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -61,6 +71,7 @@ def validate_config(config):
 
 _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -86,14 +97,21 @@ DISCOVERY_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT number through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, async_add_entities, config)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT number dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -111,6 +129,7 @@ async def _async_setup_entity(
 class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     """representation of an MQTT number."""
 
+    _entity_id_format = number.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_NUMBER_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -133,9 +152,15 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         """(Re)Setup the entity."""
         self._optimistic = config[CONF_OPTIMISTIC]
 
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._templates = {
+            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
+                config.get(CONF_COMMAND_TEMPLATE), entity=self
+            ).async_render,
+            CONF_VALUE_TEMPLATE: MqttValueTemplate(
+                config.get(CONF_VALUE_TEMPLATE),
+                entity=self,
+            ).async_render_with_possible_json_value,
+        }
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -144,10 +169,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(payload)
+            payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
             try:
                 if payload == self._config[CONF_PAYLOAD_RESET]:
                     num_value = None
@@ -186,6 +208,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
                         "topic": self._config.get(CONF_STATE_TOPIC),
                         "msg_callback": message_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )
@@ -224,6 +247,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
         if value.is_integer():
             current_number = int(value)
+        payload = self._templates[CONF_COMMAND_TEMPLATE](current_number)
 
         if self._optimistic:
             self._current_number = current_number
@@ -232,9 +256,10 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
-            current_number,
+            payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     @property

@@ -49,7 +49,7 @@ MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", AwesomeVersionStrategy.SI
 MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_MYSQL_ROWNUM = AwesomeVersion("5.8.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.32.1", AwesomeVersionStrategy.SIMPLEVER)
+MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_SQLITE_ROWNUM = AwesomeVersion("3.25.0", AwesomeVersionStrategy.SIMPLEVER)
 
 # This is the maximum time after the recorder ends the session
@@ -66,7 +66,10 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 
 @contextmanager
 def session_scope(
-    *, hass: HomeAssistant | None = None, session: Session | None = None
+    *,
+    hass: HomeAssistant | None = None,
+    session: Session | None = None,
+    exception_filter: Callable[[Exception], bool] | None = None,
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
@@ -81,11 +84,12 @@ def session_scope(
         if session.get_transaction():
             need_rollback = True
             session.commit()
-    except Exception as err:
+    except Exception as err:  # pylint: disable=broad-except
         _LOGGER.error("Error executing query: %s", err)
         if need_rollback:
             session.rollback()
-        raise
+        if not exception_filter or not exception_filter(err):
+            raise
     finally:
         session.close()
 
@@ -295,7 +299,7 @@ def _warn_unsupported_dialect(dialect):
         "Starting with Home Assistant 2022.2 this will prevent the recorder from "
         "starting. Please migrate your database to a supported software before then",
         dialect,
-        "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.32.1",
+        "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
 
 
@@ -455,3 +459,32 @@ def perodic_db_cleanups(instance: Recorder):
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
             connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
+
+
+@contextmanager
+def write_lock_db_sqlite(instance: Recorder):
+    """Lock database for writes."""
+
+    with instance.engine.connect() as connection:
+        # Execute sqlite to create a wal checkpoint
+        # This is optional but makes sure the backup is going to be minimal
+        connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
+        # Create write lock
+        _LOGGER.debug("Lock database")
+        connection.execute(text("BEGIN IMMEDIATE;"))
+        try:
+            yield
+        finally:
+            _LOGGER.debug("Unlock database")
+            connection.execute(text("END;"))
+
+
+def async_migration_in_progress(hass: HomeAssistant) -> bool:
+    """Determine is a migration is in progress.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    return hass.data[DATA_INSTANCE].migration_in_progress
