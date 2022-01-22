@@ -154,15 +154,16 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
 
     @property
     def extra_state_attributes(self):
-        """Return the optional state attributes."""
+        """Return the extra state attributes.
+
+        is_locked (bool): Indicates whether the operating lock of the room operating panel is active.
+        lock_available (bool): Specifies whether a code is requested when the room operating unit is unlocked.
+        """
         data = super().extra_state_attributes or {}
-        data["islocked"] = self.coordinator.data[self.heat_area_id].get(
+        data["is_locked"] = self.coordinator.data[self.heat_area_id].get(
             "ISLOCKED", False
         )
         data["lock_available"] = self.coordinator.data[self.heat_area_id].get(
             "LOCK_AVAILABLE", False
-        )
-        data["block_hc"] = self.coordinator.data[self.heat_area_id].get(
-            "BLOCK_HC", False
         )
         return data
