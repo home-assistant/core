@@ -1049,7 +1049,7 @@ minio==5.0.10
 mitemp_bt==0.0.5
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.8
+motionblinds==0.5.10
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
