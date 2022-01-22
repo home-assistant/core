@@ -132,8 +132,9 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
         )
 
         self.coordinator.data[self.heat_area_id]["HEATAREA_MODE"] = heat_area_mode
+        is_cooling = self.coordinator.get_cooling()
         if heat_area_mode == 1:
-            if self.coordinator.get_cooling():
+            if is_cooling:
                 self.coordinator.data[self.heat_area_id][
                     "T_TARGET"
                 ] = self.coordinator.data[self.heat_area_id]["T_COOL_DAY"]
@@ -142,7 +143,7 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
                     "T_TARGET"
                 ] = self.coordinator.data[self.heat_area_id]["T_HEAT_DAY"]
         elif heat_area_mode == 2:
-            if self.coordinator.get_cooling():
+            if is_cooling:
                 self.coordinator.data[self.heat_area_id][
                     "T_TARGET"
                 ] = self.coordinator.data[self.heat_area_id]["T_COOL_NIGHT"]
