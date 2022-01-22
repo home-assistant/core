@@ -2338,7 +2338,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 
 async def test_valid_device_class(hass, mqtt_mock):
-    """Test the setting of a valid sensor class."""
+    """Test the setting of a valid device class."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
@@ -2358,7 +2358,7 @@ async def test_valid_device_class(hass, mqtt_mock):
 
 
 async def test_invalid_device_class(hass, mqtt_mock):
-    """Test the setting of an invalid sensor class."""
+    """Test the setting of an invalid device class."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,

@@ -1,8 +1,8 @@
 """Support for Tasmota device discovery."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Awaitable, Callable
 
 from hatasmota.discovery import (
     TasmotaDiscovery,

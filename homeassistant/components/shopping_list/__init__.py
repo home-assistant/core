@@ -6,8 +6,9 @@ import uuid
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import http, websocket_api
+from homeassistant.components import frontend, http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
@@ -77,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up shopping list from config flow."""
 
     async def add_item_service(call: ServiceCall) -> None:
@@ -161,22 +162,30 @@ async def async_setup_entry(hass, config_entry):
     hass.http.register_view(UpdateShoppingListItemView)
     hass.http.register_view(ClearCompletedItemsView)
 
-    hass.components.frontend.async_register_built_in_panel(
-        "shopping-list", "shopping_list", "mdi:cart"
+    frontend.async_register_built_in_panel(
+        hass, "shopping-list", "shopping_list", "mdi:cart"
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_ITEMS, websocket_handle_items, SCHEMA_WEBSOCKET_ITEMS
+    websocket_api.async_register_command(
+        hass,
+        WS_TYPE_SHOPPING_LIST_ITEMS,
+        websocket_handle_items,
+        SCHEMA_WEBSOCKET_ITEMS,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_ADD_ITEM, websocket_handle_add, SCHEMA_WEBSOCKET_ADD_ITEM
+    websocket_api.async_register_command(
+        hass,
+        WS_TYPE_SHOPPING_LIST_ADD_ITEM,
+        websocket_handle_add,
+        SCHEMA_WEBSOCKET_ADD_ITEM,
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
         websocket_handle_update,
         SCHEMA_WEBSOCKET_UPDATE_ITEM,
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS,
         websocket_handle_clear,
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,

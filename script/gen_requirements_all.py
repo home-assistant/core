@@ -61,10 +61,6 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
-# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
-# https://github.com/home-assistant/core/issues/61756
-pillow==8.2.0
-
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
@@ -79,15 +75,15 @@ h11>=0.12.0
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
 
-# gRPC 1.32+ currently causes issues on ARMv7, see:
-# https://github.com/home-assistant/core/issues/40148
-# Newer versions of some other libraries pin a higher version of grpcio,
-# so those also need to be kept at an old version until the grpcio pin
-# is reverted, see:
-# https://github.com/home-assistant/core/issues/53427
-grpcio==1.31.0
-google-cloud-pubsub==2.1.0
-google-api-core<=1.31.2
+# gRPC is an implicit dependency that we want to make explicit so we manage
+# upgrades intentionally. It is a large package to build from source and we
+# want to ensure we have wheels built.
+grpcio==1.43.0
+
+# libcst >=0.4.0 requires a newer Rust than we currently have available,
+# thus our wheels builds fail. This pins it to the last working version,
+# which at this point satisfies our needs.
+libcst==0.3.23
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -113,12 +109,14 @@ regex==2021.8.28
 # can remove after httpx/httpcore updates its anyio version pin
 anyio>=3.3.1
 
-# websockets 10.0 is broken with AWS
-# https://github.com/aaugustin/websockets/issues/1065
-websockets==9.1
-
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
+
+# Prevent dependency conflicts between sisyphus-control and aioambient
+# until upper bounds for sisyphus-control have been updated
+# https://github.com/jkeljo/sisyphus-control/issues/6
+python-engineio>=3.13.1,<4.0
+python-socketio>=4.6.0,<5.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -136,22 +134,12 @@ def has_tests(module: str):
     """Test if a module has tests.
 
     Module format: homeassistant.components.hue
-    Test if exists: tests/components/hue
+    Test if exists: tests/components/hue/__init__.py
     """
-    path = Path(module.replace(".", "/").replace("homeassistant", "tests"))
-    if not path.exists():
-        return False
-
-    if not path.is_dir():
-        return True
-
-    # Dev environments might have stale directories around
-    # from removed tests. Check for that.
-    content = [f.name for f in path.glob("*")]
-
-    # Directories need to contain more than `__pycache__`
-    # to exist in Git and so be seen by CI.
-    return content != ["__pycache__"]
+    path = (
+        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+    )
+    return path.exists()
 
 
 def explore_module(package, explore_children):

@@ -143,6 +143,13 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Sense HAT sensor platform."""
+    _LOGGER.warning(
+        "The Enviro pHAT integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     try:
         envirophat = importlib.import_module("envirophat")
     except OSError:

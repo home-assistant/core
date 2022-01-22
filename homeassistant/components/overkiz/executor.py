@@ -1,15 +1,14 @@
 """Class for helpers and communication with the OverKiz API."""
 from __future__ import annotations
 
-import logging
-from typing import Any, cast
+from typing import Any
 from urllib.parse import urlparse
 
 from pyoverkiz.models import Command, Device
+from pyoverkiz.types import StateType as OverkizStateType
 
+from .const import LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OverkizExecutor:
@@ -37,11 +36,11 @@ class OverkizExecutor:
         """Return True if a command exists in a list of commands."""
         return self.select_command(*commands) is not None
 
-    def select_state(self, *states: str) -> str | None:
+    def select_state(self, *states: str) -> OverkizStateType:
         """Select first existing active state in a list of states."""
         for state in states:
             if current_state := self.device.states[state]:
-                return cast(str, current_state.value)
+                return current_state.value
 
         return None
 
@@ -49,11 +48,11 @@ class OverkizExecutor:
         """Return True if a state exists in self."""
         return self.select_state(*states) is not None
 
-    def select_attribute(self, *attributes: str) -> str | None:
+    def select_attribute(self, *attributes: str) -> OverkizStateType:
         """Select first existing active state in a list of states."""
         for attribute in attributes:
             if current_attribute := self.device.attributes[attribute]:
-                return cast(str, current_attribute.value)
+                return current_attribute.value
 
         return None
 
@@ -66,7 +65,7 @@ class OverkizExecutor:
                 "Home Assistant",
             )
         except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.error(exception)
+            LOGGER.error(exception)
             return
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here

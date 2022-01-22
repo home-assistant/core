@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +24,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _schema_with_defaults(username="", host="", port=80, path="/", ssl=False):
+def _schema_with_defaults(
+    username="", host="", port=80, path="/", ssl=False, verify_ssl=True
+):
     return vol.Schema(
         {
             vol.Required(CONF_USERNAME, default=username): str,
@@ -31,6 +34,7 @@ def _schema_with_defaults(username="", host="", port=80, path="/", ssl=False):
             vol.Required(CONF_PORT, default=port): cv.port,
             vol.Required(CONF_PATH, default=path): str,
             vol.Required(CONF_SSL, default=ssl): bool,
+            vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
         },
         extra=vol.ALLOW_EXTRA,
     )
@@ -80,6 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_PORT],
                         user_input[CONF_PATH],
                         user_input[CONF_SSL],
+                        user_input[CONF_VERIFY_SSL],
                     ),
                 )
 
@@ -111,14 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _finish_config(self, user_input):
         """Finish the configuration setup."""
-        session = async_get_clientsession(self.hass)
-        octoprint = OctoprintClient(
-            user_input[CONF_HOST],
-            session,
-            user_input[CONF_PORT],
-            user_input[CONF_SSL],
-            user_input[CONF_PATH],
-        )
+        octoprint = self._get_octoprint_client(user_input)
         octoprint.set_api_key(user_input[CONF_API_KEY])
 
         try:
@@ -183,14 +181,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_auth_key(self, user_input: dict):
         """Get application api key."""
-        session = async_get_clientsession(self.hass)
-        octoprint = OctoprintClient(
-            user_input[CONF_HOST],
-            session,
-            user_input[CONF_PORT],
-            user_input[CONF_SSL],
-            user_input[CONF_PATH],
-        )
+        octoprint = self._get_octoprint_client(user_input)
 
         try:
             user_input[CONF_API_KEY] = await octoprint.request_app_key(
@@ -203,6 +194,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     flow_id=self.flow_id, user_input=user_input
                 )
             )
+
+    def _get_octoprint_client(self, user_input: dict) -> OctoprintClient:
+        """Build an octoprint client from the user_input."""
+        verify_ssl = user_input.get(CONF_VERIFY_SSL, True)
+        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
+        return OctoprintClient(
+            user_input[CONF_HOST],
+            session,
+            user_input[CONF_PORT],
+            user_input[CONF_SSL],
+            user_input[CONF_PATH],
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

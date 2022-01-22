@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
+from . import AugustData
 from .const import DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     async_add_entities([AugustLock(data, lock) for lock in data.locks])
 
 
@@ -45,12 +46,23 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         self._attr_unique_id = f"{self._device_id:s}_lock"
         self._update_from_data()
 
+    @property
+    def _hyper_bridge(self):
+        """Check if the lock has a paired hyper bridge."""
+        return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
+
     async def async_lock(self, **kwargs):
         """Lock the device."""
+        if self._data.activity_stream.pubnub.connected:
+            await self._data.async_lock_async(self._device_id, self._hyper_bridge)
+            return
         await self._call_lock_operation(self._data.async_lock)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
+        if self._data.activity_stream.pubnub.connected:
+            await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
+            return
         await self._call_lock_operation(self._data.async_unlock)
 
     async def _call_lock_operation(self, lock_operation):

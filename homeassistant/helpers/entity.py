@@ -35,7 +35,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
@@ -43,7 +43,7 @@ from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from . import entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
-from .event import Event, async_track_entity_registry_updated_event
+from .event import async_track_entity_registry_updated_event
 from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)

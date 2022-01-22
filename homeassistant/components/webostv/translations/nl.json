@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken, zet uw TV aan of controleer het ip adres"
+        },
+        "step": {
+            "user": {
+                "title": "Verbinding maken met webOS TV"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "Apparaat is gevraagd om in te schakelen"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_retrieve": "Kan de lijst met bronnen niet ophalen. Zorg ervoor dat het apparaat is ingeschakeld",
+            "script_not_found": "Script niet gevonden"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "sources": "Bronnenlijst"
+                },
+                "description": "Selecteer ingeschakelde bronnen"
+            }
+        }
+    }
+}

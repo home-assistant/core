@@ -4,7 +4,13 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
-from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.const import (
+    CONF_CONDITION,
+    CONF_ENTITY_ID,
+    CONF_FOR,
+    CONF_STATE,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity import get_device_class
@@ -301,9 +307,9 @@ def async_condition_from_config(
     else:
         stat = "off"
     state_config = {
-        condition.CONF_CONDITION: "state",
-        condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        condition.CONF_STATE: stat,
+        CONF_CONDITION: "state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_STATE: stat,
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]

@@ -70,6 +70,12 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the available CO2 sensors."""
+    _LOGGER.warning(
+        "The MH-Z19 CO2 Sensor integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     try:
         co2sensor.read_mh_z19(config.get(CONF_SERIAL_DEVICE))

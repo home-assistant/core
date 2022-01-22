@@ -40,6 +40,13 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Piglow Light platform."""
+    _LOGGER.warning(
+        "The Piglow integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != "54":
         _LOGGER.error("A Piglow device was not found")
         return

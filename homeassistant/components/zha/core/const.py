@@ -211,8 +211,9 @@ MFG_CLUSTER_ID_START = 0xFC00
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
-PRESET_SCHEDULE = "schedule"
-PRESET_COMPLEX = "complex"
+PRESET_SCHEDULE = "Schedule"
+PRESET_COMPLEX = "Complex"
+PRESET_TEMP_MANUAL = "Temporary manual"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"

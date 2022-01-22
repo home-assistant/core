@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SENSE_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
-    trends_coordinator = DataUpdateCoordinator(
+    trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"Sense Trends {email}",

@@ -11,6 +11,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher, intent
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .config_flow import HangoutsFlowHandler  # noqa: F401
@@ -57,9 +58,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hangouts bot component."""
-    if (config := config.get(DOMAIN)) is None:
+    if (conf := config.get(DOMAIN)) is None:
         hass.data[DOMAIN] = {
             CONF_INTENTS: {},
             CONF_DEFAULT_CONVERSATIONS: [],
@@ -68,11 +69,9 @@ async def async_setup(hass, config):
         return True
 
     hass.data[DOMAIN] = {
-        CONF_INTENTS: config[CONF_INTENTS],
-        CONF_DEFAULT_CONVERSATIONS: config[CONF_DEFAULT_CONVERSATIONS],
-        CONF_ERROR_SUPPRESSED_CONVERSATIONS: config[
-            CONF_ERROR_SUPPRESSED_CONVERSATIONS
-        ],
+        CONF_INTENTS: conf[CONF_INTENTS],
+        CONF_DEFAULT_CONVERSATIONS: conf[CONF_DEFAULT_CONVERSATIONS],
+        CONF_ERROR_SUPPRESSED_CONVERSATIONS: conf[CONF_ERROR_SUPPRESSED_CONVERSATIONS],
     }
 
     if (

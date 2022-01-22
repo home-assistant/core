@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for hygrostat_conf in config[DOMAIN]:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "humidifier", DOMAIN, hygrostat_conf, config
+                hass, Platform.HUMIDIFIER, DOMAIN, hygrostat_conf, config
             )
         )
 

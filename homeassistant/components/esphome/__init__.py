@@ -1,11 +1,12 @@
 """Support for esphome devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Any, Callable, Generic, NamedTuple, TypeVar, cast, overload
+from typing import Any, Generic, NamedTuple, TypeVar, cast, overload
 
 from aioesphomeapi import (
     APIClient,

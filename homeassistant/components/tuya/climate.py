@@ -148,8 +148,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._attr_temperature_unit = TEMP_CELSIUS
             if any(
-                "f" in device.status.get(dpcode, "").lower()
+                "f" in device.status[dpcode].lower()
                 for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
+                if isinstance(device.status.get(dpcode), str)
             ):
                 self._attr_temperature_unit = TEMP_FAHRENHEIT
 

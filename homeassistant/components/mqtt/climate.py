@@ -101,6 +101,7 @@ CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_STATE_TEMPLATE = "power_state_template"
 CONF_POWER_STATE_TOPIC = "power_state_topic"
 CONF_PRECISION = "precision"
+# CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
 CONF_SEND_IF_OFF = "send_if_off"
 CONF_SWING_MODE_COMMAND_TEMPLATE = "swing_mode_command_template"
 CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
@@ -200,7 +201,7 @@ TOPIC_KEYS = (
 )
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
-PLATFORM_SCHEMA = SCHEMA_BASE.extend(
+_PLATFORM_SCHEMA_BASE = SCHEMA_BASE.extend(
     {
         vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
@@ -248,6 +249,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
         vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
         vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
         vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
         vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
@@ -279,7 +281,19 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+PLATFORM_SCHEMA = vol.All(
+    # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+    cv.deprecated(CONF_SEND_IF_OFF),
+    _PLATFORM_SCHEMA_BASE,
+)
+
+_DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
+
+DISCOVERY_SCHEMA = vol.All(
+    # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
+    cv.deprecated(CONF_SEND_IF_OFF),
+    _DISCOVERY_SCHEMA_BASE,
+)
 
 
 async def async_setup_platform(
@@ -704,6 +718,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 # optimistic mode
                 setattr(self, attr, temp)
 
+            # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
             if (
                 self._config[CONF_SEND_IF_OFF]
                 or self._current_operation != HVAC_MODE_OFF
@@ -746,6 +761,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
+        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
             payload = self._command_templates[CONF_SWING_MODE_COMMAND_TEMPLATE](
                 swing_mode
@@ -758,6 +774,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
+        # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.4
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
             payload = self._command_templates[CONF_FAN_MODE_COMMAND_TEMPLATE](fan_mode)
             await self._publish(CONF_FAN_MODE_COMMAND_TOPIC, payload)
@@ -768,12 +785,12 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set new operation mode."""
-        if self._current_operation == HVAC_MODE_OFF and hvac_mode != HVAC_MODE_OFF:
-            await self._publish(CONF_POWER_COMMAND_TOPIC, self._config[CONF_PAYLOAD_ON])
-        elif self._current_operation != HVAC_MODE_OFF and hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVAC_MODE_OFF:
             await self._publish(
                 CONF_POWER_COMMAND_TOPIC, self._config[CONF_PAYLOAD_OFF]
             )
+        else:
+            await self._publish(CONF_POWER_COMMAND_TOPIC, self._config[CONF_PAYLOAD_ON])
 
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](hvac_mode)
         await self._publish(CONF_MODE_COMMAND_TOPIC, payload)
@@ -794,25 +811,12 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set a preset mode."""
-        if preset_mode == self.preset_mode:
-            return
-
         # Track if we should optimistic update the state
-        optimistic_update = False
-
-        if self._away:
-            optimistic_update = optimistic_update or await self._set_away_mode(False)
-        elif preset_mode == PRESET_AWAY:
-            if self._hold:
-                await self._set_hold_mode(None)
-            optimistic_update = optimistic_update or await self._set_away_mode(True)
-        else:
-            hold_mode = preset_mode
-            if preset_mode == PRESET_NONE:
-                hold_mode = None
-            optimistic_update = optimistic_update or await self._set_hold_mode(
-                hold_mode
-            )
+        optimistic_update = await self._set_away_mode(preset_mode == PRESET_AWAY)
+        hold_mode = preset_mode
+        if preset_mode in [PRESET_NONE, PRESET_AWAY]:
+            hold_mode = None
+        optimistic_update = await self._set_hold_mode(hold_mode) or optimistic_update
 
         if optimistic_update:
             self.async_write_ha_state()

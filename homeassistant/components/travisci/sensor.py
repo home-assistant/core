@@ -8,6 +8,7 @@ from travispy import TravisPy
 from travispy.errors import TravisError
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
@@ -106,7 +107,8 @@ def setup_platform(
 
     except TravisError as ex:
         _LOGGER.error("Unable to connect to Travis CI service: %s", str(ex))
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: {}<br />"
             "You will need to restart hass after fixing."
             "".format(ex),

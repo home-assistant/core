@@ -94,7 +94,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
+            key=DPCode.SWITCH,
             name="Switch",
         ),
     ),
@@ -419,6 +419,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
             name="Switch 3",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Switch 4",
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(

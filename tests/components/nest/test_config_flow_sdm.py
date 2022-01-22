@@ -1,16 +1,18 @@
 """Test the Google Nest Device Access config flow."""
 
 import copy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from google_nest_sdm.exceptions import (
     AuthException,
     ConfigurationException,
     SubscriberException,
 )
+from google_nest_sdm.structure import Structure
 import pytest
 
 from homeassistant import config_entries, setup
+from homeassistant.components import dhcp
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -40,6 +42,11 @@ WEB_AUTH_DOMAIN = DOMAIN
 APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
+
+
+FAKE_DHCP_DATA = dhcp.DhcpServiceInfo(
+    ip="127.0.0.2", macaddress="00:11:22:33:44:55", hostname="fake_hostname"
+)
 
 
 @pytest.fixture
@@ -432,6 +439,41 @@ async def test_pubsub_subscription(hass, oauth, subscriber):
     assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
 
 
+async def test_pubsub_subscription_strip_whitespace(hass, oauth, subscriber):
+    """Check that project id has whitespace stripped on entry."""
+    assert await async_setup_configflow(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await oauth.async_pick_flow(result, APP_AUTH_DOMAIN)
+    await oauth.async_oauth_app_flow(result)
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await oauth.async_pubsub_flow(result)
+        entry = await oauth.async_finish_setup(
+            result, {"cloud_project_id": " " + CLOUD_PROJECT_ID + " "}
+        )
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    assert "token" in entry.data
+    entry.data["token"].pop("expires_at")
+    assert entry.unique_id == DOMAIN
+    assert entry.data["token"] == {
+        "refresh_token": "mock-refresh-token",
+        "access_token": "mock-access-token",
+        "type": "Bearer",
+        "expires_in": 60,
+    }
+    assert "subscriber_id" in entry.data
+    assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+
+
 async def test_pubsub_subscription_auth_failure(hass, oauth):
     """Check flow that creates a pub/sub subscription."""
     assert await async_setup_configflow(hass)
@@ -562,3 +604,203 @@ async def test_pubsub_subscriber_config_entry_reauth(hass, oauth, subscriber):
     assert entry.data["auth_implementation"] == APP_AUTH_DOMAIN
     assert entry.data["subscriber_id"] == SUBSCRIBER_ID
     assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+
+
+async def test_config_entry_title_from_home(hass, oauth, subscriber):
+    """Test that the Google Home name is used for the config entry title."""
+
+    device_manager = await subscriber.async_get_device_manager()
+    device_manager.add_structure(
+        Structure.MakeStructure(
+            {
+                "name": f"enterprise/{PROJECT_ID}/structures/some-structure-id",
+                "traits": {
+                    "sdm.structures.traits.Info": {
+                        "customName": "Example Home",
+                    },
+                },
+            }
+        )
+    )
+
+    assert await async_setup_configflow(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await oauth.async_pick_flow(result, APP_AUTH_DOMAIN)
+    await oauth.async_oauth_app_flow(result)
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await oauth.async_pubsub_flow(result)
+        entry = await oauth.async_finish_setup(
+            result, {"cloud_project_id": CLOUD_PROJECT_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert entry.title == "Example Home"
+    assert "token" in entry.data
+    assert "subscriber_id" in entry.data
+    assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+
+
+async def test_config_entry_title_multiple_homes(hass, oauth, subscriber):
+    """Test handling of multiple Google Homes authorized."""
+
+    device_manager = await subscriber.async_get_device_manager()
+    device_manager.add_structure(
+        Structure.MakeStructure(
+            {
+                "name": f"enterprise/{PROJECT_ID}/structures/id-1",
+                "traits": {
+                    "sdm.structures.traits.Info": {
+                        "customName": "Example Home #1",
+                    },
+                },
+            }
+        )
+    )
+    device_manager.add_structure(
+        Structure.MakeStructure(
+            {
+                "name": f"enterprise/{PROJECT_ID}/structures/id-2",
+                "traits": {
+                    "sdm.structures.traits.Info": {
+                        "customName": "Example Home #2",
+                    },
+                },
+            }
+        )
+    )
+
+    assert await async_setup_configflow(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await oauth.async_pick_flow(result, APP_AUTH_DOMAIN)
+    await oauth.async_oauth_app_flow(result)
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await oauth.async_pubsub_flow(result)
+        entry = await oauth.async_finish_setup(
+            result, {"cloud_project_id": CLOUD_PROJECT_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert entry.title == "Example Home #1, Example Home #2"
+
+
+async def test_title_failure_fallback(hass, oauth):
+    """Test exception handling when determining the structure names."""
+    assert await async_setup_configflow(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await oauth.async_pick_flow(result, APP_AUTH_DOMAIN)
+    await oauth.async_oauth_app_flow(result)
+
+    mock_subscriber = AsyncMock(FakeSubscriber)
+    mock_subscriber.async_get_device_manager.side_effect = AuthException()
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=mock_subscriber,
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await oauth.async_pubsub_flow(result)
+        entry = await oauth.async_finish_setup(
+            result, {"cloud_project_id": CLOUD_PROJECT_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    assert "token" in entry.data
+    assert "subscriber_id" in entry.data
+    assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+
+
+async def test_structure_missing_trait(hass, oauth, subscriber):
+    """Test handling the case where a structure has no name set."""
+
+    device_manager = await subscriber.async_get_device_manager()
+    device_manager.add_structure(
+        Structure.MakeStructure(
+            {
+                "name": f"enterprise/{PROJECT_ID}/structures/id-1",
+                # Missing Info trait
+                "traits": {},
+            }
+        )
+    )
+
+    assert await async_setup_configflow(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await oauth.async_pick_flow(result, APP_AUTH_DOMAIN)
+    await oauth.async_oauth_app_flow(result)
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await oauth.async_pubsub_flow(result)
+        entry = await oauth.async_finish_setup(
+            result, {"cloud_project_id": CLOUD_PROJECT_ID}
+        )
+        await hass.async_block_till_done()
+
+    # Fallback to default name
+    assert entry.title == "OAuth for Apps"
+
+
+async def test_dhcp_discovery_without_config(hass, oauth):
+    """Exercise discovery dhcp with no config present (can't run)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "missing_configuration"
+
+
+async def test_dhcp_discovery(hass, oauth):
+    """Discover via dhcp when config is present."""
+    assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+
+    # DHCP discovery invokes the config flow
+    result = await oauth.async_pick_flow(result, WEB_AUTH_DOMAIN)
+    await oauth.async_oauth_web_flow(result)
+    entry = await oauth.async_finish_setup(result)
+    assert entry.title == "OAuth for Web"
+
+    # Discovery does not run once configured
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"

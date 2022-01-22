@@ -52,21 +52,6 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
-DEVICE_CLASS_TUYA_BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
-DEVICE_CLASS_TUYA_BASIC_NIGHTVISION = "tuya__basic_nightvision"
-DEVICE_CLASS_TUYA_DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
-DEVICE_CLASS_TUYA_IPC_WORK_MODE = "tuya__ipc_work_mode"
-DEVICE_CLASS_TUYA_LED_TYPE = "tuya__led_type"
-DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
-DEVICE_CLASS_TUYA_MOTION_SENSITIVITY = "tuya__motion_sensitivity"
-DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
-DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
-DEVICE_CLASS_TUYA_STATUS = "tuya__status"
-DEVICE_CLASS_TUYA_FINGERBOT_MODE = "tuya__fingerbot_mode"
-DEVICE_CLASS_TUYA_VACUUM_CISTERN = "tuya__vacuum_cistern"
-DEVICE_CLASS_TUYA_VACUUM_COLLECTION = "tuya__vacuum_collection"
-DEVICE_CLASS_TUYA_VACUUM_MODE = "tuya__vacuum_mode"
-
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
@@ -80,6 +65,7 @@ TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
@@ -96,6 +82,25 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
+
+
+class TuyaDeviceClass(StrEnum):
+    """Tuya specific device classes, used for translations."""
+
+    BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
+    BASIC_NIGHTVISION = "tuya__basic_nightvision"
+    DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
+    FINGERBOT_MODE = "tuya__fingerbot_mode"
+    IPC_WORK_MODE = "tuya__ipc_work_mode"
+    LED_TYPE = "tuya__led_type"
+    LIGHT_MODE = "tuya__light_mode"
+    MOTION_SENSITIVITY = "tuya__motion_sensitivity"
+    RECORD_MODE = "tuya__record_mode"
+    RELAY_STATUS = "tuya__relay_status"
+    STATUS = "tuya__status"
+    VACUUM_CISTERN = "tuya__vacuum_cistern"
+    VACUUM_COLLECTION = "tuya__vacuum_collection"
+    VACUUM_MODE = "tuya__vacuum_mode"
 
 
 class WorkMode(StrEnum):
@@ -116,6 +121,7 @@ class DPCode(StrEnum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALARM_MESSAGE = "alarm_message"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -210,6 +216,7 @@ class DPCode(StrEnum):
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
+    MASTER_MODE = "master_mode"  # alarm mode
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
@@ -218,6 +225,7 @@ class DPCode(StrEnum):
     MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
     MOTION_TRACKING = "motion_tracking"
+    MOVEMENT_DETECT_PIC = "movement_detect_pic"
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     PAUSE = "pause"
@@ -312,6 +320,7 @@ class DPCode(StrEnum):
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
+    TOTAL_FORWARD_ENERGY = "total_forward_energy"
     UV = "uv"  # UV sterilization
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"

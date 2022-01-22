@@ -19,14 +19,21 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def init_integration(hass: HomeAssistant, use_nickname=True) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, use_nickname=True, electric_vehicle=False
+) -> MockConfigEntry:
     """Set up the Mazda Connected Services integration in Home Assistant."""
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
     if not use_nickname:
         get_vehicles_fixture[0].pop("nickname")
+    if electric_vehicle:
+        get_vehicles_fixture[0]["isElectric"] = True
 
     get_vehicle_status_fixture = json.loads(
         load_fixture("mazda/get_vehicle_status.json")
+    )
+    get_ev_vehicle_status_fixture = json.loads(
+        load_fixture("mazda/get_ev_vehicle_status.json")
     )
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT)
@@ -42,6 +49,9 @@ async def init_integration(hass: HomeAssistant, use_nickname=True) -> MockConfig
     )
     client_mock.get_vehicles = AsyncMock(return_value=get_vehicles_fixture)
     client_mock.get_vehicle_status = AsyncMock(return_value=get_vehicle_status_fixture)
+    client_mock.get_ev_vehicle_status = AsyncMock(
+        return_value=get_ev_vehicle_status_fixture
+    )
     client_mock.lock_doors = AsyncMock()
     client_mock.unlock_doors = AsyncMock()
     client_mock.send_poi = AsyncMock()

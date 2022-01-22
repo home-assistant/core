@@ -1,9 +1,13 @@
 """Support for Envisalink sensors (shows panel info)."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_PARTITIONNAME,
@@ -17,8 +21,15 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Envisalink sensor devices."""
+    if not discovery_info:
+        return
     configured_partitions = discovery_info["partitions"]
 
     devices = []

@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -24,6 +25,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
+    MEDIA_TYPE_URL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_BROWSE_MEDIA,
@@ -38,11 +40,20 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from homeassistant.components.roku.const import (
+    ATTR_CONTENT_ID,
+    ATTR_FORMAT,
+    ATTR_KEYWORD,
+    ATTR_MEDIA_TYPE,
+    DOMAIN,
+    SERVICE_SEARCH,
+)
+from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_NAME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -99,6 +110,10 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, UPNP_SERIAL)}
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "b0:a7:37:96:4d:fb"),
+        (dr.CONNECTION_NETWORK_MAC, "b0:a7:37:96:4d:fa"),
+    }
     assert device_entry.manufacturer == "Roku"
     assert device_entry.model == "Roku 3"
     assert device_entry.name == "My Roku 3"
@@ -114,6 +129,7 @@ async def test_idle_setup(
     await setup_integration(hass, aioclient_mock, power=False)
 
     state = hass.states.get(MAIN_ENTITY_ID)
+    assert state
     assert state.state == STATE_STANDBY
 
 
@@ -145,6 +161,10 @@ async def test_tv_setup(
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, TV_SERIAL)}
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "d8:13:99:f8:b0:c6"),
+        (dr.CONNECTION_NETWORK_MAC, "d4:3a:2e:07:fd:cb"),
+    }
     assert device_entry.manufacturer == TV_MANUFACTURER
     assert device_entry.model == TV_MODEL
     assert device_entry.name == '58" Onn Roku TV'
@@ -440,7 +460,74 @@ async def test_services(
             blocking=True,
         )
 
-        launch_mock.assert_called_once_with("11")
+        launch_mock.assert_called_once_with("11", {})
+
+    with patch("homeassistant.components.roku.coordinator.Roku.launch") as launch_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+                ATTR_MEDIA_CONTENT_ID: "291097",
+                ATTR_MEDIA_EXTRA: {
+                    ATTR_MEDIA_TYPE: "movie",
+                    ATTR_CONTENT_ID: "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
+                },
+            },
+            blocking=True,
+        )
+
+        launch_mock.assert_called_once_with(
+            "291097",
+            {
+                "contentID": "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
+                "MediaType": "movie",
+            },
+        )
+
+    with patch("homeassistant.components.roku.coordinator.Roku.play_video") as pv_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+                ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/media.mp4",
+                ATTR_MEDIA_EXTRA: {
+                    ATTR_NAME: "Sent from HA",
+                    ATTR_FORMAT: "mp4",
+                },
+            },
+            blocking=True,
+        )
+
+        pv_mock.assert_called_once_with(
+            "https://awesome.tld/media.mp4",
+            {
+                "videoName": "Sent from HA",
+                "videoFormat": "mp4",
+            },
+        )
+
+    with patch("homeassistant.components.roku.coordinator.Roku.play_video") as pv_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+                ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+            },
+            blocking=True,
+        )
+
+        pv_mock.assert_called_once_with(
+            "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+            {
+                "MediaType": "hls",
+            },
+        )
 
     with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "discovery_started": "S'ha iniciat el descobriment"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -9,7 +10,16 @@
             "protect_version": "La versi\u00f3 m\u00ednima necess\u00e0ria \u00e9s la v1.20.0. Actualitza UniFi Protect i torna-ho a provar.",
             "unknown": "Error inesperat"
         },
+        "flow_title": "{name} ({ip_address})",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "description": "Vols configurar {name} ({ip_address})?"
+            },
             "reauth_confirm": {
                 "data": {
                     "host": "IP/amfitri\u00f3 del servidor d'UniFi Protect",

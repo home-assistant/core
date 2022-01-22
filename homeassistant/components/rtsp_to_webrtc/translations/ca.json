@@ -9,6 +9,10 @@
             "server_unreachable": "No s'ha pogut comunicar amb el servidor RTSPtoWebRTC. Consulta els registres per a m\u00e9s informaci\u00f3."
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti al servidor de RTSPtoWebRTC proporcionat pel complement: {addon}?",
+                "title": "RTSPtoWebRTC mitjan\u00e7ant el complement de Home Assistant"
+            },
             "user": {
                 "data": {
                     "server_url": "URL del servidor RTSPtoWebRTC exemple: https://exemple.com"

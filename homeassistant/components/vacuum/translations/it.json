@@ -16,7 +16,7 @@
     "state": {
         "_": {
             "cleaning": "Pulendo",
-            "docked": "In base",
+            "docked": "Agganciato",
             "error": "Errore",
             "idle": "Inattivo",
             "off": "Spento",

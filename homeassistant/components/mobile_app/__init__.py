@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
     )
 
     websocket_api.async_setup_commands(hass)

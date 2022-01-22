@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_CONTROLLER_ID,
@@ -224,9 +225,9 @@ PULSE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the IHC integration."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
     for index, controller_conf in enumerate(conf):
         if not ihc_setup(hass, config, controller_conf, index):
             return False

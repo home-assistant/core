@@ -89,7 +89,7 @@ async def async_setup_entry(
         probe = GrowattData(
             api, username, password, device["deviceSn"], device["deviceType"]
         )
-        sensor_descriptions = ()
+        sensor_descriptions: tuple[GrowattSensorEntityDescription, ...] = ()
         if device["deviceType"] == "inverter":
             sensor_descriptions = INVERTER_SENSOR_TYPES
         elif device["deviceType"] == "tlx":
