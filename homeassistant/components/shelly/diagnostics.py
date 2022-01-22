@@ -19,6 +19,7 @@ async def async_get_config_entry_diagnostics(
     data: dict = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
 
     device_settings: str | dict = "not initialized"
+    device_status: str | dict = "not initialized"
     if BLOCK in data:
         block_wrapper: BlockDeviceWrapper = data[BLOCK]
         device_info = {
@@ -32,7 +33,23 @@ async def async_get_config_entry_diagnostics(
                 for k, v in block_wrapper.device.settings.items()
                 if k in ["cloud", "coiot"]
             }
-
+            device_status = {
+                k: v
+                for k, v in block_wrapper.device.status.items()
+                if k
+                in [
+                    "update",
+                    "wifi_sta",
+                    "time",
+                    "has_update",
+                    "ram_total",
+                    "ram_free",
+                    "ram_lwm",
+                    "fs_size",
+                    "fs_free",
+                    "uptime",
+                ]
+            }
     else:
         rpc_wrapper: RpcDeviceWrapper = data[RPC]
         device_info = {
@@ -44,9 +61,18 @@ async def async_get_config_entry_diagnostics(
             device_settings = {
                 k: v for k, v in rpc_wrapper.device.config.items() if k in ["cloud"]
             }
+            device_status = {
+                k: v
+                for k, v in rpc_wrapper.device.status.items()
+                if k in ["sys", "wifi"]
+            }
+
+    if isinstance(device_status, dict):
+        device_status = async_redact_data(device_status, ["ssid"])
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": device_info,
         "device_settings": device_settings,
+        "device_status": device_status,
     }

@@ -33,6 +33,15 @@ async def test_block_config_entry_diagnostics(
             "sw_version": coap_wrapper.sw_version,
         },
         "device_settings": {"coiot": {"update_period": 15}},
+        "device_status": {
+            "update": {
+                "beta_version": "some_beta_version",
+                "has_update": True,
+                "new_version": "some_new_version",
+                "old_version": "some_old_version",
+                "status": "pending",
+            }
+        },
     }
 
 
@@ -60,4 +69,12 @@ async def test_rpc_config_entry_diagnostics(
             "sw_version": rpc_wrapper.sw_version,
         },
         "device_settings": {},
+        "device_status": {
+            "sys": {
+                "available_updates": {
+                    "beta": {"version": "some_beta_version"},
+                    "stable": {"version": "some_beta_version"},
+                }
+            }
+        },
     }
