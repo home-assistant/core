@@ -213,6 +213,7 @@ class MatrixBot:
                     "args": pieces[1:],
                 }
                 self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
+                self._join_rooms()
 
         # After single-word commands, check all regex commands in the room
         for command in self._expression_commands.get(room_id, []):
@@ -226,6 +227,7 @@ class MatrixBot:
                 "args": match.groupdict(),
             }
             self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
+            self._join_rooms()
 
     def _join_or_get_room(self, room_id_or_alias):
         """Join a room or get it, if we are already in the room.
