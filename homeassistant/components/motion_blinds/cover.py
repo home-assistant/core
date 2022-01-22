@@ -145,7 +145,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             manufacturer=MANUFACTURER,
             model=blind.blind_type,
             name=f"{blind.blind_type}-{blind.mac[12:]}",
-            via_device=(DOMAIN, config_entry.unique_id),
+            via_device=(DOMAIN, blind._gateway.mac),
         )
 
     @property
