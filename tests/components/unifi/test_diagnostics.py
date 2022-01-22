@@ -32,6 +32,13 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         "wired-tx_bytes": 5678000000,
     }
     device = {
+        "ethernet_table": [
+            {
+                "mac": "22:22:22:22:22:22",
+                "num_port": 2,
+                "name": "eth0",
+            }
+        ],
         "device_id": "mock-id",
         "ip": "10.0.1.1",
         "mac": "00:00:00:00:01:01",
@@ -41,6 +48,22 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         "port_overrides": [],
         "port_table": [
             {
+                "mac_table": [
+                    {
+                        "age": 1,
+                        "mac": "00:00:00:00:00:01",
+                        "static": False,
+                        "uptime": 3971792,
+                        "vlan": 1,
+                    },
+                    {
+                        "age": 1,
+                        "mac": "11:11:11:11:11:11",
+                        "static": True,
+                        "uptime": 0,
+                        "vlan": 0,
+                    },
+                ],
                 "media": "GE",
                 "name": "Port 1",
                 "port_idx": 1,
@@ -50,45 +73,6 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                 "poe_power": "2.56",
                 "poe_voltage": "53.40",
                 "portconf_id": "1a1",
-                "port_poe": True,
-                "up": True,
-            },
-            {
-                "media": "GE",
-                "name": "Port 2",
-                "port_idx": 2,
-                "poe_class": "Class 4",
-                "poe_enable": True,
-                "poe_mode": "auto",
-                "poe_power": "2.56",
-                "poe_voltage": "53.40",
-                "portconf_id": "1a2",
-                "port_poe": True,
-                "up": True,
-            },
-            {
-                "media": "GE",
-                "name": "Port 3",
-                "port_idx": 3,
-                "poe_class": "Unknown",
-                "poe_enable": False,
-                "poe_mode": "off",
-                "poe_power": "0.00",
-                "poe_voltage": "0.00",
-                "portconf_id": "1a3",
-                "port_poe": False,
-                "up": True,
-            },
-            {
-                "media": "GE",
-                "name": "Port 4",
-                "port_idx": 4,
-                "poe_class": "Unknown",
-                "poe_enable": False,
-                "poe_mode": "auto",
-                "poe_power": "0.00",
-                "poe_voltage": "0.00",
-                "portconf_id": "1a4",
                 "port_poe": True,
                 "up": True,
             },
@@ -129,7 +113,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
     )
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "config_entry": {
+        "config": {
             "controller": "**REDACTED**",
             "host": "1.2.3.4",
             "password": "**REDACTED**",
@@ -138,50 +122,78 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
             "username": "username",
             "verify_ssl": False,
         },
+        "options": {
+            "allow_bandwidth_sensors": True,
+            "allow_uptime_sensors": True,
+            "block_client": ["00:00:00:00:00:00"],
+        },
         "site_role": "admin",
         "entities": {
             str(Platform.DEVICE_TRACKER): {
-                CLIENT_TRACKER: ["00:00:00:00:00:01"],
-                DEVICE_TRACKER: ["00:00:00:00:01:01"],
+                CLIENT_TRACKER: ["00:00:00:00:00:00"],
+                DEVICE_TRACKER: ["00:00:00:00:00:01"],
             },
             str(Platform.SENSOR): {
-                RX_SENSOR: ["00:00:00:00:00:01"],
-                TX_SENSOR: ["00:00:00:00:00:01"],
-                UPTIME_SENSOR: ["00:00:00:00:00:01"],
+                RX_SENSOR: ["00:00:00:00:00:00"],
+                TX_SENSOR: ["00:00:00:00:00:00"],
+                UPTIME_SENSOR: ["00:00:00:00:00:00"],
             },
             str(Platform.SWITCH): {
-                BLOCK_SWITCH: ["00:00:00:00:00:01"],
+                BLOCK_SWITCH: ["00:00:00:00:00:00"],
                 DPI_SWITCH: ["5f976f4ae3c58f018ec7dff6"],
-                POE_SWITCH: ["00:00:00:00:00:01"],
+                POE_SWITCH: ["00:00:00:00:00:00"],
             },
         },
         "clients": {
-            "00:00:00:00:00:01": {
+            "00:00:00:00:00:00": {
                 "blocked": False,
                 "hostname": "client_1",
                 "ip": "10.0.0.1",
                 "is_wired": True,
                 "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
+                "mac": "00:00:00:00:00:00",
                 "name": "POE Client 1",
                 "oui": "Producer",
-                "sw_mac": "00:00:00:00:01:01",
+                "sw_mac": "00:00:00:00:00:01",
                 "sw_port": 1,
                 "wired-rx_bytes": 1234000000,
                 "wired-tx_bytes": 5678000000,
             }
         },
         "devices": {
-            "00:00:00:00:01:01": {
+            "00:00:00:00:00:01": {
+                "ethernet_table": [
+                    {
+                        "mac": "00:00:00:00:00:02",
+                        "num_port": 2,
+                        "name": "eth0",
+                    }
+                ],
                 "device_id": "mock-id",
                 "ip": "10.0.1.1",
-                "mac": "00:00:00:00:01:01",
+                "mac": "00:00:00:00:00:01",
                 "last_seen": 1562600145,
                 "model": "US16P150",
                 "name": "mock-name",
                 "port_overrides": [],
                 "port_table": [
                     {
+                        "mac_table": [
+                            {
+                                "age": 1,
+                                "mac": "00:00:00:00:00:00",
+                                "static": False,
+                                "uptime": 3971792,
+                                "vlan": 1,
+                            },
+                            {
+                                "age": 1,
+                                "mac": "**REDACTED**",
+                                "static": True,
+                                "uptime": 0,
+                                "vlan": 0,
+                            },
+                        ],
                         "media": "GE",
                         "name": "Port 1",
                         "port_idx": 1,
@@ -191,45 +203,6 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                         "poe_power": "2.56",
                         "poe_voltage": "53.40",
                         "portconf_id": "1a1",
-                        "port_poe": True,
-                        "up": True,
-                    },
-                    {
-                        "media": "GE",
-                        "name": "Port 2",
-                        "port_idx": 2,
-                        "poe_class": "Class 4",
-                        "poe_enable": True,
-                        "poe_mode": "auto",
-                        "poe_power": "2.56",
-                        "poe_voltage": "53.40",
-                        "portconf_id": "1a2",
-                        "port_poe": True,
-                        "up": True,
-                    },
-                    {
-                        "media": "GE",
-                        "name": "Port 3",
-                        "port_idx": 3,
-                        "poe_class": "Unknown",
-                        "poe_enable": False,
-                        "poe_mode": "off",
-                        "poe_power": "0.00",
-                        "poe_voltage": "0.00",
-                        "portconf_id": "1a3",
-                        "port_poe": False,
-                        "up": True,
-                    },
-                    {
-                        "media": "GE",
-                        "name": "Port 4",
-                        "port_idx": 4,
-                        "poe_class": "Unknown",
-                        "poe_enable": False,
-                        "poe_mode": "auto",
-                        "poe_power": "0.00",
-                        "poe_voltage": "0.00",
-                        "portconf_id": "1a4",
                         "port_poe": True,
                         "up": True,
                     },
