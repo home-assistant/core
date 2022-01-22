@@ -10,7 +10,7 @@ from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import DATA_CUSTOM_COMPONENTS, DATA_INTEGRATIONS
 from homeassistant.setup import async_setup_component
 
-from . import get_diagnostics_for_config_entry, get_diagnostics_for_device
+from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
 
 from tests.common import MockConfigEntry, mock_platform
 
@@ -85,7 +85,7 @@ async def test_download_diagnostics(hass, hass_client):
         for ccmp in hass.data[DATA_CUSTOM_COMPONENTS]
     }
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+    assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "home-assistant": hass_sys_info,
         "custom-components": custom_components,
         "integration-manifest": {
@@ -104,7 +104,7 @@ async def test_download_diagnostics(hass, hass_client):
         config_entry_id=config_entry.entry_id, identifiers={("test", "test")}
     )
 
-    assert await get_diagnostics_for_device(
+    assert await _get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     ) == {
         "home-assistant": hass_sys_info,
