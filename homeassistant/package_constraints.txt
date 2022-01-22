@@ -80,9 +80,12 @@ pandas==1.3.0
 # This is fixed in 2021.8.28
 regex==2021.8.28
 
-# anyio has a bug that was fixed in 3.3.1
-# can remove after httpx/httpcore updates its anyio version pin
-anyio>=3.3.1
+# httpx requires httpcore, and httpcore requires anyio, but the version constraints on
+# these requirements are quite loose. As these requirements have some outstanding issues
+# which may be addressed by version updates, we can tighten their minimum version
+# requirements here.
+httpcore>=0.14.5
+anyio>=3.5.0
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
