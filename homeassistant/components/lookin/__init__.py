@@ -18,7 +18,7 @@ from aiolookin import (
 )
 from aiolookin.models import UDPCommandType, UDPEvent
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -29,6 +29,10 @@ from .coordinator import LookinDataUpdateCoordinator, LookinPushCoordinator
 from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
+
+UDP_LOCK = "udp_lock"
+UDP_LISTENER = "udp_listener"
+UDP_SUBSCRIPTIONS = "udp_subscriptions"
 
 
 def _async_climate_updater(
@@ -53,6 +57,30 @@ def _async_remote_updater(
         return await lookin_protocol.get_remote(uuid)
 
     return _async_update
+
+
+async def async_start_udp_listener(hass: HomeAssistant) -> LookinUDPSubscriptions:
+    """Start the shared udp listener."""
+    domain_data = hass.data[DOMAIN]
+    if UDP_LOCK not in domain_data:
+        domain_data[UDP_LOCK] = asyncio.Lock()
+
+    async with domain_data[UDP_LOCK]:
+        if domain_data[UDP_LISTENER]:
+            lookin_udp_subs: LookinUDPSubscriptions = domain_data[UDP_SUBSCRIPTIONS]
+        else:
+            lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS] = LookinUDPSubscriptions()
+            domain_data[UDP_LISTENER] = await start_lookin_udp(lookin_udp_subs, None)
+        return lookin_udp_subs
+
+
+async def async_stop_udp_listener(hass: HomeAssistant) -> None:
+    """Stop the shared udp listener."""
+    domain_data = hass.data[DOMAIN]
+    async with domain_data[UDP_LOCK]:
+        domain_data[UDP_LISTENER]()
+        domain_data[UDP_LISTENER] = None
+        domain_data[UDP_SUBSCRIPTIONS] = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -111,14 +139,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         meteo.update_from_value(event.value)
         meteo_coordinator.async_set_updated_data(meteo)
 
-    lookin_udp_subs = LookinUDPSubscriptions()
+    lookin_udp_subs = await async_start_udp_listener(hass)
+
     entry.async_on_unload(
         lookin_udp_subs.subscribe_event(
             lookin_device.id, UDPCommandType.meteo, None, _async_meteo_push_update
         )
     )
-
-    entry.async_on_unload(await start_lookin_udp(lookin_udp_subs, lookin_device.id))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LookinData(
         lookin_udp_subs=lookin_udp_subs,
@@ -138,4 +165,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        await async_stop_udp_listener(hass)
+
     return unload_ok
