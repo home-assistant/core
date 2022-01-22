@@ -460,7 +460,7 @@ brottsplatskartan==0.0.1
 brunt==1.1.1
 
 # homeassistant.components.bsblan
-bsblan==0.4.0
+bsblan==0.5.0
 
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2.1
