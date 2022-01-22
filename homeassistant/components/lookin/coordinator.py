@@ -64,5 +64,7 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
         if self.update_interval is not None and self.push_coordinator.is_active(
             self.update_interval
         ):
-            return cast(dict, self.data)
-        return cast(dict, await super()._async_update_data())
+            data = self.data
+        else:
+            data = await super()._async_update_data()
+        return cast(dict, data)
