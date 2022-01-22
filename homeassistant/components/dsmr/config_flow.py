@@ -125,14 +125,14 @@ class DSMRConnection:
 
 
 async def _validate_dsmr_connection(
-    hass: core.HomeAssistant, data: dict[str, Any]
+    hass: core.HomeAssistant, data: dict[str, Any], is_rfxtrx: bool
 ) -> dict[str, str | None]:
     """Validate the user input allows us to connect."""
     conn = DSMRConnection(
         data.get(CONF_HOST),
         data[CONF_PORT],
         data[CONF_DSMR_VERSION],
-        data[CONF_IS_RFXTRX],
+        is_rfxtrx,
     )
 
     if not await conn.validate_connect(hass):
@@ -228,7 +228,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT): int,
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
-                vol.Required(CONF_IS_RFXTRX): bool,
             }
         )
         return self.async_show_form(
@@ -246,7 +245,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_selection = user_input[CONF_PORT]
             if user_selection == CONF_MANUAL_PATH:
                 self._dsmr_version = user_input[CONF_DSMR_VERSION]
-                self._is_rfxtrx = user_input[CONF_IS_RFXTRX]
                 return await self.async_step_setup_serial_manual_path()
 
             dev_path = await self.hass.async_add_executor_job(
@@ -256,7 +254,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             validate_data = {
                 CONF_PORT: dev_path,
                 CONF_DSMR_VERSION: user_input[CONF_DSMR_VERSION],
-                CONF_IS_RFXTRX: user_input[CONF_IS_RFXTRX],
             }
 
             data = await self.async_validate_dsmr(validate_data, errors)
@@ -275,7 +272,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_PORT): vol.In(list_of_ports),
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
-                vol.Required(CONF_IS_RFXTRX): bool,
             }
         )
         return self.async_show_form(
@@ -292,7 +288,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             validate_data = {
                 CONF_PORT: user_input[CONF_PORT],
                 CONF_DSMR_VERSION: self._dsmr_version,
-                CONF_IS_RFXTRX: self._is_rfxtrx,
             }
 
             errors: dict[str, str] = {}
@@ -313,9 +308,14 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = input_data
 
         try:
-            info = await _validate_dsmr_connection(self.hass, data)
+            try:
+                is_rfxtrx = False
+                info = await _validate_dsmr_connection(self.hass, data, is_rfxtrx)
+            except CannotCommunicate:
+                is_rfxtrx = True
+                info = await _validate_dsmr_connection(self.hass, data, is_rfxtrx)
 
-            data = {**data, **info}
+            data = {**data, **info, CONF_IS_RFXTRX: is_rfxtrx}
 
             if info[CONF_SERIAL_ID]:
                 await self.async_set_unique_id(info[CONF_SERIAL_ID])
