@@ -174,10 +174,10 @@ class Alpha2Climate(ClimateEntity):
                     self._data["T_TARGET"] = self._data["T_HEAT_NIGHT"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().device_state_attributes or {}
-        data["ISLOCKED"] = self._data.get("ISLOCKED", False)
-        data["LOCK_AVAILABLE"] = self._data.get("LOCK_AVAILABLE", False)
-        data["BLOCK_HC"] = self._data.get("BLOCK_HC", False)
+        data = super().extra_state_attributes or {}
+        data["islocked"] = self._data.get("ISLOCKED", False)
+        data["lock_available"] = self._data.get("LOCK_AVAILABLE", False)
+        data["block_hc"] = self._data.get("BLOCK_HC", False)
         return data
