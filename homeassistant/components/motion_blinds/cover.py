@@ -146,6 +146,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             model=blind.blind_type,
             name=f"{blind.blind_type}-{blind.mac[12:]}",
             via_device=(DOMAIN, blind._gateway.mac),
+            hw_version=blind.wireless_name,
         )
 
     @property
