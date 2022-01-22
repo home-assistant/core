@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.loader import DATA_CUSTOM_COMPONENTS, DATA_INTEGRATIONS
 from homeassistant.setup import async_setup_component
 
 from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
@@ -82,14 +81,10 @@ async def test_download_diagnostics(hass, hass_client):
     hass_sys_info = await async_get_system_info(hass)
     hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
     del hass_sys_info["user"]
-    custom_components = {
-        ccmp: hass.data[DATA_INTEGRATIONS][ccmp].manifest
-        for ccmp in hass.data[DATA_CUSTOM_COMPONENTS]
-    }
 
     assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "home_assistant": hass_sys_info,
-        "custom_components": custom_components,
+        "custom_components": {},
         "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
@@ -110,7 +105,7 @@ async def test_download_diagnostics(hass, hass_client):
         hass, hass_client, config_entry, device
     ) == {
         "home_assistant": hass_sys_info,
-        "custom_components": custom_components,
+        "custom_components": {},
         "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
