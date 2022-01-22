@@ -134,7 +134,8 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, service[SERVICE_ID])},
             manufacturer="Aussie Broadband",
             configuration_url=f"https://my.aussiebroadband.com.au/#/{service['name']}/{service[SERVICE_ID]}/",
-            name=f"{service['description']}",
+            name=service["description"],
+            model=service["name"],
         )
 
     @property
