@@ -168,16 +168,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Figure out setting temperature, use preferred unit or what is available
         if prefered_temperature_unit == TEMP_CELSIUS or self.find_dpcode(
-            DPCode.TEMP_SET, function=True
+            DPCode.TEMP_SET, prefer_function=True
         ):
             self._set_temperature = self.get_integer_type(
-                DPCode.TEMP_SET, function=True
+                DPCode.TEMP_SET, prefer_function=True
             )
         elif prefered_temperature_unit == TEMP_FAHRENHEIT or self.find_dpcode(
-            DPCode.TEMP_SET_F, function=True
+            DPCode.TEMP_SET_F, prefer_function=True
         ):
             self._set_temperature = self.get_integer_type(
-                DPCode.TEMP_SET_F, function=True
+                DPCode.TEMP_SET_F, prefer_function=True
             )
 
         # Get integer type data for the dpcode to set temperature, use
@@ -191,20 +191,20 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes = []
         self._hvac_to_tuya = {}
-        if enum_type := self.get_enum_type(DPCode.MODE, function=True):
+        if enum_type := self.get_enum_type(DPCode.MODE, prefer_function=True):
             self._attr_hvac_modes = [HVAC_MODE_OFF]
             for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items():
                 if tuya_mode in enum_type.range:
                     self._hvac_to_tuya[ha_mode] = tuya_mode
                     self._attr_hvac_modes.append(ha_mode)
-        elif self.find_dpcode(DPCode.SWITCH, function=True):
+        elif self.find_dpcode(DPCode.SWITCH, prefer_function=True):
             self._attr_hvac_modes = [
                 HVAC_MODE_OFF,
                 description.switch_only_hvac_mode,
             ]
 
         # Determine dpcode to use for setting the humidity
-        if int_type := self.get_integer_type(DPCode.HUMIDITY_SET, function=True):
+        if int_type := self.get_integer_type(DPCode.HUMIDITY_SET, prefer_function=True):
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
             self._set_humidity = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
@@ -226,17 +226,17 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 DPCode.SWITCH_HORIZONTAL,
                 DPCode.SWITCH_VERTICAL,
             ),
-            function=True,
+            prefer_function=True,
         ):
             self._attr_supported_features |= SUPPORT_SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
-            if self.find_dpcode((DPCode.SHAKE, DPCode.SWING), function=True):
+            if self.find_dpcode((DPCode.SHAKE, DPCode.SWING), prefer_function=True):
                 self._attr_swing_modes.append(SWING_ON)
 
-            if self.find_dpcode(DPCode.SWITCH_HORIZONTAL, function=True):
+            if self.find_dpcode(DPCode.SWITCH_HORIZONTAL, prefer_function=True):
                 self._attr_swing_modes.append(SWING_HORIZONTAL)
 
-            if self.find_dpcode(DPCode.SWITCH_VERTICAL, function=True):
+            if self.find_dpcode(DPCode.SWITCH_VERTICAL, prefer_function=True):
                 self._attr_swing_modes.append(SWING_VERTICAL)
 
     async def async_added_to_hass(self) -> None:
@@ -244,7 +244,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         await super().async_added_to_hass()
 
         # Log unknown modes
-        if enum_type := self.get_enum_type(DPCode.MODE, function=True):
+        if enum_type := self.get_enum_type(DPCode.MODE, prefer_function=True):
             for tuya_mode in enum_type.range:
                 if tuya_mode not in TUYA_HVAC_TO_HA:
                     LOGGER.warning(

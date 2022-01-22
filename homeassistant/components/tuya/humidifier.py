@@ -97,17 +97,19 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         # Determine main switch DPCode
         self._switch_dpcode = self.find_dpcode(
-            description.dpcode or DPCode(description.key), function=True
+            description.dpcode or DPCode(description.key), prefer_function=True
         )
 
         # Determine humidity parameters
-        if int_type := self.get_integer_type(description.humidity, function=True):
+        if int_type := self.get_integer_type(
+            description.humidity, prefer_function=True
+        ):
             self._set_humiditye = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
 
         # Determine mode support and provided modes
-        if enum_type := self.get_enum_type(DPCode.MODE, function=True):
+        if enum_type := self.get_enum_type(DPCode.MODE, prefer_function=True):
             self._attr_supported_features |= SUPPORT_MODES
             self._attr_available_modes = enum_type.range
 

@@ -346,21 +346,25 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
         # Determine DPCodes
         self._color_mode_dpcode = self.find_dpcode(
-            description.color_mode, function=True
+            description.color_mode, prefer_function=True
         )
 
-        if int_type := self.get_integer_type(description.brightness, function=True):
+        if int_type := self.get_integer_type(
+            description.brightness, prefer_function=True
+        ):
             self._brightness = int_type
             self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             self._brightness_max = self.get_integer_type(description.brightness_max)
             self._brightness_min = self.get_integer_type(description.brightness_min)
 
-        if int_type := self.get_integer_type(description.color_temp, function=True):
+        if int_type := self.get_integer_type(
+            description.color_temp, prefer_function=True
+        ):
             self._color_temp = int_type
             self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
 
         if (
-            dpcode := self.find_dpcode(description.color_data, function=True)
+            dpcode := self.find_dpcode(description.color_data, prefer_function=True)
         ) and self.get_dptype(dpcode) == DPType.JSON:
             self._color_data_dpcode = dpcode
             self._attr_supported_color_modes.add(COLOR_MODE_HS)

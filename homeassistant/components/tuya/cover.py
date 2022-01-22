@@ -195,11 +195,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = 0
 
         # Check if this cover is based on a switch or has controls
-        if self.find_dpcode(DPCode(description.key), function=True):
+        if self.find_dpcode(DPCode(description.key), prefer_function=True):
             if device.function[description.key].type == "Boolean":
                 self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
             elif enum_type := self.get_enum_type(
-                DPCode(description.key), function=True
+                DPCode(description.key), prefer_function=True
             ):
                 if description.open_instruction_value in enum_type.range:
                     self._attr_supported_features |= SUPPORT_OPEN
@@ -209,7 +209,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     self._attr_supported_features |= SUPPORT_STOP
 
         # Determine type to use for setting the position
-        if int_type := self.get_integer_type(description.set_position, function=True):
+        if int_type := self.get_integer_type(
+            description.set_position, prefer_function=True
+        ):
             self._attr_supported_features |= SUPPORT_SET_POSITION
             self._set_position = int_type
             # Set as default, unless overwritten below
@@ -221,7 +223,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         # Determine type to use for setting the tilt
         if int_type := self.get_integer_type(
-            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL), function=True
+            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL), prefer_function=True
         ):
             self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
             self._tilt = int_type
@@ -277,7 +279,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         value: bool | str = True
-        if self.get_enum_type(DPCode(self.entity_description.key), function=True):
+        if self.get_enum_type(
+            DPCode(self.entity_description.key), prefer_function=True
+        ):
             value = self.entity_description.open_instruction_value
 
         commands: list[dict[str, str | int]] = [
@@ -299,7 +303,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         value: bool | str = False
-        if self.get_enum_type(DPCode(self.entity_description.key), function=True):
+        if self.get_enum_type(
+            DPCode(self.entity_description.key), prefer_function=True
+        ):
             value = self.entity_description.close_instruction_value
 
         commands: list[dict[str, str | int]] = [

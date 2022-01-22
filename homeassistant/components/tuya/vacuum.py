@@ -89,22 +89,22 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
-        if self.find_dpcode(DPCode.PAUSE, function=True):
+        if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._supported_features |= SUPPORT_PAUSE
 
-        if self.find_dpcode(DPCode.SWITCH_CHARGE, function=True):
+        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
             self._supported_features |= SUPPORT_RETURN_HOME
 
-        if self.find_dpcode(DPCode.SEEK, function=True):
+        if self.find_dpcode(DPCode.SEEK, prefer_function=True):
             self._supported_features |= SUPPORT_LOCATE
 
-        if self.find_dpcode(DPCode.STATUS, function=True):
+        if self.find_dpcode(DPCode.STATUS, prefer_function=True):
             self._supported_features |= SUPPORT_STATE | SUPPORT_STATUS
 
-        if self.find_dpcode(DPCode.POWER, function=True):
+        if self.find_dpcode(DPCode.POWER, prefer_function=True):
             self._supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
-        if self.find_dpcode(DPCode.POWER_GO, function=True):
+        if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
             self._supported_features |= SUPPORT_STOP | SUPPORT_START
 
         if enum_type := self.get_enum_type(DPCode.SUCTION):
