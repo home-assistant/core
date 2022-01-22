@@ -884,7 +884,6 @@ tests/components/speedtestdotnet/* @rohankapoorcom @engrbm87
 homeassistant/components/spider/* @peternijssen
 tests/components/spider/* @peternijssen
 homeassistant/components/splunk/* @Bre77
-tests/components/splunk/* @Bre77
 homeassistant/components/spotify/* @frenck
 tests/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
