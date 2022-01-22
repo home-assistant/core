@@ -276,17 +276,16 @@ class ConfiguredDoorBird:
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
-        if not self.webhook_is_registered(url, favs=favs):
-            self.device.change_favorite("http", f"Home Assistant ({event})", url)
+        if self.webhook_is_registered(url, favs=favs):
             return
 
-        if not self.get_webhook_id(url, favs=favs):
+        self.device.change_favorite("http", f"Home Assistant ({event})", url)
+        if not self.webhook_is_registered(url):
             _LOGGER.warning(
                 'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
                 url,
                 event,
             )
-            return
 
     def webhook_is_registered(self, url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""
