@@ -427,11 +427,15 @@ class SonosSpeaker:
 
         self.speaker_activity(f"{event.service.service_type} subscription")
 
+        # Skip if this update is an unchanged subset of the previous event
+        if last_event := self._last_event_cache.get(event.service.service_type):
+            if event.variables.items() <= last_event.items():
+                return
+
+        # Save most recently processed event variables for cache and diagnostics
+        self._last_event_cache[event.service.service_type] = event.variables
         dispatcher = self._event_dispatchers[event.service.service_type]
         dispatcher(event)
-
-        # Save most recent event variables for diagnostics
-        self._last_event_cache[event.service.service_type] = event.variables
 
     @callback
     def async_dispatch_alarms(self, event: SonosEvent) -> None:
