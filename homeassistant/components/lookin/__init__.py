@@ -85,7 +85,7 @@ async def async_stop_udp_listener(hass: HomeAssistant) -> None:
             for entry in hass.config_entries.async_entries(DOMAIN)
             if entry.state == ConfigEntryState.LOADED
         ]
-        if len(loaded_entries) >= 1:
+        if len(loaded_entries) > 1:
             return
         domain_data[UDP_LISTENER]()
         domain_data[UDP_LISTENER] = None
