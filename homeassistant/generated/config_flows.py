@@ -281,6 +281,7 @@ FLOWS = {
         "p1_monitor",
         "panasonic_viera",
         "peco",
+        "philips_air_purifier",
         "philips_js",
         "pi_hole",
         "picnic",

@@ -1,0 +1,11 @@
+{
+  "domain": "philips_air_purifier",
+  "name": "Philips Air Purifier",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/philips_air_purifier",
+  "requirements": [],
+  "codeowners": [
+    "@mfrister"
+  ],
+  "iot_class": "local_push"
+}
