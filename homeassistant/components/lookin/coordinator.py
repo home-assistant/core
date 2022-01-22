@@ -70,7 +70,11 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data if only if we have not been received a push inside the interval."""
         interval = self.update_interval
-        if interval is not None and self.push_coordinator.active(interval):
+        if (
+            interval is not None
+            and self.last_update_success
+            and self.push_coordinator.active(interval)
+        ):
             data = self.data
         else:
             data = await super()._async_update_data()
