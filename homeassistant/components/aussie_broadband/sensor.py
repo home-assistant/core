@@ -131,6 +131,7 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{service[SERVICE_ID]}:{description.key}"
         self._attr_name = f"{service['name']} {description.name}"
         self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, service[SERVICE_ID])},
             manufacturer="Aussie Broadband",
             configuration_url=f"https://my.aussiebroadband.com.au/#/{service['name']}/{service[SERVICE_ID]}/",
