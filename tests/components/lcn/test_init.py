@@ -10,6 +10,7 @@ from pypck.connection import (
 import pytest
 
 from homeassistant import config_entries
+import homeassistant.components.lcn
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
@@ -36,6 +37,18 @@ async def test_async_setup_entry(hass, entry, lcn_connection):
 
     assert entry.state == ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_async_setup_existing_entry(hass, entry, lcn_connection):
+    """Test setup of an existing entry."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ConfigEntryState.LOADED
+
+    result = await homeassistant.components.lcn.async_setup_entry(hass, entry)
+    assert not result
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ConfigEntryState.LOADED
 
 
 async def test_async_setup_multiple_entries(hass, entry, entry2):

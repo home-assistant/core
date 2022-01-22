@@ -53,6 +53,32 @@ async def test_step_import_existing_host(hass):
     assert mock_entry.data == CONNECTION_DATA
 
 
+async def test_step_import_existing_host_v1(hass):
+    """Test for update of config_entry if imported host (v1) already exists."""
+    # Create config entry with version 1 and add it to hass
+    mock_entry = MockConfigEntry(
+        version=1,
+        title="pchk",
+        domain=DOMAIN,
+        data=CONNECTION_DATA,
+    )
+    mock_entry.add_to_hass(hass)
+    # Inititalize a config flow with different data but same host name
+    imported_data = CONNECTION_DATA.copy()
+    imported_data[CONF_SK_NUM_TRIES] = 3
+    with patch("pypck.connection.PchkConnectionManager.async_connect"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=imported_data
+        )
+    await hass.async_block_till_done()
+
+    # Check if first config entry was updated with new imported data
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "existing_configuration_updated"
+    assert mock_entry.source == config_entries.SOURCE_IMPORT
+    assert mock_entry.data == imported_data
+
+
 async def test_step_import_non_existing_entry(hass):
     """Test for update of config_entry if imported host already exists."""
     # Inititalize a config flow with missing connection parameters and no corresponding entry

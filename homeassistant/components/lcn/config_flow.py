@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import pypck
 import voluptuous as vol
@@ -136,7 +137,9 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=f"{host_name}", data=data, options=options)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         data_schema = vol.Schema(
             {
@@ -189,7 +192,9 @@ class LcnOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the LCN options."""
         return await self.async_step_host_options(user_input)
 
