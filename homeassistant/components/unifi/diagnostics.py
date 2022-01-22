@@ -5,7 +5,6 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info
 
 from .const import DOMAIN as UNIFI_DOMAIN
 
@@ -17,7 +16,6 @@ async def async_get_config_entry_diagnostics(
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     diag: dict[str, Any] = {}
 
-    diag["home_assistant"] = await async_get_system_info(hass)
     diag["config_entry"] = dict(config_entry.data)
     diag["site_role"] = controller.site_role
     diag["entities"] = controller.entities
