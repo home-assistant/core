@@ -63,14 +63,16 @@ async def async_start_udp_listener(hass: HomeAssistant) -> LookinUDPSubscription
     """Start the shared udp listener."""
     domain_data = hass.data[DOMAIN]
     if UDP_LOCK not in domain_data:
-        domain_data[UDP_LOCK] = asyncio.Lock()
+        udp_lock = domain_data[UDP_LOCK] = asyncio.Lock()
+    else:
+        udp_lock = domain_data[UDP_LOCK]
 
-    async with domain_data[UDP_LOCK]:
-        if domain_data[UDP_LISTENER]:
-            lookin_udp_subs: LookinUDPSubscriptions = domain_data[UDP_SUBSCRIPTIONS]
-        else:
+    async with udp_lock:
+        if not domain_data[UDP_LISTENER]:
             lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS] = LookinUDPSubscriptions()
             domain_data[UDP_LISTENER] = await start_lookin_udp(lookin_udp_subs, None)
+        else:
+            lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS]
         return lookin_udp_subs
 
 
@@ -78,6 +80,13 @@ async def async_stop_udp_listener(hass: HomeAssistant) -> None:
     """Stop the shared udp listener."""
     domain_data = hass.data[DOMAIN]
     async with domain_data[UDP_LOCK]:
+        loaded_entries = [
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.state == ConfigEntryState.LOADED
+        ]
+        if len(loaded_entries) >= 1:
+            return
         domain_data[UDP_LISTENER]()
         domain_data[UDP_LISTENER] = None
         domain_data[UDP_SUBSCRIPTIONS] = None
@@ -85,7 +94,7 @@ async def async_stop_udp_listener(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up lookin from a config entry."""
-
+    hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     lookin_protocol = LookInHttpProtocol(
         api_uri=f"http://{host}", session=async_get_clientsession(hass)
@@ -147,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LookinData(
+    hass.data[DOMAIN][entry.entry_id] = LookinData(
         lookin_udp_subs=lookin_udp_subs,
         lookin_device=lookin_device,
         meteo_coordinator=meteo_coordinator,
@@ -166,12 +175,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
-        await async_stop_udp_listener(hass)
-
+    await async_stop_udp_listener(hass)
     return unload_ok
