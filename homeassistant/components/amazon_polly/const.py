@@ -33,7 +33,6 @@ CONF_SAMPLE_RATE: Final = "sample_rate"
 CONF_TEXT_TYPE: Final = "text_type"
 
 SUPPORTED_VOICES: Final[list[str]] = [
-    "Aditi",
     "Aditi",  # Hindi
     "Amy",
     "Astrid",  # Swedish
