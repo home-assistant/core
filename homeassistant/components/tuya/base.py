@@ -5,7 +5,7 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any
+from typing import Any, Literal, overload
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
@@ -151,24 +151,80 @@ class TuyaEntity(Entity):
         """Return if the device is available."""
         return self.device.online
 
+    @overload
     def find_dpcode(
-        self, dpcodes: DPCode | tuple[DPCode, ...] | None, prefer_function: bool = False
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+        dptype: Literal[DPType.ENUM],
+    ) -> EnumTypeData | None:
+        ...
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+        dptype: Literal[DPType.INTEGER],
+    ) -> IntegerTypeData | None:
+        ...
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
     ) -> DPCode | None:
+        ...
+
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+        dptype: DPType = None,
+    ) -> DPCode | EnumTypeData | IntegerTypeData | None:
         """Find a matching DP code available on for this device."""
         if dpcodes is None:
             return None
 
-        if not isinstance(dpcodes, tuple):
+        if isinstance(dpcodes, str):
+            dpcodes = (DPCode(dpcodes),)
+        elif not isinstance(dpcodes, tuple):
             dpcodes = (dpcodes,)
 
-        for dpcode in dpcodes:
-            # If not a function try to use status
-            if not prefer_function and dpcode in self.device.status:
-                return dpcode
+        order = ["status_range", "function"]
+        if prefer_function:
+            order = ["function", "status_range"]
 
-            # If a function, or (if status not found), try to use function
-            if dpcode in self.device.function:
-                return dpcode
+        # When we are not looking for a specific datatype, we can append status for
+        # searching
+        if not dptype:
+            order.append("status")
+
+        for dpcode in dpcodes:
+            for key in order:
+                if dpcode in getattr(self.device, key):
+                    if (
+                        dptype == DPType.ENUM
+                        and getattr(self.device, key)[dpcode].type == DPType.ENUM
+                    ):
+                        return EnumTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+
+                    if (
+                        dptype == DPType.INTEGER
+                        and getattr(self.device, key)[dpcode].type == DPType.INTEGER
+                    ):
+                        return IntegerTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+
+                    return dpcode
 
         return None
 
@@ -185,56 +241,6 @@ class TuyaEntity(Entity):
         for key in order:
             if dpcode in getattr(self.device, key):
                 return DPType(getattr(self.device, key)[dpcode].type)
-
-        return None
-
-    def get_integer_type(
-        self, dpcodes: DPCode | tuple[DPCode, ...] | None, prefer_function: bool = False
-    ) -> IntegerTypeData | None:
-        """Return IntegerTypeData for a found matching DPCode.
-
-        By default we find anything we can use, however we prefer to use status
-        when function is False and prefer function if function is True.
-        """
-        if (dpcode := self.find_dpcode(dpcodes, prefer_function)) is None:
-            return None
-
-        order = ["status_range", "function"]
-        if prefer_function:
-            order = ["function", "status_range"]
-        for key in order:
-            if (
-                dpcode in getattr(self.device, key)
-                and getattr(self.device, key).get(dpcode).type == "Integer"
-            ):
-                return IntegerTypeData.from_json(
-                    dpcode, getattr(self.device, key)[dpcode].values
-                )
-
-        return None
-
-    def get_enum_type(
-        self, dpcodes: DPCode | tuple[DPCode, ...] | None, prefer_function: bool = False
-    ) -> EnumTypeData | None:
-        """Return EnumTypeData for a found matching DPCode.
-
-        By default we find anything we can use, however we prefer to use status
-        when function is False and prefer function if function is True.
-        """
-        if (dpcode := self.find_dpcode(dpcodes, prefer_function)) is None:
-            return None
-
-        order = ["status_range", "function"]
-        if prefer_function:
-            order = ["function", "status_range"]
-        for key in order:
-            if (
-                dpcode in getattr(self.device, key)
-                and getattr(self.device, key).get(dpcode).type == "Enum"
-            ):
-                return EnumTypeData.from_json(
-                    dpcode, getattr(self.device, key)[dpcode].values
-                )
 
         return None
 

@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 @dataclass
@@ -101,15 +101,17 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         )
 
         # Determine humidity parameters
-        if int_type := self.get_integer_type(
-            description.humidity, prefer_function=True
+        if int_type := self.find_dpcode(
+            description.humidity, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._set_humiditye = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
 
         # Determine mode support and provided modes
-        if enum_type := self.get_enum_type(DPCode.MODE, prefer_function=True):
+        if enum_type := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._attr_supported_features |= SUPPORT_MODES
             self._attr_available_modes = enum_type.range
 

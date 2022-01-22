@@ -349,16 +349,20 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             description.color_mode, prefer_function=True
         )
 
-        if int_type := self.get_integer_type(
-            description.brightness, prefer_function=True
+        if int_type := self.find_dpcode(
+            description.brightness, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._brightness = int_type
             self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-            self._brightness_max = self.get_integer_type(description.brightness_max)
-            self._brightness_min = self.get_integer_type(description.brightness_min)
+            self._brightness_max = self.find_dpcode(
+                description.brightness_max, dptype=DPType.INTEGER
+            )
+            self._brightness_min = self.find_dpcode(
+                description.brightness_min, dptype=DPType.INTEGER
+            )
 
-        if int_type := self.get_integer_type(
-            description.color_temp, prefer_function=True
+        if int_type := self.find_dpcode(
+            description.color_temp, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._color_temp = int_type
             self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)

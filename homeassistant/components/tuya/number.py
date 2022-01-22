@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
@@ -290,7 +290,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-        if int_type := self.get_integer_type(DPCode(description.key)):
+        if int_type := self.find_dpcode(
+            description.key, dptype=DPType.INTEGER, prefer_function=True
+        ):
             self._number = int_type
             self._attr_max_value = self._number.max_scaled
             self._attr_min_value = self._number.min_scaled

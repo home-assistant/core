@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 class Mode(StrEnum):
@@ -105,7 +105,9 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         # Determine supported  modes
-        if supported_modes := self.get_enum_type(DPCode(description.key)):
+        if supported_modes := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
             if Mode.HOME in supported_modes.range:
                 self._attr_supported_features |= SUPPORT_ALARM_ARM_HOME
 
@@ -118,7 +120,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if not (status := self.device.status.get(DPCode(self.entity_description.key))):
+        if not (status := self.device.status.get(self.entity_description.key)):
             return None
         return STATE_MAPPING.get(status)
 

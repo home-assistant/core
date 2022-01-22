@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, TuyaDeviceClass
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType, TuyaDeviceClass
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -284,7 +284,9 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         self._attr_opions: list[str] = []
-        if enum_type := self.get_enum_type(DPCode(description.key)):
+        if enum_type := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._attr_options = enum_type.range
 
     @property

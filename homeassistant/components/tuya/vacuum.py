@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_STATUS_TO_HA = {
     "charge_done": STATE_DOCKED,
@@ -107,11 +107,13 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
             self._supported_features |= SUPPORT_STOP | SUPPORT_START
 
-        if enum_type := self.get_enum_type(DPCode.SUCTION):
+        if enum_type := self.find_dpcode(
+            DPCode.SUCTION, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._supported_features |= SUPPORT_FAN_SPEED
             self._fan_speed = enum_type
 
-        if int_type := self.get_integer_type(DPCode.SUCTION):
+        if int_type := self.find_dpcode(DPCode.SUCTION, dptype=DPType.INTEGER):
             self._supported_features |= SUPPORT_BATTERY
             self._battery_level = int_type
 

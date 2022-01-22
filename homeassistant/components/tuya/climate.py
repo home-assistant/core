@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from nest import CELSIUS
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
@@ -32,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
@@ -155,30 +156,32 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
-        if prefered_temperature_unit == TEMP_CELSIUS or self.find_dpcode(
-            DPCode.TEMP_CURRENT
-        ):
-            self._attr_temperature_unit = TEMP_CELSIUS
-            self._current_temperature = self.get_integer_type(DPCode.TEMP_CURRENT)
-        elif prefered_temperature_unit == TEMP_FAHRENHEIT or self.find_dpcode(
-            DPCode.TEMP_SET_F
+        celsius_type = self.find_dpcode(DPCode.TEMP_CURRENT, dptype=DPType.INTEGER)
+        farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
+        if farhenheit_type and (
+            prefered_temperature_unit == TEMP_FAHRENHEIT
+            or (prefered_temperature_unit == CELSIUS and not celsius_type)
         ):
             self._attr_temperature_unit = TEMP_FAHRENHEIT
-            self._current_temperature = self.get_integer_type(DPCode.TEMP_CURRENT_F)
+            self._current_temperature = farhenheit_type
+        elif celsius_type:
+            self._attr_temperature_unit = TEMP_CELSIUS
+            self._current_temperature = celsius_type
 
         # Figure out setting temperature, use preferred unit or what is available
-        if prefered_temperature_unit == TEMP_CELSIUS or self.find_dpcode(
-            DPCode.TEMP_SET, prefer_function=True
+        celsius_type = self.find_dpcode(
+            DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
+        )
+        farhenheit_type = self.find_dpcode(
+            DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
+        )
+        if farhenheit_type and (
+            prefered_temperature_unit == TEMP_FAHRENHEIT
+            or (prefered_temperature_unit == CELSIUS and not celsius_type)
         ):
-            self._set_temperature = self.get_integer_type(
-                DPCode.TEMP_SET, prefer_function=True
-            )
-        elif prefered_temperature_unit == TEMP_FAHRENHEIT or self.find_dpcode(
-            DPCode.TEMP_SET_F, prefer_function=True
-        ):
-            self._set_temperature = self.get_integer_type(
-                DPCode.TEMP_SET_F, prefer_function=True
-            )
+            self._set_temperature = farhenheit_type
+        elif celsius_type:
+            self._set_temperature = celsius_type
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
@@ -191,7 +194,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes = []
         self._hvac_to_tuya = {}
-        if enum_type := self.get_enum_type(DPCode.MODE, prefer_function=True):
+        if enum_type := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._attr_hvac_modes = [HVAC_MODE_OFF]
             for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items():
                 if tuya_mode in enum_type.range:
@@ -204,17 +209,23 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ]
 
         # Determine dpcode to use for setting the humidity
-        if int_type := self.get_integer_type(DPCode.HUMIDITY_SET, prefer_function=True):
+        if int_type := self.find_dpcode(
+            DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
+        ):
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
             self._set_humidity = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
 
         # Determine dpcode to use for getting the current humidity
-        self._current_humidity = self.get_integer_type(DPCode.HUMIDITY_CURRENT)
+        self._current_humidity = self.find_dpcode(
+            DPCode.HUMIDITY_CURRENT, dptype=DPType.INTEGER
+        )
 
         # Determine fan modes
-        if enum_type := self.get_enum_type(DPCode.FAN_SPEED_ENUM):
+        if enum_type := self.find_dpcode(
+            DPCode.FAN_SPEED_ENUM, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
             self._attr_fan_modes = enum_type.range
 
@@ -244,7 +255,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         await super().async_added_to_hass()
 
         # Log unknown modes
-        if enum_type := self.get_enum_type(DPCode.MODE, prefer_function=True):
+        if enum_type := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        ):
             for tuya_mode in enum_type.range:
                 if tuya_mode not in TUYA_HVAC_TO_HA:
                     LOGGER.warning(

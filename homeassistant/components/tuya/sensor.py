@@ -793,12 +793,14 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             f"{super().unique_id}{description.key}{description.subkey or ''}"
         )
 
-        if int_type := self.get_integer_type(DPCode(description.key)):
+        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
             self._type_data = int_type
             self._type = DPType.INTEGER
             if description.native_unit_of_measurement is None:
                 self._attr_native_unit_of_measurement = int_type.unit
-        elif enum_type := self.get_enum_type(DPCode(description.key)):
+        elif enum_type := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._type_data = enum_type
             self._type = DPType.ENUM
         else:
