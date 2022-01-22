@@ -106,7 +106,7 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
             return
 
         await self.coordinator.async_set_target_temperature(
-            self.coordinator.data[self.heat_area_id]["ID"], target_temperature
+            self.heat_area_id, target_temperature
         )
         self.coordinator.data[self.heat_area_id]["T_TARGET"] = target_temperature
 
@@ -128,7 +128,7 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
             heat_area_mode = 2
 
         await self.coordinator.async_set_heat_area_mode(
-            self.coordinator.data[self.heat_area_id]["ID"], heat_area_mode
+            self.heat_area_id, heat_area_mode
         )
 
         self.coordinator.data[self.heat_area_id]["HEATAREA_MODE"] = heat_area_mode
