@@ -80,6 +80,13 @@ async def async_stop_udp_listener(hass: HomeAssistant) -> None:
     """Stop the shared udp listener."""
     domain_data = hass.data[DOMAIN]
     async with domain_data[UDP_LOCK]:
+        loaded_entries = [
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.state == ConfigEntryState.LOADED
+        ]
+        if len(loaded_entries) >= 1:
+            return
         domain_data[UDP_LISTENER]()
         domain_data[UDP_LISTENER] = None
         domain_data[UDP_SUBSCRIPTIONS] = None
@@ -168,12 +175,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
-        await async_stop_udp_listener(hass)
-
+    await async_stop_udp_listener(hass)
     return unload_ok
