@@ -510,7 +510,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     gateway_configured = False
     for key in hass.data[DOMAIN]:
         item = hass.data[DOMAIN][key]
-        if type(item) is dict:
+        if isinstance(item, dict):
             gateway_data = item.get(CONF_GATEWAY)
             if gateway_data is not None:
                 gateway_configured = True
