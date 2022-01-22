@@ -88,8 +88,8 @@ async def async_stop_udp_listener(hass: HomeAssistant) -> None:
         if len(loaded_entries) > 1:
             return
         domain_data[UDP_LISTENER]()
-        domain_data[UDP_LISTENER] = None
-        domain_data[UDP_SUBSCRIPTIONS] = None
+        del domain_data[UDP_LISTENER]
+        del domain_data[UDP_SUBSCRIPTIONS]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
