@@ -927,7 +927,7 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     entity_description: ToggleEntityDescription
-    _attr_is_on: bool | None
+    _attr_is_on: bool | None = None
     _attr_state: None = None
 
     @property
