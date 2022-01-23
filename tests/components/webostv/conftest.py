@@ -1,7 +1,11 @@
 """Common fixtures and objects for the LG webOS integration tests."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+
+from homeassistant.components.webostv.const import LIVE_TV_APP_ID
+
+from . import CHANNEL_1, CHANNEL_2
 
 from tests.common import async_mock_service
 
@@ -20,10 +24,34 @@ def client_fixture():
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.hello_info = {"deviceUUID": "some-fake-uuid"}
-        client.software_info = {"device_id": "00:01:02:03:04:05"}
+        client.software_info = {"major_ver": "major", "minor_ver": "minor"}
         client.system_info = {"modelName": "TVFAKE"}
         client.client_key = "0123456789"
-        client.apps = {0: {"title": "Applicaiton01"}}
-        client.inputs = {0: {"label": "Input01"}, 1: {"label": "Input02"}}
+        client.apps = {
+            LIVE_TV_APP_ID: {
+                "title": "Live TV",
+                "id": LIVE_TV_APP_ID,
+                "largeIcon": "large-icon",
+                "icon": "icon",
+            },
+        }
+        client.inputs = {
+            "in1": {"label": "Input01", "id": "in1", "appId": "app0"},
+            "in2": {"label": "Input02", "id": "in2", "appId": "app1"},
+        }
+        client.current_app_id = LIVE_TV_APP_ID
+
+        client.channels = [CHANNEL_1, CHANNEL_2]
+        client.current_channel = CHANNEL_1
+
+        client.volume = 37
+        client.sound_output = "speaker"
+        client.muted = False
+        client.is_on = True
+
+        async def mock_state_update_callback():
+            await client.register_state_update_callback.call_args[0][0](client)
+
+        client.mock_state_update = AsyncMock(side_effect=mock_state_update_callback)
 
         yield client
