@@ -25,6 +25,39 @@
   "entities": [
     {
       "address": [0, 7, false],
+      "name": "Light_Output1",
+      "resource": "output1",
+      "domain": "light",
+      "domain_data": {
+        "output": "OUTPUT1",
+        "dimmable": true,
+        "transition": 5000.0
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Light_Output2",
+      "resource": "output2",
+      "domain": "light",
+      "domain_data": {
+        "output": "OUTPUT2",
+        "dimmable": false,
+        "transition": 0
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Light_Relay1",
+      "resource": "relay1",
+      "domain": "light",
+      "domain_data": {
+        "output": "RELAY1",
+        "dimmable": false,
+        "transition": 0.0
+      }
+    },
+    {
+      "address": [0, 7, false],
       "name": "Switch_Output1",
       "resource": "output1",
       "domain": "switch",
