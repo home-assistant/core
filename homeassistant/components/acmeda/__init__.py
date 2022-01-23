@@ -18,9 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if not await hub.async_setup():
         return False
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = hub
-
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
