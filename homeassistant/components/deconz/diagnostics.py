@@ -5,7 +5,6 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info
 
 from .gateway import get_gateway_from_config_entry
 
@@ -17,7 +16,6 @@ async def async_get_config_entry_diagnostics(
     gateway = get_gateway_from_config_entry(hass, config_entry)
     diag: dict[str, Any] = {}
 
-    diag["home_assistant"] = await async_get_system_info(hass)
     diag["config_entry"] = dict(config_entry.data)
     diag["deconz_config"] = gateway.api.config.raw
     diag["websocket_state"] = gateway.api.websocket.state

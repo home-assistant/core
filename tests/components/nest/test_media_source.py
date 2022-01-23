@@ -1043,7 +1043,8 @@ async def test_media_store_persistence(hass, auth, hass_client, event_store):
     # Fetch media for events when published
     subscriber.cache_policy.fetch = True
 
-    config_entry = create_config_entry(hass)
+    config_entry = create_config_entry()
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"

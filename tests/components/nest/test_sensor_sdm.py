@@ -6,7 +6,9 @@ pubsub subscriber.
 """
 
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
+import pytest
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
@@ -17,24 +19,26 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import async_setup_sdm_platform
-
-PLATFORM = "sensor"
+from .common import FakeSubscriber, PlatformSetup
 
 THERMOSTAT_TYPE = "sdm.devices.types.THERMOSTAT"
 
 
-async def async_setup_sensor(hass, devices={}, structures={}):
-    """Set up the platform and prerequisites."""
-    return await async_setup_sdm_platform(hass, PLATFORM, devices, structures)
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to setup the platforms to test."""
+    return ["sensor"]
 
 
-async def test_thermostat_device(hass):
+async def test_thermostat_device(
+    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+):
     """Test a thermostat with temperature and humidity sensors."""
-    devices = {
-        "some-device-id": Device.MakeDevice(
+    device_manager.add_device(
+        Device.MakeDevice(
             {
                 "name": "some-device-id",
                 "type": THERMOSTAT_TYPE,
@@ -52,8 +56,8 @@ async def test_thermostat_device(hass):
             },
             auth=None,
         )
-    }
-    await async_setup_sensor(hass, devices)
+    )
+    await setup_platform()
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
@@ -87,9 +91,9 @@ async def test_thermostat_device(hass):
     assert device.identifiers == {("nest", "some-device-id")}
 
 
-async def test_no_devices(hass):
+async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
     """Test no devices returned by the api."""
-    await async_setup_sensor(hass)
+    await setup_platform()
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is None
@@ -98,10 +102,12 @@ async def test_no_devices(hass):
     assert humidity is None
 
 
-async def test_device_no_sensor_traits(hass):
+async def test_device_no_sensor_traits(
+    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+) -> None:
     """Test a device with applicable sensor traits."""
-    devices = {
-        "some-device-id": Device.MakeDevice(
+    device_manager.add_device(
+        Device.MakeDevice(
             {
                 "name": "some-device-id",
                 "type": THERMOSTAT_TYPE,
@@ -109,8 +115,8 @@ async def test_device_no_sensor_traits(hass):
             },
             auth=None,
         )
-    }
-    await async_setup_sensor(hass, devices)
+    )
+    await setup_platform()
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is None
@@ -119,10 +125,12 @@ async def test_device_no_sensor_traits(hass):
     assert humidity is None
 
 
-async def test_device_name_from_structure(hass):
+async def test_device_name_from_structure(
+    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+) -> None:
     """Test a device without a custom name, inferring name from structure."""
-    devices = {
-        "some-device-id": Device.MakeDevice(
+    device_manager.add_device(
+        Device.MakeDevice(
             {
                 "name": "some-device-id",
                 "type": THERMOSTAT_TYPE,
@@ -137,18 +145,23 @@ async def test_device_name_from_structure(hass):
             },
             auth=None,
         )
-    }
-    await async_setup_sensor(hass, devices)
+    )
+    await setup_platform()
 
     temperature = hass.states.get("sensor.some_room_temperature")
     assert temperature is not None
     assert temperature.state == "25.2"
 
 
-async def test_event_updates_sensor(hass):
+async def test_event_updates_sensor(
+    hass: HomeAssistant,
+    subscriber: FakeSubscriber,
+    device_manager: DeviceManager,
+    setup_platform: PlatformSetup,
+) -> None:
     """Test a pubsub message received by subscriber to update temperature."""
-    devices = {
-        "some-device-id": Device.MakeDevice(
+    device_manager.add_device(
+        Device.MakeDevice(
             {
                 "name": "some-device-id",
                 "type": THERMOSTAT_TYPE,
@@ -163,8 +176,8 @@ async def test_event_updates_sensor(hass):
             },
             auth=None,
         )
-    }
-    subscriber = await async_setup_sensor(hass, devices)
+    )
+    await setup_platform()
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
@@ -194,10 +207,12 @@ async def test_event_updates_sensor(hass):
     assert temperature.state == "26.2"
 
 
-async def test_device_with_unknown_type(hass):
+async def test_device_with_unknown_type(
+    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+) -> None:
     """Test a device without a custom name, inferring name from structure."""
-    devices = {
-        "some-device-id": Device.MakeDevice(
+    device_manager.add_device(
+        Device.MakeDevice(
             {
                 "name": "some-device-id",
                 "type": "some-unknown-type",
@@ -212,8 +227,8 @@ async def test_device_with_unknown_type(hass):
             },
             auth=None,
         )
-    }
-    await async_setup_sensor(hass, devices)
+    )
+    await setup_platform()
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
@@ -232,10 +247,12 @@ async def test_device_with_unknown_type(hass):
     assert device.identifiers == {("nest", "some-device-id")}
 
 
-async def test_temperature_rounding(hass):
+async def test_temperature_rounding(
+    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+) -> None:
     """Test the rounding of overly precise temperatures."""
-    devices = {
-        "some-device-id": Device.MakeDevice(
+    device_manager.add_device(
+        Device.MakeDevice(
             {
                 "name": "some-device-id",
                 "type": THERMOSTAT_TYPE,
@@ -250,8 +267,8 @@ async def test_temperature_rounding(hass):
             },
             auth=None,
         )
-    }
-    await async_setup_sensor(hass, devices)
+    )
+    await setup_platform()
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature.state == "25.2"
