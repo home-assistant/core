@@ -25,6 +25,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -144,6 +145,7 @@ class WhoisSensorEntity(SensorEntity):
         self._attr_unique_id = f"{domain}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, domain)},
+            entry_type=DeviceEntryType.SERVICE,
         )
         self._domain = domain
 
