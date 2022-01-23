@@ -81,33 +81,33 @@ async def new_subscriber(
             hass, entry
         )
     )
-    return await new_subscriber_with_impl(hass, entry, implementation)
+    config = hass.data[DOMAIN].get(DATA_NEST_CONFIG, {})
+    if not (
+        subscriber_id := entry.data.get(
+            CONF_SUBSCRIBER_ID, config.get(CONF_SUBSCRIBER_ID)
+        )
+    ):
+        _LOGGER.error("Configuration option 'subscriber_id' required")
+        return None
+    return await new_subscriber_with_impl(hass, entry, subscriber_id, implementation)
 
 
 async def new_subscriber_with_impl(
     hass: HomeAssistant,
     entry: ConfigEntry,
+    subscriber_id: str,
     implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-) -> GoogleNestSubscriber | None:
+) -> GoogleNestSubscriber:
     """Create a GoogleNestSubscriber, used during ConfigFlow."""
-    config = hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
     # Configuration mode ConfigMode.SDM may have a blend of configuration.yaml and
     # ConfigEntry parameters, so to simplify just merge and check both
-    data = {**config, **entry.data}
+    data = hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
+    data.update(entry.data)
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    for key in (
-        CONF_CLIENT_ID,
-        CONF_CLIENT_SECRET,
-        CONF_PROJECT_ID,
-        CONF_SUBSCRIBER_ID,
-    ):
-        if key not in data:
-            _LOGGER.error("Configuration option '%s' required", key)
-            return None
     auth = AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
         session,
         data[CONF_CLIENT_ID],
         data[CONF_CLIENT_SECRET],
     )
-    return GoogleNestSubscriber(auth, data[CONF_PROJECT_ID], data[CONF_SUBSCRIBER_ID])
+    return GoogleNestSubscriber(auth, data[CONF_PROJECT_ID], subscriber_id)

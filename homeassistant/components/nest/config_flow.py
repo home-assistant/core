@@ -469,10 +469,8 @@ class NestFlowHandler(
                 version=1, domain=DOMAIN, title="", data=data, source=""
             )
             subscriber = await api.new_subscriber_with_impl(
-                self.hass, entry, self.flow_impl
+                self.hass, entry, subscriber_id, self.flow_impl
             )
-            if not subscriber:
-                return self.async_abort(reason="missing_configuration")
             try:
                 await subscriber.create_subscription()
             except AuthException as err:
