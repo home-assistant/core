@@ -208,6 +208,10 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
+        if self.preset_mode == PRESET_MODE_BREEZE:
+            await self._hub.bond.action(
+                self._device.device_id, Action(Action.BREEZE_OFF)
+            )
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
     async def async_set_direction(self, direction: str) -> None:
