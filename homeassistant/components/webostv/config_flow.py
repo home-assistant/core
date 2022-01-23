@@ -10,7 +10,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_CLIENT_SECRET,
+    CONF_CUSTOMIZE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -61,8 +67,15 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_CLIENT_SECRET: import_info[CONF_CLIENT_SECRET],
         }
         self._abort_if_unique_id_configured()
+
+        options: dict[str, list[str]] | None = None
+        if sources := import_info.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
+            if not isinstance(sources, list):
+                sources = [s.strip() for s in sources.split(",")]
+            options = {CONF_SOURCES: sources}
+
         _LOGGER.debug("WebOS Smart TV host %s imported from YAML config", self._host)
-        return self.async_create_entry(title=self._name, data=data)
+        return self.async_create_entry(title=self._name, data=data, options=options)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

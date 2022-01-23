@@ -15,7 +15,7 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -23,15 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice, valid_serial_number
-from .const import (
-    CONTROLLER,
-    DOMAIN,
-    ENTITY_MAP,
-    IDENTIFIER_ACCESSORY_ID,
-    IDENTIFIER_SERIAL_NUMBER,
-    KNOWN_DEVICES,
-    TRIGGERS,
-)
+from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
 
 
@@ -45,7 +37,7 @@ class HomeKitEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, accessory, devinfo):
+    def __init__(self, accessory: HKDevice, devinfo):
         """Initialise a generic HomeKit device."""
         self._accessory = accessory
         self._aid = devinfo["aid"]
@@ -162,38 +154,7 @@ class HomeKitEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        info = self.accessory_info
-        accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        if valid_serial_number(accessory_serial):
-            # Some accessories do not have a serial number
-            identifier = (DOMAIN, IDENTIFIER_SERIAL_NUMBER, accessory_serial)
-        else:
-            identifier = (
-                DOMAIN,
-                IDENTIFIER_ACCESSORY_ID,
-                f"{self._accessory.unique_id}_{self._aid}",
-            )
-
-        device_info = DeviceInfo(
-            identifiers={identifier},
-            manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
-            model=info.value(CharacteristicsTypes.MODEL, ""),
-            name=info.value(CharacteristicsTypes.NAME),
-            sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-            hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
-        )
-
-        # Some devices only have a single accessory - we don't add a
-        # via_device otherwise it would be self referential.
-        bridge_serial = self._accessory.connection_info["serial-number"]
-        if accessory_serial != bridge_serial:
-            device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                IDENTIFIER_SERIAL_NUMBER,
-                bridge_serial,
-            )
-
-        return device_info
+        return self._accessory.device_info_for_accessory(self.accessory)
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""

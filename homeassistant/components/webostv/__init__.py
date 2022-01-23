@@ -221,27 +221,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _async_migrate_options_from_data(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Migrate options from data."""
-    if entry.options:
-        return
-
-    config = entry.data
-    options = {}
-
-    # Get Preferred Sources
-    if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
-        options[CONF_SOURCES] = sources
-        if not isinstance(sources, list):
-            options[CONF_SOURCES] = sources.split(",")
-
-    hass.config_entries.async_update_entry(entry, options=options)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
-    _async_migrate_options_from_data(hass, entry)
-
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_CLIENT_SECRET]
 

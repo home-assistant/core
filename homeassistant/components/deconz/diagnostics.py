@@ -5,12 +5,12 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
 from .gateway import get_gateway_from_config_entry
 
-REDACT_CONFIG = {CONF_API_KEY}
+REDACT_CONFIG = {CONF_API_KEY, CONF_UNIQUE_ID}
 REDACT_DECONZ_CONFIG = {"bridgeid", "mac", "panid"}
 
 
@@ -21,8 +21,7 @@ async def async_get_config_entry_diagnostics(
     gateway = get_gateway_from_config_entry(hass, config_entry)
     diag: dict[str, Any] = {}
 
-    diag["config"] = async_redact_data(config_entry.data, REDACT_CONFIG)
-    diag["options"] = dict(config_entry.options)
+    diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)
     diag["deconz_config"] = async_redact_data(
         gateway.api.config.raw, REDACT_DECONZ_CONFIG
     )
