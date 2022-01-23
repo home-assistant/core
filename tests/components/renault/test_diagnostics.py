@@ -154,7 +154,7 @@ async def test_entry_diagnostics(
             },
             "title": "Mock Title",
         },
-        "vehicles": [VEHICLE_DETAILS],
+        "vehicles": [{"details": VEHICLE_DETAILS}],
     }
 
 
@@ -174,4 +174,30 @@ async def test_device_diagnostics(
 
     assert await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
-    ) == {"details": VEHICLE_DETAILS}
+    ) == {
+        "details": VEHICLE_DETAILS,
+        "data": {
+            "battery": {
+                "batteryAutonomy": 141,
+                "batteryAvailableEnergy": 31,
+                "batteryCapacity": 0,
+                "batteryLevel": 60,
+                "batteryTemperature": 20,
+                "chargingInstantaneousPower": 27,
+                "chargingRemainingTime": 145,
+                "chargingStatus": 1.0,
+                "plugStatus": 1,
+                "timestamp": "2020-01-12T21:40:16Z",
+            },
+            "charge_mode": {
+                "chargeMode": "always",
+            },
+            "cockpit": {
+                "totalMileage": 49114.27,
+            },
+            "hvac_status": {
+                "externalTemperature": 8.0,
+                "hvacStatus": "off",
+            },
+        },
+    }
