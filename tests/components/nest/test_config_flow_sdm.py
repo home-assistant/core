@@ -365,6 +365,65 @@ async def test_single_config_entry_with_config_flow(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
+async def test_config_flow_wrong_project_id(hass, oauth, subscriber):
+    """Check the case where the wrong project ids are entered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "oauth_input"
+
+    result = await oauth.async_configure(
+        result, {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    # Enter the cloud project id instead of device access project id (really we just check
+    # they are the same value which is never correct)
+    result = await oauth.async_configure(result, {"project_id": CLOUD_PROJECT_ID})
+    assert result["type"] == "form"
+    assert "errors" in result
+    assert "project_id" in result["errors"]
+    assert result["errors"]["project_id"] == "wrong_project_id"
+
+    # Fix with a correct value and complete the rest of the flow
+    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    await oauth.async_oauth_app_flow(result)
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        entry = await oauth.async_finish_setup(result, {"code": "1234"})
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert "subscriber_id" in data
+    assert f"projects/{CLOUD_PROJECT_ID}/subscriptions" in data["subscriber_id"]
+    data.pop("subscriber_id")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "nest.installed",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
+
+
 async def test_config_flow_pubsub_configuration_error(hass, oauth, subscriber):
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
