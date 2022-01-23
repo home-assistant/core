@@ -82,7 +82,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
         self._attr_preset_modes = []
         if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+            (DPCode.FAN_MODE, DPCode.MODE), dptype=DPType.ENUM, prefer_function=True
         ):
             self._presets = enum_type
             self._attr_supported_features |= SUPPORT_PRESET_MODE

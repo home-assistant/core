@@ -205,6 +205,7 @@ class DPCode(StrEnum):
     FAN_SPEED = "fan_speed"
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FAN_MODE = "fan_mode"
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
     FEED_REPORT = "feed_report"
