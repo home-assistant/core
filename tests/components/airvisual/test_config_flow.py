@@ -10,7 +10,7 @@ from pyairvisual.errors import (
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airvisual import (
+from homeassistant.components.airvisual.const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_GEOGRAPHIES,
