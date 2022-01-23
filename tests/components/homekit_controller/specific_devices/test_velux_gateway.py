@@ -48,6 +48,7 @@ async def test_velux_cover_setup(hass):
                     sw_version="48",
                     hw_version="",
                     serial_number="1111111a114a111a",
+                    unique_id="00:00:00:00:00:00:aid:3",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -68,6 +69,7 @@ async def test_velux_cover_setup(hass):
                     sw_version="16",
                     hw_version="",
                     serial_number="a11b111",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     devices=[],
                     entities=[
                         EntityTestInfo(
