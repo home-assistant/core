@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service  is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "clusteringesturi": "Cluster Ingest URI",
+                    "database": "Database name",
+                    "table": "Table name",
+                    "client_id": "Client ID",
+                    "client_secret": "Client  secret",
+                    "authority_id": "Authority ID"
+
+                },
+                "title": "Setup your Azure Data Explorer integration"
+            }
+        }
+    }
+}

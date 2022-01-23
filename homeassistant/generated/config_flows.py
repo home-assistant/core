@@ -36,6 +36,7 @@ FLOWS = [
     "aurora_abb_powerone",
     "awair",
     "axis",
+    "azure_data_explorer",
     "azure_devops",
     "azure_event_hub",
     "balboa",
