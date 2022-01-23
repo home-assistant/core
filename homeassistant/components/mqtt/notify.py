@@ -48,8 +48,6 @@ CONF_TITLE = "title"
 
 MQTT_EVENT_RELOADED = "event_{}_reloaded"
 
-MQTT_TARGET_KEY = "{}_{}"
-
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -116,9 +114,8 @@ async def _async_setup_notify(
         device_id=device_id,
         config_entry=config_entry,
     )
-    await service.async_setup(
-        hass, slugify(config.get(CONF_NAME, config[CONF_COMMAND_TOPIC])), ""
-    )
+    service_name = slugify(config.get(CONF_NAME, config[CONF_COMMAND_TOPIC]))
+    await service.async_setup(hass, service_name, service_name)
     await service.async_register_services()
 
 
@@ -129,12 +126,16 @@ async def async_get_service(
 ) -> MqttNotificationService | None:
     """Prepare the MQTT notification service through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    name = config.get(CONF_NAME)
+    if name is None:
+        # use command_topic as a base for the service name if no name is defined
+        config[CONF_NAME] = config[CONF_COMMAND_TOPIC]
     return MqttNotificationService(
         hass,
         config[CONF_COMMAND_TOPIC],
         MqttCommandTemplate(config.get(CONF_COMMAND_TEMPLATE), hass=hass),
         config[CONF_ENCODING],
-        config.get(CONF_NAME),
+        name,
         config[CONF_QOS],
         config[CONF_RETAIN],
         config[CONF_TARGETS],
@@ -290,10 +291,7 @@ class MqttNotificationService(notify.BaseNotificationService):
     @property
     def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
-        return {
-            MQTT_TARGET_KEY.format(self._service_name, target): target
-            for target in self._targets
-        }
+        return {target: target for target in self._targets}
 
     async def async_send_message(self, message: str = "", **kwargs):
         """Build and send a MQTT message."""
@@ -303,9 +301,13 @@ class MqttNotificationService(notify.BaseNotificationService):
             and self._targets
             and set(target) & set(self._targets) != set(target)
         ):
-            raise AttributeError(
-                f"Cannot send {message}, target list {target} is invalid, valid available targets: {self._targets}"
+            _LOGGER.error(
+                "Cannot send %s, target list %s is invalid, valid available targets: %s",
+                message,
+                target,
+                self._targets,
             )
+            return
         variables = {
             "message": message,
             "name": self._name,
