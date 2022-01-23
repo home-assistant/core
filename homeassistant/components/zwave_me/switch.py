@@ -64,8 +64,3 @@ class ZWaveMeSwitch(ZWaveMeEntity, SwitchEntity):
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         self.controller.zwave_api.send_command(self.device.id, "off")
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return self.entity_description.device_class
