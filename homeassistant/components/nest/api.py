@@ -101,13 +101,13 @@ async def new_subscriber_with_impl(
     """Create a GoogleNestSubscriber, used during ConfigFlow."""
     # Configuration mode ConfigMode.SDM may have a blend of configuration.yaml and
     # ConfigEntry parameters, so to simplify just merge and check both
-    data = hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
-    data.update(entry.data)
+    config = hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
+    config.update(entry.data)
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
         session,
-        data[CONF_CLIENT_ID],
-        data[CONF_CLIENT_SECRET],
+        config[CONF_CLIENT_ID],
+        config[CONF_CLIENT_SECRET],
     )
-    return GoogleNestSubscriber(auth, data[CONF_PROJECT_ID], subscriber_id)
+    return GoogleNestSubscriber(auth, config[CONF_PROJECT_ID], subscriber_id)

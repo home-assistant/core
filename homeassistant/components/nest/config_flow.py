@@ -294,14 +294,10 @@ class NestFlowHandler(
         entries = self._async_current_entries()
         if entries and not self._reauth:
             return self.async_abort(reason="single_instance_allowed")
-        # The SDM mode has authentication implementations registered
-        # from yaml at setup time so go right to the user (OAuth) step.
-        # The SDM_CONFIG_FLOW version may already have a valid auth
-        # implementation registered, however we still need to restart
-        # the flow to give the user a chance to update the values in
-        # case they entered a mistake.
         if self.config_mode == ConfigMode.SDM:
             return await super().async_step_user(user_input)
+        # ConfigMode.SDM_CONFIG_ENTRY registers OAuth impl during the config
+        # and can be changed if the flow is restarted to fix a mistake.
         return await self.async_step_cloud_project()
 
     async def async_step_cloud_project(
@@ -369,11 +365,8 @@ class NestFlowHandler(
                 errors[CONF_PROJECT_ID] = "wrong_project_id"
             else:
                 self._data.update(user_input)
-
-                # Register an authentication implementation
+                # Register an authentication implementation and resule flow in parent
                 async_register_implementation_from_config_entry(self.hass, self._data)
-
-                # Resume authentication flow in the parent class
                 return await super().async_step_user()
 
         return self.async_show_form(
@@ -428,12 +421,14 @@ class NestFlowHandler(
         if self._reauth:
             # Just refreshing tokens and preserving existing subscriber id
             return False
-        if self.config_mode == ConfigMode.SDM_CONFIG_ENTRY:
-            return True
-        # Hard coded in configuration.yaml skips pubsub in config flow
-        return CONF_SUBSCRIBER_ID not in self.hass.data.get(DOMAIN, {}).get(
-            DATA_NEST_CONFIG, {}
-        )
+        if (
+            self.config_mode == ConfigMode.SDM
+            and CONF_SUBSCRIBER_ID in self.hass.data[DOMAIN][DATA_NEST_CONFIG]
+        ):
+            # Hard coded configuration.yaml skips pubsub in config flow
+            return False
+        # No existing subscription configured, so create in config flow
+        return True
 
     async def async_step_pubsub(
         self, user_input: dict[str, Any] | None = None
