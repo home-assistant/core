@@ -17,11 +17,7 @@ from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import (
-    Integration,
-    async_get_custom_components,
-    async_get_integration,
-)
+from homeassistant.loader import async_get_custom_components, async_get_integration
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -144,8 +140,6 @@ async def _async_get_json_file_response(
 
     integration = await async_get_integration(hass, domain)
     custom_components = {}
-    cc_domain: str
-    cc_obj: Integration
     all_custom_components = await async_get_custom_components(hass)
     for cc_domain, cc_obj in all_custom_components.items():
         custom_components[cc_domain] = {
