@@ -17,8 +17,10 @@ async def async_get_config_entry_diagnostics(
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     return {
-        "config_entry": {
-            **config_entry.data,
+        "entry": {
+            "data": {
+                **config_entry.data,
+            },
         },
-        "coordinator": coordinator.data.as_dict(),
+        "data": coordinator.data.as_dict(),
     }
