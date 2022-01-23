@@ -117,7 +117,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         """Initiate SensiboClimate."""
         super().__init__(coordinator)
         self._client = coordinator.client
-        self._attr_unique_id = coordinator.data[device_id]["id"]
+        self._attr_unique_id = device_id
         self._attr_name = coordinator.data[device_id]["name"]
         self._attr_temperature_unit = (
             TEMP_CELSIUS
@@ -135,7 +135,6 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             hw_version=coordinator.data[device_id]["fw_type"],
             suggested_area=coordinator.data[device_id]["name"],
         )
-        self._temp_unit = temp_unit
 
     def get_features(self) -> int:
         """Get supported features."""
@@ -170,12 +169,20 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self.coordinator.data[self.unique_id]["temp"]
+        return convert_temperature(
+            self.coordinator.data[self.unique_id]["temp"],
+            TEMP_CELSIUS,
+            self.temperature_unit,
+        )
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.coordinator.data[self.unique_id]["target_temp"]
+        return convert_temperature(
+            self.coordinator.data[self.unique_id]["target_temp"],
+            TEMP_CELSIUS,
+            self.temperature_unit,
+        )
 
     @property
     def target_temperature_step(self) -> float | None:
@@ -245,22 +252,28 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         if temperature == self.target_temperature:
             return
 
-        if temperature not in self.coordinator.data[self.unique_id]["temp_list"]:
-            # Requested temperature is not supported.
-            if temperature > self.coordinator.data[self.unique_id]["temp_list"][-1]:
-                temperature = self.coordinator.data[self.unique_id]["temp_list"][-1]
+        new_temp: int = int(
+            convert_temperature(
+                temperature,
+                self.temperature_unit,
+                TEMP_CELSIUS,
+            )
+        )
 
-            elif temperature < self.coordinator.data[self.unique_id]["temp_list"][0]:
-                temperature = self.coordinator.data[self.unique_id]["temp_list"][0]
+        if new_temp not in self.coordinator.data[self.unique_id]["temp_list"]:
+            # Requested temperature is not supported.
+            if new_temp > self.coordinator.data[self.unique_id]["temp_list"][-1]:
+                new_temp = self.coordinator.data[self.unique_id]["temp_list"][-1]
+
+            elif new_temp < self.coordinator.data[self.unique_id]["temp_list"][0]:
+                new_temp = self.coordinator.data[self.unique_id]["temp_list"][0]
 
             else:
                 return
 
-        result = await self._async_set_ac_state_property(
-            "targetTemperature", int(temperature)
-        )
+        result = await self._async_set_ac_state_property("targetTemperature", new_temp)
         if result:
-            self.coordinator.data[self.unique_id]["target_temp"] = int(temperature)
+            self.coordinator.data[self.unique_id]["target_temp"] = new_temp
             self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -340,4 +353,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         LOGGER.debug("Result: %s", result)
         if result["status"] == "Success":
             return True
-        return False
+        failure = result["failureReason"]
+        raise HomeAssistantError(
+            f"Could not set state for device {self.name} due to reason {failure}"
+        )
