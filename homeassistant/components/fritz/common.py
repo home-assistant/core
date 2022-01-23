@@ -502,11 +502,11 @@ class AvmWrapper(FritzBoxTools):
         service_suffix: str,
         action_name: str,
         **kwargs: Any,
-    ) -> dict | None:
+    ) -> dict:
         """Return service details."""
 
         if f"{service_name}{service_suffix}" not in self.connection.services:
-            return None
+            return {}
 
         try:
             result: dict = self.connection.call_action(
@@ -537,30 +537,154 @@ class AvmWrapper(FritzBoxTools):
                 "Connection Error: Please check the device is properly configured for remote login",
                 exc_info=True,
             )
-        return None
+        return {}
 
-    async def _async_service_call_action(
-        self, service_name: str, service_suffix: str, action_name: str, **kwargs: Any
-    ) -> dict[str, Any] | None:
-        """Make call_action async."""
+    async def async_get_wan_dsl_interface_config(self) -> dict[str, Any]:
+        """Call WANDSLInterfaceConfig service."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.get_wan_dsl_interface_config)
+        )
+
+    async def async_get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
+        """Call GetGenericPortMappingEntry action."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.get_port_mapping, con_type, index)
+        )
+
+    async def async_get_wlan_configuration(self, index: int) -> dict[str, Any]:
+        """Call WLANConfiguration service."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.get_wlan_configuration, index)
+        )
+
+    async def async_get_ontel_deflections(self) -> dict[str, Any]:
+        """Call GetDeflections action from X_AVM-DE_OnTel service."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.get_ontel_deflections)
+        )
+
+    async def async_set_wlan_configuration(
+        self, index: int, turn_on: bool
+    ) -> dict[str, Any]:
+        """Call SetEnable action from WLANConfiguration service."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.set_wlan_configuration, index, turn_on)
+        )
+
+    async def async_set_deflection_enable(
+        self, index: int, turn_on: bool
+    ) -> dict[str, Any]:
+        """Call SetDeflectionEnable service."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.set_deflection_enable, index, turn_on)
+        )
+
+    async def async_add_port_mapping(
+        self, con_type: str, port_mapping: Any
+    ) -> dict[str, Any]:
+        """Call AddPortMapping service."""
 
         return await self.hass.async_add_executor_job(
             partial(
-                self._service_call_action,
-                service_name,
-                service_suffix,
-                action_name,
-                **kwargs,
+                self.add_port_mapping,
+                con_type,
+                port_mapping,
             )
         )
 
-    async def get_wan_dsl_interface_config(self) -> dict[str, Any] | None:
+    async def async_set_allow_wan_access(
+        self, ip_address: str, turn_on: bool
+    ) -> dict[str, Any]:
+        """Call X_AVM-DE_HostFilter service."""
+
+        return await self.hass.async_add_executor_job(
+            partial(self.set_allow_wan_access, ip_address, turn_on)
+        )
+
+    def get_ontel_num_deflections(self) -> dict[str, Any]:
+        """Call GetNumberOfDeflections action from X_AVM-DE_OnTel service."""
+
+        return self._service_call_action(
+            "X_AVM-DE_OnTel", "1", "GetNumberOfDeflections"
+        )
+
+    def get_ontel_deflections(self) -> dict[str, Any]:
+        """Call GetDeflections action from X_AVM-DE_OnTel service."""
+
+        return self._service_call_action("X_AVM-DE_OnTel", "1", "GetDeflections")
+
+    def get_default_connection(self) -> dict[str, Any]:
+        """Call Layer3Forwarding service."""
+
+        return self._service_call_action(
+            "Layer3Forwarding", "1", "GetDefaultConnectionService"
+        )
+
+    def get_num_port_mapping(self, con_type: str) -> dict[str, Any]:
+        """Call GetPortMappingNumberOfEntries action."""
+
+        return self._service_call_action(con_type, "1", "GetPortMappingNumberOfEntries")
+
+    def get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
+        """Call GetGenericPortMappingEntry action."""
+
+        return self._service_call_action(
+            con_type, "1", "GetGenericPortMappingEntry", NewPortMappingIndex=index
+        )
+
+    def get_wlan_configuration(self, index: int) -> dict[str, Any]:
+        """Call WLANConfiguration service."""
+
+        return self._service_call_action("WLANConfiguration", str(index), "GetInfo")
+
+    def get_wan_dsl_interface_config(self) -> dict[str, Any]:
         """Call WANDSLInterfaceConfig service."""
 
-        return await self._async_service_call_action(
-            "WANDSLInterfaceConfig",
+        return self._service_call_action("WANDSLInterfaceConfig", "1", "GetInfo")
+
+    def set_wlan_configuration(self, index: int, turn_on: bool) -> dict[str, Any]:
+        """Call SetEnable action from WLANConfiguration service."""
+
+        return self._service_call_action(
+            "WLANConfiguration",
+            str(index),
+            "SetEnable",
+            NewEnable="1" if turn_on else "0",
+        )
+
+    def set_deflection_enable(self, index: int, turn_on: bool) -> dict[str, Any]:
+        """Call SetDeflectionEnable service."""
+
+        return self._service_call_action(
+            "X_AVM-DE_OnTel",
             "1",
-            "GetInfo",
+            "SetDeflectionEnable",
+            NewDeflectionId=index,
+            NewEnable="1" if turn_on else "0",
+        )
+
+    def add_port_mapping(self, con_type: str, port_mapping: Any) -> dict[str, Any]:
+        """Call AddPortMapping service."""
+
+        return self._service_call_action(
+            con_type, "1", "AddPortMapping", **port_mapping
+        )
+
+    def set_allow_wan_access(self, ip_address: str, turn_on: bool) -> dict[str, Any]:
+        """Call X_AVM-DE_HostFilter service."""
+
+        return self._service_call_action(
+            "X_AVM-DE_HostFilter",
+            "1",
+            "DisallowWANAccessByIP",
+            NewIPv4Address=ip_address,
+            NewDisallow="0" if turn_on else "1",
         )
 
 
