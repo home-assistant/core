@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Ongeldige hostnaam"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "De hostnaam waarvoor de DNS query moet worden uitgevoerd"
+                }
+            }
+        }
+    }
+}

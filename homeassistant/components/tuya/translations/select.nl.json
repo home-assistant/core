@@ -49,7 +49,18 @@
             "power_off": "Uit",
             "power_on": "Aan"
         },
+        "tuya__vacuum_cistern": {
+            "low": "Laag",
+            "middle": "Midden"
+        },
+        "tuya__vacuum_collection": {
+            "middle": "Midden",
+            "small": "Klein"
+        },
         "tuya__vacuum_mode": {
+            "point": "Punt",
+            "pose": "Houding",
+            "wall_follow": "Volg muur",
             "zone": "Zone"
         }
     }
