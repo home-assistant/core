@@ -50,9 +50,10 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return str(err)
         return "connected"
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
         """Import a configuration from config.yaml."""
 
+        next_step = []
         for train in config[CONF_TRAINS]:
             new_config = {
                 CONF_API_KEY: config[CONF_API_KEY],
@@ -62,7 +63,8 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_WEEKDAY: train[CONF_WEEKDAY],
             }
             self._async_abort_entries_match(new_config)
-            return await self.async_step_user(user_input=new_config)
+            next_step.append(await self.async_step_user(user_input=new_config))
+        return next_step
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -74,8 +76,10 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
             train_from = user_input[CONF_FROM]
             train_to = user_input[CONF_TO]
-            train_time = user_input[CONF_TIME]
-            train_days = user_input[CONF_WEEKDAY]
+            if user_input[CONF_TIME]:
+                train_time = user_input[CONF_TIME]
+            if user_input[CONF_WEEKDAY]:
+                train_days = user_input[CONF_WEEKDAY]
 
             name = f"{train_from} to {train_to}"
 
