@@ -19,6 +19,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     SUBSCRIBER_ID,
+    TEST_CONFIG_ENTRY,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
     FakeSubscriber,
@@ -129,8 +130,8 @@ def subscriber_id() -> str:
 
 
 @pytest.fixture(
-    params=[TEST_CONFIG_YAML_ONLY, TEST_CONFIG_HYBRID],
-    ids=["yaml-config-only", "hybrid-config"],
+    params=[TEST_CONFIG_YAML_ONLY, TEST_CONFIG_HYBRID, TEST_CONFIG_ENTRY],
+    ids=["yaml-config-only", "hybrid-config", "config-entry"],
 )
 def nest_test_config(request) -> NestTestConfig:
     """Fixture that sets up the configuration used for the test."""

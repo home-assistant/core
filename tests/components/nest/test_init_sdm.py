@@ -25,6 +25,7 @@ from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
 from .common import (
+    TEST_CONFIG_ENTRY,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
     FakeSubscriber,
@@ -205,8 +206,12 @@ async def test_unload_entry(hass, setup_platform):
             TEST_CONFIG_HYBRID,
             True,
         ),  # Integration created subscriber, garbage collect on remove
+        (
+            TEST_CONFIG_ENTRY,
+            True,
+        ),  # Integration created subscriber, garbage collect on remove
     ],
-    ids=["yaml-config-only", "hybrid-config"],
+    ids=["yaml-config-only", "hybrid-config", "config-entry"],
 )
 async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_called):
     """Test successful unload of a ConfigEntry."""

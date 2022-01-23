@@ -107,10 +107,11 @@ THUMBNAIL_SIZE_PX = 175
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_NEST_CONFIG] = config.get(DOMAIN)
 
     if DOMAIN not in config:
-        return True
+        return True  # ConfigMode.SDM_CONFIG_ENTRY
+
+    hass.data[DOMAIN][DATA_NEST_CONFIG] = config.get(DOMAIN)
 
     config_mode = config_flow.get_config_mode(hass)
     if config_mode == config_flow.ConfigMode.LEGACY:

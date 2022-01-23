@@ -102,9 +102,9 @@ class ConfigMode(Enum):
 
 def get_config_mode(hass: HomeAssistant) -> ConfigMode:
     """Return the integration configuration mode."""
-    if DOMAIN not in hass.data:
-        return ConfigMode.SDM_CONFIG_ENTRY
-    if not (config := hass.data[DOMAIN].get(DATA_NEST_CONFIG)):
+    if DOMAIN not in hass.data or not (
+        config := hass.data[DOMAIN].get(DATA_NEST_CONFIG)
+    ):
         return ConfigMode.SDM_CONFIG_ENTRY
     if CONF_PROJECT_ID in config:
         return ConfigMode.SDM

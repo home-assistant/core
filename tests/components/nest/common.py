@@ -99,6 +99,20 @@ TEST_CONFIG_HYBRID = NestTestConfig(
     },
 )
 
+# Exercises mode where all configuration is from the config flow
+TEST_CONFIG_ENTRY = NestTestConfig(
+    config={},
+    config_entry_data={
+        "sdm": {},
+        "auth_implementation": "nest",
+        "token": create_token_entry(),
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "project_id": PROJECT_ID,
+        "subscriber_id": SUBSCRIBER_ID,
+    },
+)
+
 
 class FakeSubscriber(GoogleNestSubscriber):
     """Fake subscriber that supplies a FakeDeviceManager."""
