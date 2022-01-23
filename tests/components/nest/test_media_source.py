@@ -206,9 +206,10 @@ async def test_no_eligible_devices(hass, auth):
     assert not browse.children
 
 
-async def test_supported_device(hass, auth):
+@pytest.mark.parametrize("traits", [CAMERA_TRAITS, BATTERY_CAMERA_TRAITS])
+async def test_supported_device(hass, auth, traits):
     """Test a media source with a supported camera."""
-    await async_setup_devices(hass, auth, CAMERA_DEVICE_TYPE, CAMERA_TRAITS)
+    await async_setup_devices(hass, auth, CAMERA_DEVICE_TYPE, traits)
 
     assert len(hass.states.async_all()) == 1
     camera = hass.states.get("camera.front")
