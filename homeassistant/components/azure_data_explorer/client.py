@@ -7,33 +7,17 @@ import logging
 from xmlrpc.client import Boolean
 
 from azure.kusto.data import KustoClient, KustoConnectionStringBuilder
-
-# from azure.kusto.data.aio import KustoClient
 from azure.kusto.data.data_format import DataFormat
 from azure.kusto.data.exceptions import (
     KustoAuthenticationError,
     KustoError,
     KustoServiceError,
 )
-from azure.kusto.ingest import (  # QueuedIngestClient,; FileDescriptor,; BlobDescriptor,; KustoStreamingIngestClient,; IngestionStatus,
+from azure.kusto.ingest import (
     IngestionProperties,
     ManagedStreamingIngestClient,
     StreamDescriptor,
 )
-
-# from tokenize import String
-# from xmlrpc.client import Boolean
-
-
-# from datetime import datetime
-
-
-# import asyncio
-# import traceback
-
-# from homeassistant.core import HomeAssistant
-
-# from homeassistant.helpers.config_validation import time
 
 _LOGGER = logging.getLogger(__name__)
 

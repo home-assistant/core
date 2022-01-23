@@ -100,7 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][DATA_FILTER],
     )
     try:
-        result = await hass.async_add_executor_job(lambda: adx.test_connection())
+        # result = await hass.async_add_executor_job(lambda: adx.test_connection())
+        result = await adx.test_connection()
         if result is not None:
             raise ConfigEntryNotReady("Could not connect to Azure Data Exlorer")
     except Exception as err:
@@ -237,7 +238,7 @@ class AzureDataExplorer:
         # if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
         #    return None, dropped
         # if (utcnow() - time_fired).seconds > self._max_delay + self._send_interval:
-        #  return None, dropped + 1
+        #    return None, dropped + 1
         try:
             json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
             json_dictionary = json.loads(json_string)

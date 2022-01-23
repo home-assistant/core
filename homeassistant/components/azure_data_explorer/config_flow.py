@@ -25,14 +25,7 @@ from .const import (
     DOMAIN,
 )
 
-# from homeassistant.components.azure_data_explorer import client
-
-
-# from homeassistant.exceptions import HomeAssistantError
-
-
 _LOGGER = logging.getLogger(__name__)
-
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
