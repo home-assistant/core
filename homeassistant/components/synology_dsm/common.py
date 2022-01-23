@@ -217,28 +217,26 @@ class SynoApi:
             )
             self.surveillance_station = self.dsm.surveillance_station
 
+    async def _syno_api_executer(self, api_call: Callable) -> None:
+        """Synology api call wrapper."""
+        try:
+            await self._hass.async_add_executor_job(api_call)
+        except (SynologyDSMAPIErrorException, SynologyDSMRequestException) as err:
+            LOGGER.debug(
+                "Error from '%s': %s", self._entry.unique_id, err, exc_info=True
+            )
+
     async def async_reboot(self) -> None:
         """Reboot NAS."""
-        try:
-            await self._hass.async_add_executor_job(self.system.reboot)
-        except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            LOGGER.debug("Exception:%s", err)
-            raise err
+        await self._syno_api_executer(self.system.reboot)
 
     async def async_shutdown(self) -> None:
         """Shutdown NAS."""
-        try:
-            await self._hass.async_add_executor_job(self.system.shutdown)
-        except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            LOGGER.debug("Exception:%s", err)
-            raise err
+        await self._syno_api_executer(self.system.shutdown)
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
-        try:
-            await self._hass.async_add_executor_job(self.dsm.logout)
-        except (SynologyDSMAPIErrorException, SynologyDSMRequestException) as err:
-            LOGGER.debug("Logout from '%s' not possible:%s", self._entry.unique_id, err)
+        await self._syno_api_executer(self.dsm.logout)
 
     async def async_update(self, now: timedelta | None = None) -> None:
         """Update function for updating API information."""
