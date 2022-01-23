@@ -1,6 +1,8 @@
 """Diagnostics support for the Mazda integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -16,7 +18,7 @@ TO_REDACT_DATA = ["vin", "id", "latitude", "longitude"]
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
@@ -32,7 +34,7 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
