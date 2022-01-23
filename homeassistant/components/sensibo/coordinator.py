@@ -1,20 +1,20 @@
 """DataUpdateCoordinator for the Sensibo integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 import asyncio
+from datetime import timedelta
 from typing import Any
+
 from aiohttp.client_exceptions import ClientConnectionError
 import pysensibo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, TIMEOUT, LOGGER, DEFAULT_SCAN_INTERVAL, FIELD_TO_FLAG
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FIELD_TO_FLAG, LOGGER, TIMEOUT
 
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
@@ -62,7 +62,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             swing_mode = ac_states.get("swing")
             available = dev["connectionStatus"].get("isAlive", True)
             capabilities = dev["remoteCapabilities"]
-            hvac_modes = [mode for mode in capabilities["modes"]]
+            hvac_modes = list(capabilities["modes"])
             if hvac_modes:
                 hvac_modes.append("off")
             current_capabilities = capabilities["modes"][ac_states.get("mode")]

@@ -35,10 +35,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import ALL, DOMAIN, TIMEOUT, LOGGER
+from .const import ALL, DOMAIN, LOGGER, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
@@ -210,6 +210,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Add additional state attributes."""
         return {
             "calibration_temperature": self.coordinator.data[self.unique_id][
                 "calibration_temp"
@@ -221,7 +222,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        if (temperature := int(kwargs.get(ATTR_TEMPERATURE))) is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         if temperature == self.target_temperature:
@@ -239,10 +240,10 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
                 return
 
         result = await self._async_set_ac_state_property(
-            "targetTemperature", temperature
+            "targetTemperature", int(temperature)
         )
         if result:
-            self.coordinator.data[self.unique_id]["temp"] = temperature
+            self.coordinator.data[self.unique_id]["target_temperature"] = temperature
             self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -298,7 +299,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             self.async_write_ha_state()
 
     async def _async_set_ac_state_property(
-        self, name: str, value: str, assumed_state: bool = False
+        self, name: str, value: Any, assumed_state: bool = False
     ) -> bool:
         """Set AC state."""
         result = {}
