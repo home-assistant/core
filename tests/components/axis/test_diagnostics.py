@@ -30,8 +30,8 @@ async def test_entry_diagnostics(hass, hass_client):
             "title": "Mock Title",
             "data": {
                 "host": "1.2.3.4",
-                "username": "**REDACTED**",
-                "password": "**REDACTED**",
+                "username": REDACTED,
+                "password": REDACTED,
                 "port": 80,
                 "model": "model",
                 "name": "name",
@@ -40,7 +40,7 @@ async def test_entry_diagnostics(hass, hass_client):
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
-            "unique_id": "**REDACTED**",
+            "unique_id": REDACTED,
             "disabled_by": None,
         },
         "api_discovery": [
