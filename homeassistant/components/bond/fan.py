@@ -83,6 +83,8 @@ class BondFan(BondEntity, FanEntity):
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
+        breeze = state.get("breeze", [0, 0, 0])
+        self._attr_preset_mode = PRESET_MODE_BREEZE if breeze[0] else None
 
     @property
     def supported_features(self) -> int:
