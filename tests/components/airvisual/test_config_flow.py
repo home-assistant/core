@@ -287,7 +287,9 @@ async def test_step_reauth(hass, config_entry, setup_airvisual):
 
     new_api_key = "defgh67890"
 
-    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+    with patch(
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: new_api_key}
         )
