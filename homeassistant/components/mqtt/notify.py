@@ -43,24 +43,30 @@ from .mixins import (
 )
 
 CONF_COMMAND_TEMPLATE = "command_template"
+CONF_TARGETS = "targets"
 CONF_TITLE = "title"
 
 MQTT_EVENT_RELOADED = "event_{}_reloaded"
 
-MQTT_NOTIFY_TARGET_CONFIG = "mqtt_notify_target_config"
+MQTT_TARGET_KEY = "{}_{}"
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_TARGETS, default=[]): cv.ensure_list,
         vol.Optional(CONF_TITLE, default=notify.ATTR_TITLE_DEFAULT): cv.string,
         vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     }
 )
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    },
+    extra=vol.REMOVE_EXTRA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,6 +110,7 @@ async def _async_setup_notify(
         config.get(CONF_NAME),
         config[CONF_QOS],
         config[CONF_RETAIN],
+        config[CONF_TARGETS],
         config[CONF_TITLE],
         discovery_hash=discovery_hash,
         device_id=device_id,
@@ -130,6 +137,7 @@ async def async_get_service(
         config.get(CONF_NAME),
         config[CONF_QOS],
         config[CONF_RETAIN],
+        config[CONF_TARGETS],
         config[CONF_TITLE],
     )
 
@@ -217,6 +225,7 @@ class MqttNotificationService(notify.BaseNotificationService):
         name: str | None,
         qos: int,
         retain: bool,
+        targets: list,
         title: str | None,
         discovery_hash: tuple | None = None,
         device_id: str | None = None,
@@ -230,6 +239,7 @@ class MqttNotificationService(notify.BaseNotificationService):
         self._name = name
         self._qos = qos
         self._retain = retain
+        self._targets = targets
         self._title = title
         self._discovery_hash = discovery_hash
         self._device_id = device_id
@@ -266,24 +276,47 @@ class MqttNotificationService(notify.BaseNotificationService):
         self._retain = config[CONF_RETAIN]
         self._title = config[CONF_TITLE]
         new_service_name = slugify(config.get(CONF_NAME, config[CONF_COMMAND_TOPIC]))
-        if new_service_name != self._service_name:
+        if (
+            new_service_name != self._service_name
+            or config[CONF_TARGETS] != self._targets
+        ):
             await self.async_unregister_services()
+            self._targets = config[CONF_TARGETS]
             self._service_name = new_service_name
             await self.async_register_services()
         if self.device_id:
             await _update_device(self.hass, self._config_entry, config)
 
+    @property
+    def targets(self) -> dict[str, str]:
+        """Return a dictionary of registered targets."""
+        return {
+            MQTT_TARGET_KEY.format(self._service_name, target): target
+            for target in self._targets
+        }
+
     async def async_send_message(self, message: str = "", **kwargs):
         """Build and send a MQTT message."""
+        target = kwargs.get(notify.ATTR_TARGET)
+        if (
+            target is not None
+            and self._targets
+            and set(target) & set(self._targets) != set(target)
+        ):
+            raise AttributeError(
+                f"Cannot send {message}, target list {target} is invalid, valid available targets: {self._targets}"
+            )
+        variables = {
+            "message": message,
+            "name": self._name,
+            "service": self._service_name,
+            "target": target or self._targets,
+            "title": kwargs.get(notify.ATTR_TITLE, self._title),
+        }
+        variables.update(kwargs.get(notify.ATTR_DATA) or {})
         payload = self._command_template.async_render(
             message,
-            variables={
-                "data": kwargs.get(notify.ATTR_DATA),
-                "message": message,
-                "name": self._name,
-                "service": self._service_name,
-                "title": kwargs.get(notify.ATTR_TITLE, self._title),
-            },
+            variables=variables,
         )
         await mqtt.async_publish(
             self.hass,
