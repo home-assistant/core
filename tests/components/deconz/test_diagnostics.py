@@ -2,9 +2,11 @@
 
 from pydeconz.websocket import STATE_RUNNING
 
-from homeassistant.const import Platform
+from homeassistant.components.deconz.const import CONF_MASTER_GATEWAY
+from homeassistant.components.diagnostics import REDACTED
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
 
-from .test_gateway import DECONZ_CONFIG, setup_deconz_integration
+from .test_gateway import HOST, PORT, setup_deconz_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
@@ -19,8 +21,18 @@ async def test_entry_diagnostics(
     await hass.async_block_till_done()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "config_entry": dict(config_entry.data),
-        "deconz_config": DECONZ_CONFIG,
+        "config": {CONF_API_KEY: REDACTED, CONF_HOST: HOST, CONF_PORT: PORT},
+        "options": {CONF_MASTER_GATEWAY: True},
+        "deconz_config": {
+            "bridgeid": REDACTED,
+            "ipaddress": HOST,
+            "mac": REDACTED,
+            "modelid": "deCONZ",
+            "name": "deCONZ mock gateway",
+            "sw_version": "2.05.69",
+            "uuid": "1234",
+            "websocketport": 1234,
+        },
         "websocket_state": STATE_RUNNING,
         "deconz_ids": {},
         "entities": {
