@@ -316,5 +316,5 @@ class BlockSleepingClimate(
                 self.block = block
 
                 _LOGGER.debug("Entity %s attached to block", self.name)
-                self.async_write_ha_state()
-                return
+
+        self.async_write_ha_state()
