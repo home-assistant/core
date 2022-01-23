@@ -532,9 +532,11 @@ class AmcrestCam(Camera):
                     self.schedule_update_ha_state()
                 return
 
-   async def _async_get_video(self) -> bool:
+    async def _async_get_video(self) -> bool:
         stream = {0: "Main", 1: "Extra"}
-        return await self._api.async_is_video_enabled(channel=0, stream=stream[self._resolution])
+        return await self._api.async_is_video_enabled(
+            channel=0, stream=stream[self._resolution]
+        )
 
     async def _async_set_video(self, enable: bool) -> None:
         await self._api.async_set_video_enabled(enable, channel=0)
