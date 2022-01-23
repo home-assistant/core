@@ -21,8 +21,19 @@ async def test_entry_diagnostics(
     await hass.async_block_till_done()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "config": {CONF_API_KEY: REDACTED, CONF_HOST: HOST, CONF_PORT: PORT},
-        "options": {CONF_MASTER_GATEWAY: True},
+        "config": {
+            "data": {CONF_API_KEY: REDACTED, CONF_HOST: HOST, CONF_PORT: PORT},
+            "disabled_by": None,
+            "domain": "deconz",
+            "entry_id": "1",
+            "options": {CONF_MASTER_GATEWAY: True},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "title": "Mock Title",
+            "unique_id": REDACTED,
+            "version": 1,
+        },
         "deconz_config": {
             "bridgeid": REDACTED,
             "ipaddress": HOST,
