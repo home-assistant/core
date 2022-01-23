@@ -1,5 +1,6 @@
 """Test UniFi Network diagnostics."""
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -114,18 +115,29 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "config": {
-            "controller": "**REDACTED**",
-            "host": "1.2.3.4",
-            "password": "**REDACTED**",
-            "port": 1234,
-            "site": "site_id",
-            "username": "username",
-            "verify_ssl": False,
-        },
-        "options": {
-            "allow_bandwidth_sensors": True,
-            "allow_uptime_sensors": True,
-            "block_client": ["00:00:00:00:00:00"],
+            "data": {
+                "controller": REDACTED,
+                "host": "1.2.3.4",
+                "password": REDACTED,
+                "port": 1234,
+                "site": "site_id",
+                "username": REDACTED,
+                "verify_ssl": False,
+            },
+            "disabled_by": None,
+            "domain": "unifi",
+            "entry_id": "1",
+            "options": {
+                "allow_bandwidth_sensors": True,
+                "allow_uptime_sensors": True,
+                "block_client": ["00:00:00:00:00:00"],
+            },
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "title": "Mock Title",
+            "unique_id": "1",
+            "version": 1,
         },
         "site_role": "admin",
         "entities": {
@@ -188,7 +200,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                             },
                             {
                                 "age": 1,
-                                "mac": "**REDACTED**",
+                                "mac": REDACTED,
                                 "static": True,
                                 "uptime": 0,
                                 "vlan": 0,

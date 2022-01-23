@@ -7,13 +7,14 @@ from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
 
 TO_REDACT = {CONF_CONTROLLER, CONF_PASSWORD}
+REDACT_CONFIG = {CONF_CONTROLLER, CONF_PASSWORD, CONF_USERNAME}
 REDACT_CLIENTS = {"bssid", "essid"}
 REDACT_DEVICES = {
     "anon_id",
@@ -59,9 +60,6 @@ async def async_get_config_entry_diagnostics(
     diag: dict[str, Any] = {}
     macs_to_redact: dict[str, str] = {}
 
-    diag["config"] = async_redact_data(config_entry.data, TO_REDACT)
-    diag["site_role"] = controller.site_role
-
     counter = 0
     for mac in chain(controller.api.clients, controller.api.devices):
         macs_to_redact[mac] = format_mac(str(counter).zfill(12))
@@ -74,8 +72,10 @@ async def async_get_config_entry_diagnostics(
                 macs_to_redact[mac] = format_mac(str(counter).zfill(12))
                 counter += 1
 
-    diag["options"] = async_replace_data(config_entry.options, macs_to_redact)
-
+    diag["config"] = async_redact_data(
+        async_replace_data(config_entry.as_dict(), macs_to_redact), REDACT_CONFIG
+    )
+    diag["site_role"] = controller.site_role
     diag["entities"] = async_replace_data(controller.entities, macs_to_redact)
     diag["clients"] = {
         macs_to_redact[k]: async_redact_data(
