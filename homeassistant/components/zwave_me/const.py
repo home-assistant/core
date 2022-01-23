@@ -7,8 +7,10 @@ DOMAIN = "zwave_me"
 
 ZWAVE_PLATFORMS = [
     "switchMultilevel",
+    "binarySwitch"
 ]
 
 PLATFORMS = [
     Platform.NUMBER,
+    Platform.SWITCH
 ]
