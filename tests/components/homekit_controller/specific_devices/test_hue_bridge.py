@@ -36,6 +36,7 @@ async def test_hue_bridge_setup(hass):
                     sw_version="45.1.17846",
                     hw_version="",
                     serial_number="6623462389072572",
+                    unique_id="00:00:00:00:00:00:aid:6623462389072572",
                     devices=[],
                     entities=[
                         EntityTestInfo(

@@ -33,11 +33,9 @@ async def test_ryse_smart_bridge_setup(hass):
             manufacturer="RYSE Inc.",
             sw_version="1.3.0",
             hw_version="0101.3521.0436",
-            # This is an actual bug in the device..
-            serial_number="0101.3521.0436",
             devices=[
                 DeviceTestInfo(
-                    unique_id="00:00:00:00:00:00_2",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     name="Master Bath South",
                     model="RYSE Shade",
                     manufacturer="RYSE Inc.",
@@ -63,7 +61,7 @@ async def test_ryse_smart_bridge_setup(hass):
                     ],
                 ),
                 DeviceTestInfo(
-                    unique_id="00:00:00:00:00:00_3",
+                    unique_id="00:00:00:00:00:00:aid:3",
                     name="RYSE SmartShade",
                     model="RYSE Shade",
                     manufacturer="RYSE Inc.",
@@ -110,11 +108,9 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
             manufacturer="RYSE Inc.",
             sw_version="1.3.0",
             hw_version="0401.3521.0679",
-            # This is an actual bug in the device..
-            serial_number="0401.3521.0679",
             devices=[
                 DeviceTestInfo(
-                    unique_id="00:00:00:00:00:00_2",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     name="LR Left",
                     model="RYSE Shade",
                     manufacturer="RYSE Inc.",
@@ -140,7 +136,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                     ],
                 ),
                 DeviceTestInfo(
-                    unique_id="00:00:00:00:00:00_3",
+                    unique_id="00:00:00:00:00:00:aid:3",
                     name="LR Right",
                     model="RYSE Shade",
                     manufacturer="RYSE Inc.",
@@ -166,7 +162,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                     ],
                 ),
                 DeviceTestInfo(
-                    unique_id="00:00:00:00:00:00_4",
+                    unique_id="00:00:00:00:00:00:aid:4",
                     name="BR Left",
                     model="RYSE Shade",
                     manufacturer="RYSE Inc.",
@@ -192,7 +188,7 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                     ],
                 ),
                 DeviceTestInfo(
-                    unique_id="00:00:00:00:00:00_5",
+                    unique_id="00:00:00:00:00:00:aid:5",
                     name="RZSS",
                     model="RYSE Shade",
                     manufacturer="RYSE Inc.",

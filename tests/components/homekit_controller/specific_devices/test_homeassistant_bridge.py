@@ -41,6 +41,7 @@ async def test_homeassistant_bridge_fan_setup(hass):
                     sw_version="0.104.0.dev0",
                     hw_version="",
                     serial_number="fan.living_room_fan",
+                    unique_id="00:00:00:00:00:00:aid:1256851357",
                     devices=[],
                     entities=[
                         EntityTestInfo(
