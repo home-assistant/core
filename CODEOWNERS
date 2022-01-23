@@ -110,6 +110,8 @@ homeassistant/components/azure_service_bus/* @hfurubotten
 homeassistant/components/balboa/* @garbled1
 tests/components/balboa/* @garbled1
 homeassistant/components/beewi_smartclim/* @alemuro
+homeassistant/components/bemfa/* @larry-wong
+tests/components/bemfa/* @larry-wong
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @bbx-a @bbx-jp

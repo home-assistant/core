@@ -1,0 +1,15 @@
+{
+  "domain": "bemfa",
+  "name": "bemfa",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bemfa",
+  "requirements": ["paho-mqtt==1.6.1"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@larry-wong"
+  ],
+  "iot_class": "cloud_push"
+}

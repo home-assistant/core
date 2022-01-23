@@ -39,6 +39,7 @@ FLOWS = [
     "azure_devops",
     "azure_event_hub",
     "balboa",
+    "bemfa",
     "blebox",
     "blink",
     "bmw_connected_drive",

@@ -1184,6 +1184,7 @@ ovoenergy==1.1.12
 # homeassistant.components.p1_monitor
 p1monitor==1.0.1
 
+# homeassistant.components.bemfa
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.6.1

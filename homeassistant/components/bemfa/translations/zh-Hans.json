@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "duplicated_uid": "\u6b64 UID \u5df2\u7ecf\u914d\u7f6e",
+            "invalid_uid": "\u975e\u6cd5\u7684 UID"
+        },
+        "step": {
+            "entities": {
+                "data": {
+                    "include_entities": "\u8bf7\u9009\u62e9\u5b9e\u4f53"
+                },
+                "description": "\u9009\u62e9\u9700\u8981\u540c\u6b65\u81f3\u5df4\u6cd5\u4e91\u7684\u5b9e\u4f53:",
+                "title": "\u5b9e\u4f53"
+            },
+            "user": {
+                "data": {
+                    "uid": "\u5df4\u6cd5\u4e91 UID"
+                },
+                "title": "\u5df4\u6cd5\u4e91\u7528\u6237"
+            }
+        }
+    }
+}

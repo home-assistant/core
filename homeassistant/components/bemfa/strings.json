@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bemfa User",
+        "data": {
+          "uid": "Bemfa UID"
+        }
+      },
+      "entities": {
+        "title": "Entities",
+        "description": "Select entities to synchronize to Bemfa Service:",
+        "data": {
+          "include_entities": "Select Entities"
+        }
+      }
+    },
+    "error": {
+      "invalid_uid": "Invalid UID",
+      "duplicated_uid": "This UID has already been configured"
+    }
+  }
+}
