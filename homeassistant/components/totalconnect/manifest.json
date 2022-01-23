@@ -2,7 +2,7 @@
   "domain": "totalconnect",
   "name": "Total Connect",
   "documentation": "https://www.home-assistant.io/integrations/totalconnect",
-  "requirements": ["total_connect_client==2021.12"],
+  "requirements": ["total_connect_client==2022.1"],
   "dependencies": [],
   "codeowners": ["@austinmroczek"],
   "config_flow": true,
