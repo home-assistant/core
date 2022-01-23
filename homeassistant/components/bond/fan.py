@@ -123,6 +123,12 @@ class BondFan(BondEntity, FanEntity):
 
         return direction
 
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset_mode."""
+        _LOGGER.critical("preset mode: %s", self._device.props.get("breeze"))
+        return PRESET_MODE_BREEZE if self._device.props.get("breeze") else None
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the desired speed for the fan."""
         _LOGGER.debug("async_set_percentage called with percentage %s", percentage)
