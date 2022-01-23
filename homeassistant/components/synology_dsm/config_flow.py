@@ -7,11 +7,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
-from synology_dsm.api.surveillance_station.const import (
-    SNAPSHOT_PROFILE_BALANCED,
-    SNAPSHOT_PROFILE_HIGH_QUALITY,
-    SNAPSHOT_PROFILE_LOW_BANDWIDTH,
-)
 from synology_dsm.exceptions import (
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
@@ -44,12 +39,10 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_DEVICE_TOKEN,
-    CONF_SNAPSHOT_QUALITY,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SNAPSHOT_QUALITY,
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
@@ -364,30 +357,18 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Required(
+                vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): cv.positive_int,
-                vol.Required(
+                vol.Optional(
                     CONF_TIMEOUT,
                     default=self.config_entry.options.get(
                         CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): cv.positive_int,
-                vol.Required(
-                    CONF_SNAPSHOT_QUALITY,
-                    default=self.config_entry.options.get(
-                        CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
-                    ),
-                ): vol.In(
-                    [
-                        SNAPSHOT_PROFILE_HIGH_QUALITY,
-                        SNAPSHOT_PROFILE_BALANCED,
-                        SNAPSHOT_PROFILE_LOW_BANDWIDTH,
-                    ]
-                ),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
