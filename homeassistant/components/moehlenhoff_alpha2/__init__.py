@@ -1,7 +1,6 @@
 """Support for the Moehlenhoff Alpha2."""
 from datetime import timedelta
 import logging
-from typing import Dict
 
 import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
@@ -50,7 +49,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class Alpha2BaseCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
+class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Keep the base instance in one place and centralize the update."""
 
     def __init__(self, hass: HomeAssistant, base: Alpha2Base) -> None:
@@ -63,7 +62,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_update_data(self) -> Dict[str, Dict]:
+    async def _async_update_data(self) -> dict[str, dict]:
         """Fetch the latest data from the source."""
         await self.base.update_data()
         return {ha["ID"]: ha for ha in self.base.heatareas if ha.get("ID")}
