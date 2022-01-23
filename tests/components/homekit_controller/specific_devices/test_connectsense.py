@@ -8,6 +8,7 @@ from homeassistant.const import (
 )
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -24,7 +25,7 @@ async def test_connectsense_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="InWall Outlet-0394DE",
             model="CS-IWO",
             manufacturer="ConnectSense",
