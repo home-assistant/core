@@ -201,17 +201,14 @@ async def async_setup_entry(
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
     async_add_entities(
-        [
-            BondButtonEntity(hub, device, bpup_subs, description)
-            for device in hub.devices
-            for description in BUTTONS
-            if device.has_action(description.key)
-            and (
-                description.mutually_exclusive is None
-                or not device.has_action(description.mutually_exclusive)
-            )
-        ],
-        True,
+        BondButtonEntity(hub, device, bpup_subs, description)
+        for device in hub.devices
+        for description in BUTTONS
+        if device.has_action(description.key)
+        and (
+            description.mutually_exclusive is None
+            or not device.has_action(description.mutually_exclusive)
+        )
     )
 
 
