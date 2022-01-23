@@ -584,7 +584,7 @@ dovado==0.4.1
 dsmr_parser==0.32
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.4
+dwdwfsapi==1.0.5
 
 # homeassistant.components.dweet
 dweepy==0.3.0
