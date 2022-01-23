@@ -12,6 +12,17 @@ TV_NAME = "fake"
 ENTITY_ID = f"{MP_DOMAIN}.{TV_NAME}"
 MOCK_CLIENT_KEYS = {"1.2.3.4": "some-secret"}
 
+CHANNEL_1 = {
+    "channelNumber": "1",
+    "channelName": "Channel 1",
+    "channelId": "ch1id",
+}
+CHANNEL_2 = {
+    "channelNumber": "20",
+    "channelName": "Channel Name 2",
+    "channelId": "ch2id",
+}
+
 
 async def setup_webostv(hass, unique_id="some-unique-id"):
     """Initialize webostv and media_player for tests."""

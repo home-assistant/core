@@ -1,16 +1,17 @@
 """Support for Amcrest IP cameras."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from contextlib import suppress
+import asyncio
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-import threading
 from typing import Any
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
+import httpx
 import voluptuous as vol
 
 from homeassistant.auth.models import User
@@ -36,8 +37,8 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 
@@ -143,9 +144,9 @@ class AmcrestChecker(ApiWrapper):
         self._hass = hass
         self._wrap_name = name
         self._wrap_errors = 0
-        self._wrap_lock = threading.Lock()
+        self._wrap_lock = asyncio.Lock()
         self._wrap_login_err = False
-        self._wrap_event_flag = threading.Event()
+        self._wrap_event_flag = asyncio.Event()
         self._wrap_event_flag.set()
         self._unsub_recheck: Callable[[], None] | None = None
         super().__init__(
@@ -163,23 +164,40 @@ class AmcrestChecker(ApiWrapper):
         return self._wrap_errors <= MAX_ERRORS and not self._wrap_login_err
 
     @property
-    def available_flag(self) -> threading.Event:
-        """Return threading event flag that indicates if camera's API is responding."""
+    def available_flag(self) -> asyncio.Event:
+        """Return event flag that indicates if camera's API is responding."""
         return self._wrap_event_flag
 
     def _start_recovery(self) -> None:
         self._wrap_event_flag.clear()
-        dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
-        self._unsub_recheck = track_time_interval(
+        async_dispatcher_send(
+            self._hass, service_signal(SERVICE_UPDATE, self._wrap_name)
+        )
+        self._unsub_recheck = async_track_time_interval(
             self._hass, self._wrap_test_online, RECHECK_INTERVAL
         )
 
-    def command(self, *args: Any, **kwargs: Any) -> Any:
+    async def async_command(self, *args: Any, **kwargs: Any) -> httpx.Response:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
+        async with self._command_wrapper():
+            ret = await super().async_command(*args, **kwargs)
+        return ret
+
+    @asynccontextmanager
+    async def async_stream_command(
+        self, *args: Any, **kwargs: Any
+    ) -> AsyncIterator[httpx.Response]:
+        """amcrest.ApiWrapper.command wrapper to catch errors."""
+        async with self._command_wrapper():
+            async with super().async_stream_command(*args, **kwargs) as ret:
+                yield ret
+
+    @asynccontextmanager
+    async def _command_wrapper(self) -> AsyncIterator[None]:
         try:
-            ret = super().command(*args, **kwargs)
+            yield
         except LoginError as ex:
-            with self._wrap_lock:
+            async with self._wrap_lock:
                 was_online = self.available
                 was_login_err = self._wrap_login_err
                 self._wrap_login_err = True
@@ -189,7 +207,7 @@ class AmcrestChecker(ApiWrapper):
                 self._start_recovery()
             raise
         except AmcrestError:
-            with self._wrap_lock:
+            async with self._wrap_lock:
                 was_online = self.available
                 errs = self._wrap_errors = self._wrap_errors + 1
                 offline = not self.available
@@ -198,7 +216,7 @@ class AmcrestChecker(ApiWrapper):
                 _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
                 self._start_recovery()
             raise
-        with self._wrap_lock:
+        async with self._wrap_lock:
             was_offline = not self.available
             self._wrap_errors = 0
             self._wrap_login_err = False
@@ -208,28 +226,29 @@ class AmcrestChecker(ApiWrapper):
             self._unsub_recheck = None
             _LOGGER.error("%s camera back online", self._wrap_name)
             self._wrap_event_flag.set()
-            dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
-        return ret
+            async_dispatcher_send(
+                self._hass, service_signal(SERVICE_UPDATE, self._wrap_name)
+            )
 
-    def _wrap_test_online(self, now: datetime) -> None:
+    async def _wrap_test_online(self, now: datetime) -> None:
         """Test if camera is back online."""
         _LOGGER.debug("Testing if %s back online", self._wrap_name)
         with suppress(AmcrestError):
-            self.current_time  # pylint: disable=pointless-statement
+            await self.async_current_time
 
 
-def _monitor_events(
+async def _monitor_events(
     hass: HomeAssistant,
     name: str,
     api: AmcrestChecker,
     event_codes: set[str],
 ) -> None:
     while True:
-        api.available_flag.wait()
+        await api.available_flag.wait()
         try:
-            for code, payload in api.event_actions("All", retries=5):
+            async for code, payload in api.async_event_actions("All"):
                 event_data = {"camera": name, "event": code, "payload": payload}
-                hass.bus.fire("amcrest", event_data)
+                hass.bus.async_fire("amcrest", event_data)
                 if code in event_codes:
                     signal = service_signal(SERVICE_EVENT, name, code)
                     start = any(
@@ -237,29 +256,14 @@ def _monitor_events(
                         for key, val in payload.items()
                     )
                     _LOGGER.debug("Sending signal: '%s': %s", signal, start)
-                    dispatcher_send(hass, signal, start)
+                    async_dispatcher_send(hass, signal, start)
         except AmcrestError as error:
             _LOGGER.warning(
                 "Error while processing events from %s camera: %r", name, error
             )
 
 
-def _start_event_monitor(
-    hass: HomeAssistant,
-    name: str,
-    api: AmcrestChecker,
-    event_codes: set[str],
-) -> None:
-    thread = threading.Thread(
-        target=_monitor_events,
-        name=f"Amcrest {name}",
-        args=(hass, name, api, event_codes),
-        daemon=True,
-    )
-    thread.start()
-
-
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
 
@@ -298,13 +302,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             control_light,
         )
 
-        discovery.load_platform(
+        await discovery.async_load_platform(
             hass, Platform.CAMERA, DOMAIN, {CONF_NAME: name}, config
         )
 
         event_codes = set()
         if binary_sensors:
-            discovery.load_platform(
+            await discovery.async_load_platform(
                 hass,
                 Platform.BINARY_SENSOR,
                 DOMAIN,
@@ -319,10 +323,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 and sensor.event_code is not None
             }
 
-        _start_event_monitor(hass, name, api, event_codes)
+        asyncio.create_task(_monitor_events(hass, name, api, event_codes))
 
         if sensors:
-            discovery.load_platform(
+            await discovery.async_load_platform(
                 hass,
                 Platform.SENSOR,
                 DOMAIN,
@@ -331,7 +335,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         if switches:
-            discovery.load_platform(
+            await discovery.async_load_platform(
                 hass,
                 Platform.SWITCH,
                 DOMAIN,
@@ -384,7 +388,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_dispatcher_send(hass, service_signal(call.service, entity_id), *args)
 
     for service, params in CAMERA_SERVICES.items():
-        hass.services.register(DOMAIN, service, async_service_handler, params[0])
+        hass.services.async_register(DOMAIN, service, async_service_handler, params[0])
 
     return True
 

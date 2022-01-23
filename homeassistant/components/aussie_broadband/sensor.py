@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_KILOBYTES, DATA_MEGABYTES, TIME_DAYS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -129,6 +130,14 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{service[SERVICE_ID]}:{description.key}"
         self._attr_name = f"{service['name']} {description.name}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, service[SERVICE_ID])},
+            manufacturer="Aussie Broadband",
+            configuration_url=f"https://my.aussiebroadband.com.au/#/{service['name']}/{service[SERVICE_ID]}/",
+            name=service["description"],
+            model=service["name"],
+        )
 
     @property
     def native_value(self):
