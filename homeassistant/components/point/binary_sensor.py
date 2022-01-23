@@ -121,7 +121,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
             return not self._is_on
-        return self._is_on
+        return bool(self._is_on)
 
     @property
     def name(self):
