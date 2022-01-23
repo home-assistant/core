@@ -141,7 +141,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[HyundaiKiaBinarySensorEntityDescription, ...]] 
     HyundaiKiaBinarySensorEntityDescription(
         key="hood_is_open",
         name="Hood",
-        device_class=BinarySensorDeviceClass.DOOR,
+        is_on=lambda vehicle: vehicle.hood_is_open,
         on_icon="mdi:car",
         off_icon="mdi:car",
     ),
