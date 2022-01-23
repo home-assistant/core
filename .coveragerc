@@ -611,6 +611,7 @@ omit =
     homeassistant/components/logi_circle/sensor.py
     homeassistant/components/london_underground/sensor.py
     homeassistant/components/lookin/__init__.py
+    homeassistant/components/lookin/coordinator.py
     homeassistant/components/lookin/entity.py
     homeassistant/components/lookin/models.py
     homeassistant/components/lookin/sensor.py
