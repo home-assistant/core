@@ -3,6 +3,7 @@ import dataclasses
 from unittest.mock import Mock, patch
 
 from aiowebostv import WebOsTvPairError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -10,6 +11,7 @@ from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import (
     CONF_CLIENT_SECRET,
+    CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
@@ -69,6 +71,38 @@ async def test_import(hass, client):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "sources",
+    [
+        ["Live TV", "Input01", "Input02"],
+        "Live TV, Input01 , Input02",
+        "Live TV,Input01 ,Input02",
+    ],
+)
+async def test_import_sources(hass, client, sources):
+    """Test import yaml config with sources list/csv."""
+    assert client
+
+    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: config_entries.SOURCE_IMPORT},
+            data={
+                **MOCK_YAML_CONFIG,
+                CONF_CUSTOMIZE: {
+                    CONF_SOURCES: sources,
+                },
+            },
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "fake"
+    assert result["data"][CONF_HOST] == MOCK_YAML_CONFIG[CONF_HOST]
+    assert result["data"][CONF_CLIENT_SECRET] == MOCK_YAML_CONFIG[CONF_CLIENT_SECRET]
+    assert result["options"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
+    assert result["result"].unique_id == MOCK_YAML_CONFIG[CONF_UNIQUE_ID]
 
 
 async def test_form(hass, client):
