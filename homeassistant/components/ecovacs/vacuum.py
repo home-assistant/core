@@ -1,4 +1,4 @@
-"""Support for Ecovacs Ecovacs Vaccums."""
+"""Support for Ecovacs Ecovacs Vacuums."""
 from __future__ import annotations
 
 import logging

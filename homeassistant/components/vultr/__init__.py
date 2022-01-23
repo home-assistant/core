@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 from vultr import Vultr as VultrAPI
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -56,7 +57,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vultr.update()
     except RuntimeError as ex:
         _LOGGER.error("Failed to make update API request because: %s", ex)
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: {}" "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,

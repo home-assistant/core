@@ -461,7 +461,7 @@ async def async_setup_entry(  # noqa: C901
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
         hass,
-        NOTIFY_DOMAIN,
+        Platform.NOTIFY,
         DOMAIN,
         {
             ATTR_UNIQUE_ID: entry.unique_id,

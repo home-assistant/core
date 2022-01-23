@@ -7,7 +7,8 @@ import async_timeout
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.const import __version__ as current_version
+from homeassistant.components import hassio
+from homeassistant.const import Platform, __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery, update_coordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -79,8 +80,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Fetched version %s: %s", newest, release_notes)
 
         # Load data from Supervisor
-        if hass.components.hassio.is_hassio():
-            core_info = hass.components.hassio.get_core_info()
+        if hassio.is_hassio(hass):
+            core_info = hassio.get_core_info(hass)
             newest = core_info["version_latest"]
 
         # Validate version
@@ -117,7 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     asyncio.create_task(coordinator.async_refresh())
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
     )
 
     return True

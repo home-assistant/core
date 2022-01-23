@@ -59,8 +59,9 @@ class OverkizLight(OverkizEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.executor.select_state(OverkizState.CORE_ON_OFF) == cast(
-            str, OverkizCommandParam.ON
+        return (
+            self.executor.select_state(OverkizState.CORE_ON_OFF)
+            == OverkizCommandParam.ON
         )
 
     @property
@@ -73,13 +74,13 @@ class OverkizLight(OverkizEntity, LightEntity):
         if red is None or green is None or blue is None:
             return None
 
-        return (int(red), int(green), int(blue))
+        return (cast(int, red), cast(int, green), cast(int, blue))
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
         if brightness := self.executor.select_state(OverkizState.CORE_LIGHT_INTENSITY):
-            return round(int(brightness) * 255 / 100)
+            return round(cast(int, brightness) * 255 / 100)
 
         return None
 

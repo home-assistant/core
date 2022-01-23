@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -95,6 +96,14 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     }
 )
 
+PLATFORMS = (
+    Platform.CLIMATE,
+    Platform.WATER_HEATER,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a Genius Hub system."""
@@ -120,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    for platform in ("climate", "water_heater", "sensor", "binary_sensor", "switch"):
+    for platform in PLATFORMS:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     setup_service_functions(hass, broker)

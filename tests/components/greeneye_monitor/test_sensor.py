@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .common import (
+    MULTI_MONITOR_CONFIG,
     SINGLE_MONITOR_CONFIG_POWER_SENSORS,
     SINGLE_MONITOR_CONFIG_PULSE_COUNTERS,
     SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS,
@@ -152,6 +153,17 @@ async def test_voltage_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
     )
     connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_sensor_state(hass, "sensor.voltage_1", "120.0")
+
+
+async def test_multi_monitor_sensors(hass: HomeAssistant, monitors: AsyncMock) -> None:
+    """Test that sensors still work when multiple monitors are registered."""
+    await setup_greeneye_monitor_component_with_config(hass, MULTI_MONITOR_CONFIG)
+    connect_monitor(monitors, 1)
+    connect_monitor(monitors, 2)
+    connect_monitor(monitors, 3)
+    assert_sensor_state(hass, "sensor.unit_1_temp_1", "32.0")
+    assert_sensor_state(hass, "sensor.unit_2_temp_1", "0.0")
+    assert_sensor_state(hass, "sensor.unit_3_temp_1", "32.0")
 
 
 def connect_monitor(monitors: AsyncMock, serial_number: int) -> MagicMock:

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import requests
 from wallbox import Wallbox
@@ -37,7 +37,7 @@ PLATFORMS = [Platform.SENSOR, Platform.NUMBER]
 UPDATE_INTERVAL = 30
 
 
-class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
+class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 
     def __init__(self, station: str, wallbox: Wallbox, hass: HomeAssistant) -> None:

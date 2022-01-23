@@ -422,6 +422,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Switch 4",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             name="Child Lock",
             icon="mdi:account-lock",

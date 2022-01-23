@@ -197,7 +197,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
 
 
 async def test_automatic_offset(hass: HomeAssistant, fritz: Mock):
-    """Test when automtaic offset is configured on fritz!box device."""
+    """Test when automatic offset is configured on fritz!box device."""
     device = FritzDeviceClimateMock()
     device.temperature = 18
     device.actual_temperature = 19

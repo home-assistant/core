@@ -76,6 +76,40 @@ async def test_sending_mqtt_commands(hass, mqtt_mock):
     assert state.state == "2021-11-08T13:31:44+00:00"
 
 
+async def test_command_template(hass, mqtt_mock):
+    """Test the sending of MQTT commands through a command template."""
+    assert await async_setup_component(
+        hass,
+        button.DOMAIN,
+        {
+            button.DOMAIN: {
+                "command_topic": "command-topic",
+                "command_template": '{ "{{ value }}": "{{ entity_id }}" }',
+                "name": "test",
+                "payload_press": "milky_way_press",
+                "platform": "mqtt",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("button.test")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "test"
+
+    await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.test"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", '{ "milky_way_press": "button.test" }', 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+
 async def test_availability_when_connection_lost(hass, mqtt_mock):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
@@ -328,7 +362,7 @@ async def test_valid_device_class(hass, mqtt_mock):
 @pytest.mark.parametrize(
     "service,topic,parameters,payload,template",
     [
-        (button.SERVICE_PRESS, "command_topic", None, "PRESS", None),
+        (button.SERVICE_PRESS, "command_topic", None, "PRESS", "command_template"),
     ],
 )
 async def test_publishing_with_custom_encoding(

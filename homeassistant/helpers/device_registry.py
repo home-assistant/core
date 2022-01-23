@@ -553,7 +553,9 @@ class DeviceRegistry:
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
                     connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
-                    disabled_by=device["disabled_by"],
+                    disabled_by=DeviceEntryDisabler(device["disabled_by"])
+                    if device["disabled_by"]
+                    else None,
                     entry_type=DeviceEntryType(device["entry_type"])
                     if device["entry_type"]
                     else None,

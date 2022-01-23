@@ -128,6 +128,35 @@ SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS = make_single_monitor_config_with_sensors(
     }
 )
 
+MULTI_MONITOR_CONFIG = {
+    DOMAIN: {
+        CONF_PORT: 7513,
+        CONF_MONITORS: [
+            {
+                CONF_SERIAL_NUMBER: "00000001",
+                CONF_TEMPERATURE_SENSORS: {
+                    CONF_TEMPERATURE_UNIT: "C",
+                    CONF_SENSORS: [{CONF_NUMBER: 1, CONF_NAME: "unit_1_temp_1"}],
+                },
+            },
+            {
+                CONF_SERIAL_NUMBER: "00000002",
+                CONF_TEMPERATURE_SENSORS: {
+                    CONF_TEMPERATURE_UNIT: "F",
+                    CONF_SENSORS: [{CONF_NUMBER: 1, CONF_NAME: "unit_2_temp_1"}],
+                },
+            },
+            {
+                CONF_SERIAL_NUMBER: "00000003",
+                CONF_TEMPERATURE_SENSORS: {
+                    CONF_TEMPERATURE_UNIT: "C",
+                    CONF_SENSORS: [{CONF_NUMBER: 1, CONF_NAME: "unit_3_temp_1"}],
+                },
+            },
+        ],
+    }
+}
+
 
 async def setup_greeneye_monitor_component_with_config(
     hass: HomeAssistant, config: ConfigType

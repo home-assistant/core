@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,16 +33,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OVERKIZ_STATE_TO_TRANSLATION
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizDescriptiveEntity, OverkizEntity
+from .entity import OverkizDescriptiveEntity, OverkizDeviceClass, OverkizEntity
 
 
 @dataclass
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
-    native_value: Callable[[str | int | float], str | int | float] | None = None
+    native_value: Callable[[OverkizStateType], StateType] | None = None
 
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
@@ -52,12 +53,14 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_value=lambda value: int(str(value).strip("%")),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY,
         name="Battery",
-        native_value=lambda value: str(value).capitalize(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=OverkizDeviceClass.BATTERY,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_RSSI_LEVEL,
@@ -65,7 +68,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        native_value=lambda value: round(float(value)),
+        native_value=lambda value: round(cast(float, value)),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -236,7 +239,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_RELATIVE_HUMIDITY,
         name="Relative Humidity",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,  # core:MeasuredValueType = core:RelativeValueInPercentage
         state_class=SensorStateClass.MEASUREMENT,
@@ -245,7 +248,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_TEMPERATURE,
         name="Temperature",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,  # core:MeasuredValueType = core:TemperatureInCelcius
         state_class=SensorStateClass.MEASUREMENT,
@@ -292,7 +295,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_SUN_ENERGY,
         name="Sun Energy",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -300,7 +303,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_WIND_SPEED,
         name="Wind Speed",
-        native_value=lambda value: round(float(value), 2),
+        native_value=lambda value: round(cast(float, value), 2),
         icon="mdi:weather-windy",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -308,15 +311,19 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.IO_SENSOR_ROOM,
         name="Sensor Room",
-        native_value=lambda value: str(value).capitalize(),
-        entity_registry_enabled_default=False,
+        device_class=OverkizDeviceClass.SENSOR_ROOM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:spray-bottle",
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_PRIORITY_LOCK_ORIGINATOR,
         name="Priority Lock Originator",
-        native_value=lambda value: str(value).capitalize(),
+        device_class=OverkizDeviceClass.PRIORITY_LOCK_ORIGINATOR,
         icon="mdi:lock",
         entity_registry_enabled_default=False,
+        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
+            cast(str, value), cast(str, value)
+        ),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_PRIORITY_LOCK_TIMER,
@@ -329,8 +336,19 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_DISCRETE_RSSI_LEVEL,
         name="Discrete RSSI Level",
         entity_registry_enabled_default=False,
-        native_value=lambda value: str(value).capitalize(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=OverkizDeviceClass.DISCRETE_RSSI_LEVEL,
+        icon="mdi:wifi",
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_SENSOR_DEFECT,
+        name="Sensor Defect",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=OverkizDeviceClass.SENSOR_DEFECT,
+        native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
+            cast(str, value), cast(str, value)
+        ),
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
@@ -343,6 +361,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     ),
 ]
 
+SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -352,10 +372,6 @@ async def async_setup_entry(
     """Set up the Overkiz sensors from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = []
-
-    key_supported_states = {
-        description.key: description for description in SENSOR_DESCRIPTIONS
-    }
 
     for device in data.coordinator.data.values():
         if device.widget == UIWidget.HOMEKIT_STACK:
@@ -373,7 +389,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizStateSensor(
                         device.device_url,
@@ -395,14 +411,17 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if not state:
+        if not state or not state.value:
             return None
 
         # Transform the value with a lambda function
         if self.entity_description.native_value:
             return self.entity_description.native_value(state.value)
 
-        return cast(str, state.value)
+        if isinstance(state.value, (dict, list)):
+            return None
+
+        return state.value
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):

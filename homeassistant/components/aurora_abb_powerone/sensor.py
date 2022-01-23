@@ -1,4 +1,4 @@
-"""Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
+"""Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -7,6 +7,7 @@ from homeassistant.const import ENERGY_KILO_WATT_HOUR, VOLUME_CUBIC_METERS, Plat
 DOMAIN = "vicare"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,

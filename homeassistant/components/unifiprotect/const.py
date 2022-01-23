@@ -6,6 +6,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "unifiprotect"
 
+ATTR_EVENT_SCORE = "event_score"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
@@ -13,6 +14,7 @@ ATTR_BITRATE = "bitrate"
 ATTR_CHANNEL_ID = "channel_id"
 ATTR_MESSAGE = "message"
 ATTR_DURATION = "duration"
+ATTR_ANONYMIZE = "anonymize"
 
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"

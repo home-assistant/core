@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .common import FritzBoxTools
+from .common import AvmWrapper
 from .const import (
     DOMAIN,
     FRITZ_SERVICES,
@@ -42,9 +42,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
         for entry_id in fritzbox_entry_ids:
             _LOGGER.debug("Executing service %s", service_call.service)
-            avm_device: FritzBoxTools = hass.data[DOMAIN][entry_id]
+            avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry_id]
             if config_entry := hass.config_entries.async_get_entry(entry_id):
-                await avm_device.service_fritzbox(service_call, config_entry)
+                await avm_wrapper.service_fritzbox(service_call, config_entry)
             else:
                 _LOGGER.error(
                     "Executing service %s failed, no config entry found",

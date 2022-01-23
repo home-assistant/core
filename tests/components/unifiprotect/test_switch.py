@@ -384,11 +384,11 @@ async def test_switch_camera_simple(
     if description.name in ("High FPS", "Privacy Mode"):
         return
 
-    assert description.ufp_set_function is not None
+    assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_function] = Mock()
-    setattr(camera, description.ufp_set_function, AsyncMock())
-    set_method = getattr(camera, description.ufp_set_function)
+    camera.__fields__[description.ufp_set_method] = Mock()
+    setattr(camera, description.ufp_set_method, AsyncMock())
+    set_method = getattr(camera, description.ufp_set_method)
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, camera, description)
 

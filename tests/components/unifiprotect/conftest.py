@@ -2,11 +2,12 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from ipaddress import IPv4Address
 import json
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -21,6 +22,8 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
+
+from . import _patch_discovery
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
@@ -37,6 +40,7 @@ class MockBootstrap:
     sensors: dict[str, Any]
     viewers: dict[str, Any]
     liveviews: dict[str, Any]
+    events: dict[str, Any]
 
     def reset_objects(self) -> None:
         """Reset all devices on bootstrap for tests."""
@@ -45,6 +49,11 @@ class MockBootstrap:
         self.sensors = {}
         self.viewers = {}
         self.liveviews = {}
+        self.events = {}
+
+    def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
+        """Fake process method for tests."""
+        pass
 
 
 @dataclass
@@ -70,6 +79,24 @@ def mock_nvr_fixture():
     NVR.__config__.validate_assignment = True
 
 
+@pytest.fixture(name="mock_ufp_config_entry")
+def mock_ufp_config_entry():
+    """Mock the unifiprotect config entry."""
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+            "id": "UnifiProtect",
+            "port": 443,
+            "verify_ssl": False,
+        },
+        version=2,
+    )
+
+
 @pytest.fixture(name="mock_old_nvr")
 def mock_old_nvr_fixture():
     """Mock UniFi Protect Camera device."""
@@ -83,7 +110,13 @@ def mock_old_nvr_fixture():
 def mock_bootstrap_fixture(mock_nvr: NVR):
     """Mock Bootstrap fixture."""
     return MockBootstrap(
-        nvr=mock_nvr, cameras={}, lights={}, sensors={}, viewers={}, liveviews={}
+        nvr=mock_nvr,
+        cameras={},
+        lights={},
+        sensors={},
+        viewers={},
+        liveviews={},
+        events={},
     )
 
 
@@ -113,28 +146,20 @@ def mock_client(mock_bootstrap: MockBootstrap):
 
 @pytest.fixture
 def mock_entry(
-    hass: HomeAssistant, mock_client  # pylint: disable=redefined-outer-name
+    hass: HomeAssistant,
+    mock_ufp_config_entry: MockConfigEntry,
+    mock_client,  # pylint: disable=redefined-outer-name
 ):
     """Mock ProtectApiClient for testing."""
 
-    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
-        mock_config = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-                "id": "UnifiProtect",
-                "port": 443,
-                "verify_ssl": False,
-            },
-            version=2,
-        )
-        mock_config.add_to_hass(hass)
+    with _patch_discovery(no_device=True), patch(
+        "homeassistant.components.unifiprotect.ProtectApiClient"
+    ) as mock_api:
+        mock_ufp_config_entry.add_to_hass(hass)
 
         mock_api.return_value = mock_client
 
-        yield MockEntityFixture(mock_config, mock_client)
+        yield MockEntityFixture(mock_ufp_config_entry, mock_client)
 
 
 @pytest.fixture

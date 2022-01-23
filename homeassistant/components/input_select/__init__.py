@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -187,7 +187,7 @@ class InputSelectStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
-        return cast(Dict[str, Any], self.CREATE_SCHEMA(data))
+        return cast(dict[str, Any], self.CREATE_SCHEMA(data))
 
     @callback
     def _get_suggested_id(self, info: dict[str, Any]) -> str:

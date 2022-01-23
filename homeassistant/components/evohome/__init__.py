@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,6 +32,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -247,10 +249,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await broker.save_auth_tokens()
     await broker.async_update()  # get initial state
 
-    hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    )
     if broker.tcs.hotwater:
         hass.async_create_task(
-            async_load_platform(hass, "water_heater", DOMAIN, {}, config)
+            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
     hass.helpers.event.async_track_time_interval(
@@ -431,7 +435,7 @@ class EvoBroker:
             return
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
+            async_call_later(self.hass, 1, self._update_v2_api_state)
 
         return result
 

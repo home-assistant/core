@@ -20,9 +20,11 @@ class SteamistDataUpdateCoordinator(DataUpdateCoordinator[SteamistStatus]):
         hass: HomeAssistant,
         client: Steamist,
         host: str,
+        device_name: str | None,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific steamist."""
         self.client = client
+        self.device_name = device_name
         super().__init__(
             hass,
             _LOGGER,

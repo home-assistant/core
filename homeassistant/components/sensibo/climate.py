@@ -82,7 +82,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up Sensibo devices."""
     _LOGGER.warning(

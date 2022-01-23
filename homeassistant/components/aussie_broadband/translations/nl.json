@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "no_services_found": "Er zijn geen services gevonden voor dit account"
+        },
+        "step": {
+            "reauth": {
+                "description": "Update wachtwoord voor {username}"
+            },
+            "service": {
+                "data": {
+                    "services": "Services"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "services": "Services"
+                },
+                "title": "Selecteer Services"
+            }
+        }
+    }
+}

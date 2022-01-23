@@ -6,7 +6,7 @@ from pystiebeleltron import pystiebeleltron
 import voluptuous as vol
 
 from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -45,7 +45,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "ste_data": StiebelEltronData(name, modbus_client),
     }
 
-    discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
     return True
 
 

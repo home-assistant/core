@@ -209,7 +209,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return bool(hass.config_entries.async_entries(DOMAIN))
 
     conf = dict(conf)
-
     hass.data[DATA_KNX_CONFIG] = conf
 
     # Only import if we haven't before.
@@ -226,19 +225,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf = hass.data.get(DATA_KNX_CONFIG)
-
-    #  When reloading
+    # `conf` is None when reloading the integration or no `knx` key in configuration.yaml
     if conf is None:
-        conf = await async_integration_yaml_config(hass, DOMAIN)
-        if not conf or DOMAIN not in conf:
-            return False
-
-        conf = conf[DOMAIN]
-
-    # If user didn't have configuration.yaml config, generate defaults
-    if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
-
+        _conf = await async_integration_yaml_config(hass, DOMAIN)
+        if not _conf or DOMAIN not in _conf:
+            _LOGGER.warning(
+                "No `knx:` key found in configuration.yaml. See "
+                "https://www.home-assistant.io/integrations/knx/ "
+                "for KNX entity configuration documentation"
+            )
+            # generate defaults
+            conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
+        else:
+            conf = _conf[DOMAIN]
     config = {**conf, **entry.data}
 
     try:
@@ -269,7 +268,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
+                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
 
@@ -366,7 +365,6 @@ class KNXModule:
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
-
         self.entry.async_on_unload(self.entry.add_update_listener(async_update_entry))
 
     def init_xknx(self) -> None:
@@ -406,7 +404,6 @@ class KNXModule:
                 route_back=self.config.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
             )
-
         return ConnectionConfig(auto_reconnect=True)
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:

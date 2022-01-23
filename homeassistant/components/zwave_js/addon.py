@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
@@ -53,12 +53,12 @@ def get_addon_manager(hass: HomeAssistant) -> AddonManager:
 
 def api_error(
     error_message: str,
-) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[_R]]]:
+) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Coroutine[Any, Any, _R]]]:
     """Handle HassioAPIError and raise a specific AddonError."""
 
     def handle_hassio_api_error(
         func: Callable[_P, Awaitable[_R]]
-    ) -> Callable[_P, Awaitable[_R]]:
+    ) -> Callable[_P, Coroutine[Any, Any, _R]]:
         """Handle a HassioAPIError."""
 
         async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:

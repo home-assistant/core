@@ -8,6 +8,7 @@ from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import persistent_notification
 from homeassistant.components.camera import ATTR_FILENAME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -140,7 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if not logi_circle.authorized:
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             (
                 f"Error: The cached access tokens are missing from {DEFAULT_CACHEDB}.<br />"
                 f"Please unload then re-add the Logi Circle integration to resolve."
@@ -156,7 +158,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()
     except AuthorizationFailed:
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: Failed to obtain an access token from the cached "
             "refresh token.<br />"
             "Token may have expired or been revoked.<br />"
@@ -169,14 +172,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The TimeoutError exception object returns nothing when casted to a
         # string, so we'll handle it separately.
         err = f"{_TIMEOUT}s timeout exceeded when connecting to Logi Circle API"
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {err}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
         return False
     except ClientResponseError as ex:
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,

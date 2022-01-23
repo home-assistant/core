@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -162,7 +163,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                 call.service,
                 errors,
             )
-            hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                hass,
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{ha.DOMAIN}.check_config",

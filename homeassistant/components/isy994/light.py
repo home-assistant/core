@@ -28,10 +28,8 @@ ATTR_LAST_BRIGHTNESS = "last_brightness"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> bool:
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the ISY994 light platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     isy_options = entry.options

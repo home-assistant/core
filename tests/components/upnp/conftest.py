@@ -1,5 +1,7 @@
 """Configuration for SSDP tests."""
-from typing import Optional, Sequence
+from __future__ import annotations
+
+from collections.abc import Sequence
 from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import urlparse
 
@@ -148,26 +150,26 @@ class MockIgdDevice:
         """Get the device type of this device."""
         return self.profile_device.device_type
 
-    async def async_get_total_bytes_received(self) -> Optional[int]:
+    async def async_get_total_bytes_received(self) -> int | None:
         """Get total bytes received."""
         self.traffic_times_polled += 1
         return self.traffic_data[BYTES_RECEIVED]
 
-    async def async_get_total_bytes_sent(self) -> Optional[int]:
+    async def async_get_total_bytes_sent(self) -> int | None:
         """Get total bytes sent."""
         return self.traffic_data[BYTES_SENT]
 
-    async def async_get_total_packets_received(self) -> Optional[int]:
+    async def async_get_total_packets_received(self) -> int | None:
         """Get total packets received."""
         return self.traffic_data[PACKETS_RECEIVED]
 
-    async def async_get_total_packets_sent(self) -> Optional[int]:
+    async def async_get_total_packets_sent(self) -> int | None:
         """Get total packets sent."""
         return self.traffic_data[PACKETS_SENT]
 
     async def async_get_external_ip_address(
-        self, services: Optional[Sequence[str]] = None
-    ) -> Optional[str]:
+        self, services: Sequence[str] | None = None
+    ) -> str | None:
         """
         Get the external IP address.
 
@@ -176,8 +178,8 @@ class MockIgdDevice:
         return self.status_data[ROUTER_IP]
 
     async def async_get_status_info(
-        self, services: Optional[Sequence[str]] = None
-    ) -> Optional[StatusInfo]:
+        self, services: Sequence[str] | None = None
+    ) -> StatusInfo | None:
         """
         Get status info.
 

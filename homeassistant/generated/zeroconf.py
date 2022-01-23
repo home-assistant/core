@@ -179,6 +179,11 @@ ZEROCONF = {
             "domain": "hue"
         }
     ],
+    "_hwenergy._tcp.local.": [
+        {
+            "domain": "homewizard"
+        }
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"

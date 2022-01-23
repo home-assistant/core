@@ -34,9 +34,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     except KeyError:
         info_object["user"] = None
 
-    if platform.system() == "Windows":
-        info_object["os_version"] = platform.win32_ver()[0]
-    elif platform.system() == "Darwin":
+    if platform.system() == "Darwin":
         info_object["os_version"] = platform.mac_ver()[0]
     elif platform.system() == "Linux":
         info_object["docker"] = os.path.isfile("/.dockerenv")

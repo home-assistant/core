@@ -1939,6 +1939,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
+        self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

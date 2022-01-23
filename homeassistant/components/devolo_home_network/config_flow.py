@@ -76,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
-        """Handle zerooconf discovery."""
+        """Handle zeroconf discovery."""
         if discovery_info.properties["MT"] in ["2600", "2601"]:
             return self.async_abort(reason="home_control")
 

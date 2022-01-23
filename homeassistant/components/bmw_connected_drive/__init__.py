@@ -164,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
-            NOTIFY_DOMAIN,
+            Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: DOMAIN},
             hass.data[DOMAIN][DATA_HASS_CONFIG],

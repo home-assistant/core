@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Nom d'amfitri\u00f3 inv\u00e0lid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "El nom d'amfitri\u00f3 al qual realitzar la consulta DNS"
+                }
+            }
+        }
+    }
+}
