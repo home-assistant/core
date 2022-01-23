@@ -1,42 +1,31 @@
 """Support for tracking the online status of a UPS."""
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, KEY_STATUS, VALUE_ONLINE
 
-DEFAULT_NAME = "UPS Online Status"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up an APCUPSd Online Status binary sensor."""
-    apcups_data = hass.data[DOMAIN]
-
-    add_entities([OnlineStatus(config, apcups_data)], True)
+    data_service = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities([OnlineStatus(data_service)], update_before_add=True)
 
 
 class OnlineStatus(BinarySensorEntity):
     """Representation of an UPS online status."""
 
-    def __init__(self, config, data):
+    def __init__(self, data):
         """Initialize the APCUPSd binary device."""
         self._data = data
-        self._attr_name = config[CONF_NAME]
+        self._attr_name = "UPS Online Status"
 
     def update(self) -> None:
         """Get the status report from APCUPSd and set this entity's state."""

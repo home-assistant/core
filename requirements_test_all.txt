@@ -286,6 +286,12 @@ androidtv[async]==0.0.67
 # homeassistant.components.anthemav
 anthemav==1.4.1
 
+# homeassistant.components.apcupsd
+apcaccess==0.0.13
+
+# homeassistant.components.apns
+apns2==0.3.0
+
 # homeassistant.components.apprise
 apprise==1.0.0
 

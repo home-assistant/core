@@ -62,7 +62,9 @@ omit =
     homeassistant/components/androidtv/diagnostics.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
-    homeassistant/components/apcupsd/*
+    homeassistant/components/apcupsd/__init__.py
+    homeassistant/components/apcupsd/binary_sensor.py
+    homeassistant/components/apcupsd/sensor.py
     homeassistant/components/apple_tv/__init__.py
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py

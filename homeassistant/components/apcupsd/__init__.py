@@ -1,58 +1,65 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 from datetime import timedelta
 import logging
+from typing import Final
 
 from apcaccess import status
-import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 3551
-DOMAIN = "apcupsd"
-
-KEY_STATUS = "STATFLAG"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-VALUE_ONLINE = 8
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+DOMAIN: Final = "apcupsd"
+KEY_STATUS: Final = "STATFLAG"
+VALUE_ONLINE: Final = 8
+PLATFORMS: Final = (Platform.SENSOR, Platform.BINARY_SENSOR)
+MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=60)
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Use config values to set up a function enabling status retrieval."""
-    conf = config[DOMAIN]
-    host = conf[CONF_HOST]
-    port = conf[CONF_PORT]
+    data_service = APCUPSdData(
+        config_entry.data[CONF_HOST], config_entry.data[CONF_PORT]
+    )
 
-    apcups_data = APCUPSdData(host, port)
-    hass.data[DOMAIN] = apcups_data
-
-    # It doesn't really matter why we're not able to get the status, just that
-    # we can't.
+    # It doesn't really matter why we're not able to get the status, just that we can't.
     try:
-        apcups_data.update(no_throttle=True)
-    except Exception:  # pylint: disable=broad-except
+        data_service.update(no_throttle=True)
+    except Exception:
         _LOGGER.exception("Failure while testing APCUPSd status retrieval")
         return False
+
+    # Set up option update handler.
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_options_updated)
+    )
+
+    # Store the data service object.
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = data_service
+
+    # Forward the config entries to the supported platforms.
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
+async def _async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class APCUPSdData:

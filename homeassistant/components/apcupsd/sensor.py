@@ -4,14 +4,13 @@ from __future__ import annotations
 import logging
 
 from apcaccess.status import ALL_UNITS
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_RESOURCES,
     ELECTRIC_CURRENT_AMPERE,
@@ -25,11 +24,9 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from . import DOMAIN, APCUPSdData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -387,7 +384,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:transfer",
     ),
 )
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 SPECIFIC_UNITS = {"ITEMP": TEMP_CELSIUS}
 INFERRED_UNITS = {
@@ -403,39 +399,30 @@ INFERRED_UNITS = {
     " Percent Load Capacity": PERCENTAGE,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        )
-    }
-)
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the APCUPSd sensors."""
-    apcups_data = hass.data[DOMAIN]
-    resources = config[CONF_RESOURCES]
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up the APCUPSd sensors from config entries."""
+    data_service = hass.data[DOMAIN][config_entry.entry_id]
 
-    for resource in resources:
-        if resource.upper() not in apcups_data.status:
-            _LOGGER.warning(
-                "Sensor type: %s does not appear in the APCUPSd status output",
-                resource,
-            )
+    # Get all available resources.
+    available_resources = (resource for resource in data_service.status.keys())
+
+    # We try to get the user-specified resources from options and default to integrating all available resources.
+    specified_resources = set(
+        config_entry.options.get(CONF_RESOURCES, available_resources)
+    )
 
     entities = [
-        APCUPSdSensor(apcups_data, description)
+        APCUPSdSensor(data_service, description)
         for description in SENSOR_TYPES
-        if description.key in resources
+        if description.key.upper() in specified_resources
     ]
 
-    add_entities(entities, True)
+    async_add_entities(entities, update_before_add=True)
 
 
 def infer_unit(value):
@@ -454,18 +441,20 @@ def infer_unit(value):
 class APCUPSdSensor(SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
-    def __init__(self, data, description: SensorEntityDescription):
+    def __init__(self, data_service: APCUPSdData, description: SensorEntityDescription):
         """Initialize the sensor."""
         self.entity_description = description
-        self._data = data
+        self._data_service = data_service
         self._attr_name = f"{SENSOR_PREFIX}{description.name}"
 
     def update(self) -> None:
         """Get the latest status and use it to update our sensor state."""
         key = self.entity_description.key.upper()
-        if key not in self._data.status:
+        if key not in self._data_service.status:
             self._attr_native_value = None
         else:
-            self._attr_native_value, inferred_unit = infer_unit(self._data.status[key])
+            self._attr_native_value, inferred_unit = infer_unit(
+                self._data_service.status[key]
+            )
             if not self.native_unit_of_measurement:
                 self._attr_native_unit_of_measurement = inferred_unit

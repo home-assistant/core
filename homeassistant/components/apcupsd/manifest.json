@@ -1,7 +1,9 @@
 {
   "domain": "apcupsd",
-  "name": "apcupsd",
+  "name": "APCUPSd",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",
+  "dependencies": [],
   "requirements": ["apcaccess==0.0.13"],
   "codeowners": [],
   "iot_class": "local_polling",
