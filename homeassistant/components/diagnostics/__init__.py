@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import DATA_CUSTOM_COMPONENTS, DATA_INTEGRATIONS, Integration
+from homeassistant.loader import async_get_custom_components, async_get_integration
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -138,12 +138,10 @@ async def _async_get_json_file_response(
     hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
     del hass_sys_info["user"]
 
-    integration: Integration = hass.data[DATA_INTEGRATIONS][domain]
-
+    integration = await async_get_integration(hass, domain)
     custom_components = {}
-    cc_domain: str
-    cc_obj: Integration
-    for cc_domain, cc_obj in hass.data[DATA_CUSTOM_COMPONENTS].items():
+    all_custom_components = await async_get_custom_components(hass)
+    for cc_domain, cc_obj in all_custom_components.items():
         custom_components[cc_domain] = {
             "version": cc_obj.manifest["version"],
             "requirements": cc_obj.manifest["requirements"],
