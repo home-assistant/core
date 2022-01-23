@@ -30,9 +30,7 @@ from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
 
-UDP_LOCK = "udp_lock"
-UDP_LISTENER = "udp_listener"
-UDP_SUBSCRIPTIONS = "udp_subscriptions"
+UDP_MANAGER = "udp_manager"
 
 
 def _async_climate_updater(
@@ -59,42 +57,35 @@ def _async_remote_updater(
     return _async_update
 
 
-async def async_start_udp_listener(hass: HomeAssistant) -> LookinUDPSubscriptions:
-    """Start the shared udp listener."""
-    domain_data = hass.data[DOMAIN]
-    if UDP_LOCK not in domain_data:
-        udp_lock = domain_data[UDP_LOCK] = asyncio.Lock()
-    else:
-        udp_lock = domain_data[UDP_LOCK]
+class LookinUDPManager:
+    """Manage the lookin UDP subscriptions."""
 
-    async with udp_lock:
-        if UDP_LISTENER not in domain_data:
-            lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS] = LookinUDPSubscriptions()
-            domain_data[UDP_LISTENER] = await start_lookin_udp(lookin_udp_subs, None)
-        else:
-            lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS]
-        return lookin_udp_subs
+    def __init__(self) -> None:
+        """Init the manager."""
+        self._lock = asyncio.Lock()
+        self._listener: Callable | None = None
+        self._subscriptions: LookinUDPSubscriptions | None = None
 
+    async def async_get_subscriptions(self) -> LookinUDPSubscriptions:
+        """Get the shared LookinUDPSubscriptions."""
+        async with self._lock:
+            if not self._listener:
+                self._subscriptions = LookinUDPSubscriptions()
+                self._listener = await start_lookin_udp(self._subscriptions, None)
+            return self._subscriptions
 
-async def async_stop_udp_listener(hass: HomeAssistant) -> None:
-    """Stop the shared udp listener."""
-    domain_data = hass.data[DOMAIN]
-    async with domain_data[UDP_LOCK]:
-        loaded_entries = [
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state == ConfigEntryState.LOADED
-        ]
-        if len(loaded_entries) > 1:
-            return
-        domain_data[UDP_LISTENER]()
-        del domain_data[UDP_LISTENER]
-        del domain_data[UDP_SUBSCRIPTIONS]
+    async def async_stop(self) -> None:
+        """Stop the listener."""
+        async with self._lock:
+            assert self._listener is not None
+            self._listener()
+            self._listener = None
+            self._subscriptions = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up lookin from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+    domain_data = hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     lookin_protocol = LookInHttpProtocol(
         api_uri=f"http://{host}", session=async_get_clientsession(hass)
@@ -148,7 +139,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         meteo.update_from_value(event.value)
         meteo_coordinator.async_set_updated_data(meteo)
 
-    lookin_udp_subs = await async_start_udp_listener(hass)
+    if UDP_MANAGER not in domain_data:
+        manager = domain_data[UDP_MANAGER] = LookinUDPManager()
+    else:
+        manager = domain_data[UDP_MANAGER]
+
+    lookin_udp_subs = await manager.async_get_subscriptions()
 
     entry.async_on_unload(
         lookin_udp_subs.subscribe_event(
@@ -175,5 +171,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    await async_stop_udp_listener(hass)
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        manager: LookinUDPManager = hass.data[DOMAIN][UDP_MANAGER]
+        await manager.async_stop()
     return unload_ok
