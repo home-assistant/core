@@ -15,6 +15,7 @@ from homeassistant.components.bond.const import (
 from homeassistant.components.bond.fan import PRESET_MODE_BREEZE
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
+    ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_SPEED,
     ATTR_SPEED_LIST,
@@ -22,6 +23,7 @@ from homeassistant.components.fan import (
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_DIRECTION,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SPEED,
     SPEED_OFF,
 )
@@ -232,10 +234,23 @@ async def test_turn_on_fan_preset_mode(hass: core.HomeAssistant):
         PRESET_MODE_BREEZE
     ]
 
-    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+    with patch_bond_action() as mock_set_preset_mode, patch_bond_device_state():
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
 
-    mock_set_speed.assert_called_with("test-device-id", Action(Action.BREEZE_ON))
+    mock_set_preset_mode.assert_called_with("test-device-id", Action(Action.BREEZE_ON))
+
+    with patch_bond_action() as mock_set_preset_mode, patch_bond_device_state():
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            service_data={
+                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+                ATTR_ENTITY_ID: "fan.name_1",
+            },
+            blocking=True,
+        )
+
+    mock_set_preset_mode.assert_called_with("test-device-id", Action(Action.BREEZE_ON))
 
 
 async def test_turn_on_fan_preset_mode_not_supported(hass: core.HomeAssistant):
@@ -252,6 +267,17 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: core.HomeAssistant):
         fan.NotValidPresetModeError
     ):
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
+
+    with patch_bond_action(), patch_bond_device_state(), pytest.raises(ValueError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            service_data={
+                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+                ATTR_ENTITY_ID: "fan.name_1",
+            },
+            blocking=True,
+        )
 
 
 async def test_turn_on_fan_without_speed(hass: core.HomeAssistant):
