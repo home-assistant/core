@@ -40,16 +40,6 @@ RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
 )
 
 
-AIRPORT_SERVICE = zeroconf.ZeroconfServiceInfo(
-    host="127.0.0.1",
-    hostname="mock_hostname",
-    port=None,
-    type="_airport._tcp.local.",
-    name="Master Bed._airport._tcp.local.",
-    properties={},
-)
-
-
 @pytest.fixture(autouse=True)
 def zero_aggregation_time():
     """Prevent the aggregation time from delaying the tests."""
@@ -1063,16 +1053,3 @@ async def test_option_start_off(hass):
     assert result2["type"] == "create_entry"
 
     assert config_entry.options[CONF_START_OFF]
-
-
-async def test_zeroconf_abort_on_ip_update_services_only(
-    hass, mock_scan, pairing, mock_zeroconf
-):
-    """Test abort on ip update services only."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=AIRPORT_SERVICE,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "device_not_found"

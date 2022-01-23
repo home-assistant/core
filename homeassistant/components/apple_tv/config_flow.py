@@ -32,12 +32,6 @@ DEFAULT_START_OFF = False
 
 DISCOVERY_AGGREGATION_TIME = 15  # seconds
 
-UPDATE_IP_ONLY_SERVICES = {
-    "_companion-link._tcp.local.",
-    "_airport._tcp.local.",
-    "_sleep-proxy._udp.local.",
-}
-
 
 async def device_scan(hass, identifier, loop):
     """Scan for a specific device using identifier as filter."""
@@ -187,9 +181,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
 
         self._async_abort_entries_match({CONF_ADDRESS: host})
-        if discovery_info.type in UPDATE_IP_ONLY_SERVICES:
-            # No device found and we only use these to update ips
-            return self.async_abort(reason="device_not_found")
 
         await self._async_aggregate_discoveries(host, unique_id)
         # Scan for the device in order to extract _all_ unique identifiers assigned to
