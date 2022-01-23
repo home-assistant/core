@@ -239,7 +239,9 @@ async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_
 
 
 @pytest.mark.parametrize(
-    "nest_test_config", [TEST_CONFIG_HYBRID], ids=["hyrbid-config"]
+    "nest_test_config",
+    [TEST_CONFIG_HYBRID, TEST_CONFIG_ENTRY],
+    ids=["hyrbid-config", "config-entry"],
 )
 async def test_remove_entry_delete_subscriber_failure(
     hass, nest_test_config, setup_base_platform
