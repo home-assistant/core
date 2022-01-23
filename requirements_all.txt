@@ -2371,7 +2371,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2021.12
+total_connect_client==2022.1
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
