@@ -220,18 +220,6 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         """Return True if entity is available."""
         return self.coordinator.data[self.unique_id]["available"] and super().available
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Add additional state attributes."""
-        return {
-            "calibration_temperature": self.coordinator.data[self.unique_id][
-                "calibration_temp"
-            ],
-            "calibration_humidity": self.coordinator.data[self.unique_id][
-                "calibration_hum"
-            ],
-        }
-
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
