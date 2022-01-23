@@ -68,10 +68,7 @@ async def test_form_auth(hass: HomeAssistant) -> None:
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "mock-user",
-                "password": "mock-pass",
-            },
+            {"username": "mock-user", "password": "mock-pass", "scan_interval": 20},
         )
         await hass.async_block_till_done()
 
@@ -88,10 +85,7 @@ async def test_form_auth(hass: HomeAssistant) -> None:
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "mock-user",
-                "password": "mock-pass",
-            },
+            {"username": "mock-user", "password": "mock-pass", "scan_interval": 20},
         )
         await hass.async_block_till_done()
 
@@ -101,6 +95,7 @@ async def test_form_auth(hass: HomeAssistant) -> None:
         "host": "1.1.1.1",
         "username": "mock-user",
         "password": "mock-pass",
+        "scan_interval": 20,
     }
 
 

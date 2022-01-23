@@ -2,12 +2,19 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
+from homeassistant.core import callback
 from homeassistant.helpers import httpx_client
 
 from .const import CONNECTION_ERRORS, DOMAIN
@@ -16,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, str]
-) -> dict[str, str]:
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     iotawatt = Iotawatt(
         "",
@@ -49,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._data = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict[str, Any] = None):
         """Handle the initial step."""
         if user_input is None:
             user_input = {}
@@ -71,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(self, user_input: dict[str, Any] = None):
         """Authenticate user if authentication is enabled on the IoTaWatt device."""
         if user_input is None:
             user_input = {}
@@ -84,6 +91,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=user_input.get(CONF_SCAN_INTERVAL, 30),
+                ): vol.All(int, vol.Range(min=5)),
             }
         )
         if not user_input:
@@ -97,6 +108,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(title=data[CONF_HOST], data=data)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlow(config_entry)
+
+
+class OptionsFlow(config_entries.OptionsFlow):
+    """Handle a config flow options for iotawatt."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self._data = dict(config_entry.data)
+
+    async def async_step_init(self, user_input: dict[str, Any] = None):
+        """Handle the initial step."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return self.async_create_entry(title="", data=self._data)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self._data.get(CONF_SCAN_INTERVAL, 30),
+                ): vol.All(int, vol.Range(min=5)),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

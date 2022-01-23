@@ -7,7 +7,12 @@ import logging
 from iotawattpy.iotawatt import Iotawatt
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,11 +30,12 @@ class IotawattUpdater(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize IotaWattUpdater object."""
         self.entry = entry
+        self._timespan = entry.data.get(CONF_SCAN_INTERVAL, 30)
         super().__init__(
             hass=hass,
             logger=_LOGGER,
             name=entry.title,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=self._timespan),
         )
 
         self._last_run: datetime | None = None
@@ -62,6 +68,6 @@ class IotawattUpdater(DataUpdateCoordinator):
 
             self.api = api
 
-        await self.api.update(lastUpdate=self._last_run)
+        await self.api.update(lastUpdate=self._last_run, timespan=self._timespan)
         self._last_run = None
         return self.api.getSensors()

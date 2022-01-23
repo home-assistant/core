@@ -9,7 +9,8 @@
       "auth": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "scan_interval": "Scan Interval (seconds)"
         },
         "description": "The IoTawatt device requires authentication. Please enter the username and password and click the Submit button."
       }
@@ -18,6 +19,15 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
     }
   }
 }

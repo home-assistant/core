@@ -9,13 +9,23 @@
             "auth": {
                 "data": {
                     "password": "Password",
-                    "username": "Username"
+                    "username": "Username",
+                    "scan_interval": "Scan Interval (seconds)"
                 },
                 "description": "The IoTawatt device requires authentication. Please enter the username and password and click the Submit button."
             },
             "user": {
                 "data": {
                     "host": "Host"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
                 }
             }
         }
