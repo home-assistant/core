@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 from tuya_iot.device import TuyaDeviceStatusRange
@@ -33,6 +32,7 @@ from .const import (
     DOMAIN,
     TUYA_DISCOVERY_NEW,
     DPCode,
+    DPType,
     TuyaDeviceClass,
     UnitOfMeasurement,
 )
@@ -776,6 +776,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     entity_description: TuyaSensorEntityDescription
 
     _status_range: TuyaDeviceStatusRange | None = None
+    _type: DPType | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
@@ -792,19 +793,18 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             f"{super().unique_id}{description.key}{description.subkey or ''}"
         )
 
-        if status_range := device.status_range.get(description.key):
-            self._status_range = cast(TuyaDeviceStatusRange, status_range)
-
-            # Extract type data from integer status range,
-            # and determine unit of measurement
-            if self._status_range.type == "Integer":
-                self._type_data = IntegerTypeData.from_json(self._status_range.values)
-                if description.native_unit_of_measurement is None:
-                    self._attr_native_unit_of_measurement = self._type_data.unit
-
-            # Extract type data from enum status range
-            elif self._status_range.type == "Enum":
-                self._type_data = EnumTypeData.from_json(self._status_range.values)
+        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
+            self._type_data = int_type
+            self._type = DPType.INTEGER
+            if description.native_unit_of_measurement is None:
+                self._attr_native_unit_of_measurement = int_type.unit
+        elif enum_type := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            self._type_data = enum_type
+            self._type = DPType.ENUM
+        else:
+            self._type = self.get_dptype(DPCode(description.key))
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
@@ -841,13 +841,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        # Unknown or unsupported data type
-        if self._status_range is None or self._status_range.type not in (
-            "Integer",
-            "String",
-            "Enum",
-            "Json",
-            "Raw",
+        # Only continue if data type is known
+        if self._type not in (
+            DPType.INTEGER,
+            DPType.STRING,
+            DPType.ENUM,
+            DPType.JSON,
+            DPType.RAW,
         ):
             return None
 
@@ -871,13 +871,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             return None
 
         # Get subkey value from Json string.
-        if self._status_range.type == "Json":
+        if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
                 return None
             values = ElectricityTypeData.from_json(value)
             return getattr(values, self.entity_description.subkey)
 
-        if self._status_range.type == "Raw":
+        if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
                 return None
             values = ElectricityTypeData.from_raw(value)
