@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
-CONF_IS_RFXTRX = "is_rfxtrx"
+CONF_PROTOCOL = "protocol"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_PRECISION = "precision"
 CONF_TIME_BETWEEN_UPDATE = "time_between_update"
@@ -37,6 +37,9 @@ DEVICE_NAME_ENERGY = "Energy Meter"
 DEVICE_NAME_GAS = "Gas Meter"
 
 DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
+
+DSMR_PROTOCOL = "dsmr_protocol"
+RFXTRXDSMR_PROTOCOL = "rfxtrxdsmr_protocol"
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(

@@ -26,14 +26,16 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_IS_RFXTRX,
+    CONF_PROTOCOL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
+    DSMR_PROTOCOL,
     DSMR_VERSIONS,
     LOGGER,
+    RFXTRXDSMR_PROTOCOL,
 )
 
 CONF_MANUAL_PATH = "Enter Manually"
@@ -43,13 +45,13 @@ class DSMRConnection:
     """Test the connection to DSMR and receive telegram to read serial ids."""
 
     def __init__(
-        self, host: str | None, port: int, dsmr_version: str, is_rfxtrx: bool = False
+        self, host: str | None, port: int, dsmr_version: str, protocol: str
     ) -> None:
         """Initialize."""
         self._host = host
         self._port = port
         self._dsmr_version = dsmr_version
-        self._is_rfxtrx = is_rfxtrx
+        self._protocol = protocol
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
@@ -88,7 +90,7 @@ class DSMRConnection:
         if self._host is None:
             reader_factory = partial(
                 create_dsmr_reader
-                if not self._is_rfxtrx
+                if self._protocol == DSMR_PROTOCOL
                 else create_rfxtrx_dsmr_reader,
                 self._port,
                 self._dsmr_version,
@@ -98,7 +100,7 @@ class DSMRConnection:
         else:
             reader_factory = partial(
                 create_tcp_dsmr_reader
-                if not self._is_rfxtrx
+                if self._protocol == DSMR_PROTOCOL
                 else create_rfxtrx_tcp_dsmr_reader,
                 self._host,
                 self._port,
@@ -125,14 +127,14 @@ class DSMRConnection:
 
 
 async def _validate_dsmr_connection(
-    hass: core.HomeAssistant, data: dict[str, Any], is_rfxtrx: bool
+    hass: core.HomeAssistant, data: dict[str, Any], protocol: str
 ) -> dict[str, str | None]:
     """Validate the user input allows us to connect."""
     conn = DSMRConnection(
         data.get(CONF_HOST),
         data[CONF_PORT],
         data[CONF_DSMR_VERSION],
-        is_rfxtrx,
+        protocol,
     )
 
     if not await conn.validate_connect(hass):
@@ -157,7 +159,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _dsmr_version: str | None = None
-    _is_rfxtrx = False
 
     @staticmethod
     @callback
@@ -308,14 +309,14 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = input_data
 
         try:
-            is_rfxtrx = False
+            protocol = DSMR_PROTOCOL
             try:
-                info = await _validate_dsmr_connection(self.hass, data, is_rfxtrx)
+                info = await _validate_dsmr_connection(self.hass, data, protocol)
             except CannotCommunicate:
-                is_rfxtrx = True
-                info = await _validate_dsmr_connection(self.hass, data, is_rfxtrx)
+                protocol = RFXTRXDSMR_PROTOCOL
+                info = await _validate_dsmr_connection(self.hass, data, protocol)
 
-            data = {**data, **info, CONF_IS_RFXTRX: is_rfxtrx}
+            data = {**data, **info, CONF_PROTOCOL: protocol}
 
             if info[CONF_SERIAL_ID]:
                 await self.async_set_unique_id(info[CONF_SERIAL_ID])

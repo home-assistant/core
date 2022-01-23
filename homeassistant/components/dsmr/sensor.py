@@ -32,8 +32,8 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_IS_RFXTRX,
     CONF_PRECISION,
+    CONF_PROTOCOL,
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
@@ -45,6 +45,7 @@ from .const import (
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
+    DSMR_PROTOCOL,
     LOGGER,
     SENSORS,
 )
@@ -82,10 +83,12 @@ async def async_setup_entry(
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
-    is_rfxtrx = entry.data.get(CONF_IS_RFXTRX)
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
     if CONF_HOST in entry.data:
         reader_factory = partial(
-            create_tcp_dsmr_reader if not is_rfxtrx else create_rfxtrx_tcp_dsmr_reader,
+            create_tcp_dsmr_reader
+            if protocol == DSMR_PROTOCOL
+            else create_rfxtrx_tcp_dsmr_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
@@ -95,7 +98,9 @@ async def async_setup_entry(
         )
     else:
         reader_factory = partial(
-            create_dsmr_reader if not is_rfxtrx else create_rfxtrx_dsmr_reader,
+            create_dsmr_reader
+            if protocol == DSMR_PROTOCOL
+            else create_rfxtrx_dsmr_reader,
             entry.data[CONF_PORT],
             dsmr_version,
             update_entities_telegram,

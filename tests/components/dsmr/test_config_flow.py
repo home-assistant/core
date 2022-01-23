@@ -59,7 +59,7 @@ async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
         "host": "10.10.0.1",
         "port": 1234,
         "dsmr_version": "2.2",
-        "is_rfxtrx": False,
+        "protocol": "dsmr_protocol",
     }
 
     assert result["type"] == "create_entry"
@@ -95,7 +95,11 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
             {"port": port.device, "dsmr_version": "2.2"},
         )
 
-    entry_data = {"port": port.device, "dsmr_version": "2.2", "is_rfxtrx": False}
+    entry_data = {
+        "port": port.device,
+        "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+    }
 
     assert result["type"] == "create_entry"
     assert result["title"] == port.device
@@ -133,7 +137,7 @@ async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
     entry_data = {
         "port": port.device,
         "dsmr_version": "5L",
-        "is_rfxtrx": False,
+        "protocol": "dsmr_protocol",
         "serial_id": "12345678",
         "serial_id_gas": "123456789",
     }
@@ -174,7 +178,7 @@ async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
     entry_data = {
         "port": port.device,
         "dsmr_version": "Q3D",
-        "is_rfxtrx": False,
+        "protocol": "dsmr_protocol",
         "serial_id": "12345678",
         "serial_id_gas": None,
     }
@@ -223,7 +227,7 @@ async def test_setup_serial_manual(
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "is_rfxtrx": False,
+        "protocol": "dsmr_protocol",
     }
 
     assert result["type"] == "create_entry"
