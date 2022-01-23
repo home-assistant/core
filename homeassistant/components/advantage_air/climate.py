@@ -225,7 +225,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     async def set_myzone(self, **kwargs):
         """Set this zone as the 'MyZone'."""
         _LOGGER.warning(
-            "This service has been depreciated and will be removed in a future version, please use select.select_option"
+            "This service has been deprecated and will be removed in a future version, please use select.select_option"
         )
         await self.async_change(
             {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
