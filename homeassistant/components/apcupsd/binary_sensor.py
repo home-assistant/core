@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_RESOURCES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -16,6 +17,14 @@ async def async_setup_entry(
 ):
     """Set up an APCUPSd Online Status binary sensor."""
     data_service = hass.data[DOMAIN][config_entry.entry_id]
+
+    # If key status is hidden by user, we do not create the binary sensor.
+    if (
+        CONF_RESOURCES in config_entry.options
+        and KEY_STATUS not in config_entry.options[CONF_RESOURCES]
+    ):
+        return
+
     async_add_entities([OnlineStatus(data_service)], update_before_add=True)
 
 
