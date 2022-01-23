@@ -239,7 +239,6 @@ class LgTVDevice(MediaPlayerEntity):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._client.set_volume(float(volume * 100))
-        self.__update_volume()
 
     def mute_volume(self, mute):
         """Send mute command."""
