@@ -26,13 +26,15 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_STATE,
     ATTR_TEMPERATURE,
     CONF_API_KEY,
     CONF_ID,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -44,11 +46,17 @@ from homeassistant.util.temperature import convert as convert_temperature
 from .const import ALL, DOMAIN, LOGGER, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
+SERVICE_ASSUME_STATE = "assume_state"
+
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
     }
+)
+
+ASSUME_STATE_SCHEMA = vol.Schema(
+    {vol.Optional(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_STATE): cv.string}
 )
 
 FIELD_TO_FLAG = {
@@ -95,11 +103,37 @@ async def async_setup_entry(
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
+    entities = [
         SensiboClimate(coordinator, device_id, hass.config.units.temperature_unit)
         for device_id, device_data in coordinator.data.items()
         # Remove none climate devices
         if device_data["hvac_modes"] and device_data["temp"]
+    ]
+
+    async_add_entities(entities)
+
+    async def async_assume_state(service: ServiceCall) -> None:
+        """Set state according to external service call.."""
+        if entity_ids := service.data.get(ATTR_ENTITY_ID):
+            target_climate = [
+                entity for entity in entities if entity.entity_id in entity_ids
+            ]
+        else:
+            target_climate = entities
+
+        update_tasks = []
+        for climate in target_climate:
+            await climate.async_assume_state(service.data.get(ATTR_STATE))
+            update_tasks.append(climate.async_update_ha_state(True))
+
+        if update_tasks:
+            await asyncio.wait(update_tasks)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ASSUME_STATE,
+        async_assume_state,
+        schema=ASSUME_STATE_SCHEMA,
     )
 
 
@@ -327,3 +361,11 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         raise HomeAssistantError(
             f"Could not set state for device {self.name} due to reason {failure}"
         )
+
+    async def async_assume_state(self, state) -> None:
+        """Sync state with api."""
+        change_needed = state != self.state
+
+        if change_needed:
+            await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
+            await self.coordinator.async_refresh()
