@@ -46,7 +46,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
         for dev in devices:
             unique_id = dev["id"]
             name = dev["room"]["name"]
-            temperature = dev["measurements"].get("temperature", 0)
+            temperature = dev["measurements"].get("temperature", 0.0)
             humidity = dev["measurements"].get("humidity", 0)
             ac_states = dev["acState"]
             target_temperature = ac_states.get("targetTemperature")

@@ -178,11 +178,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return convert_temperature(
-            self.coordinator.data[self.unique_id]["target_temp"],
-            TEMP_CELSIUS,
-            self.temperature_unit,
-        )
+        return self.coordinator.data[self.unique_id]["target_temp"]
 
     @property
     def target_temperature_step(self) -> float | None:
@@ -212,20 +208,12 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return convert_temperature(
-            self.coordinator.data[self.unique_id]["temp_list"][0],
-            TEMP_CELSIUS,
-            self.temperature_unit,
-        )
+        return self.coordinator.data[self.unique_id]["temp_list"][0]
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return convert_temperature(
-            self.coordinator.data[self.unique_id]["temp_list"][-1],
-            TEMP_CELSIUS,
-            self.temperature_unit,
-        )
+        return self.coordinator.data[self.unique_id]["temp_list"][-1]
 
     @property
     def available(self) -> bool:
@@ -252,28 +240,22 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
         if temperature == self.target_temperature:
             return
 
-        new_temp: int = int(
-            convert_temperature(
-                temperature,
-                self.temperature_unit,
-                TEMP_CELSIUS,
-            )
-        )
-
-        if new_temp not in self.coordinator.data[self.unique_id]["temp_list"]:
+        if temperature not in self.coordinator.data[self.unique_id]["temp_list"]:
             # Requested temperature is not supported.
-            if new_temp > self.coordinator.data[self.unique_id]["temp_list"][-1]:
-                new_temp = self.coordinator.data[self.unique_id]["temp_list"][-1]
+            if temperature > self.coordinator.data[self.unique_id]["temp_list"][-1]:
+                temperature = self.coordinator.data[self.unique_id]["temp_list"][-1]
 
-            elif new_temp < self.coordinator.data[self.unique_id]["temp_list"][0]:
-                new_temp = self.coordinator.data[self.unique_id]["temp_list"][0]
+            elif temperature < self.coordinator.data[self.unique_id]["temp_list"][0]:
+                temperature = self.coordinator.data[self.unique_id]["temp_list"][0]
 
             else:
                 return
 
-        result = await self._async_set_ac_state_property("targetTemperature", new_temp)
+        result = await self._async_set_ac_state_property(
+            "targetTemperature", int(temperature)
+        )
         if result:
-            self.coordinator.data[self.unique_id]["target_temp"] = new_temp
+            self.coordinator.data[self.unique_id]["target_temp"] = int(temperature)
             self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
