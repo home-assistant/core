@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 # Root device in test harness always has an accessory id of this
-HUB_TEST_ACCESSORY_ID: Final[str] = "00:00:00:00:00:00"
+HUB_TEST_ACCESSORY_ID: Final[str] = "00:00:00:00:00:00:aid:1"
 
 
 @dataclass
@@ -263,8 +263,8 @@ async def assert_devices_and_entities_created(
 
         device = device_registry.async_get_device(
             {
-                (DOMAIN, IDENTIFIER_SERIAL_NUMBER, expected.serial_number),
-                (DOMAIN, IDENTIFIER_ACCESSORY_ID, expected.unique_id),
+                (IDENTIFIER_SERIAL_NUMBER, expected.serial_number),
+                (IDENTIFIER_ACCESSORY_ID, expected.unique_id),
             }
         )
 
@@ -282,7 +282,7 @@ async def assert_devices_and_entities_created(
         serial_number_set = False
         accessory_id_set = False
 
-        for _, key, value in device.identifiers:
+        for key, value in device.identifiers:
             if key == IDENTIFIER_SERIAL_NUMBER:
                 assert value == expected.serial_number
                 serial_number_set = True

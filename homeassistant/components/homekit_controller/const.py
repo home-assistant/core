@@ -11,9 +11,10 @@ TRIGGERS = f"{DOMAIN}-triggers"
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
 
-IDENTIFIER_SERIAL_NUMBER = "serial-number"
-IDENTIFIER_ACCESSORY_ID = "accessory-id"
-
+IDENTIFIER_SERIAL_NUMBER = "homekit_controller:serial-number"
+IDENTIFIER_ACCESSORY_ID = "homekit_controller:accessory-id"
+IDENTIFIER_LEGACY_SERIAL_NUMBER = "serial-number"
+IDENTIFIER_LEGACY_ACCESSORY_ID = "accessory-id"
 
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {

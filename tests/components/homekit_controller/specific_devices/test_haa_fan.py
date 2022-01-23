@@ -38,6 +38,7 @@ async def test_haa_fan_setup(hass):
                     sw_version="5.0.18",
                     hw_version="",
                     serial_number="C718B3-2",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     devices=[],
                     entities=[
                         EntityTestInfo(

@@ -54,6 +54,7 @@ async def test_ecobee3_setup(hass):
                     sw_version="1.0.0",
                     hw_version="",
                     serial_number="AB1C",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -71,6 +72,7 @@ async def test_ecobee3_setup(hass):
                     sw_version="1.0.0",
                     hw_version="",
                     serial_number="AB2C",
+                    unique_id="00:00:00:00:00:00:aid:3",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -88,6 +90,7 @@ async def test_ecobee3_setup(hass):
                     sw_version="1.0.0",
                     hw_version="",
                     serial_number="AB3C",
+                    unique_id="00:00:00:00:00:00:aid:4",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -139,7 +142,7 @@ async def test_ecobee3_setup_from_cache(hass, hass_storage):
         "version": 1,
         "data": {
             "pairings": {
-                "00:00:00:00:00:00": {
+                HUB_TEST_ACCESSORY_ID: {
                     "config_num": 1,
                     "accessories": [
                         a.to_accessory_and_service_list() for a in accessories
