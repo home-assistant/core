@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_CIRCULATION_PUMP_ACTIVE = "circulationpump_active"
 SENSOR_BURNER_ACTIVE = "burner_active"
+SENSOR_CHARGING_ACTIVE = "charging_active"
 SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
 SENSOR_SOLAR_PUMP_ACTIVE = "solar_pump_active"
 
@@ -78,6 +79,12 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         name="Solar pump active",
         device_class=BinarySensorDeviceClass.POWER,
         value_getter=lambda api: api.getSolarPumpActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key=SENSOR_CHARGING_ACTIVE,
+        name="Domestic Hot Water Charging active",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_getter=lambda api: api.getDomesticHotWaterChargingActive(),
     ),
 )
 
