@@ -7,11 +7,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
-from synology_dsm.api.surveillance_station.const import (
-    SNAPSHOT_PROFILE_BALANCED,
-    SNAPSHOT_PROFILE_HIGH_QUALITY,
-    SNAPSHOT_PROFILE_LOW_BANDWIDTH,
-)
 from synology_dsm.exceptions import (
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
@@ -381,13 +376,7 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
                     ),
-                ): vol.In(
-                    [
-                        SNAPSHOT_PROFILE_HIGH_QUALITY,
-                        SNAPSHOT_PROFILE_BALANCED,
-                        SNAPSHOT_PROFILE_LOW_BANDWIDTH,
-                    ]
-                ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=2)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
