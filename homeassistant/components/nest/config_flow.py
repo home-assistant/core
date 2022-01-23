@@ -439,13 +439,9 @@ class NestFlowHandler(
         if user_input:
             data.update(user_input)
         cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "").strip()
-        device_access_project_id = data.get(CONF_PROJECT_ID, "")
-        if self.config_mode == ConfigMode.SDM:
-            device_access_project_id = self.hass.data[DOMAIN][DATA_NEST_CONFIG][
-                CONF_PROJECT_ID
-            ]
         errors = {}
-        if cloud_project_id and cloud_project_id == device_access_project_id:
+        config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
+        if cloud_project_id == data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID)):
             _LOGGER.error(
                 "Same ID entered for Cloud Project and Device Access Project, these should not be the same"
             )
