@@ -12,8 +12,10 @@ from homeassistant.components.bond.const import (
     DOMAIN as BOND_DOMAIN,
     SERVICE_SET_FAN_SPEED_TRACKED_STATE,
 )
+from homeassistant.components.bond.fan import PRESET_MODE_BREEZE
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
+    ATTR_PRESET_MODES,
     ATTR_SPEED,
     ATTR_SPEED_LIST,
     DIRECTION_FORWARD,
@@ -49,14 +51,26 @@ def ceiling_fan(name: str):
     }
 
 
+def ceiling_fan_with_breeze(name: str):
+    """Create a ceiling fan with given name with breeze support."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": ["SetSpeed", "SetDirection", "BreezeOn"],
+    }
+
+
 async def turn_fan_on(
     hass: core.HomeAssistant,
     fan_id: str,
     speed: str | None = None,
     percentage: int | None = None,
+    preset_mode: str | None = None,
 ) -> None:
     """Turn the fan on at the specified speed."""
     service_data = {ATTR_ENTITY_ID: fan_id}
+    if preset_mode:
+        service_data[fan.ATTR_PRESET_MODE] = preset_mode
     if speed:
         service_data[fan.ATTR_SPEED] = speed
     if percentage:
@@ -203,6 +217,41 @@ async def test_turn_on_fan_with_percentage_6_speeds(hass: core.HomeAssistant):
         await turn_fan_on(hass, "fan.name_1", percentage=100)
 
     mock_set_speed.assert_called_with("test-device-id", Action.set_speed(6))
+
+
+async def test_turn_on_fan_preset_mode(hass: core.HomeAssistant):
+    """Tests that turn on command delegates to breeze on API."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan_with_breeze("name-1"),
+        bond_device_id="test-device-id",
+        props={"max_speed": 6},
+    )
+    assert hass.states.get("fan.name_1").attributes[ATTR_PRESET_MODES] == [
+        PRESET_MODE_BREEZE
+    ]
+
+    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
+
+    mock_set_speed.assert_called_with("test-device-id", Action(Action.BREEZE_ON))
+
+
+async def test_turn_on_fan_preset_mode_not_supported(hass: core.HomeAssistant):
+    """Tests calling breeze mode on a fan that does not support it raises."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+        props={"max_speed": 6},
+    )
+
+    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
+        fan.NotValidPresetModeError
+    ):
+        await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
 
 
 async def test_turn_on_fan_without_speed(hass: core.HomeAssistant):
