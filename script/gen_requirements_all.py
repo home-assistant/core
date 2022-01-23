@@ -61,10 +61,6 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
-# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
-# https://github.com/home-assistant/core/issues/61756
-pillow==8.2.0
-
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
@@ -83,6 +79,11 @@ httplib2>=0.19.0
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
 grpcio==1.43.0
+
+# libcst >=0.4.0 requires a newer Rust than we currently have available,
+# thus our wheels builds fail. This pins it to the last working version,
+# which at this point satisfies our needs.
+libcst==0.3.23
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -104,12 +105,21 @@ pandas==1.3.0
 # This is fixed in 2021.8.28
 regex==2021.8.28
 
-# anyio has a bug that was fixed in 3.3.1
-# can remove after httpx/httpcore updates its anyio version pin
-anyio>=3.3.1
+# httpx requires httpcore, and httpcore requires anyio, but the version constraints on
+# these requirements are quite loose. As these requirements have some outstanding issues
+# which may be addressed by version updates, we can tighten their minimum version
+# requirements here.
+httpcore>=0.14.5
+anyio>=3.5.0
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
+
+# Prevent dependency conflicts between sisyphus-control and aioambient
+# until upper bounds for sisyphus-control have been updated
+# https://github.com/jkeljo/sisyphus-control/issues/6
+python-engineio>=3.13.1,<4.0
+python-socketio>=4.6.0,<5.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

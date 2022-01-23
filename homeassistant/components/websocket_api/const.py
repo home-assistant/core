@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from concurrent import futures
 from functools import partial
 import json
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 if TYPE_CHECKING:
-    from .connection import ActiveConnection
+    from .connection import ActiveConnection  # noqa: F401
 
 
 WebSocketCommandHandler = Callable[

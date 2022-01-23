@@ -36,6 +36,7 @@ jobs:
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       test_groups: ${{ steps.info.outputs.test_groups }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
+      requirements: ${{ steps.core.outputs.requirements }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code from GitHub
@@ -188,6 +189,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
+          python --version
           pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt
       - name: Generate partial pre-commit restore key
@@ -579,6 +581,7 @@ jobs:
 
           python -m venv venv
           . venv/bin/activate
+          python --version
           pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
@@ -617,12 +620,14 @@ jobs:
         if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
+          python --version
           pylint homeassistant
       - name: Run pylint (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
           pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   mypy:
@@ -657,13 +662,47 @@ jobs:
         if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
+          python --version
           mypy homeassistant
       - name: Run mypy (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
           mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
+
+  pip-check:
+    runs-on: ubuntu-latest
+    if: needs.changes.outputs.requirements == 'true'
+    needs:
+      - changes
+      - prepare-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.9]
+    name: Run pip check ${{ matrix.python-version }}
+    container: homeassistant/ci-azure:${{ matrix.python-version }}
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2.4.0
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v2.1.7
+        with:
+          path: venv
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Run pip check
+        run: |
+          . venv/bin/activate
+          ./script/pip_check $PIP_CACHE
 
   pytest:
     runs-on: ubuntu-latest
@@ -718,6 +757,7 @@ jobs:
         timeout-minutes: 45
         run: |
           . venv/bin/activate
+          python --version
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -737,6 +777,7 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
+          python --version
 
           if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
             echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
@@ -761,6 +802,7 @@ jobs:
         timeout-minutes: 10
         run: |
           . venv/bin/activate
+          python --version
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \

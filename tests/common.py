@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import collections
 from collections import OrderedDict
+from collections.abc import Awaitable, Collection
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -16,7 +17,7 @@ import threading
 import time
 from time import monotonic
 import types
-from typing import Any, Awaitable, Collection
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401

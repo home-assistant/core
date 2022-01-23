@@ -10,7 +10,8 @@
   "codeowners": [
     "@mammuth",
     "@AaronDavidSchneider",
-    "@chemelli74"
+    "@chemelli74",
+    "@mib1185"
   ],
   "config_flow": true,
   "ssdp": [

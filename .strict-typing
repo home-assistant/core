@@ -100,6 +100,7 @@ homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.lametric.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
@@ -153,6 +154,7 @@ homeassistant.components.senseme.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
+homeassistant.components.smhi.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
@@ -174,6 +176,8 @@ homeassistant.components.tplink.*
 homeassistant.components.tolo.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
+homeassistant.components.trafikverket_train.*
+homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifiprotect.*
@@ -188,6 +192,7 @@ homeassistant.components.wallbox.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
+homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*

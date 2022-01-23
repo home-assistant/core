@@ -149,9 +149,19 @@ class ProtectDeviceEntity(Entity):
             devices = getattr(self.data.api.bootstrap, f"{self.device.model.value}s")
             self.device = devices[self.device.id]
 
-        self._attr_available = (
+        is_connected = (
             self.data.last_update_success and self.device.state == StateType.CONNECTED
         )
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description is not None
+            and hasattr(self.entity_description, "get_ufp_enabled")
+        ):
+            assert isinstance(self.entity_description, ProtectRequiredKeysMixin)
+            is_connected = is_connected and self.entity_description.get_ufp_enabled(
+                self.device
+            )
+        self._attr_available = is_connected
 
     @callback
     def _async_updated_event(self) -> None:

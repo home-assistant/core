@@ -170,6 +170,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
+    coordinator: ScreenlogicDataUpdateCoordinator
+
     def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""
         super().__init__(coordinator)

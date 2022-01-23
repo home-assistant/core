@@ -105,12 +105,19 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 door_windows.append(device)
                 continue
 
+        _sensor_map = {
+            contact["address"]: contact["_state"] for contact in door_windows
+        }
+        _lock_map = {lock["address"]: lock["_state"] for lock in locks}
+
         return {
             "alarm": updates["arm_status"],
             "locks": locks,
             "door_windows": door_windows,
             "status": updates["status"],
             "online": updates["online"],
+            "sensor_map": _sensor_map,
+            "lock_map": _lock_map,
         }
 
     def get_updates(self) -> dict:

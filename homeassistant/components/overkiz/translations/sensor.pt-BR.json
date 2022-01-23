@@ -1,0 +1,18 @@
+{
+    "state": {
+        "overkiz__priority_lock_originator": {
+            "user": "Usu\u00e1rio",
+            "wind": "Vento"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "Morto",
+            "low_battery": "Bateria fraca",
+            "maintenance_required": "Manuten\u00e7\u00e3o necess\u00e1ria",
+            "no_defect": "Sem defeito"
+        },
+        "overkiz__sensor_room": {
+            "clean": "Limpo",
+            "dirty": "Sujo"
+        }
+    }
+}

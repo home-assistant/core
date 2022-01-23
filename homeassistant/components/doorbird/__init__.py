@@ -1,4 +1,6 @@
 """Support for DoorBird devices."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -285,7 +287,7 @@ class ConfiguredDoorBird:
         """Return whether the given URL is registered as a device favorite."""
         return self.get_webhook_id(url, favs) is not None
 
-    def get_webhook_id(self, url, favs=None) -> str or None:
+    def get_webhook_id(self, url, favs=None) -> str | None:
         """
         Return the device favorite ID for the given URL.
 

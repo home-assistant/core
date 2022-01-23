@@ -1,9 +1,9 @@
 """Helpers for data entry flows for config entries."""
 from __future__ import annotations
 
-import asyncio  # pylint: disable=unused-import  # used in cast as string
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
@@ -11,6 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
+
+if TYPE_CHECKING:
+    import asyncio
 
 DiscoveryFunctionType = Callable[[HomeAssistant], Union[Awaitable[bool], bool]]
 

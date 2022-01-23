@@ -78,7 +78,7 @@ class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
         return SOURCE_TYPE_GPS
 
     def update(self) -> None:
-        """Update state of the decvice tracker."""
+        """Update state of the device tracker."""
         _LOGGER.debug("Updating device tracker of %s", self._vehicle.name)
         self._attr_extra_state_attributes = self._attrs
         self._location = (

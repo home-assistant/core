@@ -33,6 +33,33 @@
       }
     },
     {
+      "address": [0, 7, false],
+      "name": "Switch_Output2",
+      "resource": "output2",
+      "domain": "switch",
+      "domain_data": {
+        "output": "OUTPUT2"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Switch_Relay1",
+      "resource": "relay1",
+      "domain": "switch",
+      "domain_data": {
+        "output": "RELAY1"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Switch_Relay2",
+      "resource": "relay2",
+      "domain": "switch",
+      "domain_data": {
+        "output": "RELAY2"
+      }
+    },
+    {
       "address": [0, 5, true],
       "name": "Switch_Group5",
       "resource": "relay1",

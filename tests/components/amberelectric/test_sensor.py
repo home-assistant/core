@@ -1,5 +1,5 @@
 """Test the Amber Electric Sensors."""
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from amberelectric.model.current_interval import CurrentInterval

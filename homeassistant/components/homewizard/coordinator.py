@@ -15,12 +15,10 @@ from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-class HWEnergyDeviceUpdateCoordinator(
-    DataUpdateCoordinator[aiohwenergy.HomeWizardEnergy]
-):
+class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
     """Gather data for the energy device."""
 
-    api: aiohwenergy
+    api: aiohwenergy.HomeWizardEnergy
 
     def __init__(
         self,
@@ -48,11 +46,6 @@ class HWEnergyDeviceUpdateCoordinator(
             except aiohwenergy.DisabledError as ex:
                 raise UpdateFailed(
                     "API disabled, API must be enabled in the app"
-                ) from ex
-
-            except Exception as ex:
-                raise UpdateFailed(
-                    f"Error connecting with Energy Device at {self.api.host}"
                 ) from ex
 
             data: DeviceResponseEntry = {

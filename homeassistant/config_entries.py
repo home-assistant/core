@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
 from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
 
 from . import data_entry_flow, loader
@@ -608,6 +608,7 @@ class ConfigEntry:
         flow_context = {
             "source": SOURCE_REAUTH,
             "entry_id": self.entry_id,
+            "title_placeholders": {"name": self.title},
             "unique_id": self.unique_id,
         }
 
@@ -1054,7 +1055,7 @@ class ConfigEntries:
         *,
         unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        data: dict | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
@@ -1081,7 +1082,7 @@ class ConfigEntries:
             setattr(entry, attr, value)
             changed = True
 
-        if data is not UNDEFINED and entry.data != data:  # type: ignore
+        if data is not UNDEFINED and entry.data != data:
             changed = True
             entry.data = MappingProxyType(data)
 

@@ -66,12 +66,10 @@ async def async_setup_entry(
         NetatmoScheduleSelect(
             data_handler,
             home_id,
-            [
-                schedule.name
-                for schedule in hass.data[DOMAIN][DATA_SCHEDULES][home_id].values()
-            ],
+            [schedule.name for schedule in schedules.values()],
         )
-        for home_id in hass.data[DOMAIN][DATA_SCHEDULES]
+        for home_id, schedules in hass.data[DOMAIN][DATA_SCHEDULES].items()
+        if schedules
     ]
 
     _LOGGER.debug("Adding climate schedule select entities %s", entities)

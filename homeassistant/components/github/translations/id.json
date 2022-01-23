@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Pilih repositori untuk dilacak."
+                },
+                "title": "Konfigurasikan repositori"
+            }
+        }
+    }
+}

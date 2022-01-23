@@ -7,7 +7,14 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Coroutine, Iterable, Mapping
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Coroutine,
+    Iterable,
+    Mapping,
+)
 import datetime
 import enum
 import functools
@@ -21,8 +28,6 @@ from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
     Any,
-    Awaitable,
-    Callable,
     Generic,
     NamedTuple,
     Optional,

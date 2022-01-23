@@ -8,7 +8,7 @@ from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import mqtt
+from homeassistant.components import cloud, mqtt, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -101,9 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_when_setup(hass, "mqtt", async_connect_mqtt)
 
-    hass.components.webhook.async_register(
-        DOMAIN, "OwnTracks", webhook_id, handle_webhook
-    )
+    webhook.async_register(hass, DOMAIN, "OwnTracks", webhook_id, handle_webhook)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -116,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OwnTracks config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN]["unsub"]()
 
@@ -128,7 +126,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not entry.data.get("cloudhook"):
         return
 
-    await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
+    await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_connect_mqtt(hass, component):
@@ -147,9 +145,7 @@ async def async_connect_mqtt(hass, component):
         message["topic"] = msg.topic
         hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
 
-    await hass.components.mqtt.async_subscribe(
-        context.mqtt_topic, async_handle_mqtt_message, 1
-    )
+    await mqtt.async_subscribe(hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
     return True
 

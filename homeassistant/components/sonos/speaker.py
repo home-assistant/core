@@ -163,6 +163,7 @@ class SonosSpeaker:
         self._resubscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
+        self._last_event_cache: dict[str, Any] = {}
 
         # Scheduled callback handles
         self._poll_timer: Callable | None = None
@@ -171,8 +172,11 @@ class SonosSpeaker:
         self.dispatchers: list[Callable] = []
 
         # Device information
+        self.hardware_version = speaker_info["hardware_version"]
+        self.software_version = speaker_info["software_version"]
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
+        self.model_number = speaker_info["model_number"]
         self.uid = speaker_info["uid"]
         self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
@@ -423,6 +427,13 @@ class SonosSpeaker:
 
         self.speaker_activity(f"{event.service.service_type} subscription")
 
+        # Skip if this update is an unchanged subset of the previous event
+        if last_event := self._last_event_cache.get(event.service.service_type):
+            if event.variables.items() <= last_event.items():
+                return
+
+        # Save most recently processed event variables for cache and diagnostics
+        self._last_event_cache[event.service.service_type] = event.variables
         dispatcher = self._event_dispatchers[event.service.service_type]
         dispatcher(event)
 

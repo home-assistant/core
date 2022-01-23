@@ -1,7 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_in_progress": "De configuratiestroom is al aan de gang"
+        },
+        "error": {
+            "connection_error": "Kan geen verbinding maken"
+        },
         "step": {
             "user": {
+                "data": {
+                    "host": "IP-adres"
+                },
                 "description": "Verbinden met omvormer",
                 "title": "GoodWe-omvormer"
             }

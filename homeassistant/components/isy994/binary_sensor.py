@@ -52,10 +52,8 @@ DEVICE_PARENT_REQUIRED = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> bool:
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the ISY994 binary sensor platform."""
     devices = []
     devices_by_address = {}

@@ -93,7 +93,11 @@ async def async_remove_clients(hass, data) -> None:
 
         for client in controller.api.clients_all.values():
 
-            if client.last_seen - client.first_seen > 900:
+            if (
+                client.last_seen
+                and client.first_seen
+                and client.last_seen - client.first_seen > 900
+            ):
                 continue
 
             if any({client.fixed_ip, client.hostname, client.name}):
