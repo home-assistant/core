@@ -419,7 +419,7 @@ async def test_battery(hass, hass_client):
 
 
 async def test_climate(hass, hass_client):
-    """Test prometheus metrics for battery."""
+    """Test prometheus metrics for climate."""
     assert await async_setup_component(
         hass,
         "conversation",
@@ -457,6 +457,20 @@ async def test_climate(hass, hass_client):
         'climate_target_temperature_high_celsius{domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee"} 24.0' in body
+    )
+
+    assert (
+        'climate_mode{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump",'
+        'mode="heat"} 1.0' in body
+    )
+
+    assert (
+        'climate_mode{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump",'
+        'mode="off"} 0.0' in body
     )
 
 

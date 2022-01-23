@@ -23,7 +23,7 @@ pytest-freezegun==0.4.2
 pytest-socket==0.4.1
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.4
-pytest-timeout==2.0.1
+pytest-timeout==2.1.0
 pytest-xdist==2.4.0
 pytest==6.2.5
 requests_mock==1.9.2

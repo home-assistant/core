@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any, TypedDict, cast
@@ -11,7 +12,9 @@ from typing import Any, TypedDict, cast
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
+    FritzActionFailedError,
     FritzConnectionException,
+    FritzLookUpError,
     FritzSecurityError,
     FritzServiceError,
 )
@@ -490,6 +493,77 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             raise HomeAssistantError("Service not supported") from ex
 
 
+class AvmWrapper(FritzBoxTools):
+    """Setup AVM wrapper for API calls."""
+
+    def _service_call_action(
+        self,
+        service_name: str,
+        service_suffix: str,
+        action_name: str,
+        **kwargs: Any,
+    ) -> dict | None:
+        """Return service details."""
+
+        if f"{service_name}{service_suffix}" not in self.connection.services:
+            return None
+
+        try:
+            result: dict = self.connection.call_action(
+                f"{service_name}:{service_suffix}",
+                action_name,
+                **kwargs,
+            )
+            return result
+        except FritzSecurityError:
+            _LOGGER.error(
+                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
+                exc_info=True,
+            )
+        except (
+            FritzActionError,
+            FritzActionFailedError,
+            FritzServiceError,
+            FritzLookUpError,
+        ):
+            _LOGGER.error(
+                "Service/Action Error: cannot execute service %s with action %s",
+                service_name,
+                action_name,
+                exc_info=True,
+            )
+        except FritzConnectionException:
+            _LOGGER.error(
+                "Connection Error: Please check the device is properly configured for remote login",
+                exc_info=True,
+            )
+        return None
+
+    async def _async_service_call_action(
+        self, service_name: str, service_suffix: str, action_name: str, **kwargs: Any
+    ) -> dict[str, Any] | None:
+        """Make call_action async."""
+
+        return await self.hass.async_add_executor_job(
+            partial(
+                self._service_call_action,
+                service_name,
+                service_suffix,
+                action_name,
+                **kwargs,
+            )
+        )
+
+    async def get_wan_dsl_interface_config(self) -> dict[str, Any] | None:
+        """Call WANDSLInterfaceConfig service."""
+
+        return await self._async_service_call_action(
+            "WANDSLInterfaceConfig",
+            "1",
+            "GetInfo",
+        )
+
+
 @dataclass
 class FritzData:
     """Storage class for platform global data."""
@@ -501,10 +575,10 @@ class FritzData:
 class FritzDeviceBase(update_coordinator.CoordinatorEntity):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
-    def __init__(self, avm_device: FritzBoxTools, device: FritzDevice) -> None:
+    def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
-        super().__init__(avm_device)
-        self._avm_device = avm_device
+        super().__init__(avm_wrapper)
+        self._avm_wrapper = avm_wrapper
         self._mac: str = device.mac_address
         self._name: str = device.hostname or DEFAULT_DEVICE_NAME
 
@@ -517,7 +591,7 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity):
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         if self._mac:
-            return self._avm_device.devices[self._mac].ip_address
+            return self._avm_wrapper.devices[self._mac].ip_address
         return None
 
     @property
@@ -529,7 +603,7 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity):
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         if self._mac:
-            return self._avm_device.devices[self._mac].hostname
+            return self._avm_wrapper.devices[self._mac].hostname
         return None
 
     @property
@@ -647,25 +721,25 @@ class SwitchInfo(TypedDict):
 class FritzBoxBaseEntity:
     """Fritz host entity base class."""
 
-    def __init__(self, avm_device: FritzBoxTools, device_name: str) -> None:
+    def __init__(self, avm_wrapper: AvmWrapper, device_name: str) -> None:
         """Init device info class."""
-        self._avm_device = avm_device
+        self._avm_wrapper = avm_wrapper
         self._device_name = device_name
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the main device."""
-        return self._avm_device.mac
+        return self._avm_wrapper.mac
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
-            configuration_url=f"http://{self._avm_device.host}",
+            configuration_url=f"http://{self._avm_wrapper.host}",
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self._avm_device.unique_id)},
+            identifiers={(DOMAIN, self._avm_wrapper.unique_id)},
             manufacturer="AVM",
-            model=self._avm_device.model,
+            model=self._avm_wrapper.model,
             name=self._device_name,
-            sw_version=self._avm_device.current_firmware,
+            sw_version=self._avm_wrapper.current_firmware,
         )

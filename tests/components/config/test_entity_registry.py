@@ -111,6 +111,7 @@ async def test_get_entity(hass, client):
         "entity_id": "test_domain.name",
         "icon": None,
         "name": "Hello World",
+        "options": {},
         "original_device_class": None,
         "original_icon": None,
         "original_name": None,
@@ -138,6 +139,7 @@ async def test_get_entity(hass, client):
         "entity_id": "test_domain.no_name",
         "icon": None,
         "name": None,
+        "options": {},
         "original_device_class": None,
         "original_icon": None,
         "original_name": None,
@@ -197,6 +199,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "icon": "icon:after update",
             "name": "after update",
+            "options": {},
             "original_device_class": None,
             "original_icon": None,
             "original_name": None,
@@ -250,6 +253,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "icon": "icon:after update",
             "name": "after update",
+            "options": {},
             "original_device_class": None,
             "original_icon": None,
             "original_name": None,
@@ -257,6 +261,40 @@ async def test_update_entity(hass, client):
             "unique_id": "1234",
         },
         "reload_delay": 30,
+    }
+
+    # UPDATE ENTITY OPTION
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "options_domain": "sensor",
+            "options": {"unit_of_measurement": "beard_second"},
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "area_id": "mock-area-id",
+            "capabilities": None,
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.world",
+            "icon": "icon:after update",
+            "name": "after update",
+            "options": {"sensor": {"unit_of_measurement": "beard_second"}},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "unique_id": "1234",
+        },
     }
 
 
@@ -307,6 +345,7 @@ async def test_update_entity_require_restart(hass, client):
             "entity_id": "test_domain.world",
             "icon": None,
             "name": None,
+            "options": {},
             "original_device_class": None,
             "original_icon": None,
             "original_name": None,
@@ -411,6 +450,7 @@ async def test_update_entity_no_changes(hass, client):
             "entity_id": "test_domain.world",
             "icon": None,
             "name": "name of entity",
+            "options": {},
             "original_device_class": None,
             "original_icon": None,
             "original_name": None,
@@ -494,6 +534,7 @@ async def test_update_entity_id(hass, client):
             "entity_id": "test_domain.planet",
             "icon": None,
             "name": None,
+            "options": {},
             "original_device_class": None,
             "original_icon": None,
             "original_name": None,

@@ -7,9 +7,11 @@ from typing import Any, cast
 
 from tuya_iot import TuyaDevice
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.util import dt as dt_util
 
 from . import HomeAssistantTuyaData
@@ -27,13 +29,30 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    return _async_get_diagnostics(hass, entry)
+
+
+async def async_get_device_diagnostics(
+    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+) -> dict[str, Any]:
+    """Return diagnostics for a device entry."""
+    return _async_get_diagnostics(hass, entry, device)
+
+
+@callback
+def _async_get_diagnostics(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device: DeviceEntry | None = None,
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
     mqtt_connected = None
     if hass_data.home_manager.mq.client:
         mqtt_connected = hass_data.home_manager.mq.client.is_connected()
 
-    return {
+    data = {
         "endpoint": entry.data[CONF_ENDPOINT],
         "auth_type": entry.data[CONF_AUTH_TYPE],
         "country_code": entry.data[CONF_COUNTRY_CODE],
@@ -41,11 +60,22 @@ async def async_get_config_entry_diagnostics(
         "mqtt_connected": mqtt_connected,
         "disabled_by": entry.disabled_by,
         "disabled_polling": entry.pref_disable_polling,
-        "devices": [
-            _async_device_as_dict(hass, device)
-            for device in hass_data.device_manager.device_map.values()
-        ],
     }
+
+    if device:
+        tuya_device_id = next(iter(device.identifiers))[1]
+        data |= _async_device_as_dict(
+            hass, hass_data.device_manager.device_map[tuya_device_id]
+        )
+    else:
+        data.update(
+            devices=[
+                _async_device_as_dict(hass, device)
+                for device in hass_data.device_manager.device_map.values()
+            ]
+        )
+
+    return data
 
 
 @callback
@@ -75,7 +105,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
     for dpcode, value in device.status.items():
         # These statuses may contain sensitive information, redact these..
         if dpcode in {DPCode.ALARM_MESSAGE, DPCode.MOVEMENT_DETECT_PIC}:
-            data["status"][dpcode] = "**REDACTED**"
+            data["status"][dpcode] = REDACTED
             continue
 
         with suppress(ValueError, TypeError):
@@ -133,7 +163,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
                 if "entity_picture" in state_dict["attributes"]:
                     state_dict["attributes"] = {
                         **state_dict["attributes"],
-                        "entity_picture": "**REDACTED**",
+                        "entity_picture": REDACTED,
                     }
 
                 # The context doesn't provide useful information in this case.

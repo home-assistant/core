@@ -1,6 +1,8 @@
 """SMA Solar Webconnect interface."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pysma
 
 from homeassistant.components.sensor import (
@@ -33,6 +35,9 @@ async def async_setup_entry(
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
     device_info = sma_data[PYSMA_DEVICE_INFO]
+
+    if TYPE_CHECKING:
+        assert config_entry.unique_id
 
     entities = []
     for sensor in used_sensors:

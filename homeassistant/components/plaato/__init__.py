@@ -33,6 +33,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -219,7 +220,7 @@ class PlaatoCoordinator(DataUpdateCoordinator):
         self.api = Plaato(auth_token=auth_token)
         self.hass = hass
         self.device_type = device_type
-        self.platforms = []
+        self.platforms: list[Platform] = []
 
         super().__init__(
             hass,

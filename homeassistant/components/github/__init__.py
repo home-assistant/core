@@ -7,7 +7,7 @@ from aiogithubapi import GitHubAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.data[DOMAIN][repository] = coordinators
 
-    await async_cleanup_device_registry(hass=hass, entry=entry)
+    async_cleanup_device_registry(hass=hass, entry=entry)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -73,7 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_cleanup_device_registry(
+@callback
+def async_cleanup_device_registry(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ) -> None:

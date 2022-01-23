@@ -1057,7 +1057,7 @@ def _statistics_at_time(
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime,
 ) -> list | None:
-    """Return last known statics, earlier than start_time, for the metadata_ids."""
+    """Return last known statistics, earlier than start_time, for the metadata_ids."""
     # Fetch metadata for the given (or all) statistic_ids
     if table == StatisticsShortTerm:
         base_query = QUERY_STATISTICS_SHORT_TERM

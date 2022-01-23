@@ -36,7 +36,7 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
-    entities = []
+    entities: list[BinarySensorEntity] = []
     is_thermostat = api.single_master_thermostat()
 
     all_devices = api.get_all_devices()

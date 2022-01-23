@@ -200,7 +200,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    simple_queue = queue.SimpleQueue()
+    simple_queue: queue.SimpleQueue = queue.SimpleQueue()
     queue_handler = LogErrorQueueHandler(simple_queue)
     queue_handler.setLevel(logging.WARN)
     logging.root.addHandler(queue_handler)

@@ -20,9 +20,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, UPDATE_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 EVENT_HANDLERS = Registry()
 
@@ -89,7 +87,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             return self.devices
 
         for event in events:
-            _LOGGER.debug(event)
+            LOGGER.debug(event)
 
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
@@ -101,7 +99,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
-        _LOGGER.debug("Fetching all devices and state via /setup/devices")
+        LOGGER.debug("Fetching all devices and state via /setup/devices")
         return {d.device_url: d for d in await self.client.get_devices(refresh=True)}
 
     def _places_to_area(self, place: Place) -> dict[str, str]:

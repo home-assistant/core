@@ -28,9 +28,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .common import FritzBoxBaseEntity, FritzBoxTools
+from .common import AvmWrapper, FritzBoxBaseEntity
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
-from .wrapper import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -276,8 +275,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
-    avm_device: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-    avm_wrapper = AvmWrapper(avm_device)
+    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
     dsl: bool = False
     dslinterface = await avm_wrapper.get_wan_dsl_interface_config()
@@ -285,10 +283,10 @@ async def async_setup_entry(
         dsl = dslinterface["NewEnable"]
 
     entities = [
-        FritzBoxSensor(avm_device, entry.title, description)
+        FritzBoxSensor(avm_wrapper, entry.title, description)
         for description in SENSOR_TYPES
         if (dsl or description.connection_type != DSL_CONNECTION)
-        and description.exclude_mesh_role != avm_device.mesh_role
+        and description.exclude_mesh_role != avm_wrapper.mesh_role
     ]
 
     async_add_entities(entities, True)
@@ -301,7 +299,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        avm_device: FritzBoxTools,
+        avm_wrapper: AvmWrapper,
         device_friendly_name: str,
         description: FritzSensorEntityDescription,
     ) -> None:
@@ -310,15 +308,15 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._last_device_value: str | None = None
         self._attr_available = True
         self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = f"{avm_device.unique_id}-{description.key}"
-        super().__init__(avm_device, device_friendly_name)
+        self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
+        super().__init__(avm_wrapper, device_friendly_name)
 
     def update(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
         try:
-            status: FritzStatus = self._avm_device.fritz_status
+            status: FritzStatus = self._avm_wrapper.fritz_status
             self._attr_available = True
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)

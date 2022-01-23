@@ -29,7 +29,6 @@ from homeassistant.util import convert, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"
 
 CONF_COLOR = "color"
@@ -190,11 +189,13 @@ class FibaroController:
             except (ValueError, KeyError):
                 pass
         for item in callback_set:
-            self._callbacks[item]()
+            for callback in self._callbacks[item]:
+                callback()
 
     def register(self, device_id, callback):
         """Register device with a callback for updates."""
-        self._callbacks[device_id] = callback
+        self._callbacks.setdefault(device_id, [])
+        self._callbacks[device_id].append(callback)
 
     def get_children(self, device_id):
         """Get a list of child devices."""
@@ -522,10 +523,6 @@ class FibaroDevice(Entity):
             if "power" in self.fibaro_device.interfaces:
                 attr[ATTR_CURRENT_POWER_W] = convert(
                     self.fibaro_device.properties.power, float, 0.0
-                )
-            if "energy" in self.fibaro_device.interfaces:
-                attr[ATTR_CURRENT_ENERGY_KWH] = convert(
-                    self.fibaro_device.properties.energy, float, 0.0
                 )
         except (ValueError, KeyError):
             pass

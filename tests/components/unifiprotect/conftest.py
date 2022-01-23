@@ -51,6 +51,10 @@ class MockBootstrap:
         self.liveviews = {}
         self.events = {}
 
+    def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
+        """Fake process method for tests."""
+        pass
+
 
 @dataclass
 class MockEntityFixture:
