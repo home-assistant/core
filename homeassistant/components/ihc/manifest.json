@@ -1,6 +1,6 @@
 {
   "domain": "ihc",
-  "name": "IHC controller",
+  "name": "IHC Controller",
   "documentation": "https://www.home-assistant.io/integrations/ihc",
   "requirements": ["defusedxml==0.7.1", "ihcsdk==2.7.6"],
   "codeowners": [],
