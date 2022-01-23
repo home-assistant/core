@@ -1,4 +1,4 @@
-"""Diagnostics support for Tuya."""
+"""Diagnostics support for HomeKit Controller."""
 from __future__ import annotations
 
 from typing import Any
