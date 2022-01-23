@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+            "alread_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "already_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "step": {
             "user": {
