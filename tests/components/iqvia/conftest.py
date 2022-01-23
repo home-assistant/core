@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.iqvia.const import CONF_ZIP_CODE, DOMAIN
+from homeassistant.components.iqvia import CONF_ZIP_CODE, DOMAIN
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
