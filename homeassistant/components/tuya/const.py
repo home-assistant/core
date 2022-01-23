@@ -112,6 +112,17 @@ class WorkMode(StrEnum):
     WHITE = "white"
 
 
+class DPType(StrEnum):
+    """Data point types."""
+
+    BOOLEAN = "Boolean"
+    ENUM = "Enum"
+    INTEGER = "Integer"
+    JSON = "Json"
+    RAW = "Raw"
+    STRING = "String"
+
+
 class DPCode(StrEnum):
     """Data Point Codes used by Tuya.
 
