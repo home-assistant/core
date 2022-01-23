@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aioairctrl import CoAPClient
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import COAP_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,42 +25,41 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+class PurifierHub:
+    """PurifierHub connects to the purifier and returns device ID and name."""
 
     def __init__(self, host: str) -> None:
         """Initialize."""
         self.host = host
 
-    async def test_connection(self) -> bool:
-        """Test if we can connect to the host."""
-        # TODO test
-        # raise CannotConnect()
-        return True
+    async def test_connection(self) -> dict[str, str]:
+        """Test if we can connect to the purifier by requesting it's status."""
+
+        try:
+            async with async_timeout.timeout(20):
+                client = await CoAPClient.create(host=self.host, port=COAP_PORT)
+                try:
+                    status = await client.get_status()
+                finally:
+                    await client.shutdown()
+        except Exception as ex:
+            _LOGGER.error("Philips Air Purifier: Failed to connect: %s", repr(ex))
+            raise CannotConnect() from ex
+
+        if "DeviceId" in status and "name" in status:
+            return {"name": status["name"], "device_id": status["DeviceId"]}
+
+        raise CannotConnect()
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+    """Validate the user input allows us to connect and fetch information about the device.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
-    hub = PlaceholderHub(data["host"])
-
-    await hub.test_connection()
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    hub = PurifierHub(data["host"])
+    info = await hub.test_connection()
+    return info
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -79,18 +80,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-
-            # TODO extract and set unique id to prevent setting up the same device twice
-            # await self.async_set_unique_id("TODO")
-            # self._abort_if_unique_id_configured()
-
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            await self.async_set_unique_id(info["device_id"])
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(title=info["name"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
