@@ -1,7 +1,9 @@
 """Common libraries for test setup."""
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import time
+from typing import Any, Generator, TypeVar
 from unittest.mock import patch
 
 from google_nest_sdm.device_manager import DeviceManager
@@ -15,17 +17,22 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+# Typing helpers
+PlatformSetup = Callable[[], Awaitable[None]]
+T = TypeVar("T")
+YieldFixture = Generator[T, None, None]
+
 PROJECT_ID = "some-project-id"
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
+SUBSCRIBER_ID = "projects/example/subscriptions/subscriber-id-9876"
 
 CONFIG = {
     "nest": {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
-        # Required fields for using SDM API
         "project_id": PROJECT_ID,
-        "subscriber_id": "projects/example/subscriptions/subscriber-id-9876",
+        "subscriber_id": SUBSCRIBER_ID,
     },
 }
 
@@ -33,24 +40,64 @@ FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 
-def create_config_entry(hass, token_expiration_time=None) -> MockConfigEntry:
-    """Create a ConfigEntry and add it to Home Assistant."""
+def create_token_entry(token_expiration_time=None):
+    """Create OAuth 'token' data for a ConfigEntry."""
     if token_expiration_time is None:
         token_expiration_time = time.time() + 86400
+    return {
+        "access_token": FAKE_TOKEN,
+        "refresh_token": FAKE_REFRESH_TOKEN,
+        "scope": " ".join(SDM_SCOPES),
+        "token_type": "Bearer",
+        "expires_at": token_expiration_time,
+    }
+
+
+def create_config_entry(token_expiration_time=None) -> MockConfigEntry:
+    """Create a ConfigEntry and add it to Home Assistant."""
     config_entry_data = {
         "sdm": {},  # Indicates new SDM API, not legacy API
         "auth_implementation": "nest",
-        "token": {
-            "access_token": FAKE_TOKEN,
-            "refresh_token": FAKE_REFRESH_TOKEN,
-            "scope": " ".join(SDM_SCOPES),
-            "token_type": "Bearer",
-            "expires_at": token_expiration_time,
-        },
+        "token": create_token_entry(token_expiration_time),
     }
-    config_entry = MockConfigEntry(domain=DOMAIN, data=config_entry_data)
-    config_entry.add_to_hass(hass)
-    return config_entry
+    return MockConfigEntry(domain=DOMAIN, data=config_entry_data)
+
+
+@dataclass
+class NestTestConfig:
+    """Holder for integration configuration."""
+
+    config: dict[str, Any]
+    config_entry_data: dict[str, Any]
+
+
+# Exercises mode where all configuration is in configuration.yaml
+TEST_CONFIG_YAML_ONLY = NestTestConfig(
+    config=CONFIG,
+    config_entry_data={
+        "sdm": {},
+        "auth_implementation": "nest",
+        "token": create_token_entry(),
+    },
+)
+
+# Exercises mode where subscriber id is created in the config flow, but
+# all authentication is defined in configuration.yaml
+TEST_CONFIG_HYBRID = NestTestConfig(
+    config={
+        "nest": {
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "project_id": PROJECT_ID,
+        },
+    },
+    config_entry_data={
+        "sdm": {},
+        "auth_implementation": "nest",
+        "token": create_token_entry(),
+        "subscriber_id": SUBSCRIBER_ID,
+    },
+)
 
 
 class FakeSubscriber(GoogleNestSubscriber):
@@ -100,7 +147,7 @@ async def async_setup_sdm_platform(
 ):
     """Set up the platform and prerequisites."""
     if with_config:
-        create_config_entry(hass)
+        create_config_entry().add_to_hass(hass)
     subscriber = FakeSubscriber()
     device_manager = await subscriber.async_get_device_manager()
     if devices:
