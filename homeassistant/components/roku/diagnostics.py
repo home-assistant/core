@@ -21,6 +21,7 @@ async def async_get_config_entry_diagnostics(
             "data": {
                 **config_entry.data,
             },
+            "unique_id": config_entry.unique_id,
         },
         "data": coordinator.data.as_dict(),
     }
