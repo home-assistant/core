@@ -80,11 +80,11 @@ class BondFan(BondEntity, FanEntity):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
 
     def _apply_state(self, state: dict) -> None:
-        _LOGGER.critical("preset mode: %s", state)
-
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
+        breeze = state.get("breeze", [0, 0, 0])
+        self._attr_preset_mode = PRESET_MODE_BREEZE if breeze[0] else None
 
     @property
     def supported_features(self) -> int:
@@ -124,12 +124,6 @@ class BondFan(BondEntity, FanEntity):
             direction = DIRECTION_REVERSE
 
         return direction
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset_mode."""
-        _LOGGER.critical("preset mode: %s", self._device.props.get("breeze"))
-        return PRESET_MODE_BREEZE if self._device.props.get("breeze") else None
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the desired speed for the fan."""
