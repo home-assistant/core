@@ -29,3 +29,23 @@ def icon_for_signal_level(signal_level: int | None = None) -> str:
     if signal_level > 30:
         return "mdi:signal-cellular-2"
     return "mdi:signal-cellular-1"
+
+
+def icon_for_volume_level(
+    volume_level: int | None = None, volume_mute: bool = False
+) -> str:
+    """Return a volume icon valid identifier."""
+    icon = "mdi:volume"
+    if volume_level is None:
+        icon += "-variant-off"
+    elif volume_mute:
+        icon += "-mute"
+    elif volume_level == 0:
+        icon += "-off"
+    elif volume_level <= 35:
+        icon += "-low"
+    elif volume_level <= 70:
+        icon += "-medium"
+    elif volume_level > 70:
+        icon += "-high"
+    return icon
