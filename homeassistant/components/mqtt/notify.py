@@ -26,6 +26,7 @@ from .. import mqtt
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
+    CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
@@ -42,7 +43,6 @@ from .mixins import (
     device_info_from_config,
 )
 
-CONF_COMMAND_TEMPLATE = "command_template"
 CONF_TARGETS = "targets"
 CONF_TITLE = "title"
 
