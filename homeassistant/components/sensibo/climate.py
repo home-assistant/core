@@ -20,6 +20,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -47,6 +50,12 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
     }
 )
+
+FIELD_TO_FLAG = {
+    "fanLevel": SUPPORT_FAN_MODE,
+    "swing": SUPPORT_SWING_MODE,
+    "targetTemperature": SUPPORT_TARGET_TEMPERATURE,
+}
 
 SENSIBO_TO_HA = {
     "cool": HVAC_MODE_COOL,
@@ -87,10 +96,10 @@ async def async_setup_entry(
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        SensiboClimate(coordinator, key, hass.config.units.temperature_unit)
-        for key in coordinator.data
+        SensiboClimate(coordinator, device_id, hass.config.units.temperature_unit)
+        for device_id, device_data in coordinator.data.items()
         # Remove none climate devices
-        if coordinator.data[key]["hvac_modes"] and coordinator.data[key]["temp"]
+        if device_data["hvac_modes"] and device_data["temp"]
     )
 
 
@@ -102,31 +111,39 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
-        key: str,
+        device_id: str,
         temp_unit: str,
     ) -> None:
         """Initiate SensiboClimate."""
         super().__init__(coordinator)
         self._client = coordinator.client
-        self._attr_unique_id = coordinator.data[key]["id"]
-        self._attr_name = coordinator.data[key]["name"]
+        self._attr_unique_id = coordinator.data[device_id]["id"]
+        self._attr_name = coordinator.data[device_id]["name"]
         self._attr_temperature_unit = (
             TEMP_CELSIUS
-            if coordinator.data[key]["temp_unit"] == "C"
+            if coordinator.data[device_id]["temp_unit"] == "C"
             else TEMP_FAHRENHEIT
         )
-        self._attr_supported_features = coordinator.data[key]["features"]
+        self._attr_supported_features = self.get_features()
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data[key]["id"])},
-            name=coordinator.data[key]["name"],
+            identifiers={(DOMAIN, coordinator.data[device_id]["id"])},
+            name=coordinator.data[device_id]["name"],
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
-            model=coordinator.data[key]["model"],
-            sw_version=coordinator.data[key]["fw_ver"],
-            hw_version=coordinator.data[key]["fw_type"],
-            suggested_area=coordinator.data[key]["name"],
+            model=coordinator.data[device_id]["model"],
+            sw_version=coordinator.data[device_id]["fw_ver"],
+            hw_version=coordinator.data[device_id]["fw_type"],
+            suggested_area=coordinator.data[device_id]["name"],
         )
         self._temp_unit = temp_unit
+
+    def get_features(self) -> int:
+        """Get supported features."""
+        features = 0
+        for key in self.coordinator.data[self.unique_id]["features"]:
+            if key in FIELD_TO_FLAG:
+                features |= FIELD_TO_FLAG[key]
+        return features
 
     @property
     def current_humidity(self) -> int:
@@ -243,7 +260,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             "targetTemperature", int(temperature)
         )
         if result:
-            self.coordinator.data[self.unique_id]["target_temperature"] = temperature
+            self.coordinator.data[self.unique_id]["target_temp"] = int(temperature)
             self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -320,6 +337,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
             raise HomeAssistantError(
                 f"Failed to set AC state for device {self.name} to Sensibo servers: {err}"
             ) from err
+        LOGGER.debug("Result: %s", result)
         if result["status"] == "Success":
             return True
         return False

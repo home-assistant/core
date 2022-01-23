@@ -1,11 +1,9 @@
 """DataUpdateCoordinator for the Sensibo integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 from typing import Any
 
-from aiohttp.client_exceptions import ClientConnectionError
 import pysensibo
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FIELD_TO_FLAG, LOGGER, TIMEOUT
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
 
 class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
@@ -41,14 +39,10 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             for dev in await self.client.async_get_devices():
                 devices.append(dev)
-        except (
-            ClientConnectionError,
-            asyncio.TimeoutError,
-            pysensibo.SensiboError,
-        ) as error:
+        except (pysensibo.SensiboError) as error:
             raise UpdateFailed from error
 
-        entities: dict[str, dict[str, Any]] = {}
+        device_data: dict[str, dict[str, Any]] = {}
         for dev in devices:
             unique_id = dev["id"]
             name = dev["room"]["name"]
@@ -78,10 +72,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             )
             if temperatures_list:
                 temperature_step = temperatures_list[1] - temperatures_list[0]
-            supported_features = 0
-            for key in ac_states:
-                if key in FIELD_TO_FLAG:
-                    supported_features |= FIELD_TO_FLAG[key]
+            features = list(ac_states)
             state = hvac_mode if hvac_mode else "off"
 
             fw_ver = dev["firmwareVersion"]
@@ -91,7 +82,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             calibration_temp = dev["sensorsCalibration"].get("temperature", 0.0)
             calibration_hum = dev["sensorsCalibration"].get("humidity", 0.0)
 
-            entities[unique_id] = {
+            device_data[unique_id] = {
                 "id": unique_id,
                 "name": name,
                 "ac_states": ac_states,
@@ -109,7 +100,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "temp_unit": temperature_unit_key,
                 "temp_list": temperatures_list,
                 "temp_step": temperature_step,
-                "features": supported_features,
+                "features": features,
                 "state": state,
                 "fw_ver": fw_ver,
                 "fw_type": fw_type,
@@ -117,4 +108,4 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
                 "calibration_temp": calibration_temp,
                 "calibration_hum": calibration_hum,
             }
-        return entities
+        return device_data
