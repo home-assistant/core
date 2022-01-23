@@ -278,7 +278,7 @@ async def async_setup_entry(
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
     dsl: bool = False
-    dslinterface = await avm_wrapper.get_wan_dsl_interface_config()
+    dslinterface = await avm_wrapper.async_get_wan_dsl_interface_config()
     if dslinterface:
         dsl = dslinterface["NewEnable"]
 
