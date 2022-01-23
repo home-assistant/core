@@ -1297,7 +1297,6 @@ omit =
     homeassistant/components/waze_travel_time/helpers.py
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/webostv/__init__.py
-    homeassistant/components/webostv/media_player.py
     homeassistant/components/whois/__init__.py
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
