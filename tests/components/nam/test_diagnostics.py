@@ -14,9 +14,5 @@ async def test_entry_diagnostics(hass, hass_client):
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    assert result["info"] == {
-        "username": "**REDACTED**",
-        "password": "**REDACTED**",
-        "host": "10.10.2.3",
-    }
+    assert result["info"] == {"host": "10.10.2.3"}
     assert result["data"] == diagnostics_data
