@@ -30,10 +30,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -302,18 +303,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             control_light,
         )
 
-        await discovery.async_load_platform(
-            hass, Platform.CAMERA, DOMAIN, {CONF_NAME: name}, config
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, Platform.CAMERA, DOMAIN, {CONF_NAME: name}, config
+            )
         )
 
         event_codes = set()
         if binary_sensors:
-            await discovery.async_load_platform(
-                hass,
-                Platform.BINARY_SENSOR,
-                DOMAIN,
-                {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
-                config,
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass,
+                    Platform.BINARY_SENSOR,
+                    DOMAIN,
+                    {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
+                    config,
+                )
             )
             event_codes = {
                 sensor.event_code
@@ -323,24 +328,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 and sensor.event_code is not None
             }
 
-        asyncio.create_task(_monitor_events(hass, name, api, event_codes))
+        monitor_task = asyncio.create_task(
+            _monitor_events(hass, name, api, event_codes)
+        )
+
+        @callback
+        def cancel_monitor(event: Event) -> None:
+            monitor_task.cancel()
+
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, cancel_monitor)
 
         if sensors:
-            await discovery.async_load_platform(
-                hass,
-                Platform.SENSOR,
-                DOMAIN,
-                {CONF_NAME: name, CONF_SENSORS: sensors},
-                config,
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass,
+                    Platform.SENSOR,
+                    DOMAIN,
+                    {CONF_NAME: name, CONF_SENSORS: sensors},
+                    config,
+                )
             )
 
         if switches:
-            await discovery.async_load_platform(
-                hass,
-                Platform.SWITCH,
-                DOMAIN,
-                {CONF_NAME: name, CONF_SWITCHES: switches},
-                config,
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass,
+                    Platform.SWITCH,
+                    DOMAIN,
+                    {CONF_NAME: name, CONF_SWITCHES: switches},
+                    config,
+                )
             )
 
     if not hass.data[DATA_AMCREST][DEVICES]:
