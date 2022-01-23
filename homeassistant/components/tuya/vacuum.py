@@ -14,6 +14,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
+    SUPPORT_SEND_COMMAND,
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STATUS,
@@ -89,6 +90,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
+        self._supported_features |= SUPPORT_SEND_COMMAND
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._supported_features |= SUPPORT_PAUSE
 
@@ -185,3 +187,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
+
+    def send_command(self, command: str, params: str = None, **kwargs: Any) -> None:
+        """Send raw command."""
+        if params is None:
+            raise ValueError("Params cannot be omitted for Tuya vacuum commands")
+        self._send_command([{"code": command, "value": params}])
