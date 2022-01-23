@@ -3,9 +3,22 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+from homeassistant.components.axis.const import CONF_EVENTS, CONF_MODEL
+from homeassistant.components.diagnostics import REDACTED
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
+
 from .test_device import (
     API_DISCOVERY_BASIC_DEVICE_INFO,
     API_DISCOVERY_RESPONSE,
+    DEFAULT_HOST,
+    MODEL,
+    NAME,
     setup_axis_integration,
 )
 
@@ -21,7 +34,15 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         config_entry = await setup_axis_integration(hass)
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "config_entry": dict(config_entry.data),
+        "config": {
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: "root",
+            CONF_PASSWORD: REDACTED,
+            CONF_PORT: 80,
+            CONF_MODEL: MODEL,
+            CONF_NAME: NAME,
+        },
+        "options": {CONF_EVENTS: True},
         "api_discovery": [
             {
                 "id": "api-discovery",
@@ -42,7 +63,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         "basic_device_info": {
             "ProdNbr": "M1065-LW",
             "ProdType": "Network Camera",
-            "SerialNumber": "00408C123456",
+            "SerialNumber": REDACTED,
             "Version": "9.80.1",
         },
         "params": {
@@ -66,7 +87,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                 "Image.NbrOfViews": "2",
                 "Image.Resolution": "1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240",
                 "Image.Rotation": "0,180",
-                "System.SerialNumber": "00408C123456",
+                "System.SerialNumber": REDACTED,
             },
             "root.StreamProfile": {
                 "MaxGroups": "26",
