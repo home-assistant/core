@@ -875,7 +875,7 @@ pyatag==0.3.5.3
 pyatmo==6.2.2
 
 # homeassistant.components.apple_tv
-pyatv==0.9.8
+pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.9
@@ -1294,7 +1294,7 @@ rflink==0.0.58
 ring_doorbell==0.7.2
 
 # homeassistant.components.roku
-rokuecp==0.10.0
+rokuecp==0.11.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5

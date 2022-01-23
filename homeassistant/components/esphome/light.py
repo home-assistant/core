@@ -144,7 +144,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return self._api_version >= APIVersion(1, 6)
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the light is on."""
         return self._state.state
 

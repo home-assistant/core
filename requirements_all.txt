@@ -584,7 +584,7 @@ dovado==0.4.1
 dsmr_parser==0.32
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.4
+dwdwfsapi==1.0.5
 
 # homeassistant.components.dweet
 dweepy==0.3.0
@@ -1401,7 +1401,7 @@ pyatmo==6.2.2
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.9.8
+pyatv==0.10.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.9
@@ -2111,7 +2111,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.10.0
+rokuecp==0.11.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5
@@ -2338,7 +2338,7 @@ temescal==0.3
 temperusb==1.5.3
 
 # homeassistant.components.tensorflow
-# tensorflow==2.3.0
+# tensorflow==2.5.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.12
@@ -2347,7 +2347,7 @@ tesla-powerwall==0.3.12
 tesla-wall-connector==1.0.1
 
 # homeassistant.components.tensorflow
-# tf-models-official==2.3.0
+# tf-models-official==2.5.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
