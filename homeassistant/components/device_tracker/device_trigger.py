@@ -24,7 +24,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 
@@ -89,7 +89,7 @@ async def async_attach_trigger(
         CONF_ZONE: config[CONF_ZONE],
         CONF_EVENT: event,
     }
-    zone_config = zone.TRIGGER_SCHEMA(zone_config)
+    zone_config = await zone.async_validate_trigger_config(hass, zone_config)
     return await zone.async_attach_trigger(
         hass, zone_config, action, automation_info, platform_type="device"
     )

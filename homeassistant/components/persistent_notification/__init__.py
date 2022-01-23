@@ -207,7 +207,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, "mark_read", mark_read_service, SCHEMA_SERVICE_NOTIFICATION
     )
 
-    hass.components.websocket_api.async_register_command(websocket_get_notifications)
+    websocket_api.async_register_command(hass, websocket_get_notifications)
 
     return True
 

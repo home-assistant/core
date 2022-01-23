@@ -11,7 +11,18 @@
             "user": {
                 "data": {
                     "password": "Parola",
+                    "region": "ConnectedDrive B\u00f6lgesi",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "Salt okunur (yaln\u0131zca sens\u00f6rler ve bildirim, hizmetlerin y\u00fcr\u00fct\u00fclmesi yok, kilit yok)",
+                    "use_location": "Araba konumu anketleri i\u00e7in Home Assistant konumunu kullan\u0131n (7/2014 tarihinden \u00f6nce \u00fcretilmi\u015f i3/i8 olmayan ara\u00e7lar i\u00e7in gereklidir)"
                 }
             }
         }

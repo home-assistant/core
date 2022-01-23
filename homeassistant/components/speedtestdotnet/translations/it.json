@@ -14,9 +14,9 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Disabilitare l'aggiornamento automatico",
+                    "manual": "Disabilita l'aggiornamento automatico",
                     "scan_interval": "Frequenza di aggiornamento (minuti)",
-                    "server_name": "Selezionare il server di prova"
+                    "server_name": "Seleziona il server di prova"
                 }
             }
         }

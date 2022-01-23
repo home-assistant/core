@@ -28,10 +28,8 @@ ATTR_LAST_BRIGHTNESS = "last_brightness"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> bool:
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the ISY994 light platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     isy_options = entry.options
@@ -117,8 +115,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         self._last_brightness = self.brightness or 255
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
 
         if (

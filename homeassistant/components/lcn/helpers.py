@@ -1,8 +1,11 @@
 """Helpers for LCN component."""
 from __future__ import annotations
 
+import asyncio
+from copy import deepcopy
+from itertools import chain
 import re
-from typing import Tuple, Type, Union, cast
+from typing import Union, cast
 
 import pypck
 import voluptuous as vol
@@ -22,19 +25,23 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SENSORS,
+    CONF_SOURCE,
     CONF_SWITCHES,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BINSENSOR_PORTS,
     CONF_CLIMATES,
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
+    CONF_OUTPUT,
     CONF_RESOURCE,
     CONF_SCENES,
     CONF_SK_NUM_TRIES,
@@ -42,14 +49,21 @@ from .const import (
     CONNECTION,
     DEFAULT_NAME,
     DOMAIN,
+    LED_PORTS,
+    LOGICOP_PORTS,
+    OUTPUT_PORTS,
+    S0_INPUTS,
+    SETPOINTS,
+    THRESHOLDS,
+    VARIABLES,
 )
 
 # typing
-AddressType = Tuple[int, int, bool]
+AddressType = tuple[int, int, bool]
 DeviceConnectionType = Union[
     pypck.module.ModuleConnection, pypck.module.GroupConnection
 ]
-InputType = Type[pypck.inputs.Input]
+InputType = type[pypck.inputs.Input]
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -92,10 +106,43 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     raise ValueError("Unknown domain")
 
 
-def generate_unique_id(address: AddressType) -> str:
+def get_device_model(domain_name: str, domain_data: ConfigType) -> str:
+    """Return the model for the specified domain_data."""
+    if domain_name in ("switch", "light"):
+        return "Output" if domain_data[CONF_OUTPUT] in OUTPUT_PORTS else "Relay"
+    if domain_name in ("binary_sensor", "sensor"):
+        if domain_data[CONF_SOURCE] in BINSENSOR_PORTS:
+            return "Binary Sensor"
+        if domain_data[CONF_SOURCE] in chain(
+            VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
+        ):
+            return "Variable"
+        if domain_data[CONF_SOURCE] in LED_PORTS:
+            return "Led"
+        if domain_data[CONF_SOURCE] in LOGICOP_PORTS:
+            return "Logical Operation"
+        return "Key"
+    if domain_name == "cover":
+        return "Motor"
+    if domain_name == "climate":
+        return "Regulator"
+    if domain_name == "scene":
+        return "Scene"
+    raise ValueError("Unknown domain")
+
+
+def generate_unique_id(
+    entry_id: str,
+    address: AddressType,
+    resource: str | None = None,
+) -> str:
     """Generate a unique_id from the given parameters."""
+    unique_id = entry_id
     is_group = "g" if address[2] else "m"
-    return f"{is_group}{address[0]:03d}{address[1]:03d}"
+    unique_id += f"-{is_group}{address[0]:03d}{address[1]:03d}"
+    if resource:
+        unique_id += f"-{resource}".lower()
+    return unique_id
 
 
 def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
@@ -200,6 +247,110 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
     return list(data.values())
 
 
+def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Register LCN host for given config_entry in device registry."""
+    device_registry = dr.async_get(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="Issendorff",
+        name=config_entry.title,
+        model="LCN-PCHK",
+    )
+
+
+def register_lcn_address_devices(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Register LCN modules and groups defined in config_entry as devices in device registry.
+
+    The name of all given device_connections is collected and the devices
+    are updated.
+    """
+    device_registry = dr.async_get(hass)
+
+    host_identifiers = (DOMAIN, config_entry.entry_id)
+
+    for device_config in config_entry.data[CONF_DEVICES]:
+        address = device_config[CONF_ADDRESS]
+        device_name = device_config[CONF_NAME]
+        identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
+
+        if device_config[CONF_ADDRESS][2]:  # is group
+            device_model = f"LCN group (g{address[0]:03d}{address[1]:03d})"
+            sw_version = None
+        else:  # is module
+            hardware_type = device_config[CONF_HARDWARE_TYPE]
+            if hardware_type in pypck.lcn_defs.HARDWARE_DESCRIPTIONS:
+                hardware_name = pypck.lcn_defs.HARDWARE_DESCRIPTIONS[hardware_type]
+            else:
+                hardware_name = pypck.lcn_defs.HARDWARE_DESCRIPTIONS[-1]
+            device_model = f"{hardware_name} (m{address[0]:03d}{address[1]:03d})"
+            sw_version = f"{device_config[CONF_SOFTWARE_SERIAL]:06X}"
+
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers=identifiers,
+            via_device=host_identifiers,
+            manufacturer="Issendorff",
+            sw_version=sw_version,
+            name=device_name,
+            model=device_model,
+        )
+
+
+async def async_update_device_config(
+    device_connection: DeviceConnectionType, device_config: ConfigType
+) -> None:
+    """Fill missing values in device_config with infos from LCN bus."""
+    # fetch serial info if device is module
+    if not (is_group := device_config[CONF_ADDRESS][2]):  # is module
+        await device_connection.serial_known
+        if device_config[CONF_HARDWARE_SERIAL] == -1:
+            device_config[CONF_HARDWARE_SERIAL] = device_connection.hardware_serial
+        if device_config[CONF_SOFTWARE_SERIAL] == -1:
+            device_config[CONF_SOFTWARE_SERIAL] = device_connection.software_serial
+        if device_config[CONF_HARDWARE_TYPE] == -1:
+            device_config[CONF_HARDWARE_TYPE] = device_connection.hardware_type.value
+
+    # fetch name if device is module
+    if device_config[CONF_NAME] != "":
+        return
+
+    device_name = ""
+    if not is_group:
+        device_name = await device_connection.request_name()
+    if is_group or device_name == "":
+        module_type = "Group" if is_group else "Module"
+        device_name = (
+            f"{module_type} "
+            f"{device_config[CONF_ADDRESS][0]:03d}/"
+            f"{device_config[CONF_ADDRESS][1]:03d}"
+        )
+    device_config[CONF_NAME] = device_name
+
+
+async def async_update_config_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Fill missing values in config_entry with infos from LCN bus."""
+    device_configs = deepcopy(config_entry.data[CONF_DEVICES])
+    coros = []
+    for device_config in device_configs:
+        device_connection = get_device_connection(
+            hass, device_config[CONF_ADDRESS], config_entry
+        )
+        coros.append(async_update_device_config(device_connection, device_config))
+
+    await asyncio.gather(*coros)
+
+    new_data = {**config_entry.data, CONF_DEVICES: device_configs}
+
+    # schedule config_entry for save
+    hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
     """Validate that all connection names are unique.
 
@@ -232,8 +383,7 @@ def is_address(value: str) -> tuple[AddressType, str]:
         myhome.0.g11
         myhome.s0.g11
     """
-    matcher = PATTERN_ADDRESS.match(value)
-    if matcher:
+    if matcher := PATTERN_ADDRESS.match(value):
         is_group = matcher.group("type") == "g"
         addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
         conn_id = matcher.group("conn_id")

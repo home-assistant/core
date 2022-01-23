@@ -5,7 +5,8 @@ import logging
 import voluptuous as vol
 from xiaomi_gateway import XiaomiGateway, XiaomiGatewayDiscovery
 
-from homeassistant import config_entries, core
+from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
@@ -15,13 +16,15 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -36,8 +39,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["binary_sensor", "sensor", "switch", "light", "cover", "lock"]
-GATEWAY_PLATFORMS_NO_KEY = ["binary_sensor", "sensor"]
+GATEWAY_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+GATEWAY_PLATFORMS_NO_KEY = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 ATTR_GW_MAC = "gw_mac"
 ATTR_RINGTONE_ID = "ringtone_id"
@@ -66,10 +76,10 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
 
-    def play_ringtone_service(call):
+    def play_ringtone_service(call: ServiceCall) -> None:
         """Service to play ringtone through Gateway."""
         ring_id = call.data.get(ATTR_RINGTONE_ID)
         gateway = call.data.get(ATTR_GW_MAC)
@@ -81,22 +91,23 @@ def setup(hass, config):
 
         gateway.write_to_hub(gateway.sid, **kwargs)
 
-    def stop_ringtone_service(call):
+    def stop_ringtone_service(call: ServiceCall) -> None:
         """Service to stop playing ringtone on Gateway."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, mid=10000)
 
-    def add_device_service(call):
+    def add_device_service(call: ServiceCall) -> None:
         """Service to add a new sub-device within the next 30 seconds."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, join_permission="yes")
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             "Join permission enabled for 30 seconds! "
             "Please press the pairing button of the new device once.",
             title="Xiaomi Aqara Gateway",
         )
 
-    def remove_device_service(call):
+    def remove_device_service(call: ServiceCall) -> None:
         """Service to remove a sub-device from the gateway."""
         device_id = call.data.get(ATTR_DEVICE_ID)
         gateway = call.data.get(ATTR_GW_MAC)
@@ -129,9 +140,7 @@ def setup(hass, config):
     return True
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the xiaomi aqara components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(GATEWAYS_KEY, {})
@@ -172,7 +181,7 @@ async def async_setup_entry(
         entry.data[CONF_HOST],
     )
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
@@ -191,9 +200,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if entry.data[CONF_KEY] is not None:
         platforms = GATEWAY_PLATFORMS
@@ -284,7 +291,7 @@ class XiaomiDevice(Entity):
                 model=self._model,
             )
         else:
-            DeviceInfo(
+            device_info = DeviceInfo(
                 connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
                 identifiers={(DOMAIN, self._device_id)},
                 manufacturer="Xiaomi Aqara",

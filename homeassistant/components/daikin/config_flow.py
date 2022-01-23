@@ -10,7 +10,10 @@ from pydaikin.discovery import Discovery
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
@@ -67,10 +70,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = None
 
         try:
-            with timeout(TIMEOUT):
+            async with timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
-                    self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                    async_get_clientsession(self.hass),
                     key=key,
                     uuid=uuid,
                     password=password,
@@ -123,18 +126,20 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input.get(CONF_PASSWORD),
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
-        devices = Discovery().poll(ip=discovery_info[CONF_HOST])
+        devices = Discovery().poll(ip=discovery_info.host)
         if not devices:
             _LOGGER.debug(
                 "Could not find MAC-address for %s,"
                 " make sure the required UDP ports are open (see integration documentation)",
-                discovery_info[CONF_HOST],
+                discovery_info.host,
             )
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
         self._abort_if_unique_id_configured()
-        self.host = discovery_info[CONF_HOST]
+        self.host = discovery_info.host
         return await self.async_step_user()

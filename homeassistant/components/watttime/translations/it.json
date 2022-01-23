@@ -15,7 +15,7 @@
                     "latitude": "Latitudine",
                     "longitude": "Logitudine"
                 },
-                "description": "Immettere la latitudine e la longitudine da monitorare:"
+                "description": "Immetti la latitudine e la longitudine da monitorare:"
             },
             "location": {
                 "data": {
@@ -27,8 +27,8 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Si prega di reinserire la password per {username}:",
-                "title": "Autenticare nuovamente l'integrazione"
+                "description": "Digita nuovamente la password per {username}:",
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {
@@ -36,6 +36,16 @@
                     "username": "Nome utente"
                 },
                 "description": "Inserisci il tuo nome utente e password:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra la posizione monitorata sulla mappa"
+                },
+                "title": "Configura WattTime"
             }
         }
     }

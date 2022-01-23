@@ -3,9 +3,16 @@
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
         },
+        "error": {
+            "invalid_url": "Ge\u00e7ersiz URL",
+            "syncthru_not_supported": "Cihaz SyncThru'yu desteklemiyor",
+            "unknown_state": "Yaz\u0131c\u0131 durumu bilinmiyor, URL'yi ve a\u011f ba\u011flant\u0131s\u0131n\u0131 do\u011frulay\u0131n"
+        },
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
+                    "name": "Ad",
                     "url": "Web aray\u00fcz\u00fc URL'si"
                 }
             },

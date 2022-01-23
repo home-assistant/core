@@ -46,7 +46,7 @@ async def async_setup_entry(
 class VerisureSmartcam(CoordinatorEntity, Camera):
     """Representation of a Verisure camera."""
 
-    coordinator = VerisureDataUpdateCoordinator
+    coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
         self,
@@ -63,7 +63,7 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
 
         self.serial_number = serial_number
         self._directory_path = directory_path
-        self._image = None
+        self._image: str | None = None
         self._image_id = None
 
     @property
@@ -87,7 +87,7 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         self.check_imagelist()
         if not self._image:
             LOGGER.debug("No image to display")
-            return
+            return None
         LOGGER.debug("Trying to open %s", self._image)
         with open(self._image, "rb") as file:
             return file.read()

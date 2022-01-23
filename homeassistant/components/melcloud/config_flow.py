@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -42,16 +43,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            with timeout(10):
+            async with timeout(10):
                 if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
                         username,
                         password,
-                        self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                        async_get_clientsession(self.hass),
                     )
                 await pymelcloud.get_devices(
                     acquired_token,
-                    self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                    async_get_clientsession(self.hass),
                 )
         except ClientResponseError as err:
             if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):

@@ -17,7 +17,6 @@ from withings_api.common import (
     SleepModel,
 )
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.withings.common import (
     WITHINGS_MEASUREMENTS_MAP,
     WithingsAttribute,
@@ -25,6 +24,7 @@ from homeassistant.components.withings.common import (
     get_platform_attributes,
 )
 from homeassistant.components.withings.const import Measurement
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -310,14 +310,14 @@ async def test_sensor_default_enabled_entities(
     await component_factory.configure_component(profile_configs=(PERSON0,))
 
     # Assert entities should not exist yet.
-    for attribute in get_platform_attributes(SENSOR_DOMAIN):
+    for attribute in get_platform_attributes(Platform.SENSOR):
         assert not await async_get_entity_id(hass, attribute, PERSON0.user_id)
 
     # person 0
     await component_factory.setup_profile(PERSON0.user_id)
 
     # Assert entities should exist.
-    for attribute in get_platform_attributes(SENSOR_DOMAIN):
+    for attribute in get_platform_attributes(Platform.SENSOR):
         entity_id = await async_get_entity_id(hass, attribute, PERSON0.user_id)
         assert entity_id
         assert entity_registry.async_is_registered(entity_id)
@@ -356,14 +356,14 @@ async def test_all_entities(
         await component_factory.configure_component(profile_configs=(PERSON0,))
 
         # Assert entities should not exist yet.
-        for attribute in get_platform_attributes(SENSOR_DOMAIN):
+        for attribute in get_platform_attributes(Platform.SENSOR):
             assert not await async_get_entity_id(hass, attribute, PERSON0.user_id)
 
         # person 0
         await component_factory.setup_profile(PERSON0.user_id)
 
         # Assert entities should exist.
-        for attribute in get_platform_attributes(SENSOR_DOMAIN):
+        for attribute in get_platform_attributes(Platform.SENSOR):
             entity_id = await async_get_entity_id(hass, attribute, PERSON0.user_id)
             assert entity_id
             assert entity_registry.async_is_registered(entity_id)

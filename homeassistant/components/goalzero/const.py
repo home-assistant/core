@@ -8,5 +8,5 @@ DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
 DATA_KEY_API = "api"
-
+MANUFACTURER = "Goal Zero"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)

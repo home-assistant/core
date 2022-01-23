@@ -17,15 +17,14 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_CONTROLLER_ID,
-    ATTR_IHC_ID,
-    ATTR_VALUE,
     CONF_AUTOSETUP,
     CONF_BINARY_SENSOR,
     CONF_DIMMABLE,
@@ -40,22 +39,22 @@ from .const import (
     CONF_SENSOR,
     CONF_SWITCH,
     CONF_XPATH,
-    SERVICE_PULSE,
-    SERVICE_SET_RUNTIME_VALUE_BOOL,
-    SERVICE_SET_RUNTIME_VALUE_FLOAT,
-    SERVICE_SET_RUNTIME_VALUE_INT,
+    DOMAIN,
+    IHC_CONTROLLER,
 )
-from .util import async_pulse
+from .service_functions import setup_service_functions
 
 _LOGGER = logging.getLogger(__name__)
 
 AUTO_SETUP_YAML = "ihc_auto_setup.yaml"
 
-DOMAIN = "ihc"
-
-IHC_CONTROLLER = "controller"
 IHC_INFO = "info"
-PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
+PLATFORMS = (
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+)
 
 
 def validate_name(config):
@@ -186,41 +185,10 @@ AUTO_SETUP_SCHEMA = vol.Schema(
     }
 )
 
-SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Required(ATTR_VALUE): cv.boolean,
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
-    }
-)
 
-SET_RUNTIME_VALUE_INT_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Required(ATTR_VALUE): vol.Coerce(int),
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
-    }
-)
-
-SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Required(ATTR_VALUE): vol.Coerce(float),
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
-    }
-)
-
-PULSE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
-    }
-)
-
-
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the IHC integration."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
     for index, controller_conf in enumerate(conf):
         if not ihc_setup(hass, config, controller_conf, index):
             return False
@@ -286,8 +254,7 @@ def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
 
 def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controller_id):
     """Auto setup of IHC products from the IHC project file."""
-    project_xml = ihc_controller.get_project()
-    if not project_xml:
+    if not (project_xml := ihc_controller.get_project()):
         _LOGGER.error("Unable to read project from IHC controller")
         return False
     project = ElementTree.fromstring(project_xml)
@@ -339,61 +306,3 @@ def get_discovery_info(platform_setup, groups, controller_id):
                     }
                     discovery_data[name] = device
     return discovery_data
-
-
-def setup_service_functions(hass: HomeAssistant):
-    """Set up the IHC service functions."""
-
-    def _get_controller(call):
-        controller_id = call.data[ATTR_CONTROLLER_ID]
-        ihc_key = f"ihc{controller_id}"
-        return hass.data[ihc_key][IHC_CONTROLLER]
-
-    def set_runtime_value_bool(call):
-        """Set a IHC runtime bool value service function."""
-        ihc_id = call.data[ATTR_IHC_ID]
-        value = call.data[ATTR_VALUE]
-        ihc_controller = _get_controller(call)
-        ihc_controller.set_runtime_value_bool(ihc_id, value)
-
-    def set_runtime_value_int(call):
-        """Set a IHC runtime integer value service function."""
-        ihc_id = call.data[ATTR_IHC_ID]
-        value = call.data[ATTR_VALUE]
-        ihc_controller = _get_controller(call)
-        ihc_controller.set_runtime_value_int(ihc_id, value)
-
-    def set_runtime_value_float(call):
-        """Set a IHC runtime float value service function."""
-        ihc_id = call.data[ATTR_IHC_ID]
-        value = call.data[ATTR_VALUE]
-        ihc_controller = _get_controller(call)
-        ihc_controller.set_runtime_value_float(ihc_id, value)
-
-    async def async_pulse_runtime_input(call):
-        """Pulse a IHC controller input function."""
-        ihc_id = call.data[ATTR_IHC_ID]
-        ihc_controller = _get_controller(call)
-        await async_pulse(hass, ihc_controller, ihc_id)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_SET_RUNTIME_VALUE_BOOL,
-        set_runtime_value_bool,
-        schema=SET_RUNTIME_VALUE_BOOL_SCHEMA,
-    )
-    hass.services.register(
-        DOMAIN,
-        SERVICE_SET_RUNTIME_VALUE_INT,
-        set_runtime_value_int,
-        schema=SET_RUNTIME_VALUE_INT_SCHEMA,
-    )
-    hass.services.register(
-        DOMAIN,
-        SERVICE_SET_RUNTIME_VALUE_FLOAT,
-        set_runtime_value_float,
-        schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA,
-    )
-    hass.services.register(
-        DOMAIN, SERVICE_PULSE, async_pulse_runtime_input, schema=PULSE_SCHEMA
-    )

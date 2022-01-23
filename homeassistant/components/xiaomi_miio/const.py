@@ -166,7 +166,10 @@ MODELS_LIGHT_BULB = [
     "philips.light.candle2",
     "philips.light.downlight",
 ]
-MODELS_LIGHT_MONO = ["philips.light.mono1"]
+MODELS_LIGHT_MONO = [
+    "philips.light.mono1",
+    "philips.light.hbulb",
+]
 
 # Model lists
 MODELS_GATEWAY = ["lumi.gateway", "lumi.acpartner"]
@@ -195,8 +198,42 @@ MODELS_LIGHT = (
     + MODELS_LIGHT_BULB
     + MODELS_LIGHT_MONO
 )
-MODELS_VACUUM = [ROCKROBO_V1, ROCKROBO_S5, ROCKROBO_S6, ROCKROBO_S6_MAXV, ROCKROBO_S7]
-MODELS_VACUUM_WITH_MOP = [ROCKROBO_S5, ROCKROBO_S6, ROCKROBO_S6_MAXV, ROCKROBO_S7]
+
+# TODO: use const from pythonmiio once new release with the constant has been published. # pylint: disable=fixme
+ROCKROBO_S4 = "roborock.vacuum.s4"
+ROCKROBO_S4_MAX = "roborock.vacuum.a19"
+ROCKROBO_S5_MAX = "roborock.vacuum.s5e"
+ROCKROBO_S6_PURE = "roborock.vacuum.a08"
+ROCKROBO_E2 = "roborock.vacuum.e2"
+ROBOROCK_GENERIC = "roborock.vacuum"
+ROCKROBO_GENERIC = "rockrobo.vacuum"
+MODELS_VACUUM = [
+    ROCKROBO_V1,
+    ROCKROBO_E2,
+    ROCKROBO_S4,
+    ROCKROBO_S4_MAX,
+    ROCKROBO_S5,
+    ROCKROBO_S5_MAX,
+    ROCKROBO_S6,
+    ROCKROBO_S6_MAXV,
+    ROCKROBO_S6_PURE,
+    ROCKROBO_S7,
+    ROBOROCK_GENERIC,
+    ROCKROBO_GENERIC,
+]
+MODELS_VACUUM_WITH_MOP = [
+    ROCKROBO_E2,
+    ROCKROBO_S5,
+    ROCKROBO_S5_MAX,
+    ROCKROBO_S6,
+    ROCKROBO_S6_MAXV,
+    ROCKROBO_S6_PURE,
+    ROCKROBO_S7,
+]
+MODELS_VACUUM_WITH_SEPARATE_MOP = [
+    ROCKROBO_S7,
+]
+
 MODELS_AIR_MONITOR = [
     MODEL_AIRQUALITYMONITOR_V1,
     MODEL_AIRQUALITYMONITOR_B1,

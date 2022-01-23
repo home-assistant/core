@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import DISABLED_INTEGRATION, EntityRegistry
+from .entity_registry import EntityRegistry, RegistryEntryDisabler
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -456,9 +456,12 @@ class EntityPlatform:
 
             device_info = entity.device_info
             device_id = None
+            device = None
 
             if config_entry_id is not None and device_info is not None:
-                processed_dev_info = {"config_entry_id": config_entry_id}
+                processed_dev_info: dict[str, str | None] = {
+                    "config_entry_id": config_entry_id
+                }
                 for key in (
                     "connections",
                     "default_manufacturer",
@@ -471,24 +474,28 @@ class EntityPlatform:
                     "name",
                     "suggested_area",
                     "sw_version",
+                    "hw_version",
                     "via_device",
                 ):
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
 
                 if "configuration_url" in device_info:
-                    configuration_url = str(device_info["configuration_url"])
-                    if urlparse(configuration_url).scheme in [
-                        "http",
-                        "https",
-                        "homeassistant",
-                    ]:
-                        processed_dev_info["configuration_url"] = configuration_url
+                    if device_info["configuration_url"] is None:
+                        processed_dev_info["configuration_url"] = None
                     else:
-                        _LOGGER.warning(
-                            "Ignoring invalid device configuration_url '%s'",
-                            configuration_url,
-                        )
+                        configuration_url = str(device_info["configuration_url"])
+                        if urlparse(configuration_url).scheme in [
+                            "http",
+                            "https",
+                            "homeassistant",
+                        ]:
+                            processed_dev_info["configuration_url"] = configuration_url
+                        else:
+                            _LOGGER.warning(
+                                "Ignoring invalid device configuration_url '%s'",
+                                configuration_url,
+                            )
 
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
@@ -496,27 +503,32 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            disabled_by: str | None = None
+            disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
-                disabled_by = DISABLED_INTEGRATION
+                disabled_by = RegistryEntryDisabler.INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
-                suggested_object_id=suggested_object_id,
+                capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
                 device_id=device_id,
-                known_object_ids=self.entities.keys(),
                 disabled_by=disabled_by,
-                capabilities=entity.capability_attributes,
-                supported_features=entity.supported_features,
-                device_class=entity.device_class,
-                unit_of_measurement=entity.unit_of_measurement,
-                original_name=entity.name,
-                original_icon=entity.icon,
                 entity_category=entity.entity_category,
+                known_object_ids=self.entities.keys(),
+                original_device_class=entity.device_class,
+                original_icon=entity.icon,
+                original_name=entity.name,
+                suggested_object_id=suggested_object_id,
+                supported_features=entity.supported_features,
+                unit_of_measurement=entity.unit_of_measurement,
             )
+
+            if device and device.disabled and not entry.disabled:
+                entry = entity_registry.async_update_entity(
+                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
+                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id

@@ -1,6 +1,13 @@
 """Nexia constants."""
+from homeassistant.const import Platform
 
-PLATFORMS = ["sensor", "binary_sensor", "climate", "scene"]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SCENE,
+    Platform.SWITCH,
+]
 
 ATTRIBUTION = "Data provided by mynexia.com"
 

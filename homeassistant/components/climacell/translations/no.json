@@ -15,7 +15,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
-                "description": "Hvis Breddegrad og Lengdegrad ikke er oppgitt, vil standardverdiene i Home Assistant-konfigurasjonen bli brukt. Det blir opprettet en enhet for hver prognosetype, men bare de du velger blir aktivert som standard."
+                "description": "Hvis Breddegrad og Lengdegrad ikke er oppgitt, vil standardverdiene i Home Assistant-konfigurasjonen bli brukt. Det blir opprettet en entitet for hver prognosetype, men bare de du velger blir aktivert som standard."
             }
         }
     },
@@ -25,8 +25,8 @@
                 "data": {
                     "timestep": "Min. mellom NowCast prognoser"
                 },
-                "description": "Hvis du velger \u00e5 aktivere \u00abnowcast\u00bb -varselenheten, kan du konfigurere antall minutter mellom hver prognose. Antall angitte prognoser avhenger av antall minutter som er valgt mellom prognosene.",
-                "title": "Oppdater ClimaCell Alternativer"
+                "description": "Hvis du velger \u00e5 aktivere \u00abnowcast\u00bb -varselentiteten, kan du konfigurere antall minutter mellom hver prognose. Antall angitte prognoser avhenger av antall minutter som er valgt mellom prognosene.",
+                "title": "Oppdater ClimaCell-alternativer"
             }
         }
     },

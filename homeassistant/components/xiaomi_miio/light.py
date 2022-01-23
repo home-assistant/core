@@ -24,8 +24,12 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color, dt
 
 from .const import (
@@ -108,7 +112,11 @@ SERVICE_TO_METHOD = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi light from a config entry."""
     entities = []
 
@@ -186,7 +194,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             return
 
-        async def async_service_handler(service):
+        async def async_service_handler(service: ServiceCall) -> None:
             """Map services to methods on Xiaomi Philips Lights."""
             method = SERVICE_TO_METHOD.get(service.service)
             params = {
@@ -944,11 +952,11 @@ class XiaomiGatewayLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway_device_id)},
+        )
 
     @property
     def name(self):

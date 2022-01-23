@@ -1,4 +1,6 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
+from __future__ import annotations
+
 import logging
 
 from pyrail import iRail
@@ -13,7 +15,10 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +68,12 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
     return duration_time + get_delay_in_minutes(delay)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NMBS sensor with iRail API."""
 
     api_client = iRail()
@@ -75,7 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station_live = config.get(CONF_STATION_LIVE)
     excl_vias = config[CONF_EXCLUDE_VIAS]
 
-    sensors = [
+    sensors: list[SensorEntity] = [
         NMBSSensor(api_client, name, show_on_map, station_from, station_to, excl_vias)
     ]
 

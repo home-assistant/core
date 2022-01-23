@@ -5,7 +5,7 @@ from aioemonitor.monitor import EmonitorNetwork, EmonitorStatus
 import aiohttp
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.emonitor.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
@@ -102,11 +102,11 @@ async def test_dhcp_can_confirm(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "emonitor",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="emonitor",
+                ip="1.2.3.4",
+                macaddress="aa:bb:cc:dd:ee:ff",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -145,11 +145,11 @@ async def test_dhcp_fails_to_connect(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "emonitor",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="emonitor",
+                ip="1.2.3.4",
+                macaddress="aa:bb:cc:dd:ee:ff",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -174,11 +174,11 @@ async def test_dhcp_already_exists(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "emonitor",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="emonitor",
+                ip="1.2.3.4",
+                macaddress="aa:bb:cc:dd:ee:ff",
+            ),
         )
         await hass.async_block_till_done()
 

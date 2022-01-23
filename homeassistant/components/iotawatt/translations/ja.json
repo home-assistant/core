@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "description": "IoTawatt\u30c7\u30d0\u30a4\u30b9\u306b\u306f\u8a8d\u8a3c\u304c\u5fc5\u8981\u3067\u3059\u3002\u30e6\u30fc\u30b6\u30fc\u540d\u3068\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5165\u529b\u3057\u3001\u9001\u4fe1(submit) \u30dc\u30bf\u30f3\u3092\u30af\u30ea\u30c3\u30af\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-"""Standard conversastion implementation for Home Assistant."""
+"""Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
 import re
@@ -118,9 +118,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         for intent_type, matchers in intents.items():
             for matcher in matchers:
-                match = matcher.match(text)
-
-                if not match:
+                if not (match := matcher.match(text)):
                     continue
 
                 return await intent.async_handle(

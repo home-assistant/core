@@ -53,7 +53,7 @@ def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Connect with serial port and return Acer Projector."""
     serial_port = config[CONF_FILENAME]
@@ -111,8 +111,7 @@ class AcerSwitch(SwitchEntity):
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
         awns = self._write_read(msg)
-        match = re.search(r"\r(.+)\r", awns)
-        if match:
+        if match := re.search(r"\r(.+)\r", awns):
             return match.group(1)
         return STATE_UNKNOWN
 

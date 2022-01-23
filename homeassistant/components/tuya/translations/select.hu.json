@@ -14,6 +14,10 @@
             "0": "Alacsony \u00e9rz\u00e9kenys\u00e9g",
             "1": "Magas \u00e9rz\u00e9kenys\u00e9g"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Lenyom\u00e1s",
+            "switch": "Kapcsol\u00e1s"
+        },
         "tuya__ipc_work_mode": {
             "0": "Alacsony fogyaszt\u00e1s\u00fa m\u00f3d",
             "1": "Folyamatos \u00fczemm\u00f3d"
@@ -44,6 +48,38 @@
             "on": "Be",
             "power_off": "Ki",
             "power_on": "Be"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Z\u00e1rva",
+            "high": "Magas",
+            "low": "Alacsony",
+            "middle": "K\u00f6zepes"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Sok",
+            "middle": "K\u00f6zepes",
+            "small": "Kev\u00e9s"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Bow",
+            "chargego": "Dokkol\u00e1s",
+            "left_bow": "Bow balra",
+            "left_spiral": "Spir\u00e1l balra",
+            "mop": "Mop",
+            "part": "R\u00e9sz",
+            "partial_bow": "Bow R\u00e9szben",
+            "pick_zone": "Z\u00f3na kiv\u00e1laszt\u00e1s",
+            "point": "Pont",
+            "pose": "P\u00f3z",
+            "random": "V\u00e9letlenszer\u0171",
+            "right_bow": "Bow Jobbra",
+            "right_spiral": "Spir\u00e1l jobbra",
+            "single": "Egyetlen",
+            "smart": "Okos",
+            "spiral": "Spir\u00e1l",
+            "standby": "K\u00e9szenl\u00e9tben",
+            "wall_follow": "Fal ment\u00e9n",
+            "zone": "Z\u00f3na"
         }
     }
 }

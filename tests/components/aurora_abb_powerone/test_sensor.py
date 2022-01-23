@@ -3,7 +3,6 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError
-import pytest
 
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
@@ -13,18 +12,10 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
 )
-from homeassistant.components.aurora_abb_powerone.sensor import AuroraSensor
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
-from homeassistant.exceptions import InvalidStateError
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_time_changed,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_CONFIG = {
     "sensor": {
@@ -39,6 +30,7 @@ def _simulated_returns(index, global_measure=None):
     returns = {
         3: 45.678,  # power
         21: 9.876,  # temperature
+        5: 12345,  # energy
     }
     return returns[index]
 
@@ -58,30 +50,8 @@ def _mock_config_entry():
         },
         source="dummysource",
         entry_id="13579",
+        unique_id="654321",
     )
-
-
-async def test_setup_platform_valid_config(hass):
-    """Test that (deprecated) yaml import still works."""
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=_simulated_returns,
-    ), assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, "sensor", TEST_CONFIG)
-        await hass.async_block_till_done()
-    power = hass.states.get("sensor.power_output")
-    assert power
-    assert power.state == "45.7"
-
-    # try to set up a second time - should abort.
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data=TEST_CONFIG,
-        context={"source": SOURCE_IMPORT},
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_setup"
 
 
 async def test_sensors(hass):
@@ -90,6 +60,21 @@ async def test_sensors(hass):
 
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure",
+        side_effect=_simulated_returns,
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=_simulated_returns,
     ):
         mock_entry.add_to_hass(hass)
@@ -104,24 +89,9 @@ async def test_sensors(hass):
         assert temperature
         assert temperature.state == "9.9"
 
-
-async def test_sensor_invalid_type(hass):
-    """Test invalid sensor type during setup."""
-    entities = []
-    mock_entry = _mock_config_entry()
-
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=_simulated_returns,
-    ):
-        mock_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-
-        client = hass.data[DOMAIN][mock_entry.unique_id]
-        data = mock_entry.data
-    with pytest.raises(InvalidStateError):
-        entities.append(AuroraSensor(client, data, "WrongSensor", "wrongparameter"))
+        energy = hass.states.get("sensor.total_energy")
+        assert energy
+        assert energy.state == "12.35"
 
 
 async def test_sensor_dark(hass):
@@ -132,6 +102,18 @@ async def test_sensor_dark(hass):
     # sun is up
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
     ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)

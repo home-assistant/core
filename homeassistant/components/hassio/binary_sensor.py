@@ -4,8 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_RUNNING,
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -14,7 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ADDONS_COORDINATOR
-from .const import ATTR_STATE, ATTR_UPDATE_AVAILABLE, DATA_KEY_ADDONS, DATA_KEY_OS
+from .const import (
+    ATTR_STARTED,
+    ATTR_STATE,
+    ATTR_UPDATE_AVAILABLE,
+    DATA_KEY_ADDONS,
+    DATA_KEY_OS,
+)
 from .entity import HassioAddonEntity, HassioOSEntity
 
 
@@ -25,19 +30,22 @@ class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
     target: str | None = None
 
 
-ENTITY_DESCRIPTIONS = (
+COMMON_ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
-        device_class=DEVICE_CLASS_UPDATE,
+        device_class=BinarySensorDeviceClass.UPDATE,
         entity_registry_enabled_default=False,
         key=ATTR_UPDATE_AVAILABLE,
         name="Update Available",
     ),
+)
+
+ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
     HassioBinarySensorEntityDescription(
-        device_class=DEVICE_CLASS_RUNNING,
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_registry_enabled_default=False,
         key=ATTR_STATE,
         name="Running",
-        target="started",
+        target=ATTR_STARTED,
     ),
 )
 
@@ -52,7 +60,7 @@ async def async_setup_entry(
 
     entities = []
 
-    for entity_description in ENTITY_DESCRIPTIONS:
+    for entity_description in ADDON_ENTITY_DESCRIPTIONS:
         for addon in coordinator.data[DATA_KEY_ADDONS].values():
             entities.append(
                 HassioAddonBinarySensor(
@@ -62,7 +70,8 @@ async def async_setup_entry(
                 )
             )
 
-        if coordinator.is_hass_os:
+    if coordinator.is_hass_os:
+        for entity_description in COMMON_ENTITY_DESCRIPTIONS:
             entities.append(
                 HassioOSBinarySensor(
                     coordinator=coordinator,

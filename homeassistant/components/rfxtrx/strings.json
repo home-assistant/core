@@ -49,7 +49,6 @@
       },
       "set_device_options": {
         "data": {
-          "fire_event": "Enable device event",
           "off_delay": "Off delay",
           "off_delay_enabled": "Enable off delay",
           "data_bit": "Number of data bits",

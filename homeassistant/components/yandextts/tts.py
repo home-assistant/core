@@ -121,7 +121,7 @@ class YandexSpeechKitProvider(Provider):
         options = options or {}
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 url_param = {
                     "text": message,
                     "lang": actual_language,

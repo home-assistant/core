@@ -1,6 +1,9 @@
 """Consts used by Tradfri."""
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION
-from homeassistant.const import CONF_HOST  # noqa: F401 pylint: disable=unused-import
+from homeassistant.const import (  # noqa: F401 pylint: disable=unused-import
+    CONF_HOST,
+    Platform,
+)
 
 ATTR_AUTO = "Auto"
 ATTR_DIMMER = "dimmer"
@@ -21,7 +24,16 @@ DOMAIN = "tradfri"
 KEY_API = "tradfri_api"
 DEVICES = "tradfri_devices"
 GROUPS = "tradfri_groups"
+SIGNAL_GW = "tradfri.gw_status"
 KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
-PLATFORMS = ["cover", "fan", "light", "sensor", "switch"]
+PLATFORMS = [
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+TIMEOUT_API = 30
+ATTR_MAX_FAN_STEPS = 49

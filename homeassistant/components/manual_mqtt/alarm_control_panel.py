@@ -1,4 +1,6 @@
 """Support for manual alarms controllable via MQTT."""
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
@@ -29,11 +31,14 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     track_point_in_time,
 )
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,7 +168,12 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the manual MQTT alarm platform."""
     add_entities(
         [
@@ -452,6 +462,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         """Publish state change to MQTT."""
         if (new_state := event.data.get("new_state")) is None:
             return
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True
         )

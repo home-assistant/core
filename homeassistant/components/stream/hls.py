@@ -18,7 +18,14 @@ from .const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings, StreamView
+from .core import (
+    PROVIDERS,
+    IdleTimer,
+    Segment,
+    StreamOutput,
+    StreamSettings,
+    StreamView,
+)
 from .fmp4utils import get_codec_string
 
 if TYPE_CHECKING:
@@ -44,7 +51,7 @@ class HlsStreamOutput(StreamOutput):
         """Initialize HLS output."""
         super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
         self.stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
-        self._target_duration = 0.0
+        self._target_duration = self.stream_settings.min_segment_duration
 
     @property
     def name(self) -> str:
@@ -53,19 +60,32 @@ class HlsStreamOutput(StreamOutput):
 
     @property
     def target_duration(self) -> float:
-        """
-        Return the target duration.
-
-        The target duration is calculated as the max duration of any given segment,
-        and it is calculated only one time to avoid changing during playback.
-        """
-        if self._target_duration:
-            return self._target_duration
-        durations = [s.duration for s in self._segments if s.complete]
-        if len(durations) < 2:
-            return self.stream_settings.min_segment_duration
-        self._target_duration = max(durations)
+        """Return the target duration."""
         return self._target_duration
+
+    @callback
+    def _async_put(self, segment: Segment) -> None:
+        """Async put and also update the target duration.
+
+        The target duration is calculated as the max duration of any given segment.
+        Technically it should not change per the hls spec, but some cameras adjust
+        their GOPs periodically so we need to account for this change.
+        """
+        super()._async_put(segment)
+        self._target_duration = (
+            max((s.duration for s in self._segments), default=segment.duration)
+            or self.stream_settings.min_segment_duration
+        )
+
+    def discontinuity(self) -> None:
+        """Remove incomplete segment from deque."""
+        self._hass.loop.call_soon_threadsafe(self._async_discontinuity)
+
+    @callback
+    def _async_discontinuity(self) -> None:
+        """Remove incomplete segment from deque in event loop."""
+        if self._segments and not self._segments[-1].complete:
+            self._segments.pop()
 
 
 class HlsMasterPlaylistView(StreamView):

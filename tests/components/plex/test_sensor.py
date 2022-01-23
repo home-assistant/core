@@ -179,7 +179,8 @@ async def test_library_sensor_values(
 
     # Test movie library sensor
     entity_registry.async_update_entity(
-        entity_id="sensor.plex_server_1_library_tv_shows", disabled_by="user"
+        entity_id="sensor.plex_server_1_library_tv_shows",
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_movies", disabled_by=None
@@ -214,7 +215,8 @@ async def test_library_sensor_values(
 
     # Test music library sensor
     entity_registry.async_update_entity(
-        entity_id="sensor.plex_server_1_library_movies", disabled_by="user"
+        entity_id="sensor.plex_server_1_library_movies",
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_music", disabled_by=None

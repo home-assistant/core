@@ -326,10 +326,16 @@ def window_cover_state_fixture():
     return json.loads(load_fixture("zwave_js/chain_actuator_zws12_state.json"))
 
 
-@pytest.fixture(name="in_wall_smart_fan_control_state", scope="session")
-def in_wall_smart_fan_control_state_fixture():
+@pytest.fixture(name="fan_generic_state", scope="session")
+def fan_generic_state_fixture():
     """Load the fan node state fixture data."""
-    return json.loads(load_fixture("zwave_js/in_wall_smart_fan_control_state.json"))
+    return json.loads(load_fixture("zwave_js/fan_generic_state.json"))
+
+
+@pytest.fixture(name="hs_fc200_state", scope="session")
+def hs_fc200_state_fixture():
+    """Load the HS FC200+ node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_hs_fc200_state.json"))
 
 
 @pytest.fixture(name="gdc_zw062_state", scope="session")
@@ -354,6 +360,12 @@ def qubino_shutter_state_fixture():
 def aeotec_nano_shutter_state_fixture():
     """Load the Aeotec Nano Shutter node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_aeotec_nano_shutter_state.json"))
+
+
+@pytest.fixture(name="fibaro_fgr222_shutter_state", scope="session")
+def fibaro_fgr222_shutter_state_fixture():
+    """Load the Fibaro FGR222 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_fibaro_fgr222_state.json"))
 
 
 @pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
@@ -459,6 +471,24 @@ def lock_popp_electric_strike_lock_control_state_fixture():
 def fortrezz_ssa1_siren_state_fixture():
     """Load the fortrezz ssa1 siren node state fixture data."""
     return json.loads(load_fixture("zwave_js/fortrezz_ssa1_siren_state.json"))
+
+
+@pytest.fixture(name="fortrezz_ssa3_siren_state", scope="session")
+def fortrezz_ssa3_siren_state_fixture():
+    """Load the fortrezz ssa3 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fortrezz_ssa3_siren_state.json"))
+
+
+@pytest.fixture(name="zp3111_not_ready_state", scope="session")
+def zp3111_not_ready_state_fixture():
+    """Load the zp3111 4-in-1 sensor not-ready node state fixture data."""
+    return json.loads(load_fixture("zwave_js/zp3111-5_not_ready_state.json"))
+
+
+@pytest.fixture(name="zp3111_state", scope="session")
+def zp3111_state_fixture():
+    """Load the zp3111 4-in-1 sensor node state fixture data."""
+    return json.loads(load_fixture("zwave_js/zp3111-5_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -683,10 +713,18 @@ def window_cover_fixture(client, chain_actuator_zws12_state):
     return node
 
 
-@pytest.fixture(name="in_wall_smart_fan_control")
-def in_wall_smart_fan_control_fixture(client, in_wall_smart_fan_control_state):
+@pytest.fixture(name="fan_generic")
+def fan_generic_fixture(client, fan_generic_state):
     """Mock a fan node."""
-    node = Node(client, copy.deepcopy(in_wall_smart_fan_control_state))
+    node = Node(client, copy.deepcopy(fan_generic_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="hs_fc200")
+def hs_fc200_fixture(client, hs_fc200_state):
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(hs_fc200_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -739,6 +777,14 @@ def qubino_shutter_cover_fixture(client, qubino_shutter_state):
 def aeotec_nano_shutter_cover_fixture(client, aeotec_nano_shutter_state):
     """Mock a Aeotec Nano Shutter node."""
     node = Node(client, copy.deepcopy(aeotec_nano_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgr222_shutter")
+def fibaro_fgr222_shutter_cover_fixture(client, fibaro_fgr222_shutter_state):
+    """Mock a Fibaro FGR222 Shutter node."""
+    node = Node(client, copy.deepcopy(fibaro_fgr222_shutter_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -873,7 +919,31 @@ def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state):
     return node
 
 
+@pytest.fixture(name="fortrezz_ssa3_siren")
+def fortrezz_ssa3_siren_fixture(client, fortrezz_ssa3_siren_state):
+    """Mock a fortrezz ssa3 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa3_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="firmware_file")
 def firmware_file_fixture():
     """Return mock firmware file stream."""
     return io.BytesIO(bytes(10))
+
+
+@pytest.fixture(name="zp3111_not_ready")
+def zp3111_not_ready_fixture(client, zp3111_not_ready_state):
+    """Mock a zp3111 4-in-1 sensor node in a not-ready state."""
+    node = Node(client, copy.deepcopy(zp3111_not_ready_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zp3111")
+def zp3111_fixture(client, zp3111_state):
+    """Mock a zp3111 4-in-1 sensor node."""
+    node = Node(client, copy.deepcopy(zp3111_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node

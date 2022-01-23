@@ -1,4 +1,6 @@
 """Support for Venstar WiFi Thermostats."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -24,7 +26,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
@@ -38,9 +40,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import VenstarEntity
+from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
@@ -68,13 +73,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Venstar thermostat."""
-    client = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([VenstarThermostat(config_entry, client)], True)
+    venstar_data_coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [
+            VenstarThermostat(
+                venstar_data_coordinator,
+                config_entry,
+            )
+        ],
+    )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Venstar thermostat platform.
 
     Venstar uses config flow for configuration now. If an entry exists in
@@ -95,14 +116,20 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, config, client):
+    def __init__(
+        self,
+        venstar_data_coordinator: VenstarDataUpdateCoordinator,
+        config: ConfigEntry,
+    ) -> None:
         """Initialize the thermostat."""
-        super().__init__(config, client)
+        super().__init__(venstar_data_coordinator, config)
         self._mode_map = {
             HVAC_MODE_HEAT: self._client.MODE_HEAT,
             HVAC_MODE_COOL: self._client.MODE_COOL,
             HVAC_MODE_AUTO: self._client.MODE_AUTO,
         }
+        self._attr_unique_id = config.entry_id
+        self._attr_name = self._client.name
 
     @property
     def supported_features(self):
@@ -294,6 +321,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
             if not success:
                 _LOGGER.error("Failed to change the temperature")
+        self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
@@ -304,10 +332,12 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
         if not success:
             _LOGGER.error("Failed to change the fan mode")
+        self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         self._set_operation_mode(hvac_mode)
+        self.schedule_update_ha_state()
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
@@ -315,6 +345,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
         if not success:
             _LOGGER.error("Failed to change the target humidity level")
+        self.schedule_update_ha_state()
 
     def set_preset_mode(self, preset_mode):
         """Set the hold mode."""
@@ -332,3 +363,4 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
         if not success:
             _LOGGER.error("Failed to change the schedule/hold state")
+        self.schedule_update_ha_state()

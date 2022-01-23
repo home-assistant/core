@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
+            "invalid_auth_key": "API-referenties geweigerd door Coinbase vanwege een ongeldige API-sleutel.",
+            "invalid_auth_secret": "API-gegevens geweigerd door Coinbase vanwege een ongeldig API-secret.",
             "unknown": "Onverwachte fout"
         },
         "step": {

@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Sense informaci\u00f3",
+            "operational": "Operatiu",
+            "system_shutdown_user": "Aturada del sistema d'usuari",
+            "system_startup": "Engegada del sistema"
+        }
+    }
+}

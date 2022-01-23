@@ -87,30 +87,6 @@ clear_sleep_timer:
     device:
       integration: sonos
 
-set_option:
-  name: Set option
-  description: Set Sonos sound options.
-  target:
-    device:
-      integration: sonos
-  fields:
-    bass_level:
-      name: Bass Level
-      description: Bass level for EQ.
-      selector:
-        number:
-          min: -10
-          max: 10
-          mode: box
-    treble_level:
-      name: Treble Level
-      description: Treble level for EQ.
-      selector:
-        number:
-          min: -10
-          max: 10
-          mode: box
-
 play_queue:
   name: Play queue
   description: Start playing the queue from the first item.

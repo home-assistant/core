@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "Adres e-mail",
-                    "password": "Has\u0142o"
+                    "password": "Has\u0142o",
+                    "timeout": "Limit czasu"
                 },
                 "title": "Po\u0142\u0105czenie z monitorem energii Sense"
             }

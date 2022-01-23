@@ -40,7 +40,7 @@
     "system_health": {
         "info": {
             "device_connected": "ISY conectado",
-            "host_reachable": "Anfitri\u00f3n accesible",
+            "host_reachable": "Host accesible",
             "last_heartbeat": "Hora del \u00faltimo latido",
             "websocket_status": "Estado del conector de eventos"
         }

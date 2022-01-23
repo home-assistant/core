@@ -16,7 +16,7 @@ from homeassistant.components.ssdp import SsdpChange
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
 
 from .const import (
     BYTES_RECEIVED,
@@ -31,6 +31,17 @@ from .const import (
 )
 
 
+async def async_create_upnp_device(
+    hass: HomeAssistant, ssdp_location: str
+) -> UpnpDevice:
+    """Create UPnP device."""
+    session = async_get_clientsession(hass)
+    requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
+
+    factory = UpnpFactory(requester, disable_state_variable_validation=True)
+    return await factory.async_create_device(ssdp_location)
+
+
 class Device:
     """Home Assistant representation of a UPnP/IGD device."""
 
@@ -41,24 +52,11 @@ class Device:
         self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
-    async def async_create_upnp_device(
-        cls, hass: HomeAssistant, ssdp_location: str
-    ) -> UpnpDevice:
-        """Create UPnP device."""
-        # Build async_upnp_client requester.
-        session = async_get_clientsession(hass)
-        requester = AiohttpSessionRequester(session, True, 20)
-
-        # Create async_upnp_client device.
-        factory = UpnpFactory(requester, disable_state_variable_validation=True)
-        return await factory.async_create_device(ssdp_location)
-
-    @classmethod
     async def async_create_device(
         cls, hass: HomeAssistant, ssdp_location: str
     ) -> Device:
         """Create UPnP/IGD device."""
-        upnp_device = await Device.async_create_upnp_device(hass, ssdp_location)
+        upnp_device = await async_create_upnp_device(hass, ssdp_location)
 
         # Create profile wrapper.
         igd_device = IgdDevice(upnp_device, None)
@@ -67,7 +65,7 @@ class Device:
         # Register SSDP callback for updates.
         usn = f"{upnp_device.udn}::{upnp_device.device_type}"
         await ssdp.async_register_callback(
-            hass, device.async_ssdp_callback, {ssdp.ATTR_SSDP_USN: usn}
+            hass, device.async_ssdp_callback, {"usn": usn}
         )
 
         return device
@@ -76,7 +74,8 @@ class Device:
         self, headers: Mapping[str, Any], change: SsdpChange
     ) -> None:
         """SSDP callback, update if needed."""
-        if change != SsdpChange.UPDATE or ssdp.ATTR_SSDP_LOCATION not in headers:
+        _LOGGER.debug("SSDP Callback, change: %s, headers: %s", change, headers)
+        if ssdp.ATTR_SSDP_LOCATION not in headers:
             return
 
         location = headers[ssdp.ATTR_SSDP_LOCATION]
@@ -84,7 +83,7 @@ class Device:
         if location == device.device_url:
             return
 
-        new_upnp_device = Device.async_create_upnp_device(self.hass, location)
+        new_upnp_device = await async_create_upnp_device(self.hass, location)
         device.reinit(new_upnp_device)
 
     @property
@@ -155,7 +154,7 @@ class Device:
         )
 
         return {
-            TIMESTAMP: dt_util.utcnow(),
+            TIMESTAMP: utcnow(),
             BYTES_RECEIVED: values[0],
             BYTES_SENT: values[1],
             PACKETS_RECEIVED: values[2],

@@ -47,7 +47,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise WrongVersion
     try:
         api = get_api(hass, data)
-        await api.get_data()
+        await api.get_data("all")
     except glances_api.exceptions.GlancesApiConnectionError as err:
         raise CannotConnect from err
 

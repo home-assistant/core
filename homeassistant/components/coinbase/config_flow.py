@@ -51,6 +51,15 @@ async def validate_api(hass: core.HomeAssistant, data):
             get_user_from_client, data[CONF_API_KEY], data[CONF_API_TOKEN]
         )
     except AuthenticationError as error:
+        if "api key" in str(error):
+            _LOGGER.debug("Coinbase rejected API credentials due to an invalid API key")
+            raise InvalidKey from error
+        if "invalid signature" in str(error):
+            _LOGGER.debug(
+                "Coinbase rejected API credentials due to an invalid API secret"
+            )
+            raise InvalidSecret from error
+        _LOGGER.debug("Coinbase rejected API credentials due to an unknown error")
         raise InvalidAuth from error
     except ConnectionError as error:
         raise CannotConnect from error
@@ -110,6 +119,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_api(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
+        except InvalidKey:
+            errors["base"] = "invalid_auth_key"
+        except InvalidSecret:
+            errors["base"] = "invalid_auth_secret"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
@@ -216,6 +229,14 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidSecret(exceptions.HomeAssistantError):
+    """Error to indicate auth failed due to invalid secret."""
+
+
+class InvalidKey(exceptions.HomeAssistantError):
+    """Error to indicate auth failed due to invalid key."""
 
 
 class AlreadyConfigured(exceptions.HomeAssistantError):

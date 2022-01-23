@@ -1,5 +1,4 @@
 """Support for ASUSWRT devices."""
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -12,9 +11,11 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DNSMASQ,
@@ -33,7 +34,7 @@ from .const import (
 )
 from .router import AsusWrtRouter
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 CONF_PUB_KEY = "pub_key"
 SECRET_GROUP = "Password or SSH Key"
@@ -71,7 +72,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the AsusWrt integration."""
     if (conf := config.get(DOMAIN)) is None:
         return True
@@ -92,8 +93,7 @@ async def async_setup(hass, config):
         return True
 
     # remove not required config keys
-    pub_key = conf.pop(CONF_PUB_KEY, "")
-    if pub_key:
+    if pub_key := conf.pop(CONF_PUB_KEY, ""):
         conf[CONF_SSH_KEY] = pub_key
 
     conf.pop(CONF_REQUIRE_IP, True)

@@ -17,7 +17,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
-py-version = "3.8"
+py-version = "3.9"
 ignore = [
     "tests",
 ]
@@ -54,6 +54,7 @@ good-names = [
     "k",
     "Run",
     "T",
+    "ip",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
@@ -113,6 +114,7 @@ score = false
 ignored-classes = [
     "_CountingAttr",  # for attrs
 ]
+mixin-class-rgx = ".*[Mm]ix[Ii]n"
 
 [tool.pylint.FORMAT]
 expected-line-ending-format = "LF"

@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 
 from .const import (
@@ -136,8 +137,8 @@ class AlarmPanel:
 
             # retry in a bit, never more than ~3 min
             self.connect_attempts += 1
-            self.cancel_connect_retry = self.hass.helpers.event.async_call_later(
-                2 ** min(self.connect_attempts, 5) * 5, self.async_connect
+            self.cancel_connect_retry = async_call_later(
+                self.hass, 2 ** min(self.connect_attempts, 5) * 5, self.async_connect
             )
             return
 
@@ -151,7 +152,7 @@ class AlarmPanel:
             self.port,
         )
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.status.get("mac"))},
@@ -304,7 +305,9 @@ class AlarmPanel:
     def async_ds18b20_sensor_configuration(self):
         """Return the configuration map for syncing DS18B20 sensors."""
         return [
-            self.format_zone(sensor[CONF_ZONE])
+            self.format_zone(
+                sensor[CONF_ZONE], {CONF_POLL_INTERVAL: sensor[CONF_POLL_INTERVAL]}
+            )
             for sensor in self.stored_configuration[CONF_SENSORS]
             if sensor[CONF_TYPE] == "ds18b20"
         ]

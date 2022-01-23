@@ -1,8 +1,8 @@
 """Tests for the DirecTV component."""
 from http import HTTPStatus
 
+from homeassistant.components import ssdp
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
-from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
@@ -15,7 +15,12 @@ SSDP_LOCATION = "http://127.0.0.1/"
 UPNP_SERIAL = "RID-028877455858"
 
 MOCK_CONFIG = {DOMAIN: [{CONF_HOST: HOST}]}
-MOCK_SSDP_DISCOVERY_INFO = {ATTR_SSDP_LOCATION: SSDP_LOCATION}
+MOCK_SSDP_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=SSDP_LOCATION,
+    upnp={},
+)
 MOCK_USER_INPUT = {CONF_HOST: HOST}
 
 

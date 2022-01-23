@@ -88,7 +88,7 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status

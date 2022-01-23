@@ -20,7 +20,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BondHub
 from .const import (
     ATTR_POWER_STATE,
     BPUP_SUBS,
@@ -30,7 +29,7 @@ from .const import (
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
-from .utils import BondDevice
+from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,8 +179,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness:
+        if brightness := kwargs.get(ATTR_BRIGHTNESS):
             await self._hub.bond.action(
                 self._device.device_id,
                 Action.set_brightness(round((brightness * 100) / 255)),

@@ -7,6 +7,7 @@ import json
 from typing import Any
 from urllib.parse import parse_qsl
 
+from aiohttp import payload, web
 from multidict import CIMultiDict, MultiDict
 
 
@@ -43,13 +44,13 @@ class MockRequest:
         self.method = method
         self.url = url
         self.status = status
-        self.headers: CIMultiDict[str] = CIMultiDict(headers or {})
+        self.headers: CIMultiDict[str, str] = CIMultiDict(headers or {})
         self.query_string = query_string or ""
         self._content = content
         self.mock_source = mock_source
 
     @property
-    def query(self) -> MultiDict[str]:
+    def query(self) -> MultiDict[str, str]:
         """Return a dictionary with the query variables."""
         return MultiDict(parse_qsl(self.query_string, keep_blank_values=True))
 
@@ -67,10 +68,29 @@ class MockRequest:
         """Return the body as JSON."""
         return json.loads(self._text)
 
-    async def post(self) -> MultiDict[str]:
+    async def post(self) -> MultiDict[str, str]:
         """Return POST parameters."""
         return MultiDict(parse_qsl(self._text, keep_blank_values=True))
 
     async def text(self) -> str:
         """Return the body as text."""
         return self._text
+
+
+def serialize_response(response: web.Response) -> dict[str, Any]:
+    """Serialize an aiohttp response to a dictionary."""
+    if (body := response.body) is None:
+        body_decoded = None
+    elif isinstance(body, payload.StringPayload):
+        # pylint: disable=protected-access
+        body_decoded = body._value.decode(body.encoding)
+    elif isinstance(body, bytes):
+        body_decoded = body.decode(response.charset or "utf-8")
+    else:
+        raise ValueError("Unknown payload encoding")
+
+    return {
+        "status": response.status,
+        "body": body_decoded,
+        "headers": dict(response.headers),
+    }

@@ -7,11 +7,23 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "title": "Canary'ya ba\u011flan"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Kameralar i\u00e7in ffmpeg'e ge\u00e7irilen arg\u00fcmanlar",
+                    "timeout": "\u0130stek Zaman A\u015f\u0131m\u0131 (saniye)"
                 }
             }
         }

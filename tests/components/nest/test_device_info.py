@@ -3,6 +3,13 @@
 from google_nest_sdm.device import Device
 
 from homeassistant.components.nest.device_info import NestDeviceInfo
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+)
 
 
 def test_device_custom_name():
@@ -25,10 +32,11 @@ def test_device_custom_name():
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "My Doorbell",
-        "manufacturer": "Google Nest",
-        "model": "Doorbell",
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "My Doorbell",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: "Doorbell",
+        ATTR_SUGGESTED_AREA: None,
     }
 
 
@@ -50,10 +58,11 @@ def test_device_name_room():
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "Some Room",
-        "manufacturer": "Google Nest",
-        "model": "Doorbell",
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "Some Room",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: "Doorbell",
+        ATTR_SUGGESTED_AREA: "Some Room",
     }
 
 
@@ -69,10 +78,11 @@ def test_device_no_name():
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "Doorbell",
-        "manufacturer": "Google Nest",
-        "model": "Doorbell",
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "Doorbell",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: "Doorbell",
+        ATTR_SUGGESTED_AREA: None,
     }
 
 
@@ -96,8 +106,40 @@ def test_device_invalid_type():
     assert device_info.device_model is None
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "My Doorbell",
-        "manufacturer": "Google Nest",
-        "model": None,
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "My Doorbell",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: None,
+        ATTR_SUGGESTED_AREA: None,
+    }
+
+
+def test_suggested_area():
+    """Test the suggested area with different device name and room name."""
+    device = Device.MakeDevice(
+        {
+            "name": "some-device-id",
+            "type": "sdm.devices.types.DOORBELL",
+            "traits": {
+                "sdm.devices.traits.Info": {
+                    "customName": "My Doorbell",
+                },
+            },
+            "parentRelations": [
+                {"parent": "some-structure-id", "displayName": "Some Room"}
+            ],
+        },
+        auth=None,
+    )
+
+    device_info = NestDeviceInfo(device)
+    assert device_info.device_name == "My Doorbell"
+    assert device_info.device_model == "Doorbell"
+    assert device_info.device_brand == "Google Nest"
+    assert device_info.device_info == {
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "My Doorbell",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: "Doorbell",
+        ATTR_SUGGESTED_AREA: "Some Room",
     }

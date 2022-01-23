@@ -19,6 +19,8 @@ DEFAULT_MAX_HUMIDITY = 100
 
 DOMAIN = "humidifier"
 
+# DEVICE_CLASS_* below are deprecated as of 2021.12
+# use the HumidifierDeviceClass enum instead.
 DEVICE_CLASS_HUMIDIFIER = "humidifier"
 DEVICE_CLASS_DEHUMIDIFIER = "dehumidifier"
 
