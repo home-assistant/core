@@ -8,7 +8,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import auth, hassio, person
+from homeassistant.components import person
 from homeassistant.components.auth import indieauth
 from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -162,7 +162,10 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            auth_code = auth.create_auth_code(hass, data["client_id"], credentials)
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components.auth import create_auth_code
+
+            auth_code = create_auth_code(hass, data["client_id"], credentials)
             return self.json({"auth_code": auth_code})
 
 
@@ -188,6 +191,9 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             await hass.config_entries.flow.async_init(
                 "met", context={"source": "onboarding"}
             )
+
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components import hassio
 
             if (
                 hassio.is_hassio(hass)
@@ -238,7 +244,10 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 )
 
             # Return authorization code so we can redirect user and log them in
-            auth_code = auth.create_auth_code(
+            # pylint: disable=import-outside-toplevel
+            from homeassistant.components.auth import create_auth_code
+
+            auth_code = create_auth_code(
                 hass, data["client_id"], refresh_token.credential
             )
             return self.json({"auth_code": auth_code})

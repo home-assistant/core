@@ -217,6 +217,7 @@ omit =
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/switch.py
+    homeassistant/components/dnsip/__init__.py
     homeassistant/components/dnsip/sensor.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
@@ -588,11 +589,9 @@ omit =
     homeassistant/components/lcn/climate.py
     homeassistant/components/lcn/cover.py
     homeassistant/components/lcn/helpers.py
-    homeassistant/components/lcn/light.py
     homeassistant/components/lcn/scene.py
     homeassistant/components/lcn/sensor.py
     homeassistant/components/lcn/services.py
-    homeassistant/components/lcn/switch.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/life360/*
@@ -611,6 +610,7 @@ omit =
     homeassistant/components/logi_circle/sensor.py
     homeassistant/components/london_underground/sensor.py
     homeassistant/components/lookin/__init__.py
+    homeassistant/components/lookin/coordinator.py
     homeassistant/components/lookin/entity.py
     homeassistant/components/lookin/models.py
     homeassistant/components/lookin/sensor.py
@@ -784,6 +784,7 @@ omit =
     homeassistant/components/onvif/event.py
     homeassistant/components/onvif/parsers.py
     homeassistant/components/onvif/sensor.py
+    homeassistant/components/open_meteo/diagnostics.py
     homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
@@ -1032,6 +1033,7 @@ omit =
     homeassistant/components/soma/__init__.py
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/sensor.py
+    homeassistant/components/soma/utils.py
     homeassistant/components/somfy/__init__.py
     homeassistant/components/somfy/api.py
     homeassistant/components/somfy/climate.py
@@ -1042,6 +1044,7 @@ omit =
     homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/__init__.py
     homeassistant/components/sonos/alarms.py
+    homeassistant/components/sonos/diagnostics.py
     homeassistant/components/sonos/entity.py
     homeassistant/components/sonos/favorites.py
     homeassistant/components/sonos/helpers.py
@@ -1095,6 +1098,7 @@ omit =
     homeassistant/components/synology_dsm/__init__.py
     homeassistant/components/synology_dsm/binary_sensor.py
     homeassistant/components/synology_dsm/camera.py
+    homeassistant/components/synology_dsm/diagnostics.py
     homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_dsm/switch.py
     homeassistant/components/synology_srm/device_tracker.py
@@ -1265,6 +1269,7 @@ omit =
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/binary_sensor.py
+    homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py
     homeassistant/components/vicare/const.py
     homeassistant/components/vicare/__init__.py
@@ -1293,7 +1298,6 @@ omit =
     homeassistant/components/waze_travel_time/helpers.py
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/webostv/__init__.py
-    homeassistant/components/webostv/media_player.py
     homeassistant/components/whois/__init__.py
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*

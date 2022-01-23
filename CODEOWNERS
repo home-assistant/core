@@ -91,6 +91,8 @@ homeassistant/components/aurora/* @djtimca
 tests/components/aurora/* @djtimca
 homeassistant/components/aurora_abb_powerone/* @davet2001
 tests/components/aurora_abb_powerone/* @davet2001
+homeassistant/components/aussie_broadband/* @nickw444 @Bre77
+tests/components/aussie_broadband/* @nickw444 @Bre77
 homeassistant/components/auth/* @home-assistant/core
 tests/components/auth/* @home-assistant/core
 homeassistant/components/automation/* @home-assistant/core
@@ -214,6 +216,8 @@ homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/dlna_dmr/* @StevenLooman @chishm
 tests/components/dlna_dmr/* @StevenLooman @chishm
+homeassistant/components/dnsip/* @gjohansson-ST
+tests/components/dnsip/* @gjohansson-ST
 homeassistant/components/doorbird/* @oblogic7 @bdraco @flacjacket
 tests/components/doorbird/* @oblogic7 @bdraco @flacjacket
 homeassistant/components/dsmr/* @Robbie1221 @frenck
@@ -863,8 +867,8 @@ homeassistant/components/solaredge_local/* @drobtravels @scheric
 homeassistant/components/solarlog/* @Ernst79
 tests/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
-homeassistant/components/soma/* @ratsept
-tests/components/soma/* @ratsept
+homeassistant/components/soma/* @ratsept @sebfortier2288
+tests/components/soma/* @ratsept @sebfortier2288
 homeassistant/components/somfy/* @tetienne
 tests/components/somfy/* @tetienne
 homeassistant/components/sonarr/* @ctalkington

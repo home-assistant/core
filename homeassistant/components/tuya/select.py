@@ -1,10 +1,7 @@
 """Support for Tuya select."""
 from __future__ import annotations
 
-from typing import cast
-
 from tuya_iot import TuyaDevice, TuyaDeviceManager
-from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -14,8 +11,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, TuyaDeviceClass
+from .base import TuyaEntity
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType, TuyaDeviceClass
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -287,13 +284,10 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         self._attr_opions: list[str] = []
-        if status_range := device.status_range.get(description.key):
-            self._status_range = cast(TuyaDeviceStatusRange, status_range)
-
-            # Extract type data from enum status range,
-            if self._status_range.type == "Enum":
-                type_data = EnumTypeData.from_json(self._status_range.values)
-                self._attr_options = type_data.range
+        if enum_type := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            self._attr_options = enum_type.range
 
     @property
     def current_option(self) -> str | None:

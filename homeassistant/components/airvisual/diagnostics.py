@@ -1,40 +1,27 @@
 """Diagnostics support for AirVisual."""
 from __future__ import annotations
 
-from types import MappingProxyType
 from typing import Any
 
-from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_STATE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CITY, CONF_COUNTRY, DOMAIN
 
 CONF_COORDINATES = "coordinates"
 
-
-@callback
-def _async_redact_data(data: MappingProxyType | dict) -> dict[str, Any]:
-    """Redact sensitive data in a dict."""
-    redacted = {**data}
-
-    for key, value in redacted.items():
-        if key in (
-            CONF_API_KEY,
-            CONF_CITY,
-            CONF_COORDINATES,
-            CONF_COUNTRY,
-            CONF_LATITUDE,
-            CONF_LONGITUDE,
-            CONF_STATE,
-        ):
-            redacted[key] = REDACTED
-        elif isinstance(value, dict):
-            redacted[key] = _async_redact_data(value)
-
-    return redacted
+TO_REDACT = {
+    CONF_API_KEY,
+    CONF_CITY,
+    CONF_COORDINATES,
+    CONF_COUNTRY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_STATE,
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -46,8 +33,8 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry": {
             "title": entry.title,
-            "data": _async_redact_data(entry.data),
-            "options": _async_redact_data(entry.options),
+            "data": async_redact_data(entry.data, TO_REDACT),
+            "options": async_redact_data(entry.options, TO_REDACT),
         },
-        "data": _async_redact_data(coordinator.data["data"]),
+        "data": async_redact_data(coordinator.data["data"], TO_REDACT),
     }

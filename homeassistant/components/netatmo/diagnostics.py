@@ -1,12 +1,31 @@
 """Diagnostics support for Netatmo."""
 from __future__ import annotations
 
-from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_HANDLER, DOMAIN
-from .data_handler import NetatmoDataHandler
+from .data_handler import CLIMATE_TOPOLOGY_CLASS_NAME, NetatmoDataHandler
+
+TO_REDACT = {
+    "access_token",
+    "refresh_token",
+    "restricted_access_token",
+    "restricted_refresh_token",
+    "webhook_id",
+    "cloudhook_url",
+    "lat_ne",
+    "lat_sw",
+    "lon_ne",
+    "lon_sw",
+    "coordinates",
+    "name",
+    "timetable",
+    "zones",
+    "pseudo",
+    "url",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -17,28 +36,18 @@ async def async_get_config_entry_diagnostics(
         DATA_HANDLER
     ]
 
-    diagnostics_data = {
-        "info": {
-            **config_entry.as_dict(),
-            "webhook_registered": data_handler.webhook,
+    return {
+        "info": async_redact_data(
+            {
+                **config_entry.as_dict(),
+                "webhook_registered": data_handler.webhook,
+            },
+            TO_REDACT,
+        ),
+        "data": {
+            CLIMATE_TOPOLOGY_CLASS_NAME: async_redact_data(
+                getattr(data_handler.data[CLIMATE_TOPOLOGY_CLASS_NAME], "raw_data"),
+                TO_REDACT,
+            )
         },
-        "data": data_handler.data,
     }
-
-    if "token" in diagnostics_data["info"]["data"]:
-        diagnostics_data["info"]["data"]["token"]["access_token"] = REDACTED
-        diagnostics_data["info"]["data"]["token"]["refresh_token"] = REDACTED
-        diagnostics_data["info"]["data"]["token"]["restricted_access_token"] = REDACTED
-        diagnostics_data["info"]["data"]["token"]["restricted_refresh_token"] = REDACTED
-
-    if "webhook_id" in diagnostics_data["info"]["data"]:
-        diagnostics_data["info"]["data"]["webhook_id"] = REDACTED
-
-    if "weather_areas" in diagnostics_data["info"].get("options", {}):
-        for area in diagnostics_data["info"]["options"]["weather_areas"]:
-            for attr in ("lat_ne", "lat_sw", "lon_ne", "lon_sw"):
-                diagnostics_data["info"]["options"]["weather_areas"][area][
-                    attr
-                ] = REDACTED
-
-    return diagnostics_data

@@ -403,7 +403,7 @@ def is_hassio(hass: HomeAssistant) -> bool:
 
 
 @callback
-def get_supervisor_ip():
+def get_supervisor_ip() -> str:
     """Return the supervisor ip address."""
     if "SUPERVISOR" not in os.environ:
         return None

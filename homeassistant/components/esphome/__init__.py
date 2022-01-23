@@ -270,6 +270,7 @@ async def async_setup_entry(  # noqa: C901
             entry_data.available = True
             if entry_data.device_info.name:
                 cli.expected_name = entry_data.device_info.name
+                reconnect_logic.name = entry_data.device_info.name
             device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
@@ -318,6 +319,7 @@ async def async_setup_entry(  # noqa: C901
 
         if entry_data.device_info is not None and entry_data.device_info.name:
             cli.expected_name = entry_data.device_info.name
+            reconnect_logic.name = entry_data.device_info.name
 
         await reconnect_logic.start()
         entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
