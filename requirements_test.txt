@@ -15,7 +15,7 @@ mock-open==1.4.0
 mypy==0.931
 pre-commit==2.17.0
 pylint==2.12.1
-pipdeptree==2.2.0
+pipdeptree==2.2.1
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.12.1
