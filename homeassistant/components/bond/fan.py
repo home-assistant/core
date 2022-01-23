@@ -80,6 +80,8 @@ class BondFan(BondEntity, FanEntity):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
 
     def _apply_state(self, state: dict) -> None:
+        _LOGGER.critical("preset mode: %s", state)
+
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
