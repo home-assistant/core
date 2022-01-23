@@ -1,4 +1,7 @@
 """Binary sensors for renson."""
+from dataclasses import dataclass
+import typing
+
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_CONTROL_FIELD,
     BREEZE_ENABLE_FIELD,
@@ -22,24 +25,61 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 
-class RensonBinarySensorEntityDescription(BinarySensorEntityDescription):
+@dataclass
+class RensonBinarySensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    field: FieldEnum
+
+
+@dataclass
+class RensonBinarySensorEntityDescription(
+    BinarySensorEntityDescription, RensonBinarySensorEntityDescriptionMixin
+):
     """Description of binary sensor."""
 
-    def __init__(
-        self,
-        key: str,
-        name: str,
-        field: FieldEnum,
-        entity_registry_enabled_default: bool = True,
-    ) -> None:
-        """Initialize class."""
-        super().__init__(
-            key=key,
-            entity_registry_enabled_default=entity_registry_enabled_default,
-        )
 
-        self.name = name
-        self.field = field
+BINARY_SENSORS: typing.Tuple[RensonBinarySensorEntityDescription, ...] = (
+    RensonBinarySensorEntityDescription(
+        name="Frost protection active",
+        key="FROST_PROTECTION_FIELD",
+        field=FROST_PROTECTION_FIELD,
+    ),
+    RensonBinarySensorEntityDescription(
+        key="BREEZE_ENABLE_FIELD",
+        name="Breeze",
+        field=BREEZE_ENABLE_FIELD,
+        entity_registry_enabled_default=False,
+    ),
+    RensonBinarySensorEntityDescription(
+        key="BREEZE_MET_FIELD",
+        name="Breeze conditions met",
+        field=BREEZE_MET_FIELD,
+    ),
+    RensonBinarySensorEntityDescription(
+        key="HUMIDITY_CONTROL_FIELD",
+        name="Humidity control",
+        field=HUMIDITY_CONTROL_FIELD,
+        entity_registry_enabled_default=False,
+    ),
+    RensonBinarySensorEntityDescription(
+        key="AIR_QUALITY_CONTROL_FIELD",
+        name="Air quality control",
+        field=AIR_QUALITY_CONTROL_FIELD,
+        entity_registry_enabled_default=False,
+    ),
+    RensonBinarySensorEntityDescription(
+        key="CO2_CONTROL_FIELD",
+        name="CO2 control",
+        field=CO2_CONTROL_FIELD,
+        entity_registry_enabled_default=False,
+    ),
+    RensonBinarySensorEntityDescription(
+        key="PREHEATER_FIELD",
+        name="Preheater",
+        field=PREHEATER_FIELD,
+    ),
+)
 
 
 class RensonBinarySensor(BinarySensorEntity):
@@ -101,51 +141,8 @@ async def async_setup_entry(
     renson_api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list = []
-    for description in binary_sensor_descriptions:
+    for description in BINARY_SENSORS:
         entities.append(RensonBinarySensor(description, renson_api))
 
     entities.append(FirmwareSensor(renson_api, hass))
     async_add_entities(entities)
-
-
-binary_sensor_descriptions = [
-    RensonBinarySensorEntityDescription(
-        key="FROST_PROTECTION_FIELD",
-        name="Frost protection active",
-        field=FROST_PROTECTION_FIELD,
-    ),
-    RensonBinarySensorEntityDescription(
-        key="BREEZE_ENABLE_FIELD",
-        name="Breeze",
-        field=BREEZE_ENABLE_FIELD,
-        entity_registry_enabled_default=False,
-    ),
-    RensonBinarySensorEntityDescription(
-        key="BREEZE_MET_FIELD",
-        name="Breeze conditions met",
-        field=BREEZE_MET_FIELD,
-    ),
-    RensonBinarySensorEntityDescription(
-        key="HUMIDITY_CONTROL_FIELD",
-        name="Humidity control",
-        field=HUMIDITY_CONTROL_FIELD,
-        entity_registry_enabled_default=False,
-    ),
-    RensonBinarySensorEntityDescription(
-        key="AIR_QUALITY_CONTROL_FIELD",
-        name="Air quality control",
-        field=AIR_QUALITY_CONTROL_FIELD,
-        entity_registry_enabled_default=False,
-    ),
-    RensonBinarySensorEntityDescription(
-        key="CO2_CONTROL_FIELD",
-        name="CO2 control",
-        field=CO2_CONTROL_FIELD,
-        entity_registry_enabled_default=False,
-    ),
-    RensonBinarySensorEntityDescription(
-        key="PREHEATER_FIELD",
-        name="Preheater",
-        field=PREHEATER_FIELD,
-    ),
-]
