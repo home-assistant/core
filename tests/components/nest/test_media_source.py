@@ -104,7 +104,6 @@ def mp4() -> io.BytesIO:
     stream.width = 480
     stream.height = 320
     stream.pix_fmt = "yuv420p"
-    #    stream.options.update({"g": str(fps), "keyint_min": str(fps)})
 
     for frame_i in range(total_frames):
         img = frame_image_data(frame_i, total_frames)
@@ -207,9 +206,10 @@ async def test_no_eligible_devices(hass, auth):
     assert not browse.children
 
 
-async def test_supported_device(hass, auth):
+@pytest.mark.parametrize("traits", [CAMERA_TRAITS, BATTERY_CAMERA_TRAITS])
+async def test_supported_device(hass, auth, traits):
     """Test a media source with a supported camera."""
-    await async_setup_devices(hass, auth, CAMERA_DEVICE_TYPE, CAMERA_TRAITS)
+    await async_setup_devices(hass, auth, CAMERA_DEVICE_TYPE, traits)
 
     assert len(hass.states.async_all()) == 1
     camera = hass.states.get("camera.front")
@@ -770,6 +770,17 @@ async def test_camera_event_clip_preview(hass, auth, hass_client, mp4):
     assert received_event.data["type"] == "camera_motion"
     event_identifier = received_event.data["nest_event_id"]
 
+    # List devices
+    browse = await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}")
+    assert browse.domain == DOMAIN
+    assert len(browse.children) == 1
+    assert browse.children[0].domain == DOMAIN
+    assert browse.children[0].identifier == device.id
+    assert browse.children[0].title == "Front: Recent Events"
+    assert (
+        browse.children[0].thumbnail
+        == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
+    )
     # Browse to the device
     browse = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}"
@@ -778,10 +789,7 @@ async def test_camera_event_clip_preview(hass, auth, hass_client, mp4):
     assert browse.identifier == device.id
     assert browse.title == "Front: Recent Events"
     assert browse.can_expand
-    assert (
-        browse.thumbnail
-        == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
-    )
+    assert not browse.thumbnail
     # The device expands recent events
     assert len(browse.children) == 1
     assert browse.children[0].domain == DOMAIN
@@ -1404,12 +1412,22 @@ async def test_camera_image_resize(hass, auth, hass_client):
     assert contents == IMAGE_BYTES_FROM_EVENT
 
     # The event thumbnail is used for the device thumbnail
+    browse = await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}")
+    assert browse.domain == DOMAIN
+    assert len(browse.children) == 1
+    assert browse.children[0].identifier == device.id
+    assert browse.children[0].title == "Front: Recent Events"
+    assert (
+        browse.children[0].thumbnail
+        == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
+    )
+
+    # Browse to device. No thumbnail is needed for the device on the device page
     browse = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}"
     )
     assert browse.domain == DOMAIN
     assert browse.identifier == device.id
-    assert (
-        browse.thumbnail
-        == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
-    )
+    assert browse.title == "Front: Recent Events"
+    assert not browse.thumbnail
+    assert len(browse.children) == 1
