@@ -207,25 +207,26 @@ class TuyaEntity(Entity):
 
         for dpcode in dpcodes:
             for key in order:
-                if dpcode in getattr(self.device, key):
-                    if (
-                        dptype == DPType.ENUM
-                        and getattr(self.device, key)[dpcode].type == DPType.ENUM
-                    ):
-                        return EnumTypeData.from_json(
-                            dpcode, getattr(self.device, key)[dpcode].values
-                        )
+                if dpcode not in getattr(self.device, key):
+                    continue
+                if (
+                    dptype == DPType.ENUM
+                    and getattr(self.device, key)[dpcode].type == DPType.ENUM
+                ):
+                    return EnumTypeData.from_json(
+                        dpcode, getattr(self.device, key)[dpcode].values
+                    )
 
-                    if (
-                        dptype == DPType.INTEGER
-                        and getattr(self.device, key)[dpcode].type == DPType.INTEGER
-                    ):
-                        return IntegerTypeData.from_json(
-                            dpcode, getattr(self.device, key)[dpcode].values
-                        )
+                if (
+                    dptype == DPType.INTEGER
+                    and getattr(self.device, key)[dpcode].type == DPType.INTEGER
+                ):
+                    return IntegerTypeData.from_json(
+                        dpcode, getattr(self.device, key)[dpcode].values
+                    )
 
-                    if dptype not in (DPType.ENUM, DPType.INTEGER):
-                        return dpcode
+                if dptype not in (DPType.ENUM, DPType.INTEGER):
+                    return dpcode
 
         return None
 
