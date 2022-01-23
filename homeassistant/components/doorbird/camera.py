@@ -124,11 +124,11 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
             self._last_update = now
             return self._last_image
         except asyncio.TimeoutError:
-            _LOGGER.error("DoorBird %s: Camera image timed out", self._attr_name)
+            _LOGGER.error("DoorBird %s: Camera image timed out", self.name)
             return self._last_image
         except aiohttp.ClientError as error:
             _LOGGER.error(
-                "DoorBird %s: Error getting camera image: %s", self._attr_name, error
+                "DoorBird %s: Error getting camera image: %s", self.name, error
             )
             return self._last_image
 
