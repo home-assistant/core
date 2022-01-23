@@ -26,13 +26,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS, TYPE_TO_PLATFORM
 from .coordinator import LookinDataUpdateCoordinator, LookinPushCoordinator
-from .models import LookinData
+from .models import LookinData, LookinUDPManager
 
 LOGGER = logging.getLogger(__name__)
 
-UDP_LOCK = "udp_lock"
-UDP_LISTENER = "udp_listener"
-UDP_SUBSCRIPTIONS = "udp_subscriptions"
+UDP_MANAGER = "udp_manager"
 
 
 def _async_climate_updater(
@@ -62,24 +60,22 @@ def _async_remote_updater(
 async def async_start_udp_listener(hass: HomeAssistant) -> LookinUDPSubscriptions:
     """Start the shared udp listener."""
     domain_data = hass.data[DOMAIN]
-    if UDP_LOCK not in domain_data:
-        udp_lock = domain_data[UDP_LOCK] = asyncio.Lock()
+    if UDP_MANAGER not in domain_data:
+        manager = domain_data[UDP_MANAGER] = LookinUDPManager()
     else:
-        udp_lock = domain_data[UDP_LOCK]
+        manager = domain_data[UDP_MANAGER]
 
-    async with udp_lock:
-        if UDP_LISTENER not in domain_data:
-            lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS] = LookinUDPSubscriptions()
-            domain_data[UDP_LISTENER] = await start_lookin_udp(lookin_udp_subs, None)
-        else:
-            lookin_udp_subs = domain_data[UDP_SUBSCRIPTIONS]
-        return lookin_udp_subs
+    async with manager.lock:
+        if not manager.listener:
+            manager.subscriptions = LookinUDPSubscriptions()
+            manager.listener = await start_lookin_udp(manager.subscriptions, None)
+        return manager.subscriptions
 
 
 async def async_stop_udp_listener(hass: HomeAssistant) -> None:
     """Stop the shared udp listener."""
-    domain_data = hass.data[DOMAIN]
-    async with domain_data[UDP_LOCK]:
+    manager: LookinUDPManager = hass.data[DOMAIN][UDP_MANAGER]
+    async with manager.lock:
         loaded_entries = [
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
@@ -87,9 +83,10 @@ async def async_stop_udp_listener(hass: HomeAssistant) -> None:
         ]
         if len(loaded_entries) > 1:
             return
-        domain_data[UDP_LISTENER]()
-        del domain_data[UDP_LISTENER]
-        del domain_data[UDP_SUBSCRIPTIONS]
+        assert manager.listener is not None
+        manager.listener()
+        manager.listener = None
+        manager.subscriptions = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
