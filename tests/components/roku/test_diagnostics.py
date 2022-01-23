@@ -22,6 +22,7 @@ async def test_diagnostics(
     assert isinstance(result, dict)
     assert isinstance(result["entry"], dict)
     assert result["entry"]["data"] == {"host": "192.168.1.160"}
+    assert result["entry"]["unique_id"] == "1GU48T017973"
 
     assert isinstance(result["data"], dict)
     assert result["data"]["app"] == diagnostics_data["app"]
