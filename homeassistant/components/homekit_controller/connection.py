@@ -8,7 +8,7 @@ from aiohomekit.exceptions import (
     AccessoryNotFoundError,
     EncryptionError,
 )
-from aiohomekit.model import Accessories
+from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -201,6 +201,52 @@ class HKDevice:
 
         return True
 
+    def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
+        """Build a DeviceInfo for a given accessory."""
+        info = accessory.services.first(
+            service_type=ServicesTypes.ACCESSORY_INFORMATION,
+        )
+
+        serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+
+        if valid_serial_number(serial_number):
+            identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
+        else:
+            # Some accessories do not have a serial number
+            identifiers = {
+                (
+                    DOMAIN,
+                    IDENTIFIER_ACCESSORY_ID,
+                    f"{self.unique_id}_{accessory.aid}",
+                )
+            }
+
+        if accessory.aid == 1:
+            # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
+            # Link the root device to the pairing id for the connection.
+            identifiers.add((DOMAIN, IDENTIFIER_ACCESSORY_ID, self.unique_id))
+
+        device_info = DeviceInfo(
+            identifiers=identifiers,
+            name=info.value(CharacteristicsTypes.NAME),
+            manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
+            model=info.value(CharacteristicsTypes.MODEL, ""),
+            sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+            hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
+        )
+
+        if accessory.aid != 1:
+            # Every pairing has an accessory 1
+            # It *doesn't* have a via_device, as it is the device we are connecting to
+            # Every other accessory should use it as its via device.
+            device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                IDENTIFIER_SERIAL_NUMBER,
+                self.connection_info["serial-number"],
+            )
+
+        return device_info
+
     @callback
     def async_create_devices(self):
         """
@@ -219,48 +265,8 @@ class HKDevice:
         for accessory in sorted(
             self.entity_map.accessories, key=lambda accessory: accessory.aid
         ):
-            info = accessory.services.first(
-                service_type=ServicesTypes.ACCESSORY_INFORMATION,
-            )
 
-            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-
-            if valid_serial_number(serial_number):
-                identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
-            else:
-                # Some accessories do not have a serial number
-                identifiers = {
-                    (
-                        DOMAIN,
-                        IDENTIFIER_ACCESSORY_ID,
-                        f"{self.unique_id}_{accessory.aid}",
-                    )
-                }
-
-            if accessory.aid == 1:
-                # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
-                # Link the root device to the pairing id for the connection.
-                identifiers.add((DOMAIN, IDENTIFIER_ACCESSORY_ID, self.unique_id))
-
-            device_info = DeviceInfo(
-                identifiers=identifiers,
-                name=info.value(CharacteristicsTypes.NAME),
-                manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
-                model=info.value(CharacteristicsTypes.MODEL, ""),
-                sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-                hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
-            )
-
-            if accessory.aid != 1:
-                # Every pairing has an accessory 1
-                # It *doesn't* have a via_device, as it is the device we are connecting to
-                # Every other accessory should use it as its via device.
-                device_info[ATTR_VIA_DEVICE] = (
-                    DOMAIN,
-                    IDENTIFIER_SERIAL_NUMBER,
-                    self.connection_info["serial-number"],
-                )
-
+            device_info = self.device_info_for_accessory(accessory)
             device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 **device_info,
