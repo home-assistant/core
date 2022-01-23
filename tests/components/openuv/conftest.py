@@ -1,4 +1,5 @@
 """Define test fixtures for OpenUV."""
+import json
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
@@ -39,12 +40,29 @@ def config_fixture(hass):
     }
 
 
+@pytest.fixture(name="data_protection_window", scope="session")
+def data_protection_window_fixture():
+    """Define a fixture to return UV protection window data."""
+    return json.loads(load_fixture("protection_window_data.json", "openuv"))
+
+
+@pytest.fixture(name="data_uv_index", scope="session")
+def data_uv_index_fixture():
+    """Define a fixture to return UV index data."""
+    return json.loads(load_fixture("uv_index_data.json", "openuv"))
+
+
 @pytest.fixture(name="setup_openuv")
-async def setup_openuv_fixture(hass, config):
+async def setup_openuv_fixture(hass, config, data_protection_window, data_uv_index):
     """Define a fixture to set up OpenUV."""
-    with patch("homeassistant.components.openuv.Client.uv_index"), patch(
-        "homeassistant.components.openuv.Client.uv_protection_window"
-    ), patch("homeassistant.components.openuv.PLATFORMS", []):
+    with patch(
+        "homeassistant.components.openuv.Client.uv_index", return_value=data_uv_index
+    ), patch(
+        "homeassistant.components.openuv.Client.uv_protection_window",
+        return_value=data_protection_window,
+    ), patch(
+        "homeassistant.components.openuv.PLATFORMS", []
+    ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
