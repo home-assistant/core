@@ -48,7 +48,7 @@ async def test_step_reauth(hass, config, config_entry, setup_notion):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+    with patch("homeassistant.components.notion.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
         )
