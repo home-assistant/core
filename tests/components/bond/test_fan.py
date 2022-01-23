@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from unittest.mock import call
 
 from bond_api import Action, DeviceType, Direction
 import pytest
@@ -280,6 +281,29 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: core.HomeAssistant):
         )
 
 
+async def test_turn_on_fan_with_off_with_breeze(hass: core.HomeAssistant):
+    """Tests that turn off command delegates to turn off API."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan_with_breeze("name-1"),
+        bond_device_id="test-device-id",
+        state={"breeze": [1, 0, 0]},
+    )
+
+    assert (
+        hass.states.get("fan.name_1").attributes[ATTR_PRESET_MODE] == PRESET_MODE_BREEZE
+    )
+
+    with patch_bond_action() as mock_actions, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", fan.SPEED_OFF)
+
+    assert mock_actions.mock_calls == [
+        call("test-device-id", Action(Action.BREEZE_OFF)),
+        call("test-device-id", Action.turn_off()),
+    ]
+
+
 async def test_turn_on_fan_without_speed(hass: core.HomeAssistant):
     """Tests that turn on command delegates to turn on API."""
     await setup_platform(
@@ -293,7 +317,7 @@ async def test_turn_on_fan_without_speed(hass: core.HomeAssistant):
 
 
 async def test_turn_on_fan_with_off_speed(hass: core.HomeAssistant):
-    """Tests that turn on command delegates to turn off API."""
+    """Tests that turn off command delegates to turn off API."""
     await setup_platform(
         hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
     )
