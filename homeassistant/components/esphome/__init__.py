@@ -13,6 +13,7 @@ from aioesphomeapi import (
     APIConnectionError,
     APIIntEnum,
     APIVersion,
+    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -301,6 +302,12 @@ async def async_setup_entry(  # noqa: C901
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
+        if isinstance(err, BadNameAPIError):
+            _LOGGER.warning(
+                "Name of device %s changed to %s, potentially due to IP reassignement",
+                cli.expected_name,
+                err.received_name,
+            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
