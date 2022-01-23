@@ -3,29 +3,18 @@
 from copy import deepcopy
 from unittest.mock import patch
 
-from homeassistant.components.axis.const import CONF_EVENTS, CONF_MODEL
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
 
 from .test_device import (
     API_DISCOVERY_BASIC_DEVICE_INFO,
     API_DISCOVERY_RESPONSE,
-    DEFAULT_HOST,
-    MODEL,
-    NAME,
     setup_axis_integration,
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
+async def test_entry_diagnostics(hass, hass_client):
     """Test config entry diagnostics."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_BASIC_DEVICE_INFO)
@@ -35,14 +24,25 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "config": {
-            CONF_HOST: DEFAULT_HOST,
-            CONF_USERNAME: "root",
-            CONF_PASSWORD: REDACTED,
-            CONF_PORT: 80,
-            CONF_MODEL: MODEL,
-            CONF_NAME: NAME,
+            "entry_id": config_entry.entry_id,
+            "version": 3,
+            "domain": "axis",
+            "title": "Mock Title",
+            "data": {
+                "host": "1.2.3.4",
+                "username": "root",
+                "password": "**REDACTED**",
+                "port": 80,
+                "model": "model",
+                "name": "name",
+            },
+            "options": {"events": True},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": "**REDACTED**",
+            "disabled_by": None,
         },
-        "options": {CONF_EVENTS: True},
         "api_discovery": [
             {
                 "id": "api-discovery",
