@@ -104,10 +104,10 @@ async def test_fan_available(hass, mock_gateway, mock_api_factory):
 @pytest.mark.parametrize(
     "test_data, expected_result",
     [
-        #        (
-        #            {"percentage": 50},
-        #            "on",
-        #        ),
+        (
+            {"percentage": 50},
+            "on",
+        ),
         ({"percentage": 0}, "off"),
     ],
 )
@@ -158,5 +158,4 @@ async def test_set_percentage(
 
     # Check that the state is correct.
     state = hass.states.get("fan.tradfri_fan_0")
-    assert state.attributes["percentage"] == test_data["percentage"]
     assert state.state == expected_result

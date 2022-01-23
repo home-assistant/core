@@ -79,6 +79,11 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         self._device_control = self._device.air_purifier_control
         self._device_data = self._device_control.air_purifiers[0]
 
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device = self.coordinator.data
+        self._device_data = self.coordinator.data.air_purifier_control.air_purifiers[0]
+
     @property
     def supported_features(self) -> int:
         """Flag supported features."""

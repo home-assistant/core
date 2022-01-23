@@ -10,6 +10,7 @@ from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import PytradfriError
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -60,11 +61,25 @@ class TradfriBaseEntity(CoordinatorEntity):
 
         self._attr_unique_id = f"{self._gateway_id}-{self._device.id}"
 
+    def _refresh(self) -> None:
+        """Refresh device data."""
+        raise NotImplementedError
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """
+        Handle updated data from the coordinator.
+
+        Tests fails without this method.
+        """
+        self._refresh()
+        super()._handle_coordinator_update()
+
     async def async_added_to_hass(self) -> None:
         """Start thread when added to hass."""
         self.async_on_remove(  # Only devices shall receive SIGNAL_GW
             async_dispatcher_connect(
-                self.hass, SIGNAL_GW, self.coordinator.set_hub_available  # type: ignore
+                self.hass, SIGNAL_GW, self.coordinator.set_hub_available
             )
         )
         await super().async_added_to_hass()
