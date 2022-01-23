@@ -22,12 +22,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_utc, get_time_zone
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, CONF_TO, CONF_FROM, CONF_TIME, CONF_TRAINS
 
-CONF_TRAINS = "trains"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_TIME = "time"
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_DEPARTURE_STATE = "departure_state"
 ATTR_CANCELED = "canceled"
