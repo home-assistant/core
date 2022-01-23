@@ -1256,6 +1256,7 @@ omit =
     homeassistant/components/verisure/binary_sensor.py
     homeassistant/components/verisure/camera.py
     homeassistant/components/verisure/coordinator.py
+    homeassistant/components/verisure/diagnostics.py
     homeassistant/components/verisure/lock.py
     homeassistant/components/verisure/sensor.py
     homeassistant/components/verisure/switch.py
