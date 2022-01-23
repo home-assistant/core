@@ -1,15 +1,9 @@
 """IHC component constants."""
 from homeassistant.const import Platform
 
-<<<<<<< HEAD
-ATTR_IHC_ID = "ihc_id"
-ATTR_VALUE = "value"
-ATTR_CONTROLLER_ID = "controller_id"
-=======
 ATTR_CONTROLLER_ID = "controller_id"
 ATTR_IHC_ID = "ihc_id"
 ATTR_VALUE = "value"
->>>>>>> ee14aa4902 (ihc configflow)
 
 AUTO_SETUP_YAML = "ihc_auto_setup.yaml"
 
