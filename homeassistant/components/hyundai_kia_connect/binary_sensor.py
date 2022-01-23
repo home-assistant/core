@@ -195,9 +195,9 @@ class HyundaiKiaConnectBinarySensor(BinarySensorEntity, HyundaiKiaConnectEntity)
         vehicle: Vehicle,
     ) -> None:
         """Initialize the sensor."""
-        HyundaiKiaConnectEntity.__init__(self, coordinator, vehicle)
+        super().__init__(coordinator, vehicle)
         self.entity_description: HyundaiKiaBinarySensorEntityDescription = description
-        self._attr_unique_id = f"{DOMAIN}_{vehicle.name}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{vehicle.id}_{description.key}"
         self._attr_name = f"{vehicle.name} {description.name}"
 
     @property

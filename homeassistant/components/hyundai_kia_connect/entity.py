@@ -9,7 +9,7 @@ class HyundaiKiaConnectEntity(CoordinatorEntity):
 
     def __init__(self, coordinator, vehicle):
         """Initialize the base entity."""
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         self.vehicle = vehicle
 
     @property
