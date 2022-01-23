@@ -37,6 +37,7 @@ from .const import (
     DATA_HUB,
     DEFAULT_MAX_DELAY,
     DOMAIN,
+    FILTER_STATES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -234,11 +235,11 @@ class AzureDataExplorer:
         self._queue.task_done()
         if not state:
             self._shutdown = True
-            return None, dropped
-        # if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
-        #    return None, dropped
-        # if (utcnow() - time_fired).seconds > self._max_delay + self._send_interval:
-        #    return None, dropped + 1
+            return None, dropped + 1
+        if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
+            return None, dropped + 1
+        if (utcnow() - time_fired).seconds > self._max_delay + self._send_interval:
+            return None, dropped + 1
         try:
             json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
             json_dictionary = json.loads(json_string)
