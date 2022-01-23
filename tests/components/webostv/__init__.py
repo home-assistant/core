@@ -1,16 +1,25 @@
 """Tests for the WebOS TV integration."""
+from pickle import dumps
 from unittest.mock import patch
+
+import sqlalchemy as db
+from sqlalchemy import create_engine
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-TV_NAME = "fake"
+FAKE_UUID = "some-fake-uuid"
+TV_NAME = "fake_webos"
 ENTITY_ID = f"{MP_DOMAIN}.{TV_NAME}"
-MOCK_CLIENT_KEYS = {"1.2.3.4": "some-secret"}
+HOST = "1.2.3.4"
+CLIENT_KEY = "some-secret"
+MOCK_CLIENT_KEYS = {HOST: CLIENT_KEY}
+MOCK_JSON = '{"1.2.3.4": "some-secret"}'
 
 CHANNEL_1 = {
     "channelNumber": "1",
@@ -29,7 +38,7 @@ async def setup_webostv(hass, unique_id="some-unique-id"):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "1.2.3.4",
+            CONF_HOST: HOST,
             CONF_CLIENT_SECRET: "0123456789",
         },
         title=TV_NAME,
@@ -44,8 +53,46 @@ async def setup_webostv(hass, unique_id="some-unique-id"):
         await async_setup_component(
             hass,
             DOMAIN,
-            {DOMAIN: {CONF_HOST: "1.2.3.4"}},
+            {DOMAIN: {CONF_HOST: HOST}},
         )
         await hass.async_block_till_done()
 
     return entry
+
+
+async def setup_legacy_component(hass, create_entity=True):
+    """Initialize webostv component with legacy entity."""
+    if create_entity:
+        ent_reg = entity_registry.async_get(hass)
+        assert ent_reg.async_get_or_create(MP_DOMAIN, DOMAIN, CLIENT_KEY)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_HOST: HOST}},
+    )
+    await hass.async_block_till_done()
+
+
+def create_memory_sqlite_engine(url):
+    """Create fake db keys file in memory."""
+    mem_eng = create_engine("sqlite:///:memory:")
+    table = db.Table(
+        "unnamed",
+        db.MetaData(),
+        db.Column("key", db.String),
+        db.Column("value", db.String),
+    )
+    table.create(mem_eng)
+    query = db.insert(table).values(key=HOST, value=dumps(CLIENT_KEY))
+    connection = mem_eng.connect()
+    connection.execute(query)
+    return mem_eng
+
+
+def is_entity_unique_id_updated(hass):
+    """Check if entity has new unique_id from UUID."""
+    ent_reg = entity_registry.async_get(hass)
+    return ent_reg.async_get_entity_id(
+        MP_DOMAIN, DOMAIN, FAKE_UUID
+    ) and not ent_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, CLIENT_KEY)
