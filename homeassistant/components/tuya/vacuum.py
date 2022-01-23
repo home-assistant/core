@@ -191,5 +191,5 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     def send_command(self, command: str, params: str = None, **kwargs: Any) -> None:
         """Send raw command."""
         if params is None:
-            raise ValueError("Params cannot be omitted for Tuya vacumm commands")
+            raise ValueError("Params cannot be omitted for Tuya vacuum commands")
         self._send_command([{"code": command, "value": params}])
