@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "bad_pin_format": "\u03a4\u03bf PIN \u03c0\u03c1\u03ad\u03c0\u03b5\u03b9 \u03bd\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 4 \u03c8\u03b7\u03c6\u03af\u03b1"
+        },
         "step": {
             "pin": {
                 "data": {

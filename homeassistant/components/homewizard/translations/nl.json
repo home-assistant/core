@@ -9,6 +9,7 @@
         },
         "step": {
             "discovery_confirm": {
+                "description": "Wilt u {product_type} ({serial}) op {ip_address} instellen?",
                 "title": "Bevestig"
             },
             "user": {

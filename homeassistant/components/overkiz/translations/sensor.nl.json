@@ -1,8 +1,32 @@
 {
     "state": {
+        "overkiz__battery": {
+            "full": "Vol",
+            "low": "Laag",
+            "normal": "Normaal",
+            "verylow": "Zeer laag"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "Goed",
+            "low": "Laag",
+            "normal": "Normaal"
+        },
         "overkiz__priority_lock_originator": {
+            "local_user": "Lokale gebruiker",
+            "lsc": "LSC",
+            "myself": "Ikzelf",
             "rain": "Regen",
-            "temperature": "Temperatuur"
+            "saac": "SAAC",
+            "security": "Beveiliging",
+            "sfc": "SFC",
+            "temperature": "Temperatuur",
+            "timer": "Timer",
+            "ups": "UPS",
+            "user": "Gebruiker",
+            "wind": "Wind"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "Onbereikbaar"
         },
         "overkiz__sensor_room": {
             "clean": "Schoon",
