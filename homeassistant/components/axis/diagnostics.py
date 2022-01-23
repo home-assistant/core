@@ -5,12 +5,12 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID
+from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN as AXIS_DOMAIN
 
-REDACT_CONFIG = {CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID}
+REDACT_CONFIG = {CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
 REDACT_BASIC_DEVICE_INFO = {"SerialNumber", "SocSerialNumber"}
 REDACT_VAPIX_PARAMS = {"root.Network", "System.SerialNumber"}
 
