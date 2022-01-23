@@ -20,17 +20,18 @@ async def test_diagnostics(
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert isinstance(result, dict)
-    assert result["config_entry"] == {"host": "192.168.1.160"}
+    assert isinstance(result["entry"], dict)
+    assert result["entry"]["data"] == {"host": "192.168.1.160"}
 
-    assert isinstance(result["coordinator"], dict)
-    assert result["coordinator"]["app"] == diagnostics_data["app"]
-    assert result["coordinator"]["apps"] == diagnostics_data["apps"]
-    assert result["coordinator"]["channel"] == diagnostics_data["channel"]
-    assert result["coordinator"]["channels"] == diagnostics_data["channels"]
-    assert result["coordinator"]["info"] == diagnostics_data["info"]
-    assert result["coordinator"]["media"] == diagnostics_data["media"]
+    assert isinstance(result["data"], dict)
+    assert result["data"]["app"] == diagnostics_data["app"]
+    assert result["data"]["apps"] == diagnostics_data["apps"]
+    assert result["data"]["channel"] == diagnostics_data["channel"]
+    assert result["data"]["channels"] == diagnostics_data["channels"]
+    assert result["data"]["info"] == diagnostics_data["info"]
+    assert result["data"]["media"] == diagnostics_data["media"]
 
-    coordinator_state = result["coordinator"]["state"]
-    assert isinstance(coordinator_state, dict)
-    assert coordinator_state["available"] == diagnostics_data["state"]["available"]
-    assert coordinator_state["standby"] == diagnostics_data["state"]["standby"]
+    data_state = result["data"]["state"]
+    assert isinstance(data_state, dict)
+    assert data_state["available"] == diagnostics_data["state"]["available"]
+    assert data_state["standby"] == diagnostics_data["state"]["standby"]
