@@ -29,7 +29,7 @@ async def async_setup_entry(
 
 
 class OnlineStatus(BinarySensorEntity):
-    """Representation of an UPS online status."""
+    """Representation of a UPS online status."""
 
     def __init__(self, data):
         """Initialize the APCUPSd binary device."""
