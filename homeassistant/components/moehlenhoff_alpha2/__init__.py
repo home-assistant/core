@@ -97,6 +97,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             raise HomeAssistantError(
                 "Failed to set target temperature, communication error with alpha2 base"
             ) from http_err
+        self.data[heat_area_id]["T_TARGET"] = target_temperature
         for update_callback in self._listeners:
             update_callback()
 
@@ -120,5 +121,26 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             raise HomeAssistantError(
                 "Failed to set heat area mode, communication error with alpha2 base"
             ) from http_err
+
+        self.data[heat_area_id]["HEATAREA_MODE"] = heat_area_mode
+        is_cooling = self.get_cooling()
+        if heat_area_mode == 1:
+            if is_cooling:
+                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
+                    "T_COOL_DAY"
+                ]
+            else:
+                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
+                    "T_HEAT_DAY"
+                ]
+        elif heat_area_mode == 2:
+            if is_cooling:
+                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
+                    "T_COOL_NIGHT"
+                ]
+            else:
+                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
+                    "T_HEAT_NIGHT"
+                ]
         for update_callback in self._listeners:
             update_callback()

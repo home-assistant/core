@@ -108,7 +108,6 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_set_target_temperature(
             self.heat_area_id, target_temperature
         )
-        self.coordinator.data[self.heat_area_id]["T_TARGET"] = target_temperature
 
     @property
     def preset_mode(self) -> str:
@@ -130,27 +129,6 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_set_heat_area_mode(
             self.heat_area_id, heat_area_mode
         )
-
-        self.coordinator.data[self.heat_area_id]["HEATAREA_MODE"] = heat_area_mode
-        is_cooling = self.coordinator.get_cooling()
-        if heat_area_mode == 1:
-            if is_cooling:
-                self.coordinator.data[self.heat_area_id][
-                    "T_TARGET"
-                ] = self.coordinator.data[self.heat_area_id]["T_COOL_DAY"]
-            else:
-                self.coordinator.data[self.heat_area_id][
-                    "T_TARGET"
-                ] = self.coordinator.data[self.heat_area_id]["T_HEAT_DAY"]
-        elif heat_area_mode == 2:
-            if is_cooling:
-                self.coordinator.data[self.heat_area_id][
-                    "T_TARGET"
-                ] = self.coordinator.data[self.heat_area_id]["T_COOL_NIGHT"]
-            else:
-                self.coordinator.data[self.heat_area_id][
-                    "T_TARGET"
-                ] = self.coordinator.data[self.heat_area_id]["T_HEAT_NIGHT"]
 
     @property
     def extra_state_attributes(self):
