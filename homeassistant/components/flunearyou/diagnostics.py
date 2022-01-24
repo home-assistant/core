@@ -24,10 +24,6 @@ async def async_get_config_entry_diagnostics(
     coordinators: dict[str, DataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "entry": {
-            "title": entry.title,
-            "data": async_redact_data(entry.data, TO_REDACT),
-        },
         "data": {
             CATEGORY_CDC_REPORT: async_redact_data(
                 coordinators[CATEGORY_CDC_REPORT].data, TO_REDACT
