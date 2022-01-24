@@ -1,7 +1,6 @@
 """Support for the Roku media player."""
 from __future__ import annotations
 
-from asyncio import run_coroutine_threadsafe
 import datetime as dt
 import logging
 from typing import Any
