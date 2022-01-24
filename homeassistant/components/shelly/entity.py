@@ -501,9 +501,9 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.attribute = attribute
         self.entity_description = description
         self._attr_name = get_block_entity_name(wrapper.device, None, description.name)
-        self._attr_unique_id = f"{self.wrapper.mac}-{self.attribute}"
+        self._attr_unique_id = f"{wrapper.mac}-{attribute}"
         self._attr_device_info = DeviceInfo(
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
         )
         self._last_value = None
 
