@@ -114,7 +114,7 @@ async def _async_setup_notify(
         device_id=device_id,
         config_entry=config_entry,
     )
-    service_name = slugify(config.get(CONF_NAME, config[CONF_COMMAND_TOPIC]))
+    service_name = slugify(config.get(CONF_NAME, DOMAIN))
     await service.async_setup(hass, service_name, service_name)
     await service.async_register_services()
 
@@ -125,11 +125,11 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MqttNotificationService | None:
     """Prepare the MQTT notification service through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     name = config.get(CONF_NAME)
-    if name is None:
-        # use command_topic as a base for the service name if no name is defined
-        config[CONF_NAME] = config[CONF_COMMAND_TOPIC]
+    if CONF_NAME not in config:
+        config[CONF_NAME] = DOMAIN
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     return MqttNotificationService(
         hass,
         config[CONF_COMMAND_TOPIC],
@@ -276,7 +276,7 @@ class MqttNotificationService(notify.BaseNotificationService):
         self._qos = config[CONF_QOS]
         self._retain = config[CONF_RETAIN]
         self._title = config[CONF_TITLE]
-        new_service_name = slugify(config.get(CONF_NAME, config[CONF_COMMAND_TOPIC]))
+        new_service_name = slugify(config.get(CONF_NAME, DOMAIN))
         if (
             new_service_name != self._service_name
             or config[CONF_TARGETS] != self._targets

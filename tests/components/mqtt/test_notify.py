@@ -22,7 +22,7 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
     [
         (
             None,
-            "lcd_set",
+            "mqtt",
             {
                 notify.ATTR_TITLE: "Title",
                 notify.ATTR_MESSAGE: "Message",
@@ -30,7 +30,7 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
             },
             '{"message":"Message",'
             '"name":"None",'
-            '"service":"lcd_set",'
+            '"service":"mqtt",'
             '"par1":"val1",'
             '"target":['
             "'t1', 't2'"
@@ -39,7 +39,7 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
         ),
         (
             None,
-            "lcd_set",
+            "mqtt",
             {
                 notify.ATTR_TITLE: "Title",
                 notify.ATTR_MESSAGE: "Message",
@@ -48,7 +48,7 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
             },
             '{"message":"Message",'
             '"name":"None",'
-            '"service":"lcd_set",'
+            '"service":"mqtt",'
             '"par1":"val1",'
             '"target":['
             "'t2'"
@@ -57,7 +57,7 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
         ),
         (
             None,
-            "lcd_set_t1",
+            "mqtt_t1",
             {
                 notify.ATTR_TITLE: "Title",
                 notify.ATTR_MESSAGE: "Message",
@@ -65,7 +65,7 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
             },
             '{"message":"Message",'
             '"name":"None",'
-            '"service":"lcd_set",'
+            '"service":"mqtt",'
             '"par1":"val2",'
             '"target":['
             "'t1'"
@@ -243,7 +243,9 @@ async def test_sending_with_command_templates_with_config_setup(
     }
     if name:
         config[CONF_NAME] = name
-    service_base_name = slugify(name) or "lcd_set"
+        service_base_name = slugify(name)
+    else:
+        service_base_name = DOMAIN
     assert await async_setup_component(
         hass,
         notify.DOMAIN,
@@ -294,7 +296,9 @@ async def test_sending_with_command_templates_auto_discovery(
     }
     if name:
         config[CONF_NAME] = name
-    service_base_name = slugify(name) or "lcd_set"
+        service_base_name = slugify(name)
+    else:
+        service_base_name = DOMAIN
     async_fire_mqtt_message(
         hass, f"homeassistant/{notify.DOMAIN}/bla/config", json.dumps(config)
     )
