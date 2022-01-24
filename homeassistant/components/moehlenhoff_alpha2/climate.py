@@ -129,19 +129,3 @@ class Alpha2Climate(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_set_heat_area_mode(
             self.heat_area_id, heat_area_mode
         )
-
-    @property
-    def extra_state_attributes(self):
-        """Return the extra state attributes.
-
-        is_locked (bool): Indicates whether the operating lock of the room operating panel is active.
-        lock_available (bool): Specifies whether a code is requested when the room operating unit is unlocked.
-        """
-        data = super().extra_state_attributes or {}
-        data["is_locked"] = self.coordinator.data[self.heat_area_id].get(
-            "ISLOCKED", False
-        )
-        data["lock_available"] = self.coordinator.data[self.heat_area_id].get(
-            "LOCK_AVAILABLE", False
-        )
-        return data
