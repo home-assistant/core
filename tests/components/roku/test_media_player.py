@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
     MEDIA_CLASS_CHANNEL,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_VIDEO,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
@@ -75,6 +76,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -523,6 +525,38 @@ async def test_services(
     mock_roku.launch.assert_called_with("12")
 
 
+async def test_services_play_media_local_source(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_roku: MagicMock,
+) -> None:
+    """Test the media player services related to playing media."""
+    local_media = hass.config.path("media")
+    await async_process_ha_core_config(
+        hass, {"media_dirs": {"local": local_media, "recordings": local_media}}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "media_source", {})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
+            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        },
+        blocking=True,
+    )
+
+    assert mock_roku.play_video.call_count == 1
+    assert mock_roku.play_video.call_args
+    call_args = mock_roku.play_video.call_args.args
+    assert "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
+
+
 @pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_services(
     hass: HomeAssistant,
@@ -572,8 +606,238 @@ async def test_tv_services(
     mock_roku.tune.assert_called_with("55")
 
 
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_media_browse(
+    hass,
+    init_integration,
+    mock_roku,
+    hass_ws_client,
+):
+    """Test browsing media."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": MAIN_ENTITY_ID,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Apps"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 8
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+
+    assert msg["result"]["children"][0]["title"] == "Roku Channel Store"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_id"] == "11"
+    assert "/browse_media/app/11" in msg["result"]["children"][0]["thumbnail"]
+    assert msg["result"]["children"][0]["can_play"]
+
+    # test invalid media type
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "media_player/browse_media",
+            "entity_id": MAIN_ENTITY_ID,
+            "media_content_type": "invalid",
+            "media_content_id": "invalid",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+
+
+async def test_media_browse_internal(
+    hass,
+    init_integration,
+    mock_roku,
+    hass_ws_client,
+):
+    """Test browsing media with internal url."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+
+    assert hass.config.internal_url == "http://example.local:8123"
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+    ):
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": MAIN_ENTITY_ID,
+                "media_content_type": MEDIA_TYPE_APPS,
+                "media_content_id": "apps",
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Apps"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 8
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+
+    assert msg["result"]["children"][0]["title"] == "Roku Channel Store"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_id"] == "11"
+    assert "/query/icon/11" in msg["result"]["children"][0]["thumbnail"]
+    assert msg["result"]["children"][0]["can_play"]
+
+
+async def test_media_browse_local_source(
+    hass,
+    init_integration,
+    mock_roku,
+    hass_ws_client,
+):
+    """Test browsing local media source."""
+    local_media = hass.config.path("media")
+    await async_process_ha_core_config(
+        hass, {"media_dirs": {"local": local_media, "recordings": local_media}}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "media_source", {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": MAIN_ENTITY_ID,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Roku"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == "root"
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 2
+
+    assert msg["result"]["children"][0]["title"] == "Apps"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APPS
+
+    assert msg["result"]["children"][1]["title"] == "Local Media"
+    assert msg["result"]["children"][1]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["children"][1]["media_content_type"] is None
+    assert (
+        msg["result"]["children"][1]["media_content_id"]
+        == "media-source://media_source"
+    )
+    assert not msg["result"]["children"][1]["can_play"]
+    assert msg["result"]["children"][1]["can_expand"]
+
+    # test local media
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "media_player/browse_media",
+            "entity_id": MAIN_ENTITY_ID,
+            "media_content_type": "",
+            "media_content_id": "media-source://media_source",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Local Media"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] is None
+    assert len(msg["result"]["children"]) == 2
+
+    assert msg["result"]["children"][0]["title"] == "media"
+    assert msg["result"]["children"][0]["media_content_type"] == ""
+    assert (
+        msg["result"]["children"][0]["media_content_id"]
+        == "media-source://media_source/local/."
+    )
+
+    assert msg["result"]["children"][1]["title"] == "media"
+    assert msg["result"]["children"][1]["media_content_type"] == ""
+    assert (
+        msg["result"]["children"][1]["media_content_id"]
+        == "media-source://media_source/recordings/."
+    )
+
+    # test local media directory
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "media_player/browse_media",
+            "entity_id": MAIN_ENTITY_ID,
+            "media_content_type": "",
+            "media_content_id": "media-source://media_source/local/.",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 3
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]["title"] == "media"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == ""
+    assert len(msg["result"]["children"]) == 2
+
+    assert msg["result"]["children"][0]["title"] == "Epic Sax Guy 10 Hours.mp4"
+    assert msg["result"]["children"][0]["media_class"] == MEDIA_CLASS_VIDEO
+    assert msg["result"]["children"][0]["media_content_type"] == "video/mp4"
+    assert (
+        msg["result"]["children"][0]["media_content_id"]
+        == "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+    )
+
+
+@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
+async def test_tv_media_browse(
     hass,
     init_integration,
     mock_roku,
@@ -597,9 +861,9 @@ async def test_media_browse(
     assert msg["success"]
 
     assert msg["result"]
-    assert msg["result"]["title"] == "Media Library"
+    assert msg["result"]["title"] == "Roku"
     assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
-    assert msg["result"]["media_content_type"] == "library"
+    assert msg["result"]["media_content_type"] == "root"
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 2
@@ -663,7 +927,7 @@ async def test_media_browse(
     assert msg["success"]
 
     assert msg["result"]
-    assert msg["result"]["title"] == "Channels"
+    assert msg["result"]["title"] == "TV Channels"
     assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
     assert msg["result"]["media_content_type"] == MEDIA_TYPE_CHANNELS
     assert msg["result"]["children_media_class"] == MEDIA_CLASS_CHANNEL
@@ -676,82 +940,6 @@ async def test_media_browse(
     assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_CHANNEL
     assert msg["result"]["children"][0]["media_content_id"] == "1.1"
     assert msg["result"]["children"][0]["can_play"]
-
-    # test invalid media type
-    await client.send_json(
-        {
-            "id": 4,
-            "type": "media_player/browse_media",
-            "entity_id": TV_ENTITY_ID,
-            "media_content_type": "invalid",
-            "media_content_id": "invalid",
-        }
-    )
-
-    msg = await client.receive_json()
-
-    assert msg["id"] == 4
-    assert msg["type"] == TYPE_RESULT
-    assert not msg["success"]
-
-
-@pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
-async def test_media_browse_internal(
-    hass,
-    init_integration,
-    mock_roku,
-    hass_ws_client,
-):
-    """Test browsing media with internal url."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
-    assert hass.config.internal_url == "http://example.local:8123"
-
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
-    ):
-        await client.send_json(
-            {
-                "id": 2,
-                "type": "media_player/browse_media",
-                "entity_id": TV_ENTITY_ID,
-                "media_content_type": MEDIA_TYPE_APPS,
-                "media_content_id": "apps",
-            }
-        )
-
-        msg = await client.receive_json()
-
-    assert msg["id"] == 2
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-
-    assert msg["result"]
-    assert msg["result"]["title"] == "Apps"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
-    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
-    assert msg["result"]["can_expand"]
-    assert not msg["result"]["can_play"]
-    assert len(msg["result"]["children"]) == 11
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
-
-    assert msg["result"]["children"][0]["title"] == "Satellite TV"
-    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
-    assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
-    assert "/query/icon/tvinput.hdmi2" in msg["result"]["children"][0]["thumbnail"]
-    assert msg["result"]["children"][0]["can_play"]
-
-    assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
-    assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
-    assert msg["result"]["children"][3]["media_content_id"] == "11"
-    assert "/query/icon/11" in msg["result"]["children"][3]["thumbnail"]
-    assert msg["result"]["children"][3]["can_play"]
 
 
 async def test_integration_services(
