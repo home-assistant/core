@@ -10,6 +10,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_KPA,
+    PRESSURE_MMHG,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -354,6 +355,7 @@ async def test_restore_sensor_restore_state(
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (PRESSURE_HPA, PRESSURE_INHG, PRESSURE_INHG, 1000.0, 29.53),
         (PRESSURE_KPA, PRESSURE_HPA, PRESSURE_HPA, 1.234, 12.34),
+        (PRESSURE_HPA, PRESSURE_MMHG, PRESSURE_MMHG, 1000, 750),
         # Not a supported pressure unit
         (PRESSURE_HPA, "peer_pressure", PRESSURE_HPA, 1000, 1000),
     ],
