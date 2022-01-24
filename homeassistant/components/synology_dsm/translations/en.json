@@ -31,6 +31,14 @@
                 "description": "Do you want to setup {name} ({host})?",
                 "title": "Synology DSM"
             },
+            "reauth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Reason: {details}",
+                "title": "Synology DSM Reauthenticate Integration"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password",

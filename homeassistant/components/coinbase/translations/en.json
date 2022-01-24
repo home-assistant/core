@@ -26,7 +26,9 @@
     "options": {
         "error": {
             "currency_unavailable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+            "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
             "exchange_rate_unavailable": "One or more of the requested exchange rates is not provided by Coinbase.",
+            "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase.",
             "unknown": "Unexpected error"
         },
         "step": {
