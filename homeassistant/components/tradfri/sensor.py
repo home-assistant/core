@@ -65,6 +65,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
     def _refresh(self) -> None:
         """Refresh the device."""
+        self._attr_native_value = self.coordinator.data.device_info.battery_level
 
     @property
     def native_value(self) -> int | None:
