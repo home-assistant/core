@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 import itertools
 import logging
 from typing import Any
@@ -11,8 +12,10 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
 )
 from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
 from homeassistant.exceptions import TemplateError
@@ -85,6 +88,7 @@ LEGACY_FIELDS = {
     CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
     CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
     CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
+    CONF_FRIENDLY_NAME: CONF_NAME,
 }
 
 
@@ -106,6 +110,9 @@ def rewrite_common_legacy_to_modern_conf(
         if isinstance(val, str):
             val = Template(val)
         entity_cfg[to_key] = val
+
+    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
+        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME])
 
     return entity_cfg
 
@@ -207,12 +214,14 @@ class TemplateEntity(Entity):
 
     def __init__(
         self,
+        hass,
         *,
         availability_template=None,
         icon_template=None,
         entity_picture_template=None,
         attribute_templates=None,
         config=None,
+        fallback_name=None,
     ):
         """Template Entity."""
         self._template_attrs = {}
@@ -224,11 +233,22 @@ class TemplateEntity(Entity):
             self._availability_template = availability_template
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
+            self._friendly_name_template = None
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
+            self._friendly_name_template = config.get(CONF_NAME)
+
+        # Try to render the name as it can influence the entity ID
+        self._attr_name = fallback_name
+        if self._friendly_name_template:
+            self._friendly_name_template.hass = hass
+            with contextlib.suppress(TemplateError):
+                self._attr_name = self._friendly_name_template.async_render(
+                    parse_result=False
+                )
 
     @callback
     def _update_available(self, result):
@@ -373,6 +393,12 @@ class TemplateEntity(Entity):
             self.add_template_attribute(
                 "_attr_entity_picture", self._entity_picture_template
             )
+        if (
+            self._friendly_name_template is not None
+            and not self._friendly_name_template.is_static
+        ):
+            self.add_template_attribute("_attr_name", self._friendly_name_template)
+
         if self.hass.state == CoreState.running:
             await self._async_template_startup()
             return

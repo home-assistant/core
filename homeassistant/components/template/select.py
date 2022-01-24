@@ -1,7 +1,6 @@
 """Support for selects which integrates with other components."""
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
@@ -18,7 +17,6 @@ from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.template import TemplateError
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
@@ -102,13 +100,7 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        super().__init__(config=config)
-        self._attr_name = DEFAULT_NAME
-        name_template = config[CONF_NAME]
-        name_template.hass = hass
-        with contextlib.suppress(TemplateError):
-            self._attr_name = name_template.async_render(parse_result=False)
-        self._name_template = name_template
+        super().__init__(hass, config=config)
         self._value_template = config[CONF_STATE]
         self._command_select_option = Script(
             hass, config[CONF_SELECT_OPTION], self._attr_name, DOMAIN
@@ -133,8 +125,6 @@ class TemplateSelect(TemplateEntity, SelectEntity):
             validator=vol.All(cv.ensure_list, [cv.string]),
             none_on_template_error=True,
         )
-        if self._name_template and not self._name_template.is_static:
-            self.add_template_attribute("_attr_name", self._name_template, cv.string)
         await super().async_added_to_hass()
 
     async def async_select_option(self, option: str) -> None:
