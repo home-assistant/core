@@ -43,7 +43,7 @@ COMMANDS_SET_TILT_POSITION: list[OverkizCommand] = [OverkizCommand.SET_ORIENTATI
 
 
 class OverkizGenericCover(OverkizEntity, CoverEntity):
-    """Representation of a TaHoma Cover."""
+    """Representation of an Overkiz Cover."""
 
     @property
     def current_cover_tilt_position(self) -> int | None:
