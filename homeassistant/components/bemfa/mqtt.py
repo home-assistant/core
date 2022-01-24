@@ -20,7 +20,7 @@ _LOGGING = logging.getLogger(__name__)
 
 
 class BemfaMqtt:
-    """Representation of bemfa."""
+    """Set up mqtt connections to Bemfa Service, subscribe topcs and publish messages."""
 
     _topic_to_entity_id: dict[str, str] = {}
     _remove_listener: Any
@@ -42,7 +42,7 @@ class BemfaMqtt:
             self._connect(None)
         else:
             # for situations when hass restarts
-            self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self._connect)
+            self._hass.bus.listen_once(EVENT_HOMEASSISTANT_STARTED, self._connect)
 
     def _connect(self, _event) -> None:
         for entity_id in self._entity_ids:
@@ -58,7 +58,7 @@ class BemfaMqtt:
             self._mqttc.subscribe(topic, 2)
 
         # Listen for state changes
-        self._remove_listener = self._hass.bus.async_listen(
+        self._remove_listener = self._hass.bus.listen(
             EVENT_STATE_CHANGED, self._state_listener
         )
 

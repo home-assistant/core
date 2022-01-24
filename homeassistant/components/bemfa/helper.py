@@ -17,7 +17,7 @@ def generate_topic(domain: str, entity_id: str) -> str:
     """Generate topic by hass entity id."""
     suffix = ENTITIES_CONFIG[domain][SUFFIX]
 
-    # bemfa topic supports only alphabets and numbers, so we md5 the entity id.
+    # bemfa topic supports only alphanumeric, md5 generates unique alphanumeric string of each entity id regardless of its format.
     return TOPIC_PREFIX + hashlib.md5(entity_id.encode("utf-8")).hexdigest() + suffix
 
 
