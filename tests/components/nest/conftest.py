@@ -18,9 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    DEVICE_ID,
     SUBSCRIBER_ID,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
+    CreateDevice,
     FakeSubscriber,
     NestTestConfig,
     PlatformSetup,
@@ -114,6 +116,44 @@ def subscriber() -> YieldFixture[FakeSubscriber]:
 async def device_manager(subscriber: FakeSubscriber) -> DeviceManager:
     """Set up the DeviceManager."""
     return await subscriber.async_get_device_manager()
+
+
+@pytest.fixture
+async def device_id() -> str:
+    """Fixture to set default device id used when creating devices."""
+    return DEVICE_ID
+
+
+@pytest.fixture
+async def device_type() -> str:
+    """Fixture to set default device type used when creating devices."""
+    return "sdm.devices.types.THERMOSTAT"
+
+
+@pytest.fixture
+async def device_traits() -> dict[str, Any]:
+    """Fixture to set default device traits used when creating devices."""
+    return {}
+
+
+@pytest.fixture
+async def create_device(
+    device_manager: DeviceManager,
+    auth: FakeAuth,
+    device_id: str,
+    device_type: str,
+    device_traits: dict[str, Any],
+) -> None:
+    """Fixture for creating devices."""
+    factory = CreateDevice(device_manager, auth)
+    factory.data.update(
+        {
+            "name": device_id,
+            "type": device_type,
+            "traits": device_traits,
+        }
+    )
+    return factory
 
 
 @pytest.fixture
