@@ -93,7 +93,7 @@
                     "token_encrypted": "Encrypted token for local push"
                 },
                 "description": "Specify optional settings",
-                "title": "Xiaomi Miio"
+                "title": "For instructions how to retrieve the 32 character encrypted token, see https://www.home-assistant.io/integrations/xiaomi_miio#encrypted-toke-retrieval"
             }
         }
     }

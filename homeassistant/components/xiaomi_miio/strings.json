@@ -61,7 +61,7 @@
     },
     "step": {
       "init": {
-        "title": "Xiaomi Miio",
+        "title": "For instructions how to retrieve the 32 character encrypted token, see https://www.home-assistant.io/integrations/xiaomi_miio#encrypted-toke-retrieval",
         "description": "Specify optional settings",
         "data": {
           "cloud_subdevices": "Use cloud to get connected subdevices",
