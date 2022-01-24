@@ -1,27 +1,25 @@
 """Support for buttons which integrates with other components."""
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.button import (
-    DEVICE_CLASSES_SCHEMA,
-    ButtonDeviceClass,
-    ButtonEntity,
-)
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.components.button import DEVICE_CLASSES_SCHEMA, ButtonEntity
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.template import Template, TemplateError
 
-from .const import CONF_AVAILABILITY, DOMAIN
-from .template_entity import TemplateEntity
+from .const import DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
+    TemplateEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,15 +28,17 @@ CONF_PRESS = "press"
 DEFAULT_NAME = "Template Button"
 DEFAULT_OPTIMISTIC = False
 
-BUTTON_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-        vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_ICON): cv.template,
-    }
+BUTTON_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
 )
 
 
@@ -51,17 +51,7 @@ async def _async_create_entities(
         unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(
-            TemplateButtonEntity(
-                hass,
-                definition[CONF_NAME],
-                definition.get(CONF_AVAILABILITY),
-                definition[CONF_PRESS],
-                definition.get(CONF_DEVICE_CLASS),
-                unique_id,
-                definition.get(CONF_ICON),
-            )
-        )
+        entities.append(TemplateButtonEntity(hass, definition, unique_id))
     return entities
 
 
@@ -90,32 +80,15 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        name_template: Template,
-        availability_template: Template | None,
-        command_press: dict[str, Any],
-        device_class: ButtonDeviceClass | None,
+        config,
         unique_id: str | None,
-        icon_template: Template | None,
     ) -> None:
         """Initialize the button."""
-        super().__init__(
-            availability_template=availability_template, icon_template=icon_template
-        )
-        self._attr_name = DEFAULT_NAME
-        self._name_template = name_template
-        name_template.hass = hass
-        with contextlib.suppress(TemplateError):
-            self._attr_name = name_template.async_render(parse_result=False)
-        self._command_press = Script(hass, command_press, self._attr_name, DOMAIN)
-        self._attr_device_class = device_class
+        super().__init__(hass, config=config)
+        self._command_press = Script(hass, config[CONF_PRESS], self._attr_name, DOMAIN)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_unique_id = unique_id
         self._attr_state = None
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if self._name_template and not self._name_template.is_static:
-            self.add_template_attribute("_attr_name", self._name_template, cv.string)
-        await super().async_added_to_hass()
 
     async def async_press(self) -> None:
         """Press the button."""
