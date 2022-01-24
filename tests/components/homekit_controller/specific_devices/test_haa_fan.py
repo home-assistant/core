@@ -64,14 +64,14 @@ async def test_haa_fan_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_setup",
-                    friendly_name="HAA-C718B3 - Setup",
+                    friendly_name="HAA-C718B3 Setup",
                     unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1012",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",
                 ),
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_update",
-                    friendly_name="HAA-C718B3 - Update",
+                    friendly_name="HAA-C718B3 Update",
                     unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1011",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",
