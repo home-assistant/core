@@ -25,7 +25,6 @@ from .const import (
     CONF_MAC,
     CONF_MANUAL,
     CONF_MODEL,
-    CONF_TOKEN_ENC,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
     MODELS_ALL,
@@ -94,7 +93,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CLOUD_SUBDEVICES,
                     default=self.config_entry.options.get(CONF_CLOUD_SUBDEVICES, False),
                 ): bool,
-                vol.Optional(CONF_TOKEN_ENC): vol.All(str, vol.Length(min=32, max=32)),
             }
         )
 

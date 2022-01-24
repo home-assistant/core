@@ -51,7 +51,6 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     CONF_MODEL,
-    CONF_TOKEN_ENC,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -383,7 +382,6 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     token = entry.data[CONF_TOKEN]
     name = entry.title
     gateway_id = entry.unique_id
-    token_enc = entry.options.get(CONF_TOKEN_ENC)
 
     # For backwards compat
     if entry.unique_id.endswith("-gateway"):
@@ -392,7 +390,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Create push server
-    if KEY_PUSH_SERVER not in hass.data[DOMAIN] and token_enc is not None:
+    if KEY_PUSH_SERVER not in hass.data[DOMAIN]:
         push_server = PushServer(host)
         hass.data[DOMAIN][KEY_PUSH_SERVER] = push_server
         # start the async push server (only once)

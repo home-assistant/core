@@ -51,7 +51,6 @@ class XiaomiMiioBinarySensorDescription(BinarySensorEntityDescription):
 
     value: Callable | None = None
     parent_key: str | None = None
-    requires_push_server: bool = False
 
 
 BINARY_SENSOR_TYPES = (
@@ -78,12 +77,10 @@ BINARY_SENSOR_TYPES = (
     XiaomiMiioBinarySensorDescription(
         key="is_open",
         device_class=BinarySensorDeviceClass.DOOR,
-        requires_push_server=True,
     ),
     XiaomiMiioBinarySensorDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        requires_push_server=True,
     ),
 )
 
@@ -188,12 +185,6 @@ async def async_setup_entry(
         for sub_device in sub_devices.values():
             for description in BINARY_SENSOR_TYPES:
                 if description.key not in sub_device.status:
-                    continue
-                if description.requires_push_server and not gateway.has_push_server:
-                    _LOGGER.warning(
-                        "Subdevice %s requires the encrypted token to be configured in the config options",
-                        sub_device.name,
-                    )
                     continue
                 entities.append(
                     XiaomiGatewayBinarySensor(

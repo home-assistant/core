@@ -17,7 +17,6 @@ from .const import (
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
-    CONF_TOKEN_ENC,
     DOMAIN,
     KEY_PUSH_SERVER,
     AuthException,
@@ -42,7 +41,6 @@ class ConnectXiaomiGateway:
         self._cloud_country = None
         self._host = None
         self._token = None
-        self._token_enc = None
         self._push_server = None
 
     @property
@@ -65,7 +63,6 @@ class ConnectXiaomiGateway:
         self._cloud_username = self._config_entry.data.get(CONF_CLOUD_USERNAME)
         self._cloud_password = self._config_entry.data.get(CONF_CLOUD_PASSWORD)
         self._cloud_country = self._config_entry.data.get(CONF_CLOUD_COUNTRY)
-        self._token_enc = self._config_entry.options.get(CONF_TOKEN_ENC)
         self._push_server = self._hass.data[DOMAIN].get(KEY_PUSH_SERVER)
 
         await self._hass.async_add_executor_job(self.connect_gateway)
@@ -83,7 +80,6 @@ class ConnectXiaomiGateway:
             self._gateway_device = Gateway(
                 self._host,
                 self._token,
-                token_enc=self._token_enc,
                 push_server=self._push_server,
             )
             # get the gateway info
