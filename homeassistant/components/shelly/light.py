@@ -143,10 +143,13 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         self._attr_supported_color_modes = set()
         self._attr_supported_features = 0
         self._attr_min_mireds = MIRED_MIN_VALUE_WHITE
+        self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
         self._attr_max_mireds = MIRED_MAX_VALUE
+        self._max_kelvin: int = KELVIN_MAX_VALUE
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
             self._attr_min_mireds = MIRED_MIN_VALUE_COLOR
+            self._min_kelvin = KELVIN_MIN_VALUE_COLOR
             if wrapper.model in RGBW_MODELS:
                 self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
             else:
@@ -257,13 +260,13 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     def color_temp(self) -> int:
         """Return the CT color value in mireds."""
         if self.control_result:
-            kelvin_temp = self.control_result["temp"]
+            color_temp = self.control_result["temp"]
         else:
-            kelvin_temp = self.block.colorTemp
+            color_temp = self.block.colorTemp
 
-        mired_temp = color_temperature_kelvin_to_mired(float(kelvin_temp))
+        color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
 
-        return min(self._attr_max_mireds, max(self._attr_min_mireds, mired_temp))
+        return int(color_temperature_kelvin_to_mired(color_temp))
 
     @property
     def effect_list(self) -> list[str] | None:
@@ -316,13 +319,11 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 params["brightness"] = brightness_pct
 
         if ATTR_COLOR_TEMP in kwargs and COLOR_MODE_COLOR_TEMP in supported_color_modes:
-            color_temp = kwargs[ATTR_COLOR_TEMP]
-            color_temp = min(
-                self._attr_max_mireds, max(self._attr_min_mireds, color_temp)
-            )
+            color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+            color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
             # Color temperature change - used only in white mode, switch device mode to white
             set_mode = "white"
-            params["temp"] = color_temperature_mired_to_kelvin(color_temp)
+            params["temp"] = int(color_temp)
 
         if ATTR_RGB_COLOR in kwargs and COLOR_MODE_RGB in supported_color_modes:
             # Color channels change - used only in color mode, switch device mode to color
