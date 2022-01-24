@@ -376,6 +376,9 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if self._sensor_option_unit_of_measurement:
+            return self._sensor_option_unit_of_measurement
+
         # Support for _attr_unit_of_measurement will be removed in Home Assistant 2021.11
         if (
             hasattr(self, "_attr_unit_of_measurement")
@@ -384,9 +387,6 @@ class SensorEntity(Entity):
             return self._attr_unit_of_measurement  # type: ignore[unreachable]
 
         native_unit_of_measurement = self.native_unit_of_measurement
-
-        if self._sensor_option_unit_of_measurement:
-            return self._sensor_option_unit_of_measurement
 
         if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             return self.hass.config.units.temperature_unit
@@ -522,7 +522,6 @@ class SensorEntity(Entity):
         if (
             (sensor_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := sensor_options.get("unit"))
-            and self.device_class in UNIT_CONVERSIONS
             and (device_class := self.device_class) in UNIT_CONVERSIONS
             and self.native_unit_of_measurement in VALID_UNITS[device_class]
             and custom_unit in VALID_UNITS[device_class]
