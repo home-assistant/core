@@ -93,7 +93,7 @@ def _min_rgbwc_brightness(
 ) -> tuple[int, int, int, int, int]:
     """Ensure the RGBWC value will not turn off the device from a turn on command.
 
-    For RGBW, we also need to ensure that there is at least one
+    For RGBWC, we also need to ensure that there is at least one
     value in the RGB fields or the device will switch to CCT mode unexpectedly
 
     If the new value being set set is all use, scale the current
