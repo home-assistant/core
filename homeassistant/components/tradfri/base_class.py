@@ -61,6 +61,8 @@ class TradfriBaseEntity(CoordinatorEntity):
 
         self._attr_unique_id = f"{self._gateway_id}-{self._device.id}"
 
+    @abstractmethod
+    @callback
     def _refresh(self) -> None:
         """Refresh device data."""
 
