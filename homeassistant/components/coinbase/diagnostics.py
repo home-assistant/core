@@ -26,7 +26,7 @@ async def async_get_config_entry_diagnostics(
 
     diag_data = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "data": {},
+        "accounts": [{}],
     }
     if not isinstance(instance.accounts, list):
         return diag_data
