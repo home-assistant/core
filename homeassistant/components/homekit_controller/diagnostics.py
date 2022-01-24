@@ -60,6 +60,8 @@ def _async_get_diagnostics_for_device(
         include_disabled_entities=True,
     )
 
+    hass_entities.sort(key=lambda entry: entry.original_name)
+
     for entity_entry in hass_entities:
         state = hass.states.get(entity_entry.entity_id)
         state_dict = None

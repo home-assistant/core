@@ -49,7 +49,7 @@ async def test_eve_degree_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.eve_degree_aa11_air_pressure",
                     unique_id="homekit-AA00A0A00000-aid:1-sid:30-cid:32",
-                    friendly_name="Eve Degree AA11 - Air Pressure",
+                    friendly_name="Eve Degree AA11 Air Pressure",
                     unit_of_measurement=PRESSURE_HPA,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="1005.70001220703",
