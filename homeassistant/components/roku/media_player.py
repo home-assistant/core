@@ -365,9 +365,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         # Handle media_source
         if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
             media_type = MEDIA_TYPE_URL
-            resolved = await media_source.async_resolve_media(self.hass, media_id)
-            media_id = resolved.result().url
+            media_id = sourced_media.url
 
         # Sign and prefix with URL if playing a relative URL
         if media_id[0] == "/":
