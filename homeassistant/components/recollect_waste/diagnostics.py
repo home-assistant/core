@@ -18,10 +18,6 @@ async def async_get_config_entry_diagnostics(
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "entry": {
-            "title": entry.title,
-            "data": dict(entry.data),
-            "options": dict(entry.options),
-        },
+        "entry": entry.as_dict(),
         "data": [dataclasses.asdict(event) for event in coordinator.data],
     }
