@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
 
@@ -133,6 +133,8 @@ async def async_setup_rpc_entry(
 
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
     """Entity that controls a light on block based Shelly devices."""
+
+    _attr_supported_color_modes: set[str]
 
     def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""
@@ -299,8 +301,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         set_mode = None
         supported_color_modes = self._attr_supported_color_modes
-        if TYPE_CHECKING:
-            assert supported_color_modes
         params: dict[str, Any] = {"turn": "on"}
 
         if ATTR_TRANSITION in kwargs:
