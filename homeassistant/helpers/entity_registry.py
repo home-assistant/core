@@ -628,7 +628,9 @@ class EntityRegistry:
                     disabled_by=RegistryEntryDisabler(entity["disabled_by"])
                     if entity["disabled_by"]
                     else None,
-                    entity_category=entity["entity_category"],
+                    entity_category=EntityCategory(entity["entity_category"])
+                    if entity["entity_category"]
+                    else None,
                     entity_id=entity["entity_id"],
                     icon=entity["icon"],
                     id=entity["id"],
