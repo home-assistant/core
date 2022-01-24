@@ -268,6 +268,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
 
+    monitor_tasks = []
     for device in config[DOMAIN]:
         name: str = device[CONF_NAME]
         username: str = device[CONF_USERNAME]
@@ -328,15 +329,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 and sensor.event_code is not None
             }
 
-        monitor_task = asyncio.create_task(
-            _monitor_events(hass, name, api, event_codes)
+        monitor_tasks.append(
+            asyncio.create_task(_monitor_events(hass, name, api, event_codes))
         )
-
-        @callback
-        def cancel_monitor(event: Event) -> None:
-            monitor_task.cancel()
-
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, cancel_monitor)
 
         if sensors:
             hass.async_create_task(
@@ -359,6 +354,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     config,
                 )
             )
+
+    @callback
+    def cancel_monitors(event: Event) -> None:
+        for monitor_task in monitor_tasks:
+            monitor_task.cancel()
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, cancel_monitors)
 
     if not hass.data[DATA_AMCREST][DEVICES]:
         return False
