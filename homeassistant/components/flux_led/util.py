@@ -96,7 +96,7 @@ def _min_rgbwc_brightness(
     For RGBWC, we also need to ensure that there is at least one
     value in the RGB fields or the device will switch to CCT mode unexpectedly
 
-    If the new value being set set is all use, scale the current
+    If the new value being set set is all zeros, scale the current
     color to brightness of 1 so we do not unexpected switch to white
     """
     if _is_zero_rgb_brightness(rgbwc[:3]):
