@@ -20,6 +20,8 @@ TO_REDACT = {
     "radioCode",
     "registrationNumber",
     "vin",
+    "gpsLatitude",
+    "gpsLongitude",
 }
 
 
