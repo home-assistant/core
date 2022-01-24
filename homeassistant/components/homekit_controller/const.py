@@ -74,6 +74,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.DENSITY_NO2: "sensor",
     CharacteristicsTypes.DENSITY_SO2: "sensor",
     CharacteristicsTypes.DENSITY_VOC: "sensor",
+    CharacteristicsTypes.IDENTIFY: "button",
 }
 
 # For legacy reasons, "built-in" characteristic types are in their short form
