@@ -1,11 +1,14 @@
 """Common libraries for test setup."""
 
 from collections.abc import Awaitable, Callable
+import copy
 from dataclasses import dataclass
 import time
 from typing import Any, Generator, TypeVar
 from unittest.mock import patch
 
+from google_nest_sdm.auth import AbstractAuth
+from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.event_media import CachePolicy
@@ -142,20 +145,45 @@ class FakeSubscriber(GoogleNestSubscriber):
         await self._device_manager.async_handle_event(event_message)
 
 
+DEVICE_ID = "enterprise/project-id/devices/device-id"
+DEVICE_COMMAND = f"{DEVICE_ID}:executeCommand"
+
+
+class CreateDevice:
+    """Fixture used for creating devices."""
+
+    def __init__(
+        self,
+        device_manager: DeviceManager,
+        auth: AbstractAuth,
+    ) -> None:
+        """Initialize CreateDevice."""
+        self.device_manager = device_manager
+        self.auth = auth
+        self.data = {"traits": {}}
+
+    def create(
+        self, raw_traits: dict[str, Any] = None, raw_data: dict[str, Any] = None
+    ) -> None:
+        """Create a new device with the specifeid traits."""
+        data = copy.deepcopy(self.data)
+        data.update(raw_data if raw_data else {})
+        data["traits"].update(raw_traits if raw_traits else {})
+        self.device_manager.add_device(Device.MakeDevice(data, auth=self.auth))
+
+
 async def async_setup_sdm_platform(
-    hass, platform, devices={}, structures={}, with_config=True
+    hass,
+    platform,
+    devices={},
 ):
     """Set up the platform and prerequisites."""
-    if with_config:
-        create_config_entry().add_to_hass(hass)
+    create_config_entry().add_to_hass(hass)
     subscriber = FakeSubscriber()
     device_manager = await subscriber.async_get_device_manager()
     if devices:
         for device in devices.values():
             device_manager.add_device(device)
-    if structures:
-        for structure in structures.values():
-            device_manager.add_structure(structure)
     platforms = []
     if platform:
         platforms = [platform]

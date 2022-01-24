@@ -5,8 +5,8 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
-from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
+from typing import Any
+
 from google_nest_sdm.event import EventMessage
 import pytest
 
@@ -22,9 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import FakeSubscriber, PlatformSetup
-
-THERMOSTAT_TYPE = "sdm.devices.types.THERMOSTAT"
+from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 
 
 @pytest.fixture
@@ -33,29 +31,25 @@ def platforms() -> list[str]:
     return ["sensor"]
 
 
+@pytest.fixture
+def device_traits() -> dict[str, Any]:
+    """Fixture that sets default traits used for devices."""
+    return {"sdm.devices.traits.Info": {"customName": "My Sensor"}}
+
+
 async def test_thermostat_device(
-    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ):
     """Test a thermostat with temperature and humidity sensors."""
-    device_manager.add_device(
-        Device.MakeDevice(
-            {
-                "name": "some-device-id",
-                "type": THERMOSTAT_TYPE,
-                "traits": {
-                    "sdm.devices.traits.Info": {
-                        "customName": "My Sensor",
-                    },
-                    "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1,
-                    },
-                    "sdm.devices.traits.Humidity": {
-                        "ambientHumidityPercent": 35.0,
-                    },
-                },
+    create_device.create(
+        {
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.1,
             },
-            auth=None,
-        )
+            "sdm.devices.traits.Humidity": {
+                "ambientHumidityPercent": 35.0,
+            },
+        }
     )
     await setup_platform()
 
@@ -75,12 +69,12 @@ async def test_thermostat_device(
 
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
-    assert entry.unique_id == "some-device-id-temperature"
+    assert entry.unique_id == f"{DEVICE_ID}-temperature"
     assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
     entry = registry.async_get("sensor.my_sensor_humidity")
-    assert entry.unique_id == "some-device-id-humidity"
+    assert entry.unique_id == f"{DEVICE_ID}-humidity"
     assert entry.original_name == "My Sensor Humidity"
     assert entry.domain == "sensor"
 
@@ -88,7 +82,7 @@ async def test_thermostat_device(
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model == "Thermostat"
-    assert device.identifiers == {("nest", "some-device-id")}
+    assert device.identifiers == {("nest", DEVICE_ID)}
 
 
 async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
@@ -103,19 +97,10 @@ async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
 
 
 async def test_device_no_sensor_traits(
-    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test a device with applicable sensor traits."""
-    device_manager.add_device(
-        Device.MakeDevice(
-            {
-                "name": "some-device-id",
-                "type": THERMOSTAT_TYPE,
-                "traits": {},
-            },
-            auth=None,
-        )
-    )
+    create_device.create({})
     await setup_platform()
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
@@ -125,26 +110,22 @@ async def test_device_no_sensor_traits(
     assert humidity is None
 
 
+@pytest.mark.parametrize("device_traits", [{}])  # Disable default name
 async def test_device_name_from_structure(
-    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test a device without a custom name, inferring name from structure."""
-    device_manager.add_device(
-        Device.MakeDevice(
-            {
-                "name": "some-device-id",
-                "type": THERMOSTAT_TYPE,
-                "traits": {
-                    "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.2,
-                    },
-                },
-                "parentRelations": [
-                    {"parent": "some-structure-id", "displayName": "Some Room"}
-                ],
+    create_device.create(
+        raw_traits={
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.2,
             },
-            auth=None,
-        )
+        },
+        raw_data={
+            "parentRelations": [
+                {"parent": "some-structure-id", "displayName": "Some Room"}
+            ],
+        },
     )
     await setup_platform()
 
@@ -156,26 +137,16 @@ async def test_device_name_from_structure(
 async def test_event_updates_sensor(
     hass: HomeAssistant,
     subscriber: FakeSubscriber,
-    device_manager: DeviceManager,
+    create_device: CreateDevice,
     setup_platform: PlatformSetup,
 ) -> None:
     """Test a pubsub message received by subscriber to update temperature."""
-    device_manager.add_device(
-        Device.MakeDevice(
-            {
-                "name": "some-device-id",
-                "type": THERMOSTAT_TYPE,
-                "traits": {
-                    "sdm.devices.traits.Info": {
-                        "customName": "My Sensor",
-                    },
-                    "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1,
-                    },
-                },
+    create_device.create(
+        {
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.1,
             },
-            auth=None,
-        )
+        }
     )
     await setup_platform()
 
@@ -189,7 +160,7 @@ async def test_event_updates_sensor(
             "eventId": "some-event-id",
             "timestamp": "2019-01-01T00:00:01Z",
             "resourceUpdate": {
-                "name": "some-device-id",
+                "name": DEVICE_ID,
                 "traits": {
                     "sdm.devices.traits.Temperature": {
                         "ambientTemperatureCelsius": 26.2,
@@ -207,26 +178,17 @@ async def test_event_updates_sensor(
     assert temperature.state == "26.2"
 
 
+@pytest.mark.parametrize("device_type", ["some-unknown-type"])
 async def test_device_with_unknown_type(
-    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test a device without a custom name, inferring name from structure."""
-    device_manager.add_device(
-        Device.MakeDevice(
-            {
-                "name": "some-device-id",
-                "type": "some-unknown-type",
-                "traits": {
-                    "sdm.devices.traits.Info": {
-                        "customName": "My Sensor",
-                    },
-                    "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1,
-                    },
-                },
+    create_device.create(
+        {
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.1,
             },
-            auth=None,
-        )
+        }
     )
     await setup_platform()
 
@@ -236,7 +198,7 @@ async def test_device_with_unknown_type(
 
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
-    assert entry.unique_id == "some-device-id-temperature"
+    assert entry.unique_id == f"{DEVICE_ID}-temperature"
     assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
@@ -244,29 +206,19 @@ async def test_device_with_unknown_type(
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model is None
-    assert device.identifiers == {("nest", "some-device-id")}
+    assert device.identifiers == {("nest", DEVICE_ID)}
 
 
 async def test_temperature_rounding(
-    hass: HomeAssistant, device_manager: DeviceManager, setup_platform: PlatformSetup
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test the rounding of overly precise temperatures."""
-    device_manager.add_device(
-        Device.MakeDevice(
-            {
-                "name": "some-device-id",
-                "type": THERMOSTAT_TYPE,
-                "traits": {
-                    "sdm.devices.traits.Info": {
-                        "customName": "My Sensor",
-                    },
-                    "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.15678,
-                    },
-                },
+    create_device.create(
+        {
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.15678,
             },
-            auth=None,
-        )
+        }
     )
     await setup_platform()
 
