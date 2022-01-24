@@ -6,7 +6,7 @@ from huawei_solar import AsyncHuaweiSolar, HuaweiSolarException, register_names 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_SLAVE_IDS,
@@ -22,18 +22,18 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei Solar from a config entry."""
 
-    inverter = await AsyncHuaweiSolar.create(
-        host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
-        slave=entry.data[CONF_SLAVE_IDS][0],
-    )
-
     try:
+        inverter = await AsyncHuaweiSolar.create(
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            slave=entry.data[CONF_SLAVE_IDS][0],
+        )
+
         model_name, serial_number = await inverter.get_multiple(
             [rn.MODEL_NAME, rn.SERIAL_NUMBER]
         )
     except HuaweiSolarException as err:
-        raise PlatformNotReady from err
+        raise ConfigEntryNotReady from err
 
     device_info = {
         "identifiers": {(DOMAIN, model_name.value, serial_number.value)},
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        client = await hass.data[DOMAIN][entry.entry_id][DATA_MODBUS_CLIENT]
+        client = hass.data[DOMAIN][entry.entry_id][DATA_MODBUS_CLIENT]
         await client.stop()
         hass.data[DOMAIN].pop(entry.entry_id)
 
