@@ -85,10 +85,9 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the button."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         self._command_press = Script(hass, config[CONF_PRESS], self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_unique_id = unique_id
         self._attr_state = None
 
     async def async_press(self) -> None:
