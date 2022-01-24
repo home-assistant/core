@@ -106,5 +106,10 @@ async def async_generate_speaker_info(
         value = getattr(speaker, attrib)
         payload[attrib] = get_contents(value)
 
+    payload["enabled_entities"] = {
+        entity_id
+        for entity_id, s in hass.data[DATA_SONOS].entity_id_mappings.items()
+        if s is speaker
+    }
     payload["media"] = await async_generate_media_info(hass, speaker)
     return payload
