@@ -74,5 +74,5 @@ def test_volume_icon():
     assert icon_for_volume_level(70, True) == "mdi:volume-mute"
     assert icon_for_volume_level(70, False) == "mdi:volume-medium"
 
-    assert icon_for_volume_level(70, True) == "mdi:volume-mute"
-    assert icon_for_volume_level(70, False) == "mdi:volume-high"
+    assert icon_for_volume_level(100, True) == "mdi:volume-mute"
+    assert icon_for_volume_level(100, False) == "mdi:volume-high"
