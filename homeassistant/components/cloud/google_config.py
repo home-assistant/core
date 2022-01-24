@@ -11,7 +11,6 @@ from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -125,7 +124,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in EntityCategory
+            auxiliary_entity = registry_entry.entity_category is not None
         else:
             auxiliary_entity = False
 

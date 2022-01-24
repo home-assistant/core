@@ -38,7 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util, ensure_unique_string, enum, slugify
+from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import entity_registry as er
 from .device_registry import DeviceEntryType
@@ -182,7 +182,7 @@ class DeviceInfo(TypedDict, total=False):
     via_device: tuple[str, str]
 
 
-class EntityCategory(StrEnum, metaclass=enum.StrEnumMeta):
+class EntityCategory(StrEnum):
     """Category of an entity.
 
     An entity with a category will:

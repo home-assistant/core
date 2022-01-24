@@ -368,13 +368,10 @@ def async_extract_referenced_entity_ids(
     if not selector.area_ids and not selected.referenced_devices:
         return selected
 
-    # pylint: disable=import-outside-toplevel
-    from .entity import EntityCategory
-
     for ent_entry in ent_reg.entities.values():
         # Do not add config or diagnostic entities referenced by areas or devices
 
-        if ent_entry.entity_category in EntityCategory:
+        if ent_entry.entity_category is not None:
             continue
 
         if (

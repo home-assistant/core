@@ -20,7 +20,6 @@ from homeassistant.components.alexa import (
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -134,7 +133,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in EntityCategory
+            auxiliary_entity = registry_entry.entity_category is not None
         else:
             auxiliary_entity = False
 

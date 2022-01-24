@@ -43,7 +43,6 @@ from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
     FILTER_SCHEMA,
@@ -667,7 +666,7 @@ class HomeKit:
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
                 if (
-                    ent_reg_ent.entity_category in EntityCategory
+                    ent_reg_ent.entity_category is not None
                     and not self._filter.explicitly_included(entity_id)
                 ):
                     continue
