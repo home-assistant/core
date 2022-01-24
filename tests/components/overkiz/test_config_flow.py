@@ -87,7 +87,8 @@ async def test_form_invalid_auth(
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
         )
 
-    assert result2["type"] == "form"
+    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": error}
 
 
@@ -112,7 +113,7 @@ async def test_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
         )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -160,6 +161,26 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
+    ), patch(
+        "homeassistant.components.overkiz.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == TEST_EMAIL
+    assert result2["data"] == {
+        "username": TEST_EMAIL,
+        "password": TEST_PASSWORD,
+        "hub": TEST_HUB,
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
