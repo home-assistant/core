@@ -64,17 +64,14 @@ def _get_device_info(
     """Fetch the port, method, and device info."""
     if bridge and bridge.port:
         return bridge.port, bridge.method, bridge.device_info()
-
     for port in WEBSOCKET_PORTS:
         bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
         if info := bridge.device_info():
             return port, METHOD_WEBSOCKET, info
-
     bridge = SamsungTVBridge.get_bridge(METHOD_LEGACY, host, LEGACY_PORT)
     result = bridge.try_connect()
     if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
         return LEGACY_PORT, METHOD_LEGACY, None
-
     return None, None, None
 
 
@@ -240,24 +237,17 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Send the key using legacy protocol."""
         if remote := self._get_remote():
             remote.control(key)
-            
+
     def is_on(self) -> bool:
         """Tells if the TV is on."""
         if self._remote is not None:
             self.close_remote()
-
         try:
             return self._get_remote() is not None
-        except (
-            UnhandledResponse,
-            AccessDenied,
-            ConnectionFailure
-        ):
+        except (UnhandledResponse, AccessDenied, ConnectionFailure):
             # We got a response so it's working.
             return True
-        except (
-            OSError
-        ):
+        except (OSError):
             # Different reasons, e.g. hostname not resolveable
             return False
 
@@ -321,7 +311,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
         else:
             if result:
                 return result
-
         return RESULT_CANNOT_CONNECT
 
     def device_info(self) -> dict[str, Any] | None:
@@ -330,7 +319,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
             with contextlib.suppress(HttpApiError):
                 device_info: dict[str, Any] = remote.rest_device_info()
                 return device_info
-
         return None
 
     def _send_key(self, key: str) -> None:
@@ -364,27 +352,19 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except (WebSocketException, OSError):
                 self._remote = None
         return self._remote
-    
+
     def is_on(self) -> bool:
         """Tells if the TV is on."""
         if self._remote is not None:
             self.close_remote()
-
         try:
             if self._get_remote() is not None:
                 return self.device_info()["device"]["PowerState"] == "on"
             return False
-        except (
-            UnhandledResponse,
-            AccessDenied,
-            ConnectionFailure,
-            KeyError
-        ):
+        except (UnhandledResponse, AccessDenied, ConnectionFailure, KeyError):
             # We got a response so it's working.
             return True
-        except (
-            OSError
-        ):
+        except (OSError):
             # Different reasons, e.g. hostname not resolveable
             return False
 
