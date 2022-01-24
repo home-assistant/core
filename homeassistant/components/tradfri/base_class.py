@@ -63,7 +63,6 @@ class TradfriBaseEntity(CoordinatorEntity):
 
     def _refresh(self) -> None:
         """Refresh device data."""
-        raise NotImplementedError
 
     @callback
     def _handle_coordinator_update(self) -> None:
