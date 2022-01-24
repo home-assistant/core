@@ -3,66 +3,27 @@ import asyncio
 import logging
 
 from ihcsdk.ihccontroller import IHCController
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .auto_setup import autosetup_ihc_products
 from .const import (
     CONF_AUTOSETUP,
-    CONF_BINARY_SENSOR,
     CONF_INFO,
-    CONF_LIGHT,
-    CONF_SENSOR,
-    CONF_SWITCH,
     CONF_USE_GROUPS,
     DOMAIN,
     IHC_CONTROLLER,
     IHC_CONTROLLER_INDEX,
 )
-from .manual_setup import (
-    BINARY_SENSOR_SCHEMA,
-    LIGHT_SCHEMA,
-    SENSOR_SCHEMA,
-    SWITCH_SCHEMA,
-    manual_setup,
-    validate_name,
-)
+from .manual_setup import manual_setup
 from .migrate import migrate_configuration
 from .service_functions import setup_service_functions
 
 _LOGGER = logging.getLogger(__name__)
-
-IHC_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-        vol.Optional(CONF_BINARY_SENSOR, default=[]): vol.All(
-            cv.ensure_list, [vol.All(BINARY_SENSOR_SCHEMA, validate_name)]
-        ),
-        vol.Optional(CONF_INFO, default=True): cv.boolean,
-        vol.Optional(CONF_LIGHT, default=[]): vol.All(
-            cv.ensure_list, [vol.All(LIGHT_SCHEMA, validate_name)]
-        ),
-        vol.Optional(CONF_SENSOR, default=[]): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, validate_name)]
-        ),
-        vol.Optional(CONF_SWITCH, default=[]): vol.All(
-            cv.ensure_list, [vol.All(SWITCH_SCHEMA, validate_name)]
-        ),
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [IHC_SCHEMA]))}, extra=vol.ALLOW_EXTRA
-)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
