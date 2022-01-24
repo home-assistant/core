@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter the connection details",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",

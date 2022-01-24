@@ -10,8 +10,7 @@
                     "ip_address": "IP Address",
                     "password": "Password",
                     "port": "Port"
-                },
-                "description": "Please enter the connection details"
+                }
             }
         }
     }

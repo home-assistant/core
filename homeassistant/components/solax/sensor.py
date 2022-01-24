@@ -3,19 +3,19 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import logging
 
-from solax import real_time_api
 from solax.inverter import InverterError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, TEMP_CELSIUS
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -24,6 +24,8 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 80
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -37,14 +39,11 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Entry setup."""
-    config = hass.data[DOMAIN][config_entry.entry_id]
-    api = await real_time_api(
-        config[CONF_IP_ADDRESS], config[CONF_PORT], config[CONF_PASSWORD]
-    )
+    api = hass.data[DOMAIN][entry.entry_id]
     resp = await api.get_data()
     serial = resp.serial_number
     endpoint = RealTimeDataEndpoint(hass, api)
@@ -85,10 +84,18 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Platform setup."""
+
+    _LOGGER.warning(
+        "Configuration of the SolaX Power platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
+            context={"source": SOURCE_IMPORT},
             data=config,
         )
     )
