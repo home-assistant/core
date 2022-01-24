@@ -124,7 +124,7 @@ class RepositoryReleaseDataUpdateCoordinator(
 class RepositoryTagDataUpdateCoordinator(
     GitHubBaseDataUpdateCoordinator[GitHubTagModel]
 ):
-    """Data update coordinator for repository release."""
+    """Data update coordinator for repository tag."""
 
     @staticmethod
     def _parse_response(
