@@ -554,8 +554,7 @@ async def test_services_play_media_local_source(
     assert mock_roku.play_video.call_count == 1
     assert mock_roku.play_video.call_args
     call_args = mock_roku.play_video.call_args.args
-    assert call_args == []
-    assert "" in call_args[0]
+    assert "/media/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[0]
 
 
 @pytest.mark.parametrize("mock_roku", ["roku/rokutv-7820x.json"], indirect=True)
