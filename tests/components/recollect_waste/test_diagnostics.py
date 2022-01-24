@@ -7,11 +7,7 @@ async def test_entry_diagnostics(
 ):
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "entry": {
-            "title": "Mock Title",
-            "data": {"place_id": "12345", "service_id": "12345"},
-            "options": {},
-        },
+        "entry": config_entry.as_dict(),
         "data": [
             {
                 "date": {
