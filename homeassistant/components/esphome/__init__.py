@@ -304,7 +304,7 @@ async def async_setup_entry(  # noqa: C901
             entry.async_start_reauth(hass)
         if isinstance(err, BadNameAPIError):
             _LOGGER.warning(
-                "Name of device %s changed to %s, potentially due to IP reassignement",
+                "Name of device %s changed to %s, potentially due to IP reassignment",
                 cli.expected_name,
                 err.received_name,
             )
