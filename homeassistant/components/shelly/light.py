@@ -60,9 +60,9 @@ from .utils import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-MIRED_MIN_VALUE_WHITE = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_WHITE)
-MIRED_MAX_VALUE = color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
-MIRED_MIN_VALUE_COLOR = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_COLOR)
+MIRED_MAX_VALUE_WHITE = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_WHITE)
+MIRED_MIN_VALUE = color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
+MIRED_MAX_VALUE_COLOR = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_COLOR)
 
 
 async def async_setup_entry(
@@ -140,13 +140,13 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self._attr_min_mireds = MIRED_MIN_VALUE_WHITE
+        self._attr_min_mireds = MIRED_MIN_VALUE
         self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
-        self._attr_max_mireds = MIRED_MAX_VALUE
+        self._attr_max_mireds = MIRED_MAX_VALUE_WHITE
         self._max_kelvin: int = KELVIN_MAX_VALUE
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
-            self._attr_min_mireds = MIRED_MIN_VALUE_COLOR
+            self._attr_max_mireds = MIRED_MAX_VALUE_COLOR
             self._min_kelvin = KELVIN_MIN_VALUE_COLOR
             if wrapper.model in RGBW_MODELS:
                 self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
