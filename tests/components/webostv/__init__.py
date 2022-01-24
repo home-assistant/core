@@ -33,13 +33,13 @@ CHANNEL_2 = {
 }
 
 
-async def setup_webostv(hass, unique_id="some-unique-id"):
+async def setup_webostv(hass, unique_id=FAKE_UUID):
     """Initialize webostv and media_player for tests."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: HOST,
-            CONF_CLIENT_SECRET: "0123456789",
+            CONF_CLIENT_SECRET: CLIENT_KEY,
         },
         title=TV_NAME,
         unique_id=unique_id,
