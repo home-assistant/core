@@ -84,8 +84,8 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
 
     # Base device information, without sensitive information.
     data = {
-        "name": device.model,
-        "model": device.model,
+        "name": device.name,
+        "model": device.model if hasattr(device, "model") else None,
         "category": device.category,
         "product_id": device.product_id,
         "product_name": device.product_name,
