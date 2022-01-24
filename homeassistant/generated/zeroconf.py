@@ -144,6 +144,10 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         {
             "domain": "homekit_controller"
+        },
+        {
+            "domain": "zwave_me",
+            "name": "*z.wave-me*"
         }
     ],
     "_homekit._tcp.local.": [
