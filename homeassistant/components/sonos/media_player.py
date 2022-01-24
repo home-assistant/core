@@ -512,8 +512,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If media_id is a Plex payload, attempt Plex->Sonos playback.
 
-        If media_id is a Sonos or Tidal share link, attempt playback
-        using the respective service.
+        If media_id is an Apple Music, Deezer, Sonos, or Tidal share link,
+        attempt playback using the respective service.
 
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
