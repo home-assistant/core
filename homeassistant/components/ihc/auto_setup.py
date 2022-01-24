@@ -105,9 +105,9 @@ def autosetup_ihc_products(
         return False
     groups = project.findall(".//group")
     for platform in IHC_PLATFORMS:
-        component_setup = auto_setup_conf[platform]
+        platform_setup = auto_setup_conf[platform]
         discovery_info = get_discovery_info(
-            component_setup, groups, controller_id, use_groups
+            platform_setup, groups, controller_id, use_groups
         )
         if discovery_info:
             hass.data[DOMAIN][controller_id][platform] = discovery_info
