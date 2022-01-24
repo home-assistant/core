@@ -42,24 +42,19 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Test if connection to the host is ok and get the current status for later configuration.
             data_service = APCUPSdData(user_input[CONF_HOST], user_input[CONF_PORT])
-            status: Optional[dict[str, Any]] = None
             try:
-                status = await self.hass.async_add_executor_job(
-                    _get_status, data_service
-                )
-            except OSError:
-                errors["base"] = "cannot_connect"
+                status: Optional[
+                    dict[str, Any]
+                ] = await self.hass.async_add_executor_job(_get_status, data_service)
+                if status is None:
+                    return self.async_abort(reason="no_status")
 
-            if status is None:
-                return self.async_abort(reason="no_status")
+                # We _try_ to use the serial number of the UPS as the unique id since this field is not guaranteed to
+                # exist on all APC UPS models.
+                if "SERIALNO" in status:
+                    await self.async_set_unique_id(status["SERIALNO"])
+                    self._abort_if_unique_id_configured()
 
-            # We _try_ to use the serial number of the UPS as the unique id since this field is not guaranteed to
-            # exist on all APC UPS models.
-            if "SERIALNO" in status:
-                await self.async_set_unique_id(status["SERIALNO"])
-                self._abort_if_unique_id_configured()
-
-            if not errors:
                 # Since the MODEL field is not always available on all models, we try to find a friendly name for the
                 # integration, otherwise default to "APC UPS".
                 return self.async_create_entry(
@@ -67,6 +62,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     description="APCUPSd",
                     data=user_input,
                 )
+            except OSError:
+                errors["base"] = "cannot_connect"
 
         schema = vol.Schema(
             {
