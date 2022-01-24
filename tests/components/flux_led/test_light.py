@@ -505,12 +505,13 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     )
     # If the bulb is on and we are using existing brightness
     # and brightness was 0 we need to set it to at least 1
-    # or the device may not turn on
+    # or the device may not turn on. In this case we scale
+    # the current color to brightness of 1 to ensure the device
+    # does not switch to white since otherwise we do not have
+    # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(
-        MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, 0
-    )
+    bulb.async_set_levels.assert_called_with(2, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     await hass.services.async_call(
@@ -521,12 +522,13 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     )
     # If the bulb is on and we are using existing brightness
     # and brightness was 0 we need to set it to at least 1
-    # or the device may not turn on
+    # or the device may not turn on. In this case we scale
+    # the current color to brightness of 1 to ensure the device
+    # does not switch to white since otherwise we do not have
+    # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(
-        MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, 56
-    )
+    bulb.async_set_levels.assert_called_with(2, 0, 0, 56)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -638,10 +640,13 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     )
     # If the bulb is on and we are using existing brightness
     # and brightness was 0 we need to set it to at least 1
-    # or the device may not turn on
+    # or the device may not turn on. In this case we scale
+    # the current color so we do not unexpectedly switch to white
+    # since other we do not have enough resolution to determine
+    # which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(1, 1, 1, 0, 0)
+    bulb.async_set_levels.assert_called_with(2, 0, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
