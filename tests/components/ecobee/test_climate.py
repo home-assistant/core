@@ -349,5 +349,6 @@ async def test_turn_aux_heat_on(thermostat, data):
 async def test_turn_aux_heat_off(thermostat, data):
     """Test when aux heat is tuned off.  Must change HVAC mode back to last used."""
     data.reset_mock()
+    thermostat._last_active_hvac_mode = "heat"
     thermostat.turn_aux_heat_off()
-    data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "auto")])
+    data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "heat")])
