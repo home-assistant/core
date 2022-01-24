@@ -70,7 +70,7 @@ def mock_whois() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_cpuinfo: MagicMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_whois: MagicMock
 ) -> MockConfigEntry:
     """Set up thewhois integration for testing."""
     mock_config_entry.add_to_hass(hass)
