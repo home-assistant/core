@@ -117,7 +117,10 @@ class CloudNotAvailable(HomeAssistantError):
 @bind_hass
 @callback
 def async_is_logged_in(hass: HomeAssistant) -> bool:
-    """Test if user is logged in."""
+    """Test if user is logged in.
+
+    Note: This returns True even if not currently connected to the cloud.
+    """
     return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
 
 

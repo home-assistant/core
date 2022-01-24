@@ -196,24 +196,11 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template binary sensor."""
-        super().__init__(config=config)
+        super().__init__(hass, config=config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
-
-        self._name: str | None = None
-        self._friendly_name_template = config.get(CONF_NAME)
-
-        # Try to render the name as it can influence the entity ID
-        if self._friendly_name_template:
-            self._friendly_name_template.hass = hass
-            try:
-                self._name = self._friendly_name_template.async_render(
-                    parse_result=False
-                )
-            except template.TemplateError:
-                pass
 
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._template = config[CONF_STATE]
@@ -228,11 +215,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
-        if (
-            self._friendly_name_template is not None
-            and not self._friendly_name_template.is_static
-        ):
-            self.add_template_attribute("_name", self._friendly_name_template)
 
         if self._delay_on_raw is not None:
             try:
@@ -287,11 +269,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def unique_id(self):

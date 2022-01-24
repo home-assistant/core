@@ -44,6 +44,7 @@ from . import entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
+from .frame import report
 from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,6 +201,24 @@ class EntityCategory(StrEnum):
     SYSTEM = "system"
 
 
+def convert_to_entity_category(
+    value: EntityCategory | str | None,
+) -> EntityCategory | None:
+    """Force incoming entity_category to be an enum."""
+
+    if value is None:
+        return value
+
+    if not isinstance(value, EntityCategory):
+        report(
+            "An entity_category should only be assigned an enum.  Strings or other assignments are deprecated. Value %s is type %s"
+            % (value, type(value)),
+            error_if_core=False,
+        )
+        return EntityCategory(value)
+    return value
+
+
 @dataclass
 class EntityDescription:
     """A class that describes Home Assistant entities."""
@@ -208,6 +227,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
+    # Type string is deprecated as of 2021.12, use EntityCategory
     entity_category: EntityCategory | Literal[
         "config", "diagnostic", "system"
     ] | None = None
@@ -272,7 +292,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_category: EntityCategory | str | None
+    _attr_entity_category: EntityCategory | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -439,6 +459,7 @@ class Entity(ABC):
         """Return the attribution."""
         return self._attr_attribution
 
+    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
     def entity_category(self) -> EntityCategory | str | None:
         """Return the category of the entity, if any."""

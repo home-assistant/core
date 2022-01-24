@@ -79,7 +79,7 @@ regex==2021.8.28
 
 # httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful for us to pin the all these
+# even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.5.0
 h11==0.12.0

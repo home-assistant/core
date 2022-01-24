@@ -1,7 +1,10 @@
 """Get WHOIS information for a given host."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
+from typing import cast
 
 import voluptuous as vol
 import whois
@@ -13,11 +16,17 @@ from whois.exceptions import (
     WhoisCommandFailed,
 )
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -38,6 +47,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_DOMAIN): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
+)
+
+
+@dataclass
+class WhoisSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Domain], int | None]
+
+
+@dataclass
+class WhoisSensorEntityDescription(
+    SensorEntityDescription, WhoisSensorEntityDescriptionMixin
+):
+    """Describes a Whois sensor entity."""
+
+
+def _days_until_expiration(domain: Domain) -> int | None:
+    """Calculate days left until domain expires."""
+    if domain.expiration_date is None:
+        return None
+    # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
+    return cast(int, (domain.expiration_date - domain.expiration_date.utcnow()).days)
+
+
+SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
+    WhoisSensorEntityDescription(
+        key="days_until_expiration",
+        name="Days Until Expiration",
+        icon="mdi:calendar-clock",
+        native_unit_of_measurement=TIME_DAYS,
+        value_fn=_days_until_expiration,
+    ),
 )
 
 
@@ -79,18 +121,32 @@ async def async_setup_entry(
         LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
 
-    async_add_entities([WhoisSensor(domain)], True)
+    async_add_entities(
+        [
+            WhoisSensorEntity(
+                domain=domain,
+                description=description,
+            )
+            for description in SENSORS
+        ],
+        update_before_add=True,
+    )
 
 
-class WhoisSensor(SensorEntity):
+class WhoisSensorEntity(SensorEntity):
     """Implementation of a WHOIS sensor."""
 
-    _attr_icon = "mdi:calendar-clock"
-    _attr_native_unit_of_measurement = TIME_DAYS
+    entity_description: WhoisSensorEntityDescription
 
-    def __init__(self, domain: str) -> None:
+    def __init__(self, description: WhoisSensorEntityDescription, domain: str) -> None:
         """Initialize the sensor."""
+        self.entity_description = description
         self._attr_name = domain
+        self._attr_unique_id = f"{domain}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, domain)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
         self._domain = domain
 
     def _empty_value_and_attributes(self) -> None:
@@ -113,6 +169,12 @@ class WhoisSensor(SensorEntity):
                 self._empty_value_and_attributes()
                 return
 
+            self._attr_native_value = self.entity_description.value_fn(response)
+
+            # Only add attributes to the original sensor
+            if self.entity_description.key != "days_until_expiration":
+                return None
+
             attrs = {}
             attrs[ATTR_EXPIRES] = response.expiration_date.isoformat()
 
@@ -125,7 +187,4 @@ class WhoisSensor(SensorEntity):
             if response.registrar:
                 attrs[ATTR_REGISTRAR] = response.registrar
 
-            time_delta = response.expiration_date - response.expiration_date.now()
-
             self._attr_extra_state_attributes = attrs
-            self._attr_native_value = time_delta.days

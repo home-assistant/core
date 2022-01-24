@@ -385,11 +385,16 @@ class UniFiController:
         """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
 
+        unique_ids_to_remove = []
         for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
             if now > heartbeat_expire_time:
                 async_dispatcher_send(
                     self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
                 )
+                unique_ids_to_remove.append(unique_id)
+
+        for unique_id in unique_ids_to_remove:
+            del self._heartbeat_time[unique_id]
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:

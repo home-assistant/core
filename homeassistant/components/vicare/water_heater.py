@@ -22,7 +22,6 @@ from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
     VICARE_API,
-    VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
     VICARE_NAME,
 )
@@ -78,19 +77,22 @@ async def async_setup_entry(
     name = VICARE_NAME
 
     entities = []
-    for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
-        suffix = ""
-        if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
-            suffix = f" {circuit.id}"
-        entity = _build_entity(
-            f"{name} Water{suffix}",
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
-            circuit,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            config_entry.data[CONF_HEATING_TYPE],
-        )
-        if entity is not None:
-            entities.append(entity)
+    try:
+        for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_API].circuits:
+            suffix = ""
+            if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_API].circuits) > 1:
+                suffix = f" {circuit.id}"
+            entity = _build_entity(
+                f"{name} Water{suffix}",
+                hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
+                circuit,
+                hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+                config_entry.data[CONF_HEATING_TYPE],
+            )
+            if entity is not None:
+                entities.append(entity)
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("No circuits found")
 
     async_add_entities(entities)
 
