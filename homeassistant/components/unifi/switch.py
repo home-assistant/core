@@ -483,7 +483,6 @@ class UniFiOutletSwitch(UniFiBase, SwitchEntity):
     DOMAIN = DOMAIN
     TYPE = OUTLET_SWITCH
 
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.OUTLET
 
     def __init__(self, device, controller, index):
