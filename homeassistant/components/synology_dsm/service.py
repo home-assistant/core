@@ -2,21 +2,15 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
 
 from synology_dsm.exceptions import SynologyDSMException
-import voluptuous as vol
-from wakeonlan import send_magic_packet
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import async_get
 
 from .common import SynoApi
 from .const import (
+    CONF_SERIAL,
     DOMAIN,
-    SERVICE_POWERON,
     SERVICE_REBOOT,
     SERVICE_SHUTDOWN,
     SERVICES,
@@ -26,43 +20,29 @@ from .const import (
 
 LOGGER = logging.getLogger(__name__)
 
-SERVICE_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): cv.device_id,
-    }
-)
-
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Service handler setup."""
 
-    def _send_wol(mac: str, ip_address: str) -> None:
-        """Send magic packet to ip and broadcast."""
-        send_magic_packet(mac, ip_address=ip_address)
-        send_magic_packet(mac)
-
     async def service_handler(call: ServiceCall) -> None:
         """Handle service call."""
-        dev_reg = async_get(hass)
-        device_id = call.data[CONF_DEVICE_ID]
-        serial = None
-        device_ip_macs: set[tuple[str, str]] = set()
-        if device := dev_reg.async_get(device_id):
-            for entry_id in device.config_entries:
-                entry = hass.config_entries.async_get_entry(entry_id)
-                if entry and entry.domain == DOMAIN:
-                    serial = entry.unique_id
-                    device_ip_macs.update(
-                        [
-                            (entry.data[CONF_HOST], mac)
-                            for mac in entry.data.get(CONF_MAC, [])
-                        ]
-                    )
+        serial = call.data.get(CONF_SERIAL)
+        dsm_devices = hass.data[DOMAIN]
 
-        if not serial:
+        if serial:
+            dsm_device = dsm_devices.get(serial)
+        elif len(dsm_devices) == 1:
+            dsm_device = next(iter(dsm_devices.values()))
+            serial = next(iter(dsm_devices))
+        else:
             LOGGER.error(
-                "Error during service call %s - no suitable device found", call.service
+                "More than one DSM configured, must specify one of serials %s",
+                sorted(dsm_devices),
             )
+            return
+
+        if not dsm_device:
+            LOGGER.error("DSM with specified serial %s not found", serial)
             return
 
         if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
@@ -71,10 +51,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 LOGGER.error("DSM with specified serial %s not found", serial)
                 return
             LOGGER.debug("%s DSM with serial %s", call.service, serial)
+            LOGGER.warning(
+                "The %s service is deprecated and will be removed in future release. Please use the corresponding button entity",
+                call.service,
+            )
             dsm_api: SynoApi = dsm_device[SYNO_API]
             try:
-                await getattr(dsm_api, f"async_{call.service}")()
                 dsm_device[SYSTEM_LOADED] = False
+                await getattr(dsm_api, f"async_{call.service}")()
             except SynologyDSMException as ex:
                 LOGGER.error(
                     "%s of DSM with serial %s not possible, because of %s",
@@ -83,14 +67,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     ex,
                 )
                 return
-        elif call.service == SERVICE_POWERON:
-            for ip_mac in device_ip_macs:
-                LOGGER.debug(
-                    "Send magic packet to DSM at %s with mac %s", ip_mac[0], ip_mac[1]
-                )
-                await hass.async_add_executor_job(_send_wol, ip_mac[1], ip_mac[0])
 
     for service in SERVICES:
-        hass.services.async_register(
-            DOMAIN, service, service_handler, schema=SERVICE_SCHEMA
-        )
+        hass.services.async_register(DOMAIN, service, service_handler)

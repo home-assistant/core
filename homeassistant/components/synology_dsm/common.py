@@ -225,6 +225,7 @@ class SynoApi:
             LOGGER.debug(
                 "Error from '%s': %s", self._entry.unique_id, err, exc_info=True
             )
+            raise err
 
     async def async_reboot(self) -> None:
         """Reboot NAS."""
