@@ -13,6 +13,15 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from .common import patch_bond_action, patch_bond_device_state, setup_platform
 
 
+def ceiling_fan(name: str):
+    """Create a ceiling fan with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": [Action.SET_SPEED, Action.SET_DIRECTION, Action.STOP],
+    }
+
+
 def light_brightness_increase_decrease_only(name: str):
     """Create a light that can only increase or decrease brightness."""
     return {
@@ -74,6 +83,18 @@ async def test_mutually_exclusive_actions(hass: core.HomeAssistant):
         hass,
         BUTTON_DOMAIN,
         light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    assert not hass.states.async_all("button")
+
+
+async def test_stop_not_created_no_other_buttons(hass: core.HomeAssistant):
+    """Tests we do not create the stop button when there are no other buttons."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        ceiling_fan("name-1"),
         bond_device_id="test-device-id",
     )
 
