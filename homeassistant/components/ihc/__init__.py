@@ -49,8 +49,8 @@ def ihc_setup(
         _LOGGER.error("Unable to authenticate on IHC controller")
         return False
 
-    if controller_conf[CONF_AUTOSETUP] and not autosetup_ihc_products(
-        hass, config, ihc_controller, controller_id
+    if conf[CONF_AUTOSETUP] and not autosetup_ihc_products(
+        hass, config, ihc_controller, controller_id, False
     ):
         return False
     # Manual configuration
