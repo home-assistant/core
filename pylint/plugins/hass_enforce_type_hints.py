@@ -9,6 +9,8 @@ from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
+from homeassistant.const import Platform
+
 
 @dataclass
 class TypeHintMatch:
@@ -22,7 +24,10 @@ class TypeHintMatch:
 
 _MODULE_FILTERS: dict[str, re.Pattern] = {
     # init matches only in the package root (__init__.py)
-    "init": re.compile(r"^homeassistant.components.\w+$"),
+    "init": re.compile(r"^homeassistant\.components\.\w+$"),
+    "any_platform": re.compile(
+        f"^homeassistant\\.components\\.\\w+\\.({'|'.join([platform.value for platform in Platform])})$"
+    ),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -80,6 +85,38 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         },
         return_type="bool",
     ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["any_platform"],
+        function_name="setup_platform",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+            2: "AddEntitiesCallback",
+            3: "DiscoveryInfoType | None",
+        },
+        return_type=None,
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["any_platform"],
+        function_name="async_setup_platform",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+            2: "AddEntitiesCallback",
+            3: "DiscoveryInfoType | None",
+        },
+        return_type=None,
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["any_platform"],
+        function_name="async_setup_entry",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigEntry",
+            2: "AddEntitiesCallback",
+        },
+        return_type=None,
+    ),
 ]
 
 
@@ -88,6 +125,14 @@ def _is_valid_type(expected_type: str | None, node: astroid.NodeNG) -> bool:
     # Const occurs when the type is None
     if expected_type is None:
         return isinstance(node, astroid.Const) and node.value is None
+
+    # Special case for DiscoveryInfoType | None"
+    if expected_type == "DiscoveryInfoType | None":
+        return (
+            isinstance(node, astroid.BinOp)
+            and _is_valid_type("DiscoveryInfoType", node.left)
+            and _is_valid_type(None, node.right)
+        )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, astroid.Name) and node.name == expected_type:
