@@ -211,8 +211,9 @@ def convert_to_entity_category(
 
     if not isinstance(value, EntityCategory):
         report(
-            "An entity_category should only be assigned an enum.  Strings or other assignments are deprecated. Value %s is type %s"
-            % (value, type(value)),
+            "uses %s (%s) for entity category. This is deprecated and will "
+            "stop working in Home Assistant 2022.3, it should be updated to use "
+            "EntityCategory instead" % (type(value).__name__, value),
             error_if_core=False,
         )
         return EntityCategory(value)
