@@ -13,10 +13,11 @@ from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
@@ -65,9 +66,9 @@ async def _async_create_entities(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template select."""
     if discovery_info is None:
