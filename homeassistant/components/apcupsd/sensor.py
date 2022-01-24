@@ -4,13 +4,15 @@ from __future__ import annotations
 import logging
 
 from apcaccess.status import ALL_UNITS
+import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_RESOURCES,
     ELECTRIC_CURRENT_AMPERE,
@@ -24,9 +26,11 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, APCUPSdData
+from . import DOMAIN, APCUPSdData, _async_get_imported_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -398,6 +402,40 @@ INFERRED_UNITS = {
     " C": TEMP_CELSIUS,
     " Percent Load Capacity": PERCENTAGE,
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_RESOURCES, default=[]): vol.All(
+            cv.ensure_list, [vol.In([desc.key for desc in SENSOR_TYPES])]
+        )
+    }
+)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the APCUPSd sensors from YAML configurations."""
+    if not config:
+        return True
+
+    # Only update option if the options are not imported.
+    if (
+        entry := _async_get_imported_entry(hass)
+    ) is not None and CONF_RESOURCES not in entry.options:
+        _LOGGER.warning(r"resources loaded from YAML configuration")
+        hass.async_create_task(
+            hass.config_entries.options.async_init(
+                entry.entry_id,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_RESOURCES: [res.upper() for res in config[CONF_RESOURCES]]},
+            )
+        )
+
+    return True
 
 
 async def async_setup_entry(

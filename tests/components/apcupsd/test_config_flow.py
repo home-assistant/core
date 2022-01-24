@@ -1,5 +1,6 @@
 """Test APCUPSd setup process."""
 from copy import copy
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +18,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
     """Create hass config_entry fixture."""
+
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -25,12 +27,11 @@ def config_entry_fixture():
         options={},
         unique_id=MOCK_STATUS["SERIALNO"],
         source=config_entries.SOURCE_USER,
-        entry_id="1",
     )
 
 
 async def test_flow_works(hass: HomeAssistant, config_entry: MockConfigEntry):
-    """Test we get the form."""
+    """Test successful creation of config entries via user configuration."""
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get"
     ) as mock_get:
@@ -42,6 +43,29 @@ async def test_flow_works(hass: HomeAssistant, config_entry: MockConfigEntry):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_USER},
+                data=config_entry.data,
+            )
+            await hass.async_block_till_done()
+            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+            assert result["title"] == status["MODEL"]
+            assert result["data"][CONF_HOST] == config_entry.data[CONF_HOST]
+            assert result["data"][CONF_PORT] == config_entry.data[CONF_PORT]
+            assert result["description"] == "APCUPSd"
+
+
+async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry):
+    """Test successful creation of config entries via YAML import."""
+    with patch("apcaccess.status.parse") as mock_parse, patch(
+        "apcaccess.status.get"
+    ) as mock_get:
+        mock_get.return_value = b""
+
+        for status in (MOCK_STATUS, MOCK_MINIMAL_STATUS):
+            mock_parse.return_value = status
+
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
                 data=config_entry.data,
             )
             await hass.async_block_till_done()
@@ -85,15 +109,15 @@ async def test_config_flow_duplicate(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ):
     """Test config flow setup with duplicate integration."""
-    # Add a config entry.
-    config_entry.add_to_hass(hass)
-
     # Add a duplicate integration.
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get"
     ) as mock_get:
         mock_get.return_value = b""
         mock_parse.return_value = MOCK_STATUS
+
+        # Add a config entry.
+        config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -119,8 +143,8 @@ async def test_config_flow_duplicate(
         assert result["description"] == "APCUPSd"
 
 
-async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry):
-    """Test config flow options."""
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry, caplog):
+    """Test options flow."""
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get"
     ) as mock_get:
@@ -141,9 +165,8 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry):
 
         # Now deselect one resource and submit.
         resources.remove("LOADPCT")
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_RESOURCES: resources},
+        result = await hass.config_entries.options.async_init(
+            config_entry.entry_id, data={CONF_RESOURCES: resources}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert (
@@ -152,3 +175,17 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry):
             ]
             == resources
         )
+
+        # Now give an unavailable but valid resource "REG1" to options
+        with caplog.at_level(logging.WARNING):
+            result = await hass.config_entries.options.async_init(
+                config_entry.entry_id, data={CONF_RESOURCES: resources + ["REG1"]}
+            )
+            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+            assert (
+                hass.config_entries.async_get_entry(config_entry.entry_id).options[
+                    CONF_RESOURCES
+                ]
+                == resources
+            )
+        assert "REG1" in caplog.text

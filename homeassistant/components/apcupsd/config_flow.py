@@ -72,6 +72,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    async def async_step_import(self, conf: dict[str, Any]):
+        """Import a configuration from config.yaml."""
+        return await self.async_step_user(
+            user_input={CONF_HOST: conf[CONF_HOST], CONF_PORT: conf[CONF_PORT]}
+        )
+
 
 class OptionsFlowHandler(OptionsFlow):
     """Handles options flow for APCUPSd."""
@@ -82,19 +88,32 @@ class OptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Manage the options for APCUPSd."""
-
         errors: dict[str, str] = {}
+
+        data_service: APCUPSdData = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        available_resources = list(data_service.status.keys())
+
         if user_input is not None:
+            # If we import from YAML, user_input may contain unavailable resources, so we need to filter them out and
+            # log warnings for them.
+            available_resources_set = set(available_resources)
+            resources = []
+            for resource in user_input[CONF_RESOURCES]:
+                if resource not in available_resources_set:
+                    _LOGGER.warning(
+                        f"Sensor type: {resource} does not appear in the APCUPSd status output and will be ignored."
+                    )
+                    continue
+                resources.append(resource)
+            user_input[CONF_RESOURCES] = resources
+
             return self.async_create_entry(
                 title="",
                 data=user_input,
             )
 
-        data_service: APCUPSdData = self.hass.data[DOMAIN][self.config_entry.entry_id]
-
-        # We try to get current user-specified resources and use all available resources as default.
-        available_resources = list(data_service.status.keys())
-        current = self.config_entry.options.get(CONF_RESOURCES, available_resources)
+        # We try to get current user-specified resources if available, otherwise use all available resources as default.
+        selected = self.config_entry.options.get(CONF_RESOURCES, available_resources)
 
         # Create a resource -> sensor friendly name mapping to display as description for each resource.
         sensor_names = {
@@ -113,7 +132,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_RESOURCES, default=current): cv.multi_select(
+                vol.Optional(CONF_RESOURCES, default=selected): cv.multi_select(
                     {
                         resource: sensor_names[resource]
                         for resource in available_resources
