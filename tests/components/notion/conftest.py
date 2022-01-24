@@ -1,5 +1,6 @@
 """Define fixtures for Notion tests."""
-from unittest.mock import patch
+import json
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -7,7 +8,17 @@ from homeassistant.components.notion import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
+
+
+@pytest.fixture(name="client")
+def client_fixture(data_bridge, data_sensor, data_task):
+    """Define a fixture for an aionotion client."""
+    client = AsyncMock()
+    client.bridge.async_all.return_value = data_bridge
+    client.sensor.async_all.return_value = data_sensor
+    client.task.async_all.return_value = data_task
+    return client
 
 
 @pytest.fixture(name="config_entry")
@@ -27,12 +38,30 @@ def config_fixture(hass):
     }
 
 
+@pytest.fixture(name="data_bridge", scope="session")
+def data_bridge_fixture():
+    """Define bridge data."""
+    return json.loads(load_fixture("bridge_data.json", "notion"))
+
+
+@pytest.fixture(name="data_sensor", scope="session")
+def data_sensor_fixture():
+    """Define sensor data."""
+    return json.loads(load_fixture("sensor_data.json", "notion"))
+
+
+@pytest.fixture(name="data_task", scope="session")
+def data_task_fixture():
+    """Define task data."""
+    return json.loads(load_fixture("task_data.json", "notion"))
+
+
 @pytest.fixture(name="setup_notion")
-async def setup_notion_fixture(hass, config):
+async def setup_notion_fixture(hass, client, config):
     """Define a fixture to set up Notion."""
-    with patch("homeassistant.components.notion.async_get_client"), patch(
-        "homeassistant.components.notion.config_flow.async_get_client"
-    ), patch("homeassistant.components.notion.PLATFORMS", []):
+    with patch("homeassistant.components.notion.config_flow.async_get_client"), patch(
+        "homeassistant.components.notion.PLATFORMS", []
+    ), patch("homeassistant.components.notion.async_get_client", return_value=client):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
