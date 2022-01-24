@@ -149,19 +149,6 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             ):
                 return
 
-            now = new_state.last_updated
-            # Filter out the tuples that are older than (and outside of the) `time_window`
-            self._state_list = [
-                (timestamp, state)
-                for timestamp, state in self._state_list
-                if (now - timestamp).total_seconds() < self._time_window
-            ]
-            # It can happen that the list is now empty, in that case
-            # we use the old_state, because we cannot do anything better.
-            if len(self._state_list) == 0:
-                self._state_list.append((old_state.last_updated, old_state.state))
-            self._state_list.append((new_state.last_updated, new_state.state))
-
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                 self._unit_of_measurement = self._unit_template.format(
@@ -169,19 +156,27 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 )
 
             try:
-                # derivative of previous measures.
-                last_time, last_value = self._state_list[-1]
-                first_time, first_value = self._state_list[0]
-
-                elapsed_time = (last_time - first_time).total_seconds()
-                delta_value = Decimal(last_value) - Decimal(first_value)
-                derivative = (
+                elapsed_time = (
+                    new_state.last_updated - old_state.last_updated
+                ).total_seconds()
+                delta_value = Decimal(new_state.state) - Decimal(old_state.state)
+                new_derivative = (
                     delta_value
                     / Decimal(elapsed_time)
                     / Decimal(self._unit_prefix)
                     * Decimal(self._unit_time)
                 )
-                assert isinstance(derivative, Decimal)
+
+                # If outside of time window just report derivative (is the same as modeling it in the window),
+                # otherwise take the weighted average with the previous derivative
+                if elapsed_time < self._time_window:
+                    time_left = self._time_window - elapsed_time
+                    new_derivative = (
+                        new_derivative * Decimal(elapsed_time)
+                        + Decimal(self._state) * Decimal(time_left)
+                    ) / Decimal(self._time_window)
+
+                assert isinstance(new_derivative, Decimal)
             except ValueError as err:
                 _LOGGER.warning("While calculating derivative: %s", err)
             except DecimalException as err:
@@ -191,7 +186,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
             else:
-                self._state = derivative
+                self._state = new_derivative
                 self.async_write_ha_state()
 
         async_track_state_change_event(
