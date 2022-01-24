@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa"
+        },
+        "flow_title": "{device}"
+    }
+}

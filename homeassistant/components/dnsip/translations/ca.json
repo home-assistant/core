@@ -10,5 +10,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Adre\u00e7a IP del resolutor inv\u00e0lida"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolutor de cerca IPV4",
+                    "resolver_ipv6": "Resolutor de cerca IPV6"
+                }
+            }
+        }
     }
 }
