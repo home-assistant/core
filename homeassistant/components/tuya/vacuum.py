@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_MODE_RETURN_HOME = "chargego"
 TUYA_STATUS_TO_HA = {
@@ -95,14 +95,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._supported_features |= SUPPORT_PAUSE
 
-        if (
-            self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True)
-            or TUYA_MODE_RETURN_HOME
-            in EnumTypeData.from_json(
-                DPCode.MODE, device.status_range.get(DPCode.MODE).values
-            ).range
-        ):
+        if mode := self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
             self._supported_features |= SUPPORT_RETURN_HOME
+            LOGGER.debug("VACUUM: %s:", mode)
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):
             self._supported_features |= SUPPORT_LOCATE
