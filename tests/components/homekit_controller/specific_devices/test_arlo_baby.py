@@ -68,7 +68,7 @@ async def test_arlo_baby_setup(hass):
                     entity_id="sensor.arlobabya0_air_quality",
                     unique_id="homekit-00A0000000000-aid:1-sid:800-cid:802",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    friendly_name="ArloBabyA0 - Air Quality",
+                    friendly_name="ArloBabyA0 Air Quality",
                     state="1",
                 ),
                 EntityTestInfo(
