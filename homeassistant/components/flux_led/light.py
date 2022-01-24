@@ -44,6 +44,8 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    MIN_CCT_BRIGHTNESS,
+    MIN_RGB_BRIGHTNESS,
     MULTI_BRIGHTNESS_COLOR_MODES,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
@@ -290,7 +292,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         # We previously had a problem with the brightness
         # sometimes reporting as 0 when an effect was in progress,
         # however this has since been resolved in the upstream library
-        return max(1, brightness)
+        return max(MIN_RGB_BRIGHTNESS, brightness)
 
     async def _async_set_mode(self, **kwargs: Any) -> None:
         """Set an effect or color mode."""
@@ -308,7 +310,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             ):
                 # When switching to color temp from RGBWW or RGB&W mode,
                 # we do not want the overall brightness of the RGB channels
-                brightness = max(self._device.rgb)
+                brightness = max(MIN_CCT_BRIGHTNESS, *self._device.rgb)
             await self._device.async_set_white_temp(color_temp_kelvin, brightness)
             return
         # Handle switch to RGB Color Mode
@@ -322,8 +324,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         if rgbw := kwargs.get(ATTR_RGBW_COLOR):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbw = rgbw_brightness(rgbw, brightness)
-            if not self._device.requires_turn_on:
-                rgbw = _min_rgbw_brightness(rgbw)
+            rgbw = _min_rgbw_brightness(rgbw, self._device.rgbw)
             await self._device.async_set_levels(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
@@ -331,8 +332,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             rgbwc = rgbcw_to_rgbwc(rgbcw)
-            if not self._device.requires_turn_on:
-                rgbwc = _min_rgbwc_brightness(rgbwc)
+            rgbwc = _min_rgbwc_brightness(rgbwc, self._device.rgbww)
             await self._device.async_set_levels(*rgbwc)
             return
         if (white := kwargs.get(ATTR_WHITE)) is not None:
