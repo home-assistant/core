@@ -64,7 +64,7 @@ async def test_error_handling(
 async def test_import_config(
     hass: HomeAssistant,
     mock_whois: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    mock_whois_config_flow: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the Whois being set up from config via import."""
