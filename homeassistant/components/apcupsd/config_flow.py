@@ -22,10 +22,6 @@ from .sensor import SENSOR_TYPES
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_status(data_service: APCUPSdData):
-    return data_service.status
-
-
 class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """APCUPSd integration config flow."""
 
@@ -46,7 +42,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_service = APCUPSdData(user_input[CONF_HOST], user_input[CONF_PORT])
             try:
                 status: dict[str, Any] | None = await self.hass.async_add_executor_job(
-                    _get_status, data_service
+                    lambda: data_service.status
                 )
                 if status is None:
                     return self.async_abort(reason="no_status")
