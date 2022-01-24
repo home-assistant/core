@@ -42,7 +42,9 @@ REQUIRES = [
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",
     "ciso8601==2.2.0",
-    "httpx==0.21.0",
+    # When bumping httpx, please check the version pins of
+    # httpcore, anyio, and h11 in gen_requirements_all
+    "httpx==0.21.3",
     "ifaddr==0.1.7",
     "jinja2==3.0.3",
     "PyJWT==2.1.0",
