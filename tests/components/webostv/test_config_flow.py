@@ -24,23 +24,23 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import setup_webostv
+from . import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME, setup_webostv
 
 MOCK_YAML_CONFIG = {
-    CONF_HOST: "1.2.3.4",
-    CONF_NAME: "fake",
+    CONF_HOST: HOST,
+    CONF_NAME: TV_NAME,
     CONF_ICON: "mdi:test",
-    CONF_CLIENT_SECRET: "some-secret",
-    CONF_UNIQUE_ID: "fake-uuid",
+    CONF_CLIENT_SECRET: CLIENT_KEY,
+    CONF_UNIQUE_ID: FAKE_UUID,
 }
 
 MOCK_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
-    ssdp_location="http://1.2.3.4",
+    ssdp_location=f"http://{HOST}",
     upnp={
         ssdp.ATTR_UPNP_FRIENDLY_NAME: "LG Webostv",
-        ssdp.ATTR_UPNP_UDN: "uuid:some-fake-uuid",
+        ssdp.ATTR_UPNP_UDN: f"uuid:{FAKE_UUID}",
     },
 )
 
@@ -57,7 +57,7 @@ async def test_import(hass, client):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "fake"
+    assert result["title"] == TV_NAME
     assert result["data"][CONF_HOST] == MOCK_YAML_CONFIG[CONF_HOST]
     assert result["data"][CONF_CLIENT_SECRET] == MOCK_YAML_CONFIG[CONF_CLIENT_SECRET]
     assert result["result"].unique_id == MOCK_YAML_CONFIG[CONF_UNIQUE_ID]
@@ -98,7 +98,7 @@ async def test_import_sources(hass, client, sources):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "fake"
+    assert result["title"] == TV_NAME
     assert result["data"][CONF_HOST] == MOCK_YAML_CONFIG[CONF_HOST]
     assert result["data"][CONF_CLIENT_SECRET] == MOCK_YAML_CONFIG[CONF_CLIENT_SECRET]
     assert result["options"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
@@ -146,7 +146,7 @@ async def test_form(hass, client):
     await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "fake"
+    assert result["title"] == TV_NAME
 
 
 async def test_options_flow(hass, client):
@@ -305,7 +305,7 @@ async def test_form_abort_uuid_configured(hass, client):
     entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:])
     assert client
     assert entry.unique_id == MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:]
-    assert entry.data[CONF_HOST] == "1.2.3.4"
+    assert entry.data[CONF_HOST] == HOST
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -318,7 +318,7 @@ async def test_form_abort_uuid_configured(hass, client):
 
     user_config = {
         CONF_HOST: "new_host",
-        CONF_NAME: "fake",
+        CONF_NAME: TV_NAME,
     }
 
     result = await hass.config_entries.flow.async_init(
