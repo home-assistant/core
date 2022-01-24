@@ -1,6 +1,8 @@
 """Define test fixtures for ReCollect Waste."""
+from datetime import date
 from unittest.mock import patch
 
+from aiorecollect.client import PickupEvent, PickupType
 import pytest
 
 from homeassistant.components.recollect_waste.const import (
@@ -33,10 +35,16 @@ def config_fixture(hass):
 @pytest.fixture(name="setup_recollect_waste")
 async def setup_recollect_waste_fixture(hass, config):
     """Define a fixture to set up ReCollect Waste."""
+    pickup_event = PickupEvent(
+        date(2022, 1, 23), [PickupType("garbage", "Trash Collection")], "The Sun"
+    )
+
     with patch(
-        "homeassistant.components.recollect_waste.Client.async_get_pickup_events"
+        "homeassistant.components.recollect_waste.Client.async_get_pickup_events",
+        return_value=[pickup_event],
     ), patch(
-        "homeassistant.components.recollect_waste.config_flow.Client.async_get_pickup_events"
+        "homeassistant.components.recollect_waste.config_flow.Client.async_get_pickup_events",
+        return_value=[pickup_event],
     ), patch(
         "homeassistant.components.recollect_waste.PLATFORMS", []
     ):
