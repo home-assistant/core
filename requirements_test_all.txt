@@ -361,7 +361,7 @@ debugpy==1.5.1
 defusedxml==0.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.10.9
+denonavr==0.10.10
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.4
@@ -1041,7 +1041,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.0
+pymazda==0.3.1
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.6
@@ -1435,7 +1435,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2021.12
+total_connect_client==2022.1
 
 # homeassistant.components.transmission
 transmissionrpc==0.11

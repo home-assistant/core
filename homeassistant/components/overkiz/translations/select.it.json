@@ -6,7 +6,8 @@
         },
         "overkiz__open_closed_pedestrian": {
             "closed": "Chiuso",
-            "open": "Aperto"
+            "open": "Aperto",
+            "pedestrian": "Pedonale"
         }
     }
 }
