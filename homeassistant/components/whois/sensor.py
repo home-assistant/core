@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import cast
 
 import voluptuous as vol
@@ -10,6 +11,7 @@ from whois import Domain
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -18,7 +20,7 @@ from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -48,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class WhoisSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Domain], int | None]
+    value_fn: Callable[[Domain], datetime | int | str | None]
 
 
 @dataclass
@@ -66,13 +68,81 @@ def _days_until_expiration(domain: Domain) -> int | None:
     return cast(int, (domain.expiration_date - domain.expiration_date.utcnow()).days)
 
 
+def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
+    """Calculate days left until domain expires."""
+    if timestamp is None:
+        return None
+    return timestamp.astimezone(tz=timezone.utc)
+
+
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
+    WhoisSensorEntityDescription(
+        key="admin",
+        name="Admin",
+        icon="mdi:account-star",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+        value_fn=lambda domain: domain.admin if domain.admin else None,
+    ),
+    WhoisSensorEntityDescription(
+        key="creation_date",
+        name="Created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.creation_date),
+    ),
     WhoisSensorEntityDescription(
         key="days_until_expiration",
         name="Days Until Expiration",
         icon="mdi:calendar-clock",
         native_unit_of_measurement=TIME_DAYS,
         value_fn=_days_until_expiration,
+    ),
+    WhoisSensorEntityDescription(
+        key="expiration_date",
+        name="Expires",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.expiration_date),
+    ),
+    WhoisSensorEntityDescription(
+        key="last_updated",
+        name="Last Updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.last_updated),
+    ),
+    WhoisSensorEntityDescription(
+        key="owner",
+        name="Owner",
+        icon="mdi:account",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+        value_fn=lambda domain: domain.owner if domain.owner else None,
+    ),
+    WhoisSensorEntityDescription(
+        key="registrant",
+        name="Registrant",
+        icon="mdi:account-edit",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+        value_fn=lambda domain: domain.registrant if domain.registrant else None,
+    ),
+    WhoisSensorEntityDescription(
+        key="registrar",
+        name="Registrar",
+        icon="mdi:store",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+        value_fn=lambda domain: domain.registrar if domain.registrar else None,
+    ),
+    WhoisSensorEntityDescription(
+        key="reseller",
+        name="Reseller",
+        icon="mdi:store",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+        value_fn=lambda domain: domain.reseller if domain.reseller else None,
     ),
 )
 
@@ -133,7 +203,7 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._attr_name = domain
+        self._attr_name = f"{domain} {description.name}"
         self._attr_unique_id = f"{domain}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, domain)},
@@ -142,7 +212,7 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         self._domain = domain
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> datetime | int | str | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None
