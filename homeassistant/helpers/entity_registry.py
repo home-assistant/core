@@ -50,6 +50,8 @@ from .typing import UNDEFINED, UndefinedType
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
+    from .entity import EntityCategory
+
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
@@ -91,6 +93,16 @@ DISABLED_INTEGRATION = RegistryEntryDisabler.INTEGRATION.value
 DISABLED_USER = RegistryEntryDisabler.USER.value
 
 
+def _convert_to_entity_category(
+    value: EntityCategory | str | None,
+) -> EntityCategory | None:
+    """Force incoming entity_category to be an enum."""
+    # pylint: disable=import-outside-toplevel
+    from .entity import convert_to_entity_category
+
+    return convert_to_entity_category(value)
+
+
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
@@ -105,7 +117,9 @@ class RegistryEntry:
     device_id: str | None = attr.ib(default=None)
     domain: str = attr.ib(init=False, repr=False)
     disabled_by: RegistryEntryDisabler | None = attr.ib(default=None)
-    entity_category: str | None = attr.ib(default=None)
+    entity_category: EntityCategory | None = attr.ib(
+        default=None, converter=_convert_to_entity_category
+    )
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     name: str | None = attr.ib(default=None)
@@ -320,7 +334,8 @@ class EntityRegistry:
         capabilities: Mapping[str, Any] | None = None,
         config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
-        entity_category: str | None = None,
+        # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+        entity_category: EntityCategory | str | None = None,
         original_device_class: str | None = None,
         original_icon: str | None = None,
         original_name: str | None = None,
@@ -469,7 +484,8 @@ class EntityRegistry:
         device_class: str | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
         disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
-        entity_category: str | None | UndefinedType = UNDEFINED,
+        # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+        entity_category: EntityCategory | str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
