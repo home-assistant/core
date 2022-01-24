@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.block_device import Block
 
@@ -59,6 +59,10 @@ from .utils import (
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+MIRED_MIN_VALUE_WHITE = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_WHITE)
+MIRED_MAX_VALUE = color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
+MIRED_MIN_VALUE_COLOR = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_COLOR)
 
 
 async def async_setup_entry(
@@ -134,29 +138,29 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self._supported_color_modes: set[str] = set()
-        self._supported_features: int = 0
-        self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
-        self._max_kelvin: int = KELVIN_MAX_VALUE
+        self._attr_supported_color_modes = set()
+        self._attr_supported_features = 0
+        self._attr_min_mireds = MIRED_MIN_VALUE_WHITE
+        self._attr_max_mireds = MIRED_MAX_VALUE
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
-            self._min_kelvin = KELVIN_MIN_VALUE_COLOR
+            self._attr_min_mireds = MIRED_MIN_VALUE_COLOR
             if wrapper.model in RGBW_MODELS:
-                self._supported_color_modes.add(COLOR_MODE_RGBW)
+                self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
             else:
-                self._supported_color_modes.add(COLOR_MODE_RGB)
+                self._attr_supported_color_modes.add(COLOR_MODE_RGB)
 
         if hasattr(block, "colorTemp"):
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
 
-        if not self._supported_color_modes:
+        if not self._attr_supported_color_modes:
             if hasattr(block, "brightness") or hasattr(block, "gain"):
-                self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             else:
-                self._supported_color_modes.add(COLOR_MODE_ONOFF)
+                self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
 
         if hasattr(block, "effect"):
-            self._supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= SUPPORT_EFFECT
 
         if wrapper.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
             match = FIRMWARE_PATTERN.search(wrapper.device.settings.get("fw", ""))
@@ -164,12 +168,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 match is not None
                 and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE
             ):
-                self._supported_features |= SUPPORT_TRANSITION
-
-    @property
-    def supported_features(self) -> int:
-        """Supported features."""
-        return self._supported_features
+                self._attr_supported_features |= SUPPORT_TRANSITION
 
     @property
     def is_on(self) -> bool:
@@ -256,28 +255,13 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     def color_temp(self) -> int:
         """Return the CT color value in mireds."""
         if self.control_result:
-            color_temp = self.control_result["temp"]
+            kelvin_temp = self.control_result["temp"]
         else:
-            color_temp = self.block.colorTemp
+            kelvin_temp = self.block.colorTemp
 
-        color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
+        mired_temp = color_temperature_kelvin_to_mired(float(kelvin_temp))
 
-        return int(color_temperature_kelvin_to_mired(color_temp))
-
-    @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return int(color_temperature_kelvin_to_mired(self._max_kelvin))
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return int(color_temperature_kelvin_to_mired(self._min_kelvin))
-
-    @property
-    def supported_color_modes(self) -> set | None:
-        """Flag supported color modes."""
-        return self._supported_color_modes
+        return min(self._attr_max_mireds, max(self._attr_min_mireds, mired_temp))
 
     @property
     def effect_list(self) -> list[str] | None:
@@ -314,7 +298,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             return
 
         set_mode = None
-        supported_color_modes = self._supported_color_modes
+        supported_color_modes = self._attr_supported_color_modes
+        if TYPE_CHECKING:
+            assert supported_color_modes
         params: dict[str, Any] = {"turn": "on"}
 
         if ATTR_TRANSITION in kwargs:
@@ -330,11 +316,13 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 params["brightness"] = brightness_pct
 
         if ATTR_COLOR_TEMP in kwargs and COLOR_MODE_COLOR_TEMP in supported_color_modes:
-            color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
+            color_temp = kwargs[ATTR_COLOR_TEMP]
+            color_temp = min(
+                self._attr_max_mireds, max(self._attr_min_mireds, color_temp)
+            )
             # Color temperature change - used only in white mode, switch device mode to white
             set_mode = "white"
-            params["temp"] = int(color_temp)
+            params["temp"] = color_temperature_mired_to_kelvin(color_temp)
 
         if ATTR_RGB_COLOR in kwargs and COLOR_MODE_RGB in supported_color_modes:
             # Color channels change - used only in color mode, switch device mode to color
