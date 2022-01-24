@@ -1,11 +1,11 @@
 """The Whois integration."""
 from __future__ import annotations
 
-import whois
-from whois import Domain
+from whois import Domain, query as whois_query
 from whois.exceptions import (
     FailedParsingWhoisOutput,
     UnknownDateFormat,
+    UnknownTld,
     WhoisCommandFailed,
 )
 
@@ -24,9 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Query WHOIS for domain information."""
         try:
             return await hass.async_add_executor_job(
-                whois.query, entry.data[CONF_DOMAIN]
+                whois_query, entry.data[CONF_DOMAIN]
             )
-        except UpdateFailed as ex:
+        except UnknownTld as ex:
             raise UpdateFailed("Could not set up whois, TLD is unknown") from ex
         except (FailedParsingWhoisOutput, WhoisCommandFailed, UnknownDateFormat) as ex:
             raise UpdateFailed("An error occurred during WHOIS lookup") from ex
