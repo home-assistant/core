@@ -129,7 +129,10 @@ class RepositoryIssueDataUpdateCoordinator(
 
     async def fetch_data(self) -> IssuesPulls:
         """Get the latest data from GitHub."""
-        pulls_count, pull_last, issues_count, issue_last = 0, None, 0, None
+        pulls_count = 0
+        pull_last = None
+        issues_count = 0
+        issue_last = None
         try:
             pull_response = await self._client.repos.pulls.list(
                 self.repository,
