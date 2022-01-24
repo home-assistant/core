@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     COLOR_MODE_WHITE,
 )
 
-from .const import FLUX_COLOR_MODE_TO_HASS
+from .const import FLUX_COLOR_MODE_TO_HASS, MIN_RGB_BRIGHTNESS
 
 
 def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
@@ -57,21 +57,25 @@ def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
 def _min_rgb_brightness(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
     """Ensure the RGB value will not turn off the device from a turn on command."""
     if all(byte == 0 for byte in rgb):
-        return (1, 1, 1)
+        return (MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS)
     return rgb
 
 
 def _min_rgbw_brightness(rgbw: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
-    """Ensure the RGBW value will not turn off the device from a turn on command."""
-    if all(byte == 0 for byte in rgbw):
-        return (1, 1, 1, 0)
-    return rgbw
+    """Ensure the RGBW value will not turn off the device from a turn on command.
+
+    For RGBW, we also need to ensure that there is at least one
+    value in the RGB fields or the device will switch to CCT mode unexpectedly
+    """
+    return (*_min_rgb_brightness(rgbw[:3]), rgbw[3])
 
 
 def _min_rgbwc_brightness(
     rgbwc: tuple[int, int, int, int, int]
 ) -> tuple[int, int, int, int, int]:
-    """Ensure the RGBWC value will not turn off the device from a turn on command."""
-    if all(byte == 0 for byte in rgbwc):
-        return (1, 1, 1, 0, 0)
-    return rgbwc
+    """Ensure the RGBWC value will not turn off the device from a turn on command.
+
+    For RGBW, we also need to ensure that there is at least one
+    value in the RGB fields or the device will switch to CCT mode unexpectedly
+    """
+    return (*_min_rgb_brightness(rgbwc[:3]), rgbwc[3], rgbwc[4])
