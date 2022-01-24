@@ -461,6 +461,8 @@ build.json @home-assistant/supervisor
 /tests/components/http/ @home-assistant/core
 /homeassistant/components/huawei_lte/ @scop @fphammerle
 /tests/components/huawei_lte/ @scop @fphammerle
+/homeassistant/components/huawei_solar/ @wlcrs
+/tests/components/huawei_solar/ @wlcrs
 /homeassistant/components/hue/ @balloob @marcelveldt
 /tests/components/hue/ @balloob @marcelveldt
 /homeassistant/components/huisbaasje/ @dennisschroer

@@ -155,6 +155,7 @@ FLOWS = {
         "homewizard",
         "honeywell",
         "huawei_lte",
+        "huawei_solar",
         "hue",
         "huisbaasje",
         "hunterdouglas_powerview",
