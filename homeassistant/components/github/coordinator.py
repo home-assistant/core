@@ -144,8 +144,8 @@ class RepositoryIssueDataUpdateCoordinator(
             pull_last = self.data.pull_last
         else:
             self._pull_etag = pull_response.etag
-            pulls_count = pull_response.last_page_number or 0
-            pull_last = pull_response.data[0] if pulls_count != 0 else None
+            pulls_count = pull_response.last_page_number or len(pull_response.data)
+            pull_last = pull_response.data[0] if pull_response.data else None
 
         try:
             issue_response = await self._client.repos.issues.list(
@@ -158,8 +158,10 @@ class RepositoryIssueDataUpdateCoordinator(
             issue_last = self.data.issue_last
         else:
             self._issue_etag = issue_response.etag
-            issues_count = (issue_response.last_page_number or 0) - pulls_count
-            issue_last = issue_response.data[0] if issues_count != 0 else None
+            issues_count = (
+                issue_response.last_page_number or len(issue_response.data)
+            ) - pulls_count
+            issue_last = issue_response.data[0] if issue_response.data else None
 
             if issue_last is not None and issue_last.pull_request:
                 issue_response = await self._client.repos.issues.list(self.repository)
