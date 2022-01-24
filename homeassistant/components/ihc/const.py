@@ -34,13 +34,9 @@ IHC_PLATFORMS = (
     Platform.SWITCH,
 )
 
+MANUAL_SETUP_YAML = "ihc_manual_setup.yaml"
+
 SERVICE_SET_RUNTIME_VALUE_BOOL = "set_runtime_value_bool"
 SERVICE_SET_RUNTIME_VALUE_FLOAT = "set_runtime_value_float"
 SERVICE_SET_RUNTIME_VALUE_INT = "set_runtime_value_int"
 SERVICE_PULSE = "pulse"
-
-AUTO_SETUP_YAML = "ihc_auto_setup.yaml"
-MANUAL_SETUP_YAML = "ihc_manual_setup.yaml"
-
-IHC_CONTROLLER = "controller"
-IHC_PLATFORMS = ("binary_sensor", "light", "sensor", "switch")

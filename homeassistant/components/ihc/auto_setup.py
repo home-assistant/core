@@ -104,22 +104,22 @@ def autosetup_ihc_products(
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
     groups = project.findall(".//group")
-    for component in IHC_PLATFORMS:
-        component_setup = auto_setup_conf[component]
+    for platform in IHC_PLATFORMS:
+        component_setup = auto_setup_conf[platform]
         discovery_info = get_discovery_info(
             component_setup, groups, controller_id, use_groups
         )
         if discovery_info:
-            hass.data[DOMAIN][controller_id][component] = discovery_info
+            hass.data[DOMAIN][controller_id][platform] = discovery_info
     return True
 
 
-def get_discovery_info(component_setup, groups, controller_id, use_groups: bool):
-    """Get discovery info for specified IHC component."""
+def get_discovery_info(platform_setup, groups, controller_id, use_groups: bool):
+    """Get discovery info for specified IHC platform."""
     discovery_data = {}
     for group in groups:
         groupname = group.attrib["name"]
-        for product_cfg in component_setup:
+        for product_cfg in platform_setup:
             products = group.findall(product_cfg[CONF_XPATH])
             for product in products:
                 product_id = int(product.attrib["id"].strip("_"), 0)
