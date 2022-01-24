@@ -46,6 +46,7 @@ class HeatingType(enum.Enum):
     pellets = "pellets"
     heatpump = "heatpump"
     fuelcell = "fuelcell"
+    hybrid = "hybrid"
 
 
 DEFAULT_HEATING_TYPE = HeatingType.auto
@@ -57,4 +58,5 @@ HEATING_TYPE_TO_CREATOR_METHOD = {
     HeatingType.heatpump: "asHeatPump",
     HeatingType.oil: "asOilBoiler",
     HeatingType.pellets: "asPelletsBoiler",
+    HeatingType.hybrid: "asHybridDevice",
 }
