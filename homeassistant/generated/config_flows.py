@@ -213,6 +213,7 @@ FLOWS = [
     "nuki",
     "nut",
     "nws",
+    "nws_alerts",
     "nzbget",
     "octoprint",
     "omnilogic",

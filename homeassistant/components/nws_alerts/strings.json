@@ -1,0 +1,24 @@
+{
+  "config": {
+    "error": {
+      "error_401": "Invalid API key, or your API key hasn't been activated yet. Check your API key, then wait a few minutes and try again. This is a very common error. See https://openweathermap.org/faq#error401",
+      "error_404": "Invalid location. Check your latitude and longitude values and try again. See https://openweathermap.org/faq#error404",
+      "error_429": "Too many requests. Wait a few minutes and try again. See https://openweathermap.org/faq#error429",
+      "error_5XX": "Something went wrong. Please try again later. See https://openweathermap.org/faq#error500",
+      "unknown": "An unknown error occured. Please raise an issue on the GitHub repository."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "friendly_name": "Friendly Name",
+          "lat": "Latitude",
+          "lon": "Longitude",
+          "update_interval": "Update Interval (in seconds, the best for the free plan has been autofilled)"
+        },
+        "description": "Please create a free account at https://home.openweathermap.org/users/sign_up and confirm your account. You should receive an API key in your email. Enter it below.",
+        "title": "NWS Alerts Setup"
+      }
+    }
+  }
+}
