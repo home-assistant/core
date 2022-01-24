@@ -63,6 +63,9 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
             gateway_id=gateway_id,
         )
 
+    def _refresh(self) -> None:
+        """Refresh the device."""
+
     @property
     def native_value(self) -> int | None:
         """Return the current state of the device."""

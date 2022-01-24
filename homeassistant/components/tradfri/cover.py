@@ -63,6 +63,10 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
         self._device_control = self._device.blind_control
         self._device_data = self._device_control.blinds[0]
 
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device_data = self.coordinator.data.blind_control.blinds[0]
+
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""

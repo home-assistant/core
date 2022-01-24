@@ -81,7 +81,6 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
 
     def _refresh(self) -> None:
         """Refresh the device."""
-        self._device = self.coordinator.data
         self._device_data = self.coordinator.data.air_purifier_control.air_purifiers[0]
 
     @property

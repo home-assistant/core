@@ -56,6 +56,10 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
         self._device_control = self._device.socket_control
         self._device_data = self._device_control.sockets[0]
 
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device_data = self.coordinator.data.socket_control.sockets[0]
+
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
