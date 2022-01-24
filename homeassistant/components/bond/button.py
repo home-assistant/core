@@ -39,14 +39,16 @@ class BondButtonEntityDescription(
     """Class to describe a Bond Button entity."""
 
 
+STOP_BUTTON = BondButtonEntityDescription(
+    key=Action.STOP,
+    name="Stop Actions",
+    icon="mdi:stop-circle-outline",
+    mutually_exclusive=None,
+    argument=None,
+)
+
+
 BUTTONS: tuple[BondButtonEntityDescription, ...] = (
-    BondButtonEntityDescription(
-        key=Action.STOP,
-        name="Stop Actions",
-        icon="mdi:stop-circle-outline",
-        mutually_exclusive=None,
-        argument=None,
-    ),
     BondButtonEntityDescription(
         key=Action.TOGGLE_POWER,
         name="Toggle Power",
@@ -233,17 +235,29 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    entities: list[BondButtonEntity] = []
 
-    async_add_entities(
-        BondButtonEntity(hub, device, bpup_subs, description)
-        for device in hub.devices
-        for description in BUTTONS
-        if device.has_action(description.key)
-        and (
-            description.mutually_exclusive is None
-            or not device.has_action(description.mutually_exclusive)
-        )
-    )
+    for device in hub.devices:
+        device_entities = [
+            BondButtonEntity(hub, device, bpup_subs, description)
+            for description in BUTTONS
+            if device.has_action(description.key)
+            and (
+                description.mutually_exclusive is None
+                or not device.has_action(description.mutually_exclusive)
+            )
+        ]
+        if device_entities and device.has_action(STOP_BUTTON.key):
+            # Most devices have the stop action available, but
+            # we only add the stop action button if we add actions
+            # since its not so useful if there are no actions to stop
+            device_entities.append(
+                BondButtonEntity(hub, device, bpup_subs, STOP_BUTTON)
+            )
+        entities.extend(device_entities)
+
+    if entities:
+        async_add_entities(entities)
 
 
 class BondButtonEntity(BondEntity, ButtonEntity):
