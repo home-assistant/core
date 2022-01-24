@@ -163,16 +163,6 @@ async def async_setup_entry(
         if entity is not None:
             entities.append(entity)
 
-    for description in GLOBAL_SENSORS:
-        entity = _build_entity(
-            f"{name} {description.name}",
-            api,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            description,
-        )
-        if entity is not None:
-            entities.append(entity)
-
     for description in CIRCUIT_SENSORS:
         for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
             suffix = ""
