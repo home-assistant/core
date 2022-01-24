@@ -21,6 +21,7 @@ from .coordinator import (
     RepositoryInformationDataUpdateCoordinator,
     RepositoryIssueDataUpdateCoordinator,
     RepositoryReleaseDataUpdateCoordinator,
+    RepositoryTagDataUpdateCoordinator,
 )
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -52,6 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "commit": RepositoryCommitDataUpdateCoordinator(
                 hass=hass, entry=entry, client=client, repository=repository
             ),
+            "tag": RepositoryTagDataUpdateCoordinator(
+                hass=hass, entry=entry, client=client, repository=repository
+            ),
         }
 
         await asyncio.gather(
@@ -60,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 coordinators["release"].async_config_entry_first_refresh(),
                 coordinators["issue"].async_config_entry_first_refresh(),
                 coordinators["commit"].async_config_entry_first_refresh(),
+                coordinators["tag"].async_config_entry_first_refresh(),
             )
         )
 

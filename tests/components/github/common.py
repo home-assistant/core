@@ -31,7 +31,7 @@ async def setup_github_integration(
             },
             headers=headers,
         )
-        for endpoint in ("issues", "pulls", "releases", "commits"):
+        for endpoint in ("issues", "pulls", "releases", "commits", "tags"):
             aioclient_mock.get(
                 f"https://api.github.com/repos/{repository}/{endpoint}",
                 json=json.loads(load_fixture(f"{endpoint}.json", DOMAIN)),

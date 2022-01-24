@@ -27,6 +27,7 @@ from .coordinator import (
     RepositoryCommitDataUpdateCoordinator,
     RepositoryIssueDataUpdateCoordinator,
     RepositoryReleaseDataUpdateCoordinator,
+    RepositoryTagDataUpdateCoordinator,
 )
 
 
@@ -151,6 +152,7 @@ async def async_setup_entry(
                 GitHubSensorLatestIssueEntity,
                 GitHubSensorLatestPullEntity,
                 GitHubSensorLatestReleaseEntity,
+                GitHubSensorLatestTagEntity,
             )
         )
 
@@ -350,4 +352,25 @@ class GitHubSensorLatestCommitEntity(GitHubSensorLatestBaseEntity):
         return {
             "sha": self.coordinator.data.sha,
             "url": self.coordinator.data.html_url,
+        }
+
+
+class GitHubSensorLatestTagEntity(GitHubSensorLatestBaseEntity):
+    """Defines a GitHub latest tag sensor entity."""
+
+    _coordinator_key: CoordinatorKeyType = "tag"
+    _name: str = "Latest Tag"
+
+    coordinator: RepositoryTagDataUpdateCoordinator
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.coordinator.data.name.splitlines()[0][:255]
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, str | int | None]:
+        """Return the extra state attributes."""
+        return {
+            "sha": self.coordinator.data.commit.sha,
         }

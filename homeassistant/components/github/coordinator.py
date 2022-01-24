@@ -11,6 +11,7 @@ from aiogithubapi import (
     GitHubReleaseModel,
     GitHubRepositoryModel,
     GitHubResponseModel,
+    GitHubTagModel,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +20,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER, IssuesPulls
 
-CoordinatorKeyType = Literal["information", "release", "issue", "commit"]
+CoordinatorKeyType = Literal[
+    "commit",
+    "information",
+    "issue",
+    "release",
+    "tag",
+]
 
 
 class GitHubBaseDataUpdateCoordinator(DataUpdateCoordinator[T]):
@@ -114,6 +121,25 @@ class RepositoryReleaseDataUpdateCoordinator(
         )
 
 
+class RepositoryTagDataUpdateCoordinator(
+    GitHubBaseDataUpdateCoordinator[GitHubTagModel]
+):
+    """Data update coordinator for repository release."""
+
+    @staticmethod
+    def _parse_response(
+        response: GitHubResponseModel[GitHubTagModel | None],
+    ) -> GitHubTagModel | None:
+        """Parse the response from GitHub API."""
+        return response.data[0] if response.data else None
+
+    async def fetch_data(self) -> GitHubReleaseModel | None:
+        """Get the latest data from GitHub."""
+        return await self._client.repos.list_tags(
+            self.repository, **{"params": {"per_page": 1}, "etag": self._etag}
+        )
+
+
 class RepositoryIssueDataUpdateCoordinator(
     GitHubBaseDataUpdateCoordinator[IssuesPulls]
 ):
@@ -198,7 +224,8 @@ class RepositoryCommitDataUpdateCoordinator(
 class DataUpdateCoordinators(TypedDict):
     """Custom data update coordinators for the GitHub integration."""
 
-    information: RepositoryInformationDataUpdateCoordinator
-    release: RepositoryReleaseDataUpdateCoordinator
-    issue: RepositoryIssueDataUpdateCoordinator
     commit: RepositoryCommitDataUpdateCoordinator
+    information: RepositoryInformationDataUpdateCoordinator
+    issue: RepositoryIssueDataUpdateCoordinator
+    release: RepositoryReleaseDataUpdateCoordinator
+    tag: RepositoryTagDataUpdateCoordinator
