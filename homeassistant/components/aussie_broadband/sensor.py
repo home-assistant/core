@@ -105,7 +105,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up the Aussie Broadband sensor platform from a config entry."""
 
     async_add_entities(
@@ -116,7 +116,6 @@ async def async_setup_entry(
             if description.key in service["coordinator"].data
         ]
     )
-    return True
 
 
 class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
