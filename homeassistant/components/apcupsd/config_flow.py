@@ -1,6 +1,8 @@
 """Config flow for APCUPSd integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -36,16 +38,16 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             # Test if connection to the host is ok and get the current status for later configuration.
             data_service = APCUPSdData(user_input[CONF_HOST], user_input[CONF_PORT])
             try:
-                status: Optional[
-                    dict[str, Any]
-                ] = await self.hass.async_add_executor_job(_get_status, data_service)
+                status: dict[str, Any] | None = await self.hass.async_add_executor_job(
+                    _get_status, data_service
+                )
                 if status is None:
                     return self.async_abort(reason="no_status")
 
@@ -82,7 +84,7 @@ class OptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: Optional[dict[str, Any]] = None):
+    async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Manage the options for APCUPSd."""
 
         errors: dict[str, str] = {}

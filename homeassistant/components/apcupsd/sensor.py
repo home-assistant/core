@@ -441,7 +441,9 @@ def infer_unit(value):
 class APCUPSdSensor(SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
-    def __init__(self, data_service: APCUPSdData, description: SensorEntityDescription):
+    def __init__(
+        self, data_service: APCUPSdData, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._data_service = data_service
