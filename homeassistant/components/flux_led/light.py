@@ -324,7 +324,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         if rgbw := kwargs.get(ATTR_RGBW_COLOR):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbw = rgbw_brightness(rgbw, brightness)
-            rgbw = _min_rgbw_brightness(rgbw)
+            rgbw = _min_rgbw_brightness(rgbw, self._device.rgbw)
             await self._device.async_set_levels(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
@@ -332,7 +332,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             rgbwc = rgbcw_to_rgbwc(rgbcw)
-            rgbwc = _min_rgbwc_brightness(rgbwc)
+            rgbwc = _min_rgbwc_brightness(rgbwc, self._device.rgbww)
             await self._device.async_set_levels(*rgbwc)
             return
         if (white := kwargs.get(ATTR_WHITE)) is not None:
