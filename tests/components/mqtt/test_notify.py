@@ -10,6 +10,7 @@ from homeassistant import config as hass_config
 from homeassistant.components import notify
 from homeassistant.components.mqtt import DOMAIN
 from homeassistant.const import CONF_NAME, SERVICE_RELOAD
+from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
@@ -97,6 +98,111 @@ COMMAND_TEMPLATE_TEST_PARAMS = (
 def device_reg(hass):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
+
+
+@pytest.mark.parametrize(*COMMAND_TEMPLATE_TEST_PARAMS)
+async def test_sending_with_command_templates_with_config_setup(
+    hass, mqtt_mock, caplog, name, service, parameters, expected_result
+):
+    """Test the sending MQTT commands using a template using config setup."""
+    config = {
+        "command_topic": "lcd/set",
+        "command_template": "{"
+        '"message":"{{message}}",'
+        '"name":"{{name}}",'
+        '"service":"{{service}}",'
+        '"par1":"{{par1}}",'
+        '"target":{{target}},'
+        '"title":"{{title}}"'
+        "}",
+        "targets": ["t1", "t2"],
+        "platform": "mqtt",
+        "qos": "1",
+    }
+    if name:
+        config[CONF_NAME] = name
+        service_base_name = slugify(name)
+    else:
+        service_base_name = DOMAIN
+    assert await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {notify.DOMAIN: config},
+    )
+    await hass.async_block_till_done()
+    assert (
+        f"<Event service_registered[L]: domain=notify, service={service_base_name}>"
+        in caplog.text
+    )
+    assert (
+        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t1>"
+        in caplog.text
+    )
+    assert (
+        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t2>"
+        in caplog.text
+    )
+    await hass.services.async_call(
+        notify.DOMAIN,
+        service,
+        parameters,
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "lcd/set", expected_result, 1, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize(*COMMAND_TEMPLATE_TEST_PARAMS)
+async def test_sending_with_command_templates_auto_discovery(
+    hass, mqtt_mock, caplog, name, service, parameters, expected_result
+):
+    """Test the sending MQTT commands using a template and auto discovery."""
+    config = {
+        "command_topic": "lcd/set",
+        "command_template": "{"
+        '"message":"{{message}}",'
+        '"name":"{{name}}",'
+        '"service":"{{service}}",'
+        '"par1":"{{par1}}",'
+        '"target":{{target}},'
+        '"title":"{{title}}"'
+        "}",
+        "targets": ["t1", "t2"],
+        "qos": "1",
+    }
+    if name:
+        config[CONF_NAME] = name
+        service_base_name = slugify(name)
+    else:
+        service_base_name = DOMAIN
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{notify.DOMAIN}/bla/config", json.dumps(config)
+    )
+    await hass.async_block_till_done()
+    assert (
+        f"<Event service_registered[L]: domain=notify, service={service_base_name}>"
+        in caplog.text
+    )
+    assert (
+        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t1>"
+        in caplog.text
+    )
+    assert (
+        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t2>"
+        in caplog.text
+    )
+    await hass.services.async_call(
+        notify.DOMAIN,
+        service,
+        parameters,
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "lcd/set", expected_result, 1, False
+    )
+    mqtt_mock.async_publish.reset_mock()
 
 
 async def test_sending_mqtt_commands(hass, mqtt_mock, caplog):
@@ -222,113 +328,68 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, caplog):
     mqtt_mock.async_publish.reset_mock()
 
 
-@pytest.mark.parametrize(*COMMAND_TEMPLATE_TEST_PARAMS)
-async def test_sending_with_command_templates_with_config_setup(
-    hass, mqtt_mock, caplog, name, service, parameters, expected_result
-):
-    """Test the sending MQTT commands using a template using config setup."""
-    config = {
-        "command_topic": "lcd/set",
-        "command_template": "{"
-        '"message":"{{message}}",'
-        '"name":"{{name}}",'
-        '"service":"{{service}}",'
-        '"par1":"{{par1}}",'
-        '"target":{{target}},'
-        '"title":"{{title}}"'
-        "}",
+async def test_with_same_name(hass, mqtt_mock, caplog):
+    """Test the multiple setups with the same name."""
+    config1 = {
+        "command_topic": "command-topic1",
+        "name": "test_same_name",
+        "platform": "mqtt",
+        "qos": "2",
+    }
+    config2 = {
+        "command_topic": "command-topic2",
+        "name": "test_same_name",
         "targets": ["t1", "t2"],
         "platform": "mqtt",
-        "qos": "1",
+        "qos": "2",
     }
-    if name:
-        config[CONF_NAME] = name
-        service_base_name = slugify(name)
-    else:
-        service_base_name = DOMAIN
     assert await async_setup_component(
         hass,
         notify.DOMAIN,
-        {notify.DOMAIN: config},
+        {notify.DOMAIN: [config1, config2]},
     )
     await hass.async_block_till_done()
     assert (
-        f"<Event service_registered[L]: domain=notify, service={service_base_name}>"
+        "<Event service_registered[L]: domain=notify, service=test_same_name>"
         in caplog.text
     )
     assert (
-        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t1>"
+        "Notify service 'test_same_name' is not unique, cannot register service(s)"
         in caplog.text
     )
-    assert (
-        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t2>"
-        in caplog.text
-    )
+
+    # test call main service on service with multiple targets with the same name
+    # the first configured service should publish
     await hass.services.async_call(
         notify.DOMAIN,
-        service,
-        parameters,
+        "test_same_name",
+        {
+            notify.ATTR_TITLE: "Title",
+            notify.ATTR_MESSAGE: "Message",
+        },
         blocking=True,
     )
+
     mqtt_mock.async_publish.assert_called_once_with(
-        "lcd/set", expected_result, 1, False
+        "command-topic1", "Message", 2, False
     )
     mqtt_mock.async_publish.reset_mock()
 
-
-@pytest.mark.parametrize(*COMMAND_TEMPLATE_TEST_PARAMS)
-async def test_sending_with_command_templates_auto_discovery(
-    hass, mqtt_mock, caplog, name, service, parameters, expected_result
-):
-    """Test the sending MQTT commands using a template and auto discovery."""
-    config = {
-        "command_topic": "lcd/set",
-        "command_template": "{"
-        '"message":"{{message}}",'
-        '"name":"{{name}}",'
-        '"service":"{{service}}",'
-        '"par1":"{{par1}}",'
-        '"target":{{target}},'
-        '"title":"{{title}}"'
-        "}",
-        "targets": ["t1", "t2"],
-        "qos": "1",
-    }
-    if name:
-        config[CONF_NAME] = name
-        service_base_name = slugify(name)
-    else:
-        service_base_name = DOMAIN
-    async_fire_mqtt_message(
-        hass, f"homeassistant/{notify.DOMAIN}/bla/config", json.dumps(config)
-    )
-    await hass.async_block_till_done()
-    assert (
-        f"<Event service_registered[L]: domain=notify, service={service_base_name}>"
-        in caplog.text
-    )
-    assert (
-        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t1>"
-        in caplog.text
-    )
-    assert (
-        f"<Event service_registered[L]: domain=notify, service={service_base_name}_t2>"
-        in caplog.text
-    )
-    await hass.services.async_call(
-        notify.DOMAIN,
-        service,
-        parameters,
-        blocking=True,
-    )
-    mqtt_mock.async_publish.assert_called_once_with(
-        "lcd/set", expected_result, 1, False
-    )
-    mqtt_mock.async_publish.reset_mock()
+    with pytest.raises(ServiceNotFound):
+        await hass.services.async_call(
+            notify.DOMAIN,
+            "test_same_name_t2",
+            {
+                notify.ATTR_TITLE: "Title",
+                notify.ATTR_MESSAGE: "Message",
+                notify.ATTR_TARGET: ["t2"],
+            },
+            blocking=True,
+        )
 
 
-async def test_discovery(hass, mqtt_mock, caplog):
-    """Test discovery, update and removal of notify service."""
+async def test_discovery_without_device(hass, mqtt_mock, caplog):
+    """Test discovery, update and removal of notify service without device."""
     data = '{ "name": "Old name", "command_topic": "test_topic" }'
     data_update = '{ "command_topic": "test_topic_update", "name": "New name" }'
     data_update_with_targets1 = '{ "command_topic": "test_topic", "name": "My notify service", "targets": ["target1", "target2"] }'
@@ -360,8 +421,7 @@ async def test_discovery(hass, mqtt_mock, caplog):
     assert (
         "<Event service_registered[L]: domain=notify, service=new_name>" in caplog.text
     )
-
-    assert "Notify service ('notify', 'bla') has been updated" in caplog.text
+    assert "Notify service ('notify', 'bla') updated has been processed" in caplog.text
 
     await hass.services.async_call(
         notify.DOMAIN,
@@ -399,6 +459,7 @@ async def test_discovery(hass, mqtt_mock, caplog):
         in caplog.text
     )
     caplog.clear()
+
     # update available targets
     async_fire_mqtt_message(
         hass, f"homeassistant/{notify.DOMAIN}/bla/config", data_update_with_targets2
@@ -414,6 +475,73 @@ async def test_discovery(hass, mqtt_mock, caplog):
         in caplog.text
     )
     caplog.clear()
+
+    # test if a new service with same name fails to setup
+    config1 = {
+        "command_topic": "command-topic-config.yaml",
+        "name": "test-setup1",
+        "platform": "mqtt",
+        "qos": "2",
+    }
+    assert await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {notify.DOMAIN: [config1]},
+    )
+    await hass.async_block_till_done()
+    data = '{ "name": "test-setup1", "command_topic": "test_topic" }'
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{notify.DOMAIN}/test-setup1/config", data
+    )
+    await hass.async_block_till_done()
+    assert (
+        "Notify service 'test_setup1' already exists, cannot register service(s)"
+        in caplog.text
+    )
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "test_setup1",
+        {
+            notify.ATTR_TITLE: "Title",
+            notify.ATTR_MESSAGE: "Message",
+            notify.ATTR_TARGET: ["t2"],
+        },
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic-config.yaml", "Message", 2, False
+    )
+
+    # Test with same discovery on new name
+    data = '{ "name": "testa", "command_topic": "test_topic_a" }'
+    async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/testa/config", data)
+    await hass.async_block_till_done()
+    assert "<Event service_registered[L]: domain=notify, service=testa>" in caplog.text
+
+    data = '{ "name": "testb", "command_topic": "test_topic_b" }'
+    async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/testb/config", data)
+    await hass.async_block_till_done()
+    assert "<Event service_registered[L]: domain=notify, service=testb>" in caplog.text
+
+    # Try to update from new discovery of existing service test
+    data = '{ "name": "testa", "command_topic": "test_topic_c" }'
+    caplog.clear()
+    async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/testc/config", data)
+    await hass.async_block_till_done()
+    assert (
+        "Notify service 'testa' already exists, cannot register service(s)"
+        in caplog.text
+    )
+
+    # Try to update the same discovery to existing service test
+    data = '{ "name": "testa", "command_topic": "test_topic_c" }'
+    caplog.clear()
+    async_fire_mqtt_message(hass, f"homeassistant/{notify.DOMAIN}/testb/config", data)
+    await hass.async_block_till_done()
+    assert (
+        "Notify service 'testa' already exists, cannot update the existing service(s)"
+        in caplog.text
+    )
 
 
 async def test_discovery_with_device(hass, mqtt_mock, caplog, device_reg):
