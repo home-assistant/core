@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SLAVE_IDS, DOMAIN
 
@@ -21,7 +22,7 @@ DEFAULT_PORT = 502
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_SLAVE_IDS, default="0"): str,
     }
 )
@@ -44,8 +45,27 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             [rn.MODEL_NAME, rn.SERIAL_NUMBER]
         )
 
+        _LOGGER.info(
+            f"Successfully connected to inverter {model_name.value} with SN {serial_number.value}"
+        )
+
+        # Also validate the other slave-ids
+        for slave_id in data[CONF_SLAVE_IDS][1:]:
+            try:
+                slave_model_name, slave_serial_number = await inverter.get_multiple(
+                    [rn.MODEL_NAME, rn.SERIAL_NUMBER], slave_id
+                )
+
+                _LOGGER.info(
+                    f"Successfully connected to slave inverter {slave_id}: {slave_model_name.value} with SN {slave_serial_number.value}"
+                )
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.error(f"Could not connect to slave {slave_id}")
+                raise SlaveException(f"Could not connect to slave {slave_id}") from err
+
         # Return info that you want to store in the config entry.
         return {"model_name": model_name.value, "serial_number": serial_number.value}
+
     finally:
         # Cleanup this inverter object explicitly to prevent it from trying to maintain a modbus connection
         await inverter.stop()
@@ -78,6 +98,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
         except ConnectionException:
             errors["base"] = "cannot_connect"
+        except SlaveException:
+            errors["base"] = "slave_cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -87,3 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
+class SlaveException(Exception):
+    """Error while testing communication with a slave."""

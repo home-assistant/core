@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "slave_cannot_connect": "Failed to connect to additional slave",
             "unknown": "Unexpected error"
         },
         "step": {
