@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
 from homeassistant.helpers import entity_registry
 
-from . import CHANNEL_1, CHANNEL_2, FAKE_UUID
+from . import CHANNEL_1, CHANNEL_2, CLIENT_KEY, FAKE_UUID
 
 from tests.common import async_mock_service
 
@@ -27,7 +27,7 @@ def client_fixture():
         client.hello_info = {"deviceUUID": FAKE_UUID}
         client.software_info = {"major_ver": "major", "minor_ver": "minor"}
         client.system_info = {"modelName": "TVFAKE"}
-        client.client_key = "0123456789"
+        client.client_key = CLIENT_KEY
         client.apps = {
             LIVE_TV_APP_ID: {
                 "title": "Live TV",
@@ -65,19 +65,19 @@ def client_entity_removed_fixture(hass):
         "homeassistant.components.webostv.WebOsClient", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
-        client.hello_info = {"deviceUUID": "some-fake-uuid"}
+        client.hello_info = {"deviceUUID": FAKE_UUID}
         client.connected = False
 
-        def mock_is_conneted():
+        def mock_is_connected():
             return client.connected
 
-        client.is_connected = Mock(side_effect=mock_is_conneted)
+        client.is_connected = Mock(side_effect=mock_is_connected)
 
-        async def mock_conneted():
+        async def mock_connected():
             ent_reg = entity_registry.async_get(hass)
             ent_reg.async_remove("media_player.webostv_some_secret")
             client.connected = True
 
-        client.connect = AsyncMock(side_effect=mock_conneted)
+        client.connect = AsyncMock(side_effect=mock_connected)
 
         yield client

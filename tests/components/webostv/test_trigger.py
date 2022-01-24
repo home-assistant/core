@@ -7,17 +7,17 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
-from . import ENTITY_ID, setup_webostv
+from . import ENTITY_ID, FAKE_UUID, setup_webostv
 
 from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
     """Test for turn_on triggers by device_id firing."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     device_reg = get_dev_reg(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN, "fake-uuid")})
+    device = device_reg.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
 
     assert await async_setup_component(
         hass,
@@ -71,7 +71,7 @@ async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
 
 async def test_webostv_turn_on_trigger_entity_id(hass, calls, client):
     """Test for turn_on triggers by entity_id firing."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     assert await async_setup_component(
         hass,
@@ -110,7 +110,7 @@ async def test_webostv_turn_on_trigger_entity_id(hass, calls, client):
 
 async def test_wrong_trigger_platform_type(hass, caplog, client):
     """Test wrong trigger platform type."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     await async_setup_component(
         hass,
@@ -142,7 +142,7 @@ async def test_wrong_trigger_platform_type(hass, caplog, client):
 
 async def test_trigger_invalid_entity_id(hass, caplog, client):
     """Test turn on trigger using invalid entity_id."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     platform = MockEntityPlatform(hass)
 

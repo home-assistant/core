@@ -11,17 +11,17 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
-from . import ENTITY_ID, setup_webostv
+from . import ENTITY_ID, FAKE_UUID, setup_webostv
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(hass, client):
     """Test we get the expected triggers."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     device_reg = get_dev_reg(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN, "fake-uuid")})
+    device = device_reg.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
 
     turn_on_trigger = {
         "platform": "device",
@@ -36,10 +36,10 @@ async def test_get_triggers(hass, client):
 
 async def test_if_fires_on_turn_on_request(hass, calls, client):
     """Test for turn_on and turn_off triggers firing."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     device_reg = get_dev_reg(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN, "fake-uuid")})
+    device = device_reg.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
 
     assert await async_setup_component(
         hass,
@@ -130,7 +130,7 @@ async def test_get_triggers_for_invalid_device_id(hass, caplog):
 
 async def test_failure_scenarios(hass, client):
     """Test failure scenarios."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     # Test wrong trigger platform type
     with pytest.raises(HomeAssistantError):
