@@ -1097,6 +1097,7 @@ omit =
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_dsm/__init__.py
     homeassistant/components/synology_dsm/binary_sensor.py
+    homeassistant/components/synology_dsm/button.py
     homeassistant/components/synology_dsm/camera.py
     homeassistant/components/synology_dsm/diagnostics.py
     homeassistant/components/synology_dsm/common.py
