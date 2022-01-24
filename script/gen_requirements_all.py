@@ -68,9 +68,6 @@ pycryptodome>=3.6.6
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
 urllib3>=1.26.5
 
-# Constrain H11 to ensure we get a new enough version to support non-rfc line endings
-h11>=0.12.0
-
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
@@ -105,12 +102,13 @@ pandas==1.3.0
 # This is fixed in 2021.8.28
 regex==2021.8.28
 
-# httpx requires httpcore, and httpcore requires anyio, but the version constraints on
-# these requirements are quite loose. As these requirements have some outstanding issues
-# which may be addressed by version updates, we can tighten their minimum version
-# requirements here.
-httpcore>=0.14.5
-anyio>=3.5.0
+# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
+# these requirements are quite loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# requirements so we can directly link HA versions to these library versions.
+anyio==3.5.0
+h11==0.12.0
+httpcore==0.14.5
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
