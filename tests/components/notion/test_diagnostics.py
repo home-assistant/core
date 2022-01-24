@@ -7,7 +7,6 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 async def test_entry_diagnostics(hass, config_entry, hass_client, setup_notion):
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "data": {
             "bridges": {
                 "12345": {
                     "id": 12345,
@@ -109,5 +108,4 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_notion):
                     "links": {"sensor": 525993},
                 }
             },
-        },
     }
