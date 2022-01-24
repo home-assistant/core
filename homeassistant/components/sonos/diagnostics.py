@@ -107,4 +107,5 @@ async def async_generate_speaker_info(
         payload[attrib] = get_contents(value)
 
     payload["media"] = await async_generate_media_info(hass, speaker)
+    payload["event_stats"] = speaker.event_stats.report()
     return payload
