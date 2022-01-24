@@ -95,9 +95,13 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._supported_features |= SUPPORT_PAUSE
 
-        if mode := self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
+        if mode := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        ):
             self._supported_features |= SUPPORT_RETURN_HOME
             LOGGER.debug("VACUUM: %s:", mode)
+            if TUYA_MODE_RETURN_HOME in mode.range:
+                self._supported_features |= SUPPORT_RETURN_HOME
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):
             self._supported_features |= SUPPORT_LOCATE
