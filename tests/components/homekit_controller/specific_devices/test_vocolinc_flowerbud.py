@@ -69,7 +69,7 @@ async def test_vocolinc_flowerbud_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.vocolinc_flowerbud_0d324b_current_humidity",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b - Current Humidity",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b Current Humidity",
                     unique_id="homekit-AM01121849000327-aid:1-sid:30-cid:33",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
