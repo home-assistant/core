@@ -100,6 +100,26 @@
       "domain_data": {
         "output": "RELAY1"
       }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Cover_Outputs",
+      "resource": "outputs",
+      "domain": "cover",
+      "domain_data": {
+        "motor": "OUTPUTS",
+        "reverse_time": "RT1200"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Cover_Relays",
+      "resource": "motor1",
+      "domain": "cover",
+      "domain_data": {
+        "motor": "MOTOR1",
+        "reverse_time": "RT1200"
+      }
     }
   ]
 }
