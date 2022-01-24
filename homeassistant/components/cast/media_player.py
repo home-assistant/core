@@ -457,7 +457,15 @@ class CastDevice(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        result = await media_source.async_browse_media(self.hass, media_content_id)
+        kwargs = {}
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_AUDIO:
+            kwargs["content_filter"] = lambda item: item.media_content_type.startswith(
+                "audio/"
+            )
+
+        result = await media_source.async_browse_media(
+            self.hass, media_content_id, **kwargs
+        )
         return result
 
     async def async_play_media(self, media_type, media_id, **kwargs):
