@@ -115,23 +115,9 @@ class SamsungTVBridge(ABC):
     def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
 
-    def is_on(self) -> bool:
+    @abstractmethod
+    def is_on(self) -> bool | None:
         """Tells if the TV is on."""
-        if self._remote is not None:
-            self.close_remote()
-
-        try:
-            return self._get_remote() is not None
-        except (
-            UnhandledResponse,
-            AccessDenied,
-            ConnectionFailure,
-        ):
-            # We got a response so it's working.
-            return True
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            return False
 
     def send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
@@ -254,6 +240,26 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Send the key using legacy protocol."""
         if remote := self._get_remote():
             remote.control(key)
+            
+    def is_on(self) -> bool:
+        """Tells if the TV is on."""
+        if self._remote is not None:
+            self.close_remote()
+
+        try:
+            return self._get_remote() is not None
+        except (
+            UnhandledResponse,
+            AccessDenied,
+            ConnectionFailure
+        ):
+            # We got a response so it's working.
+            return True
+        except (
+            OSError
+        ):
+            # Different reasons, e.g. hostname not resolveable
+            return False
 
     def stop(self) -> None:
         """Stop Bridge."""
@@ -358,6 +364,29 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except (WebSocketException, OSError):
                 self._remote = None
         return self._remote
+    
+    def is_on(self) -> bool:
+        """Tells if the TV is on."""
+        if self._remote is not None:
+            self.close_remote()
+
+        try:
+            if self._get_remote() is not None:
+                return self.device_info()["device"]["PowerState"] == "on"
+            return False
+        except (
+            UnhandledResponse,
+            AccessDenied,
+            ConnectionFailure,
+            KeyError
+        ):
+            # We got a response so it's working.
+            return True
+        except (
+            OSError
+        ):
+            # Different reasons, e.g. hostname not resolveable
+            return False
 
     def stop(self) -> None:
         """Stop Bridge."""
