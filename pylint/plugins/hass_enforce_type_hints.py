@@ -19,14 +19,19 @@ class TypeHintMatch:
     module_filter: re.Pattern
     function_name: str
     arg_types: dict[int, str]
-    return_type: str | None
+    return_type: list[str] | str | None
 
 
 _MODULE_FILTERS: dict[str, re.Pattern] = {
     # init matches only in the package root (__init__.py)
     "init": re.compile(r"^homeassistant\.components\.\w+$"),
+    # any_platform matches any platform in the package root ({platform}.py)
     "any_platform": re.compile(
         f"^homeassistant\\.components\\.\\w+\\.({'|'.join([platform.value for platform in Platform])})$"
+    ),
+    # device_tracker matches only in the package root (device_tracker.py)
+    "device_tracker": re.compile(
+        f"^homeassistant\\.components\\.\\w+\\.({Platform.DEVICE_TRACKER.value})$"
     ),
 }
 
@@ -117,21 +122,67 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         },
         return_type=None,
     ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_tracker"],
+        function_name="setup_scanner",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+            2: "Callable[..., None]",
+            3: "DiscoveryInfoType | None",
+        },
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_tracker"],
+        function_name="async_setup_scanner",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+            2: "Callable[..., Awaitable[None]]",
+            3: "DiscoveryInfoType | None",
+        },
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_tracker"],
+        function_name="get_scanner",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+        },
+        return_type=["DeviceScanner", "DeviceScanner | None"],
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_tracker"],
+        function_name="async_get_scanner",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+        },
+        return_type=["DeviceScanner", "DeviceScanner | None"],
+    ),
 ]
 
 
-def _is_valid_type(expected_type: str | None, node: astroid.NodeNG) -> bool:
+def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) -> bool:
     """Check the argument node against the expected type."""
+    if isinstance(expected_type, list):
+        for expected_type_item in expected_type:
+            if _is_valid_type(expected_type_item, node):
+                return True
+        return False
+
     # Const occurs when the type is None
     if expected_type is None:
         return isinstance(node, astroid.Const) and node.value is None
 
-    # Special case for DiscoveryInfoType | None"
-    if expected_type == "DiscoveryInfoType | None":
+    # Special case for `xxx | yyy`
+    if match := re.match(r"^(\w+) | (\w+)$", expected_type):
         return (
             isinstance(node, astroid.BinOp)
-            and _is_valid_type("DiscoveryInfoType", node.left)
-            and _is_valid_type(None, node.right)
+            and _is_valid_type(match.group(1), node.left)
+            and _is_valid_type(match.group(2), node.right)
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
