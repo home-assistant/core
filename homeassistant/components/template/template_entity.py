@@ -250,6 +250,20 @@ class TemplateEntity(Entity):
                     parse_result=False
                 )
 
+        # Templates will not render while the entity is unavailable, try to render the
+        # icon and picture templates.
+        if self._entity_picture_template:
+            self._entity_picture_template.hass = hass
+            with contextlib.suppress(TemplateError):
+                self._attr_entity_picture = self._entity_picture_template.async_render(
+                    parse_result=False
+                )
+
+        if self._icon_template:
+            self._icon_template.hass = hass
+            with contextlib.suppress(TemplateError):
+                self._attr_icon = self._icon_template.async_render(parse_result=False)
+
     @callback
     def _update_available(self, result):
         if isinstance(result, TemplateError):
