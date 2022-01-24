@@ -27,7 +27,7 @@ def account_fixture():
         },
         async_get_next_pickup_event=AsyncMock(
             return_value=RidwellPickupEvent(
-                AsyncMock(),
+                None,
                 "event_123",
                 date(2022, 1, 24),
                 [RidwellPickup("Plastic Film", "offer_123", 1, "product_123", 1)],
