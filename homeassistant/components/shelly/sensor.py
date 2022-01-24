@@ -1,11 +1,13 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +31,7 @@ from homeassistant.helpers.typing import StateType
 from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
-    RestAttributeDescription,
+    RestEntityDescription,
     RpcAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
@@ -40,6 +42,12 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import get_device_entry_gen, get_device_uptime, temperature_unit
+
+
+@dataclass
+class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
+    """Class to describe a REST sensor."""
+
 
 SENSORS: Final = {
     ("device", "battery"): BlockAttributeDescription(
@@ -229,20 +237,22 @@ SENSORS: Final = {
 }
 
 REST_SENSORS: Final = {
-    "rssi": RestAttributeDescription(
+    "rssi": RestSensorDescription(
+        key="rssi",
         name="RSSI",
-        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "uptime": RestAttributeDescription(
+    "uptime": RestSensorDescription(
+        key="uptime",
         name="Uptime",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=SensorDeviceClass.TIMESTAMP,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
@@ -359,20 +369,12 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
 class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a REST sensor."""
 
+    entity_description: RestSensorDescription
+
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
-
-    @property
-    def state_class(self) -> str | None:
-        """State class of sensor."""
-        return self.description.state_class
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return unit of sensor."""
-        return self.description.unit
 
 
 class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
