@@ -148,11 +148,11 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         unique_id,
     ):
         """Initialize the Template cover."""
-        super().__init__(config=config)
+        super().__init__(hass, config=config, fallback_name=object_id)
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name = config.get(CONF_FRIENDLY_NAME, object_id)
+        friendly_name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._position_template = config.get(CONF_POSITION_TEMPLATE)
         self._tilt_template = config.get(CONF_TILT_TEMPLATE)
@@ -270,11 +270,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             )
         else:
             self._tilt_value = state
-
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
 
     @property
     def unique_id(self):
