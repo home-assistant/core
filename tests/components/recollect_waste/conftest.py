@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config, unique_id):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="12345, 12345", data=config)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
     entry.add_to_hass(hass)
     return entry
 
