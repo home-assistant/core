@@ -134,12 +134,13 @@ async def async_setup_rpc_entry(
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
     """Entity that controls a light on block based Shelly devices."""
 
-    _attr_supported_color_modes: set[str] = set()
+    _attr_supported_color_modes: set[str]
 
     def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
+        self._attr_supported_color_modes = set()
         self._attr_min_mireds = MIRED_MIN_VALUE
         self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
         self._attr_max_mireds = MIRED_MAX_VALUE_WHITE
