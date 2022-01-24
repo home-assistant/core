@@ -8,6 +8,7 @@ import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -16,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
