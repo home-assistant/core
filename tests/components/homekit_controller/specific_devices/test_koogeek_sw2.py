@@ -44,7 +44,7 @@ async def test_koogeek_sw2_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.koogeek_sw2_187a91_real_time_energy",
-                    friendly_name="Koogeek-SW2-187A91 - Real Time Energy",
+                    friendly_name="Koogeek-SW2-187A91 Real Time Energy",
                     unique_id="homekit-CNNT061751001372-aid:1-sid:14-cid:18",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},

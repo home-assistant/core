@@ -365,7 +365,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return f"{super().name} - {self.entity_description.name}"
+        return f"{super().name} {self.entity_description.name}"
 
     @property
     def native_value(self):

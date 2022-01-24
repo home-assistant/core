@@ -36,7 +36,7 @@ async def test_connectsense_setup(hass):
             entities=[
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_real_time_current",
-                    friendly_name="InWall Outlet-0394DE - Real Time Current",
+                    friendly_name="InWall Outlet-0394DE Real Time Current",
                     unique_id="homekit-1020301376-aid:1-sid:13-cid:18",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
@@ -44,7 +44,7 @@ async def test_connectsense_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_real_time_energy",
-                    friendly_name="InWall Outlet-0394DE - Real Time Energy",
+                    friendly_name="InWall Outlet-0394DE Real Time Energy",
                     unique_id="homekit-1020301376-aid:1-sid:13-cid:19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=POWER_WATT,
@@ -52,7 +52,7 @@ async def test_connectsense_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_energy_kwh",
-                    friendly_name="InWall Outlet-0394DE - Energy kWh",
+                    friendly_name="InWall Outlet-0394DE Energy kWh",
                     unique_id="homekit-1020301376-aid:1-sid:13-cid:20",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -66,7 +66,7 @@ async def test_connectsense_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_real_time_current_2",
-                    friendly_name="InWall Outlet-0394DE - Real Time Current",
+                    friendly_name="InWall Outlet-0394DE Real Time Current",
                     unique_id="homekit-1020301376-aid:1-sid:25-cid:30",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
@@ -74,7 +74,7 @@ async def test_connectsense_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_real_time_energy_2",
-                    friendly_name="InWall Outlet-0394DE - Real Time Energy",
+                    friendly_name="InWall Outlet-0394DE Real Time Energy",
                     unique_id="homekit-1020301376-aid:1-sid:25-cid:31",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=POWER_WATT,
@@ -82,7 +82,7 @@ async def test_connectsense_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_energy_kwh_2",
-                    friendly_name="InWall Outlet-0394DE - Energy kWh",
+                    friendly_name="InWall Outlet-0394DE Energy kWh",
                     unique_id="homekit-1020301376-aid:1-sid:25-cid:32",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ENERGY_KILO_WATT_HOUR,

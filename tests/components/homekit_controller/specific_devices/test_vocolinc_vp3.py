@@ -38,7 +38,7 @@ async def test_vocolinc_vp3_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.vocolinc_vp3_123456_real_time_energy",
-                    friendly_name="VOCOlinc-VP3-123456 - Real Time Energy",
+                    friendly_name="VOCOlinc-VP3-123456 Real Time Energy",
                     unique_id="homekit-EU0121203xxxxx07-aid:1-sid:48-cid:97",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},

@@ -123,7 +123,7 @@ async def test_ecobee3_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.homew_current_temperature",
-                    friendly_name="HomeW - Current Temperature",
+                    friendly_name="HomeW Current Temperature",
                     unique_id="homekit-123456789012-aid:1-sid:16-cid:19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=TEMP_CELSIUS,
