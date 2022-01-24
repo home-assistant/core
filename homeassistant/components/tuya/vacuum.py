@@ -115,7 +115,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._supported_features |= SUPPORT_FAN_SPEED
             self._fan_speed = enum_type
 
-        if int_type := self.find_dpcode(DPCode.SUCTION, dptype=DPType.INTEGER):
+        if int_type := self.find_dpcode(DPCode.ELECTRICITY_LEFT, dptype=DPType.INTEGER):
             self._supported_features |= SUPPORT_BATTERY
             self._battery_level = int_type
 
