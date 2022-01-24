@@ -13,7 +13,7 @@ async def mock_fetch_static_data(self):
     }
 
 
-async def test_duplicate_error(hass: HomeAssistant):
+async def test_duplicate_error(hass: HomeAssistant) -> None:
     """Test that errors are shown when duplicates are added."""
     with patch(
         "moehlenhoff_alpha2.Alpha2Base._fetch_static_data", mock_fetch_static_data
@@ -32,7 +32,7 @@ async def test_duplicate_error(hass: HomeAssistant):
         assert result["reason"] == "already_configured"
 
 
-async def test_user(hass: HomeAssistant):
+async def test_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
 
     with patch(
@@ -52,7 +52,7 @@ async def test_user(hass: HomeAssistant):
         assert result["data"]["host"] == "fake_host_user"
 
 
-async def test_connection_error(hass: HomeAssistant):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection error."""
     with patch(
         "moehlenhoff_alpha2.Alpha2Base._fetch_static_data",
@@ -71,7 +71,7 @@ async def test_connection_error(hass: HomeAssistant):
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_unexpected_error(hass: HomeAssistant):
+async def test_unexpected_error(hass: HomeAssistant) -> None:
     """Test unexpected error."""
 
     with patch(
