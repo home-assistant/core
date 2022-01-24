@@ -7,15 +7,9 @@ from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_ID
 from homeassistant.core import HomeAssistant
 
 from . import CoinbaseData
-from .const import (
-    API_ACCOUNT_AMOUNT,
-    API_ACCOUNT_NATIVE_BALANCE,
-    API_RESOURCE_PATH,
-    DOMAIN,
-)
+from .const import API_ACCOUNT_AMOUNT, API_RESOURCE_PATH, DOMAIN
 
 TO_REDACT = {
-    API_ACCOUNT_NATIVE_BALANCE,
     API_ACCOUNT_AMOUNT,
     API_RESOURCE_PATH,
     CONF_API_KEY,
