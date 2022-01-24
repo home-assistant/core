@@ -90,6 +90,8 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = Hood(self.hass, app)
             elif app.type == "Hob":
                 device = Hob(self.hass, app)
+            elif app.type == "CookProcessor":
+                device = CookProcessor(self.hass, app)
             else:
                 _LOGGER.warning("Appliance type %s not implemented", app.type)
                 continue
@@ -543,3 +545,14 @@ class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
+
+
+class CookProcessor(DeviceWithOpState):
+    """CookProcessor class."""
+
+    power_off_state = BSH_POWER_STANDBY
+
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        op_state_sensor = self.get_opstate_sensor()
+        return {"sensor": op_state_sensor}
