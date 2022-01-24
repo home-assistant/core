@@ -368,6 +368,12 @@ def sonos_resources_fixture():
     return load_fixture("plex/sonos_resources.xml")
 
 
+@pytest.fixture(name="hubs", scope="session")
+def hubs_fixture():
+    """Load hubs resource payload and return it."""
+    return load_fixture("plex/hubs.xml")
+
+
 @pytest.fixture(name="entry")
 def mock_config_entry():
     """Return the default mocked config entry."""

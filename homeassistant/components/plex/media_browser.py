@@ -1,5 +1,4 @@
 """Support to interface with the Plex API."""
-from itertools import islice
 import logging
 
 from homeassistant.components.media_player import BrowseMedia
@@ -35,12 +34,6 @@ PLAYLISTS_BROWSE_PAYLOAD = {
     "can_play": False,
     "can_expand": True,
 }
-
-LIBRARY_PREFERRED_LIBTYPE = {
-    "show": "episode",
-    "artist": "album",
-}
-
 ITEM_TYPE_MEDIA_CLASS = {
     "album": MEDIA_CLASS_ALBUM,
     "artist": MEDIA_CLASS_ARTIST,
@@ -51,6 +44,7 @@ ITEM_TYPE_MEDIA_CLASS = {
     "playlist": MEDIA_CLASS_PLAYLIST,
     "season": MEDIA_CLASS_SEASON,
     "show": MEDIA_CLASS_TV_SHOW,
+    "station": MEDIA_CLASS_ARTIST,
     "track": MEDIA_CLASS_TRACK,
     "video": MEDIA_CLASS_VIDEO,
 }
@@ -92,29 +86,11 @@ def browse_media(  # noqa: C901
 
         return BrowseMedia(**payload)
 
-    def hub_payload(hub):
-        payload = {
-            "title": hub.title,
-            "media_class": MEDIA_CLASS_DIRECTORY,
-            "media_content_id": f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}",
-            "media_content_type": hub.type,
-            "can_play": False,
-            "can_expand": True,
-        }
-        return BrowseMedia(**payload)
-
     def library_payload(library_id):
         """Create response payload to describe contents of a specific library."""
         library = entity.plex_server.library.sectionByID(library_id)
         library_info = library_section_payload(library)
-        library_info.children = []
-        library_info.children.append(special_library_payload(library_info, "On Deck"))
-        library_info.children.append(
-            special_library_payload(library_info, "Recently Added")
-        )
-        library_info.children.append(
-            special_library_payload(library_info, "Recommended")
-        )
+        library_info.children = [special_library_payload(library_info, "Recommended")]
         for item in library.all():
             try:
                 library_info.children.append(item_payload(item))
@@ -147,6 +123,9 @@ def browse_media(  # noqa: C901
             return None
         if media_info.can_expand:
             media_info.children = []
+            if media.TYPE == "artist":
+                if (station := media.station()) is not None:
+                    media_info.children.append(station_payload(station))
             for item in media:
                 try:
                     media_info.children.append(item_payload(item, short_name=True))
@@ -156,13 +135,20 @@ def browse_media(  # noqa: C901
 
     if media_content_id and media_content_id.startswith(HUB_PREFIX):
         media_content_id = media_content_id[len(HUB_PREFIX) :]
-        library_section_id, hub_identifier = media_content_id.split(":")
-        library_section = entity.plex_server.library.sectionByID(
-            int(library_section_id)
-        )
-        hub = next(
-            x for x in library_section.hubs() if x.hubIdentifier == hub_identifier
-        )
+        location, hub_identifier = media_content_id.split(":")
+        if location == "server":
+            hub = next(
+                x
+                for x in entity.plex_server.library.hubs()
+                if x.hubIdentifier == hub_identifier
+            )
+            media_content_id = f"{HUB_PREFIX}server:{hub.hubIdentifier}"
+        else:
+            library_section = entity.plex_server.library.sectionByID(int(location))
+            hub = next(
+                x for x in library_section.hubs() if x.hubIdentifier == hub_identifier
+            )
+            media_content_id = f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}"
         try:
             children_media_class = ITEM_TYPE_MEDIA_CLASS[hub.type]
         except KeyError as err:
@@ -170,7 +156,7 @@ def browse_media(  # noqa: C901
         payload = {
             "title": hub.title,
             "media_class": MEDIA_CLASS_DIRECTORY,
-            "media_content_id": f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}",
+            "media_content_id": media_content_id,
             "media_content_type": hub.type,
             "can_play": False,
             "can_expand": True,
@@ -178,7 +164,10 @@ def browse_media(  # noqa: C901
             "children_media_class": children_media_class,
         }
         for item in hub.items:
-            payload["children"].append(item_payload(item))
+            if hub.type == "station":
+                payload["children"].append(station_payload(item))
+            else:
+                payload["children"].append(item_payload(item))
         return BrowseMedia(**payload)
 
     if media_content_id and ":" in media_content_id:
@@ -227,31 +216,11 @@ def browse_media(  # noqa: C901
             "children_media_class": children_media_class,
         }
 
-        if special_folder == "On Deck":
-            items = library_or_section.onDeck()
-        elif special_folder == "Recently Added":
-            if library_or_section.TYPE:
-                libtype = LIBRARY_PREFERRED_LIBTYPE.get(
-                    library_or_section.TYPE, library_or_section.TYPE
-                )
-                items = library_or_section.recentlyAdded(libtype=libtype)
-            else:
-                recent_iter = (
-                    x
-                    for x in library_or_section.search(sort="addedAt:desc", limit=100)
-                    if x.type in ["album", "episode", "movie"]
-                )
-                items = list(islice(recent_iter, 30))
-        elif special_folder == "Recommended":
+        if special_folder == "Recommended":
             for item in library_or_section.hubs():
+                if item.type == "photo":
+                    continue
                 payload["children"].append(hub_payload(item))
-            return BrowseMedia(**payload)
-
-        for item in items:
-            try:
-                payload["children"].append(item_payload(item))
-            except UnknownMediaType:
-                continue
 
         return BrowseMedia(**payload)
 
@@ -323,12 +292,39 @@ def server_payload(plex_server):
         can_expand=True,
         children_media_class=MEDIA_CLASS_DIRECTORY,
     )
-    server_info.children = []
-    server_info.children.append(special_library_payload(server_info, "On Deck"))
-    server_info.children.append(special_library_payload(server_info, "Recently Added"))
+    server_info.children = [special_library_payload(server_info, "Recommended")]
     for library in plex_server.library.sections():
         if library.type == "photo":
             continue
         server_info.children.append(library_section_payload(library))
     server_info.children.append(BrowseMedia(**PLAYLISTS_BROWSE_PAYLOAD))
     return server_info
+
+
+def hub_payload(hub):
+    """Create response payload for a hub."""
+    if hasattr(hub, "librarySectionID"):
+        media_content_id = f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}"
+    else:
+        media_content_id = f"{HUB_PREFIX}server:{hub.hubIdentifier}"
+    payload = {
+        "title": hub.title,
+        "media_class": MEDIA_CLASS_DIRECTORY,
+        "media_content_id": media_content_id,
+        "media_content_type": hub.type,
+        "can_play": False,
+        "can_expand": True,
+    }
+    return BrowseMedia(**payload)
+
+
+def station_payload(station):
+    """Create response payload for a music station."""
+    return BrowseMedia(
+        title=station.title,
+        media_class=ITEM_TYPE_MEDIA_CLASS[station.type],
+        media_content_id=station.key,
+        media_content_type="station",
+        can_play=True,
+        can_expand=False,
+    )
