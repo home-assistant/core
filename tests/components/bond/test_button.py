@@ -3,6 +3,7 @@
 from bond_api import Action, DeviceType
 
 from homeassistant import core
+from homeassistant.components.bond.button import STEP_SIZE
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button.const import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
@@ -79,8 +80,8 @@ async def test_mutually_exclusive_actions(hass: core.HomeAssistant):
     assert not hass.states.async_all("button")
 
 
-async def test_press_button(hass: core.HomeAssistant):
-    """Tests we can press a button."""
+async def test_press_button_with_argument(hass: core.HomeAssistant):
+    """Tests we can press a button with an argument."""
     await setup_platform(
         hass,
         BUTTON_DOMAIN,
@@ -100,7 +101,9 @@ async def test_press_button(hass: core.HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    mock_action.assert_called_once_with("test-device-id", Action(Action.INCREASE_FLAME))
+    mock_action.assert_called_once_with(
+        "test-device-id", Action(Action.INCREASE_FLAME, STEP_SIZE)
+    )
 
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
@@ -111,4 +114,45 @@ async def test_press_button(hass: core.HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    mock_action.assert_called_once_with("test-device-id", Action(Action.DECREASE_FLAME))
+    mock_action.assert_called_once_with(
+        "test-device-id", Action(Action.DECREASE_FLAME, STEP_SIZE)
+    )
+
+
+async def test_press_button(hass: core.HomeAssistant):
+    """Tests we can press a button."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        light_brightness_increase_decrease_only("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    assert hass.states.get("button.name_1_start_increasing_brightness")
+    assert hass.states.get("button.name_1_start_decreasing_brightness")
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_start_increasing_brightness"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with(
+        "test-device-id", Action(Action.START_INCREASING_BRIGHTNESS)
+    )
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_start_decreasing_brightness"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with(
+        "test-device-id", Action(Action.START_DECREASING_BRIGHTNESS)
+    )
