@@ -7,8 +7,10 @@ from aiogithubapi import (
     GitHubAPI,
     GitHubCommitModel,
     GitHubException,
+    GitHubNotModifiedException,
     GitHubReleaseModel,
     GitHubRepositoryModel,
+    GitHubResponseModel,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,6 +36,7 @@ class GitHubBaseDataUpdateCoordinator(DataUpdateCoordinator[T]):
         self.config_entry = entry
         self.repository = repository
         self._client = client
+        self._last_response: GitHubResponseModel[T] | None = None
 
         super().__init__(
             hass,
@@ -42,15 +45,36 @@ class GitHubBaseDataUpdateCoordinator(DataUpdateCoordinator[T]):
             update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
-    async def fetch_data(self) -> T:
+    @property
+    def _etag(self) -> str:
+        """Return the ETag of the last response."""
+        return self._last_response.etag if self._last_response is not None else None
+
+    async def fetch_data(self) -> GitHubResponseModel[T]:
         """Fetch data from GitHub API."""
+
+    @staticmethod
+    def _parse_response(response: GitHubResponseModel[T]) -> T:
+        """Parse the response from GitHub API."""
+        return response.data
 
     async def _async_update_data(self) -> T:
         try:
-            return await self.fetch_data()
+            response = await self.fetch_data()
+        except GitHubNotModifiedException:
+            LOGGER.debug(
+                "Content for %s with %s not modified",
+                self.repository,
+                self.__class__.__name__,
+            )
+            # Return the last known data if the request result was not modified
+            return self.data
         except GitHubException as exception:
             LOGGER.exception(exception)
             raise UpdateFailed(exception) from exception
+        else:
+            self._last_response = response
+            return self._parse_response(response)
 
 
 class RepositoryInformationDataUpdateCoordinator(
@@ -58,10 +82,9 @@ class RepositoryInformationDataUpdateCoordinator(
 ):
     """Data update coordinator for repository information."""
 
-    async def fetch_data(self) -> GitHubRepositoryModel:
+    async def fetch_data(self) -> GitHubResponseModel[GitHubRepositoryModel]:
         """Get the latest data from GitHub."""
-        result = await self._client.repos.get(self.repository)
-        return result.data
+        return await self._client.repos.get(self.repository, **{"etag": self._etag})
 
 
 class RepositoryReleaseDataUpdateCoordinator(
@@ -69,20 +92,26 @@ class RepositoryReleaseDataUpdateCoordinator(
 ):
     """Data update coordinator for repository release."""
 
-    async def fetch_data(self) -> GitHubReleaseModel | None:
-        """Get the latest data from GitHub."""
-        result = await self._client.repos.releases.list(
-            self.repository, **{"params": {"per_page": 1}}
-        )
-        if not result.data:
+    @staticmethod
+    def _parse_response(
+        response: GitHubResponseModel[GitHubReleaseModel | None],
+    ) -> GitHubReleaseModel | None:
+        """Parse the response from GitHub API."""
+        if not response.data:
             return None
 
-        for release in result.data:
+        for release in response.data:
             if not release.prerelease:
                 return release
 
         # Fall back to the latest release if no non-prerelease release is found
-        return result.data[0]
+        return response.data[0]
+
+    async def fetch_data(self) -> GitHubReleaseModel | None:
+        """Get the latest data from GitHub."""
+        return await self._client.repos.releases.list(
+            self.repository, **{"params": {"per_page": 1}, "etag": self._etag}
+        )
 
 
 class RepositoryIssueDataUpdateCoordinator(
@@ -90,32 +119,60 @@ class RepositoryIssueDataUpdateCoordinator(
 ):
     """Data update coordinator for repository issues."""
 
+    _issue_etag: str | None = None
+    _pull_etag: str | None = None
+
+    @staticmethod
+    def _parse_response(response: IssuesPulls) -> IssuesPulls:
+        """Parse the response from GitHub API."""
+        return response
+
     async def fetch_data(self) -> IssuesPulls:
         """Get the latest data from GitHub."""
-        base_issue_response = await self._client.repos.issues.list(
-            self.repository, **{"params": {"per_page": 1}}
-        )
-        pull_response = await self._client.repos.pulls.list(
-            self.repository, **{"params": {"per_page": 1}}
-        )
+        pulls_count = 0
+        pull_last = None
+        issues_count = 0
+        issue_last = None
+        try:
+            pull_response = await self._client.repos.pulls.list(
+                self.repository,
+                **{"params": {"per_page": 1}, "etag": self._pull_etag},
+            )
+        except GitHubNotModifiedException:
+            # Return the last known data if the request result was not modified
+            pulls_count = self.data.pulls_count
+            pull_last = self.data.pull_last
+        else:
+            self._pull_etag = pull_response.etag
+            pulls_count = pull_response.last_page_number or 0
+            pull_last = pull_response.data[0] if pulls_count != 0 else None
 
-        pulls_count = pull_response.last_page_number or 0
-        issues_count = (base_issue_response.last_page_number or 0) - pulls_count
+        try:
+            issue_response = await self._client.repos.issues.list(
+                self.repository,
+                **{"params": {"per_page": 1}, "etag": self._issue_etag},
+            )
+        except GitHubNotModifiedException:
+            # Return the last known data if the request result was not modified
+            issues_count = self.data.issues_count
+            issue_last = self.data.issue_last
+        else:
+            self._issue_etag = issue_response.etag
+            issues_count = (issue_response.last_page_number or 0) - pulls_count
+            issue_last = issue_response.data[0] if issues_count != 0 else None
 
-        issue_last = base_issue_response.data[0] if issues_count != 0 else None
-
-        if issue_last is not None and issue_last.pull_request:
-            issue_response = await self._client.repos.issues.list(self.repository)
-            for issue in issue_response.data:
-                if not issue.pull_request:
-                    issue_last = issue
-                    break
+            if issue_last is not None and issue_last.pull_request:
+                issue_response = await self._client.repos.issues.list(self.repository)
+                for issue in issue_response.data:
+                    if not issue.pull_request:
+                        issue_last = issue
+                        break
 
         return IssuesPulls(
             issues_count=issues_count,
             issue_last=issue_last,
             pulls_count=pulls_count,
-            pull_last=pull_response.data[0] if pulls_count != 0 else None,
+            pull_last=pull_last,
         )
 
 
@@ -124,12 +181,18 @@ class RepositoryCommitDataUpdateCoordinator(
 ):
     """Data update coordinator for repository commit."""
 
+    @staticmethod
+    def _parse_response(
+        response: GitHubResponseModel[GitHubCommitModel | None],
+    ) -> GitHubCommitModel | None:
+        """Parse the response from GitHub API."""
+        return response.data[0] if response.data else None
+
     async def fetch_data(self) -> GitHubCommitModel | None:
         """Get the latest data from GitHub."""
-        result = await self._client.repos.list_commits(
-            self.repository, **{"params": {"per_page": 1}}
+        return await self._client.repos.list_commits(
+            self.repository, **{"params": {"per_page": 1}, "etag": self._etag}
         )
-        return result.data[0] if result.data else None
 
 
 class DataUpdateCoordinators(TypedDict):
