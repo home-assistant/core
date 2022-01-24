@@ -199,7 +199,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
@@ -209,7 +209,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._template = config.get(CONF_STATE)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
-        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""

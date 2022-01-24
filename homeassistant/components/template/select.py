@@ -101,14 +101,13 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the select."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         self._value_template = config[CONF_STATE]
         self._command_select_option = Script(
             hass, config[CONF_SELECT_OPTION], self._attr_name, DOMAIN
         )
         self._options_template = config[ATTR_OPTIONS]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_unique_id = unique_id
         self._attr_options = None
         self._attr_current_option = None
 
