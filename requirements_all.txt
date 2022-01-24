@@ -1999,7 +1999,7 @@ python_opendata_transport==0.3.0
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==2021.12.0
+pytile==2022.01.0
 
 # homeassistant.components.touchline
 pytouchline==0.7
