@@ -56,3 +56,23 @@ def test_signal_icon():
     assert icon_for_signal_level(40) == "mdi:signal-cellular-2"
     assert icon_for_signal_level(80) == "mdi:signal-cellular-3"
     assert icon_for_signal_level(100) == "mdi:signal-cellular-3"
+
+
+def test_volume_icon():
+    """Test icon generator for signal sensor."""
+    from homeassistant.helpers.icon import icon_for_volume_level
+
+    assert icon_for_volume_level(None, True) == "mdi:volume-variant-off"
+    assert icon_for_volume_level(None, False) == "mdi:volume-variant-off"
+
+    assert icon_for_volume_level(0, True) == "mdi:volume-mute"
+    assert icon_for_volume_level(0, False) == "mdi:volume-off"
+
+    assert icon_for_volume_level(35, True) == "mdi:volume-mute"
+    assert icon_for_volume_level(35, False) == "mdi:volume-low"
+
+    assert icon_for_volume_level(70, True) == "mdi:volume-mute"
+    assert icon_for_volume_level(70, False) == "mdi:volume-medium"
+
+    assert icon_for_volume_level(70, True) == "mdi:volume-mute"
+    assert icon_for_volume_level(70, False) == "mdi:volume-high"
