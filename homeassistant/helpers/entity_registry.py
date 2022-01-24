@@ -94,13 +94,13 @@ DISABLED_USER = RegistryEntryDisabler.USER.value
 
 
 def _convert_to_entity_category(
-    value: EntityCategory | str | None,
+    value: EntityCategory | str | None, raise_report: bool = True
 ) -> EntityCategory | None:
     """Force incoming entity_category to be an enum."""
     # pylint: disable=import-outside-toplevel
     from .entity import convert_to_entity_category
 
-    return convert_to_entity_category(value)
+    return convert_to_entity_category(value, raise_report=raise_report)
 
 
 @attr.s(slots=True, frozen=True)
@@ -398,7 +398,7 @@ class EntityRegistry:
             config_entry_id=config_entry_id,
             device_id=device_id,
             disabled_by=disabled_by,
-            entity_category=entity_category,
+            entity_category=_convert_to_entity_category(entity_category),
             entity_id=entity_id,
             original_device_class=original_device_class,
             original_icon=original_icon,
@@ -628,7 +628,9 @@ class EntityRegistry:
                     disabled_by=RegistryEntryDisabler(entity["disabled_by"])
                     if entity["disabled_by"]
                     else None,
-                    entity_category=entity["entity_category"],
+                    entity_category=_convert_to_entity_category(
+                        entity["entity_category"], raise_report=False
+                    ),
                     entity_id=entity["entity_id"],
                     icon=entity["icon"],
                     id=entity["id"],
