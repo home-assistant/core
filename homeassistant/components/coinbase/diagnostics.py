@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.aftership.const import CONF_TITLE
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_ID
@@ -17,6 +18,7 @@ TO_REDACT = {
     CONF_API_KEY,
     CONF_API_TOKEN,
     CONF_ID,
+    CONF_TITLE,
 }
 
 
