@@ -1,17 +1,63 @@
-"""Add FlashForge sensors."""
+"""Add Flashforge sensors."""
 from __future__ import annotations
 
-from ffpp.Printer import Printer, ToolHandler
+from collections.abc import Callable
+from dataclasses import dataclass
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from ffpp.Printer import Printer, temperatures as Tool
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .data_update_coordinator import FlashForgeDataUpdateCoordinator
+
+
+@dataclass
+class FlashforgeSensorEntityDescription(SensorEntityDescription):
+    """Sensor entity description with added value fnc."""
+
+    value_fnc: Callable[[Printer | Tool], str | int | None] | None = None
+
+
+SENSORS: tuple[FlashforgeSensorEntityDescription, ...] = (
+    FlashforgeSensorEntityDescription(
+        key="status",
+        icon="mdi:printer-3d",
+        value_fnc=lambda printer: printer.machine_status,
+    ),
+    FlashforgeSensorEntityDescription(
+        key="job_percentage",
+        icon="mdi:file-percent",
+        native_unit_of_measurement=PERCENTAGE,
+        value_fnc=lambda printer: printer.print_percent,
+    ),
+)
+TEMP_SENSORS: tuple[FlashforgeSensorEntityDescription, ...] = (
+    FlashforgeSensorEntityDescription(
+        key="_current",
+        value_fnc=lambda tool: tool.now,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FlashforgeSensorEntityDescription(
+        key="_target",
+        value_fnc=lambda tool: tool.target,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -21,159 +67,85 @@ async def async_setup_entry(
 ) -> None:
     """Set up the available FlashForge sensors platform."""
 
-    # Get coordinator and unique id.
     coordinator: FlashForgeDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
-    ]["coordinator"]
-    printer: Printer = hass.data[DOMAIN][config_entry.entry_id]["printer"]
-    device_id = config_entry.unique_id or ""
-
+    ]
     entities: list[SensorEntity] = []
 
-    # Create temperature sensors.
-    if printer.connected:
-        types = ["now", "target"]
-        for tool in printer.extruder_tools:
-            for temp_type in types:
+    if coordinator.printer.connected:
+        # Loop all extruders and add current and target temp sensors.
+        for i, tool in enumerate(coordinator.printer.extruder_tools):
+            name = (
+                f"extruder{i}"
+                if len(coordinator.printer.extruder_tools) > 1
+                else "extruder"
+            )
+            for description in TEMP_SENSORS:
                 entities.append(
-                    FlashForgeTemperatureSensor(
-                        coordinator,
-                        tool.name,
-                        temp_type,
-                        printer.extruder_tools,
-                        device_id,
-                    )
-                )
-        for tool in printer.bed_tools:
-            for temp_type in types:
-                entities.append(
-                    FlashForgeTemperatureSensor(
-                        coordinator,
-                        tool.name,
-                        temp_type,
-                        printer.bed_tools,
-                        device_id,
+                    FlashForgeSensor(
+                        coordinator=coordinator,
+                        description=description,
+                        name=name,
+                        tool_name=tool.name,
                     )
                 )
 
-    entities.append(FlashForgeStatusSensor(coordinator, device_id))
-    entities.append(FlashForgeJobPercentageSensor(coordinator, device_id))
+        # Loop all beds and add current and target temp sensors.
+        for i, tool in enumerate(coordinator.printer.bed_tools):
+            name = f"bed{i}" if len(coordinator.printer.bed_tools) > 1 else "bed"
+            for description in TEMP_SENSORS:
+                entities.append(
+                    FlashForgeSensor(
+                        coordinator=coordinator,
+                        description=description,
+                        name=name,
+                        tool_name=tool.name,
+                    )
+                )
+
+    for description in SENSORS:
+        entities.append(
+            FlashForgeSensor(
+                coordinator=coordinator,
+                description=description,
+            )
+        )
 
     async_add_entities(entities)
 
 
-class FlashForgeSensorBase(CoordinatorEntity, SensorEntity):
+class FlashForgeSensor(CoordinatorEntity, SensorEntity):
     """Representation of an FlashForge sensor."""
 
     coordinator: FlashForgeDataUpdateCoordinator
+    entity_description: FlashforgeSensorEntityDescription
 
     def __init__(
         self,
         coordinator: FlashForgeDataUpdateCoordinator,
-        sensor_type: str,
-        device_id: str,
+        description: FlashforgeSensorEntityDescription,
+        name: str = "",
+        tool_name: str | None = None,
     ) -> None:
-        """Initialize a new FlashForge sensor."""
+        """Initialize a new Flashforge sensor."""
         super().__init__(coordinator)
-        self._device_id = device_id
-        self._attr_name = f"{DEFAULT_NAME} {sensor_type}"
-        self._attr_unique_id = f"{sensor_type}-{device_id}"
+        self._device_id = coordinator.config_entry.unique_id
+        self._attr_device_info = coordinator.device_info
+        self.entity_description = description
+        self._attr_name = f"{coordinator.printer.machine_name} {name.title()}{description.key.replace('_', ' ').title()}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{name}{description.key}"
+        )
 
-    @property
-    def device_info(self):
-        """Device info."""
-        return self.coordinator.device_info
-
-
-class FlashForgeStatusSensor(FlashForgeSensorBase):
-    """Representation of an FlashForge sensor."""
-
-    _attr_icon = "mdi:printer-3d"
-
-    def __init__(
-        self, coordinator: FlashForgeDataUpdateCoordinator, device_id: str
-    ) -> None:
-        """Initialize a new FlashForge sensor."""
-        super().__init__(coordinator, "Current State", device_id)
+        self.tool_name = tool_name
 
     @property
     def native_value(self):
         """Return sensor state."""
-        status: str = self.coordinator.printer.machine_status
-        return status
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.coordinator.printer.machine_status
-        )
-
-
-class FlashForgeJobPercentageSensor(FlashForgeSensorBase):
-    """Representation of an FlashForge sensor."""
-
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_icon = "mdi:file-percent"
-
-    def __init__(
-        self, coordinator: FlashForgeDataUpdateCoordinator, device_id: str
-    ) -> None:
-        """Initialize a new FlashForge sensor."""
-        super().__init__(coordinator, "Job Percentage", device_id)
-
-    @property
-    def native_value(self):
-        """Return sensor state."""
-        percent: str = self.coordinator.printer.print_percent
-
-        return percent
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.coordinator.printer.print_percent
-        )
-
-
-class FlashForgeTemperatureSensor(FlashForgeSensorBase):
-    """Representation of an FlashForge sensor."""
-
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-
-    def __init__(
-        self,
-        coordinator: FlashForgeDataUpdateCoordinator,
-        tool_name: str,
-        temp_type: str,
-        tool_handler: ToolHandler,
-        device_id: str,
-    ) -> None:
-        """Initialize a new FlashForge sensor."""
-        super().__init__(coordinator, f"{tool_name} {temp_type} temp", device_id)
-        self._temp_type = temp_type
-        self._tool_name = tool_name
-        self.tool_handler = tool_handler
-
-    @property
-    def native_value(self):
-        """Return sensor state."""
-        tool = self.tool_handler.get(self._tool_name)
-
-        temp = tool.now
-        if self._temp_type == "target":
-            temp = tool.target
-
-        return temp
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success and self.tool_handler.get(
-            self._tool_name
-        )
+        if self.tool_name:
+            # If toolname is set we need to get that tool and pass it to the lambda.
+            tool = self.coordinator.printer.extruder_tools.get(self.tool_name)
+            if tool is None:
+                tool = self.coordinator.printer.bed_tools.get(self.tool_name)
+            return self.entity_description.value_fnc(tool)
+        return self.entity_description.value_fnc(self.coordinator.printer)

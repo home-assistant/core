@@ -5,7 +5,7 @@ from ffpp import Discovery
 from ffpp.Printer import Printer
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -46,7 +46,7 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self._get_printer_info(self.hass, user_input)
 
                 return self._async_create_entry()
-            except CannotConnect:
+            except (TimeoutError, ConnectionError):
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
 
         return self._async_show_form(errors=errors)
@@ -74,7 +74,7 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._get_printer_info(
                 self.hass, {CONF_IP_ADDRESS: ip, CONF_PORT: port}
             )
-        except CannotConnect:
+        except (TimeoutError, ConnectionError):
             return self.async_abort(reason="no_devices_found")
 
         self._set_confirm_only()
@@ -120,10 +120,7 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.port = user_input[CONF_PORT]
         self.printer = Printer(self.ip_addr, self.port)
 
-        try:
-            await self.printer.connect()
-        except (TimeoutError, ConnectionError) as err:
-            raise CannotConnect(err) from err
+        await self.printer.connect()
 
         if self.printer.serial is not None:
             await self.async_set_unique_id(self.printer.serial)
@@ -142,7 +139,3 @@ class FlashForgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL_NUMBER: self.printer.serial,
             },
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
