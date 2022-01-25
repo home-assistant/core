@@ -110,11 +110,6 @@ class WeatherAlertSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def state_class(self) -> SensorStateClass:
-        """Return the state class."""
-        return SensorStateClass.MEASUREMENT
-
-    @property
     def native_value(self) -> int:
         """Return the native value of the sensor."""
         if hasattr(self.coordinator.data, "alerts"):
