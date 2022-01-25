@@ -548,7 +548,10 @@ class Integration:
         except ImportError:
             raise
         except Exception as err:
-            raise ImportError(f"Error importing {self.pkg_path}") from err
+            _LOGGER.exception(
+                "Unexpected exception importing component %s", self.pkg_path
+            )
+            raise ImportError(f"Exception importing {self.pkg_path}") from err
 
         return cache[self.domain]
 
@@ -564,8 +567,13 @@ class Integration:
         except ImportError:
             raise
         except Exception as err:
+            _LOGGER.exception(
+                "Unexpected exception importing platform %s.%s",
+                self.pkg_path,
+                platform_name,
+            )
             raise ImportError(
-                f"Error importing {self.pkg_path}.{platform_name}"
+                f"Exception importing {self.pkg_path}.{platform_name}"
             ) from err
 
         return cache[full_name]
