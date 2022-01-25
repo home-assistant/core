@@ -81,7 +81,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Admin",
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.admin if domain.admin else None,
     ),
     WhoisSensorEntityDescription(
@@ -117,7 +117,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Owner",
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.owner if domain.owner else None,
     ),
     WhoisSensorEntityDescription(
@@ -125,7 +125,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Registrant",
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.registrant if domain.registrant else None,
     ),
     WhoisSensorEntityDescription(
@@ -133,7 +133,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Registrar",
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.registrar if domain.registrar else None,
     ),
     WhoisSensorEntityDescription(
@@ -141,7 +141,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Reseller",
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.reseller if domain.reseller else None,
     ),
 )
