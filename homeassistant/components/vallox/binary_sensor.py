@@ -57,8 +57,6 @@ class ValloxBinarySensorEntityDescription(
 ):
     """Describes Vallox binary sensor entity."""
 
-    sensor_type: type[ValloxBinarySensor] = ValloxBinarySensor
-
 
 SENSORS: tuple[ValloxBinarySensorEntityDescription, ...] = (
     ValloxBinarySensorEntityDescription(
@@ -81,7 +79,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            description.sensor_type(data["name"], data["coordinator"], description)
+            ValloxBinarySensor(data["name"], data["coordinator"], description)
             for description in SENSORS
         ]
     )
