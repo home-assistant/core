@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
@@ -96,21 +96,6 @@ class TradfriGroup(CoordinatorEntity, LightEntity):
 
         self._api = api
         self._attr_unique_id = f"group-{gateway_id}-{self._group.id}"
-
-    @callback
-    def _refresh(self) -> None:
-        """Refresh the group."""
-        self._group = self.coordinator.data
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """
-        Handle updated data from the coordinator.
-
-        Tests fails without this method.
-        """
-        self._refresh()
-        super()._handle_coordinator_update()
 
     @property
     def is_on(self) -> bool:
