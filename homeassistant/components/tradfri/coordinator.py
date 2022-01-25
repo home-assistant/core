@@ -123,20 +123,6 @@ class TradfriGroupDataUpdateCoordinator(DataUpdateCoordinator[Group]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
-    async def _handle_exception(
-        self, group: Group, exc: Exception | None = None
-    ) -> None:
-        """Handle update exceptions in a coroutine."""
-        self._exception = (
-            exc  # Store exception so that it gets raised in _async_update_data
-        )
-
-        _LOGGER.debug("Update failed for %s, trying again", group, exc_info=exc)
-        self.update_interval = timedelta(
-            seconds=5
-        )  # Change interval so we get a swift refresh
-        await self.async_request_refresh()
-
     async def _async_update_data(self) -> Group:
         """Fetch data from the gateway for a specific group."""
         self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
@@ -144,6 +130,9 @@ class TradfriGroupDataUpdateCoordinator(DataUpdateCoordinator[Group]):
         try:
             await self.api(cmd)
         except RequestError as exc:
-            await self._handle_exception(group=self.group, exc=exc)
+            self.update_interval = timedelta(
+                seconds=5
+            )  # Change interval so we get a swift refresh
+            raise UpdateFailed("Unable to update group coordinator") from exc
 
         return self.group
