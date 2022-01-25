@@ -431,6 +431,11 @@ async def async_setup_platform(
 
     # Remove the entry since it's no longer needed.
     hass.data[DOMAIN].pop(SOURCE_IMPORT)
+
+    # Our config flow allows an extra field CONF_RESOURCES and will import properly as options (although not shown in UI
+    # during config setup).
+    conf[CONF_RESOURCES] = [res.upper() for res in config[CONF_RESOURCES]]
+
     _LOGGER.warning(
         "YAML configurations loaded with host %s, port %s and resources %s ",
         conf[CONF_HOST],
@@ -438,9 +443,6 @@ async def async_setup_platform(
         conf[CONF_RESOURCES],
     )
 
-    # Our config flow allows an extra field CONF_RESOURCES and will import properly as options (although not shown in UI
-    # during config setup).
-    conf[CONF_RESOURCES] = [res.upper() for res in config[CONF_RESOURCES]]
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
