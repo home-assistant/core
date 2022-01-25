@@ -82,8 +82,10 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
+        _LOGGER.debug("Unlocking %s", self.device.name)
         return await self.device.open_lock()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
+        _LOGGER.debug("Locking %s", self.device.name)
         return await self.device.close_lock()
