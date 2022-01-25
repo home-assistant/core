@@ -88,20 +88,24 @@ class DSMRConnection:
                 transport.close()
 
         if self._host is None:
+            if self._protocol == DSMR_PROTOCOL:
+                create_reader = create_dsmr_reader
+            else:
+                create_reader = create_rfxtrx_dsmr_reader
             reader_factory = partial(
-                create_dsmr_reader
-                if self._protocol == DSMR_PROTOCOL
-                else create_rfxtrx_dsmr_reader,
+                create_reader,
                 self._port,
                 self._dsmr_version,
                 update_telegram,
                 loop=hass.loop,
             )
         else:
+            if self._protocol == DSMR_PROTOCOL:
+                create_reader = create_tcp_dsmr_reader
+            else:
+                create_reader = create_rfxtrx_tcp_dsmr_reader
             reader_factory = partial(
-                create_tcp_dsmr_reader
-                if self._protocol == DSMR_PROTOCOL
-                else create_rfxtrx_tcp_dsmr_reader,
+                create_reader,
                 self._host,
                 self._port,
                 self._dsmr_version,
