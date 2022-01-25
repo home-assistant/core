@@ -216,8 +216,6 @@ class PrometheusMetrics:
                 metrics_entity_id = changes["entity_id"]
             elif "disabled_by" in changes:
                 metrics_entity_id = entity_id
-            elif "name" in changes:
-                return
 
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)

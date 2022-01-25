@@ -722,7 +722,7 @@ async def test_renaming_entity_name(hass, hass_client):
     )
     client = await setup_prometheus_client(hass, hass_client, "")
 
-    await async_setup_component(
+    assert await async_setup_component(
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
 
