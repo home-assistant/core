@@ -3,11 +3,6 @@
   "name": "NWS Alerts",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nws_alerts",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@IceBotYT"
   ],
