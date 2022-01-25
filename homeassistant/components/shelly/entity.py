@@ -54,6 +54,9 @@ async def async_setup_entry_attribute_entities(
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
+    description_class: Callable[
+        [entity_registry.RegistryEntry], BlockEntityDescription
+    ],
 ) -> None:
     """Set up entities for attributes."""
     wrapper: BlockDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
@@ -66,7 +69,13 @@ async def async_setup_entry_attribute_entities(
         )
     else:
         await async_restore_block_attribute_entities(
-            hass, config_entry, async_add_entities, wrapper, sensors, sensor_class
+            hass,
+            config_entry,
+            async_add_entities,
+            wrapper,
+            sensors,
+            sensor_class,
+            description_class,
         )
 
 
@@ -120,6 +129,9 @@ async def async_restore_block_attribute_entities(
     wrapper: BlockDeviceWrapper,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
+    description_class: Callable[
+        [entity_registry.RegistryEntry], BlockEntityDescription
+    ],
 ) -> None:
     """Restore block attributes entities."""
     entities = []
@@ -136,13 +148,7 @@ async def async_restore_block_attribute_entities(
             continue
 
         attribute = entry.unique_id.split("-")[-1]
-        description = BlockEntityDescription(
-            key="",
-            name="",
-            icon=entry.original_icon,
-            unit_of_measurement=entry.unit_of_measurement,
-            device_class=entry.original_device_class,
-        )
+        description = description_class(entry)
 
         entities.append(
             sensor_class(wrapper, None, attribute, description, entry, sensors)

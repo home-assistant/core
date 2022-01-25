@@ -364,6 +364,17 @@ RPC_SENSORS: Final = {
 }
 
 
+def _build_block_description(entry: RegistryEntry) -> BlockSensorDescription:
+    """Build description when restoring block attribute entities."""
+    return BlockSensorDescription(
+        key="",
+        name="",
+        icon=entry.original_icon,
+        native_unit_of_measurement=entry.unit_of_measurement,
+        device_class=entry.original_device_class,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -377,11 +388,21 @@ async def async_setup_entry(
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, SENSORS, BlockSleepingSensor
+            hass,
+            config_entry,
+            async_add_entities,
+            SENSORS,
+            BlockSleepingSensor,
+            _build_block_description,
         )
     else:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, SENSORS, BlockSensor
+            hass,
+            config_entry,
+            async_add_entities,
+            SENSORS,
+            BlockSensor,
+            _build_block_description,
         )
         await async_setup_entry_rest(
             hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
