@@ -28,13 +28,11 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
             ProtectLock(
                 data,
                 lock,
             )
             for lock in data.api.bootstrap.doorlocks.values()
-        ]
     )
 
 
