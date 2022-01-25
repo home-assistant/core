@@ -147,10 +147,10 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the WHOIS sensor."""
