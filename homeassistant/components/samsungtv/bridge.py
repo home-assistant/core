@@ -358,8 +358,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if self._remote is not None:
             self.close_remote()
         try:
-            if self._get_remote() is not None:
-                return self.device_info()["device"]["PowerState"] == "on"
+            info = self.device_info()
+            if info is not None and isinstance(info["device"]["PowerState"], str):
+                return info["device"]["PowerState"] == "on"
             return False
         except (UnhandledResponse, AccessDenied, ConnectionFailure, KeyError):
             # We got a response so it's working.
