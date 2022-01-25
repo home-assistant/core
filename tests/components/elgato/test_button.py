@@ -47,6 +47,7 @@ async def test_button_identify(
     assert device_entry.model == "Elgato Key Light"
     assert device_entry.name == "Frenck"
     assert device_entry.sw_version == "1.0.3 (192)"
+    assert device_entry.hw_version == "53"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
