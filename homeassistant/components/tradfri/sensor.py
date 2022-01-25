@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 from pytradfri.command import Command
 
@@ -63,13 +63,8 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
             gateway_id=gateway_id,
         )
 
+        self._refresh()  # Set initial state
+
     def _refresh(self) -> None:
         """Refresh the device."""
         self._attr_native_value = self.coordinator.data.device_info.battery_level
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the current state of the device."""
-        if not self._device:
-            return None
-        return cast(int, self._device.device_info.battery_level)
