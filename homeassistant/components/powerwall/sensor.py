@@ -93,6 +93,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
     _attr_name = "Powerwall Charge"
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
 
