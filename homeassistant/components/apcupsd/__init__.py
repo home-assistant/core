@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     data_service = APCUPSdData(
         config_entry.data[CONF_HOST], config_entry.data[CONF_PORT]
     )
-    _LOGGER.warning(f"Setting up {config_entry.entry_id}")
+
     # It doesn't really matter why we're not able to get the status, just that we can't.
     try:
         data_service.update(no_throttle=True)
