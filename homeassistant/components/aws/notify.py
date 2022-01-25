@@ -168,10 +168,10 @@ class AWSSNS(AWSNotify):
             return
 
         message_attributes = {}
-        if kwargs.get(ATTR_DATA):
+        if data := kwargs.get(ATTR_DATA):
             message_attributes = {
                 k: {"StringValue": v, "DataType": "String"}
-                for k, v in kwargs[ATTR_DATA].items()
+                for k, v in data.items()
                 if v is not None
             }
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
