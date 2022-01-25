@@ -83,7 +83,7 @@ class BasePlatform(Entity):
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
 
-        self._attr_unique_id = entry.get(CONF_UNIQUE_ID, None)
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_should_poll = False
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
