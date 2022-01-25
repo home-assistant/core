@@ -139,11 +139,9 @@ class TradfriGroupDataUpdateCoordinator(DataUpdateCoordinator[Group]):
 
     async def _async_update_data(self) -> Group:
         """Fetch data from the gateway for a specific group."""
+        self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
+        cmd = self.group.update()
         try:
-            self.update_interval = timedelta(
-                seconds=SCAN_INTERVAL
-            )  # Reset update interval
-            cmd = self.group.update()
             await self.api(cmd)
         except RequestError as exc:
             await self._handle_exception(group=self.group, exc=exc)
