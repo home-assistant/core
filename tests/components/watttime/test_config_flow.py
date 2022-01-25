@@ -159,8 +159,6 @@ async def test_step_reauth(
             data={
                 **config_auth,
                 **config_coordinates,
-                CONF_BALANCING_AUTHORITY: "Authority 1",
-                CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
             },
         )
         result = await hass.config_entries.flow.async_configure(
