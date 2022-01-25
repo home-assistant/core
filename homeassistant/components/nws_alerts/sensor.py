@@ -160,13 +160,3 @@ class WeatherAlertSensor(CoordinatorEntity, SensorEntity):
                 }
 
         return attrs
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Data provided by the OpenWeatherMap Organization\n© 2012 — 2021 OpenWeather ® All rights reserved"  # I don't want to get sued for this, but I can't find a way to get the attribution from the API
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:alert"
