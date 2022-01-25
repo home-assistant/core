@@ -643,7 +643,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_DEVICE_FILE: "/30.111111111111/typeK/temperature",
-                ATTR_ENTITY_ID: "sensor.30_111111111111_temperature_typeX",
+                ATTR_ENTITY_ID: "sensor.30_111111111111_thermocouple_temperature",
                 ATTR_INJECT_READS: b"    173.7563",
                 ATTR_STATE: "173.8",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
