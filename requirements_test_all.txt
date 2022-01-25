@@ -1288,7 +1288,7 @@ renault-api==0.1.4
 restrictedpython==5.2
 
 # homeassistant.components.rflink
-rflink==0.0.58
+rflink==0.0.62
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
