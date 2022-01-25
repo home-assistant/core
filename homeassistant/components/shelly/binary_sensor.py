@@ -231,8 +231,10 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     entity_description: RpcBinarySensorDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if RPC sensor state is on."""
+        if self.attribute_value is None:
+            return None
         return bool(self.attribute_value)
 
 
