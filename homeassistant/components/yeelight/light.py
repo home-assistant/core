@@ -1008,8 +1008,8 @@ class YeelightNightLightMode(YeelightGenericLight):
 
     @property
     def supported_features(self):
-        """Flag no supported features."""
-        return 0
+        """Flag Also return the normal features like transitions."""
+        return SUPPORT_YEELIGHT
 
 
 class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
