@@ -214,6 +214,17 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+DOORLOCK_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="status_light",
+        name="Status Light On",
+        icon="mdi:led-on",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="led_settings.is_enabled",
+        ufp_set_method="set_status_light",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -229,6 +240,7 @@ async def async_setup_entry(
         camera_descs=CAMERA_SWITCHES,
         light_descs=LIGHT_SWITCHES,
         sense_descs=SENSE_SWITCHES,
+        lock_descs=DOORLOCK_SWITCHES,
     )
     async_add_entities(entities)
 
