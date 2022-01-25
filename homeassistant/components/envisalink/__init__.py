@@ -139,14 +139,14 @@ async def async_setup(hass, config):
     hass.data[DATA_EVL] = controller
 
     @callback
-    def login_fail_callback(data):
+    def async_login_fail_callback(data):
         """Handle when the evl rejects our login."""
         _LOGGER.error("The Envisalink rejected your credentials")
         if not sync_connect.done():
             sync_connect.set_result(False)
 
     @callback
-    def connection_fail_callback(data):
+    def async_connection_fail_callback(data):
         """Network failure callback."""
         _LOGGER.error("Could not establish a connection with the Envisalink- retrying")
         if not sync_connect.done():
@@ -154,7 +154,7 @@ async def async_setup(hass, config):
             sync_connect.set_result(True)
 
     @callback
-    def connection_success_callback(data):
+    def async_connection_success_callback(data):
         """Handle a successful connection."""
         _LOGGER.info("Established a connection with the Envisalink")
         if not sync_connect.done():
@@ -162,25 +162,25 @@ async def async_setup(hass, config):
             sync_connect.set_result(True)
 
     @callback
-    def zones_updated_callback(data):
+    def async_zones_updated_callback(data):
         """Handle zone timer updates."""
         _LOGGER.debug("Envisalink sent a zone update event. Updating zones")
         async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
-    def alarm_data_updated_callback(data):
+    def async_alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
         _LOGGER.debug("Envisalink sent new alarm info. Updating alarms")
         async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
     @callback
-    def partition_updated_callback(data):
+    def async_partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
         _LOGGER.debug("The envisalink sent a partition update event")
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback
-    def zone_bypass_update(data):
+    def async_zone_bypass_update(data):
         """Handle zone bypass status updates."""
         _LOGGER.debug("Envisalink sent a zone bypass update event. Updating zones")
         async_dispatcher_send(hass, SIGNAL_ZONE_BYPASS_UPDATE, data)
@@ -197,14 +197,14 @@ async def async_setup(hass, config):
         partition = call.data.get(ATTR_PARTITION)
         controller.command_output(code, partition, custom_function)
 
-    controller.callback_zone_timer_dump = zones_updated_callback
-    controller.callback_zone_state_change = zones_updated_callback
-    controller.callback_partition_state_change = partition_updated_callback
-    controller.callback_keypad_update = alarm_data_updated_callback
-    controller.callback_login_failure = login_fail_callback
-    controller.callback_login_timeout = connection_fail_callback
-    controller.callback_login_success = connection_success_callback
-    controller.callback_zone_bypass_update = zone_bypass_update
+    controller.callback_zone_timer_dump = async_zones_updated_callback
+    controller.callback_zone_state_change = async_zones_updated_callback
+    controller.callback_partition_state_change = async_partition_updated_callback
+    controller.callback_keypad_update = async_alarm_data_updated_callback
+    controller.callback_login_failure = async_login_fail_callback
+    controller.callback_login_timeout = async_connection_fail_callback
+    controller.callback_login_success = async_connection_success_callback
+    controller.callback_zone_bypass_update = async_zone_bypass_update
 
     _LOGGER.info("Start envisalink")
     controller.start()
