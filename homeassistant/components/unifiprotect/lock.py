@@ -1,4 +1,4 @@
-"""Support for Ubiquiti's UniFi Protect NVR."""
+"""Support for locks on Ubiquiti's UniFi Protect NVR."""
 from __future__ import annotations
 
 import logging
