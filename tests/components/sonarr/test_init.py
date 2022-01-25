@@ -60,16 +60,18 @@ async def test_config_entry_reauth(
 async def test_unload_config_entry(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    async_setup_entry: MagicMock,
 ) -> None:
     """Test the configuration entry unloading."""
     entry = init_integration
 
     assert hass.data[DOMAIN]
-    assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
-
+    assert entry.entry_id in hass.data[DOMAIN]
+    
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert entry.entry_id not in hass.data[DOMAIN]
+    
