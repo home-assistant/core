@@ -54,7 +54,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:car-brake-temperature",
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_fn=lambda data: data.temperature_c,
     ),
