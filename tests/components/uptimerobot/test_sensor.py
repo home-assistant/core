@@ -13,7 +13,7 @@ from .common import (
     MOCK_UPTIMEROBOT_MONITOR,
     STATE_UP,
     UPTIMEROBOT_SENSOR_TEST_ENTITY,
-    setup_uptimerobot_integration_sensor,
+    setup_uptimerobot_integration,
 )
 
 from tests.common import async_fire_time_changed
@@ -23,7 +23,7 @@ SENSOR_ICON = "mdi:television-shimmer"
 
 async def test_presentation(hass: HomeAssistant) -> None:
     """Test the presenstation of UptimeRobot sensors."""
-    await setup_uptimerobot_integration_sensor(hass)
+    await setup_uptimerobot_integration(hass)
 
     entity = hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)
 
@@ -34,7 +34,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
 
 async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
     """Test entity unaviable on update failure."""
-    await setup_uptimerobot_integration_sensor(hass)
+    await setup_uptimerobot_integration(hass)
 
     entity = hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY)
     assert entity.state == STATE_UP

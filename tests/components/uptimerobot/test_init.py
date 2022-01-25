@@ -23,7 +23,7 @@ from .common import (
     UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY,
     MockApiResponseKey,
     mock_uptimerobot_api_response,
-    setup_uptimerobot_integration_binary_sensor,
+    setup_uptimerobot_integration,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -66,7 +66,7 @@ async def test_reauthentication_trigger_after_setup(
     hass: HomeAssistant, caplog: LogCaptureFixture
 ):
     """Test reauthentication trigger."""
-    mock_config_entry = await setup_uptimerobot_integration_binary_sensor(hass)
+    mock_config_entry = await setup_uptimerobot_integration(hass)
 
     binary_sensor = hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY)
     assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
@@ -98,7 +98,7 @@ async def test_reauthentication_trigger_after_setup(
 
 async def test_integration_reload(hass: HomeAssistant):
     """Test integration reload."""
-    mock_entry = await setup_uptimerobot_integration_binary_sensor(hass)
+    mock_entry = await setup_uptimerobot_integration(hass)
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
@@ -115,7 +115,7 @@ async def test_integration_reload(hass: HomeAssistant):
 
 async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
     """Test errors during updates."""
-    await setup_uptimerobot_integration_binary_sensor(hass)
+    await setup_uptimerobot_integration(hass)
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
@@ -152,7 +152,7 @@ async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
 
 async def test_device_management(hass: HomeAssistant):
     """Test that we are adding and removing devices for monitors returned from the API."""
-    mock_entry = await setup_uptimerobot_integration_binary_sensor(hass)
+    mock_entry = await setup_uptimerobot_integration(hass)
     dev_reg = await async_get_registry(hass)
 
     devices = async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
