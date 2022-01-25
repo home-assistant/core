@@ -24,7 +24,7 @@ UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 async def test_sensors(
     hass: HomeAssistant,
-    skip_entry_setup: None,
+    mock_setup_entry: None,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the creation and values of the sensors."""
