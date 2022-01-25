@@ -206,6 +206,9 @@ ZEROCONF = {
     ],
     "_kizbox._tcp.local.": [
         {
+            "domain": "overkiz"
+        },
+        {
             "domain": "somfy",
             "name": "gateway*"
         }
