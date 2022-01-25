@@ -1,7 +1,7 @@
 """Config flow for Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
@@ -143,12 +143,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle reauth."""
-        self._config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
+        self._config_entry = cast(
+            ConfigEntry,
+            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
 
-        if self._config_entry:
-            self._default_user = self._config_entry.data[CONF_USERNAME]
-            self._default_hub = self._config_entry.data[CONF_HUB]
+        self._default_user = self._config_entry.data[CONF_USERNAME]
+        self._default_hub = self._config_entry.data[CONF_HUB]
 
         return await self.async_step_user(user_input)
