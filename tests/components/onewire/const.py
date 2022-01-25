@@ -44,6 +44,7 @@ ATTR_ENTITY_CATEGORY = "entity_category"
 ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_UNKNOWN_DEVICE = "unknown_device"
+ATTR_OVERRIDE_KEY = "override_key"
 
 FIXED_ATTRIBUTES = (
     ATTR_DEVICE_CLASS,
@@ -641,11 +642,12 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-                ATTR_ENTITY_ID: "sensor.30_111111111111_temperature_typek",
+                ATTR_DEVICE_FILE: "/30.111111111111/typeK/temperature",
+                ATTR_ENTITY_ID: "sensor.30_111111111111_temperature_typeX",
                 ATTR_INJECT_READS: b"    173.7563",
                 ATTR_STATE: "173.8",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
-                ATTR_UNIQUE_ID: "/30.111111111111/typeK/temperature",
+                ATTR_UNIQUE_ID: "/30.111111111111/typeX/temperature",
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
