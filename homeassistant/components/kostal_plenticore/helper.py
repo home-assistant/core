@@ -122,7 +122,7 @@ class DataUpdateCoordinatorMixin:
     """Base implementation for read and write data."""
 
     async def async_read_data(self, module_id: str, data_id: str) -> list[str, bool]:
-        """Write settings back to Plenticore."""
+        """Read data from Plenticore."""
         if (client := self._plenticore.client) is None:
             return False
 
@@ -137,6 +137,10 @@ class DataUpdateCoordinatorMixin:
         """Write settings back to Plenticore."""
         if (client := self._plenticore.client) is None:
             return False
+
+        _LOGGER.debug(
+            "Setting value for %s in module %s to %s", self.name, module_id, value
+        )
 
         try:
             await client.set_setting_values(module_id, value)
@@ -339,6 +343,19 @@ class PlenticoreDataFormatter:
             return round(float(state))
         except (TypeError, ValueError):
             return state
+
+    @staticmethod
+    def format_round_back(value: float) -> str:
+        """Return a rounded integer value from a float."""
+        try:
+            if value.is_integer():
+                int_value = int(value)
+            else:
+                int_value = round(value)
+
+            return str(int_value)
+        except (TypeError, ValueError):
+            return ""
 
     @staticmethod
     def format_float(state: str) -> int | str:
