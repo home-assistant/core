@@ -35,7 +35,7 @@ from .const import (
     DSMR_PROTOCOL,
     DSMR_VERSIONS,
     LOGGER,
-    RFXTRXDSMR_PROTOCOL,
+    RFXTRX_DSMR_PROTOCOL,
 )
 
 CONF_MANUAL_PATH = "Enter Manually"
@@ -308,12 +308,12 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate dsmr connection and create data."""
         data = input_data
 
+        protocol = DSMR_PROTOCOL
         try:
-            protocol = DSMR_PROTOCOL
             try:
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
             except CannotCommunicate:
-                protocol = RFXTRXDSMR_PROTOCOL
+                protocol = RFXTRX_DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
 
             data = {**data, **info, CONF_PROTOCOL: protocol}

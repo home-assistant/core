@@ -39,7 +39,7 @@ DEVICE_NAME_GAS = "Gas Meter"
 DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
 
 DSMR_PROTOCOL = "dsmr_protocol"
-RFXTRXDSMR_PROTOCOL = "rfxtrxdsmr_protocol"
+RFXTRX_DSMR_PROTOCOL = "rfxtrx_dsmr_protocol"
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(

@@ -85,10 +85,12 @@ async def async_setup_entry(
     # serial and calls update_entities_telegram to update entities on arrival
     protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
     if CONF_HOST in entry.data:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_tcp_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_tcp_dsmr_reader
         reader_factory = partial(
-            create_tcp_dsmr_reader
-            if protocol == DSMR_PROTOCOL
-            else create_rfxtrx_tcp_dsmr_reader,
+            create_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
@@ -97,10 +99,12 @@ async def async_setup_entry(
             keep_alive_interval=60,
         )
     else:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_dsmr_reader
         reader_factory = partial(
-            create_dsmr_reader
-            if protocol == DSMR_PROTOCOL
-            else create_rfxtrx_dsmr_reader,
+            create_reader,
             entry.data[CONF_PORT],
             dsmr_version,
             update_entities_telegram,
