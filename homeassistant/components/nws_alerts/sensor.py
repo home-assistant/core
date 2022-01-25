@@ -97,9 +97,9 @@ class WeatherAlertSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.hass = hass
-        self._name = config.data.get("friendly_name", "NWS Alerts")
+        self._attr_name = config.data.get("friendly_name", "NWS Alerts")
         self._alert_count = None
-        self._unique_id = (
+        self._attr_unique_id = (
             self._name
             + "-"
             + str(config.data["lat"])
