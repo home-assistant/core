@@ -9,6 +9,7 @@ from typing import Any
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
+from pytradfri.group import Group
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -98,3 +99,53 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
                 await self._handle_exception(device=self.device, exc=exc)
 
         return self.device
+
+
+class TradfriGroupDataUpdateCoordinator(DataUpdateCoordinator[Group]):
+    """Coordinator to manage data for a specific Tradfri group."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        api: Callable[[Command | list[Command]], Any],
+        group: Group,
+    ) -> None:
+        """Initialize group coordinator."""
+        self.api = api
+        self.group = group
+        self._exception: Exception | None = None
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"Update coordinator for {group}",
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
+        )
+
+    async def _handle_exception(
+        self, group: Group, exc: Exception | None = None
+    ) -> None:
+        """Handle update exceptions in a coroutine."""
+        self._exception = (
+            exc  # Store exception so that it gets raised in _async_update_data
+        )
+
+        _LOGGER.debug("Update failed for %s, trying again", group, exc_info=exc)
+        self.update_interval = timedelta(
+            seconds=5
+        )  # Change interval so we get a swift refresh
+        await self.async_request_refresh()
+
+    async def _async_update_data(self) -> Group:
+        """Fetch data from the gateway for a specific group."""
+        try:
+            self.update_interval = timedelta(
+                seconds=SCAN_INTERVAL
+            )  # Reset update interval
+            cmd = self.group.update()
+            await self.api(cmd)
+        except RequestError as exc:
+            await self._handle_exception(group=self.group, exc=exc)
+
+        return self.group
