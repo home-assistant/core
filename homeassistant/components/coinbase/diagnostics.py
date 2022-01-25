@@ -28,10 +28,8 @@ async def async_get_config_entry_diagnostics(
 
     diag_data: dict[str, Any] = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "data": [],
+        "data": [
+            async_redact_data(account, TO_REDACT) for account in instance.accounts
+        ],
     }
-
-    diag_data["data"] = [
-        async_redact_data(account, TO_REDACT) for account in instance.accounts
-    ]
     return diag_data
