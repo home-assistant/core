@@ -21,7 +21,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_wrong_account": "Re-authentication was not successful, you will need to authenticate with the same account"
+      "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
     }
   }
 }

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Account is already configured",
             "reauth_successful": "Re-authentication was successful",
-            "reauth_wrong_account": "Re-authentication was not successful, you will need to authenticate with the same account"
+            "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
         },
         "error": {
             "cannot_connect": "Failed to connect",
