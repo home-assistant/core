@@ -188,7 +188,7 @@ async def async_setup_entry_rpc(
                 unique_id = f"{wrapper.mac}-{key}-{sensor_id}"
                 await async_remove_shelly_entity(hass, domain, unique_id)
             else:
-                if description.should_poll:
+                if description.use_polling_wrapper:
                     entities.append(
                         sensor_class(polling_wrapper, key, sensor_id, description)
                     )
@@ -265,7 +265,7 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
-    should_poll: bool = False
+    use_polling_wrapper: bool = False
 
 
 @dataclass
@@ -549,7 +549,6 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
 
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
         self._attr_name = get_rpc_entity_name(wrapper.device, key, description.name)
-        self._attr_should_poll = description.should_poll
         self._last_value = None
 
     @property
