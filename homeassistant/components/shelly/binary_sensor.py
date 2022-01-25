@@ -222,6 +222,17 @@ async def async_setup_entry(
         )
 
 
+class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
+    """Represent a block binary sensor entity."""
+
+    entity_description: BlockBinarySensorDescription
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if sensor state is on."""
+        return bool(self.attribute_value)
+
+
 class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     """Represent a REST binary sensor entity."""
 
@@ -243,19 +254,6 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if RPC sensor state is on."""
-        if self.attribute_value is None:
-            return None
-        return bool(self.attribute_value)
-
-
-class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
-    """Represent a block binary sensor entity."""
-
-    entity_description: BlockBinarySensorDescription
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor state is on."""
         if self.attribute_value is None:
             return None
         return bool(self.attribute_value)
