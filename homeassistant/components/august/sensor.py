@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
@@ -73,6 +74,7 @@ SENSOR_TYPE_DEVICE_BATTERY = AugustSensorEntityDescription[LockDetail](
     key="device_battery",
     name="Battery",
     entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
     value_fn=_retrieve_device_battery_state,
 )
 
@@ -80,6 +82,7 @@ SENSOR_TYPE_KEYPAD_BATTERY = AugustSensorEntityDescription[KeypadDetail](
     key="linked_keypad_battery",
     name="Battery",
     entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
     value_fn=_retrieve_linked_keypad_battery_state,
 )
 
