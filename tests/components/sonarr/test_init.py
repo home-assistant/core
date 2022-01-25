@@ -68,7 +68,7 @@ async def test_unload_config_entry(
     assert hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
     assert entry.entry_id in hass.data[DOMAIN]
-    
+
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
