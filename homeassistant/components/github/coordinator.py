@@ -97,11 +97,11 @@ class RepositoryReleaseDataUpdateCoordinator(
         response: GitHubResponseModel[GitHubReleaseModel | None],
     ) -> GitHubReleaseModel | None:
         """Parse the response from GitHub API."""
-        if not response.data:
+        if response.data is None:
             return None
 
         for release in response.data:
-            if not release.prerelease:
+            if not release.prerelease and not release.draft:
                 return release
 
         # Fall back to the latest release if no non-prerelease release is found
@@ -110,7 +110,7 @@ class RepositoryReleaseDataUpdateCoordinator(
     async def fetch_data(self) -> GitHubReleaseModel | None:
         """Get the latest data from GitHub."""
         return await self._client.repos.releases.list(
-            self.repository, **{"params": {"per_page": 1}, "etag": self._etag}
+            self.repository, **{"etag": self._etag}
         )
 
 
