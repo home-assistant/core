@@ -53,17 +53,20 @@ async def test_config_entry_reauth(
     )
 
 
-@patch(
-    "homeassistant.components.sonarr.sensor.async_setup_entry",
-    return_value=True,
-)
 async def test_unload_config_entry(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    async_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test the configuration entry unloading."""
-    entry = init_integration
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sonarr.sensor.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
@@ -74,4 +77,3 @@ async def test_unload_config_entry(
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert entry.entry_id not in hass.data[DOMAIN]
-    
