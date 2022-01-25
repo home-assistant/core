@@ -46,7 +46,7 @@ async def test_whois_sensors(
     assert state
     assert entry.unique_id == "home-assistant.io_creation_date"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
-    assert state.state == "2018-12-31T23:00:00+00:00"
+    assert state.state == "2019-01-01T00:00:00+00:00"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home-assistant.io Created"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes
@@ -71,7 +71,7 @@ async def test_whois_sensors(
     assert state
     assert entry.unique_id == "home-assistant.io_expiration_date"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
-    assert state.state == "2022-12-31T23:00:00+00:00"
+    assert state.state == "2023-01-01T00:00:00+00:00"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home-assistant.io Expires"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes

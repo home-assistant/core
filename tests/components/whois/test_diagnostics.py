@@ -18,7 +18,7 @@ async def test_diagnostics(
     ) == {
         "creation_date": "2019-01-01T00:00:00",
         "expiration_date": "2023-01-01T00:00:00",
-        "last_updated": "2022-01-01T00:00:00",
+        "last_updated": "2022-01-01T00:00:00+01:00",
         "status": "OK",
         "statuses": ["OK"],
         "dnssec": True,

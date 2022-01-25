@@ -72,7 +72,12 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
     """Calculate days left until domain expires."""
     if timestamp is None:
         return None
-    return timestamp.astimezone(tz=timezone.utc)
+
+    # If timezone info isn't provided by the Whois, assume UTC.
+    if timestamp.tzinfo is None:
+        return timestamp.replace(tzinfo=timezone.utc)
+
+    return timestamp
 
 
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
