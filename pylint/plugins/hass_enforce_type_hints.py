@@ -25,6 +25,8 @@ class TypeHintMatch:
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
+    # x_of_y matches items such as "Awaitable[None]"
+    "x_of_y": re.compile(r"^(\w+)\[(.*?]*)\]$"),
     # x_of_y_comma_z matches items such as "Callable[..., Awaitable[None]]"
     "x_of_y_comma_z": re.compile(r"^(\w+)\[(.*?]*), (.*?]*)\]$"),
 }
@@ -204,6 +206,14 @@ def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) 
             and isinstance(node.slice, astroid.Tuple)
             and _is_valid_type(match.group(2), node.slice.elts[0])
             and _is_valid_type(match.group(3), node.slice.elts[1])
+        )
+
+    # Special case for xxx[yyy]`
+    if match := _TYPE_HINT_MATCHERS["x_of_y"].match(expected_type):
+        return (
+            isinstance(node, astroid.Subscript)
+            and _is_valid_type(match.group(1), node.value)
+            and _is_valid_type(match.group(2), node.slice)
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
