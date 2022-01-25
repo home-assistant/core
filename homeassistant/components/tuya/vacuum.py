@@ -97,8 +97,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
         if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
             self._supported_features |= SUPPORT_RETURN_HOME
-        elif mode := self.find_dpcode(DPCode.MODE, dptype=DPType.ENUM):
-            if TUYA_MODE_RETURN_HOME in mode.range:
+        elif (enum_type := self.find_dpcode(DPCode.MODE, dptype=DPType.ENUM, prefer_function=True) and TUYA_MODE_RETURN_HOME in enum_type.range:
                 self._supported_features |= SUPPORT_RETURN_HOME
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):
