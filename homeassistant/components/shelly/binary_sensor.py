@@ -228,7 +228,7 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
     entity_description: BlockBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if sensor state is on."""
         return bool(self.attribute_value)
 
