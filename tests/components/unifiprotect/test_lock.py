@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_UNAVAILABLE,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
     Platform,
@@ -172,6 +173,31 @@ async def test_lock_jammed(
     state = hass.states.get(doorlock[1])
     assert state
     assert state.state == STATE_JAMMED
+
+
+async def test_lock_unavailable(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    doorlock: tuple[Doorlock, str],
+):
+    """Test lock entity unavailable."""
+
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_lock = doorlock[0].copy()
+    new_lock.lock_status = LockStatusType.NOT_CALIBRATED
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = new_lock
+
+    new_bootstrap.doorlocks = {new_lock.id: new_lock}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(doorlock[1])
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_lock_do_lock(

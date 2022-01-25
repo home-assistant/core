@@ -79,6 +79,9 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
             LockStatusType.JAMMED_WHILE_OPENING,
         ):
             self._attr_is_jammed = True
+        # lock is not fully initialized yet
+        elif self.device.lock_status != LockStatusType.OPEN:
+            self._attr_available = False
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
