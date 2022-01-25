@@ -89,15 +89,28 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             heat_area_id,
             target_temperature,
         )
+
+        update_data = {"T_TARGET": target_temperature}
+        is_cooling = self.get_cooling()
+        heat_area_mode = self.data[heat_area_id]["HEATAREA_MODE"]
+        if heat_area_mode == 1:
+            if is_cooling:
+                update_data["T_COOL_DAY"] = target_temperature
+            else:
+                update_data["T_HEAT_DAY"] = target_temperature
+        elif heat_area_mode == 2:
+            if is_cooling:
+                update_data["T_COOL_NIGHT"] = target_temperature
+            else:
+                update_data["T_HEAT_NIGHT"] = target_temperature
+
         try:
-            await self.base.update_heat_area(
-                heat_area_id, {"T_TARGET": target_temperature}
-            )
+            await self.base.update_heat_area(heat_area_id, update_data)
         except aiohttp.ClientError as http_err:
             raise HomeAssistantError(
                 "Failed to set target temperature, communication error with alpha2 base"
             ) from http_err
-        self.data[heat_area_id]["T_TARGET"] = target_temperature
+        self.data[heat_area_id].update(update_data)
         for update_callback in self._listeners:
             update_callback()
 
