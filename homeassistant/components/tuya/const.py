@@ -202,8 +202,10 @@ class DPCode(StrEnum):
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
+    FAN_SPEED = "fan_speed"
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FAN_MODE = "fan_mode"
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
     FEED_REPORT = "feed_report"
@@ -301,6 +303,7 @@ class DPCode(StrEnum):
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
     SWITCH_DISTURB = "switch_disturb"
+    SWITCH_FAN = "switch_fan"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
