@@ -14,6 +14,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -28,6 +29,19 @@ TEST_GATEWAY_ID = "1234-5678-9123"
 TEST_GATEWAY_ID2 = "4321-5678-9123"
 
 MOCK_GATEWAY_RESPONSE = [Mock(id=TEST_GATEWAY_ID)]
+
+FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
+    host="192.168.0.51",
+    port=443,
+    hostname=f"gateway-{TEST_GATEWAY_ID}.local.",
+    type="_kizbox._tcp.local.",
+    name=f"gateway-{TEST_GATEWAY_ID}._kizbox._tcp.local.",
+    properties={
+        "api_version": "1",
+        "gateway_pin": TEST_GATEWAY_ID,
+        "fw_version": "2021.5.4-29",
+    },
+)
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -200,6 +214,57 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
             macaddress="F8811A000000",
         ),
         context={"source": config_entries.SOURCE_DHCP},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_flow(hass):
+    """Test that zeroconf discovery for new bridge works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=FAKE_ZERO_CONF_INFO,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
+    ), patch(
+        "homeassistant.components.overkiz.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == TEST_EMAIL
+    assert result2["data"] == {
+        "username": TEST_EMAIL,
+        "password": TEST_PASSWORD,
+        "hub": TEST_HUB,
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_flow_already_configured(hass):
+    """Test that zeroconf doesn't setup already configured gateways."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=FAKE_ZERO_CONF_INFO,
+        context={"source": config_entries.SOURCE_ZEROCONF},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
