@@ -50,7 +50,7 @@ def ihc_setup(
         return False
 
     if conf[CONF_AUTOSETUP] and not autosetup_ihc_products(
-        hass, config, ihc_controller, controller_id, False
+        hass, config, ihc_controller, controller_id
     ):
         return False
     # Manual configuration
