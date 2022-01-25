@@ -15,8 +15,8 @@ from homeassistant.util import dt
 
 from .common import (
     MOCK_UPTIMEROBOT_MONITOR,
-    UPTIMEROBOT_TEST_ENTITY,
-    setup_uptimerobot_integration,
+    UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY,
+    setup_uptimerobot_integration_binary_sensor,
 )
 
 from tests.common import async_fire_time_changed
@@ -24,9 +24,9 @@ from tests.common import async_fire_time_changed
 
 async def test_presentation(hass: HomeAssistant) -> None:
     """Test the presenstation of UptimeRobot binary_sensors."""
-    await setup_uptimerobot_integration(hass)
+    await setup_uptimerobot_integration_binary_sensor(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
+    entity = hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY)
 
     assert entity.state == STATE_ON
     assert entity.attributes["device_class"] == BinarySensorDeviceClass.CONNECTIVITY
@@ -36,9 +36,9 @@ async def test_presentation(hass: HomeAssistant) -> None:
 
 async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
     """Test entity unaviable on update failure."""
-    await setup_uptimerobot_integration(hass)
+    await setup_uptimerobot_integration_binary_sensor(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
+    entity = hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY)
     assert entity.state == STATE_ON
 
     with patch(
@@ -48,5 +48,5 @@ async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
-    entity = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
+    entity = hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY)
     assert entity.state == STATE_UNAVAILABLE

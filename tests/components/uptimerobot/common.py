@@ -45,8 +45,18 @@ MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
     "source": config_entries.SOURCE_USER,
 }
+MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_2 = {
+    "domain": DOMAIN,
+    "title": "test@test.test",
+    "data": {"platform": DOMAIN, "api_key": MOCK_UPTIMEROBOT_API_KEY},
+    "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
+    "source": config_entries.SOURCE_USER,
+}
 
-UPTIMEROBOT_TEST_ENTITY = "binary_sensor.test_monitor"
+STATE_UP = "Up"
+
+UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY = "binary_sensor.test_monitor"
+UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
 
 
 class MockApiResponseKey(str, Enum):
@@ -81,7 +91,9 @@ def mock_uptimerobot_api_response(
     )
 
 
-async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def setup_uptimerobot_integration_binary_sensor(
+    hass: HomeAssistant,
+) -> MockConfigEntry:
     """Set up the UptimeRobot integration."""
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_entry.add_to_hass(hass)
@@ -94,7 +106,26 @@ async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
+    assert mock_entry.state == config_entries.ConfigEntryState.LOADED
+
+    return mock_entry
+
+
+async def setup_uptimerobot_integration_sensor(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the UptimeRobot integration."""
+    mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_2)
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
+    ):
+
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY).state == STATE_UP
     assert mock_entry.state == config_entries.ConfigEntryState.LOADED
 
     return mock_entry
