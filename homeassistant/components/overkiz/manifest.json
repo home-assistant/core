@@ -6,7 +6,12 @@
   "requirements": [
     "pyoverkiz==1.2.0"
   ],
-  "zeroconf": ["_kizbox._tcp.local."],
+  "zeroconf": [
+    {
+      "type": "_kizbox._tcp.local.",
+      "name": "gateway*"
+    }
+  ],
   "dhcp": [
     {
       "hostname": "gateway*",
