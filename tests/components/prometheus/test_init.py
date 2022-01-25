@@ -560,7 +560,10 @@ async def test_renaming_entity_name(hass, hass_client):
         entity_id=data["climate_1"].entity_id,
         name="HeatPump Renamed",
     )
-    data["climate_1_attributes"] |= {ATTR_FRIENDLY_NAME: "HeatPump Renamed"}
+    data["climate_1_attributes"] = {
+        **data["climate_1_attributes"],
+        ATTR_FRIENDLY_NAME: "HeatPump Renamed",
+    }
     set_state_with_entry(
         hass, data["climate_1"], CURRENT_HVAC_HEAT, data["climate_1_attributes"]
     )
@@ -1323,7 +1326,7 @@ def set_state_with_entry(
         attributes[ATTR_DEVICE_CLASS] = entry.original_device_class
 
     if additional_attributes:
-        attributes |= additional_attributes
+        attributes = {**attributes, **additional_attributes}
 
     hass.states.async_set(
         entity_id=new_entity_id if new_entity_id else entry.entity_id,
