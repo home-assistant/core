@@ -12,12 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
-    TIME_MINUTES,
-)
+from homeassistant.const import TEMP_CELSIUS, TIME_MINUTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
