@@ -68,7 +68,7 @@ class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
 
     @property
     def is_on(self):
-        """Return the boolean response if the zone is bypassed.."""
+        """Return the boolean response if the zone is bypassed."""
         return self._info["bypassed"]
 
     async def async_turn_on(self, **kwargs):
