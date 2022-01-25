@@ -95,9 +95,14 @@ device2.get_device_info = {
     "is_light": False,
 }
 
+device_no_uuid = MagicMock(auto_spec=SensemeDevice)
+device_no_uuid.uuid = None
+
+
 MOCK_DEVICE = device
 MOCK_DEVICE_ALTERNATE_IP = device_alternate_ip
 MOCK_DEVICE2 = device2
+MOCK_DEVICE_NO_UUID = device_no_uuid
 
 
 def _patch_discovery(device=None, no_device=None):

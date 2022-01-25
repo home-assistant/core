@@ -17,6 +17,7 @@ from . import (
     MOCK_DEVICE,
     MOCK_DEVICE2,
     MOCK_DEVICE_ALTERNATE_IP,
+    MOCK_DEVICE_NO_UUID,
     MOCK_MAC,
     MOCK_UUID,
     _patch_discovery,
@@ -343,6 +344,19 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
     with _patch_discovery(), patch(
         "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
         return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
+
+
+async def test_dhcp_discovery_cannot_connect_no_uuid(hass: HomeAssistant) -> None:
+    """Test we abort if the discovered device has no uuid."""
+    with _patch_discovery(), patch(
+        "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
+        return_value=MOCK_DEVICE_NO_UUID,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
