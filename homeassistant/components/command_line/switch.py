@@ -64,36 +64,36 @@ def setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
     if discovery_info is None:
-        entities = [
+        devices = [
             dict(entity, **{CONF_NAME: entity_name})
             for (entity_name, entity) in config[CONF_SWITCHES].items()
         ]
     else:
-        entities = discovery_info["entities"]
+        devices = discovery_info["entities"]
 
     switches = []
 
-    for entity in entities:
-        value_template = entity.get(CONF_VALUE_TEMPLATE)
+    for device_config in devices:
+        value_template = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
-        icon_template = entity.get(CONF_ICON_TEMPLATE)
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
         if icon_template is not None:
             icon_template.hass = hass
 
         switches.append(
             CommandSwitch(
                 hass,
-                entity.get(CONF_NAME),
-                entity.get(CONF_FRIENDLY_NAME, entity.get(CONF_NAME)),
-                entity[CONF_COMMAND_ON],
-                entity[CONF_COMMAND_OFF],
-                entity.get(CONF_COMMAND_STATE),
+                device_config.get(CONF_NAME),
+                device_config.get(CONF_FRIENDLY_NAME, device_config.get(CONF_NAME)),
+                device_config[CONF_COMMAND_ON],
+                device_config[CONF_COMMAND_OFF],
+                device_config.get(CONF_COMMAND_STATE),
                 icon_template,
                 value_template,
-                entity[CONF_COMMAND_TIMEOUT],
-                entity.get(CONF_UNIQUE_ID),
+                device_config[CONF_COMMAND_TIMEOUT],
+                device_config.get(CONF_UNIQUE_ID),
             )
         )
 

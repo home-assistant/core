@@ -59,31 +59,31 @@ def setup_platform(
 ) -> None:
     """Set up cover controlled by shell commands."""
     if discovery_info is None:
-        entities = [
+        devices = [
             dict(entity, **{CONF_NAME: entity_name})
             for (entity_name, entity) in config[CONF_COVERS].items()
         ]
     else:
-        entities = discovery_info["entities"]
+        devices = discovery_info["entities"]
 
     covers = []
 
-    for entity in entities:
-        value_template = entity.get(CONF_VALUE_TEMPLATE)
+    for device_config in devices:
+        value_template = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
         covers.append(
             CommandCover(
                 hass,
-                entity.get(CONF_FRIENDLY_NAME, entity.get(CONF_NAME)),
-                entity[CONF_COMMAND_OPEN],
-                entity[CONF_COMMAND_CLOSE],
-                entity[CONF_COMMAND_STOP],
-                entity.get(CONF_COMMAND_STATE),
+                device_config.get(CONF_FRIENDLY_NAME, device_config.get(CONF_NAME)),
+                device_config[CONF_COMMAND_OPEN],
+                device_config[CONF_COMMAND_CLOSE],
+                device_config[CONF_COMMAND_STOP],
+                device_config.get(CONF_COMMAND_STATE),
                 value_template,
-                entity[CONF_COMMAND_TIMEOUT],
-                entity.get(CONF_UNIQUE_ID),
+                device_config[CONF_COMMAND_TIMEOUT],
+                device_config.get(CONF_UNIQUE_ID),
             )
         )
 

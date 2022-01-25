@@ -4,16 +4,16 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     binary_sensor as binary_sensor_platform,
     cover as cover_platform,
-    notify as notify_platform,
     sensor as sensor_platform,
     switch as switch_platform,
 )
@@ -29,9 +29,6 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         vol.Optional(COVER_DOMAIN): vol.All(
             cv.ensure_list, [cover_platform.COVER_SCHEMA]
         ),
-        vol.Optional(NOTIFY_DOMAIN): vol.All(
-            cv.ensure_list, [notify_platform.NOTIFY_SCHEMA]
-        ),
         vol.Optional(SENSOR_DOMAIN): vol.All(
             cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
         ),
@@ -42,7 +39,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_config(hass, config):
+async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
     if DOMAIN not in config:
         return config

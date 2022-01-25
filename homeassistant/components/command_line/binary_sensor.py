@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -27,8 +26,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 from .sensor import CommandSensorData
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"

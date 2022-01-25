@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _process_config(hass, hass_config):
+async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     """Process config."""
     for conf_section in hass_config[DOMAIN]:
         for platform_domain in PLATFORMS:
