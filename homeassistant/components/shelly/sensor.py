@@ -8,7 +8,6 @@ from typing import Final, cast
 from aioshelly.block_device import Block
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -484,13 +483,3 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-
-        if last_state is not None:
-            self.last_state = last_state.state
-            self._attr_state_class = last_state.attributes.get(ATTR_STATE_CLASS)

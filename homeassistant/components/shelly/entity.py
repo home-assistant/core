@@ -571,6 +571,15 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
             self._attr_unique_id = entry.unique_id
             self._attr_name = cast(str, entry.original_name)
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+
+        if last_state is not None:
+            self.last_state = last_state.state
+
     @callback
     def _update_callback(self) -> None:
         """Handle device update."""
