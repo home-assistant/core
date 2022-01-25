@@ -19,7 +19,7 @@ from .const import CONF_SLEEP_PERIOD
 from .entity import (
     BlockAttributeDescription,
     RestEntityDescription,
-    RpcAttributeDescription,
+    RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
@@ -33,6 +33,11 @@ from .utils import (
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
+
+
+@dataclass
+class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
+    """Class to describe a RPC binary sensor."""
 
 
 @dataclass
@@ -134,28 +139,28 @@ REST_SENSORS: Final = {
 }
 
 RPC_SENSORS: Final = {
-    "input": RpcAttributeDescription(
+    "input": RpcBinarySensorDescription(
         key="input",
         sub_key="state",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
     ),
-    "cloud": RpcAttributeDescription(
+    "cloud": RpcBinarySensorDescription(
         key="cloud",
         sub_key="connected",
         name="Cloud",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "fwupdate": RpcAttributeDescription(
+    "fwupdate": RpcBinarySensorDescription(
         key="sys",
         sub_key="available_updates",
         name="Firmware Update",
         device_class=BinarySensorDeviceClass.UPDATE,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         extra_state_attributes=lambda status, shelly: {
             "latest_stable_version": status.get("stable", {"version": ""})["version"],
             "installed_version": shelly["ver"],
@@ -223,9 +228,13 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
 class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     """Represent a RPC binary sensor entity."""
 
+    entity_description: RpcBinarySensorDescription
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if RPC sensor state is on."""
+        if self.attribute_value is None:
+            return None
         return bool(self.attribute_value)
 
 
