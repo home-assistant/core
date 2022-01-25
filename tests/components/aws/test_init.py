@@ -266,3 +266,51 @@ async def test_credential_skip_validate(hass):
     session = sessions.get("key")
     assert isinstance(session, MockAioSession)
     session.get_user.assert_not_awaited()
+
+
+async def test_service_call_extra_data(hass):
+    """Test service call extra data are parsed properly."""
+    with async_patch("homeassistant.components.aws.AioSession", new=MockAioSession):
+        await async_setup_component(
+            hass,
+            "aws",
+            {
+                "aws": {
+                    "notify": [
+                        {
+                            "service": "sns",
+                            "name": "SNS Test",
+                            "region_name": "us-east-1",
+                        }
+                    ]
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    sessions = hass.data[aws.DATA_SESSIONS]
+    assert sessions is not None
+    assert len(sessions) == 1
+    session = sessions.get("default")
+    assert isinstance(session, MockAioSession)
+
+    assert hass.services.has_service("notify", "sns_test") is True
+    await hass.services.async_call(
+        "notify",
+        "sns_test",
+        {
+            "message": "test",
+            "target": "ARN",
+            "data": {"AWS.SNS.SMS.SenderID": "HA-notify"},
+        },
+        blocking=True,
+    )
+
+    session.publish.assert_called_once_with(
+        TargetArn="ARN",
+        Message="test",
+        Subject="Home Assistant",
+        MessageAttributes={
+            "AWS.SNS.SMS.SenderID": {"StringValue": "HA-notify", "DataType": "String"}
+        },
+    )

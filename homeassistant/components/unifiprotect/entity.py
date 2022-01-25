@@ -7,6 +7,7 @@ from typing import Any
 
 from pyunifiprotect.data import (
     Camera,
+    Doorlock,
     Event,
     Light,
     ModelType,
@@ -41,7 +42,7 @@ def _async_device_entities(
 
     entities: list[ProtectDeviceEntity] = []
     for device in data.get_by_types({model_type}):
-        assert isinstance(device, (Camera, Light, Sensor, Viewer))
+        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock))
         for description in descs:
             assert isinstance(description, EntityDescription)
             if description.ufp_required_field:
@@ -74,6 +75,7 @@ def async_all_device_entities(
     light_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     sense_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     viewer_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
@@ -82,12 +84,14 @@ def async_all_device_entities(
     light_descs = list(light_descs or []) + all_descs
     sense_descs = list(sense_descs or []) + all_descs
     viewer_descs = list(viewer_descs or []) + all_descs
+    lock_descs = list(lock_descs or []) + all_descs
 
     return (
         _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
         + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
         + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
         + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
+        + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
     )
 
 

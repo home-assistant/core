@@ -126,6 +126,16 @@ MOTION_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
+DOORLOCK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
+    ProtectBinaryEntityDescription(
+        key="battery_low",
+        name="Battery low",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="battery_status.is_low",
+    ),
+)
+
 
 DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
@@ -150,6 +160,7 @@ async def async_setup_entry(
         camera_descs=CAMERA_SENSORS,
         light_descs=LIGHT_SENSORS,
         sense_descs=SENSE_SENSORS,
+        lock_descs=DOORLOCK_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)

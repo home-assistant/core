@@ -11,7 +11,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_
 from homeassistant.helpers import entity_registry as er
 
 
-async def test_duplicate_error(hass, config, config_entry, setup_rainmachine):
+async def test_duplicate_error(hass, config, config_entry):
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config

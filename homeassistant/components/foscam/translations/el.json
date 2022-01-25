@@ -6,9 +6,11 @@
         "step": {
             "user": {
                 "data": {
-                    "rtsp_port": "\u0398\u03cd\u03c1\u03b1 RTSP"
+                    "rtsp_port": "\u0398\u03cd\u03c1\u03b1 RTSP",
+                    "stream": "\u03a1\u03bf\u03ae"
                 }
             }
         }
-    }
+    },
+    "title": "Foscam"
 }
