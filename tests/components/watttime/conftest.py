@@ -69,7 +69,7 @@ def config_entry_fixture(hass, config_auth, config_coordinates, unique_id):
 
 @pytest.fixture(name="data_grid_region", scope="session")
 def data_grid_region_fixture():
-    """Define program data."""
+    """Define grid region data."""
     return json.loads(load_fixture("grid_region_data.json", "watttime"))
 
 
