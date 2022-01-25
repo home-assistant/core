@@ -8,11 +8,12 @@ import voluptuous as vol
 
 from homeassistant.components.button import DEVICE_CLASSES_SCHEMA, ButtonEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
@@ -57,9 +58,9 @@ async def _async_create_entities(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template button."""
     if "coordinator" in discovery_info:
@@ -84,10 +85,9 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the button."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         self._command_press = Script(hass, config[CONF_PRESS], self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_unique_id = unique_id
         self._attr_state = None
 
     async def async_press(self) -> None:

@@ -222,12 +222,14 @@ class TemplateEntity(Entity):
         attribute_templates=None,
         config=None,
         fallback_name=None,
+        unique_id=None,
     ):
         """Template Entity."""
         self._template_attrs = {}
         self._async_update = None
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
+        self._attr_unique_id = unique_id
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template

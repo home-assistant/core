@@ -254,6 +254,18 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="battery_level",
+        name="Battery Level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_value="battery_status.percentage",
+    ),
+)
+
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription[ProtectDeviceModel](
         key="uptime",
@@ -400,6 +412,7 @@ async def async_setup_entry(
         all_descs=ALL_DEVICES_SENSORS,
         camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
         sense_descs=SENSE_SENSORS,
+        lock_descs=DOORLOCK_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)

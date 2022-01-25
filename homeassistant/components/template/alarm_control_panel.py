@@ -138,7 +138,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         unique_id,
     ):
         """Initialize the panel."""
-        super().__init__(hass, config=config, fallback_name=object_id)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
@@ -160,12 +162,6 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
         self._state = None
-        self._unique_id = unique_id
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this alarm control panel."""
-        return self._unique_id
 
     @property
     def state(self):

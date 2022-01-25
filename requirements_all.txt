@@ -254,7 +254,7 @@ aioridwell==2021.12.2
 aiosenseme==0.6.1
 
 # homeassistant.components.shelly
-aioshelly==1.0.7
+aioshelly==1.0.8
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
@@ -1255,7 +1255,7 @@ pillow==9.0.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.9.0
+plexapi==4.9.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1633,7 +1633,7 @@ pylacrosse==0.4
 pylast==4.2.1
 
 # homeassistant.components.launch_library
-pylaunches==1.2.1
+pylaunches==1.2.2
 
 # homeassistant.components.lg_netcast
 pylgnetcast==0.3.7
@@ -2018,7 +2018,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.1.1
+pyunifiprotect==3.2.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0

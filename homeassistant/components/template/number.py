@@ -17,10 +17,11 @@ from homeassistant.components.number.const import (
     DOMAIN as NUMBER_DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
@@ -71,9 +72,9 @@ async def _async_create_entities(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template number."""
     if discovery_info is None:
@@ -106,7 +107,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         self._value_template = config[CONF_STATE]
         self._command_set_value = Script(
             hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
@@ -115,7 +116,6 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._min_value_template = config[ATTR_MIN]
         self._max_value_template = config[ATTR_MAX]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_unique_id = unique_id
         self._attr_value = None
         self._attr_step = None
         self._attr_min_value = None
