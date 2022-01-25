@@ -252,8 +252,8 @@ async def test_zeroconfig_flow(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconfig_flow_already_configured(hass):
-    """Test that DHCP doesn't setup already configured gateways."""
+async def test_zeroconf_flow_already_configured(hass):
+    """Test that zeroconf doesn't setup already configured gateways."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
