@@ -1020,7 +1020,7 @@ pykulersky==0.5.2
 pylast==4.2.1
 
 # homeassistant.components.launch_library
-pylaunches==1.2.2
+pylaunches==1.3.0
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
