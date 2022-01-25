@@ -73,6 +73,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception(exception)
             else:
                 if self._config_entry:
+                    if self._config_entry.unique_id != self.unique_id:
+                        return self.async_abort(reason="reauth_wrong_account")
+
                     # Update existing entry during reauth
                     self.hass.config_entries.async_update_entry(
                         self._config_entry,
