@@ -68,7 +68,7 @@ class MockPlexArtist:
 
     def station(self):
         """Mock the station artist method."""
-        return None
+        return MockPlexStation()
 
 
 class MockPlexAlbum:
@@ -96,13 +96,23 @@ class MockPlexTrack:
     type = "track"
 
 
+class MockPlexStation:
+    """Mock a plexapi radio station instance."""
+
+    TAG = "Playlist"
+    key = "/library/sections/3/stations/1"
+    title = "Radio Station"
+    radio = True
+    type = "playlist"
+
+
 async def test_browse_media(
     hass,
     hass_ws_client,
     mock_plex_server,
     requests_mock,
-    empty_payload,
     hubs,
+    hubs_music_library,
 ):
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
@@ -156,10 +166,6 @@ async def test_browse_media(
         f"{mock_plex_server.url_in_use}/hubs",
         text=hubs,
     )
-    requests_mock.get(
-        f"{mock_plex_server.url_in_use}/hubs/sections/1?includeStations=1",
-        text=empty_payload,
-    )
 
     # Browse into a special folder (server)
     msg_id += 1
@@ -189,9 +195,33 @@ async def test_browse_media(
     assert result["children"][2]["media_content_type"] == "clip"
     assert result["children"][3]["media_content_type"] == "playlist"
 
+    # Browse into a special folder (server): Continue Watching
+    msg_id += 1
+    await websocket_client.send_json(
+        {
+            "id": msg_id,
+            "type": "media_player/browse_media",
+            "entity_id": media_players[0],
+            ATTR_MEDIA_CONTENT_TYPE: result["children"][0][ATTR_MEDIA_CONTENT_TYPE],
+            ATTR_MEDIA_CONTENT_ID: result["children"][0][ATTR_MEDIA_CONTENT_ID],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == msg_id
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    result = msg["result"]
+    assert result[ATTR_MEDIA_CONTENT_TYPE] == "mixed"
+
+    requests_mock.get(
+        f"{mock_plex_server.url_in_use}/hubs/sections/3?includeStations=1",
+        text=hubs_music_library,
+    )
+
     # Browse into a special folder (library)
     msg_id += 1
-    library_section_id = next(iter(mock_plex_server.library.sections())).key
+    library_section_id = 3
     await websocket_client.send_json(
         {
             "id": msg_id,
@@ -209,7 +239,28 @@ async def test_browse_media(
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
     assert result[ATTR_MEDIA_CONTENT_ID] == f"{library_section_id}:{special_keys[0]}"
-    assert len(result["children"]) == 0  # Empty for now
+    assert len(result["children"]) == 1
+
+    # Browse into a library radio station hub
+    msg_id += 1
+    await websocket_client.send_json(
+        {
+            "id": msg_id,
+            "type": "media_player/browse_media",
+            "entity_id": media_players[0],
+            ATTR_MEDIA_CONTENT_TYPE: result["children"][0][ATTR_MEDIA_CONTENT_TYPE],
+            ATTR_MEDIA_CONTENT_ID: result["children"][0][ATTR_MEDIA_CONTENT_ID],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == msg_id
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    result = msg["result"]
+    assert result[ATTR_MEDIA_CONTENT_TYPE] == "station"
+    assert len(result["children"]) == 3
+    assert result["children"][0]["title"] == "Library Radio"
 
     # Browse into a Plex TV show library
     msg_id += 1
@@ -351,7 +402,8 @@ async def test_browse_media(
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "artist"
     assert result["title"] == mock_artist.title
-    assert result["children"][0]["title"] == f"{mock_album.title} ({mock_album.year})"
+    assert result["children"][0]["title"] == "Radio Station"
+    assert result["children"][1]["title"] == f"{mock_album.title} ({mock_album.year})"
 
     # Browse into a Plex album
     msg_id += 1
