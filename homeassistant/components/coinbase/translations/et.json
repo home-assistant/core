@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Coinbase API ei paku \u00fchte v\u00f5i mitut soovitud valuutasaldot.",
             "currency_unavaliable": "Coinbase'i API ei paku \u00fchte v\u00f5i mitut taotletud valuutasaldot.",
+            "exchange_rate_unavailable": "Coinbase ei paku \u00fchte v\u00f5i mitut soovitud vahetuskurssi.",
             "exchange_rate_unavaliable": "\u00dchte v\u00f5i mitut taotletud vahetuskurssi Coinbase ei paku.",
             "unknown": "Ootamatu t\u00f5rge"
         },
