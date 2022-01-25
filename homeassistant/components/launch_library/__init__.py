@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, STARSHIP_EVENTS, UPCOMING_LAUNCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update():
         try:
-            return await launches.upcoming_launches()
+            return {
+                UPCOMING_LAUNCHES: await launches.upcoming_launches(),
+                STARSHIP_EVENTS: await launches.starship_events(),
+            }
         except PyLaunchesException as ex:
             raise UpdateFailed(ex) from ex
 
