@@ -1,4 +1,5 @@
 """Test report state."""
+import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -41,6 +42,48 @@ async def test_report_state(hass, aioclient_mock):
         == "NOT_DETECTED"
     )
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_contact"
+
+
+async def test_report_state_fail(hass, aioclient_mock, caplog):
+    """Test proactive state retries once."""
+    aioclient_mock.post(
+        TEST_URL,
+        text=json.dumps(
+            {
+                "payload": {
+                    "code": "THROTTLING_EXCEPTION",
+                    "description": "Request could not be processed due to throttling",
+                }
+            }
+        ),
+        status=403,
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    # No retry on errors not related to expired access token
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Check we log the entity id of the failing entity
+    assert (
+        "Error when sending ChangeReport to Alexa for binary_sensor.test_contact: "
+        "THROTTLING_EXCEPTION: Request could not be processed due to throttling"
+    ) in caplog.text
 
 
 async def test_report_state_retry(hass, aioclient_mock):

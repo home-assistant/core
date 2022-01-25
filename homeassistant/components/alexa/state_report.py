@@ -177,7 +177,8 @@ async def async_send_changereport_message(
         await config.set_authorized(False)
 
     _LOGGER.error(
-        "Error when sending ChangeReport to Alexa: %s: %s",
+        "Error when sending ChangeReport to Alexa for %s: %s: %s",
+        alexa_entity.entity_id,
         response_json["payload"]["code"],
         response_json["payload"]["description"],
     )
