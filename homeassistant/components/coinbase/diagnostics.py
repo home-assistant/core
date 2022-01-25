@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "data": instance.accounts,
+            "accounts": instance.accounts,
         },
         TO_REDACT,
     )

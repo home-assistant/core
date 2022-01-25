@@ -41,5 +41,5 @@ async def test_entry_diagnostics(hass, hass_client: ClientSession):
 
         assert result == {
             "entry": MOCK_ENTRY_REDACTED,
-            "data": MOCK_ACCOUNTS_RESPONSE_REDACTED,
+            "accounts": MOCK_ACCOUNTS_RESPONSE_REDACTED,
         }
