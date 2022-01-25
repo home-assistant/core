@@ -1,7 +1,6 @@
 """Tests for the Flashforge integration."""
 
 from typing import Any
-from unittest.mock import Mock
 
 import voluptuous as vol
 
@@ -9,38 +8,7 @@ from homeassistant.components.flashforge.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const_response import (
-    MACHINE_INFO,
-    PROGRESS_PRINTING,
-    PROGRESS_READY,
-    STATUS_PRINTING,
-    STATUS_READY,
-    TEMP_PRINTING,
-    TEMP_READY,
-)
-
 from tests.common import MockConfigEntry
-
-
-def prepare_mocked_connection(mocked_obj: Mock) -> Mock:
-    """Prepare a mock for the printer."""
-
-    mocked_obj.sendInfoRequest.return_value = MACHINE_INFO
-    mocked_obj.sendStatusRequest.return_value = STATUS_READY
-    mocked_obj.sendTempRequest.return_value = TEMP_READY
-    mocked_obj.sendProgressRequest.return_value = PROGRESS_READY
-
-    return mocked_obj
-
-
-def change_printer_values(mocked_obj: Mock) -> Mock:
-    """Change the values that the printer responds with."""
-
-    mocked_obj.sendStatusRequest.return_value = STATUS_PRINTING
-    mocked_obj.sendTempRequest.return_value = TEMP_PRINTING
-    mocked_obj.sendProgressRequest.return_value = PROGRESS_PRINTING
-
-    return mocked_obj
 
 
 def get_schema_default(schema: vol.Schema, key_name: str) -> Any:
