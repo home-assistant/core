@@ -171,7 +171,9 @@ async def async_setup_entry(
         )
         await group_coordinator.async_config_entry_first_refresh()
         entry.async_on_unload(
-            async_dispatcher_connect(hass, SIGNAL_GW, coordinator.set_hub_available)
+            async_dispatcher_connect(
+                hass, SIGNAL_GW, group_coordinator.set_hub_available
+            )
         )
         coordinator_data[GROUPS_LIST].append(group_coordinator)
 
