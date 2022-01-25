@@ -27,7 +27,7 @@ from .const import DOMAIN
 
 
 @dataclass
-class IntellifireSensorRequireKeysMixin:
+class IntellifireSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     # Although sensors could have a variety of different return values,
