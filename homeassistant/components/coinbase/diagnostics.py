@@ -26,10 +26,10 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     instance: CoinbaseData = hass.data[DOMAIN][entry.entry_id]
 
-    diag_data: dict[str, Any] = {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "data": [
-            async_redact_data(account, TO_REDACT) for account in instance.accounts
-        ],
-    }
-    return diag_data
+    return async_redact_data(
+            {
+                "entry": entry.as_dict(),
+                "data": instance.accounts,
+            },
+            TO_REDACT,
+        )
