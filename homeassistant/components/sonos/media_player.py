@@ -18,7 +18,7 @@ from soco.core import (
 from soco.data_structures import DidlFavorite
 import voluptuous as vol
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, spotify
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -520,6 +520,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
+        if spotify.is_spotify_media_type(media_type):
+            media_type = spotify.resolve_spotify_media_type(media_type)
+
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
