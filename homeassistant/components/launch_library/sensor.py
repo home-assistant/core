@@ -113,10 +113,11 @@ STARSHIP_SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] =
         key="starship_launch",
         icon="mdi:rocket",
         name="Next Starship launch",
-        value_fn=lambda sl: sl.name,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda sl: parse_datetime(sl.net),
         attributes_fn=lambda sl: {
+            "title": sl.mission.name,
             "status": sl.status.name,
-            "launch_time": sl.net,
             "target_orbit": sl.mission.orbit.name,
             "description": sl.mission.description,
         },
