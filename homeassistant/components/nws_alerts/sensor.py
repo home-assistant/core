@@ -110,11 +110,6 @@ class WeatherAlertSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID to use for this sensor."""
-        return self._unique_id
-
-    @property
     def state_class(self) -> SensorStateClass:
         """Return the state class."""
         return SensorStateClass.MEASUREMENT
