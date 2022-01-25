@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # It doesn't really matter why we're not able to get the status, just that we can't.
     try:
-        data_service.update(no_throttle=True)
+        await hass.async_add_executor_job(data_service.update)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Failure while testing APCUPSd status retrieval")
         return False
