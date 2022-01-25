@@ -22,6 +22,13 @@ class TypeHintMatch:
     return_type: list[str] | str | None
 
 
+_TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
+    # a_or_b matches items such as "DiscoveryInfoType | None"
+    "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
+    # x_of_y_comma_z matches items such as "Callable[..., Awaitable[None]]"
+    "x_of_y_comma_z": re.compile(r"^(\w+)\[(.*?]*), (.*?]*)\]$"),
+}
+
 _MODULE_FILTERS: dict[str, re.Pattern] = {
     # init matches only in the package root (__init__.py)
     "init": re.compile(r"^homeassistant\.components\.\w+$"),
@@ -174,15 +181,29 @@ def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) 
         return False
 
     # Const occurs when the type is None
-    if expected_type is None:
+    if expected_type is None or expected_type == "None":
         return isinstance(node, astroid.Const) and node.value is None
 
+    # Const occurs when the type is an Ellipsis
+    if expected_type == "...":
+        return isinstance(node, astroid.Const) and node.value == Ellipsis
+
     # Special case for `xxx | yyy`
-    if match := re.match(r"^(\w+) | (\w+)$", expected_type):
+    if match := _TYPE_HINT_MATCHERS["a_or_b"].match(expected_type):
         return (
             isinstance(node, astroid.BinOp)
             and _is_valid_type(match.group(1), node.left)
             and _is_valid_type(match.group(2), node.right)
+        )
+
+    # Special case for xxx[yyy, zzz]`
+    if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
+        return (
+            isinstance(node, astroid.Subscript)
+            and _is_valid_type(match.group(1), node.value)
+            and isinstance(node.slice, astroid.Tuple)
+            and _is_valid_type(match.group(2), node.slice.elts[0])
+            and _is_valid_type(match.group(3), node.slice.elts[1])
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
