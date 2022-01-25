@@ -1,7 +1,5 @@
 """Diagnostics support for Coinbase."""
 
-from typing import Any
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_ID
@@ -27,9 +25,9 @@ async def async_get_config_entry_diagnostics(
     instance: CoinbaseData = hass.data[DOMAIN][entry.entry_id]
 
     return async_redact_data(
-            {
-                "entry": entry.as_dict(),
-                "data": instance.accounts,
-            },
-            TO_REDACT,
-        )
+        {
+            "entry": entry.as_dict(),
+            "data": instance.accounts,
+        },
+        TO_REDACT,
+    )
