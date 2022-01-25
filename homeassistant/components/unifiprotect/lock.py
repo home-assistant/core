@@ -47,7 +47,7 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         data: ProtectData,
         doorlock: Doorlock,
     ) -> None:
-        """Initialize an UniFi speaker."""
+        """Initialize an UniFi lock."""
         super().__init__(
             data,
             doorlock,
