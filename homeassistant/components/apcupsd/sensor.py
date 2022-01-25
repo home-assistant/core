@@ -14,6 +14,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
     CONF_RESOURCES,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -30,7 +32,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, APCUPSdData, _async_get_imported_entry
+from . import DOMAIN, APCUPSdData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -417,32 +419,42 @@ async def async_setup_platform(
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
-) -> bool:
-    """Set up the APCUPSd sensors from YAML configurations."""
-    if not config:
-        return True
+) -> None:
+    """Import the configurations from YAML to config flows."""
+    # This is the second step of YAML config imports, first see the comments in async_setup() of __init__.py to get
+    # an idea of how we import the YAML configs.
 
-    # Only update option if the options are not imported.
-    if (
-        entry := _async_get_imported_entry(hass)
-    ) is not None and CONF_RESOURCES not in entry.options:
-        _LOGGER.warning(r"resources loaded from YAML configuration")
-        hass.async_create_task(
-            hass.config_entries.options.async_init(
-                entry.entry_id,
-                context={"source": SOURCE_IMPORT},
-                data={CONF_RESOURCES: [res.upper() for res in config[CONF_RESOURCES]]},
-            )
+    # Here we retrieve the partial YAML configs from the special entry id, if it does not exist it means it's already
+    # been imported.
+    if (conf := hass.data[DOMAIN].get(SOURCE_IMPORT)) is None:
+        return
+
+    # Remove the entry since it's no longer needed.
+    hass.data[DOMAIN].pop(SOURCE_IMPORT)
+    _LOGGER.warning(
+        "YAML configurations loaded with host %s, port %s and resources %s ",
+        conf[CONF_HOST],
+        conf[CONF_PORT],
+        conf[CONF_RESOURCES],
+    )
+
+    # Our config flow allows an extra field CONF_RESOURCES and will import properly as options (although not shown in UI
+    # during config setup).
+    conf[CONF_RESOURCES] = [res.upper() for res in config[CONF_RESOURCES]]
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
+    )
 
-    return True
+    return
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the APCUPSd sensors from config entries."""
     data_service = hass.data[DOMAIN][config_entry.entry_id]
 

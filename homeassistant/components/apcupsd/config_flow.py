@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_POLL,
+    SOURCE_IMPORT,
     ConfigEntry,
     ConfigFlow,
     OptionsFlow,
@@ -53,12 +54,34 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(status["SERIALNO"])
                     self._abort_if_unique_id_configured()
 
-                # Since the MODEL field is not always available on all models, we try to find a friendly name for the
-                # integration, otherwise default to "APC UPS".
+                # If we import from YAML, user_input may contain CONF_RESOURCES which should be set as options.
+                # Note that it may contain unavailable resources, so we need to filter them out and log warnings for
+                # them.
+                options = None
+                if self.source == SOURCE_IMPORT and CONF_RESOURCES in user_input:
+                    available_resources = set(data_service.status.keys())
+                    resources = []
+                    for resource in user_input[CONF_RESOURCES]:
+                        if resource not in available_resources:
+                            _LOGGER.warning(
+                                "Sensor type: %s does not appear in the APCUPSd status output and will be ignored",
+                                resource,
+                            )
+                            continue
+                        resources.append(resource)
+
+                    options = {CONF_RESOURCES: resources}
+
                 return self.async_create_entry(
+                    # Since the MODEL field is not always available on all models, we try to set a friendly name for the
+                    # integration, otherwise default to "APC UPS".
                     title=status.get("MODEL", "APC UPS"),
                     description="APCUPSd",
-                    data=user_input,
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    },
+                    options=options,
                 )
             except OSError:
                 errors["base"] = "cannot_connect"
@@ -74,9 +97,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict[str, Any]):
         """Import a configuration from config.yaml."""
-        return await self.async_step_user(
-            user_input={CONF_HOST: conf[CONF_HOST], CONF_PORT: conf[CONF_PORT]}
-        )
+        return await self.async_step_user(user_input=conf)
 
 
 class OptionsFlowHandler(OptionsFlow):
@@ -90,29 +111,15 @@ class OptionsFlowHandler(OptionsFlow):
         """Manage the options for APCUPSd."""
         errors: dict[str, str] = {}
 
-        data_service: APCUPSdData = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        available_resources = list(data_service.status.keys())
-
         if user_input is not None:
-            # If we import from YAML, user_input may contain unavailable resources, so we need to filter them out and
-            # log warnings for them.
-            available_resources_set = set(available_resources)
-            resources = []
-            for resource in user_input[CONF_RESOURCES]:
-                if resource not in available_resources_set:
-                    _LOGGER.warning(
-                        f"Sensor type: {resource} does not appear in the APCUPSd status output and will be ignored."
-                    )
-                    continue
-                resources.append(resource)
-            user_input[CONF_RESOURCES] = resources
-
             return self.async_create_entry(
                 title="",
                 data=user_input,
             )
 
         # We try to get current user-specified resources if available, otherwise use all available resources as default.
+        data_service: APCUPSdData = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        available_resources = list(data_service.status.keys())
         selected = self.config_entry.options.get(CONF_RESOURCES, available_resources)
 
         # Create a resource -> sensor friendly name mapping to display as description for each resource.

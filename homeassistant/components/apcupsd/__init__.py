@@ -57,11 +57,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # We only import configs from YAML if it hasn't been imported.
     if _async_get_imported_entry(hass) is None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
+        # Since the YAML configuration for apcupsd consists of two parts:
+        # apcupsd:
+        #   host: xxx
+        #   port: xxx
+        # sensor:
+        #   - platform: apcupsd
+        #     resource:
+        #       - resource_1
+        #       - resource_2
+        #       - ...
+        # Here at the integration set up we do not have the entire information to be imported to config flow yet.
+        # So we temporarily store the configuration to hass.data[DOMAIN] under a special entry_id SOURCE_IMPORT (which
+        # shouldn't conflict with other entry ids). Later when the sensor platform setup is called we gather the
+        # resources information and from there we start the actual config entry imports.
+        hass.data.setdefault(DOMAIN, {})
+        hass.data[DOMAIN][SOURCE_IMPORT] = conf
+
     return True
 
 
