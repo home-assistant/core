@@ -315,6 +315,6 @@ class BlockSleepingClimate(
             if hasattr(block, "targetTemp"):
                 self.block = block
 
-                _LOGGER.debug("Entity %s attached to block", self.name)
-                self.async_write_ha_state()
-                return
+        if self.device_block and self.block:
+            _LOGGER.debug("Entity %s attached to blocks", self.name)
+            self.async_write_ha_state()
