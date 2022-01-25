@@ -31,12 +31,13 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
     "kj",  # Air Purifier
+    "fsd",  # Fan with Light
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up tuya fan dynamically through tuya discovery."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 

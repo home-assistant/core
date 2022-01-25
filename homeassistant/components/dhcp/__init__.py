@@ -272,7 +272,7 @@ class DeviceTrackerWatcher(WatcherBase):
     @callback
     def _async_process_device_event(self, event: Event):
         """Process a device tracker state change event."""
-        self._async_process_device_state(event.data.get("new_state"))
+        self._async_process_device_state(event.data["new_state"])
 
     @callback
     def _async_process_device_state(self, state: State):

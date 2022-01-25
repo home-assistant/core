@@ -7,7 +7,7 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
             "server_in_maintenance": "Server on hoolduse t\u00f5ttu maas",
-            "too_many_requests": "Liiga palju taotlusi, proovi hiljem uuesti.",
+            "too_many_requests": "Liiga palju p\u00e4ringuid, proovi hiljem uuesti",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {

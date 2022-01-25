@@ -1,4 +1,6 @@
 """Utility meter from sensors providing raw data."""
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
@@ -21,14 +23,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -88,14 +92,19 @@ PAUSED = "paused"
 COLLECTING = "collecting"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
         _LOGGER.error("This platform is only available through discovery")
         return
 
     meters = []
-    for conf in discovery_info:
+    for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
@@ -398,14 +407,17 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             state_attr[ATTR_CRON_PATTERN] = self._cron_pattern
         if self._tariff is not None:
             state_attr[ATTR_TARIFF] = self._tariff
+        # last_reset in utility meter was used before last_reset was added for long term
+        # statistics in base sensor. base sensor only supports last reset
+        # sensors with state_class set to total.
+        # To avoid a breaking change we set last_reset directly
+        # in extra state attributes.
+        if last_reset := self._last_reset:
+            state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
+
         return state_attr
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
-
-    @property
-    def last_reset(self):
-        """Return the time when the sensor was last reset."""
-        return self._last_reset

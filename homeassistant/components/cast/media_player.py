@@ -21,7 +21,6 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
-from homeassistant.auth.models import RefreshToken
 from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -50,7 +49,6 @@ from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
-    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -306,8 +304,11 @@ class CastDevice(MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
+                # pylint: disable=[import-outside-toplevel]
+                from homeassistant.components import tts
+
                 with suppress(KeyError):  # base_url not configured
-                    tts_base_url = self.hass.components.tts.get_base_url(self.hass)
+                    tts_base_url = tts.get_base_url(self.hass)
 
             with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
@@ -456,7 +457,15 @@ class CastDevice(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        result = await media_source.async_browse_media(self.hass, media_content_id)
+        kwargs = {}
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_AUDIO:
+            kwargs["content_filter"] = lambda item: item.media_content_type.startswith(
+                "audio/"
+            )
+
+        result = await media_source.async_browse_media(
+            self.hass, media_content_id, **kwargs
+        )
         return result
 
     async def async_play_media(self, media_type, media_id, **kwargs):
@@ -470,20 +479,11 @@ class CastDevice(MediaPlayerEntity):
         # If media ID is a relative URL, we serve it from HA.
         # Create a signed path.
         if media_id[0] == "/":
-            # Sign URL with Home Assistant Cast User
-            config_entry_id = self.registry_entry.config_entry_id
-            config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-            user_id = config_entry.data["user_id"]
-            user = await self.hass.auth.async_get_user(user_id)
-            if user.refresh_tokens:
-                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
-
-                media_id = async_sign_path(
-                    self.hass,
-                    refresh_token.id,
-                    quote(media_id),
-                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
+            media_id = async_sign_path(
+                self.hass,
+                quote(media_id),
+                timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+            )
 
             # prepend external URL
             hass_url = get_url(self.hass, prefer_external=True)
@@ -577,7 +577,7 @@ class CastDevice(MediaPlayerEntity):
                 return STATE_PLAYING
             return STATE_IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
-            return STATE_OFF
+            return STATE_IDLE
         return None
 
     @property
@@ -735,8 +735,7 @@ class CastDevice(MediaPlayerEntity):
         """
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return None
-        media_status_recevied = self._media_status()[1]
-        return media_status_recevied
+        return self._media_status()[1]
 
     async def _async_cast_discovered(self, discover: ChromecastInfo):
         """Handle discovery of new Chromecast."""

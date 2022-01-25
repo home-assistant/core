@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
     CONF_SWITCHES,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
@@ -39,6 +40,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -81,6 +83,7 @@ def setup_platform(
                 icon_template,
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
+                device_config.get(CONF_UNIQUE_ID),
             )
         )
 
@@ -105,6 +108,7 @@ class CommandSwitch(SwitchEntity):
         icon_template,
         value_template,
         timeout,
+        unique_id,
     ):
         """Initialize the switch."""
         self._hass = hass
@@ -117,6 +121,7 @@ class CommandSwitch(SwitchEntity):
         self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
+        self._attr_unique_id = unique_id
 
     def _switch(self, command):
         """Execute the actual commands."""

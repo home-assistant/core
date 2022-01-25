@@ -4,6 +4,8 @@ Support for controlling power supply of clients which are powered over Ethernet 
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 """
+
+import asyncio
 from typing import Any
 
 from aiounifi.api import SOURCE_EVENT
@@ -134,9 +136,9 @@ def add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
         # If poe_enable is False we can't know if a POE client is available for control.
         if mac not in known_poe_clients and (
             mac in controller.wireless_clients
-            or client.sw_mac not in devices
-            or not devices[client.sw_mac].ports[client.sw_port].port_poe
-            or not devices[client.sw_mac].ports[client.sw_port].poe_enable
+            or client.switch_mac not in devices
+            or not devices[client.switch_mac].ports[client.switch_port].port_poe
+            or not devices[client.switch_mac].ports[client.switch_port].poe_enable
             or controller.mac == client.mac
         ):
             continue
@@ -151,8 +153,8 @@ def add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
             if (
                 client2.is_wired
                 and client.mac != client2.mac
-                and client.sw_mac == client2.sw_mac
-                and client.sw_port == client2.sw_port
+                and client.switch_mac == client2.switch_mac
+                and client.switch_port == client2.switch_port
             ):
                 multi_clients_on_port = True
                 break
@@ -197,7 +199,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         super().__init__(client, controller)
 
         self.poe_mode = None
-        if client.sw_port and self.port.poe_mode != "off":
+        if client.switch_port and self.port.poe_mode != "off":
             self.poe_mode = self.port.poe_mode
 
     async def async_added_to_hass(self):
@@ -212,10 +214,10 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
 
         self.poe_mode = state.attributes.get("poe_mode")
 
-        if not self.client.sw_mac:
+        if not self.client.switch_mac:
             self.client.raw["sw_mac"] = state.attributes.get("switch")
 
-        if not self.client.sw_port:
+        if not self.client.switch_port:
             self.client.raw["sw_port"] = state.attributes.get("port")
 
     @property
@@ -233,26 +235,26 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         return (
             self.poe_mode is not None
             and self.controller.available
-            and self.client.sw_port
-            and self.client.sw_mac
-            and self.client.sw_mac in self.controller.api.devices
+            and self.client.switch_port
+            and self.client.switch_mac
+            and self.client.switch_mac in self.controller.api.devices
         )
 
     async def async_turn_on(self, **kwargs):
         """Enable POE for client."""
-        await self.device.async_set_port_poe_mode(self.client.sw_port, self.poe_mode)
+        await self.device.set_port_poe_mode(self.client.switch_port, self.poe_mode)
 
     async def async_turn_off(self, **kwargs):
         """Disable POE for client."""
-        await self.device.async_set_port_poe_mode(self.client.sw_port, "off")
+        await self.device.set_port_poe_mode(self.client.switch_port, "off")
 
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {
             "power": self.port.poe_power,
-            "switch": self.client.sw_mac,
-            "port": self.client.sw_port,
+            "switch": self.client.switch_mac,
+            "port": self.client.switch_port,
             "poe_mode": self.poe_mode,
         }
         return attributes
@@ -260,12 +262,12 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     @property
     def device(self):
         """Shortcut to the switch that client is connected to."""
-        return self.controller.api.devices[self.client.sw_mac]
+        return self.controller.api.devices[self.client.switch_mac]
 
     @property
     def port(self):
         """Shortcut to the switch port that client is connected to."""
-        return self.device.ports[self.client.sw_port]
+        return self.device.ports[self.client.switch_port]
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
@@ -305,11 +307,11 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on connectivity for client."""
-        await self.controller.api.clients.async_unblock(self.client.mac)
+        await self.controller.api.clients.unblock(self.client.mac)
 
     async def async_turn_off(self, **kwargs):
         """Turn off connectivity for client."""
-        await self.controller.api.clients.async_block(self.client.mac)
+        await self.controller.api.clients.block(self.client.mac)
 
     @property
     def icon(self):
@@ -332,10 +334,56 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
+    def __init__(self, dpi_group, controller):
+        """Set up dpi switch."""
+        super().__init__(dpi_group, controller)
+
+        self._is_enabled = self.calculate_enabled()
+        self._known_app_ids = dpi_group.dpiapp_ids
+
     @property
     def key(self) -> Any:
         """Return item key."""
         return self._item.id
+
+    async def async_added_to_hass(self) -> None:
+        """Register callback to known apps."""
+        await super().async_added_to_hass()
+
+        apps = self.controller.api.dpi_apps
+        for app_id in self._item.dpiapp_ids:
+            apps[app_id].register_callback(self.async_update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove registered callbacks."""
+        apps = self.controller.api.dpi_apps
+        for app_id in self._item.dpiapp_ids:
+            apps[app_id].remove_callback(self.async_update_callback)
+
+        await super().async_will_remove_from_hass()
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the DPI switch state.
+
+        Remove entity when no apps are paired with group.
+        Register callbacks to new apps.
+        Calculate and update entity state if it has changed.
+        """
+        if not self._item.dpiapp_ids:
+            self.hass.async_create_task(self.remove_item({self.key}))
+            return
+
+        if self._known_app_ids != self._item.dpiapp_ids:
+            self._known_app_ids = self._item.dpiapp_ids
+
+            apps = self.controller.api.dpi_apps
+            for app_id in self._item.dpiapp_ids:
+                apps[app_id].register_callback(self.async_update_callback)
+
+        if (enabled := self.calculate_enabled()) != self._is_enabled:
+            self._is_enabled = enabled
+            super().async_update_callback()
 
     @property
     def unique_id(self):
@@ -344,28 +392,46 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the client."""
+        """Return the name of the DPI group."""
         return self._item.name
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        if self._item.enabled:
+        if self._is_enabled:
             return "mdi:network"
         return "mdi:network-off"
 
+    def calculate_enabled(self) -> bool:
+        """Calculate if all apps are enabled."""
+        return all(
+            self.controller.api.dpi_apps[app_id].enabled
+            for app_id in self._item.dpiapp_ids
+            if app_id in self.controller.api.dpi_apps
+        )
+
     @property
     def is_on(self):
-        """Return true if client is allowed to connect."""
-        return self._item.enabled
+        """Return true if DPI group app restriction is enabled."""
+        return self._is_enabled
 
     async def async_turn_on(self, **kwargs):
-        """Turn on connectivity for client."""
-        await self.controller.api.dpi_groups.async_enable(self._item)
+        """Restrict access of apps related to DPI group."""
+        return await asyncio.gather(
+            *[
+                self.controller.api.dpi_apps.enable(app_id)
+                for app_id in self._item.dpiapp_ids
+            ]
+        )
 
     async def async_turn_off(self, **kwargs):
-        """Turn off connectivity for client."""
-        await self.controller.api.dpi_groups.async_disable(self._item)
+        """Remove restriction of apps related to DPI group."""
+        return await asyncio.gather(
+            *[
+                self.controller.api.dpi_apps.disable(app_id)
+                for app_id in self._item.dpiapp_ids
+            ]
+        )
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

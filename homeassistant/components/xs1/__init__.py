@@ -13,9 +13,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +49,7 @@ PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 UPDATE_LOCK = asyncio.Lock()
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up XS1 integration."""
     _LOGGER.debug("Initializing XS1")
 

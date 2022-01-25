@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 import xml.etree.ElementTree as et
 
-from env_canada import ECRadar, ECWeather, ec_exc
+from env_canada import ECAirQuality, ECRadar, ECWeather, ec_exc
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
@@ -44,6 +44,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
     )
     await coordinators["radar_coordinator"].async_config_entry_first_refresh()
+
+    aqhi_data = ECAirQuality(coordinates=(lat, lon))
+    coordinators["aqhi_coordinator"] = ECDataUpdateCoordinator(
+        hass, aqhi_data, "AQHI", DEFAULT_WEATHER_UPDATE_INTERVAL
+    )
+    await coordinators["aqhi_coordinator"].async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinators

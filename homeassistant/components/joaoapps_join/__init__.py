@@ -13,8 +13,9 @@ from pyjoin import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
     hass.services.register(DOMAIN, f"{name}send_tasker", send_tasker_service)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Join services."""
     for device in config[DOMAIN]:
         api_key = device.get(CONF_API_KEY)

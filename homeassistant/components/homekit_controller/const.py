@@ -11,9 +11,10 @@ TRIGGERS = f"{DOMAIN}-triggers"
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
 
-IDENTIFIER_SERIAL_NUMBER = "serial-number"
-IDENTIFIER_ACCESSORY_ID = "accessory-id"
-
+IDENTIFIER_SERIAL_NUMBER = "homekit_controller:serial-number"
+IDENTIFIER_ACCESSORY_ID = "homekit_controller:accessory-id"
+IDENTIFIER_LEGACY_SERIAL_NUMBER = "serial-number"
+IDENTIFIER_LEGACY_ACCESSORY_ID = "accessory-id"
 
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
@@ -63,6 +64,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
+    CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY: "sensor",
     CharacteristicsTypes.TEMPERATURE_CURRENT: "sensor",
     CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: "sensor",
     CharacteristicsTypes.AIR_QUALITY: "sensor",
@@ -72,6 +74,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.DENSITY_NO2: "sensor",
     CharacteristicsTypes.DENSITY_SO2: "sensor",
     CharacteristicsTypes.DENSITY_VOC: "sensor",
+    CharacteristicsTypes.IDENTIFY: "button",
 }
 
 # For legacy reasons, "built-in" characteristic types are in their short form

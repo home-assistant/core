@@ -12,8 +12,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +92,7 @@ SENSORS = (
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nextcloud integration."""
     # Fetch Nextcloud Monitor api data
     conf = config[DOMAIN]

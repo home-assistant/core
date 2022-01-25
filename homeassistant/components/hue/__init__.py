@@ -1,9 +1,9 @@
 """Support for the Philips Hue system."""
-
 from aiohue.util import normalize_bridge_id
 
-from homeassistant import config_entries, core
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .bridge import HueBridge
@@ -12,9 +12,7 @@ from .migration import check_migration
 from .services import async_register_services
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a bridge from a config entry."""
     # check (and run) migrations if needed
     await check_migration(hass, entry)
@@ -50,7 +48,7 @@ async def async_setup_entry(
             # If no other entry, update unique ID of this entry ID.
             hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
-        elif other_entry.source == config_entries.SOURCE_IGNORE:
+        elif other_entry.source == SOURCE_IGNORE:
             # There is another entry but it is ignored, delete that one and update this one
             hass.async_create_task(
                 hass.config_entries.async_remove(other_entry.entry_id)
@@ -103,9 +101,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_success = await hass.data[DOMAIN][entry.entry_id].async_reset()
     if len(hass.data[DOMAIN]) == 0:

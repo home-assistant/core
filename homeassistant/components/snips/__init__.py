@@ -6,8 +6,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "snips"
 CONF_INTENTS = "intents"
@@ -87,7 +88,7 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
 
     async def async_set_feedback(site_ids, state):

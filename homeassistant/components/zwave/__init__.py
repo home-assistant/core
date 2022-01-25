@@ -37,6 +37,7 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 
@@ -318,7 +319,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Z-Wave components."""
     if DOMAIN not in config:
         return True

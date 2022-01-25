@@ -1,6 +1,7 @@
 """The Netatmo integration."""
 from __future__ import annotations
 
+from datetime import datetime
 from http import HTTPStatus
 import logging
 import secrets
@@ -11,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import cloud
 from homeassistant.components.webhook import (
+    async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
@@ -22,7 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -72,6 +74,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+MAX_WEBHOOK_RETRIES = 3
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -146,7 +150,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def unregister_webhook(call: ServiceCall | None) -> None:
+    _webhook_retries = 0
+
+    async def unregister_webhook(
+        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+    ) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             return
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
@@ -163,24 +171,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
             )
 
-    async def register_webhook(call: ServiceCall | None) -> None:
+        nonlocal _webhook_retries
+        if _webhook_retries < MAX_WEBHOOK_RETRIES:
+            _webhook_retries += 1
+            async_call_later(hass, 30, register_webhook)
+
+    async def register_webhook(
+        call_or_event_or_dt: ServiceCall | Event | datetime | None,
+    ) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)
 
-        if hass.components.cloud.async_active_subscription():
+        if cloud.async_active_subscription(hass):
             if CONF_CLOUDHOOK_URL not in entry.data:
-                webhook_url = await hass.components.cloud.async_create_cloudhook(
-                    entry.data[CONF_WEBHOOK_ID]
+                webhook_url = await cloud.async_create_cloudhook(
+                    hass, entry.data[CONF_WEBHOOK_ID]
                 )
                 data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
                 hass.config_entries.async_update_entry(entry, data=data)
             else:
                 webhook_url = entry.data[CONF_CLOUDHOOK_URL]
         else:
-            webhook_url = hass.components.webhook.async_generate_url(
-                entry.data[CONF_WEBHOOK_ID]
-            )
+            webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
         if entry.data[
             "auth_implementation"
@@ -263,10 +276,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    if (
-        CONF_WEBHOOK_ID in entry.data
-        and hass.components.cloud.async_active_subscription()
-    ):
+    if CONF_WEBHOOK_ID in entry.data and cloud.async_active_subscription(hass):
         try:
             _LOGGER.debug(
                 "Removing Netatmo cloudhook (%s)", entry.data[CONF_WEBHOOK_ID]

@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
+from . import LeafEntity
+from .const import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +29,13 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    devices: list[LeafEntity] = []
+    entities: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
-        devices.append(LeafPluggedInSensor(datastore))
-        devices.append(LeafChargingSensor(datastore))
+        entities.append(LeafPluggedInSensor(datastore))
+        entities.append(LeafChargingSensor(datastore))
 
-    add_entities(devices, True)
+    add_entities(entities, True)
 
 
 class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):

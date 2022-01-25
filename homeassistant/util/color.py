@@ -7,8 +7,6 @@ from typing import NamedTuple, cast
 
 import attr
 
-# mypy: disallow-any-generics
-
 
 class RGBColor(NamedTuple):
     """RGB hex values."""

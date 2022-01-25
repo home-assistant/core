@@ -19,7 +19,7 @@ from .conftest import MockEntityFixture, assert_entity_counts, enable_entity
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera with only the button platform active, no extra setup."""
+    """Fixture for a single camera for testing the button platform."""
 
     camera_obj = mock_camera.copy(deep=True)
     camera_obj._api = mock_entry.api
@@ -37,7 +37,7 @@ async def camera_fixture(
 
     assert_entity_counts(hass, Platform.BUTTON, 1, 0)
 
-    yield (camera_obj, "button.test_camera_reboot_device")
+    return (camera_obj, "button.test_camera_reboot_device")
 
 
 async def test_button(

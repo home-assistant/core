@@ -161,7 +161,7 @@ class OpenUV:
                 f"Error during protection data update: {err}"
             ) from err
 
-        self.data[DATA_PROTECTION_WINDOW] = data["result"]
+        self.data[DATA_PROTECTION_WINDOW] = data.get("result")
 
     async def async_update_uv_index_data(self) -> None:
         """Update sensor (uv index, etc) data."""
@@ -172,7 +172,7 @@ class OpenUV:
                 f"Error during UV index data update: {err}"
             ) from err
 
-        self.data[DATA_UV] = data
+        self.data[DATA_UV] = data.get("result")
 
     async def async_update(self) -> None:
         """Update sensor/binary sensor data."""

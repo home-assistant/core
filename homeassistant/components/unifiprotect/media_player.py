@@ -8,7 +8,7 @@ from pyunifiprotect.data import Camera
 from pyunifiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
 )
@@ -55,18 +55,22 @@ async def async_setup_entry(
 class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     """A Ubiquiti UniFi Protect Speaker."""
 
+    device: Camera
+    entity_description: MediaPlayerEntityDescription
+
     def __init__(
         self,
         data: ProtectData,
         camera: Camera,
     ) -> None:
         """Initialize an UniFi speaker."""
-
-        self.device: Camera = camera
-        self.entity_description = MediaPlayerEntityDescription(
-            key="speaker", device_class=DEVICE_CLASS_SPEAKER
+        super().__init__(
+            data,
+            camera,
+            MediaPlayerEntityDescription(
+                key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
+            ),
         )
-        super().__init__(data)
 
         self._attr_name = f"{self.device.name} Speaker"
         self._attr_supported_features = (

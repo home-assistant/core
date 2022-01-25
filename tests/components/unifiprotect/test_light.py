@@ -27,7 +27,7 @@ from .conftest import MockEntityFixture, assert_entity_counts
 async def light_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
 ):
-    """Fixture for a single light with only the button platform active, no extra setup."""
+    """Fixture for a single light for testing the light platform."""
 
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
@@ -84,6 +84,7 @@ async def test_light_update(
     new_light.light_device_settings.led_level = 3
 
     mock_msg = Mock()
+    mock_msg.changed_data = {}
     mock_msg.new_obj = new_light
 
     new_bootstrap.lights = {new_light.id: new_light}

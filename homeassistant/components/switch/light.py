@@ -15,6 +15,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -74,7 +76,7 @@ class LightSwitch(LightEntity):
         """Forward the turn_on command to the switch in this light switch."""
         await self.hass.services.async_call(
             switch.DOMAIN,
-            switch.SERVICE_TURN_ON,
+            SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
@@ -84,7 +86,7 @@ class LightSwitch(LightEntity):
         """Forward the turn_off command to the switch in this light switch."""
         await self.hass.services.async_call(
             switch.DOMAIN,
-            switch.SERVICE_TURN_OFF,
+            SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,

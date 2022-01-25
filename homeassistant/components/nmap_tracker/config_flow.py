@@ -206,17 +206,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return False
         return True
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import from yaml."""
-        if not self._async_is_unique_host_list(user_input):
-            return self.async_abort(reason="already_configured")
-
-        normalize_input(user_input)
-
-        return self.async_create_entry(
-            title=f"Nmap Tracker {user_input[CONF_HOSTS]}", data={}, options=user_input
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:

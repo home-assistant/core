@@ -1,7 +1,8 @@
 """Support for deCONZ binary sensors."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
+from collections.abc import Callable, ValuesView
+from dataclasses import dataclass
 
 from pydeconz.sensor import (
     Alarm,
@@ -48,10 +49,33 @@ ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 
+
+@dataclass
+class DeconzBinarySensorDescriptionMixin:
+    """Required values when describing secondary sensor attributes."""
+
+    suffix: str
+    update_key: str
+    required_attr: str
+    value_fn: Callable[[PydeconzSensor], bool | None]
+
+
+@dataclass
+class DeconzBinarySensorDescription(
+    BinarySensorEntityDescription,
+    DeconzBinarySensorDescriptionMixin,
+):
+    """Class describing deCONZ binary sensor entities."""
+
+
 ENTITY_DESCRIPTIONS = {
+    Alarm: BinarySensorEntityDescription(
+        key="alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
     CarbonMonoxide: BinarySensorEntityDescription(
         key="carbonmonoxide",
-        device_class=BinarySensorDeviceClass.GAS,
+        device_class=BinarySensorDeviceClass.CO,
     ),
     Fire: BinarySensorEntityDescription(
         key="fire",
@@ -76,6 +100,28 @@ ENTITY_DESCRIPTIONS = {
 }
 
 
+BINARY_SENSOR_DESCRIPTIONS = [
+    DeconzBinarySensorDescription(
+        key="tamper",
+        required_attr="tampered",
+        value_fn=lambda device: device.tampered,
+        suffix="Tampered",
+        update_key="tampered",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DeconzBinarySensorDescription(
+        key="low_battery",
+        required_attr="low_battery",
+        value_fn=lambda device: device.low_battery,
+        suffix="Low Battery",
+        update_key="lowbattery",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -91,7 +137,7 @@ async def async_setup_entry(
         | ValuesView[PydeconzSensor] = gateway.api.sensors.values(),
     ) -> None:
         """Add binary sensor from deCONZ."""
-        entities: list[DeconzBinarySensor | DeconzTampering] = []
+        entities: list[DeconzBinarySensor | DeconzPropertyBinarySensor] = []
 
         for sensor in sensors:
 
@@ -104,11 +150,20 @@ async def async_setup_entry(
             ):
                 entities.append(DeconzBinarySensor(sensor, gateway))
 
-            if sensor.tampered is not None:
-                known_tampering_sensors = set(gateway.entities[DOMAIN])
-                new_tampering_sensor = DeconzTampering(sensor, gateway)
-                if new_tampering_sensor.unique_id not in known_tampering_sensors:
-                    entities.append(new_tampering_sensor)
+            known_sensor_entities = set(gateway.entities[DOMAIN])
+            for sensor_description in BINARY_SENSOR_DESCRIPTIONS:
+
+                if (
+                    not hasattr(sensor, sensor_description.required_attr)
+                    or sensor_description.value_fn(sensor) is None
+                ):
+                    continue
+
+                new_sensor = DeconzPropertyBinarySensor(
+                    sensor, gateway, sensor_description
+                )
+                if new_sensor.unique_id not in known_sensor_entities:
+                    entities.append(new_sensor)
 
         if entities:
             async_add_entities(entities)
@@ -175,34 +230,38 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         return attr
 
 
-class DeconzTampering(DeconzDevice, BinarySensorEntity):
-    """Representation of a deCONZ tampering sensor."""
+class DeconzPropertyBinarySensor(DeconzDevice, BinarySensorEntity):
+    """Representation of a deCONZ Property sensor."""
 
     TYPE = DOMAIN
     _device: PydeconzSensor
+    entity_description: DeconzBinarySensorDescription
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_device_class = BinarySensorDeviceClass.TAMPER
-
-    def __init__(self, device: PydeconzSensor, gateway: DeconzGateway) -> None:
+    def __init__(
+        self,
+        device: PydeconzSensor,
+        gateway: DeconzGateway,
+        description: DeconzBinarySensorDescription,
+    ) -> None:
         """Initialize deCONZ binary sensor."""
+        self.entity_description = description
         super().__init__(device, gateway)
 
-        self._attr_name = f"{self._device.name} Tampered"
+        self._attr_name = f"{self._device.name} {description.suffix}"
+        self._update_keys = {description.update_key, "reachable"}
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.serial}-tampered"
+        return f"{self.serial}-{self.entity_description.suffix.lower()}"
 
     @callback
     def async_update_callback(self) -> None:
         """Update the sensor's state."""
-        keys = {"tampered", "reachable"}
-        if self._device.changed_keys.intersection(keys):
+        if self._device.changed_keys.intersection(self._update_keys):
             super().async_update_callback()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return self._device.tampered  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)

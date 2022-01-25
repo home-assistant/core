@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 import logging
 import re
-from typing import Any, Dict
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,7 +16,7 @@ from homeassistant.loader import bind_hass
 from . import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-_SlotsType = Dict[str, Any]
+_SlotsType = dict[str, Any]
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"

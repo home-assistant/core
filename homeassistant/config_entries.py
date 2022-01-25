@@ -2,23 +2,24 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
 from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
-from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from .core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from .components import persistent_notification
+from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
+from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry
-from .helpers.event import Event
+from .helpers.event import async_call_later
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import async_process_deps_reqs, async_setup_component
@@ -375,8 +376,8 @@ class ConfigEntry:
                 await self.async_setup(hass, integration=integration, tries=tries)
 
             if hass.state == CoreState.running:
-                self._async_cancel_retry_setup = hass.helpers.event.async_call_later(
-                    wait_time, setup_again
+                self._async_cancel_retry_setup = async_call_later(
+                    hass, wait_time, setup_again
                 )
             else:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
@@ -607,6 +608,7 @@ class ConfigEntry:
         flow_context = {
             "source": SOURCE_REAUTH,
             "entry_id": self.entry_id,
+            "title_placeholders": {"name": self.title},
             "unique_id": self.unique_id,
         }
 
@@ -658,9 +660,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):
-            self.hass.components.persistent_notification.async_dismiss(
-                DISCOVERY_NOTIFICATION_ID
-            )
+            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
 
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
@@ -758,7 +758,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Create notification.
         if source in DISCOVERY_SOURCES:
             self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 title="New devices discovered",
                 message=(
                     "We have discovered new devices on your network. "
@@ -767,7 +768,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 notification_id=DISCOVERY_NOTIFICATION_ID,
             )
         elif source == SOURCE_REAUTH:
-            self.hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                self.hass,
                 title="Integration requires reconfiguration",
                 message=(
                     "At least one of your integrations requires reconfiguration to "
@@ -1053,7 +1055,7 @@ class ConfigEntries:
         *,
         unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        data: dict | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
@@ -1080,7 +1082,7 @@ class ConfigEntries:
             setattr(entry, attr, value)
             changed = True
 
-        if data is not UNDEFINED and entry.data != data:  # type: ignore
+        if data is not UNDEFINED and entry.data != data:
             changed = True
             entry.data = MappingProxyType(data)
 
@@ -1101,13 +1103,15 @@ class ConfigEntries:
 
     @callback
     def async_setup_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[str]
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
 
-    async def async_forward_entry_setup(self, entry: ConfigEntry, domain: str) -> bool:
+    async def async_forward_entry_setup(
+        self, entry: ConfigEntry, domain: Platform | str
+    ) -> bool:
         """Forward the setup of an entry to a different component.
 
         By default an entry is setup with the component it belongs to. If that
@@ -1130,7 +1134,7 @@ class ConfigEntries:
         return True
 
     async def async_unload_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[str]
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> bool:
         """Forward the unloading of an entry to platforms."""
         return all(
@@ -1142,7 +1146,9 @@ class ConfigEntries:
             )
         )
 
-    async def async_forward_entry_unload(self, entry: ConfigEntry, domain: str) -> bool:
+    async def async_forward_entry_unload(
+        self, entry: ConfigEntry, domain: Platform | str
+    ) -> bool:
         """Forward the unloading of an entry to a different component."""
         # It was never loaded.
         if domain not in self.hass.config.components:
@@ -1379,8 +1385,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             )
             if ent["flow_id"] != self.flow_id
         ):
-            self.hass.components.persistent_notification.async_dismiss(
-                RECONFIGURE_NOTIFICATION_ID
+            persistent_notification.async_dismiss(
+                self.hass, RECONFIGURE_NOTIFICATION_ID
             )
 
         return super().async_abort(
@@ -1557,8 +1563,8 @@ class EntityRegistryDisabledHandler:
         if self._remove_call_later:
             self._remove_call_later()
 
-        self._remove_call_later = self.hass.helpers.event.async_call_later(
-            RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+        self._remove_call_later = async_call_later(
+            self.hass, RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
         )
 
     async def _handle_reload(self, _now: Any) -> None:

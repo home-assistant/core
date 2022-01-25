@@ -20,9 +20,10 @@ from RestrictedPython.Guards import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import raise_if_invalid_filename
 import homeassistant.util.dt as dt_util
@@ -79,7 +80,7 @@ class ScriptError(HomeAssistantError):
     """When a script error occurs."""
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Python script component."""
     path = hass.config.path(FOLDER)
 

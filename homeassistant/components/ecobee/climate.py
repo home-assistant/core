@@ -29,6 +29,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -37,10 +38,11 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.temperature import convert
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
@@ -175,7 +177,11 @@ SUPPORT_FLAGS = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ecobee thermostat."""
 
     data = hass.data[DOMAIN]
@@ -515,7 +521,7 @@ class Thermostat(ClimateEntity):
         """Return current HVAC action.
 
         Ecobee returns a CSV string with different equipment that is active.
-        We are prioritizing any heating/cooling equipment, otherwase look at
+        We are prioritizing any heating/cooling equipment, otherwise look at
         drying/fanning. Idle if nothing going on.
 
         We are unable to map all actions to HA equivalents.

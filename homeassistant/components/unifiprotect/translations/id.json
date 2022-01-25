@@ -10,6 +10,13 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi",

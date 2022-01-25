@@ -92,7 +92,7 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.10_111111111111_temperature",
                 ATTR_INJECT_READS: b"    25.123",
                 ATTR_STATE: "25.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -1045,7 +1045,7 @@ MOCK_SYSBUS_DEVICES = {
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.10_111111111111_temperature",
                 ATTR_INJECT_READS: 25.123,
                 ATTR_STATE: "25.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,

@@ -18,6 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ACTION_PRESS,
@@ -77,7 +78,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup(hass, base_config):
+async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron component."""
     hass.data.setdefault(DOMAIN, {})
 
