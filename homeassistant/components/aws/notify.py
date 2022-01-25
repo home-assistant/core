@@ -12,6 +12,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
@@ -166,11 +167,13 @@ class AWSSNS(AWSNotify):
             _LOGGER.error("At least one target is required")
             return
 
-        message_attributes = {
-            k: {"StringValue": json.dumps(v), "DataType": "String"}
-            for k, v in kwargs.items()
-            if v is not None
-        }
+        message_attributes = {}
+        if data := kwargs.get(ATTR_DATA):
+            message_attributes = {
+                k: {"StringValue": v, "DataType": "String"}
+                for k, v in data.items()
+                if v is not None
+            }
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         async with self.session.create_client(
