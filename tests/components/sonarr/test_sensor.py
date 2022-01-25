@@ -24,11 +24,11 @@ UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 async def test_sensors(
     hass: HomeAssistant,
-    mock_setup_entry: None,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test the creation and values of the sensors."""
-    entry = init_integration
+    entry = mock_config_entry
     registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
