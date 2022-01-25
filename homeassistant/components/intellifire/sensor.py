@@ -37,7 +37,7 @@ class IntellifireSensorRequireKeysMixin:
 
 @dataclass
 class IntellifireSensorEntityDescription(
-    SensorEntityDescription, IntellifireSensorRequireKeysMixin
+    SensorEntityDescription, IntellifireSensorRequiredKeysMixin
 ):
     """Describes a sensor sensor entity."""
 
