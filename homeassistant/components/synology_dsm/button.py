@@ -63,7 +63,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.unique_id]
     syno_api: SynoApi = data[SYNO_API]
 
-    async_add_entities([SynologyDSMButton(syno_api, button) for button in BUTTONS])
+    async_add_entities(SynologyDSMButton(syno_api, button) for button in BUTTONS)
 
 
 class SynologyDSMButton(ButtonEntity):

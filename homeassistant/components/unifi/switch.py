@@ -16,10 +16,14 @@ from aiounifi.events import (
     WIRELESS_CLIENT_UNBLOCKED,
 )
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN, SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +37,7 @@ from .unifi_entity_base import UniFiBase
 BLOCK_SWITCH = "block"
 DPI_SWITCH = "dpi"
 POE_SWITCH = "poe"
+OUTLET_SWITCH = "outlet"
 
 CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
@@ -52,6 +57,7 @@ async def async_setup_entry(
         BLOCK_SWITCH: set(),
         POE_SWITCH: set(),
         DPI_SWITCH: set(),
+        OUTLET_SWITCH: set(),
     }
 
     if controller.site_role != "admin":
@@ -83,6 +89,8 @@ async def async_setup_entry(
         dpi_groups: set = controller.api.dpi_groups,
     ) -> None:
         """Update the values of the controller."""
+        add_outlet_entities(controller, async_add_entities, devices)
+
         if controller.option_block_clients:
             add_block_entities(controller, async_add_entities, clients)
 
@@ -181,6 +189,25 @@ def add_dpi_entities(controller, async_add_entities, dpi_groups):
             continue
 
         switches.append(UniFiDPIRestrictionSwitch(dpi_groups[group], controller))
+
+    if switches:
+        async_add_entities(switches)
+
+
+@callback
+def add_outlet_entities(controller, async_add_entities, devices):
+    """Add new switch entities from the controller."""
+    switches = []
+
+    for mac in devices:
+        if (
+            mac in controller.entities[DOMAIN][OUTLET_SWITCH]
+            or not (device := controller.api.devices[mac]).outlet_table
+        ):
+            continue
+        for outlet in device.outlets.values():
+            if outlet.has_relay:
+                switches.append(UniFiOutletSwitch(device, controller, outlet.index))
 
     if switches:
         async_add_entities(switches)
@@ -448,3 +475,58 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             model="UniFi Network",
             name="UniFi Network",
         )
+
+
+class UniFiOutletSwitch(UniFiBase, SwitchEntity):
+    """Representation of a outlet relay."""
+
+    DOMAIN = DOMAIN
+    TYPE = OUTLET_SWITCH
+
+    _attr_device_class = SwitchDeviceClass.OUTLET
+
+    def __init__(self, device, controller, index):
+        """Set up outlet switch."""
+        super().__init__(device, controller)
+
+        self._outlet_index = index
+
+        self._attr_name = f"{device.name or device.model} {device.outlets[index].name}"
+        self._attr_unique_id = f"{device.mac}-outlet-{index}"
+
+    @property
+    def is_on(self):
+        """Return true if outlet is active."""
+        return self._item.outlets[self._outlet_index].relay_state
+
+    @property
+    def available(self):
+        """Return if switch is available."""
+        return not self._item.disabled and self.controller.available
+
+    async def async_turn_on(self, **kwargs):
+        """Enable outlet relay."""
+        await self._item.set_outlet_relay_state(self._outlet_index, True)
+
+    async def async_turn_off(self, **kwargs):
+        """Disable outlet relay."""
+        await self._item.set_outlet_relay_state(self._outlet_index, False)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._item.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=self._item.model,
+            sw_version=self._item.version,
+            hw_version=self._item.board_revision,
+        )
+
+        if self._item.name:
+            info[ATTR_NAME] = self._item.name
+
+        return info
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, no options to act on."""
