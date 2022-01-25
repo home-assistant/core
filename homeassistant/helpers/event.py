@@ -536,6 +536,7 @@ class _TrackStateChangeFiltered:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._action = action
+        self._action_as_hassjob = HassJob(action)
         self._listeners: dict[str, Callable[[], None]] = {}
         self._last_track_states: TrackStates = track_states
 
@@ -632,12 +633,20 @@ class _TrackStateChangeFiltered:
         )
 
     @callback
+    def _state_added(self, event: Event) -> None:
+        self._cancel_listener(_ENTITIES_LISTENER)
+        self._setup_entities_listener(
+            self._last_track_states.domains, self._last_track_states.entities
+        )
+        self.hass.async_run_hass_job(self._action_as_hassjob, event)
+
+    @callback
     def _setup_domains_listener(self, domains: set[str]) -> None:
         if not domains:
             return
 
         self._listeners[_DOMAINS_LISTENER] = async_track_state_added_domain(
-            self.hass, domains, self._action
+            self.hass, domains, self._state_added
         )
 
     @callback
