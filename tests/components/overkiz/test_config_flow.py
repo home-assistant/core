@@ -221,7 +221,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconfig_flow(hass):
-    """Test that DHCP discovery for new bridge works."""
+    """Test that zeroconf discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=FAKE_ZERO_CONF_INFO,
