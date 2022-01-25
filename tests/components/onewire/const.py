@@ -44,7 +44,6 @@ ATTR_ENTITY_CATEGORY = "entity_category"
 ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_UNKNOWN_DEVICE = "unknown_device"
-ATTR_OVERRIDE_KEY = "override_key"
 
 FIXED_ATTRIBUTES = (
     ATTR_DEVICE_CLASS,
