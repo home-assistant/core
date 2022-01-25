@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from intellifire4py import IntellifirePollData
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
