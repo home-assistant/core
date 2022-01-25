@@ -84,6 +84,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class WeatherAlertSensor(CoordinatorEntity, SensorEntity):
     """Weather alert sensor."""
+    
+    _attr_attribution = (
+        "Data provided by the OpenWeatherMap Organization\n"
+        "© 2012 — 2021 OpenWeather ® All rights reserved"
+        )
+    _attr_icon = "mdi:alert"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+        
 
     def __init__(self, hass, config, coordinator):
         """Initialize the sensor."""
