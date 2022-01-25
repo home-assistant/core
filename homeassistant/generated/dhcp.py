@@ -291,6 +291,10 @@ DHCP = [
         "macaddress": "A4D578*"
     },
     {
+        "domain": "senseme",
+        "macaddress": "20F85E*"
+    },
+    {
         "domain": "simplisafe",
         "hostname": "simplisafe*",
         "macaddress": "30AEA4*"
