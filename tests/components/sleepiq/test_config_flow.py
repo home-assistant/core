@@ -1,11 +1,11 @@
 """Tests for the SleepIQ config flow."""
+
+import pytest
 from requests_mock import ANY
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-
-from tests.components.sleepiq import mock_responses
 
 USER_INPUT = {
     CONF_USERNAME: "username",
@@ -36,9 +36,11 @@ async def test_login_error(hass, requests_mock) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_success(hass, requests_mock) -> None:
+@pytest.mark.parametrize(
+    "requests_mock_fixture", [""], indirect=["requests_mock_fixture"]
+)
+async def test_success(hass, requests_mock_fixture) -> None:
     """Test successful flow provides entry creation data."""
-    mock_responses(requests_mock)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT
     )
