@@ -31,7 +31,7 @@ SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
 PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
-    #    Platform.LIGHT,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -42,3 +42,4 @@ SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
 COORDINATOR = "coordinator"
 COORDINATOR_LIST = "coordinator_list"
+GROUPS_LIST = "groups_list"
