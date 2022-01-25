@@ -29,9 +29,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _config_entry: ConfigEntry | None = None
-    _default_user: None | str = None
-    _default_hub: str = DEFAULT_HUB
+    _config_entry: ConfigEntry | None
+    _default_user: None | str
+    _default_hub: str
+
+    def __init__(self) -> None:
+        """Initialize Overkiz Config Flow."""
+        super().__init__()
+
+        self._config_entry = None
+        self._default_user = None
+        self._default_hub = DEFAULT_HUB
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate user credentials."""
