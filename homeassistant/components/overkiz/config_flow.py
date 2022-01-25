@@ -104,7 +104,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle ZeroConf discovery."""
 
         # abort if we already have exactly this bridge id/host
-        # reload the integration if the host got updated
         properties = discovery_info.properties
         gateway_id = properties["gateway_pin"]
 
