@@ -108,7 +108,11 @@ def mock_sonarr_config_flow(
         "homeassistant.components.sonarr.config_flow.Sonarr", autospec=True
     ) as sonarr_mock:
         client = sonarr_mock.return_value
+        client.host = "192.168.1.189"
+        client.port = 8989
+        client.base_path = "/api"
         client.tls = False
+        client.app = app
         client.update.return_value = app
         client.calendar.return_value = sonarr_calendar()
         client.commands.return_value = sonarr_commands()
@@ -128,7 +132,11 @@ def mock_sonarr(request: pytest.FixtureRequest) -> Generator[None, MagicMock, No
     app = Application(json.loads(load_fixture(fixture)))
     with patch("homeassistant.components.sonarr.Sonarr", autospec=True) as sonarr_mock:
         client = sonarr_mock.return_value
+        client.host = "192.168.1.189"
+        client.port = 8989
+        client.base_path = "/api"
         client.tls = False
+        client.app = app
         client.update.return_value = app
         client.calendar.return_value = sonarr_calendar()
         client.commands.return_value = sonarr_commands()
