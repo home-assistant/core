@@ -1,8 +1,9 @@
 """Support for Twilio."""
+from http import HTTPStatus
+
+from aiohttp.web import Response
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
-from aiohttp.web import Request, Response
-from http import HTTPStatus
 import voluptuous as vol
 
 from homeassistant.const import CONF_WEBHOOK_ID
