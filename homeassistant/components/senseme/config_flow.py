@@ -8,6 +8,7 @@ from aiosenseme import SensemeDevice, async_get_device_by_ip_address
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -27,6 +28,19 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the SenseME config flow."""
         self._discovered_devices: list[SensemeDevice] | None = None
         self._discovered_device: SensemeDevice | None = None
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle discovery via dhcp."""
+        # If discovery is already running, it takes precedence since its more efficient
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+        if device := await async_get_device_by_ip_address(discovery_info.ip):
+            device.stop()
+        if device is None or not device.uuid:
+            return self.async_abort(reason="cannot_connect")
+        await self.async_set_unique_id(device.uuid)
+        self._discovered_device = device
+        return await self.async_step_discovery_confirm()
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType

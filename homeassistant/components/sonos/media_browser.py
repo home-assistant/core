@@ -7,7 +7,7 @@ from functools import partial
 import logging
 from urllib.parse import quote_plus, unquote
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -89,6 +89,14 @@ async def async_browse_media(
         return await media_source.async_browse_media(
             hass, media_content_id, content_filter=media_source_filter
         )
+
+    if spotify.is_spotify_media_type(media_content_type):
+        return await spotify.async_browse_media(
+            hass, media_content_type, media_content_id, can_play_artist=False
+        )
+
+    if media_content_type == "spotify":
+        return await spotify.async_browse_media(hass, None, None, can_play_artist=False)
 
     if media_content_type == "library":
         return await hass.async_add_executor_job(
@@ -243,6 +251,19 @@ async def root_payload(
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_id="",
                 media_content_type="favorites",
+                can_play=False,
+                can_expand=True,
+            )
+        )
+
+    if "spotify" in hass.config.components:
+        children.append(
+            BrowseMedia(
+                title="Spotify",
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_id="",
+                media_content_type="spotify",
+                thumbnail="https://brands.home-assistant.io/spotify/icon.png",
                 can_play=False,
                 can_expand=True,
             )

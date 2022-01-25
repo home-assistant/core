@@ -2096,7 +2096,7 @@ restrictedpython==5.2
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.58
+rflink==0.0.62
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
@@ -2534,7 +2534,7 @@ zengge==0.2
 zeroconf==0.38.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.65
+zha-quirks==0.0.66
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

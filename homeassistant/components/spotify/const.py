@@ -22,3 +22,5 @@ SPOTIFY_SCOPES = [
     "user-read-recently-played",
     "user-follow-read",
 ]
+
+MEDIA_PLAYER_PREFIX = "spotify://"
