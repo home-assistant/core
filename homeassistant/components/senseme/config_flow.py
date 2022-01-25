@@ -34,9 +34,13 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If discovery is already running, it takes precedence since its more efficient
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
-        if not (device := await async_get_device_by_ip_address(discovery_info.ip)):
+        if (
+            not (device := await async_get_device_by_ip_address(discovery_info.ip))
+            or not device.uuid
+        ):
             return self.async_abort(reason="cannot_connect")
         device.stop()
+        await self.async_set_unique_id(device.uuid)
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
