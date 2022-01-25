@@ -123,6 +123,13 @@ class TradfriGroupDataUpdateCoordinator(DataUpdateCoordinator[Group]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
+    async def set_hub_available(self, available: bool) -> None:
+        """Set status of hub."""
+        if available != self.last_update_success:
+            if not available:
+                self.last_update_success = False
+            await self.async_request_refresh()
+
     async def _async_update_data(self) -> Group:
         """Fetch data from the gateway for a specific group."""
         self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
