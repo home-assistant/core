@@ -220,7 +220,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconfig_flow(hass):
+async def test_zeroconf_flow(hass):
     """Test that zeroconf discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
