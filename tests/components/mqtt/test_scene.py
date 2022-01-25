@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -34,7 +34,7 @@ DEFAULT_CONFIG = {
 
 async def test_sending_mqtt_commands(hass, mqtt_mock):
     """Test the sending MQTT commands."""
-    fake_state = ha.State("scene.test", scene.STATE)
+    fake_state = ha.State("scene.test", STATE_UNKNOWN)
 
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
@@ -55,7 +55,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock):
         await hass.async_block_till_done()
 
     state = hass.states.get("scene.test")
-    assert state.state == scene.STATE
+    assert state.state == STATE_UNKNOWN
 
     data = {ATTR_ENTITY_ID: "scene.test"}
     await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)

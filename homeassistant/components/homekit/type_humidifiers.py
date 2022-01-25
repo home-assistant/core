@@ -98,6 +98,10 @@ class HumidifierDehumidifier(HomeAccessory):
             serv_humidifier_dehumidifier.configure_char(
                 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
                 value=self._hk_device_class,
+                properties={
+                    PROP_MIN_VALUE: self._hk_device_class,
+                    PROP_MAX_VALUE: self._hk_device_class,
+                },
                 valid_values={
                     HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
                         device_class

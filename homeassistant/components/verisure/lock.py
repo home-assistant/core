@@ -70,7 +70,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._state = None
+        self._state: str | None = None
         self._digits = coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )

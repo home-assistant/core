@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
-    ENTITY_CATEGORIES,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -218,7 +217,10 @@ def async_prepare_call_from_config(
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
-                target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
+                registry = entity_registry.async_get(hass)
+                target[CONF_ENTITY_ID] = entity_registry.async_resolve_entity_ids(
+                    registry, cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
+                )
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
@@ -368,7 +370,8 @@ def async_extract_referenced_entity_ids(
 
     for ent_entry in ent_reg.entities.values():
         # Do not add config or diagnostic entities referenced by areas or devices
-        if ent_entry.entity_category in ENTITY_CATEGORIES:
+
+        if ent_entry.entity_category is not None:
             continue
 
         if (

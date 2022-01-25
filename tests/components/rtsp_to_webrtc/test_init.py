@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import base64
-from typing import Any, AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
@@ -29,6 +30,16 @@ ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 host.example.com\r\n..."
 SERVER_URL = "http://127.0.0.1:8083"
 
 CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
+
+
+@pytest.fixture(autouse=True)
+async def webrtc_server() -> None:
+    """Patch client library to force usage of RTSPtoWebRTC server."""
+    with patch(
+        "rtsp_to_webrtc.client.WebClient.heartbeat",
+        side_effect=rtsp_to_webrtc.exceptions.ResponseError(),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -163,6 +174,13 @@ async def test_offer_for_stream_source(
     assert "result" in response
     assert response["result"].get("answer") == ANSWER_SDP
     assert "error" not in response
+
+    # Validate request parameters were sent correctly
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "sdp64": base64.b64encode(OFFER_SDP.encode("utf-8")).decode("utf-8"),
+        "url": STREAM_SOURCE,
+    }
 
 
 async def test_offer_failure(

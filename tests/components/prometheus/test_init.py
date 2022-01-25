@@ -7,7 +7,7 @@ import unittest.mock as mock
 import prometheus_client
 import pytest
 
-from homeassistant.components import climate, humidifier, lock, sensor
+from homeassistant.components import climate, counter, humidifier, lock, sensor
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.demo.number import DemoNumber
@@ -20,6 +20,7 @@ from homeassistant.const import (
     DEGREE,
     ENERGY_KILO_WATT_HOUR,
     EVENT_STATE_CHANGED,
+    TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import split_entity_id
@@ -201,6 +202,13 @@ async def test_sensor_unit(hass, hass_client):
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
     await sensor5.async_update_ha_state()
 
+    sensor6 = DemoSensor(
+        None, "Target temperature", 22.7, None, None, TEMP_CELSIUS, None
+    )
+    sensor6.hass = hass
+    sensor6.entity_id = "input_number.target_temperature"
+    await sensor6.async_update_ha_state()
+
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
@@ -226,6 +234,12 @@ async def test_sensor_unit(hass, hass_client):
         'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
         'entity="sensor.sps30_pm_1um_weight_concentration",'
         'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
+    )
+
+    assert (
+        'input_number_state_celsius{domain="input_number",'
+        'entity="input_number.target_temperature",'
+        'friendly_name="Target temperature"} 22.7' in body
     )
 
 
@@ -355,6 +369,11 @@ async def test_input_number(hass, hass_client):
     number2._attr_name = None
     await number2.async_update_ha_state()
 
+    number3 = DemoSensor(None, "Retry count", 5, None, None, None, None)
+    number3.hass = hass
+    number3.entity_id = "input_number.retry_count"
+    await number3.async_update_ha_state()
+
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
@@ -368,6 +387,12 @@ async def test_input_number(hass, hass_client):
         'input_number_state{domain="input_number",'
         'entity="input_number.brightness",'
         'friendly_name="None"} 60.0' in body
+    )
+
+    assert (
+        'input_number_state{domain="input_number",'
+        'entity="input_number.retry_count",'
+        'friendly_name="Retry count"} 5.0' in body
     )
 
 
@@ -394,7 +419,7 @@ async def test_battery(hass, hass_client):
 
 
 async def test_climate(hass, hass_client):
-    """Test prometheus metrics for battery."""
+    """Test prometheus metrics for climate."""
     assert await async_setup_component(
         hass,
         "conversation",
@@ -432,6 +457,20 @@ async def test_climate(hass, hass_client):
         'climate_target_temperature_high_celsius{domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee"} 24.0' in body
+    )
+
+    assert (
+        'climate_mode{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump",'
+        'mode="heat"} 1.0' in body
+    )
+
+    assert (
+        'climate_mode{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump",'
+        'mode="off"} 0.0' in body
     )
 
 
@@ -659,6 +698,31 @@ async def test_lock(hass, hass_client):
         'lock_state{domain="lock",'
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
+    )
+
+
+async def test_counter(hass, hass_client):
+    """Test prometheus metrics for counter."""
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {},
+    )
+
+    client = await setup_prometheus_client(hass, hass_client, "")
+
+    await async_setup_component(
+        hass, counter.DOMAIN, {"counter": {"counter": {"initial": "2"}}}
+    )
+
+    await hass.async_block_till_done()
+
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'counter_value{domain="counter",'
+        'entity="counter.counter",'
+        'friendly_name="None"} 2.0' in body
     )
 
 

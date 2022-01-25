@@ -195,7 +195,7 @@ class PVOutputSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{system_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url=f"https://pvoutput.org/list.jsp?sid={system_id}",
-            identifiers={(DOMAIN, system_id)},
+            identifiers={(DOMAIN, str(system_id))},
             manufacturer="PVOutput",
             model=system.inverter_brand,
             name=system.system_name,

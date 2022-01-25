@@ -109,50 +109,23 @@ class ThermoworksSmokeSensor(SensorEntity):
 
     def __init__(self, sensor_type, serial, mgr):
         """Initialize the sensor."""
-        self._name = "{name} {sensor}".format(
-            name=mgr.name(serial), sensor=SENSOR_TYPES[sensor_type]
-        )
         self.type = sensor_type
-        self._state = None
-        self._attributes = {}
-        self._unit_of_measurement = TEMP_FAHRENHEIT
-        self._unique_id = f"{serial}-{sensor_type}"
         self.serial = serial
         self.mgr = mgr
+        self._attr_name = "{name} {sensor}".format(
+            name=mgr.name(serial), sensor=SENSOR_TYPES[sensor_type]
+        )
+        self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+        self._attr_unique_id = f"{serial}-{sensor_type}"
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self.update_unit()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id for the sensor."""
-        return self._unique_id
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this sensor."""
-        return self._unit_of_measurement
 
     def update_unit(self):
         """Set the units from the data."""
         if PROBE_2 in self.type:
-            self._unit_of_measurement = self.mgr.units(self.serial, PROBE_2)
+            self._attr_native_unit_of_measurement = self.mgr.units(self.serial, PROBE_2)
         else:
-            self._unit_of_measurement = self.mgr.units(self.serial, PROBE_1)
+            self._attr_native_unit_of_measurement = self.mgr.units(self.serial, PROBE_1)
 
     def update(self):
         """Get the monitored data from firebase."""
@@ -161,13 +134,13 @@ class ThermoworksSmokeSensor(SensorEntity):
             values = self.mgr.data(self.serial)
 
             # set state from data based on type of sensor
-            self._state = values.get(camelcase(self.type))
+            self._attr_native_value = values.get(camelcase(self.type))
 
             # set units
             self.update_unit()
 
             # set basic attributes for all sensors
-            self._attributes = {
+            self._attr_extra_state_attributes = {
                 "time": values["time"],
                 "localtime": values["localtime"],
             }
@@ -187,9 +160,11 @@ class ThermoworksSmokeSensor(SensorEntity):
                             key = snakecase(key.replace(self.type, ""))
                         # add to attrs
                         if key and key not in EXCLUDE_KEYS:
-                            self._attributes[key] = val
+                            self._attr_extra_state_attributes[key] = val
                 # store actual unit because attributes are not converted
-                self._attributes["unit_of_min_max"] = self._unit_of_measurement
+                self._attr_extra_state_attributes[
+                    "unit_of_min_max"
+                ] = self._attr_native_unit_of_measurement
 
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)

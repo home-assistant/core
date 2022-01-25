@@ -272,6 +272,7 @@ async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock, caplo
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -302,6 +303,7 @@ async def test_setting_sensor_bad_last_reset_via_mqtt_message(
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -327,6 +329,7 @@ async def test_setting_sensor_empty_last_reset_via_mqtt_message(
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -350,6 +353,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(hass, mqtt_mock):
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
+                "state_class": "total",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "last_reset_topic": "last-reset-topic",
@@ -379,6 +383,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
                 **{
                     "platform": "mqtt",
                     "name": "test",
+                    "state_class": "total",
                     "state_topic": "test-topic",
                     "unit_of_measurement": "kWh",
                     "value_template": "{{ value_json.value | float / 60000 }}",

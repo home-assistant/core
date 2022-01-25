@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .common import FritzBoxTools, FritzData
+from .common import AvmWrapper, FritzData
 from .const import DATA_FRITZ, DOMAIN, PLATFORMS
 from .services import async_setup_services, async_unload_services
 
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up fritzboxtools from config entry."""
     _LOGGER.debug("Setting up FRITZ!Box Tools component")
-    fritz_tools = FritzBoxTools(
+    avm_wrapper = AvmWrapper(
         hass=hass,
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
@@ -31,21 +31,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await fritz_tools.async_setup(entry.options)
+        await avm_wrapper.async_setup(entry.options)
     except FritzSecurityError as ex:
         raise ConfigEntryAuthFailed from ex
     except (FritzConnectionException, FritzResourceError) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = fritz_tools
+    hass.data[DOMAIN][entry.entry_id] = avm_wrapper
 
     if DATA_FRITZ not in hass.data:
         hass.data[DATA_FRITZ] = FritzData()
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    await fritz_tools.async_config_entry_first_refresh()
+    await avm_wrapper.async_config_entry_first_refresh()
 
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -57,10 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
-    fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
     fritz_data = hass.data[DATA_FRITZ]
-    fritz_data.tracked.pop(fritzbox.unique_id)
+    fritz_data.tracked.pop(avm_wrapper.unique_id)
 
     if not bool(fritz_data.tracked):
         hass.data.pop(DATA_FRITZ)

@@ -5,6 +5,7 @@
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
+            "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid"
         },
         "step": {

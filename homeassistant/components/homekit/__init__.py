@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import ipaddress
 import logging
 import os
@@ -26,6 +27,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -41,7 +43,11 @@ from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
+from homeassistant.helpers.entityfilter import (
+    BASE_FILTER_SCHEMA,
+    FILTER_SCHEMA,
+    EntityFilter,
+)
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.helpers.typing import ConfigType
@@ -347,8 +353,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 @callback
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
-    options = dict(entry.options)
-    data = dict(entry.data)
+    options = deepcopy(dict(entry.options))
+    data = deepcopy(dict(entry.data))
     modified = False
     for importable_option in CONFIG_OPTIONS:
         if importable_option not in entry.options and importable_option in entry.data:
@@ -467,7 +473,7 @@ class HomeKit:
         self._name = name
         self._port = port
         self._ip_address = ip_address
-        self._filter = entity_filter
+        self._filter: EntityFilter = entity_filter
         self._config = entity_config
         self._exclude_accessory_mode = exclude_accessory_mode
         self._advertise_ip = advertise_ip
@@ -659,6 +665,12 @@ class HomeKit:
                 continue
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
+                if (
+                    ent_reg_ent.entity_category is not None
+                    and not self._filter.explicitly_included(entity_id)
+                ):
+                    continue
+
                 await self._async_set_device_info_attributes(
                     ent_reg_ent, dev_reg, entity_id
                 )
@@ -707,7 +719,12 @@ class HomeKit:
         """Remove all pairings for an accessory so it can be repaired."""
         state = self.driver.state
         for client_uuid in list(state.paired_clients):
-            state.remove_paired_client(client_uuid)
+            # We need to check again since removing a single client
+            # can result in removing all the clients that the client
+            # granted access to if it was an admin, otherwise
+            # remove_paired_client can generate a KeyError
+            if client_uuid in state.paired_clients:
+                state.remove_paired_client(client_uuid)
         self.driver.async_persist()
         self.driver.async_update_advertisement()
         self._async_show_setup_message()
@@ -911,6 +928,8 @@ class HomeKit:
             config[ATTR_MODEL] = device_entry.model
         if device_entry.sw_version:
             config[ATTR_SW_VERSION] = device_entry.sw_version
+        if device_entry.hw_version:
+            config[ATTR_HW_VERSION] = device_entry.hw_version
         if device_entry.config_entries:
             first_entry = list(device_entry.config_entries)[0]
             if entry := self.hass.config_entries.async_get_entry(first_entry):

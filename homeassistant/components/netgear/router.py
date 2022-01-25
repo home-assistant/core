@@ -52,7 +52,7 @@ def get_api(
     """Get the Netgear API and login to it."""
     api: Netgear = Netgear(password, host, username, port, ssl)
 
-    if not api.login():
+    if not api.login_try_port():
         raise CannotLoginException
 
     return api
@@ -149,6 +149,14 @@ class NetgearRouter:
             if self.model.startswith(model):
                 self.method_version = 2
 
+        if self.method_version == 2:
+            if not self._api.get_attached_devices_2():
+                _LOGGER.error(
+                    "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
+                    self.model,
+                )
+                self.method_version = 1
+
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
         await self.hass.async_add_executor_job(self._setup)
@@ -235,6 +243,16 @@ class NetgearRouter:
     def signal_device_update(self) -> str:
         """Event specific per Netgear entry to signal updates in devices."""
         return f"{DOMAIN}-{self._host}-device-update"
+
+    @property
+    def port(self) -> int:
+        """Port used by the API."""
+        return self._api.port
+
+    @property
+    def ssl(self) -> bool:
+        """SSL used by the API."""
+        return self._api.ssl
 
 
 class NetgearDeviceEntity(Entity):

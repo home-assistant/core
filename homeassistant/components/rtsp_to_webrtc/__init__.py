@@ -21,8 +21,9 @@ from __future__ import annotations
 import logging
 
 import async_timeout
-from rtsp_to_webrtc.client import Client
+from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
+from rtsp_to_webrtc.interface import WebRTCClientInterface
 
 from homeassistant.components import camera
 from homeassistant.config_entries import ConfigEntry
@@ -42,10 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RTSPtoWebRTC from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    client = Client(async_get_clientsession(hass), entry.data[DATA_SERVER_URL])
+    client: WebRTCClientInterface
     try:
         async with async_timeout.timeout(TIMEOUT):
-            await client.heartbeat()
+            client = await get_adaptive_client(
+                async_get_clientsession(hass), entry.data[DATA_SERVER_URL]
+            )
     except ResponseError as err:
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError) as err:
@@ -54,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_offer_for_stream_source(
         stream_source: str,
         offer_sdp: str,
+        stream_id: str,
     ) -> str:
         """Handle the signal path for a WebRTC stream.
 
@@ -63,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """
         try:
             async with async_timeout.timeout(TIMEOUT):
-                return await client.offer(offer_sdp, stream_source)
+                return await client.offer_stream_id(stream_id, offer_sdp, stream_source)
         except TimeoutError as err:
             raise HomeAssistantError("Timeout talking to RTSPtoWebRTC server") from err
         except ClientError as err:

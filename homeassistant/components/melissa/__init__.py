@@ -2,7 +2,7 @@
 import melissa
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -34,5 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await api.async_connect()
     hass.data[DATA_MELISSA] = api
 
-    hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    )
     return True

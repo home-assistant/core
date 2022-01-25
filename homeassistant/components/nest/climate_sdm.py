@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     FAN_OFF,
     FAN_ON,
@@ -234,6 +235,8 @@ class ThermostatEntity(ClimateEntity):
     def hvac_action(self) -> str | None:
         """Return the current HVAC action (heating, cooling)."""
         trait = self._device.traits[ThermostatHvacTrait.NAME]
+        if trait.status == "OFF" and self.hvac_mode != HVAC_MODE_OFF:
+            return CURRENT_HVAC_IDLE
         if trait.status in THERMOSTAT_HVAC_STATUS_MAP:
             return THERMOSTAT_HVAC_STATUS_MAP[trait.status]
         return None

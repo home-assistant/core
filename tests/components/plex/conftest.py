@@ -278,20 +278,20 @@ def plextv_account_fixture():
     return load_fixture("plex/plextv_account.xml")
 
 
-@pytest.fixture(name="plextv_resources_base", scope="session")
-def plextv_resources_base_fixture():
-    """Load base payload for plex.tv resources and return it."""
-    return load_fixture("plex/plextv_resources_base.xml")
-
-
 @pytest.fixture(name="plextv_resources", scope="session")
-def plextv_resources_fixture(plextv_resources_base):
-    """Load default payload for plex.tv resources and return it."""
-    return plextv_resources_base.format(first_server_enabled=1, second_server_enabled=0)
+def plextv_resources_fixture():
+    """Load single-server payload for plex.tv resources and return it."""
+    return load_fixture("plex/plextv_resources_one_server.xml")
+
+
+@pytest.fixture(name="plextv_resources_two_servers", scope="session")
+def plextv_resources_two_servers_fixture():
+    """Load two-server payload for plex.tv resources and return it."""
+    return load_fixture("plex/plextv_resources_two_servers.xml")
 
 
 @pytest.fixture(name="plextv_shared_users", scope="session")
-def plextv_shared_users_fixture(plextv_resources_base):
+def plextv_shared_users_fixture():
     """Load payload for plex.tv shared users and return it."""
     return load_fixture("plex/plextv_shared_users.xml")
 

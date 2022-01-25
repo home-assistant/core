@@ -67,6 +67,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_STATE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -89,7 +90,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_START, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

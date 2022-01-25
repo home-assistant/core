@@ -10,6 +10,7 @@ from typing import Any, NamedTuple
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components import panel_custom, persistent_notification
 from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SHUTDOWN_SERVICES,
@@ -33,6 +34,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceRegistry,
@@ -401,7 +403,7 @@ def is_hassio(hass: HomeAssistant) -> bool:
 
 
 @callback
-def get_supervisor_ip():
+def get_supervisor_ip() -> str:
     """Return the supervisor ip address."""
     if "SUPERVISOR" not in os.environ:
         return None
@@ -424,7 +426,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_load_websocket_api(hass)
 
     host = os.environ["HASSIO"]
-    websession = hass.helpers.aiohttp_client.async_get_clientsession()
+    websession = async_get_clientsession(hass)
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
@@ -465,7 +467,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     hass.http.register_view(HassIOView(host, websession))
 
-    await hass.components.panel_custom.async_register_panel(
+    await panel_custom.async_register_panel(
+        hass,
         frontend_url_path="hassio",
         webcomponent_name="hassio-main",
         js_url="/api/hassio/app/entrypoint.js",
@@ -597,7 +600,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 call.service,
                 errors,
             )
-            hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                hass,
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{HASS_DOMAIN}.check_config",

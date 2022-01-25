@@ -118,7 +118,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.async_create_task(
         async_load_platform(
-            hass, SENSOR_DOMAIN, DOMAIN, conf[CONF_MONITORED_CONDITIONS], config
+            hass,
+            SENSOR_DOMAIN,
+            DOMAIN,
+            {CONF_MONITORED_CONDITIONS: conf[CONF_MONITORED_CONDITIONS]},
+            config,
         )
     )
 

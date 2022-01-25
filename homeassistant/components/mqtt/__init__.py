@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ast import literal_eval
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime as dt
 from functools import lru_cache, partial, wraps
@@ -12,11 +13,12 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import Any, Union, cast
 import uuid
 
 import attr
 import certifi
+import jinja2
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -51,7 +53,7 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import ConfigType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -286,7 +288,7 @@ class MqttCommandTemplate:
     def async_render(
         self,
         value: PublishPayloadType = None,
-        variables: template.TemplateVarsType = None,
+        variables: TemplateVarsType = None,
     ) -> PublishPayloadType:
         """Render or convert the command template with given value or variables."""
 
@@ -328,7 +330,7 @@ class MqttValueTemplate:
         *,
         hass: HomeAssistant | None = None,
         entity: Entity | None = None,
-        config_attributes: template.TemplateVarsType = None,
+        config_attributes: TemplateVarsType = None,
     ) -> None:
         """Instantiate a value template."""
         self._value_template = value_template
@@ -347,7 +349,7 @@ class MqttValueTemplate:
         self,
         payload: ReceivePayloadType,
         default: ReceivePayloadType | object = _SENTINEL,
-        variables: template.TemplateVarsType = None,
+        variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
         if self._value_template is None:
@@ -399,16 +401,6 @@ class MqttServiceInfo(BaseServiceInfo):
             error_if_core=False,
         )
         return getattr(self, name)
-
-
-def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
-    """Build the arguments for the publish service without the payload."""
-    data = {ATTR_TOPIC: topic}
-    if qos is not None:
-        data[ATTR_QOS] = qos
-    if retain is not None:
-        data[ATTR_RETAIN] = retain
-    return data
 
 
 def publish(
@@ -665,7 +657,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     msg_topic_template, hass
                 ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish: rendering topic template of %s "
                     "failed because %s",
@@ -688,7 +680,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 payload = MqttCommandTemplate(
                     template.Template(payload_template), hass=hass
                 ).async_render()
-            except (template.jinja2.TemplateError, TemplateError) as exc:
+            except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",

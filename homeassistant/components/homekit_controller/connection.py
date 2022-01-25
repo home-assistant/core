@@ -8,7 +8,7 @@ from aiohomekit.exceptions import (
     AccessoryNotFoundError,
     EncryptionError,
 )
-from aiohomekit.model import Accessories
+from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -25,6 +25,8 @@ from .const import (
     ENTITY_MAP,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
+    IDENTIFIER_LEGACY_ACCESSORY_ID,
+    IDENTIFIER_LEGACY_SERIAL_NUMBER,
     IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
@@ -141,6 +143,9 @@ class HKDevice:
         self._polling_lock_warned = False
         self._poll_failures = 0
 
+        # This is set to True if we can't rely on serial numbers to be unique
+        self.unreliable_serial_numbers = False
+
         self.watchable_characteristics = []
 
         self.pairing.dispatcher_connect(self.process_new_events)
@@ -201,6 +206,115 @@ class HKDevice:
 
         return True
 
+    def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
+        """Build a DeviceInfo for a given accessory."""
+        info = accessory.services.first(
+            service_type=ServicesTypes.ACCESSORY_INFORMATION,
+        )
+
+        identifiers = {
+            (
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self.unique_id}:aid:{accessory.aid}",
+            )
+        }
+
+        if not self.unreliable_serial_numbers:
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+            identifiers.add((IDENTIFIER_SERIAL_NUMBER, serial_number))
+
+        device_info = DeviceInfo(
+            identifiers=identifiers,
+            name=info.value(CharacteristicsTypes.NAME),
+            manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
+            model=info.value(CharacteristicsTypes.MODEL, ""),
+            sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+            hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
+        )
+
+        if accessory.aid != 1:
+            # Every pairing has an accessory 1
+            # It *doesn't* have a via_device, as it is the device we are connecting to
+            # Every other accessory should use it as its via device.
+            device_info[ATTR_VIA_DEVICE] = (
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self.unique_id}:aid:1",
+            )
+
+        return device_info
+
+    @callback
+    def async_migrate_devices(self):
+        """Migrate legacy device entries from 3-tuples to 2-tuples."""
+        _LOGGER.debug(
+            "Migrating device registry entries for pairing %s", self.unique_id
+        )
+
+        device_registry = dr.async_get(self.hass)
+
+        for accessory in self.entity_map.accessories:
+            info = accessory.services.first(
+                service_type=ServicesTypes.ACCESSORY_INFORMATION,
+            )
+
+            identifiers = {
+                (
+                    DOMAIN,
+                    IDENTIFIER_LEGACY_ACCESSORY_ID,
+                    f"{self.unique_id}_{accessory.aid}",
+                ),
+            }
+
+            if accessory.aid == 1:
+                identifiers.add(
+                    (DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, self.unique_id)
+                )
+
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+            if valid_serial_number(serial_number):
+                identifiers.add(
+                    (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, serial_number)
+                )
+
+            device = device_registry.async_get_device(identifiers=identifiers)
+            if not device:
+                continue
+
+            if self.config_entry.entry_id not in device.config_entries:
+                _LOGGER.info(
+                    "Found candidate device for %s:aid:%s, but owned by a different config entry, skipping",
+                    self.unique_id,
+                    accessory.aid,
+                )
+                continue
+
+            _LOGGER.info(
+                "Migrating device identifiers for %s:aid:%s",
+                self.unique_id,
+                accessory.aid,
+            )
+
+            new_identifiers = {
+                (
+                    IDENTIFIER_ACCESSORY_ID,
+                    f"{self.unique_id}:aid:{accessory.aid}",
+                )
+            }
+
+            if not self.unreliable_serial_numbers:
+                serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+                new_identifiers.add((IDENTIFIER_SERIAL_NUMBER, serial_number))
+            else:
+                _LOGGER.debug(
+                    "Not migrating serial number identifier for %s:aid:%s (it is wrong, not unique or unreliable)",
+                    self.unique_id,
+                    accessory.aid,
+                )
+
+            device_registry.async_update_device(
+                device.id, new_identifiers=new_identifiers
+            )
+
     @callback
     def async_create_devices(self):
         """
@@ -214,48 +328,12 @@ class HKDevice:
 
         devices = {}
 
-        for accessory in self.entity_map.accessories:
-            info = accessory.services.first(
-                service_type=ServicesTypes.ACCESSORY_INFORMATION,
-            )
-
-            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-
-            if valid_serial_number(serial_number):
-                identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
-            else:
-                # Some accessories do not have a serial number
-                identifiers = {
-                    (
-                        DOMAIN,
-                        IDENTIFIER_ACCESSORY_ID,
-                        f"{self.unique_id}_{accessory.aid}",
-                    )
-                }
-
-            if accessory.aid == 1:
-                # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
-                # Link the root device to the pairing id for the connection.
-                identifiers.add((DOMAIN, IDENTIFIER_ACCESSORY_ID, self.unique_id))
-
-            device_info = DeviceInfo(
-                identifiers=identifiers,
-                name=info.value(CharacteristicsTypes.NAME),
-                manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
-                model=info.value(CharacteristicsTypes.MODEL, ""),
-                sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-                hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
-            )
-
-            if accessory.aid != 1:
-                # Every pairing has an accessory 1
-                # It *doesn't* have a via_device, as it is the device we are connecting to
-                # Every other accessory should use it as its via device.
-                device_info[ATTR_VIA_DEVICE] = (
-                    DOMAIN,
-                    IDENTIFIER_SERIAL_NUMBER,
-                    self.connection_info["serial-number"],
-                )
+        # Accessories need to be created in the correct order or setting up
+        # relationships with ATTR_VIA_DEVICE may fail.
+        for accessory in sorted(
+            self.entity_map.accessories, key=lambda accessory: accessory.aid
+        ):
+            device_info = self.device_info_for_accessory(accessory)
 
             device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
@@ -265,6 +343,46 @@ class HKDevice:
             devices[accessory.aid] = device.id
 
         self.devices = devices
+
+    @callback
+    def async_detect_workarounds(self):
+        """Detect any workarounds that are needed for this pairing."""
+        unreliable_serial_numbers = False
+
+        devices = set()
+
+        for accessory in self.entity_map.accessories:
+            info = accessory.services.first(
+                service_type=ServicesTypes.ACCESSORY_INFORMATION,
+            )
+
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+
+            if not valid_serial_number(serial_number):
+                _LOGGER.debug(
+                    "Serial number %r is not valid, it cannot be used as a unique identifier",
+                    serial_number,
+                )
+                unreliable_serial_numbers = True
+
+            elif serial_number in devices:
+                _LOGGER.debug(
+                    "Serial number %r is duplicated within this pairing, it cannot be used as a unique identifier",
+                    serial_number,
+                )
+                unreliable_serial_numbers = True
+
+            elif serial_number == info.value(CharacteristicsTypes.HARDWARE_REVISION):
+                # This is a known bug with some devices (e.g. RYSE SmartShades)
+                _LOGGER.debug(
+                    "Serial number %r is actually the hardware revision, it cannot be used as a unique identifier",
+                    serial_number,
+                )
+                unreliable_serial_numbers = True
+
+            devices.add(serial_number)
+
+        self.unreliable_serial_numbers = unreliable_serial_numbers
 
     async def async_process_entity_map(self):
         """
@@ -278,6 +396,11 @@ class HKDevice:
         # to map aid/iid to GATT characteristics. So push it to there as well.
 
         self.pairing.pairing_data["accessories"] = self.accessories
+
+        self.async_detect_workarounds()
+
+        # Migrate to new device ids
+        self.async_migrate_devices()
 
         await self.async_load_platforms()
 

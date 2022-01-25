@@ -35,6 +35,7 @@ SENSOR_LAST_ORDER_SLOT_END = "last_order_slot_end"
 SENSOR_LAST_ORDER_STATUS = "last_order_status"
 SENSOR_LAST_ORDER_ETA_START = "last_order_eta_start"
 SENSOR_LAST_ORDER_ETA_END = "last_order_eta_end"
+SENSOR_LAST_ORDER_MAX_ORDER_TIME = "last_order_max_order_time"
 SENSOR_LAST_ORDER_DELIVERY_TIME = "last_order_delivery_time"
 SENSOR_LAST_ORDER_TOTAL_PRICE = "last_order_total_price"
 
@@ -147,6 +148,16 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         data_type="last_order_data",
         value_fn=lambda last_order: dt_util.parse_datetime(
             str(last_order.get("eta", {}).get("end"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:clock-alert-outline",
+        entity_registry_enabled_default=True,
+        data_type="last_order_data",
+        value_fn=lambda last_order: dt_util.parse_datetime(
+            str(last_order.get("slot", {}).get("cut_off_time"))
         ),
     ),
     PicnicSensorEntityDescription(

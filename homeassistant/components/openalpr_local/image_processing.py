@@ -9,15 +9,17 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
-    ATTR_ENTITY_ID,
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_REGION
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_REGION,
+    CONF_SOURCE,
+)
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

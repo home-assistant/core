@@ -44,7 +44,7 @@ def async_register_info(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the System Health component."""
-    hass.components.websocket_api.async_register_command(handle_info)
+    websocket_api.async_register_command(hass, handle_info)
     hass.data.setdefault(DOMAIN, {})
 
     await integration_platform.async_process_integration_platforms(

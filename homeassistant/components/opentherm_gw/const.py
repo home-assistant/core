@@ -1,4 +1,6 @@
 """Constants for the opentherm_gw integration."""
+from __future__ import annotations
+
 import pyotgw.vars as gw_vars
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -49,7 +51,7 @@ TRANSLATE_SOURCE = {
 UNIT_KW = "kW"
 UNIT_L_MIN = f"L/{TIME_MINUTES}"
 
-BINARY_SENSOR_INFO = {
+BINARY_SENSOR_INFO: dict[str, list] = {
     # [device_class, friendly_name format, [status source, ...]]
     gw_vars.DATA_MASTER_CH_ENABLED: [
         None,
@@ -211,7 +213,7 @@ BINARY_SENSOR_INFO = {
     gw_vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}", [gw_vars.OTGW]],
 }
 
-SENSOR_INFO = {
+SENSOR_INFO: dict[str, list] = {
     # [device_class, unit, friendly_name, [status source, ...]]
     gw_vars.DATA_CONTROL_SETPOINT: [
         SensorDeviceClass.TEMPERATURE,

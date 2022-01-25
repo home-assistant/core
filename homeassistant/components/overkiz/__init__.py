@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
-import logging
 
 from aiohttp import ClientError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -26,6 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import (
     CONF_HUB,
     DOMAIN,
+    LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
     PLATFORMS,
     UPDATE_INTERVAL,
@@ -33,15 +33,14 @@ from .const import (
 )
 from .coordinator import OverkizDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
-    platforms: defaultdict[Platform, list[Device | Scenario]]
+    platforms: defaultdict[Platform, list[Device]]
+    scenarios: list[Scenario]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
         )
     except BadCredentialsException:
-        _LOGGER.error("Invalid authentication")
+        LOGGER.error("Invalid authentication")
         return False
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
@@ -77,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name="device events",
         client=client,
         devices=setup.devices,
@@ -89,24 +88,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.is_stateless:
-        _LOGGER.debug(
+        LOGGER.debug(
             "All devices have an assumed state. Update interval has been reduced to: %s",
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
-    platforms: defaultdict[Platform, list[Device | Scenario]] = defaultdict(list)
+    platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
-        coordinator=coordinator,
-        platforms=platforms,
+        coordinator=coordinator, platforms=platforms, scenarios=scenarios
     )
 
     # Map Overkiz entities to Home Assistant platform
-    platforms[Platform.SCENE] = scenarios
-
     for device in coordinator.data.values():
-        _LOGGER.debug(
+        LOGGER.debug(
             "The following device has been retrieved. Report an issue if not supported correctly (%s)",
             device,
         )
@@ -121,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
 
     for gateway in setup.gateways:
-        _LOGGER.debug("Added gateway (%s)", gateway)
+        LOGGER.debug("Added gateway (%s)", gateway)
 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,

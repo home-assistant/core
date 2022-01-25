@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -23,6 +23,13 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="home-assistant.io",
     )
+
+
+@pytest.fixture
+def mock_whois_config_flow() -> Generator[MagicMock, None, None]:
+    """Return a mocked whois."""
+    with patch("homeassistant.components.whois.config_flow.whois.query") as whois_mock:
+        yield whois_mock
 
 
 @pytest.fixture

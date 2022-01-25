@@ -44,7 +44,7 @@ class MockGetAccounts:
 
 
 def mocked_get_accounts(_, **kwargs):
-    """Return simplied accounts using mock."""
+    """Return simplified accounts using mock."""
     return MockGetAccounts(**kwargs)
 
 

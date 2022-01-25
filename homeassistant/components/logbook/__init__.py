@@ -11,6 +11,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import literal
 import voluptuous as vol
 
+from homeassistant.components import frontend
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
@@ -154,8 +155,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         message = message.async_render(parse_result=False)
         async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.components.frontend.async_register_built_in_panel(
-        "logbook", "logbook", "hass:format-list-bulleted-type"
+    frontend.async_register_built_in_panel(
+        hass, "logbook", "logbook", "hass:format-list-bulleted-type"
     )
 
     if conf := config.get(DOMAIN, {}):

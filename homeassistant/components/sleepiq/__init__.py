@@ -5,7 +5,7 @@ import logging
 from sleepyq import Sleepyq
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -52,8 +52,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DOMAIN] = data
-    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
-    discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
 
     return True
 

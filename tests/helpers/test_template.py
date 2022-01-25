@@ -314,6 +314,12 @@ def test_isnumber(hass, value, expected):
         )
         == expected
     )
+    assert (
+        template.Template("{{ value is is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
 
 
 def test_rounding_value(hass):
@@ -835,12 +841,97 @@ def test_min(hass):
     assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
     assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | min }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min(1) }}", hass).async_render()
+
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
     assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
     assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | max }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max(1) }}", hass).async_render()
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        "a",
+        "b",
+        "c",
+    ),
+)
+def test_min_max_attribute(hass, attribute):
+    """Test the min and max filters with attribute."""
+    hass.states.async_set(
+        "test.object",
+        "test",
+        {
+            "objects": [
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 3,
+                },
+                {
+                    "a": 2,
+                    "b": 1,
+                    "c": 2,
+                },
+                {
+                    "a": 3,
+                    "b": 3,
+                    "c": 1,
+                },
+            ],
+        },
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (min(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
+    assert (
+        template.Template(
+            "{{ (max(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
 
 
 def test_ord(hass):

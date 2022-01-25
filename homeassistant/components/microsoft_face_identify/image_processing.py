@@ -8,14 +8,11 @@ import voluptuous as vol
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
 from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv

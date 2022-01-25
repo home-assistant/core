@@ -1,4 +1,6 @@
 """Support for Microsoft face recognition."""
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -9,11 +11,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_TIMEOUT, CONTENT_TYPE_JSON
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,9 +70,9 @@ SCHEMA_FACE_SERVICE = vol.Schema(
 SCHEMA_TRAIN_SERVICE = vol.Schema({vol.Required(ATTR_GROUP): cv.slugify})
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Microsoft Face."""
-    entities = {}
+    entities: dict[str, MicrosoftFaceGroupEntity] = {}
     face = MicrosoftFace(
         hass,
         config[DOMAIN].get(CONF_AZURE_REGION),

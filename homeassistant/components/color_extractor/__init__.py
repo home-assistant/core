@@ -13,8 +13,8 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
-    SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON,
 )
+from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv

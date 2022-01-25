@@ -1,7 +1,15 @@
 """Support for Yale Alarm."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
+from yalesmartalarmclient.const import (
+    YALE_STATE_ARM_FULL,
+    YALE_STATE_ARM_PARTIAL,
+    YALE_STATE_DISARM,
+)
+from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -14,13 +22,11 @@ from homeassistant.components.alarm_control_panel.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -78,51 +84,109 @@ async def async_setup_entry(
 class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
+    coordinator: YaleDataUpdateCoordinator
+
+    _attr_code_arm_required = False
+    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
         super().__init__(coordinator)
-        self._attr_name: str = coordinator.entry.data[CONF_NAME]
+        self._attr_name = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
-        self._identifier: str = coordinator.entry.data[CONF_USERNAME]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._identifier)},
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.entry.data[CONF_USERNAME])},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=str(self.name),
+            name=self._attr_name,
         )
 
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return STATE_MAP.get(self.coordinator.data["alarm"])
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return STATE_MAP.get(self.coordinator.data["alarm"]) is not None
-
-    @property
-    def code_arm_required(self):
-        """Whether the code is required for arm actions."""
-        return False
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    def alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None) -> None:
         """Send disarm command."""
-        self.coordinator.yale.disarm()
+        if TYPE_CHECKING:
+            assert self.coordinator.yale, "Connection to API is missing"
 
-    def alarm_arm_home(self, code=None):
+        try:
+            alarm_state = await self.hass.async_add_executor_job(
+                self.coordinator.yale.disarm
+            )
+        except (
+            AuthenticationError,
+            ConnectionError,
+            TimeoutError,
+            UnknownError,
+        ) as error:
+            raise HomeAssistantError(
+                f"Could not verify disarmed for {self._attr_name}: {error}"
+            ) from error
+
+        LOGGER.debug("Alarm disarmed: %s", alarm_state)
+        if alarm_state:
+            self.coordinator.data["alarm"] = YALE_STATE_DISARM
+            self.async_write_ha_state()
+            return
+        raise HomeAssistantError("Could not disarm, check system ready for disarming.")
+
+    async def async_alarm_arm_home(self, code=None) -> None:
         """Send arm home command."""
-        self.coordinator.yale.arm_partial()
+        if TYPE_CHECKING:
+            assert self.coordinator.yale, "Connection to API is missing"
 
-    def alarm_arm_away(self, code=None):
+        try:
+            alarm_state = await self.hass.async_add_executor_job(
+                self.coordinator.yale.arm_partial
+            )
+        except (
+            AuthenticationError,
+            ConnectionError,
+            TimeoutError,
+            UnknownError,
+        ) as error:
+            raise HomeAssistantError(
+                f"Could not verify armed home for {self._attr_name}: {error}"
+            ) from error
+
+        LOGGER.debug("Alarm armed home: %s", alarm_state)
+        if alarm_state:
+            self.coordinator.data["alarm"] = YALE_STATE_ARM_PARTIAL
+            self.async_write_ha_state()
+            return
+        raise HomeAssistantError("Could not arm home, check system ready for arming.")
+
+    async def async_alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
-        self.coordinator.yale.arm_full()
+        if TYPE_CHECKING:
+            assert self.coordinator.yale, "Connection to API is missing"
+
+        try:
+            alarm_state = await self.hass.async_add_executor_job(
+                self.coordinator.yale.arm_full
+            )
+        except (
+            AuthenticationError,
+            ConnectionError,
+            TimeoutError,
+            UnknownError,
+        ) as error:
+            raise HomeAssistantError(
+                f"Could not verify armed away for {self._attr_name}: {error}"
+            ) from error
+
+        LOGGER.debug("Alarm armed away: %s", alarm_state)
+        if alarm_state:
+            self.coordinator.data["alarm"] = YALE_STATE_ARM_FULL
+            self.async_write_ha_state()
+            return
+        raise HomeAssistantError("Could not arm away, check system ready for arming.")
+
+    @property
+    def available(self) -> bool:
+        """Return True if alarm is available."""
+        if STATE_MAP.get(self.coordinator.data["alarm"]) is None:
+            return False
+        return super().available
+
+    @property
+    def state(self) -> StateType:
+        """Return the state of the alarm."""
+        return STATE_MAP.get(self.coordinator.data["alarm"])

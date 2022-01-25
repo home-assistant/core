@@ -48,6 +48,38 @@
             "on": "A\u00e7\u0131k",
             "power_off": "Kapal\u0131",
             "power_on": "A\u00e7\u0131k"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Kapal\u0131",
+            "high": "Y\u00fcksek",
+            "low": "D\u00fc\u015f\u00fck",
+            "middle": "Orta"
+        },
+        "tuya__vacuum_collection": {
+            "large": "B\u00fcy\u00fck",
+            "middle": "Orta",
+            "small": "K\u00fc\u00e7\u00fck"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Yay",
+            "chargego": "Dock'a geri d\u00f6n",
+            "left_bow": "Sola Yay",
+            "left_spiral": "Spiral Sol",
+            "mop": "Paspas",
+            "part": "B\u00f6l\u00fcm",
+            "partial_bow": "K\u0131smen Yay",
+            "pick_zone": "Se\u00e7im B\u00f6lgesi",
+            "point": "Nokta",
+            "pose": "Poz",
+            "random": "Rastgele",
+            "right_bow": "Sa\u011fa E\u011fil",
+            "right_spiral": "Spiral Sa\u011f",
+            "single": "Tek",
+            "smart": "Ak\u0131ll\u0131",
+            "spiral": "Sarmal",
+            "standby": "Bekleme modu",
+            "wall_follow": "Duvar\u0131 Takip Et",
+            "zone": "B\u00f6lge"
         }
     }
 }

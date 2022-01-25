@@ -31,6 +31,30 @@ async def test_query(hass):
     assert state.attributes["value"] == 5
 
 
+async def test_query_limit(hass):
+    """Test the SQL sensor with a query containing 'LIMIT' in lowercase."""
+    config = {
+        "sensor": {
+            "platform": "sql",
+            "db_url": "sqlite://",
+            "queries": [
+                {
+                    "name": "count_tables",
+                    "query": "SELECT 5 as value limit 1",
+                    "column": "value",
+                }
+            ],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+
 async def test_invalid_query(hass):
     """Test the SQL sensor for invalid queries."""
     with pytest.raises(vol.Invalid):

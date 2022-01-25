@@ -16,6 +16,7 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_OFFSET,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
@@ -171,14 +173,16 @@ def do_authentication(hass, hass_config, config):
     try:
         dev_flow = oauth.step1_get_device_and_user_codes()
     except OAuth2DeviceCodeError as err:
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {err}<br />You will need to restart hass after fixing." "",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
         return False
 
-    hass.components.persistent_notification.create(
+    persistent_notification.create(
+        hass,
         (
             f"In order to authorize Home-Assistant to view your calendars "
             f'you must visit: <a href="{dev_flow.verification_url}" target="_blank">{dev_flow.verification_url}</a> and enter '
@@ -196,7 +200,8 @@ def do_authentication(hass, hass_config, config):
         user_code_expiry = dev_flow.user_code_expiry.replace(tzinfo=timezone.utc)
 
         if now >= user_code_expiry:
-            hass.components.persistent_notification.create(
+            persistent_notification.create(
+                hass,
                 "Authentication code expired, please restart "
                 "Home-Assistant and try again",
                 title=NOTIFICATION_TITLE,
@@ -214,7 +219,8 @@ def do_authentication(hass, hass_config, config):
         storage.put(credentials)
         do_setup(hass, hass_config, config)
         listener()
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             (
                 f"We are all setup now. Check {YAML_DEVICES} for calendars that have "
                 f"been found"
@@ -283,7 +289,7 @@ def setup_services(
 
         discovery.load_platform(
             hass,
-            "calendar",
+            Platform.CALENDAR,
             DOMAIN,
             hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
             hass_config,
@@ -370,7 +376,7 @@ def do_setup(hass, hass_config, config):
     )
 
     for calendar in hass.data[DATA_INDEX].values():
-        discovery.load_platform(hass, "calendar", DOMAIN, calendar, hass_config)
+        discovery.load_platform(hass, Platform.CALENDAR, DOMAIN, calendar, hass_config)
 
     # Look for any new calendars
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
