@@ -26,8 +26,10 @@ from .const import (
     DATA_SPOTIFY_ME,
     DATA_SPOTIFY_SESSION,
     DOMAIN,
+    MEDIA_PLAYER_PREFIX,
     SPOTIFY_SCOPES,
 )
+from .media_player import async_browse_media_internal
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -42,6 +44,31 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
+
+
+def is_spotify_media_type(media_content_type):
+    """Return whether the media_content_type is a valid Spotify media_id."""
+    return media_content_type.startswith(MEDIA_PLAYER_PREFIX)
+
+
+def resolve_spotify_media_type(media_content_type):
+    """Return actual spotify media_content_type."""
+    return media_content_type[len(MEDIA_PLAYER_PREFIX) :]
+
+
+async def async_browse_media(
+    hass, media_content_type, media_content_id, *, can_play_artist=True
+):
+    """Browse Spotify media."""
+    info = list(hass.data[DOMAIN].values())[0]
+    return await async_browse_media_internal(
+        hass,
+        info[DATA_SPOTIFY_CLIENT],
+        info[DATA_SPOTIFY_ME],
+        media_content_type,
+        media_content_id,
+        can_play_artist=can_play_artist,
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
