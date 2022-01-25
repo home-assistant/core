@@ -38,6 +38,14 @@ def create_valve_service(accessory):
     remaining.value = 99
 
 
+def create_char_switch_service(accessory):
+    """Define swtch characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    on_char = service.add_char(CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE)
+    on_char.value = False
+
+
 async def test_switch_change_outlet_state(hass, utcnow):
     """Test that we can turn a HomeKit outlet on and off again."""
     helper = await setup_test_component(hass, create_switch_service)
@@ -122,3 +130,51 @@ async def test_valve_read_state(hass, utcnow):
     helper.characteristics[("valve", "in-use")].value = InUseValues.NOT_IN_USE
     switch_1 = await helper.poll_and_get_state()
     assert switch_1.attributes["in_use"] is False
+
+
+async def test_char_switch_change_state(hass, utcnow):
+    """Test that we can turn a characteristic on and off again."""
+    helper = await setup_test_component(
+        hass, create_char_switch_service, suffix="pairing_mode"
+    )
+    svc = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    pairing_mode = svc[CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE]
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.testdevice_pairing_mode"},
+        blocking=True,
+    )
+    assert pairing_mode.value is True
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.testdevice_pairing_mode"},
+        blocking=True,
+    )
+    assert pairing_mode.value is False
+
+
+async def test_char_switch_read_state(hass, utcnow):
+    """Test that we can read the state of a HomeKit characteristic switch."""
+    helper = await setup_test_component(
+        hass, create_char_switch_service, suffix="pairing_mode"
+    )
+    svc = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    pairing_mode = svc[CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE]
+
+    # Initial state is that the switch is off
+    switch_1 = await helper.poll_and_get_state()
+    assert switch_1.state == "off"
+
+    # Simulate that someone switched on the device in the real world not via HA
+    pairing_mode.set_value(True)
+    switch_1 = await helper.poll_and_get_state()
+    assert switch_1.state == "on"
+
+    # Simulate that device switched off in the real world not via HA
+    pairing_mode.set_value(False)
+    switch_1 = await helper.poll_and_get_state()
+    assert switch_1.state == "off"

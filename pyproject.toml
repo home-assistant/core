@@ -17,7 +17,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
-py-version = "3.8"
+py-version = "3.9"
 ignore = [
     "tests",
 ]
@@ -30,6 +30,7 @@ load-plugins = [
     "pylint.extensions.typing",
     "pylint_strict_informational",
     "hass_constructor",
+    "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
 ]

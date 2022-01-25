@@ -1,4 +1,5 @@
 """Support for Prometheus metrics export."""
+from contextlib import suppress
 import logging
 import string
 
@@ -10,6 +11,7 @@ from homeassistant import core as hacore
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
@@ -35,9 +37,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +86,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
     hass.http.register_view(PrometheusView(prometheus_client))
 
@@ -282,13 +286,24 @@ class PrometheusMetrics:
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_input_number(self, state):
-        metric = self._metric(
-            "input_number_state",
-            self.prometheus_cli.Gauge,
-            "State of the input number",
-        )
-        value = self.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+        if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            metric = self._metric(
+                f"input_number_state_{unit}",
+                self.prometheus_cli.Gauge,
+                f"State of the input number measured in {unit}",
+            )
+        else:
+            metric = self._metric(
+                "input_number_state",
+                self.prometheus_cli.Gauge,
+                "State of the input number",
+            )
+
+        with suppress(ValueError):
+            value = self.state_as_number(state)
+            if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
+                value = fahrenheit_to_celsius(value)
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_device_tracker(self, state):
         metric = self._metric(
@@ -377,6 +392,20 @@ class PrometheusMetrics:
             for action in CURRENT_HVAC_ACTIONS:
                 metric.labels(**dict(self._labels(state), action=action)).set(
                     float(action == current_action)
+                )
+
+        current_mode = state.state
+        available_modes = state.attributes.get(ATTR_HVAC_MODES)
+        if current_mode and available_modes:
+            metric = self._metric(
+                "climate_mode",
+                self.prometheus_cli.Gauge,
+                "HVAC mode",
+                ["mode"],
+            )
+            for mode in available_modes:
+                metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == current_mode)
                 )
 
     def _handle_humidifier(self, state):
@@ -512,6 +541,15 @@ class PrometheusMetrics:
         )
 
         metric.labels(**self._labels(state)).inc()
+
+    def _handle_counter(self, state):
+        metric = self._metric(
+            "counter_value",
+            self.prometheus_cli.Gauge,
+            "Value of counter entities",
+        )
+
+        metric.labels(**self._labels(state)).set(self.state_as_number(state))
 
 
 class PrometheusView(HomeAssistantView):

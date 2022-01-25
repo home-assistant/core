@@ -76,7 +76,7 @@ def test_get_or_create_updates_data(registry):
         capabilities={"max": 100},
         config_entry=orig_config_entry,
         device_id="mock-dev-id",
-        disabled_by=er.DISABLED_HASS,
+        disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category="config",
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
@@ -94,7 +94,7 @@ def test_get_or_create_updates_data(registry):
         config_entry_id=orig_config_entry.entry_id,
         device_class=None,
         device_id="mock-dev-id",
-        disabled_by=er.DISABLED_HASS,
+        disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category="config",
         icon=None,
         id=orig_entry.id,
@@ -116,7 +116,7 @@ def test_get_or_create_updates_data(registry):
         capabilities={"new-max": 100},
         config_entry=new_config_entry,
         device_id="new-mock-dev-id",
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
         entity_category=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
@@ -134,7 +134,7 @@ def test_get_or_create_updates_data(registry):
         config_entry_id=new_config_entry.entry_id,
         device_class=None,
         device_id="new-mock-dev-id",
-        disabled_by=er.DISABLED_HASS,  # Should not be updated
+        disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
         entity_category="config",
         icon=None,
         id=orig_entry.id,
@@ -188,7 +188,7 @@ async def test_loading_saving_data(hass, registry):
         capabilities={"max": 100},
         config_entry=mock_config,
         device_id="mock-dev-id",
-        disabled_by=er.DISABLED_HASS,
+        disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category="config",
         original_device_class="mock-device-class",
         original_icon="hass:original-icon",
@@ -196,12 +196,16 @@ async def test_loading_saving_data(hass, registry):
         supported_features=5,
         unit_of_measurement="initial-unit_of_measurement",
     )
-    orig_entry2 = registry.async_update_entity(
+    registry.async_update_entity(
         orig_entry2.entity_id,
         device_class="user-class",
         name="User Name",
         icon="hass:user-icon",
     )
+    registry.async_update_entity_options(
+        orig_entry2.entity_id, "light", {"minimum_brightness": 20}
+    )
+    orig_entry2 = registry.async_get(orig_entry2.entity_id)
 
     assert len(registry.entities) == 2
 
@@ -223,10 +227,11 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.config_entry_id == mock_config.entry_id
     assert new_entry2.device_class == "user-class"
     assert new_entry2.device_id == "mock-dev-id"
-    assert new_entry2.disabled_by == er.DISABLED_HASS
+    assert new_entry2.disabled_by is er.RegistryEntryDisabler.HASS
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.name == "User Name"
+    assert new_entry2.options == {"light": {"minimum_brightness": 20}}
     assert new_entry2.original_device_class == "mock-device-class"
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
@@ -277,19 +282,19 @@ async def test_loading_extra_values(hass, hass_storage):
                     "entity_id": "test.disabled_user",
                     "platform": "super_platform",
                     "unique_id": "disabled-user",
-                    "disabled_by": er.DISABLED_USER,
+                    "disabled_by": er.RegistryEntryDisabler.USER,
                 },
                 {
                     "entity_id": "test.disabled_hass",
                     "platform": "super_platform",
                     "unique_id": "disabled-hass",
-                    "disabled_by": er.DISABLED_HASS,
+                    "disabled_by": er.RegistryEntryDisabler.HASS,
                 },
                 {
                     "entity_id": "test.invalid__entity",
                     "platform": "super_platform",
                     "unique_id": "invalid-hass",
-                    "disabled_by": er.DISABLED_HASS,
+                    "disabled_by": er.RegistryEntryDisabler.HASS,
                 },
             ]
         },
@@ -317,9 +322,9 @@ async def test_loading_extra_values(hass, hass_storage):
         "test", "super_platform", "disabled-user"
     )
     assert entry_disabled_hass.disabled
-    assert entry_disabled_hass.disabled_by == er.DISABLED_HASS
+    assert entry_disabled_hass.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry_disabled_user.disabled
-    assert entry_disabled_user.disabled_by == er.DISABLED_USER
+    assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
 
 
 def test_async_get_entity_id(registry):
@@ -399,7 +404,7 @@ async def test_migration_yaml_to_json(hass):
             "unique_id": "test-unique",
             "platform": "test-platform",
             "name": "Test Name",
-            "disabled_by": er.DISABLED_HASS,
+            "disabled_by": er.RegistryEntryDisabler.HASS,
         }
     }
     with patch("os.path.isfile", return_value=True), patch("os.remove"), patch(
@@ -416,7 +421,7 @@ async def test_migration_yaml_to_json(hass):
         config_entry=mock_config,
     )
     assert entry.name == "Test Name"
-    assert entry.disabled_by == er.DISABLED_HASS
+    assert entry.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry.config_entry_id == "test-config-id"
 
 
@@ -554,7 +559,7 @@ async def test_update_entity(registry):
     for attr_name, new_value in (
         ("name", "new name"),
         ("icon", "new icon"),
-        ("disabled_by", er.DISABLED_USER),
+        ("disabled_by", er.RegistryEntryDisabler.USER),
     ):
         changes = {attr_name: new_value}
         updated_entry = registry.async_update_entity(entry.entity_id, **changes)
@@ -570,17 +575,42 @@ async def test_update_entity(registry):
         entry = updated_entry
 
 
+async def test_update_entity_options(registry):
+    """Test updating entity."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    entry = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config
+    )
+
+    registry.async_update_entity_options(
+        entry.entity_id, "light", {"minimum_brightness": 20}
+    )
+    new_entry_1 = registry.async_get(entry.entity_id)
+
+    assert entry.options == {}
+    assert new_entry_1.options == {"light": {"minimum_brightness": 20}}
+
+    registry.async_update_entity_options(
+        entry.entity_id, "light", {"minimum_brightness": 30}
+    )
+    new_entry_2 = registry.async_get(entry.entity_id)
+
+    assert entry.options == {}
+    assert new_entry_1.options == {"light": {"minimum_brightness": 20}}
+    assert new_entry_2.options == {"light": {"minimum_brightness": 30}}
+
+
 async def test_disabled_by(registry):
     """Test that we can disable an entry when we create it."""
     entry = registry.async_get_or_create(
-        "light", "hue", "5678", disabled_by=er.DISABLED_HASS
+        "light", "hue", "5678", disabled_by=er.RegistryEntryDisabler.HASS
     )
-    assert entry.disabled_by == er.DISABLED_HASS
+    assert entry.disabled_by is er.RegistryEntryDisabler.HASS
 
     entry = registry.async_get_or_create(
-        "light", "hue", "5678", disabled_by=er.DISABLED_INTEGRATION
+        "light", "hue", "5678", disabled_by=er.RegistryEntryDisabler.INTEGRATION
     )
-    assert entry.disabled_by == er.DISABLED_HASS
+    assert entry.disabled_by is er.RegistryEntryDisabler.HASS
 
     entry2 = registry.async_get_or_create("light", "hue", "1234")
     assert entry2.disabled_by is None
@@ -596,16 +626,16 @@ async def test_disabled_by_config_entry_pref(registry):
     entry = registry.async_get_or_create(
         "light", "hue", "AAAA", config_entry=mock_config
     )
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     entry2 = registry.async_get_or_create(
         "light",
         "hue",
         "BBBB",
         config_entry=mock_config,
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
-    assert entry2.disabled_by == er.DISABLED_USER
+    assert entry2.disabled_by is er.RegistryEntryDisabler.USER
 
 
 async def test_restore_states(hass):
@@ -626,7 +656,7 @@ async def test_restore_states(hass):
         "hue",
         "5678",
         suggested_object_id="disabled",
-        disabled_by=er.DISABLED_HASS,
+        disabled_by=er.RegistryEntryDisabler.HASS,
     )
     registry.async_get_or_create(
         "light",
@@ -836,7 +866,7 @@ async def test_disable_device_disables_entities(hass, registry):
         "ABCD",
         config_entry=config_entry,
         device_id=device_entry.id,
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entry3 = registry.async_get_or_create(
         "light",
@@ -844,7 +874,7 @@ async def test_disable_device_disables_entities(hass, registry):
         "EFGH",
         config_entry=config_entry,
         device_id=device_entry.id,
-        disabled_by=er.DISABLED_CONFIG_ENTRY,
+        disabled_by=er.RegistryEntryDisabler.CONFIG_ENTRY,
     )
 
     assert not entry1.disabled
@@ -858,13 +888,13 @@ async def test_disable_device_disables_entities(hass, registry):
 
     entry1 = registry.async_get(entry1.entity_id)
     assert entry1.disabled
-    assert entry1.disabled_by == er.DISABLED_DEVICE
+    assert entry1.disabled_by is er.RegistryEntryDisabler.DEVICE
     entry2 = registry.async_get(entry2.entity_id)
     assert entry2.disabled
-    assert entry2.disabled_by == er.DISABLED_USER
+    assert entry2.disabled_by is er.RegistryEntryDisabler.USER
     entry3 = registry.async_get(entry3.entity_id)
     assert entry3.disabled
-    assert entry3.disabled_by == er.DISABLED_CONFIG_ENTRY
+    assert entry3.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
 
     device_registry.async_update_device(device_entry.id, disabled_by=None)
     await hass.async_block_till_done()
@@ -873,10 +903,10 @@ async def test_disable_device_disables_entities(hass, registry):
     assert not entry1.disabled
     entry2 = registry.async_get(entry2.entity_id)
     assert entry2.disabled
-    assert entry2.disabled_by == er.DISABLED_USER
+    assert entry2.disabled_by is er.RegistryEntryDisabler.USER
     entry3 = registry.async_get(entry3.entity_id)
     assert entry3.disabled
-    assert entry3.disabled_by == er.DISABLED_CONFIG_ENTRY
+    assert entry3.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
 
 
 async def test_disable_config_entry_disables_entities(hass, registry):
@@ -903,7 +933,7 @@ async def test_disable_config_entry_disables_entities(hass, registry):
         "ABCD",
         config_entry=config_entry,
         device_id=device_entry.id,
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entry3 = registry.async_get_or_create(
         "light",
@@ -911,7 +941,7 @@ async def test_disable_config_entry_disables_entities(hass, registry):
         "EFGH",
         config_entry=config_entry,
         device_id=device_entry.id,
-        disabled_by=er.DISABLED_DEVICE,
+        disabled_by=er.RegistryEntryDisabler.DEVICE,
     )
 
     assert not entry1.disabled
@@ -919,19 +949,19 @@ async def test_disable_config_entry_disables_entities(hass, registry):
     assert entry3.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry.entry_id, config_entries.DISABLED_USER
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
     entry1 = registry.async_get(entry1.entity_id)
     assert entry1.disabled
-    assert entry1.disabled_by == er.DISABLED_CONFIG_ENTRY
+    assert entry1.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
     entry2 = registry.async_get(entry2.entity_id)
     assert entry2.disabled
-    assert entry2.disabled_by == er.DISABLED_USER
+    assert entry2.disabled_by is er.RegistryEntryDisabler.USER
     entry3 = registry.async_get(entry3.entity_id)
     assert entry3.disabled
-    assert entry3.disabled_by == er.DISABLED_DEVICE
+    assert entry3.disabled_by is er.RegistryEntryDisabler.DEVICE
 
     await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
     await hass.async_block_till_done()
@@ -940,7 +970,7 @@ async def test_disable_config_entry_disables_entities(hass, registry):
     assert not entry1.disabled
     entry2 = registry.async_get(entry2.entity_id)
     assert entry2.disabled
-    assert entry2.disabled_by == er.DISABLED_USER
+    assert entry2.disabled_by is er.RegistryEntryDisabler.USER
     # The device was re-enabled, so entity disabled by the device will be re-enabled too
     entry3 = registry.async_get(entry3.entity_id)
     assert not entry3.disabled_by
@@ -970,7 +1000,7 @@ async def test_disabled_entities_excluded_from_entity_list(hass, registry):
         "ABCD",
         config_entry=config_entry,
         device_id=device_entry.id,
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
 
     entries = er.async_entries_for_device(registry, device_entry.id)

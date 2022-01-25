@@ -38,6 +38,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        SwitchEntityDescription(
+            key=DPCode.SLOW_FEED,
+            name="Slow Feed",
+            icon="mdi:speedometer-slow",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Pet Water Feeder
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
     "cwysj": (
@@ -84,7 +94,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
+            key=DPCode.SWITCH,
             name="Switch",
         ),
     ),
@@ -412,6 +422,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Switch 4",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
@@ -486,10 +501,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    if description.key in device.status:
                         entities.append(
                             TuyaSwitchEntity(
                                 device, hass_data.device_manager, description

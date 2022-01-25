@@ -1,11 +1,11 @@
 """Support for Huawei LTE router notifications."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import time
 from typing import Any
 
-import attr
 from huawei_lte_api.exceptions import ResponseErrorException
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
@@ -33,12 +33,12 @@ async def async_get_service(
     return HuaweiLteSmsNotificationService(router, default_targets)
 
 
-@attr.s
+@dataclass
 class HuaweiLteSmsNotificationService(BaseNotificationService):
     """Huawei LTE router SMS notification service."""
 
-    router: Router = attr.ib()
-    default_targets: list[str] = attr.ib()
+    router: Router
+    default_targets: list[str]
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to target numbers."""

@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Hue gruplar\u0131na izin ver",
                     "allow_hue_scenes": "Hue sahnelerine izin ver",
-                    "allow_unreachable": "Ula\u015f\u0131lamayan ampullerin durumlar\u0131n\u0131 do\u011fru \u015fekilde bildirmesine izin verin"
+                    "allow_unreachable": "Ula\u015f\u0131lamayan ampullerin durumlar\u0131n\u0131 do\u011fru \u015fekilde bildirmesine izin verin",
+                    "ignore_availability": "Verilen cihazlar i\u00e7in ba\u011flant\u0131 durumunu yoksay"
                 }
             }
         }

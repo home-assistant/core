@@ -19,7 +19,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.deconz.gateway import DeconzGateway
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -34,9 +33,10 @@ from .const import (
     CONF_BRIDGE_ID,
     DEFAULT_PORT,
     DOMAIN,
+    HASSIO_CONFIGURATION_URL,
     LOGGER,
 )
-from .gateway import get_gateway_from_config_entry
+from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
@@ -228,7 +228,12 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: hostname, CONF_PORT: port}
         )
 
-        self.context["title_placeholders"] = {"host": hostname}
+        self.context.update(
+            {
+                "title_placeholders": {"host": hostname},
+                "configuration_url": f"http://{hostname}:{port}",
+            }
+        )
 
         self.deconz_config = {CONF_HOST: hostname, CONF_PORT: port}
 
@@ -251,6 +256,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_API_KEY: discovery_info.config[CONF_API_KEY],
             }
         )
+
+        self.context["configuration_url"] = HASSIO_CONFIGURATION_URL
 
         self._hassio_discovery = discovery_info.config
 

@@ -1,11 +1,12 @@
 """Services for Fritz integration."""
 import logging
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .common import FritzBoxTools
+from .common import AvmWrapper
 from .const import (
     DOMAIN,
     FRITZ_SERVICES,
@@ -31,7 +32,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         """Call correct Fritz service."""
 
         if not (
-            fritzbox_entry_ids := await _async_get_configured_fritz_tools(
+            fritzbox_entry_ids := await _async_get_configured_avm_device(
                 hass, service_call
             )
         ):
@@ -41,9 +42,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
         for entry_id in fritzbox_entry_ids:
             _LOGGER.debug("Executing service %s", service_call.service)
-            fritz_tools: FritzBoxTools = hass.data[DOMAIN][entry_id]
+            avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry_id]
             if config_entry := hass.config_entries.async_get_entry(entry_id):
-                await fritz_tools.service_fritzbox(service_call, config_entry)
+                await avm_wrapper.service_fritzbox(service_call, config_entry)
             else:
                 _LOGGER.error(
                     "Executing service %s failed, no config entry found",
@@ -54,7 +55,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
 
 
-async def _async_get_configured_fritz_tools(
+async def _async_get_configured_avm_device(
     hass: HomeAssistant, service_call: ServiceCall
 ) -> list:
     """Get FritzBoxTools class from config entry."""
@@ -62,7 +63,11 @@ async def _async_get_configured_fritz_tools(
     list_entry_id: list = []
     for entry_id in await async_extract_config_entry_ids(hass, service_call):
         config_entry = hass.config_entries.async_get_entry(entry_id)
-        if config_entry and config_entry.domain == DOMAIN:
+        if (
+            config_entry
+            and config_entry.domain == DOMAIN
+            and config_entry.state == ConfigEntryState.LOADED
+        ):
             list_entry_id.append(entry_id)
     return list_entry_id
 

@@ -3,6 +3,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.helpers import device_registry as dr
+
 from .const import (
     DATA_CALL_GET_CALLS_LOG,
     DATA_CONNECTION_GET_STATUS,
@@ -12,6 +14,8 @@ from .const import (
     WIFI_GET_GLOBAL_CONFIG,
 )
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture(autouse=True)
 def mock_path():
@@ -20,8 +24,30 @@ def mock_path():
         yield
 
 
+@pytest.fixture
+def mock_device_registry_devices(hass):
+    """Create device registry devices so the device tracker entities are enabled."""
+    dev_reg = dr.async_get(hass)
+    config_entry = MockConfigEntry(domain="something_else")
+
+    for idx, device in enumerate(
+        (
+            "68:A3:78:00:00:00",
+            "8C:97:EA:00:00:00",
+            "DE:00:B0:00:00:00",
+            "DC:00:B0:00:00:00",
+            "5E:65:55:00:00:00",
+        )
+    ):
+        dev_reg.async_get_or_create(
+            name=f"Device {idx}",
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, device)},
+        )
+
+
 @pytest.fixture(name="router")
-def mock_router():
+def mock_router(mock_device_registry_devices):
     """Mock a successful connection."""
     with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
         instance = service_mock.return_value

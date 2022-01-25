@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
+            "invalid_auth_key": "API-legitimasjon avvist av Coinbase p\u00e5 grunn av en ugyldig API-n\u00f8kkel.",
+            "invalid_auth_secret": "API-legitimasjon avvist av Coinbase p\u00e5 grunn av en ugyldig API-hemmelighet.",
             "unknown": "Uventet feil"
         },
         "step": {

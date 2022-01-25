@@ -4,14 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import sys
 
-from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import (
-    DATA_GIBIBYTES,
-    DATA_MEBIBYTES,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.const import DATA_GIBIBYTES, DATA_MEBIBYTES, PERCENTAGE, TEMP_CELSIUS
 
 DOMAIN = "glances"
 CONF_VERSION = "version"
@@ -150,14 +144,14 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="sensors",
         name_suffix="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     GlancesSensorEntityDescription(
         key="temperature_hdd",
         type="sensors",
         name_suffix="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     GlancesSensorEntityDescription(
         key="fan_speed",

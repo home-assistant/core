@@ -41,7 +41,7 @@ DATA_CONFIG = "config"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback

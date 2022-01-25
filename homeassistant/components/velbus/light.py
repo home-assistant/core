@@ -49,7 +49,7 @@ class VelbusLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
     _channel: VelbusDimmer
-    _attr_supported_feature = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+    _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     @property
     def is_on(self) -> bool:
@@ -96,7 +96,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
 
     _channel: VelbusButton
     _attr_entity_registry_enabled_default = False
-    _attr_supported_feature = SUPPORT_FLASH
+    _attr_supported_features = SUPPORT_FLASH
 
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the button light (led)."""

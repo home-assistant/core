@@ -8,8 +8,8 @@ from kasa import SmartDevice
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import legacy_device_id
@@ -49,7 +49,7 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 
     coordinator: TPLinkDataUpdateCoordinator
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator

@@ -21,7 +21,8 @@
                     "path": "Applicatiepad",
                     "port": "Poortnummer",
                     "ssl": "SSL gebruiken",
-                    "username": "Gebruikersnaam"
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }
             }
         }

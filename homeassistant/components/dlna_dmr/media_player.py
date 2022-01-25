@@ -2,22 +2,22 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import Any, TypeVar
 
 from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
 from async_upnp_client.utils import async_get_local_ip
-import voluptuous as vol
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
     REPEAT_MODE_ALL,
@@ -38,7 +38,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CONF_DEVICE_ID,
-    CONF_NAME,
     CONF_TYPE,
     CONF_URL,
     STATE_IDLE,
@@ -49,9 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
@@ -69,69 +66,34 @@ from .data import EventListenAddr, get_domain_data
 
 PARALLEL_UPDATES = 0
 
-# Configuration via YAML is deprecated in favour of config flow
-CONF_LISTEN_IP = "listen_ip"
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_URL),
-    cv.deprecated(CONF_LISTEN_IP),
-    cv.deprecated(CONF_LISTEN_PORT),
-    cv.deprecated(CONF_NAME),
-    cv.deprecated(CONF_CALLBACK_URL_OVERRIDE),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_URL): cv.string,
-            vol.Optional(CONF_LISTEN_IP): cv.string,
-            vol.Optional(CONF_LISTEN_PORT): cv.port,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_CALLBACK_URL_OVERRIDE): cv.url,
-        }
-    ),
-)
+_T = TypeVar("_T", bound="DlnaDmrEntity")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 Func = TypeVar("Func", bound=Callable[..., Any])
 
 
-def catch_request_errors(func: Func) -> Func:
+def catch_request_errors(
+    func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R | None]]:  # type: ignore[misc]
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
-    async def wrapper(self: "DlnaDmrEntity", *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
         """Catch UpnpError errors and check availability before and after request."""
         if not self.available:
             _LOGGER.warning(
                 "Device disappeared when trying to call service %s", func.__name__
             )
-            return
+            return None
         try:
-            return await func(self, *args, **kwargs)
+            return await func(self, *args, **kwargs)  # type: ignore[no-any-return]  # mypy can't yet infer 'func'
         except UpnpError as err:
             self.check_available = True
             _LOGGER.error("Error during call %s: %r", func.__name__, err)
+        return None
 
-    return cast(Func, wrapper)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up DLNA media_player platform."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-    _LOGGER.warning(
-        "Configuring dlna_dmr via yaml is deprecated; the configuration for"
-        " %s will be migrated to a config entry and can be safely removed when"
-        "migration is complete",
-        config.get(CONF_URL),
-    )
+    return wrapper
 
 
 async def async_setup_entry(
@@ -171,6 +133,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
     check_available: bool = False
+    _ssdp_connect_failed: bool = False
 
     # Track BOOTID in SSDP advertisements for device changes
     _bootid: int | None = None
@@ -268,22 +231,34 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Nothing left to do until ssdp:alive comes through
             return
 
-        if self._bootid is not None and self._bootid != bootid and self._device:
-            # Device has rebooted, drop existing connection and maybe reconnect
-            await self._device_disconnect()
+        if self._bootid is not None and self._bootid != bootid:
+            # Device has rebooted
+            # Maybe connection will succeed now
+            self._ssdp_connect_failed = False
+            if self._device:
+                # Drop existing connection and maybe reconnect
+                await self._device_disconnect()
         self._bootid = bootid
 
-        if change == ssdp.SsdpChange.BYEBYE and self._device:
-            # Device is going away, disconnect
-            await self._device_disconnect()
+        if change == ssdp.SsdpChange.BYEBYE:
+            # Device is going away
+            if self._device:
+                # Disconnect from gone device
+                await self._device_disconnect()
+            # Maybe the next alive message will result in a successful connection
+            self._ssdp_connect_failed = False
 
-        if change == ssdp.SsdpChange.ALIVE and not self._device:
-            if TYPE_CHECKING:
-                assert info.ssdp_location
+        if (
+            change == ssdp.SsdpChange.ALIVE
+            and not self._device
+            and not self._ssdp_connect_failed
+        ):
+            assert info.ssdp_location
             location = info.ssdp_location
             try:
                 await self._device_connect(location)
             except UpnpError as err:
+                self._ssdp_connect_failed = True
                 _LOGGER.warning(
                     "Failed connecting to recently alive device at %s: %r",
                     location,

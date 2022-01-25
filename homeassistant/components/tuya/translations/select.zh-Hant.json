@@ -48,6 +48,38 @@
             "on": "\u958b\u555f",
             "power_off": "\u95dc\u9589",
             "power_on": "\u958b\u555f"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "\u95dc\u9589",
+            "high": "\u9ad8",
+            "low": "\u4f4e",
+            "middle": "\u4e2d"
+        },
+        "tuya__vacuum_collection": {
+            "large": "\u5927",
+            "middle": "\u4e2d",
+            "small": "\u5c0f"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "\u5f27\u578b",
+            "chargego": "\u8fd4\u56de\u5145\u96fb",
+            "left_bow": "\u5de6\u5f27\u5f62",
+            "left_spiral": "\u5de6\u87ba\u65cb",
+            "mop": "\u62d6\u5730",
+            "part": "\u5c40\u90e8",
+            "partial_bow": "\u5c40\u90e8\u5f27\u5f62",
+            "pick_zone": "\u9078\u64c7\u5340\u57df",
+            "point": "\u5b9a\u9ede",
+            "pose": "\u8def\u5f91",
+            "random": "\u96a8\u6a5f",
+            "right_bow": "\u53f3\u5f27\u5f62",
+            "right_spiral": "\u53f3\u87ba\u65cb",
+            "single": "\u55ae\u6b21",
+            "smart": "\u667a\u80fd",
+            "spiral": "\u87ba\u65cb",
+            "standby": "\u5f85\u547d",
+            "wall_follow": "\u8ddf\u96a8\u7246\u9762",
+            "zone": "\u5340\u57df"
         }
     }
 }

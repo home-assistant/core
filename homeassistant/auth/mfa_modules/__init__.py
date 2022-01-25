@@ -133,7 +133,7 @@ async def auth_mfa_module_from_config(
     module = await _load_mfa_module(hass, module_name)
 
     try:
-        config = module.CONFIG_SCHEMA(config)  # type: ignore
+        config = module.CONFIG_SCHEMA(config)
     except vol.Invalid as err:
         _LOGGER.error(
             "Invalid configuration for multi-factor module %s: %s",
@@ -168,7 +168,7 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.Modul
 
     # https://github.com/python/mypy/issues/1424
     await requirements.async_process_requirements(
-        hass, module_path, module.REQUIREMENTS  # type: ignore
+        hass, module_path, module.REQUIREMENTS
     )
 
     processed.add(module_name)

@@ -1,7 +1,6 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import datetime
 import logging
 import os
@@ -14,17 +13,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_NAME,
-    CONF_OFFSET,
-    DEVICE_CLASS_TIMESTAMP,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
@@ -485,7 +480,7 @@ def get_next_departure(
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: Callable[[list], None],
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GTFS sensor."""
@@ -497,8 +492,7 @@ def setup_platform(
     offset: datetime.timedelta = config[CONF_OFFSET]
     include_tomorrow = config[CONF_TOMORROW]
 
-    if not os.path.exists(gtfs_dir):
-        os.makedirs(gtfs_dir)
+    os.makedirs(gtfs_dir, exist_ok=True)
 
     if not os.path.exists(os.path.join(gtfs_dir, data)):
         _LOGGER.error("The given GTFS data file/folder was not found")
@@ -522,7 +516,7 @@ def setup_platform(
 class GTFSDepartureSensor(SensorEntity):
     """Implementation of a GTFS departure sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self,
@@ -619,7 +613,9 @@ class GTFSDepartureSensor(SensorEntity):
             if not self._departure:
                 self._state = None
             else:
-                self._state = self._departure["departure_time"]
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
 
             # Fetch trip and route details once, unless updated
             if not self._departure:
