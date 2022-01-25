@@ -68,7 +68,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch the latest data from the source."""
         await self.base.update_data()
-        return {ha["ID"]: ha for ha in self.base.heatareas if ha.get("ID")}
+        return {ha["ID"]: ha for ha in self.base.heat_areas if ha.get("ID")}
 
     def get_cooling(self) -> bool:
         """Return if cooling mode is enabled."""
@@ -90,10 +90,10 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             target_temperature,
         )
         try:
-            await self.base.update_heatarea(
+            await self.base.update_heat_area(
                 heat_area_id, {"T_TARGET": target_temperature}
             )
-        except aiohttp.web.HTTPError as http_err:
+        except aiohttp.ClientError as http_err:
             raise HomeAssistantError(
                 "Failed to set target temperature, communication error with alpha2 base"
             ) from http_err
@@ -114,10 +114,10 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             heat_area_mode,
         )
         try:
-            await self.base.update_heatarea(
+            await self.base.update_heat_area(
                 heat_area_id, {"HEATAREA_MODE": heat_area_mode}
             )
-        except aiohttp.web.HTTPException as http_err:
+        except aiohttp.ClientError as http_err:
             raise HomeAssistantError(
                 "Failed to set heat area mode, communication error with alpha2 base"
             ) from http_err
