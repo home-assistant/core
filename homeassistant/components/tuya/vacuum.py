@@ -185,8 +185,12 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
-        self._send_command([{"code": DPCode.SWITCH_CHARGE, "value": True}])
-        self._send_command([{"code": DPCode.MODE, "value": TUYA_MODE_RETURN_HOME}])
+        self._send_command(
+            [
+                {"code": DPCode.SWITCH_CHARGE, "value": True},
+                {"code": DPCode.MODE, "value": TUYA_MODE_RETURN_HOME},
+            ]
+        )
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the device."""
