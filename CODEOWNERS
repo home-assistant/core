@@ -1006,8 +1006,8 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 tests/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 tests/components/utility_meter/* @dgomes
-homeassistant/components/vallox/* @andre-richter @slovdahl
-tests/components/vallox/* @andre-richter @slovdahl
+homeassistant/components/vallox/* @andre-richter @slovdahl @viiru-
+tests/components/vallox/* @andre-richter @slovdahl @viiru-
 homeassistant/components/velbus/* @Cereal2nd @brefra
 tests/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
