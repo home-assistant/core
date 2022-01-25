@@ -1,14 +1,21 @@
 """Support for media browsing."""
-from contextlib import suppress
-import logging
-import urllib.parse
+from __future__ import annotations
 
+from collections.abc import Callable
+from contextlib import suppress
+from functools import partial
+import logging
+from urllib.parse import quote_plus, unquote
+
+from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_ALBUM,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import is_internal_request
 
 from .const import (
     EXPANDABLE_MEDIA_TYPES,
@@ -24,8 +31,108 @@ from .const import (
     SONOS_TYPES_MAPPING,
 )
 from .exception import UnknownMediaType
+from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
+
+GetBrowseImageUrlType = Callable[[str, str, "str | None"], str]
+
+
+def get_thumbnail_url_full(
+    media: SonosMedia,
+    is_internal: bool,
+    get_browse_image_url: GetBrowseImageUrlType,
+    media_content_type: str,
+    media_content_id: str,
+    media_image_id: str | None = None,
+) -> str | None:
+    """Get thumbnail URL."""
+    if is_internal:
+        item = get_media(  # type: ignore[no-untyped-call]
+            media.library,
+            media_content_id,
+            media_content_type,
+        )
+        return getattr(item, "album_art_uri", None)  # type: ignore[no-any-return]
+
+    return get_browse_image_url(
+        media_content_type,
+        quote_plus(media_content_id),
+        media_image_id,
+    )
+
+
+def media_source_filter(item: BrowseMedia):
+    """Filter media sources."""
+    return item.media_content_type.startswith("audio/")
+
+
+async def async_browse_media(
+    hass,
+    speaker: SonosSpeaker,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
+    media_content_id: str | None,
+    media_content_type: str | None,
+):
+    """Browse media."""
+
+    if media_content_id is None:
+        return await root_payload(
+            hass,
+            speaker,
+            media,
+            get_browse_image_url,
+        )
+
+    if media_source.is_media_source_id(media_content_id):
+        return await media_source.async_browse_media(
+            hass, media_content_id, content_filter=media_source_filter
+        )
+
+    if media_content_type == "library":
+        return await hass.async_add_executor_job(
+            library_payload,
+            media.library,
+            partial(
+                get_thumbnail_url_full,
+                media,
+                is_internal_request(hass),
+                get_browse_image_url,
+            ),
+        )
+
+    if media_content_type == "favorites":
+        return await hass.async_add_executor_job(
+            favorites_payload,
+            speaker.favorites,
+        )
+
+    if media_content_type == "favorites_folder":
+        return await hass.async_add_executor_job(
+            favorites_folder_payload,
+            speaker.favorites,
+            media_content_id,
+        )
+
+    payload = {
+        "search_type": media_content_type,
+        "idstring": media_content_id,
+    }
+    response = await hass.async_add_executor_job(
+        build_item_response,
+        media.library,
+        payload,
+        partial(
+            get_thumbnail_url_full,
+            media,
+            is_internal_request(hass),
+            get_browse_image_url,
+        ),
+    )
+    if response is None:
+        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+    return response
 
 
 def build_item_response(media_library, payload, get_thumbnail_url=None):
@@ -62,7 +169,7 @@ def build_item_response(media_library, payload, get_thumbnail_url=None):
 
     if not title:
         try:
-            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
+            title = unquote(payload["idstring"].split("/")[1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
@@ -120,42 +227,62 @@ def item_payload(item, get_thumbnail_url=None):
     )
 
 
-def root_payload(media_library, favorites, get_thumbnail_url):
+async def root_payload(
+    hass: HomeAssistant,
+    speaker: SonosSpeaker,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
+):
     """Return root payload for Sonos."""
-    has_local_library = bool(
-        media_library.browse_by_idstring(
-            "tracks",
-            "",
-            max_items=1,
+    children = []
+
+    if speaker.favorites:
+        children.append(
+            BrowseMedia(
+                title="Favorites",
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_id="",
+                media_content_type="favorites",
+                can_play=False,
+                can_expand=True,
+            )
         )
-    )
 
-    if not (favorites or has_local_library):
-        raise BrowseError("No media available")
+    if await hass.async_add_executor_job(
+        partial(media.library.browse_by_idstring, "tracks", "", max_items=1)
+    ):
+        children.append(
+            BrowseMedia(
+                title="Music Library",
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_id="",
+                media_content_type="library",
+                can_play=False,
+                can_expand=True,
+            )
+        )
 
-    if not has_local_library:
-        return favorites_payload(favorites)
-    if not favorites:
-        return library_payload(media_library, get_thumbnail_url)
+    try:
+        item = await media_source.async_browse_media(
+            hass, None, content_filter=media_source_filter
+        )
+        # If domain is None, it's overview of available sources
+        if item.domain is None:
+            children.extend(item.children)
+        else:
+            children.append(item)
+    except media_source.BrowseError:
+        pass
 
-    children = [
-        BrowseMedia(
-            title="Favorites",
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_id="",
-            media_content_type="favorites",
-            can_play=False,
-            can_expand=True,
-        ),
-        BrowseMedia(
-            title="Music Library",
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_id="",
-            media_content_type="library",
-            can_play=False,
-            can_expand=True,
-        ),
-    ]
+    if len(children) == 1:
+        return await async_browse_media(
+            hass,
+            speaker,
+            media,
+            get_browse_image_url,
+            children[0].media_content_id,
+            children[0].media_content_type,
+        )
 
     return BrowseMedia(
         title="Sonos",

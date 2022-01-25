@@ -97,19 +97,21 @@ def create_stream(
     return stream
 
 
+DOMAIN_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_LL_HLS, default=True): cv.boolean,
+        vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
+            cv.positive_float, vol.Range(min=2, max=10)
+        ),
+        vol.Optional(CONF_PART_DURATION, default=1): vol.All(
+            cv.positive_float, vol.Range(min=0.2, max=1.5)
+        ),
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LL_HLS, default=False): cv.boolean,
-                vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
-                    cv.positive_float, vol.Range(min=2, max=10)
-                ),
-                vol.Optional(CONF_PART_DURATION, default=1): vol.All(
-                    cv.positive_float, vol.Range(min=0.2, max=1.5)
-                ),
-            }
-        )
+        DOMAIN: DOMAIN_SCHEMA,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -154,7 +156,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
-    if (conf := config.get(DOMAIN)) and conf[CONF_LL_HLS]:
+    conf = DOMAIN_SCHEMA(config.get(DOMAIN, {}))
+    if conf[CONF_LL_HLS]:
         assert isinstance(conf[CONF_SEGMENT_DURATION], float)
         assert isinstance(conf[CONF_PART_DURATION], float)
         hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(

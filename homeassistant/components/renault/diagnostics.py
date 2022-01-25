@@ -11,6 +11,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import RenaultHub
 from .const import CONF_KAMEREON_ACCOUNT_ID, DOMAIN
+from .renault_vehicle import RenaultVehicleProxy
 
 TO_REDACT = {
     CONF_KAMEREON_ACCOUNT_ID,
@@ -19,6 +20,8 @@ TO_REDACT = {
     "radioCode",
     "registrationNumber",
     "vin",
+    "gpsLatitude",
+    "gpsLongitude",
 }
 
 
@@ -34,7 +37,7 @@ async def async_get_config_entry_diagnostics(
             "data": async_redact_data(entry.data, TO_REDACT),
         },
         "vehicles": [
-            async_redact_data(vehicle.details.raw_data, TO_REDACT)
+            _get_vehicle_diagnostics(vehicle)
             for vehicle in renault_hub.vehicles.values()
         ],
     }
@@ -42,13 +45,21 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     renault_hub: RenaultHub = hass.data[DOMAIN][entry.entry_id]
     vin = next(iter(device.identifiers))[1]
+    vehicle = renault_hub.vehicles[vin]
 
+    return _get_vehicle_diagnostics(vehicle)
+
+
+def _get_vehicle_diagnostics(vehicle: RenaultVehicleProxy) -> dict[str, Any]:
+    """Return diagnostics for a device."""
     return {
-        "details": async_redact_data(
-            renault_hub.vehicles[vin].details.raw_data, TO_REDACT
-        ),
+        "details": async_redact_data(vehicle.details.raw_data, TO_REDACT),
+        "data": {
+            key: async_redact_data(coordinator.data.raw_data, TO_REDACT)
+            for key, coordinator in vehicle.coordinators.items()
+        },
     }

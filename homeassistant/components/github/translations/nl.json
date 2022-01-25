@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Selecteer repositories om bij te houden."
+                },
+                "title": "Configureer repositories"
+            }
+        }
+    }
+}

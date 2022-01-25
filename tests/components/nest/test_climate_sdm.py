@@ -5,7 +5,10 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
-from google_nest_sdm.device import Device
+from collections.abc import Awaitable, Callable
+from typing import Any
+
+from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.event import EventMessage
 import pytest
 
@@ -37,49 +40,83 @@ from homeassistant.components.climate.const import (
     PRESET_SLEEP,
 )
 from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.core import HomeAssistant
 
-from .common import async_setup_sdm_platform
+from .common import (
+    DEVICE_COMMAND,
+    DEVICE_ID,
+    CreateDevice,
+    FakeSubscriber,
+    PlatformSetup,
+)
+from .conftest import FakeAuth
 
 from tests.components.climate import common
 
-PLATFORM = "climate"
+CreateEvent = Callable[[dict[str, Any]], Awaitable[None]]
+
+EVENT_ID = "some-event-id"
 
 
-async def setup_climate(hass, raw_traits=None, auth=None):
-    """Load Nest climate devices."""
-    devices = None
-    if raw_traits:
-        traits = raw_traits
-        traits["sdm.devices.traits.Info"] = {"customName": "My Thermostat"}
-        devices = {
-            "some-device-id": Device.MakeDevice(
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return ["climate"]
+
+
+@pytest.fixture
+def device_traits() -> dict[str, Any]:
+    """Fixture that sets default traits used for devices."""
+    return {"sdm.devices.traits.Info": {"customName": "My Thermostat"}}
+
+
+@pytest.fixture
+async def create_event(
+    hass: HomeAssistant,
+    auth: AbstractAuth,
+    subscriber: FakeSubscriber,
+) -> CreateEvent:
+    """Fixture to send a pub/sub event."""
+
+    async def create_event(traits: dict[str, Any]) -> None:
+        await subscriber.async_receive_event(
+            EventMessage(
                 {
-                    "name": "some-device-id",
-                    "type": "sdm.devices.types.Thermostat",
-                    "traits": traits,
+                    "eventId": EVENT_ID,
+                    "timestamp": "2019-01-01T00:00:01Z",
+                    "resourceUpdate": {
+                        "name": DEVICE_ID,
+                        "traits": traits,
+                    },
                 },
                 auth=auth,
-            ),
-        }
-    return await async_setup_sdm_platform(hass, PLATFORM, devices)
+            )
+        )
+        await hass.async_block_till_done()
+
+    return create_event
 
 
-async def test_no_devices(hass):
+async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup) -> None:
     """Test no devices returned by the api."""
-    await setup_climate(hass)
+    await setup_platform()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_climate_devices(hass):
+async def test_climate_devices(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+) -> None:
     """Test no eligible climate devices returned by the api."""
-    await setup_climate(hass, {"sdm.devices.traits.CameraImage": {}})
+    create_device.create({"sdm.devices.traits.CameraImage": {}})
+    await setup_platform()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_thermostat_off(hass):
+async def test_thermostat_off(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+):
     """Test a thermostat that is not running."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
@@ -91,6 +128,7 @@ async def test_thermostat_off(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -113,10 +151,11 @@ async def test_thermostat_off(hass):
     assert ATTR_FAN_MODES not in thermostat.attributes
 
 
-async def test_thermostat_heat(hass):
+async def test_thermostat_heat(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+):
     """Test a thermostat that is heating."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
                 "status": "HEATING",
@@ -133,6 +172,7 @@ async def test_thermostat_heat(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -153,10 +193,11 @@ async def test_thermostat_heat(hass):
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
 
-async def test_thermostat_cool(hass):
+async def test_thermostat_cool(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+):
     """Test a thermostat that is cooling."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
                 "status": "COOLING",
@@ -173,6 +214,7 @@ async def test_thermostat_cool(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -193,10 +235,11 @@ async def test_thermostat_cool(hass):
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
 
-async def test_thermostat_heatcool(hass):
+async def test_thermostat_heatcool(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+):
     """Test a thermostat that is cooling in heatcool mode."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
                 "status": "COOLING",
@@ -214,6 +257,7 @@ async def test_thermostat_heatcool(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -234,10 +278,11 @@ async def test_thermostat_heatcool(hass):
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
 
-async def test_thermostat_eco_off(hass):
+async def test_thermostat_eco_off(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+) -> None:
     """Test a thermostat cooling with eco off."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
                 "status": "COOLING",
@@ -261,6 +306,7 @@ async def test_thermostat_eco_off(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -281,10 +327,11 @@ async def test_thermostat_eco_off(hass):
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
 
-async def test_thermostat_eco_on(hass):
+async def test_thermostat_eco_on(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+) -> None:
     """Test a thermostat in eco mode."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
                 "status": "COOLING",
@@ -308,6 +355,7 @@ async def test_thermostat_eco_on(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -328,10 +376,11 @@ async def test_thermostat_eco_on(hass):
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
 
-async def test_thermostat_eco_heat_only(hass):
+async def test_thermostat_eco_heat_only(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+) -> None:
     """Test a thermostat in eco mode that only supports heat."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
                 "status": "OFF",
@@ -352,6 +401,7 @@ async def test_thermostat_eco_heat_only(hass):
             "sdm.devices.traits.ThermostatTemperatureSetpoint": {},
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -370,19 +420,24 @@ async def test_thermostat_eco_heat_only(hass):
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
 
-async def test_thermostat_set_hvac_mode(hass, auth):
+async def test_thermostat_set_hvac_mode(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+    create_event: CreateEvent,
+) -> None:
     """Test a thermostat changing hvac modes."""
-    subscriber = await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "OFF",
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -394,7 +449,7 @@ async def test_thermostat_set_hvac_mode(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.ThermostatMode.SetMode",
         "params": {"mode": "HEAT"},
@@ -407,24 +462,14 @@ async def test_thermostat_set_hvac_mode(hass, auth):
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
 
     # Simulate pubsub message when mode changes
-    event = EventMessage(
+    await create_event(
         {
-            "eventId": "some-event-id",
-            "timestamp": "2019-01-01T00:00:01Z",
-            "resourceUpdate": {
-                "name": "some-device-id",
-                "traits": {
-                    "sdm.devices.traits.ThermostatMode": {
-                        "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
-                        "mode": "HEAT",
-                    },
-                },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEAT",
             },
-        },
-        auth=None,
+        }
     )
-    await subscriber.async_receive_event(event)
-    await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
@@ -432,23 +477,13 @@ async def test_thermostat_set_hvac_mode(hass, auth):
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
     # Simulate pubsub message when the thermostat starts heating
-    event = EventMessage(
+    await create_event(
         {
-            "eventId": "some-event-id",
-            "timestamp": "2019-01-01T00:00:01Z",
-            "resourceUpdate": {
-                "name": "some-device-id",
-                "traits": {
-                    "sdm.devices.traits.ThermostatHvac": {
-                        "status": "HEATING",
-                    },
-                },
+            "sdm.devices.traits.ThermostatHvac": {
+                "status": "HEATING",
             },
-        },
-        auth=None,
+        }
     )
-    await subscriber.async_receive_event(event)
-    await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
@@ -456,19 +491,23 @@ async def test_thermostat_set_hvac_mode(hass, auth):
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
 
-async def test_thermostat_invalid_hvac_mode(hass, auth):
+async def test_thermostat_invalid_hvac_mode(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
     """Test setting an hvac_mode that is not supported."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "OFF",
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -484,10 +523,15 @@ async def test_thermostat_invalid_hvac_mode(hass, auth):
     assert auth.method is None  # No communication with API
 
 
-async def test_thermostat_set_eco_preset(hass, auth):
+async def test_thermostat_set_eco_preset(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+    create_event: CreateEvent,
+) -> None:
     """Test a thermostat put into eco mode."""
-    subscriber = await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatEco": {
@@ -500,9 +544,9 @@ async def test_thermostat_set_eco_preset(hass, auth):
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "OFF",
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -516,7 +560,7 @@ async def test_thermostat_set_eco_preset(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.ThermostatEco.SetMode",
         "params": {"mode": "MANUAL_ECO"},
@@ -530,26 +574,16 @@ async def test_thermostat_set_eco_preset(hass, auth):
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     # Simulate pubsub message when mode changes
-    event = EventMessage(
+    await create_event(
         {
-            "eventId": "some-event-id",
-            "timestamp": "2019-01-01T00:00:01Z",
-            "resourceUpdate": {
-                "name": "some-device-id",
-                "traits": {
-                    "sdm.devices.traits.ThermostatEco": {
-                        "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
-                        "mode": "MANUAL_ECO",
-                        "heatCelsius": 15.0,
-                        "coolCelsius": 28.0,
-                    },
-                },
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "MANUAL_ECO",
+                "heatCelsius": 15.0,
+                "coolCelsius": 28.0,
             },
-        },
-        auth=auth,
+        }
     )
-    await subscriber.async_receive_event(event)
-    await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
@@ -562,17 +596,21 @@ async def test_thermostat_set_eco_preset(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.ThermostatEco.SetMode",
         "params": {"mode": "OFF"},
     }
 
 
-async def test_thermostat_set_cool(hass, auth):
+async def test_thermostat_set_cool(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat in cool mode with a temperature change."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
@@ -583,8 +621,8 @@ async def test_thermostat_set_cool(hass, auth):
                 "coolCelsius": 25.0,
             },
         },
-        auth=auth,
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -595,17 +633,21 @@ async def test_thermostat_set_cool(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
         "params": {"coolCelsius": 24.0},
     }
 
 
-async def test_thermostat_set_heat(hass, auth):
+async def test_thermostat_set_heat(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat heating mode with a temperature change."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
@@ -615,9 +657,9 @@ async def test_thermostat_set_heat(hass, auth):
             "sdm.devices.traits.ThermostatTemperatureSetpoint": {
                 "heatCelsius": 19.0,
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -628,17 +670,21 @@ async def test_thermostat_set_heat(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
         "params": {"heatCelsius": 20.0},
     }
 
 
-async def test_thermostat_set_heat_cool(hass, auth):
+async def test_thermostat_set_heat_cool(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat in heatcool mode with a temperature change."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
@@ -649,9 +695,9 @@ async def test_thermostat_set_heat_cool(hass, auth):
                 "heatCelsius": 19.0,
                 "coolCelsius": 25.0,
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -664,17 +710,20 @@ async def test_thermostat_set_heat_cool(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetRange",
         "params": {"heatCelsius": 20.0, "coolCelsius": 24.0},
     }
 
 
-async def test_thermostat_fan_off(hass):
+async def test_thermostat_fan_off(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat with the fan not running."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.Fan": {
                 "timerMode": "OFF",
@@ -688,8 +737,9 @@ async def test_thermostat_fan_off(hass):
             "sdm.devices.traits.Temperature": {
                 "ambientTemperatureCelsius": 16.2,
             },
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -708,10 +758,13 @@ async def test_thermostat_fan_off(hass):
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
 
-async def test_thermostat_fan_on(hass):
+async def test_thermostat_fan_on(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat with the fan running."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.Fan": {
                 "timerMode": "ON",
@@ -727,8 +780,9 @@ async def test_thermostat_fan_on(hass):
             "sdm.devices.traits.Temperature": {
                 "ambientTemperatureCelsius": 16.2,
             },
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -747,10 +801,13 @@ async def test_thermostat_fan_on(hass):
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
 
-async def test_thermostat_cool_with_fan(hass):
+async def test_thermostat_cool_with_fan(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat cooling while the fan is on."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.Fan": {
                 "timerMode": "ON",
@@ -765,6 +822,7 @@ async def test_thermostat_cool_with_fan(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -782,10 +840,14 @@ async def test_thermostat_cool_with_fan(hass):
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
 
-async def test_thermostat_set_fan(hass, auth):
+async def test_thermostat_set_fan(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat enabling the fan."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.Fan": {
                 "timerMode": "ON",
@@ -798,9 +860,9 @@ async def test_thermostat_set_fan(hass, auth):
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "OFF",
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -814,7 +876,7 @@ async def test_thermostat_set_fan(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.Fan.SetTimer",
         "params": {"timerMode": "OFF"},
@@ -825,7 +887,7 @@ async def test_thermostat_set_fan(hass, auth):
     await hass.async_block_till_done()
 
     assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
+    assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.Fan.SetTimer",
         "params": {
@@ -835,10 +897,13 @@ async def test_thermostat_set_fan(hass, auth):
     }
 
 
-async def test_thermostat_fan_empty(hass):
+async def test_thermostat_fan_empty(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a fan trait with an empty response."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.Fan": {},
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
@@ -849,8 +914,9 @@ async def test_thermostat_fan_empty(hass):
             "sdm.devices.traits.Temperature": {
                 "ambientTemperatureCelsius": 16.2,
             },
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -875,10 +941,13 @@ async def test_thermostat_fan_empty(hass):
     assert ATTR_FAN_MODES not in thermostat.attributes
 
 
-async def test_thermostat_invalid_fan_mode(hass):
+async def test_thermostat_invalid_fan_mode(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test setting a fan mode that is not supported."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.Fan": {
                 "timerMode": "ON",
@@ -892,8 +961,9 @@ async def test_thermostat_invalid_fan_mode(hass):
             "sdm.devices.traits.Temperature": {
                 "ambientTemperatureCelsius": 16.2,
             },
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -916,10 +986,14 @@ async def test_thermostat_invalid_fan_mode(hass):
         await hass.async_block_till_done()
 
 
-async def test_thermostat_set_hvac_fan_only(hass, auth):
+async def test_thermostat_set_hvac_fan_only(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat enabling the fan via hvac_mode."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.Fan": {
                 "timerMode": "OFF",
@@ -932,9 +1006,9 @@ async def test_thermostat_set_hvac_fan_only(hass, auth):
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "OFF",
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -950,24 +1024,28 @@ async def test_thermostat_set_hvac_fan_only(hass, auth):
 
     (method, url, json, headers) = auth.captured_requests.pop(0)
     assert method == "post"
-    assert url == "some-device-id:executeCommand"
+    assert url == DEVICE_COMMAND
     assert json == {
         "command": "sdm.devices.commands.Fan.SetTimer",
         "params": {"duration": "43200s", "timerMode": "ON"},
     }
     (method, url, json, headers) = auth.captured_requests.pop(0)
     assert method == "post"
-    assert url == "some-device-id:executeCommand"
+    assert url == DEVICE_COMMAND
     assert json == {
         "command": "sdm.devices.commands.ThermostatMode.SetMode",
         "params": {"mode": "OFF"},
     }
 
 
-async def test_thermostat_target_temp(hass, auth):
+async def test_thermostat_target_temp(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    create_event: CreateEvent,
+) -> None:
     """Test a thermostat changing hvac modes and affected on target temps."""
-    subscriber = await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
                 "status": "HEATING",
@@ -982,9 +1060,9 @@ async def test_thermostat_target_temp(hass, auth):
             "sdm.devices.traits.ThermostatTemperatureSetpoint": {
                 "heatCelsius": 23.0,
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -995,28 +1073,18 @@ async def test_thermostat_target_temp(hass, auth):
     assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] is None
 
     # Simulate pubsub message changing modes
-    event = EventMessage(
+    await create_event(
         {
-            "eventId": "some-event-id",
-            "timestamp": "2019-01-01T00:00:01Z",
-            "resourceUpdate": {
-                "name": "some-device-id",
-                "traits": {
-                    "sdm.devices.traits.ThermostatMode": {
-                        "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
-                        "mode": "HEATCOOL",
-                    },
-                    "sdm.devices.traits.ThermostatTemperatureSetpoint": {
-                        "heatCelsius": 22.0,
-                        "coolCelsius": 28.0,
-                    },
-                },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEATCOOL",
             },
-        },
-        auth=None,
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 22.0,
+                "coolCelsius": 28.0,
+            },
+        }
     )
-    await subscriber.async_receive_event(event)
-    await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
@@ -1026,14 +1094,18 @@ async def test_thermostat_target_temp(hass, auth):
     assert thermostat.attributes[ATTR_TEMPERATURE] is None
 
 
-async def test_thermostat_missing_mode_traits(hass):
+async def test_thermostat_missing_mode_traits(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat missing many thermostat traits in api response."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -1059,18 +1131,22 @@ async def test_thermostat_missing_mode_traits(hass):
     assert ATTR_PRESET_MODE not in thermostat.attributes
 
 
-async def test_thermostat_missing_temperature_trait(hass):
+async def test_thermostat_missing_temperature_trait(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat missing many thermostat traits in api response."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "HEAT",
             },
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -1097,14 +1173,18 @@ async def test_thermostat_missing_temperature_trait(hass):
     assert thermostat.attributes[ATTR_TEMPERATURE] is None
 
 
-async def test_thermostat_unexpected_hvac_status(hass):
+async def test_thermostat_unexpected_hvac_status(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat missing many thermostat traits in api response."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "UNEXPECTED"},
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -1127,10 +1207,13 @@ async def test_thermostat_unexpected_hvac_status(hass):
     assert thermostat.state == HVAC_MODE_OFF
 
 
-async def test_thermostat_missing_set_point(hass):
+async def test_thermostat_missing_set_point(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat missing many thermostat traits in api response."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
@@ -1139,6 +1222,7 @@ async def test_thermostat_missing_set_point(hass):
             },
         },
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -1161,18 +1245,22 @@ async def test_thermostat_missing_set_point(hass):
     assert ATTR_FAN_MODES not in thermostat.attributes
 
 
-async def test_thermostat_unexepected_hvac_mode(hass):
+async def test_thermostat_unexepected_hvac_mode(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat missing many thermostat traits in api response."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF", "UNEXPECTED"],
                 "mode": "UNEXPECTED",
             },
-        },
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
@@ -1195,10 +1283,14 @@ async def test_thermostat_unexepected_hvac_mode(hass):
     assert ATTR_FAN_MODES not in thermostat.attributes
 
 
-async def test_thermostat_invalid_set_preset_mode(hass, auth):
+async def test_thermostat_invalid_set_preset_mode(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
     """Test a thermostat set with an invalid preset mode."""
-    await setup_climate(
-        hass,
+    create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatEco": {
@@ -1207,9 +1299,9 @@ async def test_thermostat_invalid_set_preset_mode(hass, auth):
                 "heatCelsius": 15.0,
                 "coolCelsius": 28.0,
             },
-        },
-        auth=auth,
+        }
     )
+    await setup_platform()
 
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")

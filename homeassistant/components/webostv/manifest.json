@@ -6,5 +6,6 @@
   "requirements": ["aiowebostv==0.1.1", "sqlalchemy==1.4.27"],
   "codeowners": ["@bendavid", "@thecode"],
   "ssdp": [{"st": "urn:lge-com:service:webos-second-screen:1"}],
+  "quality_scale": "platinum",
   "iot_class": "local_push"
 }

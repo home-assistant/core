@@ -15,7 +15,7 @@ from pyoverkiz.models import obfuscate_id
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -92,6 +92,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         gateway_id = hostname[8:22]
 
         LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
+
+        await self.async_set_unique_id(gateway_id)
+        self._abort_if_unique_id_configured()
+
+        return await self.async_step_user()
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle ZeroConf discovery."""
+
+        # abort if we already have exactly this bridge id/host
+        properties = discovery_info.properties
+        gateway_id = properties["gateway_pin"]
+
+        LOGGER.debug("ZeroConf discovery detected gateway %s", obfuscate_id(gateway_id))
 
         await self.async_set_unique_id(gateway_id)
         self._abort_if_unique_id_configured()

@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -32,7 +33,7 @@ async def test_velux_cover_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="VELUX Gateway",
             model="VELUX Gateway",
             manufacturer="VELUX",
@@ -47,6 +48,7 @@ async def test_velux_cover_setup(hass):
                     sw_version="48",
                     hw_version="",
                     serial_number="1111111a114a111a",
+                    unique_id="00:00:00:00:00:00:aid:3",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -67,6 +69,7 @@ async def test_velux_cover_setup(hass):
                     sw_version="16",
                     hw_version="",
                     serial_number="a11b111",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     devices=[],
                     entities=[
                         EntityTestInfo(

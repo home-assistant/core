@@ -1,5 +1,11 @@
 {
     "config": {
-        "flow_title": "{device} ({ip_address})"
+        "flow_title": "{device} ({ip_address})",
+        "step": {
+            "user": {
+                "description": "\u0394\u03ce\u03c3\u03c4\u03b5 \u03c4\u03b9\u03c2 \u03b1\u03c0\u03b1\u03c1\u03b1\u03af\u03c4\u03b7\u03c4\u03b5\u03c2 \u03c0\u03bb\u03b7\u03c1\u03bf\u03c6\u03bf\u03c1\u03af\u03b5\u03c2 \u03c0\u03b1\u03c1\u03b1\u03ba\u03ac\u03c4\u03c9.",
+                "title": "\u03a1\u03cd\u03b8\u03bc\u03b9\u03c3\u03b7 Gogogate2 \u03ae ismartgate"
+            }
+        }
     }
 }
