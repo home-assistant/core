@@ -72,7 +72,12 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
     """Calculate days left until domain expires."""
     if timestamp is None:
         return None
-    return timestamp.astimezone(tz=timezone.utc)
+
+    # If timezone info isn't provided by the Whois, assume UTC.
+    if timestamp.tzinfo is None:
+        return timestamp.replace(tzinfo=timezone.utc)
+
+    return timestamp
 
 
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
@@ -81,7 +86,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Admin",
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.admin if domain.admin else None,
     ),
     WhoisSensorEntityDescription(
@@ -117,7 +122,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Owner",
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.owner if domain.owner else None,
     ),
     WhoisSensorEntityDescription(
@@ -125,7 +130,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Registrant",
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.registrant if domain.registrant else None,
     ),
     WhoisSensorEntityDescription(
@@ -133,7 +138,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Registrar",
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.registrar if domain.registrar else None,
     ),
     WhoisSensorEntityDescription(
@@ -141,7 +146,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Reseller",
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.reseller if domain.reseller else None,
     ),
 )
