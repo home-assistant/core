@@ -12,14 +12,15 @@ from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
     Camera,
     DoorbellMessageType,
+    Doorlock,
     IRLEDMode,
     Light,
     LightModeEnableType,
     LightModeType,
     RecordingMode,
+    Sensor,
     Viewer,
 )
-from pyunifiprotect.data.devices import Sensor
 from pyunifiprotect.data.types import ChimeType, MountType
 import voluptuous as vol
 
@@ -165,7 +166,7 @@ async def _set_light_mode(obj: Light, mode: str) -> None:
     )
 
 
-async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
+async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> None:
     if camera_id == TYPE_EMPTY_VALUE:
         camera: Camera | None = None
     else:
@@ -276,6 +277,18 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
 )
 
+DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
+    ProtectSelectEntityDescription[Doorlock](
+        key="paired_camera",
+        name="Paired Camera",
+        icon="mdi:cctv",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="camera_id",
+        ufp_options_fn=_get_paired_camera_options,
+        ufp_set_method_fn=_set_paired_camera,
+    ),
+)
+
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Viewer](
         key="viewer",
@@ -303,6 +316,7 @@ async def async_setup_entry(
         light_descs=LIGHT_SELECTS,
         sense_descs=SENSE_SELECTS,
         viewer_descs=VIEWER_SELECTS,
+        lock_descs=DOORLOCK_SELECTS,
     )
 
     async_add_entities(entities)
