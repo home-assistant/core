@@ -24,7 +24,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Discover cameras with speakers on a UniFi Protect NVR."""
+    """Set up locks on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
