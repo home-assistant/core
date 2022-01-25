@@ -18,7 +18,7 @@ from pyoverkiz.models import Device, Scenario
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -64,9 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 client.get_scenarios(),
             ]
         )
-    except BadCredentialsException:
-        LOGGER.error("Invalid authentication")
-        return False
+    except BadCredentialsException as exception:
+        raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
     except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
