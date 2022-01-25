@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/overkiz",
   "requirements": [
-    "pyoverkiz==1.2.0"
+    "pyoverkiz==1.3.0"
   ],
   "zeroconf": [
     {
