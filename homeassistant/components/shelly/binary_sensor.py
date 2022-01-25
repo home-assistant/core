@@ -271,3 +271,12 @@ class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensor
             return bool(self.attribute_value)
 
         return self.last_state == STATE_ON
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+
+        if last_state is not None:
+            self.last_state = last_state.state
