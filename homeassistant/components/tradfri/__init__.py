@@ -9,6 +9,7 @@ from pytradfri import Gateway, PytradfriError, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
+from pytradfri.group import Group
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -34,12 +35,16 @@ from .const import (
     COORDINATOR_LIST,
     DEFAULT_ALLOW_TRADFRI_GROUPS,
     DOMAIN,
+    GROUPS_LIST,
     KEY_API,
     PLATFORMS,
     SIGNAL_GW,
     TIMEOUT_API,
 )
-from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .coordinator import (
+    TradfriDeviceDataUpdateCoordinator,
+    TradfriGroupDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +124,8 @@ async def async_setup_entry(
             gateway.get_devices(), timeout=TIMEOUT_API
         )
         devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
+        groups_commands: Command = await api(gateway.get_groups(), timeout=TIMEOUT_API)
+        groups: list[Group] = await api(groups_commands, timeout=TIMEOUT_API)
 
     except PytradfriError as exc:
         await factory.shutdown()
@@ -141,6 +148,7 @@ async def async_setup_entry(
         CONF_GATEWAY_ID: gateway,
         KEY_API: api,
         COORDINATOR_LIST: [],
+        GROUPS_LIST: [],
     }
 
     for device in devices:
@@ -150,6 +158,13 @@ async def async_setup_entry(
         await coordinator.async_config_entry_first_refresh()
 
         coordinator_data[COORDINATOR_LIST].append(coordinator)
+
+    for group in groups:
+        group_coordinator = TradfriGroupDataUpdateCoordinator(
+            hass=hass, api=api, group=group
+        )
+        await group_coordinator.async_config_entry_first_refresh()
+        coordinator_data[GROUPS_LIST].append(group_coordinator)
 
     tradfri_data[COORDINATOR] = coordinator_data
 
