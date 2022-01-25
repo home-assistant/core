@@ -18,7 +18,10 @@ from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -157,6 +160,9 @@ async def async_setup_entry(
         )
         await coordinator.async_config_entry_first_refresh()
 
+        entry.async_on_unload(
+            async_dispatcher_connect(hass, SIGNAL_GW, coordinator.set_hub_available)
+        )
         coordinator_data[COORDINATOR_LIST].append(coordinator)
 
     for group in groups:
