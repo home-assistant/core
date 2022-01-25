@@ -51,4 +51,6 @@ DOMAIN = "mqtt"
 MQTT_CONNECTED = "mqtt_connected"
 MQTT_DISCONNECTED = "mqtt_disconnected"
 
+PAYLOAD_NONE = ["None", "{}"]
+
 PROTOCOL_311 = "3.1.1"

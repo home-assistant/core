@@ -1,14 +1,20 @@
 """Support for MQTT sirens."""
 from __future__ import annotations
 
+import copy
 import functools
+import json
 import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import siren
-from homeassistant.components.siren import SirenEntity
+from homeassistant.components.siren import (
+    TURN_ON_SCHEMA,
+    SirenEntity,
+    process_turn_on_params,
+)
 from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
@@ -44,6 +50,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     DOMAIN,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -57,38 +64,18 @@ ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
 
 CONF_AVAILABLE_TONES = "available_tones"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
-CONF_DURATION_COMMAND_TEMPLATE = "duration_command_template"
-CONF_DURATION_COMMAND_TOPIC = "duration_command_topic"
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
-CONF_SUPPORT_DURATION = "supported_duration"
-CONF_SUPPORT_TURN_OFF = "supported_turn_off"
-CONF_SUPPORT_TURN_ON = "supported_turn_on"
-CONF_SUPPORT_VOLUME_SET = "supported_volume_set"
-CONF_TONE_COMMAND_TEMPLATE = "tone_command_template"
-CONF_TONE_COMMAND_TOPIC = "tone_command_topic"
-CONF_VOLUME_COMMAND_TEMPLATE = "volume_command_template"
-CONF_VOLUME_COMMAND_TOPIC = "volume_command_topic"
+CONF_SUPPORT_DURATION = "support_duration"
+CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
-SIREN_ENTITY = "siren_entity"
+STATE = "state"
 
-
-def valid_tone_configuration(config):
-    """Validate that the preset mode reset payload is not one of the preset modes."""
-    if CONF_TONE_COMMAND_TOPIC in config and not config.get(CONF_AVAILABLE_TONES):
-        raise ValueError(
-            "Available_tones must contain a valid list of available tones when tone_command_topic is configured"
-        )
-    return config
-
-
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-        vol.Optional(CONF_DURATION_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DURATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
@@ -96,24 +83,12 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_STATE_OFF): cv.string,
         vol.Optional(CONF_STATE_ON): cv.string,
         vol.Optional(CONF_SUPPORT_DURATION, default=True): cv.boolean,
-        vol.Optional(CONF_SUPPORT_TURN_OFF, default=True): cv.boolean,
-        vol.Optional(CONF_SUPPORT_TURN_ON, default=True): cv.boolean,
         vol.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
-        vol.Optional(CONF_TONE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TONE_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VOLUME_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_VOLUME_COMMAND_TOPIC): mqtt.valid_publish_topic,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-PLATFORM_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE,
-    valid_tone_configuration,
-)
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_tone_configuration
-)
+DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA))
 
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -123,6 +98,14 @@ MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
         ATTR_VOLUME_LEVEL,
     }
 )
+
+SUPPORTED_BASE = SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+
+SUPPORTED_ATTRIBUTES = {
+    ATTR_DURATION: SUPPORT_DURATION,
+    ATTR_TONE: SUPPORT_TONES,
+    ATTR_VOLUME_LEVEL: SUPPORT_VOLUME_SET,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,18 +150,13 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Initialize the MQTT siren."""
         self._attr_name = config[CONF_NAME]
         self._attr_should_poll = False
-        self._supported_features = 0
+        self._supported_features = SUPPORTED_BASE
         self._attr_is_on = False
-        self._attr_extra_state_attributes = {}
-
         self._state_on = None
         self._state_off = None
-        self._available_tones = None
-        self._tone = None
-        self._duration = None
-        self._volume_level = None
         self._optimistic = None
-        self._support_tones = None
+
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
         self.target = None
 
@@ -200,17 +178,16 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         if config[CONF_SUPPORT_DURATION]:
             self._supported_features |= SUPPORT_DURATION
-        if config[CONF_SUPPORT_TURN_OFF]:
-            self._supported_features |= SUPPORT_TURN_OFF
-        if config[CONF_SUPPORT_TURN_ON]:
-            self._supported_features |= SUPPORT_TURN_ON
-        if config[CONF_SUPPORT_VOLUME_SET]:
-            self._supported_features |= SUPPORT_VOLUME_SET
+            self._attr_extra_state_attributes[ATTR_DURATION] = None
 
-        self._support_tones = CONF_AVAILABLE_TONES in config
-        if self._support_tones:
+        if config.get(CONF_AVAILABLE_TONES):
             self._supported_features |= SUPPORT_TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
+            self._attr_extra_state_attributes[ATTR_TONE] = None
+
+        if config[CONF_SUPPORT_VOLUME_SET]:
+            self._supported_features |= SUPPORT_VOLUME_SET
+            self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
 
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
 
@@ -218,9 +195,6 @@ class MqttSiren(MqttEntity, SirenEntity):
             CONF_COMMAND_TEMPLATE: config.get(CONF_COMMAND_TEMPLATE),
             CONF_COMMAND_OFF_TEMPLATE: config.get(CONF_COMMAND_OFF_TEMPLATE)
             or config.get(CONF_COMMAND_TEMPLATE),
-            CONF_DURATION_COMMAND_TEMPLATE: config.get(CONF_DURATION_COMMAND_TEMPLATE),
-            CONF_TONE_COMMAND_TEMPLATE: config.get(CONF_TONE_COMMAND_TEMPLATE),
-            CONF_VOLUME_COMMAND_TEMPLATE: config.get(CONF_VOLUME_COMMAND_TEMPLATE),
         }
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
@@ -239,11 +213,50 @@ class MqttSiren(MqttEntity, SirenEntity):
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
-            if payload == self._state_on:
-                self._attr_is_on = True
-            elif payload == self._state_off:
-                self._attr_is_on = False
+            if not payload or payload in PAYLOAD_NONE:
+                _LOGGER.debug(
+                    "Ignoring empty payload '%s' after rendering for topic %s",
+                    payload,
+                    msg.topic,
+                )
+                return
+            json_payload = {}
+            if payload in [self._state_on, self._state_off]:
+                json_payload = {STATE: payload}
+            else:
+                try:
+                    json_payload = json.loads(payload)
+                    _LOGGER.debug(
+                        "JSON payload detected after processing payload '%s' on topic %s",
+                        json_payload,
+                        msg.topic,
+                    )
+                except json.decoder.JSONDecodeError:
+                    _LOGGER.warning(
+                        "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                        json_payload,
+                        msg.topic,
+                    )
+                    return
+            if STATE in json_payload:
+                if json_payload[STATE] == self._state_on:
+                    self._attr_is_on = True
+                if json_payload[STATE] == self._state_off:
+                    self._attr_is_on = False
+                del json_payload[STATE]
 
+            if json_payload:
+                # process attributes
+                try:
+                    vol.All(TURN_ON_SCHEMA)(json_payload)
+                except vol.MultipleInvalid as invalid_siren_parameters:
+                    _LOGGER.warning(
+                        "Unable to update siren state attributes from payload '%s': %s",
+                        json_payload,
+                        invalid_siren_parameters,
+                    )
+                    return
+            self._update(process_turn_on_params(self, json_payload))
             self.async_write_ha_state()
 
         if self._config.get(CONF_STATE_TOPIC) is None:
@@ -269,17 +282,30 @@ class MqttSiren(MqttEntity, SirenEntity):
         return self._optimistic
 
     @property
+    def extra_state_attributes(self) -> dict:
+        """Return the state attributes."""
+        mqtt_attributes = super().extra_state_attributes
+        attributes = (
+            copy.deepcopy(mqtt_attributes) if mqtt_attributes is not None else {}
+        )
+        attributes.update(self._attr_extra_state_attributes)
+        return attributes
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
 
     async def async_conditional_publish(
-        self, topic: str, template: str, value: Any, variables: dict | None = None
+        self,
+        topic: str,
+        template: str,
+        value: Any,
+        variables: dict[str, Any],
     ) -> None:
         """Publish MQTT payload with command template if a topic is configured."""
-        if self._config.get(topic) and value:
-            payload = self._command_templates[template](value, variables)
-
+        payload = self._command_templates[template](value, variables)
+        if payload and payload not in PAYLOAD_NONE:
             await mqtt.async_publish(
                 self.hass,
                 self._config[topic],
@@ -302,27 +328,10 @@ class MqttSiren(MqttEntity, SirenEntity):
         )
         if self._optimistic:
             # Optimistically assume that siren has changed state.
+            _LOGGER.debug("Writing state attributes %s", kwargs)
             self._attr_is_on = True
+            self._update(kwargs)
             self.async_write_ha_state()
-
-        if not kwargs:
-            return
-
-        await self.async_conditional_publish(
-            CONF_DURATION_COMMAND_TOPIC,
-            CONF_DURATION_COMMAND_TEMPLATE,
-            kwargs.get(ATTR_DURATION),
-        )
-        await self.async_conditional_publish(
-            CONF_TONE_COMMAND_TOPIC,
-            CONF_TONE_COMMAND_TEMPLATE,
-            kwargs.get(ATTR_TONE),
-        )
-        await self.async_conditional_publish(
-            CONF_VOLUME_COMMAND_TOPIC,
-            CONF_VOLUME_COMMAND_TEMPLATE,
-            kwargs.get(ATTR_VOLUME_LEVEL),
-        )
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the siren off.
@@ -333,9 +342,16 @@ class MqttSiren(MqttEntity, SirenEntity):
             CONF_COMMAND_TOPIC,
             CONF_COMMAND_OFF_TEMPLATE,
             self._config[CONF_PAYLOAD_OFF],
+            self._attr_extra_state_attributes,
         )
 
         if self._optimistic:
             # Optimistically assume that siren has changed state.
             self._attr_is_on = False
             self.async_write_ha_state()
+
+    def _update(self, data: dict[str, Any]) -> None:
+        """Update the extra siren state attributes."""
+        for attribute, support in SUPPORTED_ATTRIBUTES.items():
+            if self._supported_features & support and attribute in data:
+                self._attr_extra_state_attributes[attribute] = data[attribute]

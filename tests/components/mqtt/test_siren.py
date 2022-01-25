@@ -67,42 +67,6 @@ async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL) -> None:
     await hass.services.async_call(siren.DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
 
-async def test_invalid_setup(hass, mqtt_mock, caplog):
-    """Test the setup with an invalid configuration."""
-    assert await async_setup_component(
-        hass,
-        siren.DOMAIN,
-        {
-            siren.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "name": "test",
-                "tone_command_topic": "tone-command-topic",
-                "available_tones": [],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert "Invalid config for [siren.mqtt]: not a valid value." in caplog.text
-
-    assert await async_setup_component(
-        hass,
-        siren.DOMAIN,
-        {
-            siren.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "name": "test",
-                "tone_command_topic": "tone-command-topic",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert "Invalid config for [siren.mqtt]: not a valid value." in caplog.text
-
-
 async def test_controlling_state_via_topic(hass, mqtt_mock):
     """Test the controlling state via topic."""
     assert await async_setup_component(
@@ -176,7 +140,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state == STATE_OFF
 
 
-async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
+async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, caplog):
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
         hass,
@@ -203,10 +167,247 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     state = hass.states.get("siren.test")
     assert state.state == STATE_ON
 
+    async_fire_mqtt_message(hass, "state-topic", '{"val": null }')
+    assert (
+        "Ignoring empty payload 'None' after rendering for topic state-topic"
+        in caplog.text
+    )
+
+    state = hass.states.get("siren.test")
+    assert state.state == STATE_ON
+
     async_fire_mqtt_message(hass, "state-topic", '{"val":"beer off"}')
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_OFF
+
+
+async def test_controlling_state_and_attributes_with_json_message_without_template(
+    hass, mqtt_mock, caplog
+):
+    """Test the controlling state via topic and JSON message without a value template."""
+    assert await async_setup_component(
+        hass,
+        siren.DOMAIN,
+        {
+            siren.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "payload_on": "beer on",
+                "payload_off": "beer off",
+                "available_tones": ["ping", "siren", "bell"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("siren.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(siren.ATTR_TONE) is None
+    assert state.attributes.get(siren.ATTR_DURATION) is None
+    assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) is None
+
+    async_fire_mqtt_message(
+        hass,
+        "state-topic",
+        '{"state":"beer on", "tone": "bell", "duration": 10, "volume_level": 0.5 }',
+    )
+
+    state = hass.states.get("siren.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(siren.ATTR_TONE) == "bell"
+    assert state.attributes.get(siren.ATTR_DURATION) == 10
+    assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.5
+
+    async_fire_mqtt_message(
+        hass,
+        "state-topic",
+        '{"state":"beer off", "duration": 5, "volume_level": 0.6}',
+    )
+
+    state = hass.states.get("siren.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(siren.ATTR_TONE) == "bell"
+    assert state.attributes.get(siren.ATTR_DURATION) == 5
+    assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
+
+    # Test validation of received attributes, invalid
+    async_fire_mqtt_message(
+        hass,
+        "state-topic",
+        '{"state":"beer on", "duration": 6, "volume_level": 2 }',
+    )
+    state = hass.states.get("siren.test")
+    assert (
+        "Unable to update siren state attributes from payload '{'duration': 6, 'volume_level': 2}': value must be at most 1 for dictionary value @ data['volume_level']"
+        in caplog.text
+    )
+    assert state.state == STATE_OFF
+    assert state.attributes.get(siren.ATTR_TONE) == "bell"
+    assert state.attributes.get(siren.ATTR_DURATION) == 5
+    assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
+
+
+async def test_filtering_not_supported_attributes_optimistic(hass, mqtt_mock):
+    """Test setting attributes with support flags optimistic."""
+    config = {
+        "platform": "mqtt",
+        "command_topic": "command-topic",
+        "available_tones": ["ping", "siren", "bell"],
+    }
+    config1 = copy.deepcopy(config)
+    config1["name"] = "test1"
+    config1["support_duration"] = False
+    config2 = copy.deepcopy(config)
+    config2["name"] = "test2"
+    config2["support_volume_set"] = False
+    config3 = copy.deepcopy(config)
+    config3["name"] = "test3"
+    del config3["available_tones"]
+
+    assert await async_setup_component(
+        hass,
+        siren.DOMAIN,
+        {siren.DOMAIN: [config1, config2, config3]},
+    )
+    await hass.async_block_till_done()
+
+    state1 = hass.states.get("siren.test1")
+    assert state1.state == STATE_OFF
+    assert siren.ATTR_DURATION not in state1.attributes
+    assert siren.ATTR_AVAILABLE_TONES in state1.attributes
+    assert siren.ATTR_TONE in state1.attributes
+    assert siren.ATTR_VOLUME_LEVEL in state1.attributes
+    await async_turn_on(
+        hass,
+        entity_id="siren.test1",
+        parameters={
+            siren.ATTR_DURATION: 22,
+            siren.ATTR_TONE: "ping",
+            ATTR_VOLUME_LEVEL: 0.88,
+        },
+    )
+    state1 = hass.states.get("siren.test1")
+    assert state1.attributes.get(siren.ATTR_TONE) == "ping"
+    assert state1.attributes.get(siren.ATTR_DURATION) is None
+    assert state1.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.88
+
+    state2 = hass.states.get("siren.test2")
+    assert siren.ATTR_DURATION in state2.attributes
+    assert siren.ATTR_AVAILABLE_TONES in state2.attributes
+    assert siren.ATTR_TONE in state2.attributes
+    assert siren.ATTR_VOLUME_LEVEL not in state2.attributes
+    await async_turn_on(
+        hass,
+        entity_id="siren.test2",
+        parameters={
+            siren.ATTR_DURATION: 22,
+            siren.ATTR_TONE: "ping",
+            ATTR_VOLUME_LEVEL: 0.88,
+        },
+    )
+    state2 = hass.states.get("siren.test2")
+    assert state2.attributes.get(siren.ATTR_TONE) == "ping"
+    assert state2.attributes.get(siren.ATTR_DURATION) == 22
+    assert state2.attributes.get(siren.ATTR_VOLUME_LEVEL) is None
+
+    state3 = hass.states.get("siren.test3")
+    assert siren.ATTR_DURATION in state3.attributes
+    assert siren.ATTR_AVAILABLE_TONES not in state3.attributes
+    assert siren.ATTR_TONE not in state3.attributes
+    assert siren.ATTR_VOLUME_LEVEL in state3.attributes
+    await async_turn_on(
+        hass,
+        entity_id="siren.test3",
+        parameters={
+            siren.ATTR_DURATION: 22,
+            siren.ATTR_TONE: "ping",
+            ATTR_VOLUME_LEVEL: 0.88,
+        },
+    )
+    state3 = hass.states.get("siren.test3")
+    assert state3.attributes.get(siren.ATTR_TONE) is None
+    assert state3.attributes.get(siren.ATTR_DURATION) == 22
+    assert state3.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.88
+
+
+async def test_filtering_not_supported_attributes_via_state(hass, mqtt_mock):
+    """Test setting attributes with support flags via state."""
+    config = {
+        "platform": "mqtt",
+        "command_topic": "command-topic",
+        "available_tones": ["ping", "siren", "bell"],
+    }
+    config1 = copy.deepcopy(config)
+    config1["name"] = "test1"
+    config1["state_topic"] = "state-topic1"
+    config1["support_duration"] = False
+    config2 = copy.deepcopy(config)
+    config2["name"] = "test2"
+    config2["state_topic"] = "state-topic2"
+    config2["support_volume_set"] = False
+    config3 = copy.deepcopy(config)
+    config3["name"] = "test3"
+    config3["state_topic"] = "state-topic3"
+    del config3["available_tones"]
+
+    assert await async_setup_component(
+        hass,
+        siren.DOMAIN,
+        {siren.DOMAIN: [config1, config2, config3]},
+    )
+    await hass.async_block_till_done()
+
+    state1 = hass.states.get("siren.test1")
+    assert state1.state == STATE_OFF
+    assert siren.ATTR_DURATION not in state1.attributes
+    assert siren.ATTR_AVAILABLE_TONES in state1.attributes
+    assert siren.ATTR_TONE in state1.attributes
+    assert siren.ATTR_VOLUME_LEVEL in state1.attributes
+    async_fire_mqtt_message(
+        hass,
+        "state-topic1",
+        '{"state":"ON", "duration": 22, "tone": "ping", "volume_level": 0.88}',
+    )
+    await hass.async_block_till_done()
+    state1 = hass.states.get("siren.test1")
+    assert state1.attributes.get(siren.ATTR_TONE) == "ping"
+    assert state1.attributes.get(siren.ATTR_DURATION) is None
+    assert state1.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.88
+
+    state2 = hass.states.get("siren.test2")
+    assert siren.ATTR_DURATION in state2.attributes
+    assert siren.ATTR_AVAILABLE_TONES in state2.attributes
+    assert siren.ATTR_TONE in state2.attributes
+    assert siren.ATTR_VOLUME_LEVEL not in state2.attributes
+    async_fire_mqtt_message(
+        hass,
+        "state-topic2",
+        '{"state":"ON", "duration": 22, "tone": "ping", "volume_level": 0.88}',
+    )
+    await hass.async_block_till_done()
+    state2 = hass.states.get("siren.test2")
+    assert state2.attributes.get(siren.ATTR_TONE) == "ping"
+    assert state2.attributes.get(siren.ATTR_DURATION) == 22
+    assert state2.attributes.get(siren.ATTR_VOLUME_LEVEL) is None
+
+    state3 = hass.states.get("siren.test3")
+    assert siren.ATTR_DURATION in state3.attributes
+    assert siren.ATTR_AVAILABLE_TONES not in state3.attributes
+    assert siren.ATTR_TONE not in state3.attributes
+    assert siren.ATTR_VOLUME_LEVEL in state3.attributes
+    async_fire_mqtt_message(
+        hass,
+        "state-topic3",
+        '{"state":"ON", "duration": 22, "tone": "ping", "volume_level": 0.88}',
+    )
+    await hass.async_block_till_done()
+    state3 = hass.states.get("siren.test3")
+    assert state3.attributes.get(siren.ATTR_TONE) is None
+    assert state3.attributes.get(siren.ATTR_DURATION) == 22
+    assert state3.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.88
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
@@ -438,19 +639,13 @@ async def test_discovery_update_siren_template(hass, mqtt_mock, caplog):
 
 
 async def test_command_templates(hass, mqtt_mock, caplog):
-    """Test siren with command templates."""
+    """Test siren with command templates optimistic."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
     config1["name"] = "Beer"
     config1["available_tones"] = ["ping", "chimes"]
-    config1["duration_command_topic"] = "duration-command-topic"
-    config1["tone_command_topic"] = "tone-command-topic"
-    config1["volume_command_topic"] = "volume-command-topic"
     config1[
         "command_template"
     ] = "CMD: {{ value }}, DURATION: {{ duration }}, TONE: {{ tone }}, VOLUME: {{ volume_level }}"
-    config1["tone_command_template"] = "TONE: {{ value }}"
-    config1["duration_command_template"] = "DURATION: {{ value }}"
-    config1["volume_command_template"] = "VOLUME: {{ value }}"
 
     config2 = copy.deepcopy(config1)
     config2["name"] = "Milk"
@@ -480,29 +675,39 @@ async def test_command_templates(hass, mqtt_mock, caplog):
             ATTR_VOLUME_LEVEL: 0.88,
         },
     )
+    state1 = hass.states.get("siren.beer")
+    assert state1.attributes.get(siren.ATTR_TONE) == "ping"
+    assert state1.attributes.get(siren.ATTR_DURATION) == 22
+    assert state1.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.88
+
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: ON, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
     )
-    mqtt_mock.async_publish.assert_any_call(
-        "duration-command-topic", "DURATION: 22", 0, False
-    )
-    mqtt_mock.async_publish.assert_any_call(
-        "tone-command-topic", "TONE: ping", 0, False
-    )
-    mqtt_mock.async_publish.assert_any_call(
-        "volume-command-topic", "VOLUME: 0.88", 0, False
-    )
-    mqtt_mock.async_publish.call_count == 4
+    mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
     await async_turn_off(
         hass,
         entity_id="siren.beer",
     )
     mqtt_mock.async_publish.assert_any_call(
-        "test-topic", "CMD: OFF, DURATION: , TONE: , VOLUME:", 0, False
+        "test-topic", "CMD: OFF, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
     )
     mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
+
+    await async_turn_on(
+        hass,
+        entity_id="siren.milk",
+        parameters={
+            siren.ATTR_DURATION: 22,
+            siren.ATTR_TONE: "ping",
+            ATTR_VOLUME_LEVEL: 0.88,
+        },
+    )
+    state2 = hass.states.get("siren.milk")
+    assert state2.attributes.get(siren.ATTR_TONE) == "ping"
+    assert state2.attributes.get(siren.ATTR_DURATION) == 22
+    assert state2.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.88
     await async_turn_off(
         hass,
         entity_id="siren.milk",
@@ -600,27 +805,6 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
             None,
             "ON",
             "command_template",
-        ),
-        (
-            siren.SERVICE_TURN_ON,
-            "duration_command_topic",
-            {siren.ATTR_DURATION: 22},
-            "22",
-            "duration_command_template",
-        ),
-        (
-            siren.SERVICE_TURN_ON,
-            "tone_command_topic",
-            {siren.ATTR_TONE: "xylophone"},
-            "xylophone",
-            "tone_command_template",
-        ),
-        (
-            siren.SERVICE_TURN_ON,
-            "volume_command_topic",
-            {siren.ATTR_VOLUME_LEVEL: 0.88},
-            "0.88",
-            "volume_command_template",
         ),
         (
             siren.SERVICE_TURN_OFF,
