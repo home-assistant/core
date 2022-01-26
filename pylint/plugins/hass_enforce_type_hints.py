@@ -10,6 +10,7 @@ from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
+from homeassistant.helpers.typing import UNDEFINED
 
 
 @dataclass
@@ -178,7 +179,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigEntry",
         },
-        return_type=["dict", "dict[str, Any]"],
+        return_type=UNDEFINED,
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["diagnostics"],
@@ -188,13 +189,16 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             1: "ConfigEntry",
             2: "DeviceEntry",
         },
-        return_type=["dict", "dict[str, Any]"],
+        return_type=UNDEFINED,
     ),
 ]
 
 
 def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) -> bool:
     """Check the argument node against the expected type."""
+    if expected_type is UNDEFINED:
+        return True
+
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
             if _is_valid_type(expected_type_item, node):
