@@ -217,9 +217,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Spotify based on a config entry."""
     spotify = SpotifyMediaPlayer(
-        hass.data[DOMAIN][entry.entry_id][DATA_SPOTIFY_SESSION],
-        hass.data[DOMAIN][entry.entry_id][DATA_SPOTIFY_CLIENT],
-        hass.data[DOMAIN][entry.entry_id][DATA_SPOTIFY_ME],
+        hass.data[DOMAIN][entry.entry_id],
         entry.data[CONF_ID],
         entry.data[CONF_NAME],
     )
@@ -258,19 +256,15 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        session: OAuth2Session,
-        spotify: Spotify,
-        me: dict,  # pylint: disable=invalid-name
+        spotify_data,
         user_id: str,
         name: str,
     ) -> None:
         """Initialize."""
         self._id = user_id
-        self._me = me
+        self._spotify_data = spotify_data
         self._name = f"Spotify {name}"
-        self._session = session
-        self._spotify = spotify
-        self._scope_ok = set(session.token["scope"].split(" ")).issuperset(
+        self._scope_ok = set(self._session.token["scope"].split(" ")).issuperset(
             SPOTIFY_SCOPES
         )
 
@@ -280,6 +274,21 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         self._attr_name = self._name
         self._attr_unique_id = user_id
+
+    @property
+    def _me(self) -> dict:
+        """Return spotify user info."""
+        return self._spotify_data[DATA_SPOTIFY_ME]
+
+    @property
+    def _session(self) -> OAuth2Session:
+        """Return spotify session."""
+        return self._spotify_data[DATA_SPOTIFY_SESSION]
+
+    @property
+    def _spotify(self) -> Spotify:
+        """Return spotify API."""
+        return self._spotify_data[DATA_SPOTIFY_CLIENT]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -501,7 +510,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             run_coroutine_threadsafe(
                 self._session.async_ensure_token_valid(), self.hass.loop
             ).result()
-            self._spotify = Spotify(auth=self._session.token["access_token"])
+            self._spotify_data[DATA_SPOTIFY_CLIENT] = Spotify(
+                auth=self._session.token["access_token"]
+            )
 
         current = self._spotify.current_playback()
         self._currently_playing = current or {}
