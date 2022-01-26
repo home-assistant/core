@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import datetime
 
 from intellifire4py import IntellifirePollData
 
@@ -13,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TIME_MINUTES
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -28,7 +29,7 @@ class IntellifireSensorRequiredKeysMixin:
 
     # Although sensors could have a variety of different return values,
     # all the ones below are only returning ints
-    value_fn: Callable[[IntellifirePollData], int]
+    value_fn: Callable[[IntellifirePollData], int | str]
 
 
 @dataclass
@@ -73,12 +74,13 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         value_fn=lambda data: data.fanspeed,
     ),
     IntellifireSensorEntityDescription(
-        key="timer_remaining",
+        key="timer_end_time",
         icon="mdi:timer-sand",
-        name="Timer Time Remaining",
-        native_unit_of_measurement=TIME_MINUTES,
+        name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: round(int(data.timeremaining_s) / 60),
+        value_fn=lambda data: (
+            datetime.datetime.now() + datetime.timedelta(seconds=data.timeremaining_s)
+        ).strftime("%X"),
     ),
 )
 
@@ -119,6 +121,6 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = self.coordinator.device_info
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | str:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.api.data)
