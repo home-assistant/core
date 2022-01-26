@@ -39,9 +39,9 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
         f"^homeassistant\\.components\\.\\w+\\.({'|'.join([platform.value for platform in Platform])})$"
     ),
     # device_tracker matches only in the package root (device_tracker.py)
-    "device_tracker": re.compile(
-        f"^homeassistant\\.components\\.\\w+\\.({Platform.DEVICE_TRACKER.value})$"
-    ),
+    "device_tracker": re.compile(r"^homeassistant\.components\.\w+\.(device_tracker)$"),
+    # diagnostics matches only in the package root (diagnostics.py)
+    "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -170,6 +170,25 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             1: "ConfigType",
         },
         return_type=["DeviceScanner", "DeviceScanner | None"],
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["diagnostics"],
+        function_name="async_get_config_entry_diagnostics",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigEntry",
+        },
+        return_type="dict",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["diagnostics"],
+        function_name="async_get_device_diagnostics",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigEntry",
+            2: "DeviceEntry",
+        },
+        return_type="dict",
     ),
 ]
 
