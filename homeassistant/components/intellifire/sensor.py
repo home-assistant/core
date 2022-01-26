@@ -7,8 +7,6 @@ from datetime import datetime, timedelta
 
 from intellifire4py import IntellifirePollData
 
-from intellifire4py import IntellifirePollData
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -20,7 +18,6 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utcnow
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
@@ -55,12 +52,9 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.api.data)
 
 
-def _time_remaining_to_timestamp(seconds_offset: int) -> datetime | None:
+def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
     """Define a sensor that takes into account timezone."""
-    #    seconds_offset = coordinator.api.data.timeremaining_s
-
-    # If disabled return None - else return a timestamp with correct TZ info
-    if seconds_offset == 0:
+    if not (seconds_offset := data.timeremaining_s):
         return None
     return (datetime.now() + timedelta(seconds=seconds_offset)).replace(microsecond=0)
 
@@ -127,6 +121,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:timer-sand",
         name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _time_remaining_to_timestamp(data.timeremaining_s),
+        value_fn=lambda data: _time_remaining_to_timestamp(data),
     ),
 )
