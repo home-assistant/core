@@ -529,7 +529,7 @@ class CastDevice(MediaPlayerEntity):
         # Handle plex
         elif media_id and media_id.startswith(PLEX_URI_SCHEME):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
-            media, _ = lookup_plex_media(self.hass, media_type, media_id)
+            media = lookup_plex_media(self.hass, media_type, media_id)
             if media is None:
                 return
             controller = PlexController()
