@@ -20,7 +20,7 @@ from homeassistant.util import dt
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
     MOCK_UPTIMEROBOT_MONITOR,
-    UPTIMEROBOT_TEST_ENTITY,
+    UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY,
     MockApiResponseKey,
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
@@ -68,7 +68,7 @@ async def test_reauthentication_trigger_after_setup(
     """Test reauthentication trigger."""
     mock_config_entry = await setup_uptimerobot_integration(hass)
 
-    binary_sensor = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
+    binary_sensor = hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY)
     assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
     assert binary_sensor.state == STATE_ON
 
@@ -81,7 +81,10 @@ async def test_reauthentication_trigger_after_setup(
         await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
-    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state
+        == STATE_UNAVAILABLE
+    )
 
     assert "Authentication failed while fetching uptimerobot data" in caplog.text
 
@@ -107,7 +110,7 @@ async def test_integration_reload(hass: HomeAssistant):
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
 
 
 async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
@@ -120,7 +123,10 @@ async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
     ):
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
-        assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_UNAVAILABLE
+        assert (
+            hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state
+            == STATE_UNAVAILABLE
+        )
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
@@ -128,7 +134,7 @@ async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
     ):
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
-        assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+        assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
@@ -136,7 +142,10 @@ async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
     ):
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
-        assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_UNAVAILABLE
+        assert (
+            hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state
+            == STATE_UNAVAILABLE
+        )
 
     assert "Error fetching uptimerobot data: test error from API" in caplog.text
 
@@ -152,8 +161,8 @@ async def test_device_management(hass: HomeAssistant):
     assert devices[0].identifiers == {(DOMAIN, "1234")}
     assert devices[0].name == "Test monitor"
 
-    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
-    assert hass.states.get(f"{UPTIMEROBOT_TEST_ENTITY}_2") is None
+    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(f"{UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY}_2") is None
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
@@ -169,8 +178,10 @@ async def test_device_management(hass: HomeAssistant):
     assert devices[0].identifiers == {(DOMAIN, "1234")}
     assert devices[1].identifiers == {(DOMAIN, "12345")}
 
-    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
-    assert hass.states.get(f"{UPTIMEROBOT_TEST_ENTITY}_2").state == STATE_ON
+    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
+    assert (
+        hass.states.get(f"{UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY}_2").state == STATE_ON
+    )
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
@@ -183,5 +194,5 @@ async def test_device_management(hass: HomeAssistant):
     assert len(devices) == 1
     assert devices[0].identifiers == {(DOMAIN, "1234")}
 
-    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
-    assert hass.states.get(f"{UPTIMEROBOT_TEST_ENTITY}_2") is None
+    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(f"{UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY}_2") is None
