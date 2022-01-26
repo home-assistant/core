@@ -82,9 +82,9 @@ IGNORED_MODULES: Final[list[str]] = [
 ]
 
 # Component modules which should set no_implicit_reexport = true.
-# Module must already be in list of strictly typed modules.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
+    "homeassistant.components.diagnostics.*",
 }
 
 HEADER: Final = """
@@ -191,12 +191,6 @@ def generate_and_validate(config: Config) -> str:
             if not module_path.is_file():
                 config.add_error("mypy_config", f"Module '{module} doesn't exist")
 
-    for module in NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules):
-        config.add_error(
-            "mypy_config",
-            f"Can't add 'no_implicit_reexport' for '{module}'. Module is not strictly typed.",
-        )
-
     # Don't generate mypy.ini if there're errors found because it will likely crash.
     if any(err.plugin == "mypy_config" for err in config.errors):
         return ""
@@ -236,6 +230,11 @@ def generate_and_validate(config: Config) -> str:
             mypy_config.set(strict_section, key, "true")
         if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
+
+    for reexport_module in NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules):
+        reexport_section = f"mypy-{reexport_module}"
+        mypy_config.add_section(reexport_section)
+        mypy_config.set(reexport_section, "no_implicit_reexport", "true")
 
     # Disable strict checks for tests
     tests_section = "mypy-tests.*"
