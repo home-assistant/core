@@ -1,5 +1,5 @@
 """Tests for the Config Entry Flow helper."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 
@@ -323,13 +323,15 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
         return_value={"cloudhook_url": "https://example.com"},
     ) as mock_create, patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "hass_nabucasa.Cloud.subscription_expired",
+        new_callable=PropertyMock(return_value=False),
     ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "hass_nabucasa.Cloud.is_logged_in",
+        new_callable=PropertyMock(return_value=True),
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
+        "hass_nabucasa.iot_base.BaseIoT.connected",
+        new_callable=PropertyMock(return_value=True),
     ):
-
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -375,11 +377,14 @@ async def test_webhook_create_cloudhook_aborts_not_connected(hass, webhook_flow_
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
         return_value={"cloudhook_url": "https://example.com"},
     ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "hass_nabucasa.Cloud.subscription_expired",
+        new_callable=PropertyMock(return_value=False),
     ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "hass_nabucasa.Cloud.is_logged_in",
+        new_callable=PropertyMock(return_value=True),
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=False
+        "hass_nabucasa.iot_base.BaseIoT.connected",
+        new_callable=PropertyMock(return_value=False),
     ):
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
