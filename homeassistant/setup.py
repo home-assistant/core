@@ -181,9 +181,6 @@ async def _async_setup_component(
     except ImportError as err:
         log_error(f"Unable to import component: {err}", integration.documentation)
         return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Setup failed for %s: unknown error", domain)
-        return False
 
     processed_config = await conf_util.async_process_component_config(
         hass, config, integration
