@@ -102,7 +102,7 @@ class CloudClient(Interface):
                     self._prefs,
                     self.cloud,
                 )
-                alexa_conf.async_initialize()
+                await alexa_conf.async_initialize()
                 self._alexa_config = alexa_conf
 
         return self._alexa_config
