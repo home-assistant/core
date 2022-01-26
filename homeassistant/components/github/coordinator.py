@@ -6,8 +6,10 @@ from typing import Literal, TypedDict
 from aiogithubapi import (
     GitHubAPI,
     GitHubCommitModel,
+    GitHubConnectionException,
     GitHubException,
     GitHubNotModifiedException,
+    GitHubRatelimitException,
     GitHubReleaseModel,
     GitHubRepositoryModel,
     GitHubResponseModel,
@@ -69,7 +71,11 @@ class GitHubBaseDataUpdateCoordinator(DataUpdateCoordinator[T]):
             )
             # Return the last known data if the request result was not modified
             return self.data
+        except (GitHubConnectionException, GitHubRatelimitException) as exception:
+            # These are expected and we dont log anything extra
+            raise UpdateFailed(exception) from exception
         except GitHubException as exception:
+            # These are unexpected and we log the trace to help with troubleshooting
             LOGGER.exception(exception)
             raise UpdateFailed(exception) from exception
         else:
