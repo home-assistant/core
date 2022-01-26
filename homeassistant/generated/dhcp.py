@@ -551,39 +551,39 @@ DHCP = [
         "hostname": "twinkly_*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "B4FBE4*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "802AA8*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "F09FC2*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "68D79A*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "18E829*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "245A4C*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "784558*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "E063DA*"
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_protect",
         "macaddress": "265A4C*"
     },
     {

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from pyunifiprotect.data import Camera
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifi_protect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

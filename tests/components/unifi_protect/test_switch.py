@@ -8,8 +8,8 @@ import pytest
 from pyunifiprotect.data import Camera, Light
 from pyunifiprotect.data.types import RecordingMode, VideoMode
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
-from homeassistant.components.unifiprotect.switch import (
+from homeassistant.components.unifi_protect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifi_protect.switch import (
     ALL_DEVICES_SWITCHES,
     CAMERA_SWITCHES,
     LIGHT_SWITCHES,
