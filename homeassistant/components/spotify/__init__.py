@@ -64,6 +64,7 @@ async def async_browse_media(
     return await async_browse_media_internal(
         hass,
         info[DATA_SPOTIFY_CLIENT],
+        info[DATA_SPOTIFY_SESSION],
         info[DATA_SPOTIFY_ME],
         media_content_type,
         media_content_id,
