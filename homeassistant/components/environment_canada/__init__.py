@@ -1,12 +1,11 @@
 """The Environment Canada (EC) component."""
-import asyncio
 from datetime import timedelta
 import logging
 import xml.etree.ElementTree as et
 
 from env_canada import ECAirQuality, ECRadar, ECWeather, ec_exc
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -29,6 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     lang = config_entry.data.get(CONF_LANGUAGE, "English")
 
     coordinators = {}
+    errors = 0
 
     weather_data = ECWeather(
         station_id=station,
@@ -38,19 +38,34 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinators["weather_coordinator"] = ECDataUpdateCoordinator(
         hass, weather_data, "weather", DEFAULT_WEATHER_UPDATE_INTERVAL
     )
-    await coordinators["weather_coordinator"].async_config_entry_first_refresh()
+    try:
+        await coordinators["weather_coordinator"].async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        errors = errors + 1
+        _LOGGER.warning("Unable to retrieve Environment Canada weather")
 
     radar_data = ECRadar(coordinates=(lat, lon))
     coordinators["radar_coordinator"] = ECDataUpdateCoordinator(
         hass, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
     )
-    await coordinators["radar_coordinator"].async_config_entry_first_refresh()
+    try:
+        await coordinators["radar_coordinator"].async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        errors = errors + 1
+        _LOGGER.warning("Unable to retrieve Environment Canada radar")
 
     aqhi_data = ECAirQuality(coordinates=(lat, lon))
     coordinators["aqhi_coordinator"] = ECDataUpdateCoordinator(
         hass, aqhi_data, "AQHI", DEFAULT_WEATHER_UPDATE_INTERVAL
     )
-    await coordinators["aqhi_coordinator"].async_config_entry_first_refresh()
+    try:
+        await coordinators["aqhi_coordinator"].async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        errors = errors + 1
+        _LOGGER.warning("Unable to retrieve Environment Canada AQHI")
+
+    if errors == 3:
+        raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinators
@@ -86,10 +101,6 @@ class ECDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from EC."""
         try:
             await self.ec_data.update()
-        except asyncio.TimeoutError:
-            self.last_update_success = False
-            _LOGGER.warning("Timeout fetching %s data", self.name)
-            return
         except (et.ParseError, ec_exc.UnknownStationId) as ex:
             raise UpdateFailed(f"Error fetching {self.name} data: {ex}") from ex
         return self.ec_data

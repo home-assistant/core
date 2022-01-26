@@ -289,7 +289,7 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the native value of the sensor."""
         value = self.entity_description.value_fn(self._ec_data)
-        if value and self.entity_description.transform:
+        if value is not None and self.entity_description.transform:
             value = self.entity_description.transform(value)
         return value
 
