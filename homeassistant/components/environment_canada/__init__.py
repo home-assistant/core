@@ -1,4 +1,5 @@
 """The Environment Canada (EC) component."""
+import asyncio
 from datetime import timedelta
 import logging
 import xml.etree.ElementTree as et
@@ -79,11 +80,16 @@ class ECDataUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, name=f"{DOMAIN} {name}", update_interval=update_interval
         )
         self.ec_data = ec_data
+        self.last_update_success = False
 
     async def _async_update_data(self):
         """Fetch data from EC."""
         try:
             await self.ec_data.update()
+        except asyncio.TimeoutError:
+            self.last_update_success = False
+            _LOGGER.warning("Timeout fetching %s data", self.name)
+            return
         except (et.ParseError, ec_exc.UnknownStationId) as ex:
             raise UpdateFailed(f"Error fetching {self.name} data: {ex}") from ex
         return self.ec_data
