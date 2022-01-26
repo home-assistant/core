@@ -60,7 +60,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     ),
     IntellifireSensorEntityDescription(
         key="target_temp",
-        icon="mdi:thermometer-lines",
         name="Target Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=DEVICE_CLASS_TEMPERATURE,
