@@ -135,7 +135,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:timer-sand",
         name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_class=IntellifireTimeSensor,
-        value_fn=lambda data: data.timeremaining_s,
+        value_fn=_time_remaining_to_timestamp,
     ),
 )
