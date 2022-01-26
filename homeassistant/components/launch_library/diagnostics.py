@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from pylaunches.objects.event import Event
+from pylaunches.objects.launch import Launch
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -16,12 +19,22 @@ async def async_get_config_entry_diagnostics(
     entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+
     coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
     if coordinator.data is None:
         return {}
-    next_launch = coordinator.data["upcoming_launches"][0]
-    starship_launch = coordinator.data["starship_events"].upcoming.launches[0]
+
+    def _first_element(data: list[Launch | Event]) -> dict[str, Any] | None:
+        if not data:
+            return None
+        return data[0].raw_data_contents
+
     return {
-        "next_launch": next_launch.raw_data_contents,
-        "starship": starship_launch.raw_data_contents,
+        "next_launch": _first_element(coordinator.data["upcoming_launches"]),
+        "starship_launch": _first_element(
+            coordinator.data["starship_events"].upcoming.launches
+        ),
+        "starship_event": _first_element(
+            coordinator.data["starship_events"].upcoming.events
+        ),
     }
