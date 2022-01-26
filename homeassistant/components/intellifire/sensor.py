@@ -75,7 +75,9 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:timer-sand",
         name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: (
+        value_fn=lambda data: "disabled"
+        if (data.timeremaining_s == 0)
+        else (
             datetime.datetime.now() + datetime.timedelta(seconds=data.timeremaining_s)
         ).strftime("%X"),
     ),
