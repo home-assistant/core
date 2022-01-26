@@ -263,7 +263,7 @@ async def root_payload(
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_id="",
                 media_content_type="spotify",
-                thumbnail="https://brands.home-assistant.io/spotify/icon.png",
+                thumbnail="https://brands.home-assistant.io/spotify/logo.png",
                 can_play=False,
                 can_expand=True,
             )
