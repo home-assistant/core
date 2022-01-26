@@ -998,6 +998,9 @@ pyipp==0.11.0
 # homeassistant.components.iqvia
 pyiqvia==2021.11.0
 
+# homeassistant.components.iss
+pyiss==1.0.1
+
 # homeassistant.components.isy994
 pyisy==3.0.1
 
