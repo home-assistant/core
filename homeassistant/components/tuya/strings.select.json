@@ -80,6 +80,11 @@
         "point": "Point",
         "part": "Part",
         "pick_zone": "Pick Zone"
+    },
+    "tuya__fan_angle": {
+        "30": "30°",
+        "60": "60°",
+        "90": "90°"
     }
   }
 }
