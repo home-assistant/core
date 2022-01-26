@@ -278,6 +278,11 @@ class AbstractConfig(ABC):
         setup_successfull = True
         setup_webhook_ids = []
 
+        # Don't enable local SDK if ssl is enabled
+        if self.hass.config.api and self.hass.config.api.use_ssl:
+            self._local_sdk_active = False
+            return
+
         for user_agent_id, _ in self._store.agent_user_ids.items():
 
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
