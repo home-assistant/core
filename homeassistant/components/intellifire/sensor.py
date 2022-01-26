@@ -79,7 +79,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         if (data.timeremaining_s == 0)
         else (
             datetime.datetime.now() + datetime.timedelta(seconds=data.timeremaining_s)
-        ).strftime("%X"),
+        ).strftime("%I:%M %p"),
     ),
 )
 
