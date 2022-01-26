@@ -50,21 +50,6 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, user_input):
-        """Import a config flow from configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        webhook_id, _webhook_url, cloudhook = await self._get_webhook_id()
-        secret = secrets.token_hex(16)
-        return self.async_create_entry(
-            title="OwnTracks",
-            data={
-                CONF_WEBHOOK_ID: webhook_id,
-                CONF_SECRET: secret,
-                CONF_CLOUDHOOK: cloudhook,
-            },
-        )
-
     async def _get_webhook_id(self):
         """Generate webhook ID."""
         webhook_id = webhook.async_generate_id()
