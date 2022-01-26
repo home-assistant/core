@@ -78,7 +78,7 @@ class IntellifireSensorRequiredKeysMixin:
 
     # Although sensors could have a variety of different return values,
     # all the ones below are only returning ints
-    value_fn: Callable[[IntellifirePollData], int | str]
+    value_fn: Callable[[IntellifirePollData], int | str | datetime | None]
 
 
 @dataclass
