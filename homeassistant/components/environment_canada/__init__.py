@@ -5,9 +5,10 @@ import xml.etree.ElementTree as et
 
 from env_canada import ECAirQuality, ECRadar, ECWeather, ec_exc
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
