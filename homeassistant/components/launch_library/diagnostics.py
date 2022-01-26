@@ -7,7 +7,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, STARSHIP_EVENTS, UPCOMING_LAUNCHES
+from . import LaunchLibrary
+from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
@@ -15,16 +16,12 @@ async def async_get_config_entry_diagnostics(
     entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: DataUpdateCoordinator[dict[str, Any]] = hass.data[DOMAIN]
-    next_launch = coordinator.data[UPCOMING_LAUNCHES][0] if coordinator.data else None
-    starship_launch = (
-        coordinator.data[STARSHIP_EVENTS].upcoming.launches[0]
-        if coordinator.data
-        else None
-    )
+    coordinator: DataUpdateCoordinator[LaunchLibrary] = hass.data[DOMAIN]
+    if coordinator.data is None:
+        return {}
+    next_launch = coordinator.data["upcoming_launches"][0]
+    starship_launch = coordinator.data["starship_events"].upcoming.launches[0]
     return {
-        "next_launch": next_launch.raw_data_contents if next_launch else None,
-        "starship_launch": starship_launch.raw_data_contents
-        if starship_launch
-        else None,
+        "next_launch": next_launch.raw_data_contents,
+        "starship": starship_launch.raw_data_contents,
     }

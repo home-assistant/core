@@ -28,7 +28,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.dt import parse_datetime
 
-from .const import DOMAIN, STARSHIP_EVENTS, UPCOMING_LAUNCHES
+from . import LaunchLibrary
+from .const import DOMAIN
 
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
@@ -55,7 +56,7 @@ class LaunchLibrarySensorEntityDescription(
     """Describes a Next Launch sensor entity."""
 
 
-NEXT_LAUNCH_SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
+SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="next_launch",
         icon="mdi:rocket-launch",
@@ -106,9 +107,6 @@ NEXT_LAUNCH_SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...
             "description": nl.mission.description,
         },
     ),
-)
-
-STARSHIP_SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
     LaunchLibrarySensorEntityDescription(
         key="starship_launch",
         icon="mdi:rocket",
@@ -154,38 +152,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
-    coordinator = hass.data[DOMAIN]
+    coordinator: DataUpdateCoordinator[LaunchLibrary] = hass.data[DOMAIN]
 
     async_add_entities(
-        NextLaunchSensor(
+        LaunchLibrarySensor(
             coordinator=coordinator,
             entry_id=entry.entry_id,
             description=description,
             name=name if description.key == "next_launch" else None,
         )
-        for description in NEXT_LAUNCH_SENSOR_DESCRIPTIONS
-    )
-
-    async_add_entities(
-        StarshipSensor(
-            coordinator=coordinator,
-            entry_id=entry.entry_id,
-            description=description,
-        )
-        for description in STARSHIP_SENSOR_DESCRIPTIONS
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
-class NextLaunchSensor(CoordinatorEntity, SensorEntity):
+class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
     _next_launch: Launch | None = None
     entity_description: LaunchLibrarySensorEntityDescription
+    coordinator: DataUpdateCoordinator[LaunchLibrary]
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[LaunchLibrary],
         entry_id: str,
         description: LaunchLibrarySensorEntityDescription,
         name: str | None = None,
@@ -220,60 +210,13 @@ class NextLaunchSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._next_launch = next(
-            (launch for launch in self.coordinator.data[UPCOMING_LAUNCHES]), None
-        )
-        super()._handle_coordinator_update()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
-
-
-class StarshipSensor(CoordinatorEntity, SensorEntity):
-    """Representation of the starship sensors."""
-
-    _attr_attribution = "Data provided by Launch Library."
-    _next_starship_launch: Launch | None = None
-    entity_description: LaunchLibrarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        entry_id: str,
-        description: LaunchLibrarySensorEntityDescription,
-    ) -> None:
-        """Initialize a Launch Library sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-        self.entity_description = description
-
-    @property
-    def native_value(self) -> datetime | str | int | None:
-        """Return the state of the sensor."""
-        if self._next_starship_launch is None:
-            return None
-        return self.entity_description.value_fn(self._next_starship_launch)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the attributes of the sensor."""
-        if self._next_starship_launch is None:
-            return None
-        return self.entity_description.attributes_fn(self._next_starship_launch)
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and self._next_starship_launch is not None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._next_starship_launch = next(
             (
                 launch
-                for launch in self.coordinator.data[STARSHIP_EVENTS].upcoming.launches
+                for launch in (
+                    self.coordinator.data["starship_events"].upcoming.launches
+                    if self.entity_description.key == "starship_launch"
+                    else self.coordinator.data["upcoming_launches"]
+                )
             ),
             None,
         )
