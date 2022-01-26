@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-import pytz
+from intellifire4py import IntellifirePollData
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -49,33 +49,24 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> int | str | datetime | None:
         """Return the state."""
-        # return self.entity_description.value_fn(self.coordinator.api.data)
-        return self.entity_description.value_fn(self.coordinator)
+        return self.entity_description.value_fn(self.coordinator.api.data)
 
 
-def _time_remaining_to_timestamp(
-    coordinator: IntellifireDataUpdateCoordinator,
-) -> datetime | None:
+def _time_remaining_to_timestamp(seconds_offset: int) -> datetime | None:
     """Define a sensor that takes into account timezone."""
-    seconds_offset = coordinator.api.data.timeremaining_s
+    #    seconds_offset = coordinator.api.data.timeremaining_s
 
     # If disabled return None - else return a timestamp with correct TZ info
     if seconds_offset == 0:
         return None
-
-    return (
-        datetime.now().replace(tzinfo=pytz.timezone(coordinator.hass.config.time_zone))
-        + timedelta(seconds=seconds_offset)
-    ).replace(microsecond=0)
+    return (datetime.now() + timedelta(seconds=seconds_offset)).replace(microsecond=0)
 
 
 @dataclass
 class IntellifireSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    # Although sensors could have a variety of different return values,
-    # all the ones below are only returning ints
-    value_fn: Callable[[IntellifireDataUpdateCoordinator], int | str | datetime | None]
+    value_fn: Callable[[IntellifirePollData], int | str | datetime | None]
 
 
 @dataclass
@@ -103,7 +94,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:fire-circle",
         name="Flame Height",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coord: coord.api.data.flameheight,
+        value_fn=lambda data: data.flameheight,
     ),
     IntellifireSensorEntityDescription(
         key="temperature",
@@ -111,7 +102,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        value_fn=lambda coord: coord.api.data.temperature_c,
+        value_fn=lambda data: data.temperature_c,
     ),
     IntellifireSensorEntityDescription(
         key="target_temp",
@@ -119,20 +110,20 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        value_fn=lambda coord: coord.api.data.thermostat_setpoint_c,
+        value_fn=lambda data: data.thermostat_setpoint_c,
     ),
     IntellifireSensorEntityDescription(
         key="fan_speed",
         icon="mdi:fan",
         name="Fan Speed",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coord: coord.api.data.fanspeed,
+        value_fn=lambda data: data.fanspeed,
     ),
     IntellifireSensorEntityDescription(
         key="timer_end_timestamp",
         icon="mdi:timer-sand",
         name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coord: _time_remaining_to_timestamp(coord),
+        value_fn=lambda data: _time_remaining_to_timestamp(data.timeremaining_s),
     ),
 )
