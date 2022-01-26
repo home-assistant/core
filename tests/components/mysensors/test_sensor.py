@@ -1,7 +1,7 @@
 """Provide tests for mysensors sensor platform."""
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from mysensors.sensor import Sensor
 import pytest

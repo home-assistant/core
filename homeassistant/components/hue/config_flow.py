@@ -17,13 +17,15 @@ from homeassistant.components import ssdp, zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
     CONF_API_VERSION,
+    CONF_IGNORE_AVAILABILITY,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
@@ -46,17 +48,11 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> HueOptionsFlowHandler:
+    ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return HueOptionsFlowHandler(config_entry)
-
-    @classmethod
-    @callback
-    def async_supports_options_flow(
-        cls, config_entry: config_entries.ConfigEntry
-    ) -> bool:
-        """Return options flow support for this handler."""
-        return config_entry.data.get(CONF_API_VERSION, 1) == 1
+        if config_entry.data.get(CONF_API_VERSION, 1) == 1:
+            return HueV1OptionsFlowHandler(config_entry)
+        return HueV2OptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the Hue flow."""
@@ -288,8 +284,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
 
-class HueOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Hue options."""
+class HueV1OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Hue options for V1 implementation."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Hue options flow."""
@@ -316,6 +312,50 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
                         ),
                     ): bool,
+                }
+            ),
+        )
+
+
+class HueV2OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Hue options for V2 implementation."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize Hue options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
+        """Manage Hue options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        # create a list of Hue device ID's that the user can select
+        # to ignore availability status
+        dev_reg = device_registry.async_get(self.hass)
+        entries = device_registry.async_entries_for_config_entry(
+            dev_reg, self.config_entry.entry_id
+        )
+        dev_ids = {
+            identifier[1]: entry.name
+            for entry in entries
+            for identifier in entry.identifiers
+            if identifier[0] == DOMAIN
+        }
+        # filter any non existing device id's from the list
+        cur_ids = [
+            item
+            for item in self.config_entry.options.get(CONF_IGNORE_AVAILABILITY, [])
+            if item in dev_ids
+        ]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_IGNORE_AVAILABILITY,
+                        default=cur_ids,
+                    ): cv.multi_select(dev_ids),
                 }
             ),
         )

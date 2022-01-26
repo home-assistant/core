@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "alread_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "already_configured": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "step": {
+            "user": {
+                "description": "Ingin memulai penyiapan?",
+                "title": "Kecepatan CPU"
+            }
+        }
+    },
+    "title": "Kecepatan CPU"
+}

@@ -1,14 +1,16 @@
 """Binary sensor for Shelly."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Final, cast
 
 from homeassistant.components.binary_sensor import (
-    STATE_ON,
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,8 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import CONF_SLEEP_PERIOD
 from .entity import (
     BlockAttributeDescription,
-    RestAttributeDescription,
-    RpcAttributeDescription,
+    RestEntityDescription,
+    RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
@@ -31,6 +33,17 @@ from .utils import (
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
+
+
+@dataclass
+class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
+    """Class to describe a RPC binary sensor."""
+
+
+@dataclass
+class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
+    """Class to describe a REST binary sensor."""
+
 
 SENSORS: Final = {
     ("device", "overtemp"): BlockAttributeDescription(
@@ -102,18 +115,20 @@ SENSORS: Final = {
 }
 
 REST_SENSORS: Final = {
-    "cloud": RestAttributeDescription(
+    "cloud": RestBinarySensorDescription(
+        key="cloud",
         name="Cloud",
         value=lambda status, _: status["cloud"]["connected"],
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "fwupdate": RestAttributeDescription(
+    "fwupdate": RestBinarySensorDescription(
+        key="fwupdate",
         name="Firmware Update",
         device_class=BinarySensorDeviceClass.UPDATE,
         value=lambda status, _: status["update"]["has_update"],
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         extra_state_attributes=lambda status: {
             "latest_stable_version": status["update"]["new_version"],
             "installed_version": status["update"]["old_version"],
@@ -124,28 +139,28 @@ REST_SENSORS: Final = {
 }
 
 RPC_SENSORS: Final = {
-    "input": RpcAttributeDescription(
+    "input": RpcBinarySensorDescription(
         key="input",
         sub_key="state",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
     ),
-    "cloud": RpcAttributeDescription(
+    "cloud": RpcBinarySensorDescription(
         key="cloud",
         sub_key="connected",
         name="Cloud",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "fwupdate": RpcAttributeDescription(
+    "fwupdate": RpcBinarySensorDescription(
         key="sys",
         sub_key="available_updates",
         name="Firmware Update",
         device_class=BinarySensorDeviceClass.UPDATE,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         extra_state_attributes=lambda status, shelly: {
             "latest_stable_version": status.get("stable", {"version": ""})["version"],
             "installed_version": shelly["ver"],
@@ -200,18 +215,26 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
 class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     """Represent a REST binary sensor entity."""
 
+    entity_description: RestBinarySensorDescription
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if REST sensor state is on."""
+        if self.attribute_value is None:
+            return None
         return bool(self.attribute_value)
 
 
 class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     """Represent a RPC binary sensor entity."""
 
+    entity_description: RpcBinarySensorDescription
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if RPC sensor state is on."""
+        if self.attribute_value is None:
+            return None
         return bool(self.attribute_value)
 
 

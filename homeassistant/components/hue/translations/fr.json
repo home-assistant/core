@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Autoriser les groupes Hue",
                     "allow_hue_scenes": "Autoriser les sc\u00e8nes Hue",
-                    "allow_unreachable": "Autoriser les ampoules inaccessibles \u00e0 signaler correctement leur \u00e9tat"
+                    "allow_unreachable": "Autoriser les ampoules inaccessibles \u00e0 signaler correctement leur \u00e9tat",
+                    "ignore_availability": "Ignorer l'\u00e9tat de la connectivit\u00e9 pour les appareils donn\u00e9s"
                 }
             }
         }

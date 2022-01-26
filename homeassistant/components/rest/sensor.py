@@ -1,4 +1,6 @@
 """Support for RESTful API sensors."""
+from __future__ import annotations
+
 import json
 import logging
 from xml.parsers.expat import ExpatError
@@ -24,8 +26,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH
@@ -41,7 +46,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the RESTful sensor."""
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
@@ -144,6 +154,7 @@ class RestSensor(RestEntity, SensorEntity):
                 content_type.startswith("text/xml")
                 or content_type.startswith("application/xml")
                 or content_type.startswith("application/xhtml+xml")
+                or content_type.startswith("application/rss+xml")
             ):
                 try:
                     value = json.dumps(xmltodict.parse(value))

@@ -121,7 +121,8 @@ class EntityComponent:
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in config_per_platform(config, self.domain):
-            self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
+            if p_type is not None:
+                self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
@@ -198,7 +199,7 @@ class EntityComponent:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: Callable) -> None:
+        async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
             await self.hass.helpers.service.entity_service_call(
                 self._platforms.values(), func, call, required_features

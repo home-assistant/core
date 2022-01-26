@@ -1,4 +1,6 @@
 """Support for Google Calendar Search binary sensors."""
+from __future__ import annotations
+
 import copy
 from datetime import timedelta
 import logging
@@ -12,7 +14,10 @@ from homeassistant.components.calendar import (
     is_offset_reached,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
 from . import (
@@ -35,7 +40,12 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, disc_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    disc_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the calendar platform for event devices."""
     if disc_info is None:
         return

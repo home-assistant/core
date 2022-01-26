@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -19,8 +20,10 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -117,7 +120,9 @@ LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Mill sensor."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
         mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
@@ -202,6 +207,16 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = (
             f"{coordinator.mill_data_connection.name} {entity_description.name}"
         )
+        if mac := coordinator.mill_data_connection.mac_address:
+            self._attr_unique_id = f"{mac}_{entity_description.key}"
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, mac)},
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
+            )
 
     @property
     def native_value(self):

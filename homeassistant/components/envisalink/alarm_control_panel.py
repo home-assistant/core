@@ -1,4 +1,6 @@
 """Support for Envisalink-based alarm control panels (Honeywell/DSC)."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -24,9 +26,11 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_PANIC,
@@ -51,8 +55,15 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Envisalink alarm panels."""
+    if not discovery_info:
+        return
     configured_partitions = discovery_info["partitions"]
     code = discovery_info[CONF_CODE]
     panic_type = discovery_info[CONF_PANIC]
@@ -74,10 +85,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
     @callback
-    def alarm_keypress_handler(service):
+    def alarm_keypress_handler(service: ServiceCall) -> None:
         """Map services to methods on Alarm."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        keypress = service.data.get(ATTR_KEYPRESS)
+        entity_ids = service.data[ATTR_ENTITY_ID]
+        keypress = service.data[ATTR_KEYPRESS]
 
         target_devices = [
             device for device in devices if device.entity_id in entity_ids
@@ -92,8 +103,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         alarm_keypress_handler,
         schema=ALARM_KEYPRESS_SCHEMA,
     )
-
-    return True
 
 
 class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):

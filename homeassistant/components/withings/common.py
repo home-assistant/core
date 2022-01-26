@@ -10,7 +10,7 @@ from enum import Enum, IntEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp.web import Response
 import requests
@@ -63,7 +63,7 @@ NOT_AUTHENTICATED_ERROR = re.compile(
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
-MeasurementData = Dict[Measurement, Any]
+MeasurementData = dict[Measurement, Any]
 
 
 class NotAuthenticatedError(HomeAssistantError):
@@ -588,7 +588,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            Dict[MeasureType, Any]
+            dict[MeasureType, Any]
         ](
             hass,
             _LOGGER,

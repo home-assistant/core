@@ -853,6 +853,67 @@ async def test_template_validation_error(hass, caplog, start_ha):
     assert state.attributes.get("icon") is None
 
 
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "config,domain,entity_id",
+    [
+        (
+            {
+                "binary_sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test": {
+                            "availability_template": "{{ is_state('sensor.bla', 'available') }}",
+                            "entity_picture_template": "{{ 'blib' + 'blub' }}",
+                            "icon_template": "mdi:{{ 1+2 }}",
+                            "friendly_name": "{{ 'My custom ' + 'sensor' }}",
+                            "value_template": "{{ true }}",
+                        },
+                    },
+                },
+            },
+            binary_sensor.DOMAIN,
+            "binary_sensor.test",
+        ),
+        (
+            {
+                "template": {
+                    "binary_sensor": {
+                        "availability": "{{ is_state('sensor.bla', 'available') }}",
+                        "picture": "{{ 'blib' + 'blub' }}",
+                        "icon": "mdi:{{ 1+2 }}",
+                        "name": "{{ 'My custom ' + 'sensor' }}",
+                        "state": "{{ true }}",
+                    },
+                },
+            },
+            template.DOMAIN,
+            "binary_sensor.my_custom_sensor",
+        ),
+    ],
+)
+async def test_availability_icon_picture(hass, start_ha, entity_id):
+    """Test name, icon and picture templates are rendered at setup."""
+    state = hass.states.get(entity_id)
+    assert state.state == "unavailable"
+    assert state.attributes == {
+        "entity_picture": "blibblub",
+        "friendly_name": "My custom sensor",
+        "icon": "mdi:3",
+    }
+
+    hass.states.async_set("sensor.bla", "available")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    assert state.attributes == {
+        "entity_picture": "blibblub",
+        "friendly_name": "My custom sensor",
+        "icon": "mdi:3",
+    }
+
+
 @pytest.mark.parametrize("count,domain", [(2, "template")])
 @pytest.mark.parametrize(
     "config",
@@ -909,11 +970,11 @@ async def test_trigger_entity(hass, start_ha):
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.hello_name")
     assert state is not None
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("binary_sensor.bare_minimum")
     assert state is not None
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     context = Context()
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)
@@ -976,7 +1037,7 @@ async def test_trigger_entity(hass, start_ha):
 async def test_template_with_trigger_templated_delay_on(hass, start_ha):
     """Test binary sensor template with template delay on."""
     state = hass.states.get("binary_sensor.test")
-    assert state.state == OFF
+    assert state.state == STATE_UNKNOWN
 
     context = Context()
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)

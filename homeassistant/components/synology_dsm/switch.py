@@ -6,7 +6,7 @@ from typing import Any
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.switch import ToggleEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
+class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
     """Representation a Synology Surveillance Station Home Mode toggle."""
 
     coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]]

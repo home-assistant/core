@@ -1,8 +1,9 @@
 """Helpers for data entry flows for config entries."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Union
+from typing import TYPE_CHECKING, Any, Union, cast
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
@@ -10,6 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
+
+if TYPE_CHECKING:
+    import asyncio
 
 DiscoveryFunctionType = Callable[[HomeAssistant], Union[Awaitable[bool], bool]]
 
@@ -55,9 +59,10 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
             # Get current discovered entries.
             in_progress = self._async_in_progress()
 
-            if not (has_devices := in_progress):
-                has_devices = await self.hass.async_add_job(  # type: ignore
-                    self._discovery_function, self.hass
+            if not (has_devices := bool(in_progress)):
+                has_devices = await cast(
+                    "asyncio.Future[bool]",
+                    self.hass.async_add_job(self._discovery_function, self.hass),
                 )
 
             if not has_devices:

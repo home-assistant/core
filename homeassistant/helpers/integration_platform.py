@@ -6,9 +6,10 @@ from collections.abc import Awaitable, Callable
 import logging
 from typing import Any
 
+from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.loader import async_get_integration, bind_hass
-from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
+from homeassistant.setup import ATTR_COMPONENT
 
 _LOGGER = logging.getLogger(__name__)
 

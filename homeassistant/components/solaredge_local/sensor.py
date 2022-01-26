@@ -29,7 +29,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 DOMAIN = "solaredge_local"
@@ -187,7 +190,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the SolarEdge Monitoring API sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     platform_name = config[CONF_NAME]

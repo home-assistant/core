@@ -159,9 +159,7 @@ async def async_check_ha_config_file(  # noqa: C901
         ):
             try:
                 result[domain] = (
-                    await config_validator.async_validate_config(  # type: ignore
-                        hass, config
-                    )
+                    await config_validator.async_validate_config(hass, config)
                 )[domain]
                 continue
             except (vol.Invalid, HomeAssistantError) as ex:

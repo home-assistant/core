@@ -1,5 +1,5 @@
 """Test the Amber Electric Sensors."""
-from typing import AsyncGenerator, List
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from amberelectric.model.current_interval import CurrentInterval
@@ -121,7 +121,7 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     assert attributes.get("range_min") is None
     assert attributes.get("range_max") is None
 
-    with_range: List[CurrentInterval] = GENERAL_CHANNEL
+    with_range: list[CurrentInterval] = GENERAL_CHANNEL
     with_range[0].range = Range(7.8, 12.4)
 
     setup_general.get_current_price.return_value = with_range
@@ -208,7 +208,7 @@ async def test_general_forecast_sensor(
     assert first_forecast.get("range_min") is None
     assert first_forecast.get("range_max") is None
 
-    with_range: List[CurrentInterval] = GENERAL_CHANNEL
+    with_range: list[CurrentInterval] = GENERAL_CHANNEL
     with_range[1].range = Range(7.8, 12.4)
 
     setup_general.get_current_price.return_value = with_range

@@ -1,6 +1,6 @@
 """Test the Nina binary sensor."""
 import json
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -19,13 +19,13 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_fixture
 
-ENTRY_DATA: Dict[str, Any] = {
+ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
     "corona_filter": True,
     "regions": {"083350000000": "Aach, Stadt"},
 }
 
-ENTRY_DATA_NO_CORONA: Dict[str, Any] = {
+ENTRY_DATA_NO_CORONA: dict[str, Any] = {
     "slots": 5,
     "corona_filter": False,
     "regions": {"083350000000": "Aach, Stadt"},
@@ -35,7 +35,7 @@ ENTRY_DATA_NO_CORONA: Dict[str, Any] = {
 async def test_sensors(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors."""
 
-    dummy_response: Dict[str, Any] = json.loads(
+    dummy_response: dict[str, Any] = json.loads(
         load_fixture("sample_warnings.json", "nina")
     )
 
@@ -125,7 +125,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
 async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
-    dummy_response: Dict[str, Any] = json.loads(
+    dummy_response: dict[str, Any] = json.loads(
         load_fixture("nina/sample_warnings.json")
     )
 

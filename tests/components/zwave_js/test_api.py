@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
-    CommandClass,
     InclusionStrategy,
     LogLevel,
     Protocols,
@@ -27,7 +26,6 @@ from zwave_js_server.model.controller import (
     QRProvisioningInformation,
 )
 from zwave_js_server.model.node import Node
-from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
@@ -74,8 +72,6 @@ from homeassistant.components.zwave_js.const import (
     DOMAIN,
 )
 from homeassistant.helpers import device_registry as dr
-
-from .common import PROPERTY_ULTRAVIOLET
 
 
 async def test_network_status(hass, integration, hass_ws_client):
@@ -196,86 +192,6 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
         {
             ID: 5,
             TYPE: "zwave_js/node_status",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: node.node_id,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_LOADED
-
-
-async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
-    """Test the node_state websocket command."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-
-    node = multisensor_6
-
-    # Update a value and ensure it is reflected in the node state
-    value_id = get_value_id(node, CommandClass.SENSOR_MULTILEVEL, PROPERTY_ULTRAVIOLET)
-    event = Event(
-        type="value updated",
-        data={
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Multilevel Sensor",
-                "commandClass": 49,
-                "endpoint": 0,
-                "property": PROPERTY_ULTRAVIOLET,
-                "newValue": 1,
-                "prevValue": 0,
-                "propertyName": PROPERTY_ULTRAVIOLET,
-            },
-        },
-    )
-    node.receive_event(event)
-
-    await ws_client.send_json(
-        {
-            ID: 3,
-            TYPE: "zwave_js/node_state",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: node.node_id,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    # Assert that the data returned doesn't match the stale node state data
-    assert msg["result"] != node.data
-
-    # Replace data for the value we updated and assert the new node data is the same
-    # as what's returned
-    updated_node_data = node.data.copy()
-    for n, value in enumerate(updated_node_data["values"]):
-        if _get_value_id_from_dict(node, value) == value_id:
-            updated_node_data["values"][n] = node.values[value_id].data.copy()
-    assert msg["result"] == updated_node_data
-
-    # Test getting non-existent node fails
-    await ws_client.send_json(
-        {
-            ID: 4,
-            TYPE: "zwave_js/node_state",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 99999,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
-
-    # Test sending command with not loaded entry fails
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    await ws_client.send_json(
-        {
-            ID: 5,
-            TYPE: "zwave_js/node_state",
             ENTRY_ID: entry.entry_id,
             NODE_ID: node.node_id,
         }
@@ -632,19 +548,19 @@ async def test_add_node(
         "options": {
             "strategy": InclusionStrategy.SECURITY_S2,
             "provisioning": QRProvisioningInformation(
-                QRCodeVersion.S2,
-                [SecurityClass.S2_UNAUTHENTICATED],
-                "test",
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                "test",
-                None,
-                None,
-                None,
+                version=QRCodeVersion.S2,
+                security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+                dsk="test",
+                generic_device_class=1,
+                specific_device_class=1,
+                installer_icon_type=1,
+                manufacturer_id=1,
+                product_type=1,
+                product_id=1,
+                application_version="test",
+                max_inclusion_request_interval=None,
+                uuid=None,
+                supported_protocols=None,
             ).to_dict(),
         },
     }
@@ -935,19 +851,19 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.provision_smart_start_node",
         "entry": QRProvisioningInformation(
-            QRCodeVersion.SMART_START,
-            [SecurityClass.S2_UNAUTHENTICATED],
-            "test",
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            "test",
-            None,
-            None,
-            None,
+            version=QRCodeVersion.SMART_START,
+            security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+            dsk="test",
+            generic_device_class=1,
+            specific_device_class=1,
+            installer_icon_type=1,
+            manufacturer_id=1,
+            product_type=1,
+            product_id=1,
+            application_version="test",
+            max_inclusion_request_interval=None,
+            uuid=None,
+            supported_protocols=None,
         ).to_dict(),
     }
 
@@ -1266,6 +1182,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
         "max_inclusion_request_interval": 1,
         "uuid": "test",
         "supported_protocols": [Protocols.ZWAVE],
+        "additional_properties": {},
     }
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -1765,19 +1682,19 @@ async def test_replace_failed_node(
         "options": {
             "strategy": InclusionStrategy.SECURITY_S2,
             "provisioning": QRProvisioningInformation(
-                QRCodeVersion.S2,
-                [SecurityClass.S2_UNAUTHENTICATED],
-                "test",
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                "test",
-                None,
-                None,
-                None,
+                version=QRCodeVersion.S2,
+                security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+                dsk="test",
+                generic_device_class=1,
+                specific_device_class=1,
+                installer_icon_type=1,
+                manufacturer_id=1,
+                product_type=1,
+                product_id=1,
+                application_version="test",
+                max_inclusion_request_interval=None,
+                uuid=None,
+                supported_protocols=None,
             ).to_dict(),
         },
     }
@@ -2802,69 +2719,6 @@ async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_c
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_dump_view(integration, hass_client):
-    """Test the HTTP dump view."""
-    client = await hass_client()
-    with patch(
-        "zwave_js_server.dump.dump_msgs",
-        return_value=[{"hello": "world"}, {"second": "msg"}],
-    ):
-        resp = await client.get(f"/api/zwave_js/dump/{integration.entry_id}")
-    assert resp.status == HTTPStatus.OK
-    assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
-
-
-async def test_version_info(hass, integration, hass_ws_client, version_state):
-    """Test the HTTP dump node view."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-
-    version_info = {
-        "driver_version": version_state["driverVersion"],
-        "server_version": version_state["serverVersion"],
-        "min_schema_version": 0,
-        "max_schema_version": 0,
-    }
-
-    await ws_client.send_json(
-        {
-            ID: 3,
-            TYPE: "zwave_js/version_info",
-            ENTRY_ID: entry.entry_id,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["result"] == version_info
-
-    # Test getting non-existent entry fails
-    await ws_client.send_json(
-        {
-            ID: 4,
-            TYPE: "zwave_js/version_info",
-            ENTRY_ID: "INVALID",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
-
-    # Test sending command with not loaded entry fails
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    await ws_client.send_json(
-        {
-            ID: 5,
-            TYPE: "zwave_js/version_info",
-            ENTRY_ID: entry.entry_id,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_LOADED
-
-
 async def test_firmware_upload_view(
     hass, multisensor_6, integration, hass_client, firmware_file
 ):
@@ -2911,21 +2765,6 @@ async def test_firmware_upload_view_invalid_payload(
 
 @pytest.mark.parametrize(
     "method, url",
-    [("get", "/api/zwave_js/dump/{}")],
-)
-async def test_view_non_admin_user(
-    integration, hass_client, hass_admin_user, method, url
-):
-    """Test config entry level views for non-admin users."""
-    client = await hass_client()
-    # Verify we require admin user
-    hass_admin_user.groups = []
-    resp = await client.request(method, url.format(integration.entry_id))
-    assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
-@pytest.mark.parametrize(
-    "method, url",
     [("post", "/api/zwave_js/firmware/upload/{}/{}")],
 )
 async def test_node_view_non_admin_user(
@@ -2944,7 +2783,6 @@ async def test_node_view_non_admin_user(
 @pytest.mark.parametrize(
     "method, url",
     [
-        ("get", "/api/zwave_js/dump/INVALID"),
         ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
     ],
 )

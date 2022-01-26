@@ -1,11 +1,13 @@
 """Support for a Emonitor channel sensor."""
-
 from aioemonitor.monitor import EmonitorChannel
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import POWER_WATT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -16,7 +18,11 @@ from . import name_short_mac
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     channels = coordinator.data.channels
