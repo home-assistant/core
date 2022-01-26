@@ -25,7 +25,10 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+        try:
+            webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+        except cloud.CloudNotConnected:
+            return self.async_abort(reason="cloud_not_connected")
 
         secret = secrets.token_hex(16)
 
