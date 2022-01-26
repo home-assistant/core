@@ -1500,7 +1500,7 @@ pyeight==0.2.0
 pyemby==1.8
 
 # homeassistant.components.envisalink
-pyenvisalink==4.0
+pyenvisalink==4.3
 
 # homeassistant.components.ephember
 pyephember==0.3.1
