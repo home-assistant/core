@@ -22,11 +22,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -36,7 +35,7 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COMMAND): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -49,39 +48,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(BINARY_SENSOR_SCHEMA.schema)
 
-def setup_platform(
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
+    if discovery_info is None:
+        entities = [config]
+    else:
+        entities = discovery_info["entities"]
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    name: str = config[CONF_NAME]
-    command: str = config[CONF_COMMAND]
-    payload_off: str = config[CONF_PAYLOAD_OFF]
-    payload_on: str = config[CONF_PAYLOAD_ON]
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    command_timeout: int = config[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
-    if value_template is not None:
-        value_template.hass = hass
-    data = CommandSensorData(hass, command, command_timeout)
+    for entity in entities:
+        command: str = entity[CONF_COMMAND]
+        command_timeout: int = entity[CONF_COMMAND_TIMEOUT]
+        value_template: Template = entity[CONF_VALUE_TEMPLATE]
+        if value_template is not None:
+            value_template.hass = hass
 
     add_entities(
         [
             CommandBinarySensor(
-                data,
-                name,
-                device_class,
-                payload_on,
-                payload_off,
+                CommandSensorData(hass, command, command_timeout),
+                entity[CONF_NAME],
+                entity.get(CONF_DEVICE_CLASS),
+                entity[CONF_PAYLOAD_ON],
+                entity[CONF_PAYLOAD_OFF],
                 value_template,
-                unique_id,
+                entity[CONF_UNIQUE_ID],
             )
         ],
         True,
