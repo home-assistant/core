@@ -1,4 +1,6 @@
 """Support for DoorBird devices."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -250,8 +252,11 @@ class ConfiguredDoorBird:
         if self.custom_url is not None:
             hass_url = self.custom_url
 
-        favorites = self.device.favorites()
+        if not self.doorstation_events:
+            # User may not have permission to get the favorites
+            return
 
+        favorites = self.device.favorites()
         for event in self.doorstation_events:
             self._register_event(hass_url, event, favs=favorites)
 
@@ -270,22 +275,22 @@ class ConfiguredDoorBird:
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
-        if not self.webhook_is_registered(url, favs=favs):
-            self.device.change_favorite("http", f"Home Assistant ({event})", url)
+        if self.webhook_is_registered(url, favs=favs):
+            return
 
-        if not self.get_webhook_id(url, favs=favs):
+        self.device.change_favorite("http", f"Home Assistant ({event})", url)
+        if not self.webhook_is_registered(url):
             _LOGGER.warning(
                 'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
                 url,
                 event,
             )
-            return
 
     def webhook_is_registered(self, url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""
         return self.get_webhook_id(url, favs) is not None
 
-    def get_webhook_id(self, url, favs=None) -> str or None:
+    def get_webhook_id(self, url, favs=None) -> str | None:
         """
         Return the device favorite ID for the given URL.
 

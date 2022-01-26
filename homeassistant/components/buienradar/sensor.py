@@ -735,7 +735,7 @@ class BrSensor(SensorEntity):
             or sensor_type.endswith("_5d")
         ):
 
-            # update forcasting sensors:
+            # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):
                 fcday = 1

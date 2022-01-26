@@ -145,9 +145,10 @@ class BlockSleepingClimate(
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.wrapper.mac}-{self.block.description}"
+            assert self.block.channel
             self._preset_modes = [
                 PRESET_NONE,
-                *wrapper.device.settings["thermostats"][cast(int, self.block.channel)][
+                *wrapper.device.settings["thermostats"][int(self.block.channel)][
                     "schedule_profile_names"
                 ],
             ]
@@ -314,6 +315,6 @@ class BlockSleepingClimate(
             if hasattr(block, "targetTemp"):
                 self.block = block
 
-                _LOGGER.debug("Entity %s attached to block", self.name)
-                self.async_write_ha_state()
-                return
+        if self.device_block and self.block:
+            _LOGGER.debug("Entity %s attached to blocks", self.name)
+            self.async_write_ha_state()

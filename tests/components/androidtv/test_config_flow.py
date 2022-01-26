@@ -270,7 +270,7 @@ async def test_error_invalid_host(hass):
 
 
 async def test_invalid_serial(hass):
-    """Test for invallid serialno."""
+    """Test for invalid serialno."""
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(eth_mac=""), None),

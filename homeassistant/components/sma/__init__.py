@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import pysma
 
@@ -57,6 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pysma.exceptions.SmaConnectionException,
     ) as exc:
         raise ConfigEntryNotReady from exc
+
+    if TYPE_CHECKING:
+        assert entry.unique_id
 
     # Create DeviceInfo object from sma_device_info
     device_info = DeviceInfo(

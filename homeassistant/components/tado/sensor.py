@@ -63,7 +63,7 @@ async def async_setup_entry(
 
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     zones = tado.zones
-    entities = []
+    entities: list[SensorEntity] = []
 
     # Create home sensors
     entities.extend([TadoHomeSensor(tado, variable) for variable in HOME_SENSORS])

@@ -16,13 +16,12 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import Device, Event, Place
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, UPDATE_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 EVENT_HANDLERS = Registry()
 
@@ -67,7 +66,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
-            raise UpdateFailed("Invalid authentication.") from exception
+            raise ConfigEntryAuthFailed("Invalid authentication.") from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
@@ -82,14 +81,14 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 await self.client.login()
                 self.devices = await self._get_devices()
             except BadCredentialsException as exception:
-                raise UpdateFailed("Invalid authentication.") from exception
+                raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsException as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
             return self.devices
 
         for event in events:
-            _LOGGER.debug(event)
+            LOGGER.debug(event)
 
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
@@ -101,7 +100,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
-        _LOGGER.debug("Fetching all devices and state via /setup/devices")
+        LOGGER.debug("Fetching all devices and state via /setup/devices")
         return {d.device_url: d for d in await self.client.get_devices(refresh=True)}
 
     def _places_to_area(self, place: Place) -> dict[str, str]:

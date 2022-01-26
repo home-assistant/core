@@ -486,6 +486,16 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 "Plex integration configured without a token, playback may fail"
             )
 
+        if media_type == "station":
+            playqueue = self.plex_server.create_station_playqueue(media_id)
+            try:
+                self.device.playMedia(playqueue)
+            except requests.exceptions.ConnectTimeout as exc:
+                raise HomeAssistantError(
+                    f"Request failed when playing on {self.name}"
+                ) from exc
+            return
+
         src = json.loads(media_id)
         if isinstance(src, int):
             src = {"plex_key": src}

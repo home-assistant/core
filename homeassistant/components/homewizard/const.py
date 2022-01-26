@@ -7,11 +7,11 @@ from typing import TypedDict
 # Set up.
 from aiohwenergy.device import Device
 
+from homeassistant.const import Platform
 from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
-COORDINATOR = "coordinator"
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 # Platform config.
 CONF_SERIAL = "serial"

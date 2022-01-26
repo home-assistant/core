@@ -1,6 +1,8 @@
 """Support for Kaiterra Temperature ahn Humidity Sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -14,14 +16,29 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DISPATCHER_KAITERRA, DOMAIN
 
+
+@dataclass
+class KaiterraSensorRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    suffix: str
+
+
+@dataclass
+class KaiterraSensorEntityDescription(
+    SensorEntityDescription, KaiterraSensorRequiredKeysMixin
+):
+    """Class describing Renault sensor entities."""
+
+
 SENSORS = [
-    SensorEntityDescription(
-        name="Temperature",
+    KaiterraSensorEntityDescription(
+        suffix="Temperature",
         key="rtemp",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    SensorEntityDescription(
-        name="Humidity",
+    KaiterraSensorEntityDescription(
+        suffix="Humidity",
         key="rhumid",
         device_class=SensorDeviceClass.HUMIDITY,
     ),
@@ -52,13 +69,15 @@ class KaiterraSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, api, name, device_id, description: SensorEntityDescription):
+    def __init__(
+        self, api, name, device_id, description: KaiterraSensorEntityDescription
+    ):
         """Initialize the sensor."""
         self._api = api
         self._device_id = device_id
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{device_id}_{description.name.lower()}"
+        self._attr_name = f"{name} {description.suffix}"
+        self._attr_unique_id = f"{device_id}_{description.suffix.lower()}"
 
     @property
     def _sensor(self):

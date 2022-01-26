@@ -16,9 +16,9 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_CHANNELS,
@@ -45,11 +45,14 @@ COUNTER_ICON = "mdi:counter"
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a single GEM temperature sensor."""
+    if not discovery_info:
+        return
+
     entities: list[GEMSensor] = []
     for monitor_config in discovery_info[CONF_MONITORS]:
         monitor_serial_number = monitor_config[CONF_SERIAL_NUMBER]

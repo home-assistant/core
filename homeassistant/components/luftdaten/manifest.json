@@ -3,7 +3,7 @@
   "name": "Sensor.Community",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/luftdaten",
-  "requirements": ["luftdaten==0.7.1"],
+  "requirements": ["luftdaten==0.7.2"],
   "codeowners": ["@fabaff", "@frenck"],
   "quality_scale": "gold",
   "iot_class": "cloud_polling"

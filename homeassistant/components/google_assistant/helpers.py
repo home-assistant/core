@@ -256,16 +256,19 @@ class AbstractConfig(ABC):
         raise NotImplementedError
 
     async def async_connect_agent_user(self, agent_user_id: str):
-        """Add an synced and known agent_user_id.
+        """Add a synced and known agent_user_id.
 
-        Called when a completed sync response have been sent to Google.
+        Called before sending a sync response to Google.
         """
         self._store.add_agent_user_id(agent_user_id)
 
     async def async_disconnect_agent_user(self, agent_user_id: str):
         """Turn off report state and disable further state reporting.
 
-        Called when the user disconnects their account from Google.
+        Called when:
+         - The user disconnects their account from Google.
+         - When the cloud configuration is initialized
+         - When sync entities fails with 404
         """
         self._store.pop_agent_user_id(agent_user_id)
 

@@ -68,7 +68,7 @@ async def mock_stream(hass):
 
 
 def test_create_api_message_defaults(hass):
-    """Create a API message response of a request with defaults."""
+    """Create an API message response of a request with defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
     directive_header = request["directive"]["header"]
     directive = messages.AlexaDirective(request)
@@ -93,7 +93,7 @@ def test_create_api_message_defaults(hass):
 
 
 def test_create_api_message_special():
-    """Create a API message response of a request with non defaults."""
+    """Create an API message response of a request with non defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn")
     directive_header = request["directive"]["header"]
     directive_header.pop("correlationToken")

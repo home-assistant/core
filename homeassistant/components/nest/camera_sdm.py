@@ -20,7 +20,7 @@ from google_nest_sdm.exceptions import ApiException
 from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
-from homeassistant.components.camera.const import STREAM_TYPE_HLS, STREAM_TYPE_WEB_RTC
+from homeassistant.components.camera.const import STREAM_TYPE_WEB_RTC
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -125,7 +125,7 @@ class NestCamera(Camera):
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
         if StreamingProtocol.WEB_RTC in trait.supported_protocols:
             return STREAM_TYPE_WEB_RTC
-        return STREAM_TYPE_HLS
+        return super().frontend_stream_type
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
@@ -232,9 +232,11 @@ class NestCamera(Camera):
             return self._placeholder_image
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
-    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str:
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
         """Return the source of the stream."""
         trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
+        if StreamingProtocol.WEB_RTC not in trait.supported_protocols:
+            return await super().async_handle_web_rtc_offer(offer_sdp)
         try:
             stream = await trait.generate_web_rtc_stream(offer_sdp)
         except ApiException as err:

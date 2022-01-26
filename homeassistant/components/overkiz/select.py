@@ -75,6 +75,8 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     ),
 ]
 
+SUPPORTED_STATES = {description.key: description for description in SELECT_DESCRIPTIONS}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -85,10 +87,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizSelect] = []
 
-    key_supported_states = {
-        description.key: description for description in SELECT_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -97,7 +95,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizSelect(
                         device.device_url,

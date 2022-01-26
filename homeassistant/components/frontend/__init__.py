@@ -5,7 +5,6 @@ from collections.abc import Iterator
 from functools import lru_cache
 import json
 import logging
-import mimetypes
 import os
 import pathlib
 from typing import Any, TypedDict, cast
@@ -28,12 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 
 from .storage import async_setup_frontend_storage
-
-# Fix mimetypes for borked Windows machines
-# https://github.com/home-assistant/frontend/issues/3336
-mimetypes.add_type("text/css", ".css")
-mimetypes.add_type("application/javascript", ".js")
-
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"

@@ -1,8 +1,12 @@
 """Test report state."""
-from unittest.mock import patch
+import json
+from unittest.mock import AsyncMock, patch
+
+import aiohttp
+import pytest
 
 from homeassistant import core
-from homeassistant.components.alexa import state_report
+from homeassistant.components.alexa import errors, state_report
 
 from . import TEST_URL, get_default_config
 
@@ -39,6 +43,81 @@ async def test_report_state(hass, aioclient_mock):
         == "NOT_DETECTED"
     )
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_contact"
+
+
+async def test_report_state_fail(hass, aioclient_mock, caplog):
+    """Test proactive state retries once."""
+    aioclient_mock.post(
+        TEST_URL,
+        text=json.dumps(
+            {
+                "payload": {
+                    "code": "THROTTLING_EXCEPTION",
+                    "description": "Request could not be processed due to throttling",
+                }
+            }
+        ),
+        status=403,
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    # No retry on errors not related to expired access token
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Check we log the entity id of the failing entity
+    assert (
+        "Error when sending ChangeReport for binary_sensor.test_contact to Alexa: "
+        "THROTTLING_EXCEPTION: Request could not be processed due to throttling"
+    ) in caplog.text
+
+
+async def test_report_state_timeout(hass, aioclient_mock, caplog):
+    """Test proactive state retries once."""
+    aioclient_mock.post(
+        TEST_URL,
+        exc=aiohttp.ClientError(),
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    # No retry on errors not related to expired access token
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Check we log the entity id of the failing entity
+    assert (
+        "Timeout sending report to Alexa for binary_sensor.test_contact" in caplog.text
+    )
 
 
 async def test_report_state_retry(hass, aioclient_mock):
@@ -97,6 +176,37 @@ async def test_report_state_unsets_authorized_on_error(hass, aioclient_mock):
     # To trigger event listener
     await hass.async_block_till_done()
     config._store.set_authorized.assert_called_once_with(False)
+
+
+@pytest.mark.parametrize("exc", [errors.NoTokenAvailable, errors.RequireRelink])
+async def test_report_state_unsets_authorized_on_access_token_error(
+    hass, aioclient_mock, exc
+):
+    """Test proactive state unsets authorized on error."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    config = get_default_config()
+
+    await state_report.async_enable_proactive_mode(hass, config)
+
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    config._store.set_authorized.assert_not_called()
+
+    with patch.object(config, "async_get_access_token", AsyncMock(side_effect=exc)):
+        # To trigger event listener
+        await hass.async_block_till_done()
+        config._store.set_authorized.assert_called_once_with(False)
 
 
 async def test_report_state_instance(hass, aioclient_mock):
@@ -274,6 +384,81 @@ async def test_doorbell_event(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 2
+
+
+async def test_doorbell_event_fail(hass, aioclient_mock, caplog):
+    """Test proactive state retries once."""
+    aioclient_mock.post(
+        TEST_URL,
+        text=json.dumps(
+            {
+                "payload": {
+                    "code": "THROTTLING_EXCEPTION",
+                    "description": "Request could not be processed due to throttling",
+                }
+            }
+        ),
+        status=403,
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "off",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "on",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    # No retry on errors not related to expired access token
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Check we log the entity id of the failing entity
+    assert (
+        "Error when sending DoorbellPress event for binary_sensor.test_doorbell to Alexa: "
+        "THROTTLING_EXCEPTION: Request could not be processed due to throttling"
+    ) in caplog.text
+
+
+async def test_doorbell_event_timeout(hass, aioclient_mock, caplog):
+    """Test proactive state retries once."""
+    aioclient_mock.post(
+        TEST_URL,
+        exc=aiohttp.ClientError(),
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "off",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config())
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "on",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    # No retry on errors not related to expired access token
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Check we log the entity id of the failing entity
+    assert (
+        "Timeout sending report to Alexa for binary_sensor.test_doorbell" in caplog.text
+    )
 
 
 async def test_proactive_mode_filter_states(hass, aioclient_mock):

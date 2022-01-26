@@ -8,6 +8,7 @@ the user has submitted configuration information.
 """
 from contextlib import suppress
 import functools as ft
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -60,7 +61,7 @@ def async_request_config(
     link_name=None,
     link_url=None,
     entity_picture=None,
-):
+) -> str:
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -87,7 +88,7 @@ def async_request_config(
 
 
 @bind_hass
-def request_config(hass, *args, **kwargs):
+def request_config(hass: HomeAssistant, *args: Any, **kwargs: Any) -> str:
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -106,7 +107,7 @@ def async_notify_errors(hass, request_id, error):
 
 
 @bind_hass
-def notify_errors(hass, request_id, error):
+def notify_errors(hass: HomeAssistant, request_id: str, error: str) -> None:
     """Add errors to a config request."""
     return run_callback_threadsafe(
         hass.loop, async_notify_errors, hass, request_id, error
@@ -115,14 +116,14 @@ def notify_errors(hass, request_id, error):
 
 @bind_hass
 @async_callback
-def async_request_done(hass, request_id):
+def async_request_done(hass: HomeAssistant, request_id: str) -> None:
     """Mark a configuration request as done."""
     with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
 
 
 @bind_hass
-def request_done(hass, request_id):
+def request_done(hass: HomeAssistant, request_id: str) -> None:
     """Mark a configuration request as done."""
     return run_callback_threadsafe(
         hass.loop, async_request_done, hass, request_id
@@ -149,7 +150,7 @@ class Configurator:
     @async_callback
     def async_request_config(
         self, name, callback, description, submit_caption, fields, entity_picture
-    ):
+    ) -> str:
         """Set up a request for configuration."""
         entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 

@@ -609,7 +609,11 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     async def async_mute_volume(self, mute):
         """Mute the volume."""
-        await self.aftv.mute_volume()
+        is_muted = await self.aftv.is_volume_muted()
+
+        # `None` indicates that the muted status could not be determined
+        if is_muted is not None and is_muted != mute:
+            await self.aftv.mute_volume()
 
     @adb_decorator()
     async def async_set_volume_level(self, volume):

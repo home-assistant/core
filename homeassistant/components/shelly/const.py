@@ -10,6 +10,7 @@ DEVICE: Final = "device"
 DOMAIN: Final = "shelly"
 REST: Final = "rest"
 RPC: Final = "rpc"
+RPC_POLL: Final = "rpc_poll"
 
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
@@ -52,6 +53,9 @@ POLLING_TIMEOUT_SEC: Final = 18
 
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL: Final = 60
+
+# Refresh interval for RPC polling sensors
+RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
 # Timeout used for aioshelly calls
 AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
