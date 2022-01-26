@@ -51,7 +51,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     ),
     IntellifireSensorEntityDescription(
         key="temperature",
-        icon="mdi:car-brake-temperature",
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
