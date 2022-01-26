@@ -10,6 +10,7 @@ from homeassistant.components.senseme import config_flow
 MOCK_NAME = "Haiku Fan"
 MOCK_UUID = "77a6b7b3-925d-4695-a415-76d76dca4444"
 MOCK_ADDRESS = "127.0.0.1"
+MOCK_MAC = "20:F8:5E:92:5A:75"
 
 device = MagicMock(auto_spec=SensemeDevice)
 device.async_update = AsyncMock()
@@ -29,7 +30,7 @@ device.address = MOCK_ADDRESS
 device.get_device_info = {
     "name": MOCK_NAME,
     "uuid": MOCK_UUID,
-    "mac": "20:F8:5E:92:5A:75",
+    "mac": MOCK_ADDRESS,
     "address": MOCK_ADDRESS,
     "base_model": "FAN,HAIKU,HSERIES",
     "has_light": False,
@@ -94,9 +95,14 @@ device2.get_device_info = {
     "is_light": False,
 }
 
+device_no_uuid = MagicMock(auto_spec=SensemeDevice)
+device_no_uuid.uuid = None
+
+
 MOCK_DEVICE = device
 MOCK_DEVICE_ALTERNATE_IP = device_alternate_ip
 MOCK_DEVICE2 = device2
+MOCK_DEVICE_NO_UUID = device_no_uuid
 
 
 def _patch_discovery(device=None, no_device=None):
