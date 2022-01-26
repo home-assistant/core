@@ -66,6 +66,14 @@ class TuyaLightEntityDescription(LightEntityDescription):
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
+    # Curtain Switch
+    # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
+    "clkg": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_BACKLIGHT,
+            name="Backlight",
+        ),
+    ),
     # String Lights
     # https://developer.tuya.com/en/docs/iot/dc?id=Kaof7taxmvadu
     "dc": (
