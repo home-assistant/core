@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             webhook_id,
             webhook_url,
         ) = await async_get_or_create_registered_webhook_id_and_url(hass, entry)
-    except cloud.CloudNotAvailable as exc:
+    except cloud.CloudNotConnected as exc:
         # User has an active cloud subscription, but the connection to the cloud is down
         raise ConfigEntryNotReady from exc
     rachio.webhook_url = webhook_url
