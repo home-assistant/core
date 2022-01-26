@@ -27,6 +27,7 @@ omit =
     homeassistant/components/adguard/sensor.py
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
+    homeassistant/components/advantage_air/diagnostics.py
     homeassistant/components/aemet/weather_update_coordinator.py
     homeassistant/components/aftership/*
     homeassistant/components/agent_dvr/alarm_control_panel.py
