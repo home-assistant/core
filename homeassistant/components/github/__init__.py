@@ -1,8 +1,6 @@
 """The GitHub integration."""
 from __future__ import annotations
 
-import asyncio
-
 from aiogithubapi import GitHubAPI
 
 from homeassistant.config_entries import ConfigEntry
@@ -54,14 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         }
 
-        await asyncio.gather(
-            *(
-                coordinators["information"].async_config_entry_first_refresh(),
-                coordinators["release"].async_config_entry_first_refresh(),
-                coordinators["issue"].async_config_entry_first_refresh(),
-                coordinators["commit"].async_config_entry_first_refresh(),
-            )
-        )
+        await coordinators["information"].async_config_entry_first_refresh()
 
         hass.data[DOMAIN][repository] = coordinators
 
