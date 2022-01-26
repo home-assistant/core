@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-class LaunchLibrary(TypedDict):
+class LaunchLibraryData(TypedDict):
     """Typed dict representation of data returned from pylaunches."""
 
     upcoming_launches: list[Launch]
@@ -37,9 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     launches = PyLaunches(session)
 
-    async def async_update() -> LaunchLibrary:
+    async def async_update() -> LaunchLibraryData:
         try:
-            return LaunchLibrary(
+            return LaunchLibraryData(
                 upcoming_launches=await launches.upcoming_launches(),
                 starship_events=await launches.starship_events(),
             )

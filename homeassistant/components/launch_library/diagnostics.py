@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import LaunchLibrary
+from . import LaunchLibraryData
 from .const import DOMAIN
 
 
@@ -16,7 +16,7 @@ async def async_get_config_entry_diagnostics(
     entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: DataUpdateCoordinator[LaunchLibrary] = hass.data[DOMAIN]
+    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
     if coordinator.data is None:
         return {}
     next_launch = coordinator.data["upcoming_launches"][0]

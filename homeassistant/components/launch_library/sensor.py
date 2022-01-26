@@ -28,7 +28,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.dt import parse_datetime
 
-from . import LaunchLibrary
+from . import LaunchLibraryData
 from .const import DOMAIN
 
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
@@ -152,7 +152,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
-    coordinator: DataUpdateCoordinator[LaunchLibrary] = hass.data[DOMAIN]
+    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
 
     async_add_entities(
         LaunchLibrarySensor(
@@ -171,11 +171,11 @@ class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
     _attr_attribution = "Data provided by Launch Library."
     _next_launch: Launch | None = None
     entity_description: LaunchLibrarySensorEntityDescription
-    coordinator: DataUpdateCoordinator[LaunchLibrary]
+    coordinator: DataUpdateCoordinator[LaunchLibraryData]
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[LaunchLibrary],
+        coordinator: DataUpdateCoordinator[LaunchLibraryData],
         entry_id: str,
         description: LaunchLibrarySensorEntityDescription,
         name: str | None = None,
