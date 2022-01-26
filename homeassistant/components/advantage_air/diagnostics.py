@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 
-SYSTEM_BLACKLIST = ["dealerPhoneNumber", "latitude", "logoPIN", "longitude", "postCode"]
+TO_REDACT = ["dealerPhoneNumber", "latitude", "logoPIN", "longitude", "postCode"]
 
 
 async def async_get_config_entry_diagnostics(
@@ -17,11 +18,9 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]["coordinator"].data
 
-    for item in SYSTEM_BLACKLIST:
-        data["system"].pop(item, None)
 
     # Return only the relevant children
     return {
         "aircons": data["aircons"],
-        "system": data["system"],
+        "system": async_redact_data(data["system"], TO_REDACT)
     }
