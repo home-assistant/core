@@ -6,17 +6,23 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 SERVICE_REMOVE_CLIENTS = "remove_clients"
+SERVICE_REMOVE_OLD_CLIENTS = "remove_old_clients"
 
 SERVICE_RECONNECT_CLIENT_SCHEMA = vol.All(
     vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 )
 
-SUPPORTED_SERVICES = (SERVICE_RECONNECT_CLIENT, SERVICE_REMOVE_CLIENTS)
+SUPPORTED_SERVICES = (
+    SERVICE_RECONNECT_CLIENT,
+    SERVICE_REMOVE_CLIENTS,
+    SERVICE_REMOVE_OLD_CLIENTS,
+)
 
 SERVICE_TO_SCHEMA = {
     SERVICE_RECONNECT_CLIENT: SERVICE_RECONNECT_CLIENT_SCHEMA,
@@ -30,6 +36,7 @@ def async_setup_services(hass) -> None:
     services = {
         SERVICE_RECONNECT_CLIENT: async_reconnect_client,
         SERVICE_REMOVE_CLIENTS: async_remove_clients,
+        SERVICE_REMOVE_OLD_CLIENTS: async_remove_old_clients,
     }
 
     async def async_call_unifi_service(service_call: ServiceCall) -> None:
@@ -98,6 +105,36 @@ async def async_remove_clients(hass, data) -> None:
                 and client.first_seen
                 and client.last_seen - client.first_seen > 900
             ):
+                continue
+
+            if any({client.fixed_ip, client.hostname, client.name}):
+                continue
+
+            clients_to_remove.append(client.mac)
+
+        if clients_to_remove:
+            await controller.api.clients.remove_clients(macs=clients_to_remove)
+
+
+async def async_remove_old_clients(hass, data) -> None:
+    """Remove select old clients from controller.
+
+    Validates based on:
+    - Time from last seen to now
+    """
+    for controller in hass.data[UNIFI_DOMAIN].values():
+
+        if not controller.available:
+            continue
+
+        clients_to_remove = []
+
+        for client in controller.api.clients_all.values():
+            time_delta = dt_util.utcnow() - dt_util.utc_from_timestamp(
+                float(client.last_seen)
+            )
+
+            if client.last_seen and time_delta.days > int(data.get("days")):
                 continue
 
             if any({client.fixed_ip, client.hostname, client.name}):

@@ -9,7 +9,21 @@ reconnect_client:
       selector:
         device:
           integration: unifi
-
 remove_clients:
   name: Remove clients from the UniFi Network
-  description: Clean up clients that has only been associated with the controller for a short period of time.
+  description: Clean up clients that has only been associated with the controller for under 15 minutes
+remove_old_clients:
+  name: Remove old clients from the UniFi Network
+  description: Clean up clients that haven't seen the network in the number of days specified
+  fields:
+    days:
+      name: Days
+      description: Days since last seen by the controller
+      required: true
+      default: 90
+      selector:
+        number:
+          min: 30
+          max: 1000
+          step: 1
+          unit_of_measurement: days
