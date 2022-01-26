@@ -1,5 +1,6 @@
 """Representation of a switchBinary."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -49,7 +50,7 @@ class ZWaveMeSwitch(ZWaveMeEntity, SwitchEntity):
 
     def __init__(self, controller, device, description):
         """Initialize the device."""
-        ZWaveMeEntity.__init__(self, controller, device)
+        super().__init__(controller, device)
         self.entity_description = description
 
     @property
@@ -57,10 +58,10 @@ class ZWaveMeSwitch(ZWaveMeEntity, SwitchEntity):
         """Return the state of the switch."""
         return self.device.level == "on"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.controller.zwave_api.send_command(self.device.id, "on")
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.controller.zwave_api.send_command(self.device.id, "off")
