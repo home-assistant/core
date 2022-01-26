@@ -126,12 +126,12 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         icon="mdi:calendar",
         name="Next Starship event",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda e: parse_datetime(e.date),
-        attributes_fn=lambda e: {
-            "title": e.name,
-            "location": e.location,
-            "stream": e.video_url,
-            "description": e.description,
+        value_fn=lambda se: parse_datetime(se.date),
+        attributes_fn=lambda se: {
+            "title": se.name,
+            "location": se.location,
+            "stream": se.video_url,
+            "description": se.description,
         },
     ),
 )
