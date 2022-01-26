@@ -35,7 +35,7 @@ async def test_no_binary_sensors(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-binary_sensor_test_data = [
+TEST_DATA = [
     (  # Alarm binary sensor
         {
             "config": {
@@ -462,7 +462,7 @@ binary_sensor_test_data = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", binary_sensor_test_data)
+@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
 async def test_binary_sensors(
     hass, aioclient_mock, mock_deconz_websocket, sensor_data, expected
 ):
