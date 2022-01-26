@@ -162,6 +162,8 @@ def browse_media(  # noqa: C901
         }
         for item in hub.items:
             if hub.type == "station":
+                if platform == "sonos":
+                    continue
                 payload["children"].append(station_payload(item))
             else:
                 payload["children"].append(item_payload(item))
