@@ -19,12 +19,12 @@ from pyunifiprotect.data.types import (
 )
 
 from homeassistant.components.select.const import ATTR_OPTIONS
-from homeassistant.components.unifiprotect.const import (
+from homeassistant.components.unifi_protect.const import (
     ATTR_DURATION,
     ATTR_MESSAGE,
     DEFAULT_ATTRIBUTION,
 )
-from homeassistant.components.unifiprotect.select import (
+from homeassistant.components.unifi_protect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
     LIGHT_SELECTS,
@@ -655,7 +655,7 @@ async def test_select_service_doorbell_success(
     )
 
 
-@patch("homeassistant.components.unifiprotect.select.utcnow")
+@patch("homeassistant.components.unifi_protect.select.utcnow")
 async def test_select_service_doorbell_with_reset(
     mock_now,
     hass: HomeAssistant,

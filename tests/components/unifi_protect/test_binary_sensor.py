@@ -11,13 +11,13 @@ from pyunifiprotect.data import Camera, Event, EventType, Light, MountType, Sens
 from pyunifiprotect.data.nvr import EventMetadata
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.unifiprotect.binary_sensor import (
+from homeassistant.components.unifi_protect.binary_sensor import (
     CAMERA_SENSORS,
     LIGHT_SENSORS,
     MOTION_SENSORS,
     SENSE_SENSORS,
 )
-from homeassistant.components.unifiprotect.const import (
+from homeassistant.components.unifi_protect.const import (
     ATTR_EVENT_SCORE,
     DEFAULT_ATTRIBUTION,
 )
