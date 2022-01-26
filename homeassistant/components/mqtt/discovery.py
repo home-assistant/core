@@ -240,7 +240,7 @@ async def async_start(  # noqa: C901
                         from . import notify
 
                         await notify.async_setup_entry(
-                            hass, config_entry, AddEntitiesCallback()
+                            hass, config_entry, AddEntitiesCallback
                         )
                     elif component in "tag":
                         # Local import to avoid circular dependencies
