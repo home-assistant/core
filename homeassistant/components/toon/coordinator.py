@@ -65,7 +65,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
                     webhook_url = await cloud.async_create_cloudhook(
                         self.hass, self.entry.data[CONF_WEBHOOK_ID]
                     )
-                except cloud.CloudNotAvailable:
+                except cloud.CloudNotConnected:
                     webhook_url = webhook.async_generate_url(
                         self.hass, self.entry.data[CONF_WEBHOOK_ID]
                     )
