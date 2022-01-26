@@ -21,11 +21,16 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
-from homeassistant.components import media_source, zeroconf
+from homeassistant.components import media_source, plex, zeroconf
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -458,15 +463,60 @@ class CastDevice(MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
         kwargs = {}
+        children = []
+
         if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_AUDIO:
             kwargs["content_filter"] = lambda item: item.media_content_type.startswith(
                 "audio/"
             )
 
-        result = await media_source.async_browse_media(
-            self.hass, media_content_id, **kwargs
+        if plex.is_plex_media_id(media_content_id):
+            return await plex.async_browse_media(
+                self.hass, media_content_type, media_content_id, platform=CAST_DOMAIN
+            )
+
+        if media_content_type == "plex":
+            return await plex.async_browse_media(
+                self.hass, None, None, platform=CAST_DOMAIN
+            )
+
+        if "plex" in self.hass.config.components:
+            children.append(
+                BrowseMedia(
+                    title="Plex",
+                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_content_id="",
+                    media_content_type="plex",
+                    thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+                    can_play=False,
+                    can_expand=True,
+                )
+            )
+
+        try:
+            result = await media_source.async_browse_media(
+                self.hass, media_content_id, **kwargs
+            )
+            children.append(result)
+        except BrowseError:
+            if not children:
+                raise
+
+        if len(children) == 1:
+            return await self.async_browse_media(
+                children[0].media_content_type,
+                children[0].media_content_id,
+            )
+
+        return BrowseMedia(
+            title="Cast",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="",
+            can_play=False,
+            can_expand=True,
+            children=children,
         )
-        return result
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
