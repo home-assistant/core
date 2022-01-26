@@ -229,7 +229,7 @@ class MotionEyeOptionsFlow(OptionsFlow):
                         CONF_STREAM_URL_TEMPLATE,
                         default=self._config_entry.options.get(
                             CONF_STREAM_URL_TEMPLATE,
-                            "",
+                            None,
                         ),
                     ): str
                 }
