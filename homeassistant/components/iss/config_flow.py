@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DOMAIN
 
 
-class LaunchLibraryFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class IssFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for iss component."""
 
     VERSION = 1
@@ -20,6 +20,7 @@ class LaunchLibraryFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        # Check if location have been defined.
         if None in (self.hass.config.latitude, self.hass.config.longitude):
             return self.async_abort(reason="latitude_longitude_not_defined")
 
