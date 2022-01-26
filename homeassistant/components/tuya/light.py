@@ -72,6 +72,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             name="Backlight",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # String Lights
@@ -157,6 +158,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             name="Backlight",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Air conditioner
@@ -165,6 +167,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             name="Backlight",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Heater
