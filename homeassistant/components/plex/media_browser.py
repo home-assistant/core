@@ -73,16 +73,7 @@ def browse_media(  # noqa: C901
             "can_expand": item.type in EXPANDABLES,
         }
         if hasattr(item, "thumbUrl"):
-            plex_server.thumbnail_cache.setdefault(str(item.ratingKey), item.thumbUrl)
-
-            # FIXME
-            thumbnail = item.thumbUrl
-            #            if is_internal:
-            #                thumbnail = item.thumbUrl
-            #            else:
-            #                thumbnail = entity.get_browse_image_url(item.type, item.ratingKey)
-
-            payload["thumbnail"] = thumbnail
+            payload["thumbnail"] = item.thumbUrl
 
         return BrowseMedia(**payload)
 
