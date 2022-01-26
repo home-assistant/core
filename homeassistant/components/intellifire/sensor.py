@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+from datetime import datetime, timedelta
+from typing import Any
 
 from intellifire4py import IntellifirePollData
+import pytz
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,6 +25,53 @@ from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
 
 
+class IntellifireSensor(CoordinatorEntity, SensorEntity):
+    """Define a generic class for Sensors."""
+
+    # Define types
+    coordinator: IntellifireDataUpdateCoordinator
+    entity_description: IntellifireSensorEntityDescription
+    _attr_attribution = "Data provided by unpublished Intellifire API"
+
+    def __init__(
+        self,
+        coordinator: IntellifireDataUpdateCoordinator,
+        description: IntellifireSensorEntityDescription,
+    ) -> None:
+        """Init the sensor."""
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
+
+        # Set the Display name the User will see
+        self._attr_name = f"Fireplace {description.name}"
+        self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
+        # Configure the Device Info
+        self._attr_device_info = self.coordinator.device_info
+
+    @property
+    def native_value(self) -> int | str:
+        """Return the state."""
+        return self.entity_description.value_fn(self.coordinator.api.data)
+
+
+class IntellifireTimeSensor(IntellifireSensor):
+    """Define a sensor that takes into account timezone."""
+
+    @property
+    def native_value(self) -> Any:
+        """Return a datetime value."""
+        seconds_offset = int(
+            self.entity_description.value_fn(self.coordinator.api.data)
+        )
+        # If disabled return None - else return a timestamp with correct TZ info
+        if seconds_offset == 0:
+            return None
+
+        return datetime.now().replace(
+            tzinfo=pytz.timezone(self.hass.config.time_zone)
+        ) + timedelta(seconds=seconds_offset)
+
+
 @dataclass
 class IntellifireSensorRequiredKeysMixin:
     """Mixin for required keys."""
@@ -37,6 +86,22 @@ class IntellifireSensorEntityDescription(
     SensorEntityDescription, IntellifireSensorRequiredKeysMixin
 ):
     """Describes a sensor sensor entity."""
+
+    entity_class: type[IntellifireSensor] = IntellifireSensor
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Define setup entry call."""
+
+    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    sensors = []
+    for description in INTELLIFIRE_SENSORS:
+        sensors.append(
+            description.entity_class(coordinator=coordinator, description=description)
+        )
+    async_add_entities(sensors)
 
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
@@ -71,55 +136,11 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         value_fn=lambda data: data.fanspeed,
     ),
     IntellifireSensorEntityDescription(
-        key="timer_end_time",
+        key="timer_end_timestamp",
         icon="mdi:timer-sand",
         name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: "Stopped"
-        if (data.timeremaining_s == 0)
-        else (
-            datetime.datetime.now() + datetime.timedelta(seconds=data.timeremaining_s)
-        ).strftime("%I:%M %p"),
+        entity_class=IntellifireTimeSensor,
+        value_fn=lambda data: data.timeremaining_s,
     ),
 )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Define setup entry call."""
-
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        IntellifireSensor(coordinator=coordinator, description=description)
-        for description in INTELLIFIRE_SENSORS
-    )
-
-
-class IntellifireSensor(CoordinatorEntity, SensorEntity):
-    """Define a generic class for Sensors."""
-
-    # Define types
-    coordinator: IntellifireDataUpdateCoordinator
-    entity_description: IntellifireSensorEntityDescription
-    _attr_attribution = "Data provided by unpublished Intellifire API"
-
-    def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: IntellifireSensorEntityDescription,
-    ) -> None:
-        """Init the sensor."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-
-        # Set the Display name the User will see
-        self._attr_name = f"Fireplace {description.name}"
-        self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
-        # Configure the Device Info
-        self._attr_device_info = self.coordinator.device_info
-
-    @property
-    def native_value(self) -> int | str:
-        """Return the state."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
