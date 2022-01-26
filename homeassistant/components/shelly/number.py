@@ -2,21 +2,27 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
 import async_timeout
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD
 from .entity import (
-    NumberAttributeDescription,
+    BlockEntityDescription,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
 )
@@ -25,21 +31,47 @@ from .utils import get_device_entry_gen
 _LOGGER: Final = logging.getLogger(__name__)
 
 
+@dataclass
+class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
+    """Class to describe a BLOCK sensor."""
+
+    mode: NumberMode = NumberMode("slider")
+    rest_path: str = ""
+    rest_arg: str = ""
+
+
 NUMBERS: Final = {
-    ("device", "valvePos"): NumberAttributeDescription(
+    ("device", "valvePos"): BlockNumberDescription(
+        key="device|valvepos",
         icon="mdi:pipe-valve",
         name="Valve Position",
-        unit=PERCENTAGE,
+        unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
         entity_category=EntityCategory.CONFIG,
-        min=0,
-        max=100,
+        min_value=0,
+        max_value=100,
         step=1,
         mode=NumberMode("slider"),
         rest_path="thermostat/0",
         rest_arg="pos",
     ),
 }
+
+
+def _build_block_description(entry: RegistryEntry) -> BlockNumberDescription:
+    """Build description when restoring block attribute entities."""
+    assert entry.capabilities
+    return BlockNumberDescription(
+        key="",
+        name="",
+        icon=entry.original_icon,
+        unit_of_measurement=entry.unit_of_measurement,
+        device_class=entry.original_device_class,
+        min_value=cast(float, entry.capabilities.get("min")),
+        max_value=cast(float, entry.capabilities.get("max")),
+        step=cast(float, entry.capabilities.get("step")),
+        mode=cast(NumberMode, entry.capabilities.get("mode")),
+    )
 
 
 async def async_setup_entry(
@@ -53,14 +85,19 @@ async def async_setup_entry(
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, NUMBERS, BlockSleepingNumber
+            hass,
+            config_entry,
+            async_add_entities,
+            NUMBERS,
+            BlockSleepingNumber,
+            _build_block_description,
         )
 
 
 class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     """Represent a block sleeping number."""
 
-    description: NumberAttributeDescription
+    entity_description: BlockNumberDescription
 
     @property
     def value(self) -> float:
@@ -73,39 +110,41 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return unit of number."""
-        return cast(str, self._unit)
+        return self.entity_description.unit_of_measurement
 
     @property
     def min_value(self) -> float:
         """Return minimum value."""
-        return self.description.min
+        return cast(float, self.entity_description.min_value)
 
     @property
     def max_value(self) -> float:
         """Return maximum value."""
-        return self.description.max
+        return cast(float, self.entity_description.max_value)
 
     @property
     def step(self) -> float:
         """Return step increment/decrement value."""
-        return self.description.step
+        return cast(float, self.entity_description.step)
 
     @property
     def mode(self) -> NumberMode:
         """Return mode."""
-        return self.description.mode
+        return self.entity_description.mode
 
     async def async_set_value(self, value: float) -> None:
         """Set value."""
         # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
         await self._set_state_full_path(
-            self.description.rest_path, {self.description.rest_arg: value}
+            self.entity_description.rest_path,
+            {self.entity_description.rest_arg: value},
         )
         self.async_write_ha_state()
 
     async def _set_state_full_path(self, path: str, params: Any) -> Any:
         """Set block state (HTTP request)."""
 
+        assert self.unique_id
         blocktype = self.unique_id.split("-")[-2]
         if blocktype != "device" and self.block:
             path = f"{path}/{self.block.channel}"
