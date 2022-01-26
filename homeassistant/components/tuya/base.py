@@ -74,7 +74,16 @@ class IntegerTypeData:
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData:
         """Load JSON string and return a IntegerTypeData object."""
-        return cls(dpcode, **json.loads(data))
+        parsed = json.loads(data)
+        return cls(
+            dpcode,
+            min=int(parsed["min"]),
+            max=int(parsed["max"]),
+            scale=float(parsed["scale"]),
+            step=float(parsed["step"]),
+            unit=parsed.get("unit"),
+            type=parsed.get("type"),
+        )
 
 
 @dataclass
