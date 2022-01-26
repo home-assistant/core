@@ -311,7 +311,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.VOICE_SWITCH,
-            name="Voice",
+            name="Mute Voice",
             icon="mdi:account-voice",
             entity_category=EntityCategory.CONFIG,
         ),
