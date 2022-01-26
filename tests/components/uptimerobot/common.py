@@ -84,9 +84,7 @@ def mock_uptimerobot_api_response(
     )
 
 
-async def setup_uptimerobot_integration(
-    hass: HomeAssistant,
-) -> MockConfigEntry:
+async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the UptimeRobot integration."""
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_entry.add_to_hass(hass)
