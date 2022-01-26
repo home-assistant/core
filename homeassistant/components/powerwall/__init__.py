@@ -10,6 +10,7 @@ from tesla_powerwall import (
     PowerwallUnreachableError,
 )
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -78,7 +79,8 @@ async def _async_handle_api_changed_error(
 ):
     # The error might include some important information about what exactly changed.
     _LOGGER.error(str(error))
-    hass.components.persistent_notification.async_create(
+    persistent_notification.async_create(
+        hass,
         "It seems like your powerwall uses an unsupported version. "
         "Please update the software of your powerwall or if it is "
         "already the newest consider reporting this issue.\nSee logs for more information",

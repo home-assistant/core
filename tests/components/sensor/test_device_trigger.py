@@ -81,7 +81,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 24
+    assert len(triggers) == 26
     assert triggers == expected_triggers
 
 

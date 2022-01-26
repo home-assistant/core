@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Configurare l'integrazione Dune HD. In caso di problemi con la configurazione, visitare: https://www.home-assistant.io/integrations/dunehd \n\n Assicurati che il tuo lettore sia acceso.",
+                "description": "Configura l'integrazione Dune HD. In caso di problemi con la configurazione, visita: https://www.home-assistant.io/integrations/dunehd \n\n Assicurati che il tuo lettore sia acceso.",
                 "title": "Dune HD"
             }
         }

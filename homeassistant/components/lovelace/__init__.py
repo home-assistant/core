@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import frontend
+from homeassistant.components import frontend, websocket_api
 from homeassistant.config import async_hass_config_yaml, async_process_component_config
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -121,22 +121,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             RESOURCE_UPDATE_FIELDS,
         ).async_setup(hass, create_list=False)
 
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_config
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_config)
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_save_config)
+    websocket_api.async_register_command(
+        hass, websocket.websocket_lovelace_delete_config
     )
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_save_config
-    )
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_delete_config
-    )
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_resources
-    )
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_resources)
 
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_dashboards
-    )
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_dashboards)
 
     hass.data[DOMAIN] = {
         # We store a dictionary mapping url_path: config. None is the default.

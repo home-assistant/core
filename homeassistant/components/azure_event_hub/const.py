@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+
 DOMAIN = "azure_event_hub"
 
 CONF_USE_CONN_STRING = "use_connection_string"
@@ -27,3 +29,4 @@ DEFAULT_OPTIONS: dict[str, Any] = {
 }
 
 ADDITIONAL_ARGS: dict[str, Any] = {"logging_enable": False}
+FILTER_STATES = (STATE_UNKNOWN, STATE_UNAVAILABLE, "")

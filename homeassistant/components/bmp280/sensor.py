@@ -1,4 +1,6 @@
 """Platform for Bosch BMP280 Environmental Sensor integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -13,8 +15,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,8 +44,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
+    _LOGGER.warning(
+        "The Bosch BMP280 Environmental Sensor integration is deprecated and "
+        "will be removed in Home Assistant Core 2022.4; "
+        "this integration is removed under Architectural Decision Record 0019, "
+        "more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     try:
         # initializing I2C bus using the auto-detected pins
         i2c = I2C(board.SCL, board.SDA)

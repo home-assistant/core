@@ -4,9 +4,9 @@
   "config_flow": true,
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": ["flux_led==0.27.10"],
+  "requirements": ["flux_led==0.28.11"],
   "quality_scale": "platinum",
-  "codeowners": ["@icemanch"],
+  "codeowners": ["@icemanch", "@bdraco"],
   "iot_class": "local_push",
   "dhcp": [
   {
@@ -23,7 +23,7 @@
   },
   {
     "macaddress": "ACCF23*",
-    "hostname": "[ba][lk]*"
+    "hostname": "[hba][flk]*"
   },
   {
     "macaddress": "B4E842*",
@@ -31,7 +31,7 @@
   },
   {
     "macaddress": "F0FE6B*",
-    "hostname": "[ba][lk]*"
+    "hostname": "[hba][flk]*"
   },
   {
     "macaddress": "8CCE4E*",

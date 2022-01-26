@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
+            "invalid_auth_key": "Credenziali API rifiutate da Coinbase a causa di una chiave API non valida.",
+            "invalid_auth_secret": "Credenziali API rifiutate da Coinbase a causa di un segreto API non valido.",
             "unknown": "Errore imprevisto"
         },
         "step": {
@@ -34,7 +36,7 @@
                     "exchange_base": "Valuta di base per i sensori di tasso di cambio.",
                     "exchange_rate_currencies": "Tassi di cambio da segnalare."
                 },
-                "description": "Regolare le opzioni di Coinbase"
+                "description": "Regola le opzioni di Coinbase"
             }
         }
     }

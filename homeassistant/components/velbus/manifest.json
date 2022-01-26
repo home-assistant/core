@@ -5,5 +5,24 @@
   "requirements": ["velbus-aio==2021.11.7"],
   "config_flow": true,
   "codeowners": ["@Cereal2nd", "@brefra"],
-  "iot_class": "local_push"
+  "dependencies": ["usb"],
+  "iot_class": "local_push",
+  "usb": [
+    {
+    "vid": "10CF",
+    "pid": "0B1B"
+    },
+    {
+    "vid": "10CF",
+    "pid": "0516"
+    },
+    {
+    "vid": "10CF",
+    "pid": "0517"
+    },
+    {
+    "vid": "10CF",
+    "pid": "0518"
+    }
+  ]
 }

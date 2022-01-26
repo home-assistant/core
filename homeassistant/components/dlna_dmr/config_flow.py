@@ -1,10 +1,10 @@
 """Config flow for DLNA DMR."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from pprint import pformat
-from typing import Any, Mapping, Optional, cast
+from typing import Any, Optional, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -380,8 +380,8 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
-    model = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
+    manufacturer = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or "").lower()
+    model = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or "").lower()
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi

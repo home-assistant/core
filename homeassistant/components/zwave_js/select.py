@@ -1,7 +1,7 @@
 """Support for Z-Wave controls using the select platform."""
 from __future__ import annotations
 
-from typing import Dict, cast
+from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
@@ -150,7 +150,7 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         assert self.info.platform_data_template
         self._lookup_map = cast(
-            Dict[int, str], self.info.platform_data_template.static_data
+            dict[int, str], self.info.platform_data_template.static_data
         )
 
         # Entity class attributes

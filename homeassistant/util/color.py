@@ -3,11 +3,9 @@ from __future__ import annotations
 
 import colorsys
 import math
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import attr
-
-# mypy: disallow-any-generics
 
 
 class RGBColor(NamedTuple):
@@ -299,7 +297,7 @@ def color_xy_brightness_to_RGB(
     r, g, b = map(
         lambda x: (12.92 * x)
         if (x <= 0.0031308)
-        else ((1.0 + 0.055) * pow(x, (1.0 / 2.4)) - 0.055),
+        else ((1.0 + 0.055) * cast(float, pow(x, (1.0 / 2.4))) - 0.055),
         [r, g, b],
     )
 

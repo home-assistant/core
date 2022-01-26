@@ -7,6 +7,7 @@ from typing import Any, Final
 from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.cover import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     CoverDeviceClass,
@@ -55,7 +56,8 @@ def setup_platform(
         )
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,

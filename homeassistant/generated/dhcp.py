@@ -89,7 +89,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "ACCF23*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -99,7 +99,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "F0FE6B*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -176,6 +176,18 @@ DHCP = [
         "macaddress": "18B430*"
     },
     {
+        "domain": "nest",
+        "macaddress": "641666*"
+    },
+    {
+        "domain": "nest",
+        "macaddress": "D8EB46*"
+    },
+    {
+        "domain": "nest",
+        "macaddress": "1C53F9*"
+    },
+    {
         "domain": "nexia",
         "hostname": "xl857-*",
         "macaddress": "000231*"
@@ -188,6 +200,11 @@ DHCP = [
     {
         "domain": "nuki",
         "hostname": "nuki_bridge_*"
+    },
+    {
+        "domain": "overkiz",
+        "hostname": "gateway*",
+        "macaddress": "F8811A*"
     },
     {
         "domain": "powerwall",
@@ -274,6 +291,10 @@ DHCP = [
         "macaddress": "A4D578*"
     },
     {
+        "domain": "senseme",
+        "macaddress": "20F85E*"
+    },
+    {
         "domain": "simplisafe",
         "hostname": "simplisafe*",
         "macaddress": "30AEA4*"
@@ -317,6 +338,11 @@ DHCP = [
         "domain": "squeezebox",
         "hostname": "squeezebox*",
         "macaddress": "000420*"
+    },
+    {
+        "domain": "steamist",
+        "macaddress": "001E0C*",
+        "hostname": "my[45]50*"
     },
     {
         "domain": "tado",
@@ -523,6 +549,42 @@ DHCP = [
     {
         "domain": "twinkly",
         "hostname": "twinkly_*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "B4FBE4*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "802AA8*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "F09FC2*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "68D79A*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "18E829*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "245A4C*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "784558*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "E063DA*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "265A4C*"
     },
     {
         "domain": "verisure",

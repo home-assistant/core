@@ -110,7 +110,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation light from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.LIGHT]
 

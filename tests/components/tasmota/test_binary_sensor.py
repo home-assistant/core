@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
     Platform,
 )
 import homeassistant.core as ha
@@ -58,7 +59,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test normal state update
@@ -124,7 +125,7 @@ async def test_controlling_state_via_mqtt_switchname(hass, mqtt_mock, setup_tasm
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.custom_name")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test normal state update
@@ -183,7 +184,7 @@ async def test_pushon_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test normal state update
@@ -260,14 +261,14 @@ async def test_off_delay(hass, mqtt_mock, setup_tasmota):
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
-    assert events == ["off"]
+    assert events == ["unknown"]
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"ON"}}'
     )
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_ON
-    assert events == ["off", "on"]
+    assert events == ["unknown", "on"]
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"ON"}}'
@@ -275,13 +276,13 @@ async def test_off_delay(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_ON
-    assert events == ["off", "on", "on"]
+    assert events == ["unknown", "on", "on"]
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
-    assert events == ["off", "on", "on", "off"]
+    assert events == ["unknown", "on", "on", "off"]
 
 
 async def test_availability_when_connection_lost(

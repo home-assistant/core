@@ -206,7 +206,6 @@ async def test_discovery_works(hass, controller, upper_case_props, missing_cshar
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
@@ -577,7 +576,6 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     )
 
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -593,7 +591,6 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -627,7 +624,6 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
     )
 
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -641,7 +637,6 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -669,7 +664,6 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     )
 
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -683,7 +677,6 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -697,7 +690,6 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -820,7 +812,6 @@ async def test_unignore_works(hass, controller):
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
-        "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_UNIGNORE,
@@ -852,3 +843,44 @@ async def test_unignore_ignores_missing_devices(hass, controller):
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices"
+
+
+async def test_discovery_dismiss_existing_flow_on_paired(hass, controller):
+    """Test that existing flows get dismissed once paired to something else."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Set device as already not paired
+    discovery_info.properties["sf"] = 0x01
+    discovery_info.properties["c#"] = 99999
+    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "pair"
+    await hass.async_block_till_done()
+    assert (
+        len(hass.config_entries.flow.async_progress_by_handler("homekit_controller"))
+        == 1
+    )
+
+    # Set device as already paired
+    discovery_info.properties["sf"] = 0x00
+    # Device is discovered again after pairing to someone else
+    result2 = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_paired"
+    await hass.async_block_till_done()
+    assert (
+        len(hass.config_entries.flow.async_progress_by_handler("homekit_controller"))
+        == 0
+    )

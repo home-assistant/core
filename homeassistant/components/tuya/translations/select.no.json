@@ -48,6 +48,38 @@
             "on": "P\u00e5",
             "power_off": "Av",
             "power_on": "P\u00e5"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Lukket",
+            "high": "H\u00f8y",
+            "low": "Lav",
+            "middle": "Midten"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Stor",
+            "middle": "Midten",
+            "small": "Liten"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Bue",
+            "chargego": "Returner til dokken",
+            "left_bow": "Bue til venstre",
+            "left_spiral": "Spiral til venstre",
+            "mop": "Mopp",
+            "part": "Del",
+            "partial_bow": "Bue Delvis",
+            "pick_zone": "Velg sone",
+            "point": "Punkt",
+            "pose": "Posere",
+            "random": "Tilfeldig",
+            "right_bow": "Bue H\u00f8yre",
+            "right_spiral": "Spiral h\u00f8yre",
+            "single": "Enkelt",
+            "smart": "Smart",
+            "spiral": "Spiral",
+            "standby": "Vent litt",
+            "wall_follow": "F\u00f8lg Wall",
+            "zone": "Sone"
         }
     }
 }

@@ -39,7 +39,7 @@ async def async_setup_entry(
     if (unique_id := entry.unique_id) is None:
         unique_id = entry.entry_id
 
-    sensors = []
+    sensors: list[SensorEntity] = []
 
     sensors.append(IPPPrinterSensor(entry.entry_id, unique_id, coordinator))
     sensors.append(IPPUptimeSensor(entry.entry_id, unique_id, coordinator))

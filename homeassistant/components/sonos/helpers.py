@@ -1,10 +1,12 @@
 """Helper methods for common tasks."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, TypeVar
 
 from soco.exceptions import SoCoException, SoCoUPnPException
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -19,20 +21,26 @@ if TYPE_CHECKING:
 UID_PREFIX = "RINCON_"
 UID_POSTFIX = "01400"
 
-WrapFuncType = TypeVar("WrapFuncType", bound=Callable[..., Any])
-
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T", "SonosSpeaker", "SonosEntity")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 
 def soco_error(
     errorcodes: list[str] | None = None, raise_on_err: bool = True
-) -> Callable:
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
+]:
     """Filter out specified UPnP errors and raise exceptions for service calls."""
 
-    def decorator(funct: WrapFuncType) -> WrapFuncType:
+    def decorator(
+        funct: Callable[Concatenate[_T, _P], _R]  # type: ignore[misc]
+    ) -> Callable[Concatenate[_T, _P], _R | None]:  # type: ignore[misc]
         """Decorate functions."""
 
-        def wrapper(self: SonosSpeaker | SonosEntity, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
             """Wrap for all soco UPnP exception."""
             try:
                 result = funct(self, *args, **kwargs)
@@ -65,7 +73,7 @@ def soco_error(
             )
             return result
 
-        return cast(WrapFuncType, wrapper)
+        return wrapper
 
     return decorator
 

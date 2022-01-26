@@ -5,6 +5,7 @@
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
         "step": {
@@ -22,6 +23,19 @@
                     "name": "Name",
                     "password": "Password",
                     "username": "Username"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "The code does not match the required number of digits"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Default code for locks, used if none is given",
+                    "lock_code_digits": "Number of digits in PIN code for locks"
                 }
             }
         }

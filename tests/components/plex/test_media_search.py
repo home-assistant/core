@@ -4,7 +4,6 @@ from unittest.mock import patch
 from plexapi.exceptions import BadRequest, NotFound
 import pytest
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -16,7 +15,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.plex.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.exceptions import HomeAssistantError
 
 
@@ -30,7 +29,7 @@ async def test_media_lookups(
     requests_mock.get("/player/playback/playMedia", status_code=200)
 
     assert await hass.services.async_call(
-        MP_DOMAIN,
+        Platform.MEDIA_PLAYER,
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: media_player_id,
@@ -42,7 +41,7 @@ async def test_media_lookups(
     with pytest.raises(HomeAssistantError) as excinfo:
         with patch("plexapi.server.PlexServer.fetchItem", side_effect=NotFound):
             assert await hass.services.async_call(
-                MP_DOMAIN,
+                Platform.MEDIA_PLAYER,
                 SERVICE_PLAY_MEDIA,
                 {
                     ATTR_ENTITY_ID: media_player_id,
@@ -57,7 +56,7 @@ async def test_media_lookups(
     with pytest.raises(HomeAssistantError) as excinfo:
         payload = '{"library_name": "Not a Library", "show_name": "TV Show"}'
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -70,7 +69,7 @@ async def test_media_lookups(
 
     with patch("plexapi.library.LibrarySection.search") as search:
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -82,7 +81,7 @@ async def test_media_lookups(
         search.assert_called_with(**{"show.title": "TV Show", "libtype": "show"})
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -96,7 +95,7 @@ async def test_media_lookups(
         )
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -110,7 +109,7 @@ async def test_media_lookups(
         )
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -129,7 +128,7 @@ async def test_media_lookups(
         )
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -141,7 +140,7 @@ async def test_media_lookups(
         search.assert_called_with(**{"artist.title": "Artist", "libtype": "artist"})
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -153,7 +152,7 @@ async def test_media_lookups(
         search.assert_called_with(**{"album.title": "Album", "libtype": "album"})
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -167,7 +166,7 @@ async def test_media_lookups(
         )
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -181,7 +180,7 @@ async def test_media_lookups(
         )
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -200,7 +199,7 @@ async def test_media_lookups(
         )
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -220,7 +219,7 @@ async def test_media_lookups(
 
         # Movie searches
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -232,7 +231,7 @@ async def test_media_lookups(
         search.assert_called_with(**{"movie.title": "Movie 1", "libtype": None})
 
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -248,7 +247,7 @@ async def test_media_lookups(
         payload = '{"library_name": "Movies", "title": "Not a Movie"}'
         with patch("plexapi.library.LibrarySection.search", side_effect=BadRequest):
             assert await hass.services.async_call(
-                MP_DOMAIN,
+                Platform.MEDIA_PLAYER,
                 SERVICE_PLAY_MEDIA,
                 {
                     ATTR_ENTITY_ID: media_player_id,
@@ -262,7 +261,7 @@ async def test_media_lookups(
 
     # Playlist searches
     assert await hass.services.async_call(
-        MP_DOMAIN,
+        Platform.MEDIA_PLAYER,
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: media_player_id,
@@ -275,7 +274,7 @@ async def test_media_lookups(
     with pytest.raises(HomeAssistantError) as excinfo:
         payload = '{"playlist_name": "Not a Playlist"}'
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,
@@ -290,7 +289,7 @@ async def test_media_lookups(
     with pytest.raises(HomeAssistantError) as excinfo:
         payload = "{}"
         assert await hass.services.async_call(
-            MP_DOMAIN,
+            Platform.MEDIA_PLAYER,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_id,

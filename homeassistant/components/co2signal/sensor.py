@@ -6,10 +6,13 @@ from datetime import timedelta
 from typing import cast
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import CO2SignalCoordinator, CO2SignalResponse
@@ -44,7 +47,9 @@ SENSORS = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the CO2signal sensor."""
     coordinator: CO2SignalCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(CO2Sensor(coordinator, description) for description in SENSORS)

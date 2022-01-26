@@ -34,10 +34,10 @@ async def test_remote_setup_works(hass):
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
-        remotes = {entry for entry in entries if entry.domain == Platform.REMOTE}
+        remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
         assert len(remotes) == 1
 
-        remote = remotes.pop()
+        remote = remotes[0]
         assert remote.original_name == f"{device.name} Remote"
         assert hass.states.get(remote.entity_id).state == STATE_ON
         assert mock_setup.api.auth.call_count == 1
@@ -54,10 +54,10 @@ async def test_remote_send_command(hass):
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
-        remotes = {entry for entry in entries if entry.domain == Platform.REMOTE}
+        remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
         assert len(remotes) == 1
 
-        remote = remotes.pop()
+        remote = remotes[0]
         await hass.services.async_call(
             Platform.REMOTE,
             SERVICE_SEND_COMMAND,
@@ -81,10 +81,10 @@ async def test_remote_turn_off_turn_on(hass):
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
-        remotes = {entry for entry in entries if entry.domain == Platform.REMOTE}
+        remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
         assert len(remotes) == 1
 
-        remote = remotes.pop()
+        remote = remotes[0]
         await hass.services.async_call(
             Platform.REMOTE,
             SERVICE_TURN_OFF,

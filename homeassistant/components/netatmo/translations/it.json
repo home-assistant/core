@@ -54,7 +54,7 @@
                     "mode": "Calcolo",
                     "show_on_map": "Mostra sulla mappa"
                 },
-                "description": "Configurare un sensore meteorologico pubblico per un'area.",
+                "description": "Configura un sensore meteorologico pubblico per un'area.",
                 "title": "Sensore meteorologico pubblico Netatmo"
             },
             "public_weather_areas": {

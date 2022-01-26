@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
-            "cannot_connect": "Connessione con le credenziali da configuration.yaml non riuscita, rimuovere da yaml e utilizzare il flusso di configurazione.",
+            "cannot_connect": "Connessione con le credenziali da configuration.yaml non riuscita, rimuovi da yaml e utilizza il flusso di configurazione.",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
-            "unknown": "La connessione con le credenziali da configuration.yaml non \u00e8 riuscita con un errore sconosciuto, rimuovere da yaml e utilizzare il flusso di configurazione."
+            "unknown": "La connessione con le credenziali da configuration.yaml non \u00e8 riuscita con un errore sconosciuto, rimuovi da yaml e utilizza il flusso di configurazione."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",

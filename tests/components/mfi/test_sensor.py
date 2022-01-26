@@ -8,7 +8,8 @@ import requests
 
 import homeassistant.components.mfi.sensor as mfi
 import homeassistant.components.sensor as sensor_component
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -134,7 +135,7 @@ async def test_uom_temp(port, sensor):
     """Test the UOM temperature."""
     port.tag = "temperature"
     assert sensor.unit_of_measurement == TEMP_CELSIUS
-    assert sensor.device_class == DEVICE_CLASS_TEMPERATURE
+    assert sensor.device_class is SensorDeviceClass.TEMPERATURE
 
 
 async def test_uom_power(port, sensor):

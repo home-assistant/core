@@ -1,0 +1,13 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "hazardous": "Gevaarlijk",
+            "unhealthy": "Ongezond",
+            "unhealthy_for_sensitive_groups": "Ongezond voor gevoelige groepen",
+            "very_unhealthy": "Heel ongezond"
+        },
+        "climacell__pollen_index": {
+            "none": "Geen"
+        }
+    }
+}
