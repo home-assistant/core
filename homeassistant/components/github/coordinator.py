@@ -97,7 +97,7 @@ class RepositoryReleaseDataUpdateCoordinator(
         response: GitHubResponseModel[GitHubReleaseModel | None],
     ) -> GitHubReleaseModel | None:
         """Parse the response from GitHub API."""
-        if response.data is None:
+        if not response.data:
             return None
 
         for release in response.data:
