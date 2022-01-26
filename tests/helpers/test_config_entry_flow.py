@@ -297,7 +297,7 @@ async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
 
 
 async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
-    """Test only a single entry is allowed."""
+    """Test cloudhook will be created if subscribed."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
     async_setup_entry = Mock(return_value=True)
@@ -326,6 +326,8 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
     ):
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -344,6 +346,46 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
 
     assert len(mock_delete.mock_calls) == 1
     assert result["require_restart"] is False
+
+
+async def test_webhook_create_cloudhook_aborts_not_connected(hass, webhook_flow_conf):
+    """Test cloudhook aborts if subscribed but not connected."""
+    assert await setup.async_setup_component(hass, "cloud", {})
+
+    async_setup_entry = Mock(return_value=True)
+    async_unload_entry = Mock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test_single",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+            async_remove_entry=config_entry_flow.webhook_async_remove_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.test_single", None)
+
+    result = await hass.config_entries.flow.async_init(
+        "test_single", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    with patch(
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://example.com"},
+    ), patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=False
+    ):
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cloud_not_connected"
 
 
 async def test_warning_deprecated_connection_class(hass, caplog):
