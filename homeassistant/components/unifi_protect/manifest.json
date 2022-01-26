@@ -1,5 +1,5 @@
 {
-  "domain": "unifiprotect",
+  "domain": "unifi_protect",
   "name": "UniFi Protect",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
