@@ -17,6 +17,7 @@ from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 from soco.music_library import MusicLibrary
+from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
 
@@ -155,6 +156,7 @@ class SonosSpeaker:
         self.soco = soco
         self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
+        self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
         self.available = True
 
@@ -311,6 +313,13 @@ class SonosSpeaker:
     def is_coordinator(self) -> bool:
         """Return true if player is a coordinator."""
         return self.coordinator is None
+
+    @property
+    def plex_plugin(self) -> PlexPlugin:
+        """Cache the PlexPlugin instance for this speaker."""
+        if not self._plex_plugin:
+            self._plex_plugin = PlexPlugin(self.soco)
+        return self._plex_plugin
 
     @property
     def share_link(self) -> ShareLinkPlugin:
