@@ -368,7 +368,7 @@ class Zone(entity.Entity):
             if state and state.state == object_id:
                 self._persons_in_zone.add(person)
 
-        self._async_on_remove(
+        self.async_on_remove(
             event.async_track_state_change_filtered(
                 self.hass,
                 event.TrackStates(False, set(), {PERSON_DOMAIN}),
