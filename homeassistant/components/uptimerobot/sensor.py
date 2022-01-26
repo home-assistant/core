@@ -22,11 +22,11 @@ class StatusValue(TypedDict):
 
 
 SENSORS_INFO = {
-    0: StatusValue(value="Pause", icon="mdi:television-pause"),
-    1: StatusValue(value="Not checked yet", icon="mdi:television"),
-    2: StatusValue(value="Up", icon="mdi:television-shimmer"),
-    8: StatusValue(value="Seems down", icon="mdi:television-off"),
-    9: StatusValue(value="Down", icon="mdi:television-off"),
+    0: StatusValue(value="pause", icon="mdi:television-pause"),
+    1: StatusValue(value="not_checked_yet", icon="mdi:television"),
+    2: StatusValue(value="up", icon="mdi:television-shimmer"),
+    8: StatusValue(value="seems_down", icon="mdi:television-off"),
+    9: StatusValue(value="down", icon="mdi:television-off"),
 }
 
 
@@ -45,6 +45,7 @@ async def async_setup_entry(
                     key=str(monitor.id),
                     name=monitor.friendly_name,
                     entity_category=EntityCategory.DIAGNOSTIC,
+                    device_class="monitor_status",
                 ),
                 monitor=monitor,
             )
