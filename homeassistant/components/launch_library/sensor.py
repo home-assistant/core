@@ -209,17 +209,12 @@ class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._next_launch = next(
-            (
-                launch
-                for launch in (
-                    self.coordinator.data["starship_events"].upcoming.launches
-                    if self.entity_description.key == "starship_launch"
-                    else self.coordinator.data["upcoming_launches"]
-                )
-            ),
-            None,
-        )
+        if self.entity_description.key == "starship_launch":
+            launches = self.coordinator.data["starship_events"].upcoming.launches
+        else:
+            launches = self.coordinator.data["upcoming_launches"]
+
+        self._next_launch = next((launch for launch in (launches)), None)
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
