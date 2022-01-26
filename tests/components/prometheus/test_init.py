@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-import unittest.mock as mock
+from unittest import mock
 
 import prometheus_client
 import pytest
@@ -18,6 +18,7 @@ from homeassistant.components import (
     light,
     lock,
     person,
+    prometheus,
     sensor,
     switch,
 )
@@ -31,7 +32,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
 )
 from homeassistant.components.humidifier.const import ATTR_AVAILABLE_MODES
-import homeassistant.components.prometheus as prometheus
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -71,6 +71,7 @@ class FilterTest:
     should_pass: bool
 
 
+@pytest.fixture(name="client")
 async def setup_prometheus_client(hass, hass_client, namespace):
     """Initialize an hass_client with Prometheus component."""
     # Reset registry
@@ -103,12 +104,9 @@ async def generate_latest_metrics(client):
     return body
 
 
-async def test_view_empty_namespace(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_view_empty_namespace(client, sensor_entities):
     """Test prometheus metrics view."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, sensor_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert "# HELP python_info Python platform information" in body
@@ -130,12 +128,9 @@ async def test_view_empty_namespace(hass, hass_client):
     )
 
 
-async def test_view_default_namespace(hass, hass_client):
+@pytest.mark.parametrize("namespace", [None])
+async def test_view_default_namespace(client, sensor_entities):
     """Test prometheus metrics view."""
-    client = await setup_prometheus_client(hass, hass_client, None)
-    simulate_entities(hass, sensor_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert "# HELP python_info Python platform information" in body
@@ -151,12 +146,9 @@ async def test_view_default_namespace(hass, hass_client):
     )
 
 
-async def test_sensor_unit(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_sensor_unit(client, sensor_entities):
     """Test prometheus metrics for sensors with a unit."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, sensor_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -184,12 +176,9 @@ async def test_sensor_unit(hass, hass_client):
     )
 
 
-async def test_sensor_without_unit(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_sensor_without_unit(client, sensor_entities):
     """Test prometheus metrics for sensors without a unit."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, sensor_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -211,12 +200,9 @@ async def test_sensor_without_unit(hass, hass_client):
     )
 
 
-async def test_sensor_device_class(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_sensor_device_class(client, sensor_entities):
     """Test prometheus metrics for sensor with a device_class."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, sensor_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -244,12 +230,9 @@ async def test_sensor_device_class(hass, hass_client):
     )
 
 
-async def test_input_number(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_input_number(client, input_number_entities):
     """Test prometheus metrics for input_number."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, input_number_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -271,12 +254,9 @@ async def test_input_number(hass, hass_client):
     )
 
 
-async def test_battery(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_battery(client, sensor_entities):
     """Test prometheus metrics for battery."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, sensor_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -286,12 +266,9 @@ async def test_battery(hass, hass_client):
     )
 
 
-async def test_climate(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_climate(client, climate_entities):
     """Test prometheus metrics for climate entities."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, climate_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -319,12 +296,9 @@ async def test_climate(hass, hass_client):
     )
 
 
-async def test_humidifier(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_humidifier(client, humidifier_entities):
     """Test prometheus metrics for humidifier entities."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, humidifier_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -353,12 +327,9 @@ async def test_humidifier(hass, hass_client):
     )
 
 
-async def test_attributes(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_attributes(client, switch_entities):
     """Test prometheus metrics for entity attributes."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, switch_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -386,12 +357,9 @@ async def test_attributes(hass, hass_client):
     )
 
 
-async def test_binary_sensor(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_binary_sensor(client, binary_sensor_entities):
     """Test prometheus metrics for binary_sensor."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, binary_sensor_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -407,12 +375,9 @@ async def test_binary_sensor(hass, hass_client):
     )
 
 
-async def test_input_boolean(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_input_boolean(client, input_boolean_entities):
     """Test prometheus metrics for input_boolean."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, input_boolean_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -428,12 +393,9 @@ async def test_input_boolean(hass, hass_client):
     )
 
 
-async def test_light(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_light(client, light_entities):
     """Test prometheus metrics for lights."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, light_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -461,12 +423,9 @@ async def test_light(hass, hass_client):
     )
 
 
-async def test_lock(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_lock(client, lock_entities):
     """Test prometheus metrics for lock."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, lock_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -482,12 +441,9 @@ async def test_lock(hass, hass_client):
     )
 
 
-async def test_counter(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_counter(client, counter_entities):
     """Test prometheus metrics for counter."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    simulate_entities(hass, counter_entities=True)
-
-    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -497,12 +453,12 @@ async def test_counter(hass, hass_client):
     )
 
 
-async def test_renaming_entity_name(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_renaming_entity_name(
+    hass, registry, client, sensor_entities, climate_entities
+):
     """Test renaming entity name."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    data = simulate_entities(hass, sensor_entities=True, climate_entities=True)
-
-    await hass.async_block_till_done()
+    data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
     assert (
@@ -543,7 +499,6 @@ async def test_renaming_entity_name(hass, hass_client):
         'friendly_name="HeatPump"} 0.0' in body
     )
 
-    registry = entity_registry.async_get(hass)
     assert "sensor.outside_temperature" in registry.entities
     assert "climate.heatpump" in registry.entities
     registry.async_update_entity(
@@ -617,12 +572,12 @@ async def test_renaming_entity_name(hass, hass_client):
     )
 
 
-async def test_renaming_entity_id(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_renaming_entity_id(
+    hass, registry, client, sensor_entities, climate_entities
+):
     """Test renaming entity id."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    data = simulate_entities(hass, sensor_entities=True, climate_entities=True)
-
-    await hass.async_block_till_done()
+    data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
     assert (
@@ -649,7 +604,6 @@ async def test_renaming_entity_id(hass, hass_client):
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
-    registry = entity_registry.async_get(hass)
     assert "sensor.outside_temperature" in registry.entities
     assert "climate.heatpump" in registry.entities
     registry.async_update_entity(
@@ -694,12 +648,12 @@ async def test_renaming_entity_id(hass, hass_client):
     )
 
 
-async def test_deleting_entity(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_deleting_entity(
+    hass, registry, client, sensor_entities, climate_entities
+):
     """Test deleting a entity."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    data = simulate_entities(hass, sensor_entities=True, climate_entities=True)
-
-    await hass.async_block_till_done()
+    data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
     assert (
@@ -740,7 +694,6 @@ async def test_deleting_entity(hass, hass_client):
         'friendly_name="HeatPump"} 0.0' in body
     )
 
-    registry = entity_registry.async_get(hass)
     assert "sensor.outside_temperature" in registry.entities
     assert "climate.heatpump" in registry.entities
     registry.async_remove(data["sensor_1"].entity_id)
@@ -770,10 +723,12 @@ async def test_deleting_entity(hass, hass_client):
     )
 
 
-async def test_disabling_entity(hass, hass_client):
+@pytest.mark.parametrize("namespace", [""])
+async def test_disabling_entity(
+    hass, registry, client, sensor_entities, climate_entities
+):
     """Test disabling a entity."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    data = simulate_entities(hass, sensor_entities=True, climate_entities=True)
+    data = {**sensor_entities, **climate_entities}
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -823,7 +778,6 @@ async def test_disabling_entity(hass, hass_client):
         'friendly_name="HeatPump"} 0.0' in body
     )
 
-    registry = entity_registry.async_get(hass)
     assert "sensor.outside_temperature" in registry.entities
     assert "climate.heatpump" in registry.entities
     registry.async_update_entity(
@@ -856,455 +810,523 @@ async def test_disabling_entity(hass, hass_client):
     )
 
 
-def simulate_entities(
-    hass,
-    binary_sensor_entities=False,
-    climate_entities=False,
-    device_tracker_entities=False,
-    humidifier_entities=False,
-    input_boolean_entities=False,
-    input_number_entities=False,
-    light_entities=False,
-    lock_entities=False,
-    person_entities=False,
-    sensor_entities=False,
-    switch_entities=False,
-    counter_entities=False,
-):
-    """Simulate entities by creating a entry in the entity registry and setting a state in the state machine."""
-    registry = entity_registry.async_get(hass)
+@pytest.fixture(name="registry")
+def entity_registry_fixture(hass):
+    """Provide entity registry."""
+    return entity_registry.async_get(hass)
+
+
+@pytest.fixture(name="sensor_entities")
+async def sensor_fixture(hass, registry):
+    """Simulate sensor entities."""
     data = {}
+    sensor_1 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_1",
+        unit_of_measurement=TEMP_CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="outside_temperature",
+        original_name="Outside Temperature",
+    )
+    sensor_1_attributes = {ATTR_BATTERY_LEVEL: 12}
+    set_state_with_entry(hass, sensor_1, 15.6, sensor_1_attributes)
+    data["sensor_1"] = sensor_1
+    data["sensor_1_attributes"] = sensor_1_attributes
 
-    if sensor_entities:
-        sensor_1 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_1",
-            unit_of_measurement=TEMP_CELSIUS,
-            original_device_class=SensorDeviceClass.TEMPERATURE,
-            suggested_object_id="outside_temperature",
-            original_name="Outside Temperature",
-        )
-        sensor_1_attributes = {ATTR_BATTERY_LEVEL: 12}
-        set_state_with_entry(hass, sensor_1, 15.6, sensor_1_attributes)
-        data["sensor_1"] = sensor_1
-        data["sensor_1_attributes"] = sensor_1_attributes
+    sensor_2 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_2",
+        unit_of_measurement=PERCENTAGE,
+        original_device_class=SensorDeviceClass.HUMIDITY,
+        suggested_object_id="outside_humidity",
+        original_name="Outside Humidity",
+    )
+    set_state_with_entry(hass, sensor_2, 54.0)
+    data["sensor_2"] = sensor_2
 
-        sensor_2 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_2",
-            unit_of_measurement=PERCENTAGE,
-            original_device_class=SensorDeviceClass.HUMIDITY,
-            suggested_object_id="outside_humidity",
-            original_name="Outside Humidity",
-        )
-        set_state_with_entry(hass, sensor_2, 54.0)
-        data["sensor_2"] = sensor_2
+    sensor_3 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_3",
+        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        original_device_class=SensorDeviceClass.POWER,
+        suggested_object_id="radio_energy",
+        original_name="Radio Energy",
+    )
+    with mock.patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
+    ):
+        set_state_with_entry(hass, sensor_3, 14)
+    data["sensor_3"] = sensor_3
 
-        sensor_3 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_3",
-            unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            original_device_class=SensorDeviceClass.POWER,
-            suggested_object_id="radio_energy",
-            original_name="Radio Energy",
-        )
-        with mock.patch(
-            "homeassistant.util.dt.utcnow",
-            return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
-        ):
-            set_state_with_entry(hass, sensor_3, 14)
-        data["sensor_3"] = sensor_3
+    sensor_4 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_4",
+        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        suggested_object_id="television_energy",
+        original_name="Television Energy",
+    )
+    set_state_with_entry(hass, sensor_4, 74)
+    data["sensor_4"] = sensor_4
 
-        sensor_4 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_4",
-            unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            suggested_object_id="television_energy",
-            original_name="Television Energy",
-        )
-        set_state_with_entry(hass, sensor_4, 74)
-        data["sensor_4"] = sensor_4
+    sensor_5 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_5",
+        unit_of_measurement=f"SEK/{ENERGY_KILO_WATT_HOUR}",
+        suggested_object_id="electricity_price",
+        original_name="Electricity price",
+    )
+    set_state_with_entry(hass, sensor_5, 0.123)
+    data["sensor_5"] = sensor_5
 
-        sensor_5 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_5",
-            unit_of_measurement=f"SEK/{ENERGY_KILO_WATT_HOUR}",
-            suggested_object_id="electricity_price",
-            original_name="Electricity price",
-        )
-        set_state_with_entry(hass, sensor_5, 0.123)
-        data["sensor_5"] = sensor_5
+    sensor_6 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_6",
+        unit_of_measurement=DEGREE,
+        suggested_object_id="wind_direction",
+        original_name="Wind Direction",
+    )
+    set_state_with_entry(hass, sensor_6, 25)
+    data["sensor_6"] = sensor_6
 
-        sensor_6 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_6",
-            unit_of_measurement=DEGREE,
-            suggested_object_id="wind_direction",
-            original_name="Wind Direction",
-        )
-        set_state_with_entry(hass, sensor_6, 25)
-        data["sensor_6"] = sensor_6
+    sensor_7 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_7",
+        unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        suggested_object_id="sps30_pm_1um_weight_concentration",
+        original_name="SPS30 PM <1µm Weight concentration",
+    )
+    set_state_with_entry(hass, sensor_7, 3.7069)
+    data["sensor_7"] = sensor_7
 
-        sensor_7 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_7",
-            unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            suggested_object_id="sps30_pm_1um_weight_concentration",
-            original_name="SPS30 PM <1µm Weight concentration",
-        )
-        set_state_with_entry(hass, sensor_7, 3.7069)
-        data["sensor_7"] = sensor_7
+    sensor_8 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_8",
+        suggested_object_id="trend_gradient",
+        original_name="Trend Gradient",
+    )
+    set_state_with_entry(hass, sensor_8, 0.002)
+    data["sensor_8"] = sensor_8
 
-        sensor_8 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_8",
-            suggested_object_id="trend_gradient",
-            original_name="Trend Gradient",
-        )
-        set_state_with_entry(hass, sensor_8, 0.002)
-        data["sensor_8"] = sensor_8
+    sensor_9 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_9",
+        suggested_object_id="text",
+        original_name="Text",
+    )
+    set_state_with_entry(hass, sensor_9, "should_not_work")
+    data["sensor_9"] = sensor_9
 
-        sensor_9 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_9",
-            suggested_object_id="text",
-            original_name="Text",
-        )
-        set_state_with_entry(hass, sensor_9, "should_not_work")
-        data["sensor_9"] = sensor_9
+    sensor_10 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_10",
+        unit_of_measurement="Text",
+        suggested_object_id="text_unit",
+        original_name="Text Unit",
+    )
+    set_state_with_entry(hass, sensor_10, "should_not_work")
+    data["sensor_10"] = sensor_10
 
-        sensor_10 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_10",
-            unit_of_measurement="Text",
-            suggested_object_id="text_unit",
-            original_name="Text Unit",
-        )
-        set_state_with_entry(hass, sensor_10, "should_not_work")
-        data["sensor_10"] = sensor_10
+    sensor_11 = registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_11",
+        unit_of_measurement=TEMP_FAHRENHEIT,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="fahrenheit",
+        original_name="Fahrenheit",
+    )
+    set_state_with_entry(hass, sensor_11, 50)
+    data["sensor_11"] = sensor_11
 
-        sensor_11 = registry.async_get_or_create(
-            domain=sensor.DOMAIN,
-            platform="test",
-            unique_id="sensor_11",
-            unit_of_measurement=TEMP_FAHRENHEIT,
-            original_device_class=SensorDeviceClass.TEMPERATURE,
-            suggested_object_id="fahrenheit",
-            original_name="Fahrenheit",
-        )
-        set_state_with_entry(hass, sensor_11, 50)
-        data["sensor_11"] = sensor_11
+    await hass.async_block_till_done()
+    return data
 
-    if climate_entities:
-        climate_1 = registry.async_get_or_create(
-            domain=climate.DOMAIN,
-            platform="test",
-            unique_id="climate_1",
-            unit_of_measurement=TEMP_CELSIUS,
-            suggested_object_id="heatpump",
-            original_name="HeatPump",
-        )
-        climate_1_attributes = {
-            ATTR_TEMPERATURE: 20,
-            ATTR_CURRENT_TEMPERATURE: 25,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
-        }
-        set_state_with_entry(hass, climate_1, CURRENT_HVAC_HEAT, climate_1_attributes)
-        data["climate_1"] = climate_1
-        data["climate_1_attributes"] = climate_1_attributes
 
-        climate_2 = registry.async_get_or_create(
-            domain=climate.DOMAIN,
-            platform="test",
-            unique_id="climate_2",
-            unit_of_measurement=TEMP_CELSIUS,
-            suggested_object_id="ecobee",
-            original_name="Ecobee",
-        )
-        climate_2_attributes = {
-            ATTR_TEMPERATURE: 21,
-            ATTR_CURRENT_TEMPERATURE: 22,
-            ATTR_TARGET_TEMP_LOW: 21,
-            ATTR_TARGET_TEMP_HIGH: 24,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
-        }
-        set_state_with_entry(hass, climate_2, CURRENT_HVAC_HEAT, climate_2_attributes)
-        data["climate_2"] = climate_2
-        data["climate_2_attributes"] = climate_2_attributes
+@pytest.fixture(name="climate_entities")
+async def climate_fixture(hass, registry):
+    """Simulate climate entities."""
+    data = {}
+    climate_1 = registry.async_get_or_create(
+        domain=climate.DOMAIN,
+        platform="test",
+        unique_id="climate_1",
+        unit_of_measurement=TEMP_CELSIUS,
+        suggested_object_id="heatpump",
+        original_name="HeatPump",
+    )
+    climate_1_attributes = {
+        ATTR_TEMPERATURE: 20,
+        ATTR_CURRENT_TEMPERATURE: 25,
+        ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+    }
+    set_state_with_entry(hass, climate_1, CURRENT_HVAC_HEAT, climate_1_attributes)
+    data["climate_1"] = climate_1
+    data["climate_1_attributes"] = climate_1_attributes
 
-    if humidifier_entities:
-        humidifier_1 = registry.async_get_or_create(
-            domain=humidifier.DOMAIN,
-            platform="test",
-            unique_id="humidifier_1",
-            original_device_class=humidifier.HumidifierDeviceClass.HUMIDIFIER,
-            suggested_object_id="humidifier",
-            original_name="Humidifier",
-        )
-        humidifier_1_attributes = {
-            ATTR_HUMIDITY: 68,
-        }
-        set_state_with_entry(hass, humidifier_1, STATE_ON, humidifier_1_attributes)
-        data["humidifier_1"] = humidifier_1
-        data["humidifier_1_attributes"] = humidifier_1_attributes
+    climate_2 = registry.async_get_or_create(
+        domain=climate.DOMAIN,
+        platform="test",
+        unique_id="climate_2",
+        unit_of_measurement=TEMP_CELSIUS,
+        suggested_object_id="ecobee",
+        original_name="Ecobee",
+    )
+    climate_2_attributes = {
+        ATTR_TEMPERATURE: 21,
+        ATTR_CURRENT_TEMPERATURE: 22,
+        ATTR_TARGET_TEMP_LOW: 21,
+        ATTR_TARGET_TEMP_HIGH: 24,
+        ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
+    }
+    set_state_with_entry(hass, climate_2, CURRENT_HVAC_HEAT, climate_2_attributes)
+    data["climate_2"] = climate_2
+    data["climate_2_attributes"] = climate_2_attributes
 
-        humidifier_2 = registry.async_get_or_create(
-            domain=humidifier.DOMAIN,
-            platform="test",
-            unique_id="humidifier_2",
-            original_device_class=humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
-            suggested_object_id="dehumidifier",
-            original_name="Dehumidifier",
-        )
-        humidifier_2_attributes = {
-            ATTR_HUMIDITY: 54,
-        }
-        set_state_with_entry(hass, humidifier_2, STATE_ON, humidifier_2_attributes)
-        data["humidifier_2"] = humidifier_2
-        data["humidifier_2_attributes"] = humidifier_2_attributes
+    await hass.async_block_till_done()
+    return data
 
-        humidifier_3 = registry.async_get_or_create(
-            domain=humidifier.DOMAIN,
-            platform="test",
-            unique_id="humidifier_3",
-            suggested_object_id="hygrostat",
-            original_name="Hygrostat",
-        )
-        humidifier_3_attributes = {
-            ATTR_HUMIDITY: 50,
-            ATTR_MODE: "home",
-            ATTR_AVAILABLE_MODES: ["home", "eco"],
-        }
-        set_state_with_entry(hass, humidifier_3, STATE_ON, humidifier_3_attributes)
-        data["humidifier_3"] = humidifier_3
-        data["humidifier_3_attributes"] = humidifier_3_attributes
 
-    if lock_entities:
-        lock_1 = registry.async_get_or_create(
-            domain=lock.DOMAIN,
-            platform="test",
-            unique_id="lock_1",
-            suggested_object_id="front_door",
-            original_name="Front Door",
-        )
-        set_state_with_entry(hass, lock_1, STATE_LOCKED)
-        data["lock_1"] = lock_1
+@pytest.fixture(name="humidifier_entities")
+async def humidifier_fixture(hass, registry):
+    """Simulate humidifier entities."""
+    data = {}
+    humidifier_1 = registry.async_get_or_create(
+        domain=humidifier.DOMAIN,
+        platform="test",
+        unique_id="humidifier_1",
+        original_device_class=humidifier.HumidifierDeviceClass.HUMIDIFIER,
+        suggested_object_id="humidifier",
+        original_name="Humidifier",
+    )
+    humidifier_1_attributes = {
+        ATTR_HUMIDITY: 68,
+    }
+    set_state_with_entry(hass, humidifier_1, STATE_ON, humidifier_1_attributes)
+    data["humidifier_1"] = humidifier_1
+    data["humidifier_1_attributes"] = humidifier_1_attributes
 
-        lock_2 = registry.async_get_or_create(
-            domain=lock.DOMAIN,
-            platform="test",
-            unique_id="lock_2",
-            suggested_object_id="kitchen_door",
-            original_name="Kitchen Door",
-        )
-        set_state_with_entry(hass, lock_2, STATE_UNLOCKED)
-        data["lock_2"] = lock_2
+    humidifier_2 = registry.async_get_or_create(
+        domain=humidifier.DOMAIN,
+        platform="test",
+        unique_id="humidifier_2",
+        original_device_class=humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
+        suggested_object_id="dehumidifier",
+        original_name="Dehumidifier",
+    )
+    humidifier_2_attributes = {
+        ATTR_HUMIDITY: 54,
+    }
+    set_state_with_entry(hass, humidifier_2, STATE_ON, humidifier_2_attributes)
+    data["humidifier_2"] = humidifier_2
+    data["humidifier_2_attributes"] = humidifier_2_attributes
 
-    if input_number_entities:
-        input_number_1 = registry.async_get_or_create(
-            domain=input_number.DOMAIN,
-            platform="test",
-            unique_id="input_number_1",
-            suggested_object_id="threshold",
-            original_name="Threshold",
-        )
-        set_state_with_entry(hass, input_number_1, 5.2)
-        data["input_number_1"] = input_number_1
+    humidifier_3 = registry.async_get_or_create(
+        domain=humidifier.DOMAIN,
+        platform="test",
+        unique_id="humidifier_3",
+        suggested_object_id="hygrostat",
+        original_name="Hygrostat",
+    )
+    humidifier_3_attributes = {
+        ATTR_HUMIDITY: 50,
+        ATTR_MODE: "home",
+        ATTR_AVAILABLE_MODES: ["home", "eco"],
+    }
+    set_state_with_entry(hass, humidifier_3, STATE_ON, humidifier_3_attributes)
+    data["humidifier_3"] = humidifier_3
+    data["humidifier_3_attributes"] = humidifier_3_attributes
 
-        input_number_2 = registry.async_get_or_create(
-            domain=input_number.DOMAIN,
-            platform="test",
-            unique_id="input_number_2",
-            suggested_object_id="brightness",
-        )
-        set_state_with_entry(hass, input_number_2, 60)
-        data["input_number_2"] = input_number_2
+    await hass.async_block_till_done()
+    return data
 
-        input_number_3 = registry.async_get_or_create(
-            domain=input_number.DOMAIN,
-            platform="test",
-            unique_id="input_number_3",
-            suggested_object_id="target_temperature",
-            original_name="Target temperature",
-            unit_of_measurement=TEMP_CELSIUS,
-        )
-        set_state_with_entry(hass, input_number_3, 22.7)
-        data["input_number_3"] = input_number_3
 
-    if input_boolean_entities:
-        input_boolean_1 = registry.async_get_or_create(
-            domain=input_boolean.DOMAIN,
-            platform="test",
-            unique_id="input_boolean_1",
-            suggested_object_id="test",
-            original_name="Test",
-        )
-        set_state_with_entry(hass, input_boolean_1, STATE_ON)
-        data["input_boolean_1"] = input_boolean_1
+@pytest.fixture(name="lock_entities")
+async def lock_fixture(hass, registry):
+    """Simulate lock entities."""
+    data = {}
+    lock_1 = registry.async_get_or_create(
+        domain=lock.DOMAIN,
+        platform="test",
+        unique_id="lock_1",
+        suggested_object_id="front_door",
+        original_name="Front Door",
+    )
+    set_state_with_entry(hass, lock_1, STATE_LOCKED)
+    data["lock_1"] = lock_1
 
-        input_boolean_2 = registry.async_get_or_create(
-            domain=input_boolean.DOMAIN,
-            platform="test",
-            unique_id="input_boolean_2",
-            suggested_object_id="helper",
-            original_name="Helper",
-        )
-        set_state_with_entry(hass, input_boolean_2, STATE_OFF)
-        data["input_boolean_2"] = input_boolean_2
+    lock_2 = registry.async_get_or_create(
+        domain=lock.DOMAIN,
+        platform="test",
+        unique_id="lock_2",
+        suggested_object_id="kitchen_door",
+        original_name="Kitchen Door",
+    )
+    set_state_with_entry(hass, lock_2, STATE_UNLOCKED)
+    data["lock_2"] = lock_2
 
-    if binary_sensor_entities:
-        binary_sensor_1 = registry.async_get_or_create(
-            domain=binary_sensor.DOMAIN,
-            platform="test",
-            unique_id="binary_sensor_1",
-            suggested_object_id="door",
-            original_name="Door",
-        )
-        set_state_with_entry(hass, binary_sensor_1, STATE_ON)
-        data["binary_sensor_1"] = binary_sensor_1
+    await hass.async_block_till_done()
+    return data
 
-        binary_sensor_2 = registry.async_get_or_create(
-            domain=binary_sensor.DOMAIN,
-            platform="test",
-            unique_id="binary_sensor_2",
-            suggested_object_id="window",
-            original_name="Window",
-        )
-        set_state_with_entry(hass, binary_sensor_2, STATE_OFF)
-        data["binary_sensor_2"] = binary_sensor_2
 
-    if light_entities:
-        light_1 = registry.async_get_or_create(
-            domain=light.DOMAIN,
-            platform="test",
-            unique_id="light_1",
-            suggested_object_id="desk",
-            original_name="Desk",
-        )
-        set_state_with_entry(hass, light_1, STATE_ON)
-        data["light_1"] = light_1
+@pytest.fixture(name="input_number_entities")
+async def input_number_fixture(hass, registry):
+    """Simulate input_number entities."""
+    data = {}
+    input_number_1 = registry.async_get_or_create(
+        domain=input_number.DOMAIN,
+        platform="test",
+        unique_id="input_number_1",
+        suggested_object_id="threshold",
+        original_name="Threshold",
+    )
+    set_state_with_entry(hass, input_number_1, 5.2)
+    data["input_number_1"] = input_number_1
 
-        light_2 = registry.async_get_or_create(
-            domain=light.DOMAIN,
-            platform="test",
-            unique_id="light_2",
-            suggested_object_id="wall",
-            original_name="Wall",
-        )
-        set_state_with_entry(hass, light_2, STATE_OFF)
-        data["light_2"] = light_2
+    input_number_2 = registry.async_get_or_create(
+        domain=input_number.DOMAIN,
+        platform="test",
+        unique_id="input_number_2",
+        suggested_object_id="brightness",
+    )
+    set_state_with_entry(hass, input_number_2, 60)
+    data["input_number_2"] = input_number_2
 
-        light_3 = registry.async_get_or_create(
-            domain=light.DOMAIN,
-            platform="test",
-            unique_id="light_3",
-            suggested_object_id="tv",
-            original_name="TV",
-        )
-        light_3_attributes = {light.ATTR_BRIGHTNESS: 255}
-        set_state_with_entry(hass, light_3, STATE_ON, light_3_attributes)
-        data["light_3"] = light_3
-        data["light_3_attributes"] = light_3_attributes
+    input_number_3 = registry.async_get_or_create(
+        domain=input_number.DOMAIN,
+        platform="test",
+        unique_id="input_number_3",
+        suggested_object_id="target_temperature",
+        original_name="Target temperature",
+        unit_of_measurement=TEMP_CELSIUS,
+    )
+    set_state_with_entry(hass, input_number_3, 22.7)
+    data["input_number_3"] = input_number_3
 
-        light_4 = registry.async_get_or_create(
-            domain=light.DOMAIN,
-            platform="test",
-            unique_id="light_4",
-            suggested_object_id="pc",
-            original_name="PC",
-        )
-        light_4_attributes = {light.ATTR_BRIGHTNESS: 180}
-        set_state_with_entry(hass, light_4, STATE_ON, light_4_attributes)
-        data["light_4"] = light_4
-        data["light_4_attributes"] = light_4_attributes
+    await hass.async_block_till_done()
+    return data
 
-    if switch_entities:
-        switch_1 = registry.async_get_or_create(
-            domain=switch.DOMAIN,
-            platform="test",
-            unique_id="switch_1",
-            suggested_object_id="boolean",
-            original_name="Boolean",
-        )
-        switch_1_attributes = {"boolean": True}
-        set_state_with_entry(hass, switch_1, STATE_ON, switch_1_attributes)
-        data["switch_1"] = switch_1
-        data["switch_1_attributes"] = switch_1_attributes
 
-        switch_2 = registry.async_get_or_create(
-            domain=switch.DOMAIN,
-            platform="test",
-            unique_id="switch_2",
-            suggested_object_id="number",
-            original_name="Number",
-        )
-        switch_2_attributes = {"Number": 10.2}
-        set_state_with_entry(hass, switch_2, STATE_OFF, switch_2_attributes)
-        data["switch_2"] = switch_2
-        data["switch_2_attributes"] = switch_2_attributes
+@pytest.fixture(name="input_boolean_entities")
+async def input_boolean_fixture(hass, registry):
+    """Simulate input_boolean entities."""
+    data = {}
+    input_boolean_1 = registry.async_get_or_create(
+        domain=input_boolean.DOMAIN,
+        platform="test",
+        unique_id="input_boolean_1",
+        suggested_object_id="test",
+        original_name="Test",
+    )
+    set_state_with_entry(hass, input_boolean_1, STATE_ON)
+    data["input_boolean_1"] = input_boolean_1
 
-    if person_entities:
-        person_1 = registry.async_get_or_create(
-            domain=person.DOMAIN,
-            platform="test",
-            unique_id="person_1",
-            suggested_object_id="bob",
-            original_name="Bob",
-        )
-        set_state_with_entry(hass, person_1, STATE_HOME)
-        data["person_1"] = person_1
+    input_boolean_2 = registry.async_get_or_create(
+        domain=input_boolean.DOMAIN,
+        platform="test",
+        unique_id="input_boolean_2",
+        suggested_object_id="helper",
+        original_name="Helper",
+    )
+    set_state_with_entry(hass, input_boolean_2, STATE_OFF)
+    data["input_boolean_2"] = input_boolean_2
 
-        person_2 = registry.async_get_or_create(
-            domain=person.DOMAIN,
-            platform="test",
-            unique_id="person_2",
-            suggested_object_id="alice",
-            original_name="Alice",
-        )
-        set_state_with_entry(hass, person_2, STATE_NOT_HOME)
-        data["person_2"] = person_2
+    await hass.async_block_till_done()
+    return data
 
-    if device_tracker_entities:
-        device_tracker_1 = registry.async_get_or_create(
-            domain=device_tracker.DOMAIN,
-            platform="test",
-            unique_id="device_tracker_1",
-            suggested_object_id="phone",
-            original_name="Phone",
-        )
-        set_state_with_entry(hass, device_tracker_1, STATE_HOME)
-        data["device_tracker_1"] = device_tracker_1
 
-        device_tracker_2 = registry.async_get_or_create(
-            domain=device_tracker.DOMAIN,
-            platform="test",
-            unique_id="device_tracker_2",
-            suggested_object_id="watch",
-            original_name="Watch",
-        )
-        set_state_with_entry(hass, device_tracker_2, STATE_NOT_HOME)
-        data["device_tracker_2"] = device_tracker_2
+@pytest.fixture(name="binary_sensor_entities")
+async def binary_sensor_fixture(hass, registry):
+    """Simulate binary_sensor entities."""
+    data = {}
+    binary_sensor_1 = registry.async_get_or_create(
+        domain=binary_sensor.DOMAIN,
+        platform="test",
+        unique_id="binary_sensor_1",
+        suggested_object_id="door",
+        original_name="Door",
+    )
+    set_state_with_entry(hass, binary_sensor_1, STATE_ON)
+    data["binary_sensor_1"] = binary_sensor_1
 
-    if counter_entities:
-        counter_1 = registry.async_get_or_create(
-            domain=counter.DOMAIN,
-            platform="test",
-            unique_id="counter_1",
-            suggested_object_id="counter",
-        )
-        set_state_with_entry(hass, counter_1, 2)
-        data["counter_1"] = counter_1
+    binary_sensor_2 = registry.async_get_or_create(
+        domain=binary_sensor.DOMAIN,
+        platform="test",
+        unique_id="binary_sensor_2",
+        suggested_object_id="window",
+        original_name="Window",
+    )
+    set_state_with_entry(hass, binary_sensor_2, STATE_OFF)
+    data["binary_sensor_2"] = binary_sensor_2
 
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="light_entities")
+async def light_fixture(hass, registry):
+    """Simulate light entities."""
+    data = {}
+    light_1 = registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_1",
+        suggested_object_id="desk",
+        original_name="Desk",
+    )
+    set_state_with_entry(hass, light_1, STATE_ON)
+    data["light_1"] = light_1
+
+    light_2 = registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_2",
+        suggested_object_id="wall",
+        original_name="Wall",
+    )
+    set_state_with_entry(hass, light_2, STATE_OFF)
+    data["light_2"] = light_2
+
+    light_3 = registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_3",
+        suggested_object_id="tv",
+        original_name="TV",
+    )
+    light_3_attributes = {light.ATTR_BRIGHTNESS: 255}
+    set_state_with_entry(hass, light_3, STATE_ON, light_3_attributes)
+    data["light_3"] = light_3
+    data["light_3_attributes"] = light_3_attributes
+
+    light_4 = registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_4",
+        suggested_object_id="pc",
+        original_name="PC",
+    )
+    light_4_attributes = {light.ATTR_BRIGHTNESS: 180}
+    set_state_with_entry(hass, light_4, STATE_ON, light_4_attributes)
+    data["light_4"] = light_4
+    data["light_4_attributes"] = light_4_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="switch_entities")
+async def switch_fixture(hass, registry):
+    """Simulate switch entities."""
+    data = {}
+    switch_1 = registry.async_get_or_create(
+        domain=switch.DOMAIN,
+        platform="test",
+        unique_id="switch_1",
+        suggested_object_id="boolean",
+        original_name="Boolean",
+    )
+    switch_1_attributes = {"boolean": True}
+    set_state_with_entry(hass, switch_1, STATE_ON, switch_1_attributes)
+    data["switch_1"] = switch_1
+    data["switch_1_attributes"] = switch_1_attributes
+
+    switch_2 = registry.async_get_or_create(
+        domain=switch.DOMAIN,
+        platform="test",
+        unique_id="switch_2",
+        suggested_object_id="number",
+        original_name="Number",
+    )
+    switch_2_attributes = {"Number": 10.2}
+    set_state_with_entry(hass, switch_2, STATE_OFF, switch_2_attributes)
+    data["switch_2"] = switch_2
+    data["switch_2_attributes"] = switch_2_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="person_entities")
+async def person_fixture(hass, registry):
+    """Simulate person entities."""
+    data = {}
+    person_1 = registry.async_get_or_create(
+        domain=person.DOMAIN,
+        platform="test",
+        unique_id="person_1",
+        suggested_object_id="bob",
+        original_name="Bob",
+    )
+    set_state_with_entry(hass, person_1, STATE_HOME)
+    data["person_1"] = person_1
+
+    person_2 = registry.async_get_or_create(
+        domain=person.DOMAIN,
+        platform="test",
+        unique_id="person_2",
+        suggested_object_id="alice",
+        original_name="Alice",
+    )
+    set_state_with_entry(hass, person_2, STATE_NOT_HOME)
+    data["person_2"] = person_2
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="device_tracker_entities")
+async def device_tracker_fixture(hass, registry):
+    """Simulate device_tracker entities."""
+    data = {}
+    device_tracker_1 = registry.async_get_or_create(
+        domain=device_tracker.DOMAIN,
+        platform="test",
+        unique_id="device_tracker_1",
+        suggested_object_id="phone",
+        original_name="Phone",
+    )
+    set_state_with_entry(hass, device_tracker_1, STATE_HOME)
+    data["device_tracker_1"] = device_tracker_1
+
+    device_tracker_2 = registry.async_get_or_create(
+        domain=device_tracker.DOMAIN,
+        platform="test",
+        unique_id="device_tracker_2",
+        suggested_object_id="watch",
+        original_name="Watch",
+    )
+    set_state_with_entry(hass, device_tracker_2, STATE_NOT_HOME)
+    data["device_tracker_2"] = device_tracker_2
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="counter_entities")
+async def counter_fixture(hass, registry):
+    """Simulate counter entities."""
+    data = {}
+    counter_1 = registry.async_get_or_create(
+        domain=counter.DOMAIN,
+        platform="test",
+        unique_id="counter_1",
+        suggested_object_id="counter",
+    )
+    set_state_with_entry(hass, counter_1, 2)
+    data["counter_1"] = counter_1
+
+    await hass.async_block_till_done()
     return data
 
 
