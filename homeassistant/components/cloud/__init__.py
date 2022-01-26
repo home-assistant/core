@@ -114,6 +114,10 @@ class CloudNotAvailable(HomeAssistantError):
     """Raised when an action requires the cloud but it's not available."""
 
 
+class CloudNotConnected(CloudNotAvailable):
+    """Raised when an action requires the cloud but it's not connected."""
+
+
 @bind_hass
 @callback
 def async_is_logged_in(hass: HomeAssistant) -> bool:
@@ -126,6 +130,13 @@ def async_is_logged_in(hass: HomeAssistant) -> bool:
 
 @bind_hass
 @callback
+def async_is_connected(hass: HomeAssistant) -> bool:
+    """Test if connected to the cloud."""
+    return DOMAIN in hass.data and hass.data[DOMAIN].iot.connected
+
+
+@bind_hass
+@callback
 def async_active_subscription(hass: HomeAssistant) -> bool:
     """Test if user has an active subscription."""
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
@@ -134,6 +145,9 @@ def async_active_subscription(hass: HomeAssistant) -> bool:
 @bind_hass
 async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
