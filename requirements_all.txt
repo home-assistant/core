@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220124.0
+home-assistant-frontend==20220126.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
