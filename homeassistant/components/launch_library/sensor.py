@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
+from pylaunches.objects.event import Event
 from pylaunches.objects.launch import Launch
 import voluptuous as vol
 
@@ -45,8 +46,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class LaunchLibrarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Launch], datetime | int | str | None]
-    attributes_fn: Callable[[Launch], dict[str, Any] | None]
+    value_fn: Callable[[Launch | Event], datetime | int | str | None]
+    attributes_fn: Callable[[Launch | Event], dict[str, Any] | None]
 
 
 @dataclass
@@ -120,6 +121,19 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
             "description": sl.mission.description,
         },
     ),
+    LaunchLibrarySensorEntityDescription(
+        key="starship_event",
+        icon="mdi:calendar",
+        name="Next Starship event",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda se: parse_datetime(se.date),
+        attributes_fn=lambda se: {
+            "title": se.name,
+            "location": se.location,
+            "stream": se.video_url,
+            "description": se.description,
+        },
+    ),
 )
 
 
@@ -169,7 +183,7 @@ class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
-    _next_launch: Launch | None = None
+    _next_event: Launch | Event | None = None
     entity_description: LaunchLibrarySensorEntityDescription
     coordinator: DataUpdateCoordinator[LaunchLibraryData]
 
@@ -190,31 +204,33 @@ class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> datetime | str | int | None:
         """Return the state of the sensor."""
-        if self._next_launch is None:
+        if self._next_event is None:
             return None
-        return self.entity_description.value_fn(self._next_launch)
+        return self.entity_description.value_fn(self._next_event)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the attributes of the sensor."""
-        if self._next_launch is None:
+        if self._next_event is None:
             return None
-        return self.entity_description.attributes_fn(self._next_launch)
+        return self.entity_description.attributes_fn(self._next_event)
 
     @property
     def available(self) -> bool:
         """Return if the sensor is available."""
-        return super().available and self._next_launch is not None
+        return super().available and self._next_event is not None
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.entity_description.key == "starship_launch":
-            launches = self.coordinator.data["starship_events"].upcoming.launches
+            events = self.coordinator.data["starship_events"].upcoming.launches
+        elif self.entity_description.key == "starship_event":
+            events = self.coordinator.data["starship_events"].upcoming.events
         else:
-            launches = self.coordinator.data["upcoming_launches"]
+            events = self.coordinator.data["upcoming_launches"]
 
-        self._next_launch = next((launch for launch in (launches)), None)
+        self._next_event = next((event for event in (events)), None)
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
