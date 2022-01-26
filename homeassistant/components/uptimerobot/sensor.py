@@ -45,7 +45,7 @@ async def async_setup_entry(
                     key=str(monitor.id),
                     name=monitor.friendly_name,
                     entity_category=EntityCategory.DIAGNOSTIC,
-                    device_class="monitor_status",
+                    device_class="uptimerobot_monitor_status",
                 ),
                 monitor=monitor,
             )
