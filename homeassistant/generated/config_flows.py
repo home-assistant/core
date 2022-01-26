@@ -337,7 +337,7 @@ FLOWS = [
     "twilio",
     "twinkly",
     "unifi",
-    "unifi_protect",
+    "unifiprotect",
     "upb",
     "upcloud",
     "upnp",

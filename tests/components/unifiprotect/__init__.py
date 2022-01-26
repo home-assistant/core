@@ -36,7 +36,7 @@ def _patch_discovery(device=None, no_device=False):
     @contextmanager
     def _patcher():
         with patch(
-            "homeassistant.components.unifi_protect.discovery.AIOUnifiScanner",
+            "homeassistant.components.unifiprotect.discovery.AIOUnifiScanner",
             return_value=mock_aio_discovery,
         ):
             yield

@@ -17,7 +17,7 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.unifi_protect.const import (
+from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
     ATTR_CHANNEL_ID,
     ATTR_FPS,

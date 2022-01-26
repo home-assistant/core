@@ -23,7 +23,7 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
-from homeassistant.components.unifi_protect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
@@ -163,7 +163,7 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifi_protect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.ProtectApiClient"
     ) as mock_api:
         mock_ufp_config_entry.add_to_hass(hass)
 

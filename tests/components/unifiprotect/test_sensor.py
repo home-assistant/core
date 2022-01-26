@@ -12,11 +12,11 @@ from pyunifiprotect.data.base import WifiConnectionState, WiredConnectionState
 from pyunifiprotect.data.nvr import EventMetadata
 from pyunifiprotect.data.types import EventType, SmartDetectObjectType
 
-from homeassistant.components.unifi_protect.const import (
+from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,
     DEFAULT_ATTRIBUTION,
 )
-from homeassistant.components.unifi_protect.sensor import (
+from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,

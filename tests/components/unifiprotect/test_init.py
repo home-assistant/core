@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pyunifiprotect import NotAuthorized, NvrError
 from pyunifiprotect.data import NVR
 
-from homeassistant.components.unifi_protect.const import CONF_DISABLE_RTSP, DOMAIN
+from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -48,7 +48,7 @@ async def test_setup_multiple(
     nvr.id
     mock_client.get_nvr = AsyncMock(return_value=nvr)
 
-    with patch("homeassistant.components.unifi_protect.ProtectApiClient") as mock_api:
+    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
         mock_config = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -164,7 +164,7 @@ async def test_setup_starts_discovery(
 ):
     """Test setting up will start discovery."""
     with _patch_discovery(), patch(
-        "homeassistant.components.unifi_protect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.ProtectApiClient"
     ) as mock_api:
         mock_ufp_config_entry.add_to_hass(hass)
         mock_api.return_value = mock_client

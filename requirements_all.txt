@@ -2017,7 +2017,7 @@ pytrafikverket==0.1.6.2
 # homeassistant.components.usb
 pyudev==0.22.0
 
-# homeassistant.components.unifi_protect
+# homeassistant.components.unifiprotect
 pyunifiprotect==3.2.0
 
 # homeassistant.components.uptimerobot
@@ -2394,7 +2394,7 @@ twilio==6.32.0
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
 
-# homeassistant.components.unifi_protect
+# homeassistant.components.unifiprotect
 unifi-discovery==1.1.2
 
 # homeassistant.components.unifiled

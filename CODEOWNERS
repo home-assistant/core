@@ -987,9 +987,9 @@ homeassistant/components/twinkly/* @dr1rrb @Robbie1221
 tests/components/twinkly/* @dr1rrb @Robbie1221
 homeassistant/components/unifi/* @Kane610
 tests/components/unifi/* @Kane610
-homeassistant/components/unifi_protect/* @briis @AngellusMortis @bdraco
-tests/components/unifi_protect/* @briis @AngellusMortis @bdraco
 homeassistant/components/unifiled/* @florisvdk
+homeassistant/components/unifiprotect/* @briis @AngellusMortis @bdraco
+tests/components/unifiprotect/* @briis @AngellusMortis @bdraco
 homeassistant/components/upb/* @gwww
 tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff

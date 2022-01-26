@@ -10,7 +10,7 @@ from pyunifiprotect.data.nvr import NVR
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp
-from homeassistant.components.unifi_protect.const import (
+from homeassistant.components.unifiprotect.const import (
     CONF_ALL_UPDATES,
     CONF_DISABLE_RTSP,
     CONF_OVERRIDE_CHOST,
@@ -68,10 +68,10 @@ async def test_form(hass: HomeAssistant, mock_nvr: NVR) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         return_value=mock_nvr,
     ), patch(
-        "homeassistant.components.unifi_protect.async_setup_entry",
+        "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -104,7 +104,7 @@ async def test_form_version_too_old(hass: HomeAssistant, mock_old_nvr: NVR) -> N
     )
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         return_value=mock_old_nvr,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -127,7 +127,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         side_effect=NotAuthorized,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -150,7 +150,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         side_effect=NvrError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -193,7 +193,7 @@ async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         side_effect=NotAuthorized,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -209,7 +209,7 @@ async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
     assert result2["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         return_value=mock_nvr,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -242,7 +242,7 @@ async def test_form_options(hass: HomeAssistant, mock_client) -> None:
     mock_config.add_to_hass(hass)
 
     with _patch_discovery(), patch(
-        "homeassistant.components.unifi_protect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.ProtectApiClient"
     ) as mock_api:
         mock_api.return_value = mock_client
 
@@ -316,10 +316,10 @@ async def test_discovered_by_unifi_discovery_direct_connect(
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         return_value=mock_nvr,
     ), patch(
-        "homeassistant.components.unifi_protect.async_setup_entry",
+        "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -364,7 +364,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
     mock_config.add_to_hass(hass)
 
     with _patch_discovery(), patch(
-        "homeassistant.components.unifi_protect.async_setup_entry",
+        "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -400,7 +400,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     mock_config.add_to_hass(hass)
 
     with _patch_discovery(), patch(
-        "homeassistant.components.unifi_protect.async_setup_entry",
+        "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -440,10 +440,10 @@ async def test_discovered_by_unifi_discovery(
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         side_effect=[NotAuthorized, mock_nvr],
     ), patch(
-        "homeassistant.components.unifi_protect.async_setup_entry",
+        "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -492,10 +492,10 @@ async def test_discovered_by_unifi_discovery_partial(
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.unifi_protect.config_flow.ProtectApiClient.get_nvr",
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         return_value=mock_nvr,
     ), patch(
-        "homeassistant.components.unifi_protect.async_setup_entry",
+        "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

@@ -19,13 +19,12 @@ from pyunifiprotect.data.types import (
 )
 
 from homeassistant.components.select.const import ATTR_OPTIONS
-from homeassistant.components.unifi_protect.const import (
+from homeassistant.components.unifiprotect.const import (
     ATTR_DURATION,
     ATTR_MESSAGE,
     DEFAULT_ATTRIBUTION,
-    DOMAIN,
 )
-from homeassistant.components.unifi_protect.select import (
+from homeassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
     LIGHT_SELECTS,
@@ -620,7 +619,7 @@ async def test_select_service_doorbell_invalid(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            DOMAIN,
+            "unifiprotect",
             SERVICE_SET_DOORBELL_MESSAGE,
             {ATTR_ENTITY_ID: entity_id, ATTR_MESSAGE: "Test"},
             blocking=True,
@@ -642,7 +641,7 @@ async def test_select_service_doorbell_success(
     camera.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(
-        DOMAIN,
+        "unifiprotect",
         SERVICE_SET_DOORBELL_MESSAGE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -656,7 +655,7 @@ async def test_select_service_doorbell_success(
     )
 
 
-@patch("homeassistant.components.unifi_protect.select.utcnow")
+@patch("homeassistant.components.unifiprotect.select.utcnow")
 async def test_select_service_doorbell_with_reset(
     mock_now,
     hass: HomeAssistant,
@@ -674,7 +673,7 @@ async def test_select_service_doorbell_with_reset(
     camera.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(
-        DOMAIN,
+        "unifiprotect",
         SERVICE_SET_DOORBELL_MESSAGE,
         {
             ATTR_ENTITY_ID: entity_id,

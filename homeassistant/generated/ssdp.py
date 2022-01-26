@@ -240,7 +240,7 @@ SSDP = {
             "modelDescription": "UniFi Dream Machine SE"
         }
     ],
-    "unifi_protect": [
+    "unifiprotect": [
         {
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine"
