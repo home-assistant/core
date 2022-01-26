@@ -49,21 +49,22 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = self.coordinator.device_info
 
     @property
-    def native_value(self) -> int | str:
+    def native_value(self) -> int | str | datetime:
         """Return the state."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
+        # return self.entity_description.value_fn(self.coordinator.api.data)
+        return self.entity_description.value_fn(self.coordinator)
 
 
-def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
+def _time_remaining_to_timestamp(coordinator: IntellifireDataUpdateCoordinator) -> datetime | None:
     """Define a sensor that takes into account timezone."""
+    seconds_offset = coordinator.api.data.timeremaining_s
 
-    seconds_offset = data.timeremaining_s
     # If disabled return None - else return a timestamp with correct TZ info
     if seconds_offset == 0:
         return None
 
     return datetime.now().replace(
-        tzinfo=pytz.timezone(self.hass.config.time_zone)
+        tzinfo = pytz.timezone(coordinator.hass.config.time_zone)
     ) + timedelta(seconds=seconds_offset)
 
 
@@ -73,7 +74,7 @@ class IntellifireSensorRequiredKeysMixin:
 
     # Although sensors could have a variety of different return values,
     # all the ones below are only returning ints
-    value_fn: Callable[[IntellifirePollData], int | str | datetime | None]
+    value_fn: Callable[[IntellifireDataUpdateCoordinator], int | str | datetime | None ]
 
 
 @dataclass
@@ -82,22 +83,16 @@ class IntellifireSensorEntityDescription(
 ):
     """Describes a sensor sensor entity."""
 
-    entity_class: type[IntellifireSensor] = IntellifireSensor
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Define setup entry call."""
 
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    sensors = []
-    for description in INTELLIFIRE_SENSORS:
-        sensors.append(
-            description.entity_class(coordinator=coordinator, description=description)
-        )
-    async_add_entities(sensors)
-
+    async_add_entities(
+        IntellifireSensor(coordinator=coordinator, description=description)
+        for description in INTELLIFIRE_SENSORS
+    )
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
@@ -105,7 +100,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:fire-circle",
         name="Flame Height",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.flameheight,
+        value_fn=lambda coord: coord.api.data.flameheight,
     ),
     IntellifireSensorEntityDescription(
         key="temperature",
@@ -113,7 +108,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        value_fn=lambda data: data.temperature_c,
+        value_fn=lambda coord: coord.api.data.temperature_c,
     ),
     IntellifireSensorEntityDescription(
         key="target_temp",
@@ -121,20 +116,21 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        value_fn=lambda data: data.thermostat_setpoint_c,
+        value_fn=lambda coord: coord.api.data.thermostat_setpoint_c,
     ),
     IntellifireSensorEntityDescription(
         key="fan_speed",
         icon="mdi:fan",
         name="Fan Speed",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.fanspeed,
+        value_fn=lambda coord: coord.api.data.fanspeed,
     ),
     IntellifireSensorEntityDescription(
         key="timer_end_timestamp",
         icon="mdi:timer-sand",
         name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_time_remaining_to_timestamp,
+        value_fn=lambda coord: _time_remaining_to_timestamp(coord)
+
     ),
 )
