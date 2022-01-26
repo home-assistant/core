@@ -27,25 +27,25 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Perform the setup for Envisalink sensor devices."""
+    """Perform the setup for Envisalink sensor entities."""
     if not discovery_info:
         return
     configured_partitions = discovery_info["partitions"]
 
-    devices = []
+    entities = []
     for part_num in configured_partitions:
-        device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
-        device = EnvisalinkSensor(
+        entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
+        entity = EnvisalinkSensor(
             hass,
-            device_config_data[CONF_PARTITIONNAME],
+            entity_config_data[CONF_PARTITIONNAME],
             part_num,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
         )
 
-        devices.append(device)
+        entities.append(entity)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
@@ -61,9 +61,15 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_KEYPAD_UPDATE, self.async_update_callback
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_PARTITION_UPDATE, self.async_update_callback
+            )
         )
 
     @property
@@ -82,7 +88,7 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
         return self._info["status"]
 
     @callback
-    def _update_callback(self, partition):
+    def async_update_callback(self, partition):
         """Update the partition state in HA, if needed."""
         if partition is None or int(partition) == self._partition_number:
             self.async_write_ha_state()
