@@ -1,7 +1,6 @@
 """Tests for the aws component config and setup."""
 from unittest.mock import AsyncMock, MagicMock, patch as async_patch
 
-from homeassistant.components import aws
 from homeassistant.setup import async_setup_component
 
 
@@ -36,22 +35,23 @@ class MockAioSession:
 
 async def test_empty_config(hass):
     """Test a default config will be create for empty config."""
-    with async_patch("homeassistant.components.aws.AioSession", new=MockAioSession):
+    mock_session = MockAioSession()
+    with async_patch(
+        "homeassistant.components.aws.AioSession", return_value=mock_session
+    ):
         await async_setup_component(hass, "aws", {"aws": {}})
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 1
-    session = sessions.get("default")
-    assert isinstance(session, MockAioSession)
     # we don't validate auto-created default profile
-    session.get_user.assert_not_awaited()
+    mock_session.get_user.assert_not_awaited()
 
 
 async def test_empty_credential(hass):
     """Test a default config will be create for empty credential section."""
-    with async_patch("homeassistant.components.aws.AioSession", new=MockAioSession):
+    mock_session = MockAioSession()
+    with async_patch(
+        "homeassistant.components.aws.AioSession", return_value=mock_session
+    ):
         await async_setup_component(
             hass,
             "aws",
@@ -69,22 +69,20 @@ async def test_empty_credential(hass):
         )
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 1
-    session = sessions.get("default")
-    assert isinstance(session, MockAioSession)
-
     assert hass.services.has_service("notify", "new_lambda_test") is True
     await hass.services.async_call(
         "notify", "new_lambda_test", {"message": "test", "target": "ARN"}, blocking=True
     )
-    session.invoke.assert_awaited_once()
+    mock_session.invoke.assert_awaited_once()
 
 
 async def test_profile_credential(hass):
     """Test credentials with profile name."""
-    with async_patch("homeassistant.components.aws.AioSession", new=MockAioSession):
+    mock_session = MockAioSession()
+    with async_patch(
+        "homeassistant.components.aws.AioSession", return_value=mock_session
+    ):
+
         await async_setup_component(
             hass,
             "aws",
@@ -104,12 +102,6 @@ async def test_profile_credential(hass):
         )
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 1
-    session = sessions.get("test")
-    assert isinstance(session, MockAioSession)
-
     assert hass.services.has_service("notify", "sns_test") is True
     await hass.services.async_call(
         "notify",
@@ -117,12 +109,15 @@ async def test_profile_credential(hass):
         {"title": "test", "message": "test", "target": "ARN"},
         blocking=True,
     )
-    session.publish.assert_awaited_once()
+    mock_session.publish.assert_awaited_once()
 
 
 async def test_access_key_credential(hass):
     """Test credentials with access key."""
-    with async_patch("homeassistant.components.aws.AioSession", new=MockAioSession):
+    mock_session = MockAioSession()
+    with async_patch(
+        "homeassistant.components.aws.AioSession", return_value=mock_session
+    ):
         await async_setup_component(
             hass,
             "aws",
@@ -149,12 +144,6 @@ async def test_access_key_credential(hass):
         )
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 2
-    session = sessions.get("key")
-    assert isinstance(session, MockAioSession)
-
     assert hass.services.has_service("notify", "sns_test") is True
     await hass.services.async_call(
         "notify",
@@ -162,15 +151,16 @@ async def test_access_key_credential(hass):
         {"title": "test", "message": "test", "target": "ARN"},
         blocking=True,
     )
-    session.publish.assert_awaited_once()
+    mock_session.publish.assert_awaited_once()
 
 
 async def test_notify_credential(hass):
     """Test notify service can use access key directly."""
+    mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", new=MockAioSession
+        "homeassistant.components.aws.AioSession", return_value=mock_session
     ), async_patch(
-        "homeassistant.components.aws.notify.AioSession", new=MockAioSession
+        "homeassistant.components.aws.notify.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -192,11 +182,6 @@ async def test_notify_credential(hass):
         )
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 1
-    assert isinstance(sessions.get("default"), MockAioSession)
-
     assert hass.services.has_service("notify", "sqs_test") is True
     await hass.services.async_call(
         "notify", "sqs_test", {"message": "test", "target": "ARN"}, blocking=True
@@ -205,10 +190,11 @@ async def test_notify_credential(hass):
 
 async def test_notify_credential_profile(hass):
     """Test notify service can use profile directly."""
+    mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", new=MockAioSession
+        "homeassistant.components.aws.AioSession", return_value=mock_session
     ), async_patch(
-        "homeassistant.components.aws.notify.AioSession", new=MockAioSession
+        "homeassistant.components.aws.notify.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -228,11 +214,6 @@ async def test_notify_credential_profile(hass):
         )
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 1
-    assert isinstance(sessions.get("default"), MockAioSession)
-
     assert hass.services.has_service("notify", "sqs_test") is True
     await hass.services.async_call(
         "notify", "sqs_test", {"message": "test", "target": "ARN"}, blocking=True
@@ -241,7 +222,10 @@ async def test_notify_credential_profile(hass):
 
 async def test_credential_skip_validate(hass):
     """Test credential can skip validate."""
-    with async_patch("homeassistant.components.aws.AioSession", new=MockAioSession):
+    mock_session = MockAioSession()
+    with async_patch(
+        "homeassistant.components.aws.AioSession", return_value=mock_session
+    ):
         await async_setup_component(
             hass,
             "aws",
@@ -260,17 +244,15 @@ async def test_credential_skip_validate(hass):
         )
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 1
-    session = sessions.get("key")
-    assert isinstance(session, MockAioSession)
-    session.get_user.assert_not_awaited()
+    mock_session.get_user.assert_not_awaited()
 
 
 async def test_service_call_extra_data(hass):
     """Test service call extra data are parsed properly."""
-    with async_patch("homeassistant.components.aws.AioSession", new=MockAioSession):
+    mock_session = MockAioSession()
+    with async_patch(
+        "homeassistant.components.aws.AioSession", return_value=mock_session
+    ):
         await async_setup_component(
             hass,
             "aws",
@@ -288,12 +270,6 @@ async def test_service_call_extra_data(hass):
         )
         await hass.async_block_till_done()
 
-    sessions = hass.data[aws.DATA_SESSIONS]
-    assert sessions is not None
-    assert len(sessions) == 1
-    session = sessions.get("default")
-    assert isinstance(session, MockAioSession)
-
     assert hass.services.has_service("notify", "sns_test") is True
     await hass.services.async_call(
         "notify",
@@ -305,8 +281,7 @@ async def test_service_call_extra_data(hass):
         },
         blocking=True,
     )
-
-    session.publish.assert_called_once_with(
+    mock_session.publish.assert_called_once_with(
         TargetArn="ARN",
         Message="test",
         Subject="Home Assistant",
