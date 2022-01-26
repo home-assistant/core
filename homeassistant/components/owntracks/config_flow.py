@@ -27,7 +27,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
-        except cloud.CloudNotAvailable:
+        except cloud.CloudNotConnected:
             return self.async_abort(reason="cloud_not_connected")
 
         secret = secrets.token_hex(16)
