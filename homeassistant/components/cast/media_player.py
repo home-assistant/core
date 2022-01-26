@@ -30,6 +30,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
+    MEDIA_CLASS_APP,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -484,7 +485,7 @@ class CastDevice(MediaPlayerEntity):
             children.append(
                 BrowseMedia(
                     title="Plex",
-                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_class=MEDIA_CLASS_APP,
                     media_content_id="",
                     media_content_type="plex",
                     thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
