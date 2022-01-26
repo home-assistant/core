@@ -29,13 +29,12 @@ async def async_get_config_entry_diagnostics(
             return None
         return data[0].raw_data_contents
 
-    next_launch = _first_element(coordinator.data["upcoming_launches"])
-    starship_launch = _first_element(
-        coordinator.data["starship_events"].upcoming.launches
-    )
-    starship_event = _first_element(coordinator.data["starship_events"].upcoming.events)
     return {
-        "next_launch": next_launch,
-        "starship_launch": starship_launch,
-        "starship_event": starship_event,
+        "next_launch": _first_element(coordinator.data["upcoming_launches"]),
+        "starship_launch": _first_element(
+            coordinator.data["starship_events"].upcoming.launches
+        ),
+        "starship_event": _first_element(
+            coordinator.data["starship_events"].upcoming.events
+        ),
     }
