@@ -36,6 +36,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     STATE_ON,
+    TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -398,7 +399,15 @@ class Thermostat(ClimateEntity):
 
     @property
     def precision(self) -> float:
-        """Return the precision of the system."""
+        """
+        Return the precision of the system.
+
+        Ecobee presicision is tenths and the temp is kept in F.
+        For configurations displaying in C, we set the precision
+        to HALVES to match the display behavior on the thermostat.
+        """
+        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+            return PRECISION_HALVES
         return PRECISION_TENTHS
 
     @property

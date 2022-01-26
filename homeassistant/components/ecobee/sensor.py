@@ -10,10 +10,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    PERCENTAGE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.temperature import display_temp
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
@@ -21,7 +28,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -112,6 +118,17 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
+    def native_unit_of_measurement(self):
+        """Return the configured unit of measurement."""
+        if self.entity_description.key == "temperature":
+            # Tell HA that the entity's native unit is the same
+            # as HA config's temperature unit. Then we will do
+            # the needed conversion and rounding in native_value.
+            return self.hass.config.units.temperature_unit
+
+        return self.entity_description.native_unit_of_measurement
+
+    @property
     def available(self):
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
@@ -128,7 +145,14 @@ class EcobeeSensor(SensorEntity):
             return None
 
         if self.entity_description.key == "temperature":
-            return float(self._state) / 10
+            if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+                precision = PRECISION_HALVES
+            else:
+                precision = PRECISION_TENTHS
+
+            return display_temp(
+                self.hass, (float(self._state) / 10.0), TEMP_FAHRENHEIT, precision
+            )
 
         return self._state
 
