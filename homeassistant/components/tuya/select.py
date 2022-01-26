@@ -235,22 +235,26 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Vertical Swing Flap Angle",
             device_class=TuyaDeviceClass.FAN_ANGLE,
             entity_category=EntityCategory.CONFIG,
+            icon="mdi:format-vertical-align-center",
         ),
         SelectEntityDescription(
             key=DPCode.FAN_HORIZONTAL,
             name="Horizontal Swing Flap Angle",
             device_class=TuyaDeviceClass.FAN_ANGLE,
             entity_category=EntityCategory.CONFIG,
+            icon="mdi:format-horizontal-align-center",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
             name="Countdown",
             entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             name="Countdown Setting",
             entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
         ),
     ),
 }
