@@ -4,9 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
 
-from intellifire4py import IntellifirePollData
 import pytz
 
 from homeassistant.components.sensor import (
@@ -55,7 +53,9 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator)
 
 
-def _time_remaining_to_timestamp(coordinator: IntellifireDataUpdateCoordinator) -> datetime | None:
+def _time_remaining_to_timestamp(
+    coordinator: IntellifireDataUpdateCoordinator,
+) -> datetime | None:
     """Define a sensor that takes into account timezone."""
     seconds_offset = coordinator.api.data.timeremaining_s
 
@@ -63,9 +63,10 @@ def _time_remaining_to_timestamp(coordinator: IntellifireDataUpdateCoordinator) 
     if seconds_offset == 0:
         return None
 
-    return datetime.now().replace(
-        tzinfo = pytz.timezone(coordinator.hass.config.time_zone)
-    ) + timedelta(seconds=seconds_offset)
+    return (
+        datetime.now().replace(tzinfo=pytz.timezone(coordinator.hass.config.time_zone))
+        + timedelta(seconds=seconds_offset)
+    ).replace(microsecond=0)
 
 
 @dataclass
@@ -74,7 +75,7 @@ class IntellifireSensorRequiredKeysMixin:
 
     # Although sensors could have a variety of different return values,
     # all the ones below are only returning ints
-    value_fn: Callable[[IntellifireDataUpdateCoordinator], int | str | datetime | None ]
+    value_fn: Callable[[IntellifireDataUpdateCoordinator], int | str | datetime | None]
 
 
 @dataclass
@@ -82,6 +83,7 @@ class IntellifireSensorEntityDescription(
     SensorEntityDescription, IntellifireSensorRequiredKeysMixin
 ):
     """Describes a sensor sensor entity."""
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -93,6 +95,7 @@ async def async_setup_entry(
         IntellifireSensor(coordinator=coordinator, description=description)
         for description in INTELLIFIRE_SENSORS
     )
+
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
@@ -130,7 +133,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:timer-sand",
         name="Timer End",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coord: _time_remaining_to_timestamp(coord)
-
+        value_fn=lambda coord: _time_remaining_to_timestamp(coord),
     ),
 )
