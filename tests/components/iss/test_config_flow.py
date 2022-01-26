@@ -2,10 +2,10 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.launch_library.const import DOMAIN
-from homeassistant.components.launch_library.sensor import DEFAULT_NEXT_LAUNCH_NAME
+from homeassistant.components.iss.binary_sensor import DEFAULT_NAME
+from homeassistant.components.iss.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 
 from tests.common import MockConfigEntry
 
@@ -13,11 +13,9 @@ from tests.common import MockConfigEntry
 async def test_import(hass):
     """Test entry will be imported."""
 
-    imported_config = {CONF_NAME: DEFAULT_NEXT_LAUNCH_NAME}
+    imported_config = {CONF_NAME: DEFAULT_NAME, CONF_SHOW_ON_MAP: False}
 
-    with patch(
-        "homeassistant.components.launch_library.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=imported_config
@@ -36,17 +34,15 @@ async def test_create_entry(hass):
     assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
     assert result.get("step_id") == SOURCE_USER
 
-    with patch(
-        "homeassistant.components.launch_library.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {},
+            {CONF_SHOW_ON_MAP: True},
         )
 
         assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result.get("result").data == {}
+        assert result.get("result").data[CONF_SHOW_ON_MAP] is True
 
 
 async def test_integration_already_exists(hass):
@@ -58,24 +54,8 @@ async def test_integration_already_exists(hass):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={}
+        DOMAIN, context={"source": SOURCE_USER}, data={CONF_SHOW_ON_MAP: False}
     )
 
     assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
     assert result.get("reason") == "single_instance_allowed"
-
-
-async def test_integration_location_not_defined(hass):
-    """Test that we abort if latitude and longitudehaas not been configured."""
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={}
-    )
-
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
-    assert result.get("reason") == "latitude_longitude_not_defined"
