@@ -402,7 +402,7 @@ class Thermostat(ClimateEntity):
         """
         Return the precision of the system.
 
-        Ecobee presicision is tenths and the temp is kept in F.
+        Ecobee precision is tenths and the temperature is kept in F.
         For configurations displaying in C, we set the precision
         to HALVES to match the display behavior on the thermostat.
         """
