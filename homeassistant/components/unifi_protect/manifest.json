@@ -1,8 +1,8 @@
 {
-  "domain": "unifiprotect",
+  "domain": "unifi_protect",
   "name": "UniFi Protect",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
+  "documentation": "https://www.home-assistant.io/integrations/unifi_protect",
   "requirements": [
     "pyunifiprotect==3.2.0",
     "unifi-discovery==1.1.2"

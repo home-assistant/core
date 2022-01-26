@@ -122,7 +122,14 @@ def _get_viewer_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     default_message = api.bootstrap.nvr.doorbell_settings.default_message_text
     messages = api.bootstrap.nvr.doorbell_settings.all_messages
-    built_messages = ({"id": item.type.value, "name": item.text} for item in messages)
+    built_messages: list[dict[str, str]] = []
+
+    for item in messages:
+        msg_type = item.type.value
+        if item.type == DoorbellMessageType.CUSTOM_MESSAGE:
+            msg_type = f"{DoorbellMessageType.CUSTOM_MESSAGE}:{item.text}"
+
+        built_messages.append({"id": msg_type, "name": item.text})
 
     return [
         {"id": "", "name": f"Default Message ({default_message})"},
@@ -176,6 +183,7 @@ async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> 
 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
+        message = message.split(":")[-1]
         await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
     elif message == TYPE_EMPTY_VALUE:
         await obj.set_lcd_text(None)

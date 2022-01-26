@@ -66,6 +66,15 @@ class TuyaLightEntityDescription(LightEntityDescription):
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
+    # Curtain Switch
+    # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
+    "clkg": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_BACKLIGHT,
+            name="Backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # String Lights
     # https://developer.tuya.com/en/docs/iot/dc?id=Kaof7taxmvadu
     "dc": (
@@ -149,6 +158,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             name="Backlight",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Air conditioner
@@ -157,6 +167,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             name="Backlight",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Heater
@@ -262,6 +273,16 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_CONTROLLER,
             color_temp=DPCode.TEMP_CONTROLLER,
+        ),
+    ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_temp=DPCode.TEMP_VALUE,
         ),
     ),
 }

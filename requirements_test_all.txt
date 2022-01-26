@@ -586,7 +586,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.4.3
+intellifire4py==0.5
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1230,7 +1230,7 @@ python-twitch-client==0.6.0
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==2021.12.0
+pytile==2022.01.0
 
 # homeassistant.components.traccar
 pytraccar==0.10.0
@@ -1245,7 +1245,7 @@ pytrafikverket==0.1.6.2
 # homeassistant.components.usb
 pyudev==0.22.0
 
-# homeassistant.components.unifiprotect
+# homeassistant.components.unifi_protect
 pyunifiprotect==3.2.0
 
 # homeassistant.components.uptimerobot
@@ -1360,6 +1360,9 @@ soco==0.26.0
 # homeassistant.components.solaredge
 solaredge==0.0.2
 
+# homeassistant.components.solax
+solax==0.2.9
+
 # homeassistant.components.honeywell
 somecomfort==0.8.0
 
@@ -1455,7 +1458,7 @@ twilio==6.32.0
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
 
-# homeassistant.components.unifiprotect
+# homeassistant.components.unifi_protect
 unifi-discovery==1.1.2
 
 # homeassistant.components.upb

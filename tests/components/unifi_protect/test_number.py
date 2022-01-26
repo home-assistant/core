@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from pyunifiprotect.data import Camera, Doorlock, Light
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
-from homeassistant.components.unifiprotect.number import (
+from homeassistant.components.unifi_protect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifi_protect.number import (
     CAMERA_NUMBERS,
     DOORLOCK_NUMBERS,
     LIGHT_NUMBERS,

@@ -241,6 +241,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        NumberEntityDescription(
+            key=DPCode.TEMP,
+            name="Temperature",
+            icon="mdi:thermometer-lines",
+        ),
+    ),
 }
 
 

@@ -524,13 +524,19 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             raise NotImplementedError
 
         return await async_browse_media_internal(
-            self.hass, self._spotify, self._me, media_content_type, media_content_id
+            self.hass,
+            self._spotify,
+            self._session,
+            self._me,
+            media_content_type,
+            media_content_id,
         )
 
 
 async def async_browse_media_internal(
     hass,
     spotify,
+    session,
     current_user,
     media_content_type,
     media_content_id,
@@ -542,6 +548,8 @@ async def async_browse_media_internal(
         return await hass.async_add_executor_job(
             partial(library_payload, can_play_artist=can_play_artist)
         )
+
+    await session.async_ensure_token_valid()
 
     # Strip prefix
     media_content_type = media_content_type[len(MEDIA_PLAYER_PREFIX) :]
