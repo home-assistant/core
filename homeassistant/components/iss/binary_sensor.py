@@ -1,4 +1,4 @@
-"""Support for International Space Station binary sensor."""
+"""Support for iss binary sensor."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -43,10 +43,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
+def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import ISS configuration from yaml."""
@@ -77,7 +77,7 @@ async def async_setup_entry(
 
     try:
         iss_data = IssData(hass.config.latitude, hass.config.longitude)
-        iss_data.update()
+        await hass.async_add_executor_job(iss_data.update)
     except HTTPError as error:
         _LOGGER.error(error)
         return
@@ -119,7 +119,7 @@ class IssBinarySensor(BinarySensorEntity):
 
             return attrs
 
-    async def async_update(self):
+    def update(self):
         """Get the latest data from ISS API and updates the states."""
         self.iss_data.update()
 

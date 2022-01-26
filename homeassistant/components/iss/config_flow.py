@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DOMAIN
 
 
-class IssFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for iss component."""
 
     VERSION = 1
@@ -39,7 +39,7 @@ class IssFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, conf: dict) -> FlowResult:
-        """Import a configuration from config.yaml."""
+        """Import a configuration from configuration.yaml."""
         return await self.async_step_user(
             user_input={
                 CONF_NAME: conf[CONF_NAME],
