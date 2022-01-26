@@ -1,37 +1,28 @@
 """Define test fixtures for Tile."""
-from datetime import datetime
+import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytile.tile import Tile
 
 from homeassistant.components.tile.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
-TILE_UUID = "tile_123"
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="api")
-def api_fixture(hass):
+def api_fixture(hass, data_tile_details):
     """Define a pytile API object."""
-    tile = Mock(
-        accuracy=20,
-        altitude=1000,
-        dead=False,
-        latitude=51.528308,
-        longitude=-0.3817765,
-        lost=False,
-        lost_timestamp=datetime(2022, 1, 1, 0, 0, 0),
-        ring_state="STOPPED",
-        uuid=TILE_UUID,
-        voip_state="OFFLINE",
-        async_update=AsyncMock(),
-    )
-    tile.name = "Tile 123"
+    tile = Tile(None, data_tile_details)
+    tile.async_update = AsyncMock()
 
-    return Mock(async_get_tiles=AsyncMock(return_value={TILE_UUID: tile}))
+    return Mock(
+        async_get_tiles=AsyncMock(
+            return_value={data_tile_details["result"]["tile_uuid"]: tile}
+        )
+    )
 
 
 @pytest.fixture(name="config_entry")
@@ -49,6 +40,12 @@ def config_fixture(hass):
         CONF_USERNAME: "user@host.com",
         CONF_PASSWORD: "123abc",
     }
+
+
+@pytest.fixture(name="data_tile_details", scope="session")
+def data_tile_details_fixture():
+    """Define a Tile details data payload."""
+    return json.loads(load_fixture("tile_details_data.json", "tile"))
 
 
 @pytest.fixture(name="setup_tile")
