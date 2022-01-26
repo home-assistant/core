@@ -39,7 +39,6 @@ class IotawattUpdater(DataUpdateCoordinator):
                 _LOGGER,
                 cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
                 immediate=True,
-                function=self.async_refresh,
             ),
         )
 
