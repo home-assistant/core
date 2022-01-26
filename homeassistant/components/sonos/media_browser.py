@@ -10,6 +10,7 @@ from urllib.parse import quote_plus, unquote
 from homeassistant.components import media_source, plex, spotify
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_APP,
     MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_ALBUM,
 )
@@ -265,11 +266,25 @@ async def root_payload(
             )
         )
 
+    if await hass.async_add_executor_job(
+        partial(media.library.browse_by_idstring, "tracks", "", max_items=1)
+    ):
+        children.append(
+            BrowseMedia(
+                title="Music Library",
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_id="",
+                media_content_type="library",
+                can_play=False,
+                can_expand=True,
+            )
+        )
+
     if "plex" in hass.config.components:
         children.append(
             BrowseMedia(
                 title="Plex",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MEDIA_CLASS_APP,
                 media_content_id="",
                 media_content_type="plex",
                 thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
@@ -282,24 +297,10 @@ async def root_payload(
         children.append(
             BrowseMedia(
                 title="Spotify",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MEDIA_CLASS_APP,
                 media_content_id="",
                 media_content_type="spotify",
                 thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
-                can_play=False,
-                can_expand=True,
-            )
-        )
-
-    if await hass.async_add_executor_job(
-        partial(media.library.browse_by_idstring, "tracks", "", max_items=1)
-    ):
-        children.append(
-            BrowseMedia(
-                title="Music Library",
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_id="",
-                media_content_type="library",
                 can_play=False,
                 can_expand=True,
             )
