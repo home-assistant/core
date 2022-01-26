@@ -54,22 +54,17 @@ class IntellifireSensor(CoordinatorEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.api.data)
 
 
-class IntellifireTimeSensor(IntellifireSensor):
+def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
     """Define a sensor that takes into account timezone."""
 
-    @property
-    def native_value(self) -> Any:
-        """Return a datetime value."""
-        seconds_offset = int(
-            self.entity_description.value_fn(self.coordinator.api.data)
-        )
-        # If disabled return None - else return a timestamp with correct TZ info
-        if seconds_offset == 0:
-            return None
+    seconds_offset = data.timeremaining_s
+    # If disabled return None - else return a timestamp with correct TZ info
+    if seconds_offset == 0:
+        return None
 
-        return datetime.now().replace(
-            tzinfo=pytz.timezone(self.hass.config.time_zone)
-        ) + timedelta(seconds=seconds_offset)
+    return datetime.now().replace(
+        tzinfo=pytz.timezone(self.hass.config.time_zone)
+    ) + timedelta(seconds=seconds_offset)
 
 
 @dataclass
