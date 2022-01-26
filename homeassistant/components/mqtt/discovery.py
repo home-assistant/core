@@ -15,6 +15,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -238,7 +239,9 @@ async def async_start(  # noqa: C901
                         # pylint: disable=import-outside-toplevel
                         from . import notify
 
-                        await notify.async_setup_entry(hass, config_entry)
+                        await notify.async_setup_entry(
+                            hass, config_entry, AddEntitiesCallback()
+                        )
                     elif component in "tag":
                         # Local import to avoid circular dependencies
                         # pylint: disable=import-outside-toplevel
