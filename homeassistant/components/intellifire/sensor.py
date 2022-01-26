@@ -39,9 +39,6 @@ class IntellifireSensorEntityDescription(
     """Describes a sensor sensor entity."""
 
 
-ATTRIBUTION = "Data provided by unpublished Intellifire API"
-
-
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="flame_height",
