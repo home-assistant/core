@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 
 from intellifire4py import IntellifirePollData
 
+from intellifire4py import IntellifirePollData
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
