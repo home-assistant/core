@@ -118,17 +118,6 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the configured unit of measurement."""
-        if self.entity_description.key == "temperature":
-            # Tell HA that the entity's native unit is the same
-            # as HA config's temperature unit. Then we will do
-            # the needed conversion and rounding in native_value.
-            return self.hass.config.units.temperature_unit
-
-        return self.entity_description.native_unit_of_measurement
-
-    @property
     def available(self):
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
@@ -167,3 +156,19 @@ class EcobeeSensor(SensorEntity):
                     continue
                 self._state = item["value"]
                 break
+
+    async def async_added_to_hass(self):
+        """Run when entity is added to hass."""
+        if self.entity_description.key == "temperature":
+            # Tell HA that the entity's native unit is the same
+            # as HA config's temperature unit. Then we will do
+            # the needed conversion and rounding in native_value.
+            self._attr_native_unit_of_measurement = (
+                self.hass.config.units.temperature_unit
+            )
+        else:
+            self._attr_native_unit_of_measurement = (
+                self.entity_description.native_unit_of_measurement
+            )
+
+        await super().async_added_to_hass()
