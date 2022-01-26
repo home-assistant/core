@@ -13,7 +13,7 @@ from plexwebsocket import (
 )
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, BrowseError
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -54,12 +54,14 @@ _LOGGER = logging.getLogger(__package__)
 
 def is_plex_media_id(media_content_id):
     """Return whether the media_content_id is a valid Plex media_id."""
-    return media_content_id.startswith(PLEX_URI_SCHEME)
+    return media_content_id and media_content_id.startswith(PLEX_URI_SCHEME)
 
 
 async def async_browse_media(hass, media_content_type, media_content_id, platform=None):
     """Browse Plex media."""
-    plex_server = list(hass.data[PLEX_DOMAIN][SERVERS].values())[0]
+    plex_server = next(iter(hass.data[PLEX_DOMAIN][SERVERS].values()), None)
+    if not plex_server:
+        raise BrowseError("No Plex servers available")
     is_internal = is_internal_request(hass)
     return await hass.async_add_executor_job(
         partial(
