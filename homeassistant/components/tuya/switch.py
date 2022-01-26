@@ -502,12 +502,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.FAN_COOL,
-            name="Cool wind",
-            icon="mdi:sun-snowflake",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
             key=DPCode.FAN_BEEP,
             name="Sound",
             icon="mdi:minus-circle",
