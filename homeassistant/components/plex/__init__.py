@@ -25,6 +25,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -39,14 +40,37 @@ from .const import (
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
+    PLEX_URI_SCHEME,
     SERVERS,
     WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
+from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__package__)
+
+
+def is_plex_media_id(media_content_id):
+    """Return whether the media_content_id is a valid Plex media_id."""
+    return media_content_id.startswith(PLEX_URI_SCHEME)
+
+
+async def async_browse_media(hass, media_content_type, media_content_id, platform=None):
+    """Browse Plex media."""
+    plex_server = list(hass.data[PLEX_DOMAIN][SERVERS].values())[0]
+    is_internal = is_internal_request(hass)
+    return await hass.async_add_executor_job(
+        partial(
+            browse_media,
+            plex_server,
+            is_internal,
+            media_content_type,
+            media_content_id,
+            platform=platform,
+        )
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
