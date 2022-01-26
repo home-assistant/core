@@ -141,7 +141,7 @@ def async_active_subscription(hass: HomeAssistant) -> bool:
 @bind_hass
 async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
-    if not async_is_logged_in(hass):
+    if not async_is_logged_in(hass) or not async_is_connected(hass):
         raise CloudNotAvailable
 
     hook = await hass.data[DOMAIN].cloudhooks.async_create(webhook_id, True)
