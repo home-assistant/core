@@ -57,7 +57,7 @@ def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
     """Define a sensor that takes into account timezone."""
     if not (seconds_offset := data.timeremaining_s):
         return None
-    return (datetime.now() + timedelta(seconds=seconds_offset)).replace(microsecond=0)
+    return utcnow() + timedelta(seconds=seconds_offset)
 
 
 @dataclass
