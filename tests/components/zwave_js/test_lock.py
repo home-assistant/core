@@ -30,7 +30,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     # Test locking
     await hass.services.async_call(
-        Platform.LOCK,
+        Platform.LOCK.value,
         SERVICE_LOCK,
         {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
@@ -95,7 +95,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     # Test unlocking
     await hass.services.async_call(
-        Platform.LOCK,
+        Platform.LOCK.value,
         SERVICE_UNLOCK,
         {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,

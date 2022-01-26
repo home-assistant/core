@@ -99,7 +99,7 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
 
     # Test turning off
     await hass.services.async_call(
-        Platform.SWITCH, SERVICE_TURN_OFF, {"entity_id": entity}, blocking=True
+        Platform.SWITCH.value, SERVICE_TURN_OFF, {"entity_id": entity}, blocking=True
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -138,7 +138,7 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
 
     # Test turning on
     await hass.services.async_call(
-        Platform.SWITCH, SERVICE_TURN_ON, {"entity_id": entity}, blocking=True
+        Platform.SWITCH.value, SERVICE_TURN_ON, {"entity_id": entity}, blocking=True
     )
 
     # Note: the valueId's value is still 255 because we never
