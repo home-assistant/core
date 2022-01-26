@@ -178,7 +178,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigEntry",
         },
-        return_type="dict",
+        return_type=["dict", "dict[str, Any]"],
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["diagnostics"],
@@ -188,7 +188,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             1: "ConfigEntry",
             2: "DeviceEntry",
         },
-        return_type="dict",
+        return_type=["dict", "dict[str, Any]"],
     ),
 ]
 
