@@ -4,7 +4,7 @@ from pyunifiprotect.data.types import ModelType, Version
 
 from homeassistant.const import Platform
 
-DOMAIN = "unifiprotect"
+DOMAIN = "unifi_protect"
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_WIDTH = "width"
