@@ -488,13 +488,13 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
             user_input={
                 CONF_WEBHOOK_SET: True,
                 CONF_WEBHOOK_SET_OVERWRITE: True,
-                CONF_STREAM_URL_TEMPLATE: "http://moo",
+                CONF_STREAM_URL_TEMPLATE: "",
             },
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_SET]
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
-        assert result["data"][CONF_STREAM_URL_TEMPLATE] == "http://moo"
+        assert result["data"][CONF_STREAM_URL_TEMPLATE] == ""
         assert len(mock_setup.mock_calls) == 0
         assert len(mock_setup_entry.mock_calls) == 0
