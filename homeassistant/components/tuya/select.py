@@ -227,8 +227,33 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:layers-outline",
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45vs7vkge
+    "fs": (
+        SelectEntityDescription(
+            key=DPCode.FAN_VERTICAL,
+            name="Fan Vertical",
+            device_class=TuyaDeviceClass.FAN_ANGLE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.FAN_HORIZONTAL,
+            name="Fan Horizontal",
+            device_class=TuyaDeviceClass.FAN_ANGLE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown Set",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
-
 
 # Socket (duplicate of `kg`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
