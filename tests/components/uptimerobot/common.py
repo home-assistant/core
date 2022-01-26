@@ -46,7 +46,7 @@ MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "source": config_entries.SOURCE_USER,
 }
 
-STATE_UP = "Up"
+STATE_UP = "up"
 
 UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY = "binary_sensor.test_monitor"
 UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
