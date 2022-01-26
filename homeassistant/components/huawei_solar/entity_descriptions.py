@@ -25,6 +25,10 @@ class HuaweiSolarSensorEntityDescription(SensorEntityDescription):
     """Huawei Solar Sensor Entity."""
 
 
+# Every list in this file describes a group of entities which are related to each other.
+# The order of these lists matters, as they need to be in ascending order wrt. to their modbus-register.
+
+
 INVERTER_SENSOR_DESCRIPTIONS: list[HuaweiSolarSensorEntityDescription] = [
     HuaweiSolarSensorEntityDescription(
         key=rn.INPUT_POWER,

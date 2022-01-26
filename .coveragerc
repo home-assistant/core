@@ -503,6 +503,8 @@ omit =
     homeassistant/components/huawei_lte/notify.py
     homeassistant/components/huawei_lte/sensor.py
     homeassistant/components/huawei_lte/switch.py
+    homeassistant/components/huawei_solar/__init__.py
+    homeassistant/components/huawei_solar/sensor.py
     homeassistant/components/hue/light.py
     homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/coordinator.py

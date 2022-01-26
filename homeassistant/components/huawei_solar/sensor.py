@@ -68,6 +68,12 @@ async def _compute_slave_entities(
     slave: t.Optional[int],
     connecting_inverter_device_id: t.Tuple,
 ):
+    """Add all relevant entities for a certain slave.
+
+    If slave is None, then the default slave configured in the AsyncHuaweiSolar-object will be used.
+    This is typically the inverter to which we make the Modbus-TCP connection.
+    """
+
     entities_to_add = []
 
     model_name, serial_number = await inverter.get_multiple(

@@ -4,7 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from huawei_solar import AsyncHuaweiSolar, ConnectionException, register_names as rn
+from huawei_solar import (
+    AsyncHuaweiSolar,
+    ConnectionException,
+    ReadException,
+    register_names as rn,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -34,6 +39,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
+    inverter = None
     try:
         inverter = await AsyncHuaweiSolar.create(
             host=data[CONF_HOST],
@@ -67,8 +73,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         return {"model_name": model_name.value, "serial_number": serial_number.value}
 
     finally:
-        # Cleanup this inverter object explicitly to prevent it from trying to maintain a modbus connection
-        await inverter.stop()
+        if inverter is not None:
+            # Cleanup this inverter object explicitly to prevent it from trying to maintain a modbus connection
+            await inverter.stop()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -94,16 +101,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             info = await validate_input(self.hass, user_input)
 
-            await self.async_set_unique_id(info["serial_number"])
-            self._abort_if_unique_id_configured()
         except ConnectionException:
             errors["base"] = "cannot_connect"
         except SlaveException:
             errors["base"] = "slave_cannot_connect"
+        except ReadException:
+            errors["base"] = "read_error"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(info["serial_number"])
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(title=info["model_name"], data=user_input)
 
         return self.async_show_form(
