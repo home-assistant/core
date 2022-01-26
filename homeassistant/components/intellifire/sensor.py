@@ -61,7 +61,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         key="target_temp",
         name="Target Temperature",
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_fn=lambda data: data.thermostat_setpoint_c,
     ),
