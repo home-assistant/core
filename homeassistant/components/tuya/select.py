@@ -232,13 +232,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "fs": (
         SelectEntityDescription(
             key=DPCode.FAN_VERTICAL,
-            name="Fan Vertical",
+            name="Vertical Swing Flap Angle",
             device_class=TuyaDeviceClass.FAN_ANGLE,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.FAN_HORIZONTAL,
-            name="Fan Horizontal",
+            name="Horizontal Swing Flap Angle",
             device_class=TuyaDeviceClass.FAN_ANGLE,
             entity_category=EntityCategory.CONFIG,
         ),
@@ -249,7 +249,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
-            name="Countdown Set",
+            name="Countdown Setting",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
