@@ -3,6 +3,7 @@ from datetime import timedelta
 
 DOMAIN = "huawei_solar"
 DEFAULT_PORT = 502
+DEFAULT_SLAVE_ID = 0
 
 DATA_MODBUS_CLIENT = "client"
 DATA_DEVICE_INFO = "device_info"

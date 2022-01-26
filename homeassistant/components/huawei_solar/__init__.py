@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     CONF_SLAVE_IDS,
@@ -35,13 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except HuaweiSolarException as err:
         raise ConfigEntryNotReady from err
 
-    device_info = {
-        "identifiers": {(DOMAIN, model_name.value, serial_number.value)},
-        "name": model_name.value,
-        "manufacturer": "Huawei",
-        "serial_number": serial_number.value,
-        "model": model_name.value,
-    }
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, str(model_name.value), str(serial_number.value))},  # type: ignore
+        name=model_name.value,
+        manufacturer="Huawei",
+        model=model_name.value,
+    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_MODBUS_CLIENT: inverter,

@@ -7,6 +7,7 @@ from typing import Any
 from huawei_solar import (
     AsyncHuaweiSolar,
     ConnectionException,
+    HuaweiSolarException,
     ReadException,
     register_names as rn,
 )
@@ -18,17 +19,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_SLAVE_IDS, DOMAIN
+from .const import CONF_SLAVE_IDS, DEFAULT_PORT, DEFAULT_SLAVE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_PORT = 502
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_SLAVE_IDS, default="0"): str,
+        vol.Required(CONF_SLAVE_IDS, default=str(DEFAULT_SLAVE_ID)): str,
     }
 )
 
@@ -52,7 +51,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         )
 
         _LOGGER.info(
-            f"Successfully connected to inverter {model_name.value} with SN {serial_number.value}"
+            "Successfully connected to inverter %s with SN %s",
+            model_name.value,
+            serial_number.value,
         )
 
         # Also validate the other slave-ids
@@ -63,10 +64,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
                 )
 
                 _LOGGER.info(
-                    f"Successfully connected to slave inverter {slave_id}: {slave_model_name.value} with SN {slave_serial_number.value}"
+                    "Successfully connected to slave inverter %s: %s with SN %s",
+                    slave_id,
+                    slave_model_name.value,
+                    slave_serial_number.value,
                 )
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error(f"Could not connect to slave {slave_id}")
+            except HuaweiSolarException as err:
+                _LOGGER.error("Could not connect to slave %s", slave_id)
                 raise SlaveException(f"Could not connect to slave {slave_id}") from err
 
         # Return info that you want to store in the config entry.
@@ -107,8 +111,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "slave_cannot_connect"
         except ReadException:
             errors["base"] = "read_error"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+        except Exception as exception:  # pylint: disable=broad-except
+            _LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(info["serial_number"])

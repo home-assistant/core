@@ -6,10 +6,6 @@
   "requirements": [
     "huawei-solar==2.0.0rc1"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@wlcrs"
   ],

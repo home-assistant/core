@@ -11,6 +11,9 @@ from huawei_solar import (
 )
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -41,7 +44,11 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add Huawei Solar entry."""
     inverter = hass.data[DOMAIN][entry.entry_id][
         DATA_MODBUS_CLIENT
@@ -66,7 +73,7 @@ async def _compute_slave_entities(
     hass,
     inverter: AsyncHuaweiSolar,
     slave: t.Optional[int],
-    connecting_inverter_device_id: t.Tuple,
+    connecting_inverter_device_id: t.Optional[tuple],
 ):
     """Add all relevant entities for a certain slave.
 
@@ -284,6 +291,8 @@ class BatchedHuaweiSolarSensor(CoordinatorEntity, SensorEntity):
         device_info,
     ):
         """Batched Huawei Solar Sensor Entity constructor."""
+        super().__init__(coordinator)
+
         self.coordinator = coordinator
         self.entity_description = description
 

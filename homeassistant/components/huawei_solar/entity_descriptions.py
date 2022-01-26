@@ -74,6 +74,7 @@ INVERTER_SENSOR_DESCRIPTIONS: list[HuaweiSolarSensorEntityDescription] = [
         key=rn.INTERNAL_TEMPERATURE,
         name="Internal Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
