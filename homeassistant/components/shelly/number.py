@@ -112,26 +112,6 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
         """Return unit of number."""
         return self.entity_description.unit_of_measurement
 
-    @property
-    def min_value(self) -> float:
-        """Return minimum value."""
-        return cast(float, self.entity_description.min_value)
-
-    @property
-    def max_value(self) -> float:
-        """Return maximum value."""
-        return cast(float, self.entity_description.max_value)
-
-    @property
-    def step(self) -> float:
-        """Return step increment/decrement value."""
-        return cast(float, self.entity_description.step)
-
-    @property
-    def mode(self) -> NumberMode:
-        """Return mode."""
-        return self.entity_description.mode
-
     async def async_set_value(self, value: float) -> None:
         """Set value."""
         # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
