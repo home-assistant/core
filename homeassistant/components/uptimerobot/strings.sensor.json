@@ -1,6 +1,6 @@
 {
     "state": {
-      "uptimerobot_monitor_status": {
+      "uptimerobot__monitor_status": {
         "pause": "Pause",
         "not_checked_yet": "Not checked yet",
         "up": "Up",
