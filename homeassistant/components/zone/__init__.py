@@ -349,11 +349,13 @@ class Zone(entity.Entity):
     def _person_state_change_listener(self, evt: Event) -> None:
         object_id = split_entity_id(self.entity_id)[1]
         person_entity_id = evt.data["entity_id"]
+        cur_count = len(self._persons_in_zone)
         if evt.data["new_state"] and evt.data["new_state"].state == object_id:
             self._persons_in_zone.add(person_entity_id)
-            self.async_write_ha_state()
         elif person_entity_id in self._persons_in_zone:
             self._persons_in_zone.remove(person_entity_id)
+
+        if len(self._persons_in_zone) != cur_count:
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -366,18 +368,13 @@ class Zone(entity.Entity):
             if state and state.state == object_id:
                 self._persons_in_zone.add(person)
 
-        self._remove_listener = event.async_track_state_change_filtered(
-            self.hass,
-            event.TrackStates(False, set(), {PERSON_DOMAIN}),
-            self._person_state_change_listener,
-        ).async_remove
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if self._remove_listener:
-            self._remove_listener()
-            self._remove_listener = None
+        self._async_on_remove(
+            event.async_track_state_change_filtered(
+                self.hass,
+                event.TrackStates(False, set(), {PERSON_DOMAIN}),
+                self._person_state_change_listener,
+            ).async_remove
+        )
 
     @callback
     def _generate_attrs(self) -> None:
