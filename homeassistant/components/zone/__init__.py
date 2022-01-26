@@ -8,7 +8,6 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_LATITUDE,
@@ -361,7 +360,8 @@ class Zone(entity.Entity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        persons = self.hass.states.async_entity_ids(PERSON_DOMAIN)
+        person_domain = "person"  # avoid circular import
+        persons = self.hass.states.async_entity_ids(person_domain)
         object_id = split_entity_id(self.entity_id)[1]
         for person in persons:
             state = self.hass.states.get(person)
@@ -371,7 +371,7 @@ class Zone(entity.Entity):
         self.async_on_remove(
             event.async_track_state_change_filtered(
                 self.hass,
-                event.TrackStates(False, set(), {PERSON_DOMAIN}),
+                event.TrackStates(False, set(), {person_domain}),
                 self._person_state_change_listener,
             ).async_remove
         )
