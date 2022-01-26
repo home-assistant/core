@@ -21,7 +21,9 @@ async def async_get_config_entry_diagnostics(
         return {}
     next_launch = coordinator.data["upcoming_launches"][0]
     starship_launch = coordinator.data["starship_events"].upcoming.launches[0]
+    starship_event = coordinator.data["starship_events"].upcoming.events[0]
     return {
         "next_launch": next_launch.raw_data_contents,
-        "starship": starship_launch.raw_data_contents,
+        "starship_launch": starship_launch.raw_data_contents,
+        "starship_event": starship_event.raw_data_contents,
     }
