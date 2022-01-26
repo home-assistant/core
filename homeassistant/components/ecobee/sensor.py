@@ -166,9 +166,5 @@ class EcobeeSensor(SensorEntity):
             self._attr_native_unit_of_measurement = (
                 self.hass.config.units.temperature_unit
             )
-        else:
-            self._attr_native_unit_of_measurement = (
-                self.entity_description.native_unit_of_measurement
-            )
 
         await super().async_added_to_hass()
