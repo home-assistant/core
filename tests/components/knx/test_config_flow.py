@@ -11,7 +11,12 @@ from homeassistant.components.knx import ConnectionSchema
 from homeassistant.components.knx.config_flow import (
     CONF_DEFAULT_LOCAL_IP,
     CONF_KNX_GATEWAY,
+    CONF_KNX_LABEL_TUNNELING_TCP,
+    CONF_KNX_LABEL_TUNNELING_UDP,
+    CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
+    CONF_KNX_TUNNELING_TYPE,
     DEFAULT_ENTRY_DATA,
+    get_knx_tunneling_type,
 )
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -19,6 +24,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_KNX_TUNNELING_TCP,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -28,7 +34,9 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
 from tests.common import MockConfigEntry
 
 
-def _gateway_descriptor(ip: str, port: int) -> GatewayDescriptor:
+def _gateway_descriptor(
+    ip: str, port: int, supports_tunnelling_tcp: bool = False
+) -> GatewayDescriptor:
     """Get mock gw descriptor."""
     return GatewayDescriptor(
         "Test",
@@ -38,6 +46,7 @@ def _gateway_descriptor(ip: str, port: int) -> GatewayDescriptor:
         "127.0.0.1",
         supports_routing=True,
         supports_tunnelling=True,
+        supports_tunnelling_tcp=supports_tunnelling_tcp,
     )
 
 
@@ -153,9 +162,64 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_tunneling_setup(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "user_input,config_entry_data",
+    [
+        (
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+            },
+            {
+                **DEFAULT_ENTRY_DATA,
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+            },
+        ),
+        (
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+            },
+            {
+                **DEFAULT_ENTRY_DATA,
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+            },
+        ),
+        (
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+            },
+            {
+                **DEFAULT_ENTRY_DATA,
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
+                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+            },
+        ),
+    ],
+)
+async def test_tunneling_setup(
+    hass: HomeAssistant, user_input, config_entry_data
+) -> None:
     """Test tunneling if only one gateway is found."""
-    gateway = _gateway_descriptor("192.168.0.1", 3675)
+    gateway = _gateway_descriptor("192.168.0.1", 3675, True)
     with patch("xknx.io.gateway_scanner.GatewayScanner.scan") as gateways:
         gateways.return_value = [gateway]
         result = await hass.config_entries.flow.async_init(
@@ -181,23 +245,12 @@ async def test_tunneling_setup(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {
-                CONF_HOST: "192.168.0.1",
-                CONF_PORT: 3675,
-            },
+            user_input,
         )
         await hass.async_block_till_done()
         assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result3["title"] == "Tunneling @ 192.168.0.1"
-        assert result3["data"] == {
-            **DEFAULT_ENTRY_DATA,
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
-            CONF_HOST: "192.168.0.1",
-            CONF_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
-            ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: None,
-        }
+        assert result3["data"] == config_entry_data
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -235,6 +288,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
                 CONF_HOST: "192.168.0.2",
                 CONF_PORT: 3675,
                 ConnectionSchema.CONF_KNX_LOCAL_IP: "192.168.1.112",
@@ -294,6 +348,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
         manual_tunnel_flow = await hass.config_entries.flow.async_configure(
             manual_tunnel["flow_id"],
             {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
             },
@@ -595,8 +650,73 @@ async def test_options_flow(
         }
 
 
+@pytest.mark.parametrize(
+    "user_input,config_entry_data",
+    [
+        (
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 3675,
+            },
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
+                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
+                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
+                ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
+                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 3675,
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
+            },
+        ),
+        (
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 3675,
+            },
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
+                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
+                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
+                ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
+                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 3675,
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+            },
+        ),
+        (
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_TCP,
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 3675,
+            },
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
+                ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
+                ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+                ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
+                ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
+                ConnectionSchema.CONF_KNX_LOCAL_IP: None,
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 3675,
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+            },
+        ),
+    ],
+)
 async def test_tunneling_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input,
+    config_entry_data,
 ) -> None:
     """Test options flow for tunneling."""
     mock_config_entry.add_to_hass(hass)
@@ -628,29 +748,14 @@ async def test_tunneling_options_flow(
 
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
-            user_input={
-                CONF_HOST: "192.168.1.1",
-                CONF_PORT: 3675,
-                ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
-            },
+            user_input=user_input,
         )
 
         await hass.async_block_till_done()
         assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
         assert not result3.get("data")
 
-        assert mock_config_entry.data == {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
-            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
-            ConnectionSchema.CONF_KNX_LOCAL_IP: None,
-            CONF_HOST: "192.168.1.1",
-            CONF_PORT: 3675,
-            ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
-        }
+        assert mock_config_entry.data == config_entry_data
 
 
 @pytest.mark.parametrize(
@@ -730,3 +835,37 @@ async def test_advanced_options(
         assert not result2.get("data")
 
         assert mock_config_entry.data == config_entry_data
+
+
+@pytest.mark.parametrize(
+    "config_entry_data,result",
+    [
+        (
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+            },
+            CONF_KNX_LABEL_TUNNELING_UDP,
+        ),
+        (
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: True,
+            },
+            CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
+        ),
+        (
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+                ConnectionSchema.CONF_KNX_ROUTE_BACK: False,
+            },
+            CONF_KNX_LABEL_TUNNELING_TCP,
+        ),
+    ],
+)
+async def test_get_knx_tunneling_type(
+    config_entry_data,
+    result,
+) -> None:
+    """Test converting config entry data to tunneling type for config flow."""
+    assert get_knx_tunneling_type(config_entry_data) == result
