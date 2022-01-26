@@ -10,11 +10,11 @@
         "step": {
             "manual_tunnel": {
                 "data": {
+                    "tunneling_type": "KNX Tunneling Type",
                     "host": "Host",
                     "individual_address": "Individual address for the connection",
                     "local_ip": "Local IP of Home Assistant (leave empty for automatic detection)",
-                    "port": "Port",
-                    "route_back": "Route Back / NAT Mode"
+                    "port": "Port"
                 },
                 "description": "Please enter the connection information of your tunneling device."
             },
@@ -56,10 +56,10 @@
             },
             "tunnel": {
                 "data": {
+                    "tunneling_type": "KNX Tunneling Type",
                     "host": "Host",
                     "local_ip": "Local IP (leave empty if unsure)",
-                    "port": "Port",
-                    "route_back": "Route Back / NAT Mode"
+                    "port": "Port"
                 }
             }
         }
