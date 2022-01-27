@@ -14,6 +14,11 @@
             "0": "Low sensitivity",
             "1": "High sensitivity"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "Push",
             "switch": "Switch"

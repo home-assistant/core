@@ -13,7 +13,7 @@ repos:
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.0.0
+    rev: v2.1.0
     hooks:
       - id: codespell
         args:
@@ -94,6 +94,12 @@ repos:
         language: script
         types: [python]
         require_serial: true
+        files: ^homeassistant/.+\.py$
+      - id: pylint
+        name: pylint
+        entry: script/run-in-env.sh pylint -j 0
+        language: script
+        types: [python]
         files: ^homeassistant/.+\.py$
       - id: gen_requirements_all
         name: gen_requirements_all

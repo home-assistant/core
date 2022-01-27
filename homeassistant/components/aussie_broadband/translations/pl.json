@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "no_services_found": "Nie znaleziono \u017cadnych us\u0142ug dla tego konta"
+        },
+        "step": {
+            "reauth": {
+                "description": "Zaktualizuj has\u0142o dla {username}"
+            },
+            "service": {
+                "data": {
+                    "services": "Us\u0142ugi"
+                },
+                "title": "Wybierz us\u0142ugi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "services": "Us\u0142ugi"
+                },
+                "title": "Wybierz us\u0142ugi"
+            }
+        }
+    }
+}

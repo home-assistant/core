@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Percek a vizsg\u00e1latok k\u00f6z\u00f6tt",
+                    "snap_profile_type": "A kamera pillanatk\u00e9peinek min\u0151s\u00e9ge (0:magas 1:k\u00f6zepes 2:alacsony)",
                     "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s (m\u00e1sodperc)"
                 }
             }

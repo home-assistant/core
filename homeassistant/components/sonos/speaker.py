@@ -17,6 +17,7 @@ from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 from soco.music_library import MusicLibrary
+from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
 
@@ -61,6 +62,7 @@ from .const import (
 )
 from .favorites import SonosFavorites
 from .helpers import soco_error
+from .statistics import EventStatistics
 
 NEVER_TIME = -1200.0
 EVENT_CHARGING = {
@@ -154,22 +156,9 @@ class SonosSpeaker:
         self.soco = soco
         self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
+        self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
         self.available = True
-
-        # Subscriptions and events
-        self.subscriptions_failed: bool = False
-        self._subscriptions: list[SubscriptionBase] = []
-        self._resubscription_lock: asyncio.Lock | None = None
-        self._event_dispatchers: dict[str, Callable] = {}
-        self._last_activity: float = NEVER_TIME
-        self._last_event_cache: dict[str, Any] = {}
-
-        # Scheduled callback handles
-        self._poll_timer: Callable | None = None
-
-        # Dispatcher handles
-        self.dispatchers: list[Callable] = []
 
         # Device information
         self.hardware_version = speaker_info["hardware_version"]
@@ -180,6 +169,21 @@ class SonosSpeaker:
         self.uid = speaker_info["uid"]
         self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
+
+        # Subscriptions and events
+        self.subscriptions_failed: bool = False
+        self._subscriptions: list[SubscriptionBase] = []
+        self._resubscription_lock: asyncio.Lock | None = None
+        self._event_dispatchers: dict[str, Callable] = {}
+        self._last_activity: float = NEVER_TIME
+        self._last_event_cache: dict[str, Any] = {}
+        self.event_stats: EventStatistics = EventStatistics(self.zone_name)
+
+        # Scheduled callback handles
+        self._poll_timer: Callable | None = None
+
+        # Dispatcher handles
+        self.dispatchers: list[Callable] = []
 
         # Battery
         self.battery_info: dict[str, Any] = {}
@@ -311,6 +315,13 @@ class SonosSpeaker:
         return self.coordinator is None
 
     @property
+    def plex_plugin(self) -> PlexPlugin:
+        """Cache the PlexPlugin instance for this speaker."""
+        if not self._plex_plugin:
+            self._plex_plugin = PlexPlugin(self.soco)
+        return self._plex_plugin
+
+    @property
     def share_link(self) -> ShareLinkPlugin:
         """Cache the ShareLinkPlugin instance for this speaker."""
         if not self._share_link_plugin:
@@ -426,23 +437,30 @@ class SonosSpeaker:
             self._poll_timer = None
 
         self.speaker_activity(f"{event.service.service_type} subscription")
+        self.event_stats.receive(event)
 
+        # Skip if this update is an unchanged subset of the previous event
+        if last_event := self._last_event_cache.get(event.service.service_type):
+            if event.variables.items() <= last_event.items():
+                self.event_stats.duplicate(event)
+                return
+
+        # Save most recently processed event variables for cache and diagnostics
+        self._last_event_cache[event.service.service_type] = event.variables
         dispatcher = self._event_dispatchers[event.service.service_type]
         dispatcher(event)
-
-        # Save most recent event variables for diagnostics
-        self._last_event_cache[event.service.service_type] = event.variables
 
     @callback
     def async_dispatch_alarms(self, event: SonosEvent) -> None:
         """Add the soco instance associated with the event to the callback."""
-        if not (event_id := event.variables.get("alarm_list_version")):
+        if "alarm_list_version" not in event.variables:
             return
-        self.alarms.async_handle_event(event_id, self.soco)
+        self.hass.async_create_task(self.alarms.async_process_event(event, self))
 
     @callback
     def async_dispatch_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
+        self.event_stats.process(event)
         self.hass.async_create_task(self.async_update_device_properties(event))
 
     async def async_update_device_properties(self, event: SonosEvent) -> None:
@@ -461,11 +479,11 @@ class SonosSpeaker:
     @callback
     def async_dispatch_favorites(self, event: SonosEvent) -> None:
         """Add the soco instance associated with the event to the callback."""
-        if not (event_id := event.variables.get("favorites_update_id")):
+        if "favorites_update_id" not in event.variables:
             return
-        if not (container_ids := event.variables.get("container_update_i_ds")):
+        if "container_update_i_ds" not in event.variables:
             return
-        self.favorites.async_handle_event(event_id, container_ids, self.soco)
+        self.hass.async_create_task(self.favorites.async_process_event(event, self))
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
@@ -478,6 +496,7 @@ class SonosSpeaker:
     @callback
     def async_update_volume(self, event: SonosEvent) -> None:
         """Update information about currently volume settings."""
+        self.event_stats.process(event)
         variables = event.variables
 
         if "volume" in variables:
@@ -666,6 +685,7 @@ class SonosSpeaker:
         """Handle callback for topology change event."""
         if not hasattr(event, "zone_player_uui_ds_in_group"):
             return
+        self.event_stats.process(event)
         self.hass.async_create_task(self.create_update_groups_coro(event))
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
@@ -1008,6 +1028,9 @@ class SonosSpeaker:
         # Ignore transitions, we should get the target state soon
         if new_status == SONOS_STATE_TRANSITIONING:
             return
+
+        if event:
+            self.event_stats.process(event)
 
         self.media.clear()
         update_position = new_status != self.media.playback_status

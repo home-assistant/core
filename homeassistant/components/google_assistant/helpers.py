@@ -275,13 +275,18 @@ class AbstractConfig(ABC):
     @callback
     def async_enable_local_sdk(self):
         """Enable the local SDK."""
-        setup_successfull = True
+        setup_successful = True
         setup_webhook_ids = []
+
+        # Don't enable local SDK if ssl is enabled
+        if self.hass.config.api and self.hass.config.api.use_ssl:
+            self._local_sdk_active = False
+            return
 
         for user_agent_id, _ in self._store.agent_user_ids.items():
 
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
-                setup_successfull = False
+                setup_successful = False
                 break
 
             try:
@@ -300,17 +305,17 @@ class AbstractConfig(ABC):
                     webhook_id,
                     user_agent_id,
                 )
-                setup_successfull = False
+                setup_successful = False
                 break
 
-        if not setup_successfull:
+        if not setup_successful:
             _LOGGER.warning(
                 "Local fulfillment failed to setup, falling back to cloud fulfillment"
             )
             for setup_webhook_id in setup_webhook_ids:
                 webhook.async_unregister(self.hass, setup_webhook_id)
 
-        self._local_sdk_active = setup_successfull
+        self._local_sdk_active = setup_successful
 
     @callback
     def async_disable_local_sdk(self):

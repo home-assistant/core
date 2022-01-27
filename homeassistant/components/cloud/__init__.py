@@ -114,11 +114,25 @@ class CloudNotAvailable(HomeAssistantError):
     """Raised when an action requires the cloud but it's not available."""
 
 
+class CloudNotConnected(CloudNotAvailable):
+    """Raised when an action requires the cloud but it's not connected."""
+
+
 @bind_hass
 @callback
 def async_is_logged_in(hass: HomeAssistant) -> bool:
-    """Test if user is logged in."""
+    """Test if user is logged in.
+
+    Note: This returns True even if not currently connected to the cloud.
+    """
     return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
+
+
+@bind_hass
+@callback
+def async_is_connected(hass: HomeAssistant) -> bool:
+    """Test if connected to the cloud."""
+    return DOMAIN in hass.data and hass.data[DOMAIN].iot.connected
 
 
 @bind_hass
@@ -131,6 +145,9 @@ def async_active_subscription(hass: HomeAssistant) -> bool:
 @bind_hass
 async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
@@ -157,10 +174,10 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     if not hass.data[DOMAIN].client.prefs.remote_enabled:
         raise CloudNotAvailable
 
-    if not hass.data[DOMAIN].remote.instance_domain:
+    if not (remote_domain := hass.data[DOMAIN].client.prefs.remote_domain):
         raise CloudNotAvailable
 
-    return f"https://{hass.data[DOMAIN].remote.instance_domain}"
+    return f"https://{remote_domain}"
 
 
 def is_cloudhook_request(request):
@@ -235,7 +252,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             Platform.TTS, DOMAIN, {}, config
         )
 
+    async def _on_initialized():
+        """Update preferences."""
+        await prefs.async_update(remote_domain=cloud.remote.instance_domain)
+
     cloud.iot.register_on_connect(_on_connect)
+    cloud.register_on_initialized(_on_initialized)
 
     await cloud.initialize()
     await http_api.async_setup(hass)

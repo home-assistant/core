@@ -21,12 +21,17 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
-from homeassistant.auth.models import RefreshToken
-from homeassistant.components import media_source, zeroconf
+from homeassistant.components import media_source, plex, zeroconf
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
+    MEDIA_CLASS_APP,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -458,8 +463,61 @@ class CastDevice(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        result = await media_source.async_browse_media(self.hass, media_content_id)
-        return result
+        kwargs = {}
+        children = []
+
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_AUDIO:
+            kwargs["content_filter"] = lambda item: item.media_content_type.startswith(
+                "audio/"
+            )
+
+        if plex.is_plex_media_id(media_content_id):
+            return await plex.async_browse_media(
+                self.hass, media_content_type, media_content_id, platform=CAST_DOMAIN
+            )
+
+        if media_content_type == "plex":
+            return await plex.async_browse_media(
+                self.hass, None, None, platform=CAST_DOMAIN
+            )
+
+        if "plex" in self.hass.config.components:
+            children.append(
+                BrowseMedia(
+                    title="Plex",
+                    media_class=MEDIA_CLASS_APP,
+                    media_content_id="",
+                    media_content_type="plex",
+                    thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+                    can_play=False,
+                    can_expand=True,
+                )
+            )
+
+        try:
+            result = await media_source.async_browse_media(
+                self.hass, media_content_id, **kwargs
+            )
+            children.append(result)
+        except BrowseError:
+            if not children:
+                raise
+
+        if len(children) == 1:
+            return await self.async_browse_media(
+                children[0].media_content_type,
+                children[0].media_content_id,
+            )
+
+        return BrowseMedia(
+            title="Cast",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="",
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -472,20 +530,11 @@ class CastDevice(MediaPlayerEntity):
         # If media ID is a relative URL, we serve it from HA.
         # Create a signed path.
         if media_id[0] == "/":
-            # Sign URL with Home Assistant Cast User
-            config_entry_id = self.registry_entry.config_entry_id
-            config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-            user_id = config_entry.data["user_id"]
-            user = await self.hass.auth.async_get_user(user_id)
-            if user.refresh_tokens:
-                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
-
-                media_id = async_sign_path(
-                    self.hass,
-                    refresh_token.id,
-                    quote(media_id),
-                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
+            media_id = async_sign_path(
+                self.hass,
+                quote(media_id),
+                timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+            )
 
             # prepend external URL
             hass_url = get_url(self.hass, prefer_external=True)
@@ -531,7 +580,7 @@ class CastDevice(MediaPlayerEntity):
         # Handle plex
         elif media_id and media_id.startswith(PLEX_URI_SCHEME):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
-            media, _ = lookup_plex_media(self.hass, media_type, media_id)
+            media = lookup_plex_media(self.hass, media_type, media_id)
             if media is None:
                 return
             controller = PlexController()

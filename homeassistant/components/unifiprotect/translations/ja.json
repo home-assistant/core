@@ -18,7 +18,8 @@
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d",
                     "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b"
                 },
-                "description": "{name} ({ip_address}) \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
+                "description": "{name} ({ip_address}) \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f",
+                "title": "UniFi Protect\u304c\u691c\u51fa\u3055\u308c\u307e\u3057\u305f"
             },
             "reauth_confirm": {
                 "data": {

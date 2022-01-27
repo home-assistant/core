@@ -6,8 +6,9 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DATA_SONOS
+from .const import DATA_SONOS, DOMAIN
 from .speaker import SonosSpeaker
 
 MEDIA_DIAGNOSTIC_ATTRIBUTES = (
@@ -63,6 +64,23 @@ async def async_get_config_entry_diagnostics(
     return payload
 
 
+async def async_get_device_diagnostics(
+    hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+) -> dict[str, Any] | None:
+    """Return diagnostics for a device."""
+    uid = next(
+        (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
+        None,
+    )
+    if uid is None:
+        return None
+
+    if (speaker := hass.data[DATA_SONOS].discovered.get(uid)) is None:
+        return None
+
+    return await async_generate_speaker_info(hass, speaker)
+
+
 async def async_generate_media_info(
     hass: HomeAssistant, speaker: SonosSpeaker
 ) -> dict[str, Any]:
@@ -106,5 +124,11 @@ async def async_generate_speaker_info(
         value = getattr(speaker, attrib)
         payload[attrib] = get_contents(value)
 
+    payload["enabled_entities"] = {
+        entity_id
+        for entity_id, s in hass.data[DATA_SONOS].entity_id_mappings.items()
+        if s is speaker
+    }
     payload["media"] = await async_generate_media_info(hass, speaker)
+    payload["event_stats"] = speaker.event_stats.report()
     return payload

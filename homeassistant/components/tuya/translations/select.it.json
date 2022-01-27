@@ -14,6 +14,11 @@
             "0": "Bassa sensibilit\u00e0",
             "1": "Alta sensibilit\u00e0"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "Spingere",
             "switch": "Interruttore"

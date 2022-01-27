@@ -45,6 +45,7 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_KNX_TUNNELING_TCP,
     DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
@@ -402,6 +403,13 @@ class KNXModule:
                 gateway_port=self.config[CONF_PORT],
                 local_ip=self.config.get(ConnectionSchema.CONF_KNX_LOCAL_IP),
                 route_back=self.config.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False),
+                auto_reconnect=True,
+            )
+        if _conn_type == CONF_KNX_TUNNELING_TCP:
+            return ConnectionConfig(
+                connection_type=ConnectionType.TUNNELING_TCP,
+                gateway_ip=self.config[CONF_HOST],
+                gateway_port=self.config[CONF_PORT],
                 auto_reconnect=True,
             )
         return ConnectionConfig(auto_reconnect=True)

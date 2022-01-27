@@ -53,7 +53,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_value=lambda value: int(str(value).strip("%")),
+        native_value=lambda value: int(float(str(value).strip("%"))),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY,

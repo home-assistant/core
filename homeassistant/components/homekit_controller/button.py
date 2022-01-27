@@ -45,7 +45,22 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
+    CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.IDENTIFY,
+        name="Identify",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        write_value=True,
+    ),
 }
+
+# For legacy reasons, "built-in" characteristic types are in their short form
+# And vendor types don't have a short form
+# This means long and short forms get mixed up in this dict, and comparisons
+# don't work!
+# We call get_uuid on *every* type to normalise them to the long form
+# Eventually aiohomekit will use the long form exclusively amd this can be removed.
+for k, v in list(BUTTON_ENTITIES.items()):
+    BUTTON_ENTITIES[CharacteristicsTypes.get_uuid(k)] = BUTTON_ENTITIES.pop(k)
 
 
 async def async_setup_entry(
@@ -92,7 +107,7 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
     def name(self) -> str:
         """Return the name of the device if any."""
         if name := super().name:
-            return f"{name} - {self.entity_description.name}"
+            return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
     async def async_press(self) -> None:

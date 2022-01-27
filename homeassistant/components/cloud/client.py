@@ -95,14 +95,15 @@ class CloudClient(Interface):
 
                 cloud_user = await self._prefs.get_cloud_user()
 
-                self._alexa_config = alexa_config.CloudAlexaConfig(
+                alexa_conf = alexa_config.CloudAlexaConfig(
                     self._hass,
                     self.alexa_user_config,
                     cloud_user,
                     self._prefs,
                     self.cloud,
                 )
-                await self._alexa_config.async_initialize()
+                await alexa_conf.async_initialize()
+                self._alexa_config = alexa_conf
 
         return self._alexa_config
 

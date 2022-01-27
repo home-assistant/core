@@ -27,6 +27,12 @@ def mz_mock():
 
 
 @pytest.fixture()
+def plex_mock():
+    """Mock pychromecast PlexController."""
+    return MagicMock(spec_set=pychromecast.controllers.plex.PlexController)
+
+
+@pytest.fixture()
 def quick_play_mock():
     """Mock pychromecast quick_play."""
     return MagicMock()
@@ -45,6 +51,7 @@ def cast_mock(
     castbrowser_mock,
     get_chromecast_mock,
     get_multizone_status_mock,
+    plex_mock,
 ):
     """Mock pychromecast."""
     ignore_cec_orig = list(pychromecast.IGNORE_CEC)
@@ -58,6 +65,9 @@ def cast_mock(
     ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager",
         return_value=mz_mock,
+    ), patch(
+        "homeassistant.components.cast.media_player.PlexController",
+        return_value=plex_mock,
     ), patch(
         "homeassistant.components.cast.media_player.zeroconf.async_get_instance",
         AsyncMock(),

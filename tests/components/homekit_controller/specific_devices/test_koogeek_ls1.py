@@ -8,10 +8,12 @@ from aiohomekit.testing import FakePairing
 import pytest
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
+from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     Helper,
@@ -31,7 +33,7 @@ async def test_koogeek_ls1_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="Koogeek-LS1-20833F",
             model="LS1",
             manufacturer="Koogeek",
@@ -47,6 +49,13 @@ async def test_koogeek_ls1_setup(hass):
                     supported_features=SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",
+                ),
+                EntityTestInfo(
+                    entity_id="button.koogeek_ls1_20833f_identify",
+                    friendly_name="Koogeek-LS1-20833F Identify",
+                    unique_id="homekit-AAAA011111111111-aid:1-sid:1-cid:6",
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    state="unknown",
                 ),
             ],
         ),
