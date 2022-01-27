@@ -85,6 +85,14 @@
         "30": "30°",
         "60": "60°",
         "90": "90°"
+    },
+    "tuya__curtain_mode": {
+        "morning": "Morning",
+        "night": "Night"
+    },
+    "tuya__curtain_motor_mode": {
+        "forward": "Forward",
+        "back": "Back"
     }
   }
 }

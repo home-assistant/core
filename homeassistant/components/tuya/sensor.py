@@ -729,6 +729,16 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qy7wkre
+    "cl": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_TOTAL,
+            name="Last Operation Duration",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:progress-clock",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
