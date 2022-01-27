@@ -514,6 +514,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SwitchEntityDescription(
+            key=DPCode.CONTROL_BACK,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OPPOSITE,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)
