@@ -529,12 +529,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:restore",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
-            key=DPCode.AUTO_POWER,
-            name="Automatically Start",
-            icon="mdi:flash-auto",
-            entity_category=EntityCategory.CONFIG,
-        ),
     ),
 }
 
