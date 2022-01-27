@@ -269,7 +269,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
-            name="Working Mode",
+            name="Mode",
             device_class=TuyaDeviceClass.CURTAIN_MODE,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:layers-outline",
