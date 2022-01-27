@@ -87,7 +87,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 existing_entry = await self.async_set_unique_id(username)
-                if existing_entry and self.entry.data:
+                if existing_entry and self.entry:
                     self.hass.config_entries.async_update_entry(
                         existing_entry,
                         data={
