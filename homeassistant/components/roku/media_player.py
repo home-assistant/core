@@ -408,13 +408,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 if attr in extra
             }
 
-            await self.coordinator.roku.play_video(media_id, params)
+            await self.coordinator.roku.play_on_roku(media_id, params)
         elif media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
             params = {
                 "MediaType": "hls",
             }
 
-            await self.coordinator.roku.play_video(media_id, params)
+            await self.coordinator.roku.play_on_roku(media_id, params)
 
         await self.coordinator.async_request_refresh()
 
