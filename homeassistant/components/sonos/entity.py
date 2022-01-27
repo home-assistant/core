@@ -9,6 +9,7 @@ import soco.config as soco_config
 from soco.core import SoCo
 from soco.exceptions import SoCoException
 
+from homeassistant.components import persistent_notification
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -70,10 +71,13 @@ class SonosEntity(Entity):
                 listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
             else:
                 listener_msg = self.speaker.subscription_address
-            _LOGGER.warning(
-                "%s cannot reach %s, falling back to polling, functionality may be limited",
-                self.speaker.zone_name,
-                listener_msg,
+            message = f"{self.speaker.zone_name} cannot reach {listener_msg}, falling back to polling, functionality may be limited"
+            _LOGGER.warning(message)
+            persistent_notification.async_create(
+                self.hass,
+                message,
+                "Sonos networking issue",
+                "sonos_subscriptions_failed",
             )
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
