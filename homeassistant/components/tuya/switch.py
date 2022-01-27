@@ -520,7 +520,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.CONTROL_BACK,
             name="Reverse",
-            icon="mdi:restore",
+            icon="mdi:swap-horizontal",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
