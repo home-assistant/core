@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 # List the platforms that you want to support.
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "binary_sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1

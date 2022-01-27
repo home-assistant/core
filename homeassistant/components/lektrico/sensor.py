@@ -155,16 +155,6 @@ class LedMaxBrightnessSensorEntityDescription(LektricoSensorEntityDescription):
         return int(data.led_max_brightness)
 
 
-@dataclass
-class HeadlessSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico No Authentication sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> bool:
-        """Get the headless."""
-        return bool(data.headless)
-
-
 SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ChargerStateSensorEntityDescription(
         key="charger_state",
@@ -233,10 +223,6 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=PERCENTAGE,
-    ),
-    HeadlessSensorEntityDescription(
-        key="headless",
-        name="No Authentication",
     ),
 )
 
