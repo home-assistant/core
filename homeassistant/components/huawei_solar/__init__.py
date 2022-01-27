@@ -18,12 +18,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    Debouncer,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     BATTERY_UPDATE_INTERVAL,
