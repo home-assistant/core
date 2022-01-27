@@ -7,17 +7,11 @@ from pyoverkiz.enums import OverkizCommand, OverkizState, UIClass, UIWidget
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
 )
 
 from .generic_cover import COMMANDS_STOP, OverkizGenericCover
@@ -26,16 +20,16 @@ COMMANDS_OPEN = [OverkizCommand.OPEN, OverkizCommand.UP, OverkizCommand.CYCLE]
 COMMANDS_CLOSE = [OverkizCommand.CLOSE, OverkizCommand.DOWN, OverkizCommand.CYCLE]
 
 OVERKIZ_DEVICE_TO_DEVICE_CLASS = {
-    UIClass.CURTAIN: DEVICE_CLASS_CURTAIN,
-    UIClass.EXTERIOR_SCREEN: DEVICE_CLASS_BLIND,
-    UIClass.EXTERIOR_VENETIAN_BLIND: DEVICE_CLASS_BLIND,
-    UIClass.GARAGE_DOOR: DEVICE_CLASS_GARAGE,
-    UIClass.GATE: DEVICE_CLASS_GATE,
-    UIWidget.MY_FOX_SECURITY_CAMERA: DEVICE_CLASS_SHUTTER,
-    UIClass.PERGOLA: DEVICE_CLASS_AWNING,
-    UIClass.ROLLER_SHUTTER: DEVICE_CLASS_SHUTTER,
-    UIClass.SWINGING_SHUTTER: DEVICE_CLASS_SHUTTER,
-    UIClass.WINDOW: DEVICE_CLASS_WINDOW,
+    UIClass.CURTAIN: CoverDeviceClass.CURTAIN,
+    UIClass.EXTERIOR_SCREEN: CoverDeviceClass.BLIND,
+    UIClass.EXTERIOR_VENETIAN_BLIND: CoverDeviceClass.BLIND,
+    UIClass.GARAGE_DOOR: CoverDeviceClass.GARAGE,
+    UIClass.GATE: CoverDeviceClass.GATE,
+    UIWidget.MY_FOX_SECURITY_CAMERA: CoverDeviceClass.SHUTTER,
+    UIClass.PERGOLA: CoverDeviceClass.AWNING,
+    UIClass.ROLLER_SHUTTER: CoverDeviceClass.SHUTTER,
+    UIClass.SWINGING_SHUTTER: CoverDeviceClass.SHUTTER,
+    UIClass.WINDOW: CoverDeviceClass.WINDOW,
 }
 
 
@@ -69,7 +63,7 @@ class VerticalCover(OverkizGenericCover):
             (
                 OVERKIZ_DEVICE_TO_DEVICE_CLASS.get(self.device.widget)
                 or OVERKIZ_DEVICE_TO_DEVICE_CLASS.get(self.device.ui_class)
-                or DEVICE_CLASS_BLIND
+                or CoverDeviceClass.BLIND
             ),
         )
 

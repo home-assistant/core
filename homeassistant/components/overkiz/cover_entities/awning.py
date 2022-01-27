@@ -7,11 +7,11 @@ from pyoverkiz.enums import OverkizCommand, OverkizState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_AWNING,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
 )
 
 from .generic_cover import COMMANDS_STOP, OverkizGenericCover
@@ -20,7 +20,7 @@ from .generic_cover import COMMANDS_STOP, OverkizGenericCover
 class Awning(OverkizGenericCover):
     """Representation of an Overkiz awning."""
 
-    _attr_device_class = DEVICE_CLASS_AWNING
+    _attr_device_class = CoverDeviceClass.AWNING
 
     @property
     def supported_features(self) -> int:
