@@ -141,7 +141,7 @@ async def _async_setup_entity(
 
 
 class MqttSiren(MqttEntity, SirenEntity):
-    """Representation of a siren that can be toggled and notified using MQTT."""
+    """Representation of a siren that can be controlled using MQTT."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
