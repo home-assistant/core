@@ -1,8 +1,13 @@
 {
-  "domain": "mycroft",
-  "name": "Mycroft",
-  "documentation": "https://www.home-assistant.io/integrations/mycroft",
-  "requirements": ["mycroftapi==2.0"],
-  "codeowners": [],
-  "iot_class": "local_push"
+    "domain": "mycroft",
+    "name": "Mycroft",
+    "documentation": "https://www.home-assistant.io/integrations/mycroft",
+    "requirements": [
+        "mycroftapi==2.0"
+    ],
+    "codeowners": [],
+    "iot_class": "local_push",
+    "loggers": [
+        "mycroftapi"
+    ]
 }

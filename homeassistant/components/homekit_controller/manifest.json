@@ -1,11 +1,24 @@
 {
-  "domain": "homekit_controller",
-  "name": "HomeKit Controller",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
-  "requirements": ["aiohomekit==0.6.11"],
-  "zeroconf": ["_hap._tcp.local."],
-  "after_dependencies": ["zeroconf"],
-  "codeowners": ["@Jc2k", "@bdraco"],
-  "iot_class": "local_push"
+    "domain": "homekit_controller",
+    "name": "HomeKit Controller",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
+    "requirements": [
+        "aiohomekit==0.6.11"
+    ],
+    "zeroconf": [
+        "_hap._tcp.local."
+    ],
+    "after_dependencies": [
+        "zeroconf"
+    ],
+    "codeowners": [
+        "@Jc2k",
+        "@bdraco"
+    ],
+    "iot_class": "local_push",
+    "loggers": [
+        "aiohomekit",
+        "commentjson"
+    ]
 }

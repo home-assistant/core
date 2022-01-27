@@ -1,8 +1,13 @@
 {
-  "domain": "pushover",
-  "name": "Pushover",
-  "documentation": "https://www.home-assistant.io/integrations/pushover",
-  "requirements": ["pushover_complete==1.1.1"],
-  "codeowners": [],
-  "iot_class": "cloud_push"
+    "domain": "pushover",
+    "name": "Pushover",
+    "documentation": "https://www.home-assistant.io/integrations/pushover",
+    "requirements": [
+        "pushover_complete==1.1.1"
+    ],
+    "codeowners": [],
+    "iot_class": "cloud_push",
+    "loggers": [
+        "pushover_complete"
+    ]
 }

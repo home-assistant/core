@@ -1,8 +1,15 @@
 {
-  "domain": "synology_srm",
-  "name": "Synology SRM",
-  "documentation": "https://www.home-assistant.io/integrations/synology_srm",
-  "requirements": ["synology-srm==0.2.0"],
-  "codeowners": ["@aerialls"],
-  "iot_class": "local_polling"
+    "domain": "synology_srm",
+    "name": "Synology SRM",
+    "documentation": "https://www.home-assistant.io/integrations/synology_srm",
+    "requirements": [
+        "synology-srm==0.2.0"
+    ],
+    "codeowners": [
+        "@aerialls"
+    ],
+    "iot_class": "local_polling",
+    "loggers": [
+        "synology_srm"
+    ]
 }

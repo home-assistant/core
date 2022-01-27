@@ -1,8 +1,13 @@
 {
-  "domain": "edimax",
-  "name": "Edimax",
-  "documentation": "https://www.home-assistant.io/integrations/edimax",
-  "requirements": ["pyedimax==0.2.1"],
-  "codeowners": [],
-  "iot_class": "local_polling"
+    "domain": "edimax",
+    "name": "Edimax",
+    "documentation": "https://www.home-assistant.io/integrations/edimax",
+    "requirements": [
+        "pyedimax==0.2.1"
+    ],
+    "codeowners": [],
+    "iot_class": "local_polling",
+    "loggers": [
+        "pyedimax"
+    ]
 }

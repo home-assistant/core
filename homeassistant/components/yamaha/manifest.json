@@ -1,8 +1,13 @@
 {
-  "domain": "yamaha",
-  "name": "Yamaha Network Receivers",
-  "documentation": "https://www.home-assistant.io/integrations/yamaha",
-  "requirements": ["rxv==0.7.0"],
-  "codeowners": [],
-  "iot_class": "local_polling"
+    "domain": "yamaha",
+    "name": "Yamaha Network Receivers",
+    "documentation": "https://www.home-assistant.io/integrations/yamaha",
+    "requirements": [
+        "rxv==0.7.0"
+    ],
+    "codeowners": [],
+    "iot_class": "local_polling",
+    "loggers": [
+        "rxv"
+    ]
 }

@@ -1,8 +1,13 @@
 {
-  "domain": "gstreamer",
-  "name": "GStreamer",
-  "documentation": "https://www.home-assistant.io/integrations/gstreamer",
-  "requirements": ["gstreamer-player==1.1.2"],
-  "codeowners": [],
-  "iot_class": "local_push"
+    "domain": "gstreamer",
+    "name": "GStreamer",
+    "documentation": "https://www.home-assistant.io/integrations/gstreamer",
+    "requirements": [
+        "gstreamer-player==1.1.2"
+    ],
+    "codeowners": [],
+    "iot_class": "local_push",
+    "loggers": [
+        "gsp"
+    ]
 }

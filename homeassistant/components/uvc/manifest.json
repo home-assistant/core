@@ -1,8 +1,13 @@
 {
-  "domain": "uvc",
-  "name": "Ubiquiti UniFi Video",
-  "documentation": "https://www.home-assistant.io/integrations/uvc",
-  "requirements": ["uvcclient==0.11.0"],
-  "codeowners": [],
-  "iot_class": "local_polling"
+    "domain": "uvc",
+    "name": "Ubiquiti UniFi Video",
+    "documentation": "https://www.home-assistant.io/integrations/uvc",
+    "requirements": [
+        "uvcclient==0.11.0"
+    ],
+    "codeowners": [],
+    "iot_class": "local_polling",
+    "loggers": [
+        "uvcclient"
+    ]
 }

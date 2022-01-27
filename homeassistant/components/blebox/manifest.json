@@ -1,9 +1,17 @@
 {
-  "domain": "blebox",
-  "name": "BleBox devices",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/blebox",
-  "requirements": ["blebox_uniapi==1.3.3"],
-  "codeowners": ["@bbx-a", "@bbx-jp"],
-  "iot_class": "local_polling"
+    "domain": "blebox",
+    "name": "BleBox devices",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/blebox",
+    "requirements": [
+        "blebox_uniapi==1.3.3"
+    ],
+    "codeowners": [
+        "@bbx-a",
+        "@bbx-jp"
+    ],
+    "iot_class": "local_polling",
+    "loggers": [
+        "blebox_uniapi"
+    ]
 }

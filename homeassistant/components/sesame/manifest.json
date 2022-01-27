@@ -1,8 +1,13 @@
 {
-  "domain": "sesame",
-  "name": "Sesame Smart Lock",
-  "documentation": "https://www.home-assistant.io/integrations/sesame",
-  "requirements": ["pysesame2==1.0.1"],
-  "codeowners": [],
-  "iot_class": "cloud_polling"
+    "domain": "sesame",
+    "name": "Sesame Smart Lock",
+    "documentation": "https://www.home-assistant.io/integrations/sesame",
+    "requirements": [
+        "pysesame2==1.0.1"
+    ],
+    "codeowners": [],
+    "iot_class": "cloud_polling",
+    "loggers": [
+        "pysesame2"
+    ]
 }

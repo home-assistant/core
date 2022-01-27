@@ -1,9 +1,16 @@
 {
-  "domain": "dunehd",
-  "name": "Dune HD",
-  "documentation": "https://www.home-assistant.io/integrations/dunehd",
-  "requirements": ["pdunehd==1.3.2"],
-  "codeowners": ["@bieniu"],
-  "config_flow": true,
-  "iot_class": "local_polling"
+    "domain": "dunehd",
+    "name": "Dune HD",
+    "documentation": "https://www.home-assistant.io/integrations/dunehd",
+    "requirements": [
+        "pdunehd==1.3.2"
+    ],
+    "codeowners": [
+        "@bieniu"
+    ],
+    "config_flow": true,
+    "iot_class": "local_polling",
+    "loggers": [
+        "pdunehd"
+    ]
 }

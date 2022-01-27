@@ -1,8 +1,13 @@
 {
-  "domain": "clementine",
-  "name": "Clementine Music Player",
-  "documentation": "https://www.home-assistant.io/integrations/clementine",
-  "requirements": ["python-clementine-remote==1.0.1"],
-  "codeowners": [],
-  "iot_class": "local_polling"
+    "domain": "clementine",
+    "name": "Clementine Music Player",
+    "documentation": "https://www.home-assistant.io/integrations/clementine",
+    "requirements": [
+        "python-clementine-remote==1.0.1"
+    ],
+    "codeowners": [],
+    "iot_class": "local_polling",
+    "loggers": [
+        "clementineremote"
+    ]
 }
