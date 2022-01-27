@@ -37,9 +37,9 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
         ]
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the current selected option."""
-        return _ECOBEE_MODE_TO_TEXT.get(self._char.value, "Unknown")
+        return _ECOBEE_MODE_TO_TEXT.get(self._char.value)
 
     async def async_select_option(self, option: str) -> None:
         """Set the current mode."""
