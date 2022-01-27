@@ -190,20 +190,19 @@ async def async_setup_entry(
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            known_sensor_entities = set(gateway.entities[DOMAIN])
-
-            for sensor_description in (
+            known_entities = set(gateway.entities[DOMAIN])
+            for description in (
                 ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
             ):
 
                 if (
-                    not hasattr(sensor, sensor_description.key)
-                    or sensor_description.value_fn(sensor) is None
+                    not hasattr(sensor, description.key)
+                    or description.value_fn(sensor) is None
                 ):
                     continue
 
-                new_sensor = DeconzBinarySensor(sensor, gateway, sensor_description)
-                if new_sensor.unique_id not in known_sensor_entities:
+                new_sensor = DeconzBinarySensor(sensor, gateway, description)
+                if new_sensor.unique_id not in known_entities:
                     entities.append(new_sensor)
 
         if entities:
@@ -236,7 +235,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         description: DeconzBinarySensorDescription,
     ) -> None:
         """Initialize deCONZ binary sensor."""
-        self.entity_description = description
+        self.entity_description: DeconzBinarySensorDescription = description
         super().__init__(device, gateway)
 
         if description.suffix:
