@@ -140,7 +140,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
             self._available = True
 
         if last_state is None or last_state.state != STATE_ON:
-            self._ping.data = False
+            self._ping.data = None
             return
 
         attributes = last_state.attributes
