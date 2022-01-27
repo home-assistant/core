@@ -109,6 +109,9 @@ ENTITY_DESCRIPTIONS = {
         icon="mdi:white-balance-sunny",
         entity_registry_enabled_default=False,
     ),
+    GenericStatus: SensorEntityDescription(
+        key="status",
+    ),
     Humidity: SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
@@ -138,11 +141,16 @@ ENTITY_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
+    Time: SensorEntityDescription(
+        key="time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
 }
 
 SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
-        key="temperature",
+        key="secondary_temperature",
         required_attr="secondary_temperature",
         value_fn=lambda device: device.secondary_temperature,
         suffix="Temperature",
