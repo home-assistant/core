@@ -192,10 +192,10 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
-                with suppress(
-                    alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink
-                ):
+                try:
                     await self.async_enable_proactive_mode()
+                except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+                    await self.set_authorized(False)
             else:
                 await self.async_disable_proactive_mode()
 
