@@ -343,7 +343,7 @@ async def async_process_deps_reqs(
     elif integration.domain in processed:
         return
 
-    if failed_deps := await _async_process_dependencies(hass, config, integration)
+    if failed_deps := await _async_process_dependencies(hass, config, integration):
         raise DependencyError(failed_deps)
 
     if not hass.config.skip_pip and integration.requirements:
