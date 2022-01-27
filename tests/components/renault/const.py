@@ -228,7 +228,7 @@ MOCK_VEHICLES = {
         },
         "endpoints_available": [
             True,  # cockpit
-            False,  # hvac-status
+            True,  # hvac-status
             True,  # location
             True,  # battery-status
             True,  # charge-mode
@@ -237,6 +237,7 @@ MOCK_VEHICLES = {
             "battery_status": "battery_status_not_charging.json",
             "charge_mode": "charge_mode_schedule.json",
             "cockpit": "cockpit_ev.json",
+            "hvac_status": "hvac_status.json",
             "location": "location.json",
         },
         Platform.BINARY_SENSOR: [
@@ -355,6 +356,14 @@ MOCK_VEHICLES = {
                 ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_mileage",
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            },
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_ENTITY_ID: "sensor.reg_number_outside_temperature",
+                ATTR_STATE: "8.0",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_outside_temperature",
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
