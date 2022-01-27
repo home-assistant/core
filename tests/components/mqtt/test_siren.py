@@ -125,7 +125,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     await async_turn_on(hass, entity_id="siren.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "beer on", 2, False
+        "command-topic", '{"state": "beer on"}', 2, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("siren.test")
@@ -134,7 +134,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     await async_turn_off(hass, entity_id="siren.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "beer off", 2, False
+        "command-topic", '{"state": "beer off"}', 2, False
     )
     state = hass.states.get("siren.test")
     assert state.state == STATE_OFF
@@ -690,7 +690,7 @@ async def test_command_templates(hass, mqtt_mock, caplog):
         entity_id="siren.beer",
     )
     mqtt_mock.async_publish.assert_any_call(
-        "test-topic", "CMD: OFF, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
+        "test-topic", "CMD: OFF, DURATION: , TONE: , VOLUME:", 0, False
     )
     mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
@@ -803,15 +803,15 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
             siren.SERVICE_TURN_ON,
             "command_topic",
             None,
-            "ON",
-            "command_template",
+            '{"state": "ON"}',
+            None,
         ),
         (
             siren.SERVICE_TURN_OFF,
             "command_topic",
             None,
-            "OFF",
-            "command_off_template",
+            '{"state": "OFF"}',
+            None,
         ),
     ],
 )

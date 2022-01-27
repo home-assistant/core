@@ -191,15 +191,22 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
 
+        command_template = config.get(CONF_COMMAND_TEMPLATE)
+        command_off_template = config.get(CONF_COMMAND_OFF_TEMPLATE) or config.get(
+            CONF_COMMAND_TEMPLATE
+        )
         self._command_templates = {
-            CONF_COMMAND_TEMPLATE: config.get(CONF_COMMAND_TEMPLATE),
-            CONF_COMMAND_OFF_TEMPLATE: config.get(CONF_COMMAND_OFF_TEMPLATE)
-            or config.get(CONF_COMMAND_TEMPLATE),
-        }
-        for key, tpl in self._command_templates.items():
-            self._command_templates[key] = MqttCommandTemplate(
-                tpl, entity=self
+            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
+                command_template, entity=self
             ).async_render
+            if command_template
+            else None,
+            CONF_COMMAND_OFF_TEMPLATE: MqttCommandTemplate(
+                command_off_template, entity=self
+            ).async_render
+            if command_off_template
+            else None,
+        }
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),
             entity=self,
@@ -296,15 +303,22 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Flag supported features."""
         return self._supported_features
 
-    async def async_conditional_publish(
+    async def _async_publish(
         self,
         topic: str,
         template: str,
         value: Any,
-        variables: dict[str, Any],
+        variables: dict[str, Any] | None = None,
     ) -> None:
-        """Publish MQTT payload with command template if a topic is configured."""
-        payload = self._command_templates[template](value, variables)
+        """Publish MQTT payload with optional command template."""
+        template_variables = {STATE: value}
+        if variables is not None:
+            template_variables.update(variables)
+        payload = (
+            self._command_templates[template](value, template_variables)
+            if self._command_templates[template]
+            else json.dumps(template_variables)
+        )
         if payload and payload not in PAYLOAD_NONE:
             await mqtt.async_publish(
                 self.hass,
@@ -320,7 +334,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         This method is a coroutine.
         """
-        await self.async_conditional_publish(
+        await self._async_publish(
             CONF_COMMAND_TOPIC,
             CONF_COMMAND_TEMPLATE,
             self._config[CONF_PAYLOAD_ON],
@@ -338,11 +352,10 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         This method is a coroutine.
         """
-        await self.async_conditional_publish(
+        await self._async_publish(
             CONF_COMMAND_TOPIC,
             CONF_COMMAND_OFF_TEMPLATE,
             self._config[CONF_PAYLOAD_OFF],
-            self._attr_extra_state_attributes,
         )
 
         if self._optimistic:
