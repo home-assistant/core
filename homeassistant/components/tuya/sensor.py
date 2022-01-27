@@ -733,14 +733,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qy7wkre
     "cl": (
         TuyaSensorEntityDescription(
-            key=DPCode.COUNTDOWN_LEFT,
-            name="Remaining Time of Countdown",
-            entity_category=EntityCategory.CONFIG,
-            icon="mdi:timer-outline",
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.TIME_TOTAL,
-            name="Total Time of Opening and Closing Once",
+            name="Last Operation Duration",
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:progress-clock",
         ),

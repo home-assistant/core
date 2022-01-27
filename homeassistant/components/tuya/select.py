@@ -273,18 +273,6 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             device_class=TuyaDeviceClass.CURTAIN_MODE,
             entity_category=EntityCategory.CONFIG,
         ),
-        SelectEntityDescription(
-            key=DPCode.COUNTDOWN,
-            name="Countdown",
-            entity_category=EntityCategory.CONFIG,
-            icon="mdi:timer-cog-outline",
-        ),
-        SelectEntityDescription(
-            key=DPCode.COUNTDOWN_SET,
-            name="Countdown Setting",
-            entity_category=EntityCategory.CONFIG,
-            icon="mdi:timer-cog-outline",
-        ),
     ),
 }
 
