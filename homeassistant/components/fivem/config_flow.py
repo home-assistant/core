@@ -4,15 +4,17 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fivem import FiveM, FiveMServerOfflineError
+from fivem import FiveMServerOfflineError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_HOST, CONF_NAME, CONF_PORT, DOMAIN
+from . import FiveMServer
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +32,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect."""
 
-    fivem = FiveM(data[CONF_HOST], data[CONF_PORT])
-    server = await fivem.get_server()
+    fivem = FiveMServer(hass, data)
+    await fivem.initialize()
 
-    return server.vars["sv_licenseKeyToken"].split(":")[0]
+    if fivem.unique_id is None:
+        raise FiveMServerOfflineError
+
+    return fivem.unique_id
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
