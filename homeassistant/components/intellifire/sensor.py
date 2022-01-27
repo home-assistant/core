@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from . import IntellifireDataUpdateCoordinator
@@ -35,21 +34,24 @@ def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
 @dataclass
 class IntellifireSensorRequiredKeysMixin:
     """Mixin for required keys."""
+
     value_fn: Callable[[IntellifirePollData], int | str | datetime | None]
 
 
 @dataclass
-class IntellifireSensorEntityDescription(SensorEntityDescription,
-                                         IntellifireEntityDescription,
-                                         IntellifireSensorRequiredKeysMixin):
+class IntellifireSensorEntityDescription(
+    SensorEntityDescription,
+    IntellifireEntityDescription,
+    IntellifireSensorRequiredKeysMixin,
+):
     """Describes a binary sensor entity."""
+
 
 # @dataclass
 # class IntellifireSensorEntityDescription(
 #     SensorEntityDescription, IntellifireSensorRequiredKeysMixin
 # ):
 #     """Describes a sensor sensor entity."""
-
 
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
@@ -94,9 +96,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
 )
 
 
-
-
-
 class IntellifireSensor(
     IntellifireEntity, SensorEntity, IntellifireSensorRequiredKeysMixin
 ):
@@ -122,8 +121,6 @@ class IntellifireSensor(
         return self.description.value_fn(self.coordinator.api.data)
 
 
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -134,7 +131,3 @@ async def async_setup_entry(
         IntellifireSensor(coordinator=coordinator, description=description)
         for description in INTELLIFIRE_SENSORS
     )
-
-
-
-

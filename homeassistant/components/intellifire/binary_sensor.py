@@ -6,14 +6,10 @@ from dataclasses import dataclass
 
 from intellifire4py import IntellifirePollData
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
@@ -23,13 +19,16 @@ from .entity import IntellifireEntity, IntellifireEntityDescription
 @dataclass
 class IntellifireBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
+
     value_fn: Callable[[IntellifirePollData], bool]
 
 
 @dataclass
-class IntellifireBinarySensorEntityDescription(IntellifireEntityDescription,
-                                               IntellifireBinarySensorRequiredKeysMixin):
+class IntellifireBinarySensorEntityDescription(
+    IntellifireEntityDescription, IntellifireBinarySensorRequiredKeysMixin
+):
     """Describes a binary sensor entity."""
+
 
 INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...] = (
     IntellifireBinarySensorEntityDescription(
@@ -60,9 +59,9 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a IntelliFire On/Off Sensor."""
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -74,10 +73,12 @@ async def async_setup_entry(
 
 
 class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
+    """Class definition."""
+
     def __init__(
-            self,
-            coordinator: IntellifireDataUpdateCoordinator,
-            description: IntellifireBinarySensorEntityDescription,
+        self,
+        coordinator: IntellifireDataUpdateCoordinator,
+        description: IntellifireBinarySensorEntityDescription,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator, description=description)
@@ -90,7 +91,5 @@ class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-
         """Use this to get the correct value."""
         return self.description.value_fn(self.coordinator.api.data)
-
