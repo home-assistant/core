@@ -513,6 +513,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_COOL,
+            name="Cool Wind",
+            icon="mdi:tailwind",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
 }
 
