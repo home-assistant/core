@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{product_type} ({serial})",
     "step": {
       "user": {
         "title": "Configure device",
