@@ -37,6 +37,17 @@ ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 
+PROVIDES_EXTRA_ATTRIBUTES = (
+    "alarm",
+    "carbon_monoxide",
+    "fire",
+    "flag",
+    "open",
+    "presence",
+    "vibration",
+    "water",
+)
+
 
 @dataclass
 class DeconzBinarySensorDescriptionMixin:
@@ -230,7 +241,10 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
 
         if description.suffix:
             self._attr_name = f"{self._device.name} {description.suffix}"
+
         self._update_keys = {description.update_key, "reachable"}
+        if self.entity_description.key in PROVIDES_EXTRA_ATTRIBUTES:
+            self._update_keys.update({"on", "state"})
 
     @property
     def unique_id(self) -> str:
@@ -253,16 +267,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, bool | float | int | list | None]:
         """Return the state attributes of the sensor."""
-        if self.entity_description.key not in (
-            "alarm",
-            "carbon_monoxide",
-            "fire",
-            "flag",
-            "open",
-            "presence",
-            "vibration",
-            "water",
-        ):
+        if self.entity_description.key not in PROVIDES_EXTRA_ATTRIBUTES:
             return
 
         attr: dict[str, bool | float | int | list | None] = {}
