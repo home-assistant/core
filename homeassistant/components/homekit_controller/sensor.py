@@ -44,21 +44,21 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_WATT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_WATT,
-        name="Real Time Energy",
+        name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS,
-        name="Real Time Current",
+        name="Current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS_20: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS_20,
-        name="Real Time Current",
+        name="Current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
@@ -72,7 +72,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.EVE_ENERGY_WATT,
-        name="Real Time Energy",
+        name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
@@ -100,14 +100,14 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY,
-        name="Real Time Energy",
+        name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2,
-        name="Real Time Energy",
+        name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
@@ -121,7 +121,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY,
-        name="Real Time Energy",
+        name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
