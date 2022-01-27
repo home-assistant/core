@@ -196,7 +196,7 @@ class SensorFilter(SensorEntity):
     def __init__(self, name, unique_id, entity_id, filters):
         """Initialize the sensor."""
         self._name = name
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._entity = entity_id
         self._unit_of_measurement = None
         self._state = None
@@ -346,11 +346,6 @@ class SensorFilter(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return self._unique_id
 
     @property
     def native_value(self):
