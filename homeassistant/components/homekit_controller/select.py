@@ -12,9 +12,9 @@ from . import KNOWN_DEVICES, CharacteristicEntity
 from .const import DEVICE_CLASS_ECOBEE_MODE
 
 _ECOBEE_MODE_TO_TEXT = {
-    0: "Home",
-    1: "Sleep",
-    2: "Away",
+    0: "home",
+    1: "sleep",
+    2: "away",
 }
 _ECOBEE_MODE_TO_NUMBERS = {v: k for (k, v) in _ECOBEE_MODE_TO_TEXT.items()}
 
@@ -22,7 +22,7 @@ _ECOBEE_MODE_TO_NUMBERS = {v: k for (k, v) in _ECOBEE_MODE_TO_TEXT.items()}
 class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     """Represents a ecobee mode select entity."""
 
-    _attr_options = ["Home", "Sleep", "Away"]
+    _attr_options = ["home", "sleep", "away"]
     _attr_device_class = DEVICE_CLASS_ECOBEE_MODE
 
     @property
