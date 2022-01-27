@@ -39,7 +39,8 @@
                 "data": {
                     "sources": "Bronnenlijst"
                 },
-                "description": "Selecteer ingeschakelde bronnen"
+                "description": "Selecteer ingeschakelde bronnen",
+                "title": "Opties voor WebOS Smart TV"
             }
         }
     }

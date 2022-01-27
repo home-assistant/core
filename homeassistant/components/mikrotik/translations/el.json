@@ -7,7 +7,8 @@
             "user": {
                 "data": {
                     "verify_ssl": "\u03a7\u03c1\u03ae\u03c3\u03b7 ssl"
-                }
+                },
+                "title": "\u03a1\u03cd\u03b8\u03bc\u03b9\u03c3\u03b7 \u03c4\u03bf\u03c5 \u03b4\u03c1\u03bf\u03bc\u03bf\u03bb\u03bf\u03b3\u03b7\u03c4\u03ae Mikrotik"
             }
         }
     },
@@ -15,6 +16,7 @@
         "step": {
             "device_tracker": {
                 "data": {
+                    "arp_ping": "\u0395\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7 ARP ping",
                     "detection_time": "\u0395\u03be\u03b5\u03c4\u03ac\u03c3\u03c4\u03b5 \u03c4\u03bf \u03c7\u03c1\u03bf\u03bd\u03b9\u03ba\u03cc \u03b4\u03b9\u03ac\u03c3\u03c4\u03b7\u03bc\u03b1 \u03c3\u03c4\u03bf \u03c3\u03c0\u03af\u03c4\u03b9",
                     "force_dhcp": "\u0391\u03bd\u03b1\u03b3\u03ba\u03b1\u03c3\u03c4\u03b9\u03ba\u03ae \u03c3\u03ac\u03c1\u03c9\u03c3\u03b7 \u03bc\u03b5 \u03c7\u03c1\u03ae\u03c3\u03b7 DHCP"
                 }

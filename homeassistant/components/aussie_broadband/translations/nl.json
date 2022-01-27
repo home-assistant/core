@@ -3,18 +3,33 @@
         "abort": {
             "no_services_found": "Er zijn geen services gevonden voor dit account"
         },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
         "step": {
             "reauth": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
                 "description": "Update wachtwoord voor {username}"
             },
             "service": {
                 "data": {
                     "services": "Services"
                 }
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
             }
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "init": {
                 "data": {
