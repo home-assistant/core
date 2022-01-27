@@ -257,6 +257,36 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:timer-cog-outline",
         ),
     ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SelectEntityDescription(
+            key=DPCode.CONTROL_BACK_MODE,
+            name="Motor mode",
+            device_class=TuyaDeviceClass.CURTAIN_MOTOR_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi-restore",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            name="Working Mode",
+            device_class=TuyaDeviceClass.CURTAIN_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:layers-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown Setting",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

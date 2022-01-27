@@ -513,6 +513,34 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_COOL,
+            name="Cool Wind Natural",
+            icon="mdi:tailwind",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SwitchEntityDescription(
+            key=DPCode.CONTROL_BACK,
+            name="Reverse Operation",
+            icon="mdi-restore",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OPPOSITE,
+            name="Reverse Setting",
+            icon="mdi-restore",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.AUTO_POWER,
+            name="Automatically Start",
+            icon="mdi-flash-auto",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
 }
 
