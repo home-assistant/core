@@ -62,6 +62,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT: "number",
     CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL: "number",
     CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT: "number",
+    CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: "select",
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: "number",
