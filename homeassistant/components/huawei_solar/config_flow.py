@@ -99,26 +99,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-
             user_input[CONF_SLAVE_IDS] = list(
                 map(int, user_input[CONF_SLAVE_IDS].split(","))
             )
-            info = await validate_input(self.hass, user_input)
-
-        except ConnectionException:
-            errors["base"] = "cannot_connect"
-        except SlaveException:
-            errors["base"] = "slave_cannot_connect"
-        except ReadException:
-            errors["base"] = "read_error"
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            errors["base"] = "unknown"
+        except ValueError:
+            errors["base"] = "invalid_slave_ids"
         else:
-            await self.async_set_unique_id(info["serial_number"])
-            self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=info["model_name"], data=user_input)
+            try:
+                info = await validate_input(self.hass, user_input)
+
+            except ConnectionException:
+                errors["base"] = "cannot_connect"
+            except SlaveException:
+                errors["base"] = "slave_cannot_connect"
+            except ReadException:
+                errors["base"] = "read_error"
+            except Exception as exception:  # pylint: disable=broad-except
+                _LOGGER.exception(exception)
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(info["serial_number"])
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=info["model_name"], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

@@ -14,7 +14,8 @@
       "slave_cannot_connect": "Failed to connect to additional slave",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "read_error": "Reading from the inverter failed."
+      "read_error": "Reading from the inverter failed.",
+      "invalid_slave_ids": "Slave IDs must be comma-separated list of ints"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

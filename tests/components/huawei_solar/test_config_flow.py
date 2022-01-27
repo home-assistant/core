@@ -124,6 +124,23 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
+async def test_form_invalid_slave_ids(hass: HomeAssistant) -> None:
+    """Test manual device add with default pin."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_SLAVE_IDS: "0,a"},
+    )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "invalid_slave_ids"}
+
+
 async def test_form_invalid_extra_slave(hass: HomeAssistant) -> None:
     """Test manual device add with default pin."""
     result = await hass.config_entries.flow.async_init(
