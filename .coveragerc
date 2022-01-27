@@ -889,7 +889,6 @@ omit =
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
     homeassistant/components/pyload/sensor.py
-    homeassistant/components/p1_monitor/diagnostics.py
     homeassistant/components/qbittorrent/sensor.py
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py

@@ -23,8 +23,13 @@ async def async_get_config_entry_diagnostics(
     coordinator: P1MonitorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "smartmeter": coordinator.data[SERVICE_SMARTMETER].__dict__,
-        "phases": coordinator.data[SERVICE_PHASES].__dict__,
-        "settings": coordinator.data[SERVICE_SETTINGS].__dict__,
+        "entry": {
+            "title": entry.title,
+            "data": async_redact_data(entry.data, TO_REDACT),
+        },
+        "data": {
+            "smartmeter": coordinator.data[SERVICE_SMARTMETER].__dict__,
+            "phases": coordinator.data[SERVICE_PHASES].__dict__,
+            "settings": coordinator.data[SERVICE_SETTINGS].__dict__,
+        },
     }
