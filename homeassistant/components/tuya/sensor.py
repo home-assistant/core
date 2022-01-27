@@ -741,7 +741,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.COUNTDOWN_LEFT,
-            name="Countdown",
+            name="Remaining Time of Countdown",
             value_to_timestamp=True,
             device_class=SensorDeviceClass.TIMESTAMP,
             icon="mdi:timer-outline",
