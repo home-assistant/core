@@ -20,6 +20,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice, valid_serial_number
@@ -27,6 +28,7 @@ from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def escape_characteristic_name(char_name):
     """Escape any dash or dots in a characteristics name."""
@@ -256,16 +258,14 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Remove the pairing on the device, making the device discoverable again.
     # Don't reuse any objects in hass.data as they are already unloaded
     async_zeroconf_instance = await zeroconf.async_get_async_instance(hass)
-    controller = aiohomekit.Controller(
-        async_zeroconf_instance=async_zeroconf_instance
-    )
-    controller.load_pairing(hkid, entry.data)
+    controller = aiohomekit.Controller(async_zeroconf_instance=async_zeroconf_instance)
+    controller.load_pairing(hkid, dict(entry.data))
     try:
         await controller.remove_pairing(hkid)
     except aiohomekit.AccessoryDisconnectedError:
         _LOGGER.warning(
             "Accessory %s was removed from HomeAssistant but was not reachable "
             "to properly unpair. It may need resetting before you can use it with "
-            "HomeKit again.",
+            "HomeKit again",
             entry.title,
         )
