@@ -127,6 +127,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
 
+        self.context["title_placeholders"] = {
+            "name": f"{self.config[CONF_PRODUCT_NAME]} ({self.config[CONF_SERIAL]})"
+        }
+
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
