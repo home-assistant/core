@@ -61,8 +61,7 @@ async def async_browse_media(
     hass, media_content_type, media_content_id, *, can_play_artist=True
 ):
     """Browse Spotify media."""
-    info = next(iter(hass.data[DOMAIN].values()), None)
-    if not info:
+    if not (info := next(iter(hass.data[DOMAIN].values()), None)):
         raise BrowseError("No Spotify accounts available")
     return await async_browse_media_internal(
         hass,
