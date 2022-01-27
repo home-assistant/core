@@ -74,14 +74,16 @@ class VerticalCover(OverkizGenericCover):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if current_position := self.executor.select_state(
+        position = self.executor.select_state(
             OverkizState.CORE_CLOSURE,
             OverkizState.CORE_CLOSURE_OR_ROCKER_POSITION,
             OverkizState.CORE_PEDESTRIAN_POSITION,
-        ):
-            return 100 - cast(int, current_position)
+        )
 
-        return None
+        if position is None:
+            return None
+
+        return 100 - cast(int, position)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
