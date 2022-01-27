@@ -17,7 +17,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FiveM binary sensor platform."""
-    server = hass.data[DOMAIN][config_entry.unique_id]
+    server = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [FiveMStatusBinarySensor(server)]
 

@@ -30,6 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = fivem
+
+    await fivem.async_update()
+    fivem.start_periodic_update()
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -37,6 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    fivem: FiveMServer = hass.data[DOMAIN][entry.entry_id]
+    fivem.stop_periodic_update()
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -99,14 +106,14 @@ class FiveMServer:
             self.online = False
 
         if self.online:
-            self.players_online = server.players.count()
+            self.players_online = len(server.players)
             self.players_max = server.max_players
             self.players_list = []
             for player in server.players:
                 self.players_list.append(player.name)
             self.players_list.sort()
 
-            self.resources_count = server.resources.count()
+            self.resources_count = len(server.resources)
             self.resources_list = server.resources
             self.resources_list.sort()
 
