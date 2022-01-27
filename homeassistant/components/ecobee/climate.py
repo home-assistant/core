@@ -83,6 +83,14 @@ ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     ]
 )
 
+MAP_STATE_ICONS = {
+    # off to use default climate icon
+    "heat": "mdi:fire",
+    "cool": "mdi:snowflake",
+    "auto": "mdi:cached",
+    "auxHeatOnly": "mdi:fire-circle",
+}
+
 ECOBEE_HVAC_ACTION_TO_HASS = {
     # Map to None if we do not know how to represent.
     "heatPump": CURRENT_HVAC_HEAT,
@@ -490,6 +498,13 @@ class Thermostat(ClimateEntity):
     def hvac_mode(self):
         """Return current operation."""
         return ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
+
+    @property
+    def icon(self):
+        """Return the icon for the current state."""
+        return MAP_STATE_ICONS.get(
+            self.thermostat["settings"]["hvacMode"], "mdi:thermostat"
+        )
 
     @property
     def hvac_modes(self):

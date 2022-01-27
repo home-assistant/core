@@ -138,6 +138,20 @@ async def test_hvac_mode(ecobee_fixture, thermostat):
     assert thermostat.hvac_mode == "off"
 
 
+async def test_icon(ecobee_fixture, thermostat):
+    """Test current operation property."""
+    thermostat.set_hvac_mode("heat_cool")
+    assert thermostat.icon == "mdi:cached"
+    ecobee_fixture["settings"]["hvacMode"] = "heat"
+    assert thermostat.icon == "mdi:fire"
+    ecobee_fixture["settings"]["hvacMode"] = "cool"
+    assert thermostat.icon == "mdi:snowflake"
+    ecobee_fixture["settings"]["hvacMode"] = "auxHeatOnly"
+    assert thermostat.icon == "mdi:fire-circle"
+    ecobee_fixture["settings"]["hvacMode"] = "off"
+    assert thermostat.icon == "mdi:thermostat"
+
+
 async def test_hvac_modes(thermostat):
     """Test operation list property."""
     assert ["heat_cool", "heat", "cool", "off"] == thermostat.hvac_modes
