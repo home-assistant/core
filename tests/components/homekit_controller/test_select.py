@@ -35,15 +35,15 @@ async def test_read_current_mode(hass, utcnow):
     mode = service[CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE]
 
     state = await energy_helper.poll_and_get_state()
-    assert state.state == "Home"
+    assert state.state == "home"
 
     mode.value = 1
     state = await energy_helper.poll_and_get_state()
-    assert state.state == "Sleep"
+    assert state.state == "sleep"
 
     mode.value = 2
     state = await energy_helper.poll_and_get_state()
-    assert state.state == "Away"
+    assert state.state == "away"
 
 
 async def test_write_current_mode(hass, utcnow):
@@ -68,7 +68,7 @@ async def test_write_current_mode(hass, utcnow):
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.testdevice_current_mode", "option": "Home"},
+        {"entity_id": "select.testdevice_current_mode", "option": "home"},
         blocking=True,
     )
     assert mode.value == 0
@@ -76,7 +76,7 @@ async def test_write_current_mode(hass, utcnow):
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.testdevice_current_mode", "option": "Sleep"},
+        {"entity_id": "select.testdevice_current_mode", "option": "sleep"},
         blocking=True,
     )
     assert mode.value == 1
@@ -84,7 +84,7 @@ async def test_write_current_mode(hass, utcnow):
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.testdevice_current_mode", "option": "Away"},
+        {"entity_id": "select.testdevice_current_mode", "option": "away"},
         blocking=True,
     )
     assert mode.value == 2
