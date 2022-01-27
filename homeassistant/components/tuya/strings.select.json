@@ -91,7 +91,7 @@
         "night": "Night"
     },
     "tuya__curtain_motor_mode": {
-        "forward": "Forward°",
+        "forward": "Forward",
         "back": "Back"
     }
   }
