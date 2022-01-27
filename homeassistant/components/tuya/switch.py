@@ -513,12 +513,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
-            key=DPCode.FAN_COOL,
-            name="Cool Wind Natural",
-            icon="mdi:tailwind",
-            entity_category=EntityCategory.CONFIG,
-        ),
     ),
     # Curtain
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
