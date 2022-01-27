@@ -63,7 +63,6 @@ MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
 
 setup(
     name=PROJECT_PACKAGE_NAME,
-    version=hass_const.__version__,
     url=PROJECT_URL,
     download_url=DOWNLOAD_URL,
     project_urls=PROJECT_URLS,
