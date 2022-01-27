@@ -225,9 +225,6 @@ class TrackerEntity(BaseTrackerEntity):
         attr: dict[str, StateType] = {}
         attr.update(super().state_attributes)
 
-        if self.location_name is not None:
-            return attr
-
         if self.latitude is not None and self.longitude is not None:
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
