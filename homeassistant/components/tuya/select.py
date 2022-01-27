@@ -262,7 +262,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "cl": (
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
-            name="Motor mode",
+            name="Motor Mode",
             device_class=TuyaDeviceClass.CURTAIN_MOTOR_MODE,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:swap-horizontal",
