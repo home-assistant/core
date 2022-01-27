@@ -1,13 +1,12 @@
 """Sensor platform for the Flipr's pool_sensor."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.const import ELECTRIC_POTENTIAL_MILLIVOLT, TEMP_CELSIUS
 
 from . import FliprEntity
 from .const import DOMAIN
@@ -27,13 +26,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Water Temp",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     SensorEntityDescription(
         key="date_time",
         name="Last Measured",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="red_ox",

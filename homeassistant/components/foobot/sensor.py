@@ -9,7 +9,11 @@ import aiohttp
 from foobot_async import FoobotClient
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
@@ -18,7 +22,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
     TIME_SECONDS,
@@ -54,7 +57,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="tmp",
         name=ATTR_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="hum",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
 import datetime
 from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -162,11 +163,20 @@ def _patch_discovery(device=None, no_device=False):
     async def _discovery(*args, **kwargs):
         if no_device:
             raise OSError
-        return [FLUX_DISCOVERY]
+        return [] if no_device else [device or FLUX_DISCOVERY]
 
-    return patch(
-        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
-    )
+    @contextmanager
+    def _patcher():
+        with patch(
+            "homeassistant.components.flux_led.AIOBulbScanner.async_scan",
+            new=_discovery,
+        ), patch(
+            "homeassistant.components.flux_led.AIOBulbScanner.getBulbInfo",
+            return_value=[] if no_device else [device or FLUX_DISCOVERY],
+        ):
+            yield
+
+    return _patcher()
 
 
 def _patch_wifibulb(device=None, no_device=False):

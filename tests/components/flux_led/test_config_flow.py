@@ -31,6 +31,7 @@ from . import (
     DEFAULT_ENTRY_TITLE,
     DHCP_DISCOVERY,
     FLUX_DISCOVERY,
+    FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
     MAC_ADDRESS,
     MODULE,
@@ -419,6 +420,35 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
     assert result["errors"] is None
 
     with _patch_discovery(no_device=True), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+    }
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+
+
+async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
+    """Test we can setup when discovered from dhcp but part of the udp response is missing."""
+
+    with _patch_discovery(no_device=True), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(device=FLUX_DISCOVERY_PARTIAL), _patch_wifibulb(), patch(
         f"{MODULE}.async_setup", return_value=True
     ) as mock_async_setup, patch(
         f"{MODULE}.async_setup_entry", return_value=True

@@ -17,7 +17,6 @@ from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
-from homeassistant.components.august import AugustData
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -27,6 +26,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_call_later
 
+from . import AugustData
 from .const import ACTIVITY_UPDATE_INTERVAL, DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 

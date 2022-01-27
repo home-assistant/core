@@ -5,14 +5,10 @@ from pyfreedompro import put_state
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.const import CONF_API_KEY
@@ -24,11 +20,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
-    "windowCovering": DEVICE_CLASS_BLIND,
-    "gate": DEVICE_CLASS_GATE,
-    "garageDoor": DEVICE_CLASS_GARAGE,
-    "door": DEVICE_CLASS_DOOR,
-    "window": DEVICE_CLASS_WINDOW,
+    "windowCovering": CoverDeviceClass.BLIND,
+    "gate": CoverDeviceClass.GATE,
+    "garageDoor": CoverDeviceClass.GARAGE,
+    "door": CoverDeviceClass.DOOR,
+    "window": CoverDeviceClass.WINDOW,
 }
 
 SUPPORTED_SENSORS = {"windowCovering", "gate", "garageDoor", "door", "window"}

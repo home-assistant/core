@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers.entity import DeviceInfo
@@ -97,7 +97,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_OCCUPANCY
+        return BinarySensorDeviceClass.OCCUPANCY
 
     async def async_update(self):
         """Get the latest state of the sensor."""

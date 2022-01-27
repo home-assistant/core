@@ -17,21 +17,20 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
     DATA_RATE_KILOBITS_PER_SECOND,
     DATA_RATE_KILOBYTES_PER_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     SIGNAL_STRENGTH_DECIBELS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -165,21 +164,21 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="device_uptime",
         name="Device Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
         name="Connection Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_connection_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="kb_s_sent",
         name="Upload Throughput",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
         value_fn=_retrieve_kb_s_sent_state,
@@ -187,7 +186,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="kb_s_received",
         name="Download Throughput",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
         value_fn=_retrieve_kb_s_received_state,
@@ -197,7 +196,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -205,13 +204,13 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="gb_sent",
         name="GB sent",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
         value_fn=_retrieve_gb_sent_state,
@@ -219,7 +218,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="gb_received",
         name="GB received",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         value_fn=_retrieve_gb_received_state,

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     DATA_MEGABYTES,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     SERVICE_RELOAD,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -216,6 +217,68 @@ async def test_setup_get(hass):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
     assert state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_MEASUREMENT
+
+
+@respx.mock
+async def test_setup_timestamp(hass, caplog):
+    """Test setup with valid configuration."""
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK, json={"key": "2021-11-11 11:39Z"}
+    )
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "device_class": DEVICE_CLASS_TIMESTAMP,
+                "state_class": sensor.STATE_CLASS_MEASUREMENT,
+            }
+        },
+    )
+    await async_setup_component(hass, "homeassistant", {})
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 1
+
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == "2021-11-11T11:39:00+00:00"
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TIMESTAMP
+    assert "sensor.rest_sensor rendered invalid timestamp" not in caplog.text
+    assert "sensor.rest_sensor rendered timestamp without timezone" not in caplog.text
+
+    # Bad response: Not a timestamp
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK, json={"key": "invalid time stamp"}
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.rest_sensor"]},
+        blocking=True,
+    )
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == "unknown"
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TIMESTAMP
+    assert "sensor.rest_sensor rendered invalid timestamp" in caplog.text
+
+    # Bad response: No timezone
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK, json={"key": "2021-10-11 11:39"}
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.rest_sensor"]},
+        blocking=True,
+    )
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == "unknown"
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TIMESTAMP
+    assert "sensor.rest_sensor rendered timestamp without timezone" in caplog.text
 
 
 @respx.mock

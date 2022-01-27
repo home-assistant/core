@@ -24,9 +24,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.zwave_js.discovery_data_template import (
-    NumericSensorDataTemplateData,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -75,6 +72,7 @@ from .const import (
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
+from .discovery_data_template import NumericSensorDataTemplateData
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_id
 

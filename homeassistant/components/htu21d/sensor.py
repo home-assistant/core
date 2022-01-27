@@ -11,16 +11,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import CONF_NAME, PERCENTAGE, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -40,12 +35,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=SENSOR_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
 )
 

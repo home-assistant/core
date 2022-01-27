@@ -16,7 +16,8 @@
                     "host": "Nazwa hosta lub adres IP",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
-                }
+                },
+                "description": "W przypadku nowszych modeli, wpisz nazw\u0119 u\u017cytkownika \u201eenvoy\u201d bez has\u0142a. W przypadku starszych modeli, wprowad\u017a nazw\u0119 u\u017cytkownika \u201einstaller\u201d bez has\u0142a. W przypadku wszystkich innych modeli wprowad\u017a prawid\u0142ow\u0105 nazw\u0119 u\u017cytkownika i has\u0142o."
             }
         }
     }

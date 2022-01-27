@@ -36,6 +36,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+AUTO_ATTRIBUTES = (
+    "line_number_public",
+    "line_transport_type",
+    "final_destination",
+    "due_at_schedule",
+    "due_at_realtime",
+    "is_realtime",
+)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the sensor."""
@@ -94,17 +103,11 @@ class DeLijnPublicTransportSensor(SensorEntity):
             if (first_passage := first["due_at_realtime"]) is None:
                 first_passage = first["due_at_schedule"]
             self._attr_native_value = first_passage
-            self._attr_extra_state_attributes.update(
-                {
-                    "line_number_public": first["line_number_public"],
-                    "line_transport_type": first["line_transport_type"],
-                    "final_destination": first["final_destination"],
-                    "due_at_schedule": first["due_at_schedule"],
-                    "due_at_realtime": first["due_at_realtime"],
-                    "is_realtime": first["is_realtime"],
-                    "next_passages": self.line.passages,
-                }
-            )
+
+            for key in AUTO_ATTRIBUTES:
+                self._attr_extra_state_attributes[key] = first[key]
+            self._attr_extra_state_attributes["next_passages"] = self.line.passages
+
             self._attr_available = True
         except (KeyError) as error:
             _LOGGER.error("Invalid data received from De Lijn: %s", error)

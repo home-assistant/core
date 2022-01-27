@@ -75,7 +75,8 @@ class DhcpServiceInfo(BaseServiceInfo):
         Deprecated, and will be removed in version 2022.6.
         """
         report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
             exclude_integrations={DOMAIN},
             error_if_core=False,
         )
@@ -88,7 +89,8 @@ class DhcpServiceInfo(BaseServiceInfo):
         Deprecated, and will be removed in version 2022.6.
         """
         report(
-            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
+            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
             exclude_integrations={DOMAIN},
             error_if_core=False,
         )

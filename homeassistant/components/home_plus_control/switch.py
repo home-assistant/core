@@ -1,11 +1,7 @@
 """Legrand Home+ Control Switch Entity Module that uses the HomeAssistant DataUpdateCoordinator."""
 from functools import partial
 
-from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
-    SwitchEntity,
-)
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers import dispatcher
 from homeassistant.helpers.entity import DeviceInfo
@@ -97,8 +93,8 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         if self.module.device == "plug":
-            return DEVICE_CLASS_OUTLET
-        return DEVICE_CLASS_SWITCH
+            return SwitchDeviceClass.OUTLET
+        return SwitchDeviceClass.SWITCH
 
     @property
     def available(self) -> bool:

@@ -6,15 +6,11 @@ from typing import Any
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS
 from homeassistant.util import slugify
 
 from . import DOMAIN, IncomfortChild
@@ -35,20 +31,20 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
     IncomfortSensorEntityDescription(
         key="pressure",
         name=INCOMFORT_PRESSURE,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_BAR,
     ),
     IncomfortSensorEntityDescription(
         key="heater_temp",
         name=INCOMFORT_HEATER_TEMP,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         extra_key="is_pumping",
     ),
     IncomfortSensorEntityDescription(
         key="tap_temp",
         name=INCOMFORT_TAP_TEMP,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         extra_key="is_tapping",
     ),

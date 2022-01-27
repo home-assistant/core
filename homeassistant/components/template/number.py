@@ -17,7 +17,6 @@ from homeassistant.components.number.const import (
     DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
 )
-from homeassistant.components.template import TriggerUpdateCoordinator
 from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
@@ -31,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import Template, TemplateError
 
+from . import TriggerUpdateCoordinator
 from .const import CONF_AVAILABILITY, DOMAIN
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity

@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LOCATION, DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.const import ATTR_LOCATION, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -170,7 +170,7 @@ class IPPPrinterSensor(IPPSensor):
 class IPPUptimeSensor(IPPSensor):
     """Defines a IPP uptime sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator

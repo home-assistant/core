@@ -12,6 +12,7 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "individual_address": "Indywidualny adres dla po\u0142\u0105czenia",
+                    "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
                     "port": "Port",
                     "route_back": "Tryb Route Back / NAT"
                 },
@@ -29,13 +30,13 @@
                 "data": {
                     "gateway": "Po\u0142\u0105czenie tunelowe KNX"
                 },
-                "description": "Prosz\u0119 wybra\u0107 bram\u0119 z listy."
+                "description": "Prosz\u0119 wybra\u0107 bramk\u0119 z listy."
             },
             "type": {
                 "data": {
                     "connection_type": "Typ po\u0142\u0105czenia KNX"
                 },
-                "description": "Prosz\u0119 wprowadzi\u0107 typ po\u0142\u0105czenia, kt\u00f3rego powinni\u015bmy u\u017cy\u0107 dla po\u0142\u0105czenia KNX. \n AUTOMATIC - Integracja sama zadba o po\u0142\u0105czenie z magistral\u0105 KNX poprzez skanowanie bramy. \n TUNNELING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez tunelowanie. \n ROUTING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez routing."
+                "description": "Prosz\u0119 wprowadzi\u0107 typ po\u0142\u0105czenia, kt\u00f3rego powinni\u015bmy u\u017cy\u0107 dla po\u0142\u0105czenia KNX. \n AUTOMATIC - Integracja sama zadba o po\u0142\u0105czenie z magistral\u0105 KNX poprzez skanowanie bramki. \n TUNNELING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez tunelowanie. \n ROUTING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez routing."
             }
         }
     },

@@ -9,10 +9,12 @@ from pypck.module import GroupConnection, ModuleConnection
 import pytest
 
 from homeassistant.components.lcn.const import DOMAIN
+from homeassistant.components.lcn.helpers import generate_unique_id
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_mock_service, load_fixture
 
 
 class MockModuleConnection(ModuleConnection):
@@ -38,6 +40,13 @@ class MockGroupConnection(GroupConnection):
 
 class MockPchkConnectionManager(PchkConnectionManager):
     """Fake connection handler."""
+
+    return_value = None
+
+    def __init__(self, *args, **kwargs):
+        """Initialize MockPchkCOnnectionManager."""
+        super().__init__(*args, **kwargs)
+        self.__class__.return_value = self
 
     async def async_connect(self, timeout=30):
         """Mock establishing a connection to PCHK."""
@@ -75,6 +84,12 @@ def create_config_entry(name):
     return entry
 
 
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
+
+
 @pytest.fixture(name="entry")
 def create_config_entry_pchk():
     """Return one specific config entry."""
@@ -101,3 +116,12 @@ async def setup_component(hass):
 
     await async_setup_component(hass, DOMAIN, config_data)
     await hass.async_block_till_done()
+
+
+def get_device(hass, entry, address):
+    """Get LCN device for specified address."""
+    device_registry = dr.async_get(hass)
+    identifiers = {(DOMAIN, generate_unique_id(entry.entry_id, address))}
+    device = device_registry.async_get_device(identifiers)
+    assert device
+    return device

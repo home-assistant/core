@@ -4,13 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_RATE_KILOBYTES_PER_SECOND,
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -42,7 +42,7 @@ async def async_setup_entry(
                 key=sensor_name,
                 name=f"Freebox {sensor_name}",
                 native_unit_of_measurement=TEMP_CELSIUS,
-                device_class=DEVICE_CLASS_TEMPERATURE,
+                device_class=SensorDeviceClass.TEMPERATURE,
             ),
         )
         for sensor_name in router.sensors_temperature

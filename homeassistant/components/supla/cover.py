@@ -7,12 +7,8 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     CoverEntity,
 )
-from homeassistant.components.supla import (
-    DOMAIN,
-    SUPLA_COORDINATORS,
-    SUPLA_SERVERS,
-    SuplaChannel,
-)
+
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -35,7 +35,7 @@ async def test_switch_on_off(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     switch = _mocked_switch()
-    with _patch_discovery(device=switch), _patch_wifibulb(device=switch):
+    with _patch_discovery(), _patch_wifibulb(device=switch):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 

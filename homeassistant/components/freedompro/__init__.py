@@ -1,11 +1,14 @@
 """Support for freedompro."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Final
 
 from pyfreedompro import get_list, get_states
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -14,15 +17,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "fan",
-    "light",
-    "lock",
-    "sensor",
-    "switch",
+PLATFORMS: Final[list[Platform]] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

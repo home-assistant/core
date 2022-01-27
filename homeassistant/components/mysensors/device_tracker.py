@@ -6,16 +6,12 @@ from typing import Any
 
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.mysensors import DevId
-from homeassistant.components.mysensors.const import (
-    ATTR_GATEWAY_ID,
-    DiscoveryInfo,
-    GatewayId,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
+from . import DevId
+from .const import ATTR_GATEWAY_ID, DiscoveryInfo, GatewayId
 from .helpers import on_unload
 
 

@@ -3,8 +3,9 @@
 from datetime import timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.components.streamlabswater import DOMAIN as STREAMLABSWATER_DOMAIN
 from homeassistant.util import Throttle
+
+from . import DOMAIN as STREAMLABSWATER_DOMAIN
 
 DEPENDS = ["streamlabswater"]
 

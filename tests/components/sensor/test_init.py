@@ -1,4 +1,4 @@
-"""The test for sensor device automation."""
+"""The test for sensor entity."""
 from datetime import date, datetime, timezone
 
 import pytest

@@ -2,7 +2,7 @@
 from pylutron import OccupancyGroup
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -29,7 +29,7 @@ class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     reported as a single occupancy group.
     """
 
-    _attr_device_class = DEVICE_CLASS_OCCUPANCY
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     @property
     def is_on(self):

@@ -6,8 +6,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_SWITCH,
     PLATFORM_SCHEMA,
+    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -28,12 +28,12 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="auto_watering",
         name="Automatic Watering",
-        device_class=DEVICE_CLASS_SWITCH,
+        device_class=SwitchDeviceClass.SWITCH,
     ),
     SwitchEntityDescription(
         key="manual_watering",
         name="Manual Watering",
-        device_class=DEVICE_CLASS_SWITCH,
+        device_class=SwitchDeviceClass.SWITCH,
     ),
 )
 

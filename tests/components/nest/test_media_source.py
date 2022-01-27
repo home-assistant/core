@@ -16,6 +16,7 @@ from homeassistant.components import media_source
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.components.media_source.error import Unresolvable
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
@@ -164,6 +165,37 @@ async def test_supported_device(hass, auth):
     assert len(browse.children) == 0
 
 
+async def test_integration_unloaded(hass, auth):
+    """Test the media player loads, but has no devices, when config unloaded."""
+    await async_setup_devices(
+        hass,
+        auth,
+        CAMERA_DEVICE_TYPE,
+        CAMERA_TRAITS,
+    )
+
+    browse = await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}")
+    assert browse.domain == DOMAIN
+    assert browse.identifier == ""
+    assert browse.title == "Nest"
+    assert len(browse.children) == 1
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
+
+    # No devices returned
+    browse = await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}")
+    assert browse.domain == DOMAIN
+    assert browse.identifier == ""
+    assert browse.title == "Nest"
+    assert len(browse.children) == 0
+
+
 async def test_camera_event(hass, auth, hass_client):
     """Test a media source and image created for an event."""
     event_timestamp = dt_util.now()
@@ -231,6 +263,7 @@ async def test_camera_event(hass, auth, hass_client):
     assert "Person" in browse.title
     assert not browse.can_expand
     assert not browse.children
+    assert not browse.can_play
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
@@ -302,6 +335,7 @@ async def test_event_order(hass, auth):
     event_timestamp_string = event_timestamp2.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Motion @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
+    assert not browse.can_play
 
     # Person event is next
     assert browse.children[1].domain == DOMAIN
@@ -310,6 +344,7 @@ async def test_event_order(hass, auth):
     event_timestamp_string = event_timestamp1.strftime(DATE_STR_FORMAT)
     assert browse.children[1].title == f"Person @ {event_timestamp_string}"
     assert not browse.children[1].can_expand
+    assert not browse.can_play
 
 
 async def test_browse_invalid_device_id(hass, auth):
@@ -449,6 +484,7 @@ async def test_camera_event_clip_preview(hass, auth, hass_client):
     assert browse.children[0].title == f"Motion @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
+    assert browse.children[0].can_play
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(

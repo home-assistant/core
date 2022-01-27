@@ -4,15 +4,13 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
@@ -25,20 +23,20 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="is_connected",
         name="Connection",
-        device_class=DEVICE_CLASS_CONNECTIVITY,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="is_linked",
         name="Link",
-        device_class=DEVICE_CLASS_PLUG,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="firmware_update",
         name="Firmware Update",
-        device_class=DEVICE_CLASS_UPDATE,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

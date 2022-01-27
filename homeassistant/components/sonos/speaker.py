@@ -193,7 +193,7 @@ class SonosSpeaker:
         self.volume: int | None = None
         self.muted: bool | None = None
         self.night_mode: bool | None = None
-        self.dialog_mode: bool | None = None
+        self.dialog_level: bool | None = None
         self.cross_fade: bool | None = None
         self.bass: int | None = None
         self.treble: int | None = None
@@ -498,17 +498,18 @@ class SonosSpeaker:
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
 
-        if "night_mode" in variables:
-            self.night_mode = variables["night_mode"] == "1"
+        for bool_var in (
+            "dialog_level",
+            "night_mode",
+            "sub_enabled",
+            "surround_enabled",
+        ):
+            if bool_var in variables:
+                setattr(self, bool_var, variables[bool_var] == "1")
 
-        if "dialog_level" in variables:
-            self.dialog_mode = variables["dialog_level"] == "1"
-
-        if "bass" in variables:
-            self.bass = variables["bass"]
-
-        if "treble" in variables:
-            self.treble = variables["treble"]
+        for int_var in ("bass", "treble"):
+            if int_var in variables:
+                setattr(self, int_var, variables[int_var])
 
         self.async_write_entity_states()
 
@@ -982,7 +983,7 @@ class SonosSpeaker:
         self.volume = self.soco.volume
         self.muted = self.soco.mute
         self.night_mode = self.soco.night_mode
-        self.dialog_mode = self.soco.dialog_mode
+        self.dialog_level = self.soco.dialog_mode
         self.bass = self.soco.bass
         self.treble = self.soco.treble
 

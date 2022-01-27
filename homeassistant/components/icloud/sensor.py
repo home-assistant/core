@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -53,7 +53,7 @@ def add_entities(account, async_add_entities, tracked):
 class IcloudDeviceBatterySensor(SensorEntity):
     """Representation of a iCloud device battery sensor."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:

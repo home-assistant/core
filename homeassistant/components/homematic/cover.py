@@ -2,7 +2,7 @@
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_GARAGE,
+    CoverDeviceClass,
     CoverEntity,
 )
 
@@ -112,7 +112,7 @@ class HMCover(HMDevice, CoverEntity):
 class HMGarage(HMCover):
     """Represents a Homematic Garage cover. Homematic garage covers do not support position attributes."""
 
-    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_device_class = CoverDeviceClass.GARAGE
 
     @property
     def current_cover_position(self):

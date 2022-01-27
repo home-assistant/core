@@ -22,10 +22,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.samsungtv.bridge import (
-    SamsungTVLegacyBridge,
-    SamsungTVWSBridge,
-)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -37,6 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
+from .bridge import SamsungTVLegacyBridge, SamsungTVWSBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,

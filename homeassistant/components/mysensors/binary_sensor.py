@@ -12,14 +12,13 @@ from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorEntity,
 )
-from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DiscoveryInfo
+from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 SENSORS = {

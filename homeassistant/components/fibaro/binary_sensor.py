@@ -1,10 +1,7 @@
 """Support for Fibaro binary sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_WINDOW,
     DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
@@ -13,11 +10,15 @@ from . import FIBARO_DEVICES, FibaroDevice
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
-    "com.fibaro.motionSensor": ["Motion", "mdi:run", DEVICE_CLASS_MOTION],
-    "com.fibaro.doorSensor": ["Door", "mdi:window-open", DEVICE_CLASS_DOOR],
-    "com.fibaro.windowSensor": ["Window", "mdi:window-open", DEVICE_CLASS_WINDOW],
-    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", DEVICE_CLASS_SMOKE],
-    "com.fibaro.FGMS001": ["Motion", "mdi:run", DEVICE_CLASS_MOTION],
+    "com.fibaro.motionSensor": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
+    "com.fibaro.doorSensor": ["Door", "mdi:window-open", BinarySensorDeviceClass.DOOR],
+    "com.fibaro.windowSensor": [
+        "Window",
+        "mdi:window-open",
+        BinarySensorDeviceClass.WINDOW,
+    ],
+    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", BinarySensorDeviceClass.SMOKE],
+    "com.fibaro.FGMS001": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
     "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
 }
 

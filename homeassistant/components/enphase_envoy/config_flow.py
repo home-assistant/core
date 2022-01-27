@@ -11,13 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -60,7 +54,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize an envoy flow."""
         self.ip_address = None
-        self.name = None
         self.username = None
         self._reauth_entry = None
 
@@ -79,19 +72,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema[vol.Optional(CONF_USERNAME, default=self.username or "envoy")] = str
         schema[vol.Optional(CONF_PASSWORD, default="")] = str
         return vol.Schema(schema)
-
-    async def async_step_import(self, import_config):
-        """Handle a flow import."""
-        self.ip_address = import_config[CONF_IP_ADDRESS]
-        self.username = import_config[CONF_USERNAME]
-        self.name = import_config[CONF_NAME]
-        return await self.async_step_user(
-            {
-                CONF_HOST: import_config[CONF_IP_ADDRESS],
-                CONF_USERNAME: import_config[CONF_USERNAME],
-                CONF_PASSWORD: import_config[CONF_PASSWORD],
-            }
-        )
 
     @callback
     def _async_current_hosts(self):
@@ -136,8 +116,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _async_envoy_name(self) -> str:
         """Return the name of the envoy."""
-        if self.name:
-            return self.name
         if self.unique_id:
             return f"{ENVOY} {self.unique_id}"
         return ENVOY

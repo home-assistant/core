@@ -17,7 +17,6 @@ from homeassistant.components.homeassistant.triggers.state import (
     async_attach_trigger as async_attach_state_trigger,
     async_validate_trigger_config as async_validate_state_trigger_config,
 )
-from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -31,6 +30,7 @@ from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .const import ATTR_OPTIONS
 
 TRIGGER_TYPES = {"current_option_changed"}
 

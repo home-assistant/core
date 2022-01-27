@@ -41,7 +41,7 @@ async def test_number_unique_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -64,7 +64,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
 
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -129,7 +129,7 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
     bulb.color_mode = FLUX_COLOR_MODE_RGB
     bulb.effect = "7 colors change gradually"
     bulb.speed = 50
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -186,7 +186,7 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
     bulb.color_mode = FLUX_COLOR_MODE_RGB
     bulb.effect = "RBM 1"
     bulb.speed = 50
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 

@@ -4,13 +4,6 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
-from homeassistant.components.light import (
-    ATTR_FLASH,
-    FLASH_SHORT,
-    SUPPORT_FLASH,
-    VALID_BRIGHTNESS_PCT,
-    VALID_FLASH,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -27,7 +20,12 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_BRIGHTNESS_STEP_PCT,
+    ATTR_FLASH,
     DOMAIN,
+    FLASH_SHORT,
+    SUPPORT_FLASH,
+    VALID_BRIGHTNESS_PCT,
+    VALID_FLASH,
     brightness_supported,
     get_supported_color_modes,
 )

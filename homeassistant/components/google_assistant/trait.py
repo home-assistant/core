@@ -807,7 +807,8 @@ class TemperatureControlTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return (
-            domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_TEMPERATURE
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.TEMPERATURE
         )
 
     def sync_attributes(self):
@@ -1111,7 +1112,10 @@ class HumiditySettingTrait(_Trait):
         if domain == humidifier.DOMAIN:
             return True
 
-        return domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_HUMIDITY
+        return (
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.HUMIDITY
+        )
 
     def sync_attributes(self):
         """Return humidity attributes for a sync request."""
@@ -1121,7 +1125,7 @@ class HumiditySettingTrait(_Trait):
 
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+            if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 response["queryOnlyHumiditySetting"] = True
 
         elif domain == humidifier.DOMAIN:
@@ -1144,7 +1148,7 @@ class HumiditySettingTrait(_Trait):
 
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+            if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 current_humidity = self.state.state
                 if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
@@ -1759,9 +1763,9 @@ class OpenCloseTrait(_Trait):
 
     # Cover device classes that require 2FA
     COVER_2FA = (
-        cover.DEVICE_CLASS_DOOR,
-        cover.DEVICE_CLASS_GARAGE,
-        cover.DEVICE_CLASS_GATE,
+        cover.CoverDeviceClass.DOOR,
+        cover.CoverDeviceClass.GARAGE,
+        cover.CoverDeviceClass.GATE,
     )
 
     name = TRAIT_OPENCLOSE
@@ -1774,11 +1778,11 @@ class OpenCloseTrait(_Trait):
             return True
 
         return domain == binary_sensor.DOMAIN and device_class in (
-            binary_sensor.DEVICE_CLASS_DOOR,
-            binary_sensor.DEVICE_CLASS_GARAGE_DOOR,
-            binary_sensor.DEVICE_CLASS_LOCK,
-            binary_sensor.DEVICE_CLASS_OPENING,
-            binary_sensor.DEVICE_CLASS_WINDOW,
+            binary_sensor.BinarySensorDeviceClass.DOOR,
+            binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+            binary_sensor.BinarySensorDeviceClass.LOCK,
+            binary_sensor.BinarySensorDeviceClass.OPENING,
+            binary_sensor.BinarySensorDeviceClass.WINDOW,
         )
 
     @staticmethod
@@ -2245,7 +2249,7 @@ class ChannelTrait(_Trait):
         if (
             domain == media_player.DOMAIN
             and (features & media_player.SUPPORT_PLAY_MEDIA)
-            and device_class == media_player.DEVICE_CLASS_TV
+            and device_class == media_player.MediaPlayerDeviceClass.TV
         ):
             return True
 
@@ -2293,12 +2297,12 @@ class SensorStateTrait(_Trait):
     """
 
     sensor_types = {
-        sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
-        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
+        sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
+        sensor.SensorDeviceClass.CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (
             "VolatileOrganicCompounds",
             "PARTS_PER_MILLION",
         ),

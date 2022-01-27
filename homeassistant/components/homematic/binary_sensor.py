@@ -1,10 +1,6 @@
 """Support for HomeMatic binary sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PRESENCE,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -12,24 +8,24 @@ from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
 from .entity import HMDevice
 
 SENSOR_TYPES_CLASS = {
-    "IPShutterContact": DEVICE_CLASS_OPENING,
-    "IPShutterContactSabotage": DEVICE_CLASS_OPENING,
-    "MaxShutterContact": DEVICE_CLASS_OPENING,
-    "Motion": DEVICE_CLASS_MOTION,
-    "MotionV2": DEVICE_CLASS_MOTION,
-    "PresenceIP": DEVICE_CLASS_PRESENCE,
+    "IPShutterContact": BinarySensorDeviceClass.OPENING,
+    "IPShutterContactSabotage": BinarySensorDeviceClass.OPENING,
+    "MaxShutterContact": BinarySensorDeviceClass.OPENING,
+    "Motion": BinarySensorDeviceClass.MOTION,
+    "MotionV2": BinarySensorDeviceClass.MOTION,
+    "PresenceIP": BinarySensorDeviceClass.MOTION,
     "Remote": None,
     "RemoteMotion": None,
-    "ShutterContact": DEVICE_CLASS_OPENING,
-    "Smoke": DEVICE_CLASS_SMOKE,
-    "SmokeV2": DEVICE_CLASS_SMOKE,
+    "ShutterContact": BinarySensorDeviceClass.OPENING,
+    "Smoke": BinarySensorDeviceClass.SMOKE,
+    "SmokeV2": BinarySensorDeviceClass.SMOKE,
     "TiltSensor": None,
     "WeatherSensor": None,
-    "IPContact": DEVICE_CLASS_OPENING,
-    "MotionIP": DEVICE_CLASS_MOTION,
-    "MotionIPV2": DEVICE_CLASS_MOTION,
-    "MotionIPContactSabotage": DEVICE_CLASS_MOTION,
-    "IPRemoteMotionV2": DEVICE_CLASS_MOTION,
+    "IPContact": BinarySensorDeviceClass.OPENING,
+    "MotionIP": BinarySensorDeviceClass.MOTION,
+    "MotionIPV2": BinarySensorDeviceClass.MOTION,
+    "MotionIPContactSabotage": BinarySensorDeviceClass.MOTION,
+    "IPRemoteMotionV2": BinarySensorDeviceClass.MOTION,
 }
 
 
@@ -63,7 +59,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
         """Return the class of this sensor from DEVICE_CLASSES."""
         # If state is MOTION (Only RemoteMotion working)
         if self._state == "MOTION":
-            return DEVICE_CLASS_MOTION
+            return BinarySensorDeviceClass.MOTION
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__)
 
     def _init_data_struct(self):
@@ -76,7 +72,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
 class HMBatterySensor(HMDevice, BinarySensorEntity):
     """Representation of an HomeMatic low battery sensor."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
 
     @property
     def is_on(self):

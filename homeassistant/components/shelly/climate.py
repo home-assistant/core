@@ -19,15 +19,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.shelly import BlockDeviceWrapper
-from homeassistant.components.shelly.entity import ShellyBlockEntity
-from homeassistant.components.shelly.utils import get_device_entry_gen
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import BlockDeviceWrapper
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
     BLOCK,
@@ -35,6 +33,8 @@ from .const import (
     DOMAIN,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
+from .entity import ShellyBlockEntity
+from .utils import get_device_entry_gen
 
 _LOGGER: Final = logging.getLogger(__name__)
 

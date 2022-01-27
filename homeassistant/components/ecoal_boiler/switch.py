@@ -28,7 +28,7 @@ class EcoalSwitch(SwitchEntity):
         Sets HA switch to state as read from controller.
         """
         self._ecoal_contr = ecoal_contr
-        self._name = name
+        self._attr_name = name
         self._state_attr = state_attr
         # Ecoalcotroller holds convention that same postfix is used
         # to set attribute
@@ -36,13 +36,6 @@ class EcoalSwitch(SwitchEntity):
         # as attribute name in status instance:
         #   status.<attr>
         self._contr_set_fun = getattr(self._ecoal_contr, f"set_{state_attr}")
-        # No value set, will be read from controller instead
-        self._state = None
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the switch."""
-        return self._name
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -50,7 +43,7 @@ class EcoalSwitch(SwitchEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         status = self._ecoal_contr.get_cached_status()
-        self._state = getattr(status, self._state_attr)
+        self._attr_is_on = getattr(status, self._state_attr)
 
     def invalidate_ecoal_cache(self):
         """Invalidate ecoal interface cache.
@@ -58,11 +51,6 @@ class EcoalSwitch(SwitchEntity):
         Forces that next read from ecaol interface to not use cache.
         """
         self._ecoal_contr.status = None
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._state
 
     def turn_on(self, **kwargs) -> None:
         """Turn the device on."""

@@ -29,6 +29,7 @@
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Cam\u00e9ras prenant en charge l'audio",
                     "camera_copy": "Cam\u00e9ras prenant en charge les flux H.264 natifs"
                 },
                 "description": "V\u00e9rifiez toutes les cam\u00e9ras prenant en charge les flux H.264 natifs. Si la cam\u00e9ra ne produit pas de flux H.264, le syst\u00e8me transcodera la vid\u00e9o en H.264 pour HomeKit. Le transcodage n\u00e9cessite un processeur performant et il est peu probable qu'il fonctionne sur des ordinateurs \u00e0 carte unique.",

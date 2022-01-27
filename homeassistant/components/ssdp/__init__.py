@@ -110,7 +110,10 @@ class SsdpServiceInfo(
         Deprecated, and will be removed in version 2022.6.
         """
         report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}, "
+            f"discovery_info.upnp['{name}'] "
+            f"or discovery_info.ssdp_headers['{name}']; "
+            "this will fail in version 2022.6",
             exclude_integrations={DOMAIN},
             error_if_core=False,
         )
@@ -128,7 +131,10 @@ class SsdpServiceInfo(
         Deprecated, and will be removed in version 2022.6.
         """
         report(
-            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
+            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}, "
+            f"discovery_info.upnp.get('{name}') "
+            f"or discovery_info.ssdp_headers.get('{name}'); "
+            "this will fail in version 2022.6",
             exclude_integrations={DOMAIN},
             error_if_core=False,
         )
@@ -143,8 +149,10 @@ class SsdpServiceInfo(
         Deprecated, and will be removed in version 2022.6.
         """
         report(
-            f"accessed discovery_info.__contains__('{name}') instead of discovery_info.upnp.__contains__('{name}') "
-            f"or discovery_info.ssdp_headers.__contains__('{name}'); this will fail in version 2022.6",
+            f"accessed discovery_info.__contains__('{name}') "
+            f"instead of discovery_info.upnp.__contains__('{name}') "
+            f"or discovery_info.ssdp_headers.__contains__('{name}'); "
+            "this will fail in version 2022.6",
             exclude_integrations={DOMAIN},
             error_if_core=False,
         )

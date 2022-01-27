@@ -83,7 +83,7 @@ async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["recall"] == {
         "action": "active",
-        "duration": 600,
+        "duration": 6000,
     }
 
 

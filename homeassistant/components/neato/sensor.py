@@ -8,7 +8,6 @@ from typing import Any
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
 
-from homeassistant.components.neato import NeatoHub
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE
@@ -16,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import NeatoHub
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)

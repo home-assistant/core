@@ -25,7 +25,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -135,19 +135,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     forward_setup = hass.config_entries.async_forward_entry_setup
     if binary_sensors:
         _LOGGER.debug("Got %s binary sensors: %s", len(binary_sensors), binary_sensors)
-        hass.async_create_task(forward_setup(entry, BINARY_SENSOR_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.BINARY_SENSOR))
     if climates:
         _LOGGER.debug("Got %s climates: %s", len(climates), climates)
-        hass.async_create_task(forward_setup(entry, CLIMATE_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.CLIMATE))
     if lights:
         _LOGGER.debug("Got %s lights: %s", len(lights), lights)
-        hass.async_create_task(forward_setup(entry, LIGHT_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.LIGHT))
     if sensors:
         _LOGGER.debug("Got %s sensors: %s", len(sensors), sensors)
-        hass.async_create_task(forward_setup(entry, SENSOR_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.SENSOR))
     if switches:
         _LOGGER.debug("Got %s switches: %s", len(switches), switches)
-        hass.async_create_task(forward_setup(entry, SWITCH_DOMAIN))
+        hass.async_create_task(forward_setup(entry, Platform.SWITCH))
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""

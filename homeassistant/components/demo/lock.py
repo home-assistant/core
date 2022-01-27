@@ -10,6 +10,8 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 
+LOCK_UNLOCK_DELAY = 2  # Used to give a realistic lock/unlock experience in frontend
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo lock platform."""
@@ -72,7 +74,7 @@ class DemoLock(LockEntity):
         """Lock the device."""
         self._state = STATE_LOCKING
         self.async_write_ha_state()
-        await asyncio.sleep(2)
+        await asyncio.sleep(LOCK_UNLOCK_DELAY)
         if self._jam_on_operation:
             self._state = STATE_JAMMED
         else:
@@ -83,7 +85,7 @@ class DemoLock(LockEntity):
         """Unlock the device."""
         self._state = STATE_UNLOCKING
         self.async_write_ha_state()
-        await asyncio.sleep(2)
+        await asyncio.sleep(LOCK_UNLOCK_DELAY)
         self._state = STATE_UNLOCKED
         self.async_write_ha_state()
 

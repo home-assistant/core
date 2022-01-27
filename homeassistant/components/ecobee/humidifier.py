@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.humidifier import HumidifierEntity
+from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
 from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_HUMIDIFIER,
     MODE_AUTO,
     SUPPORT_MODES,
 )
@@ -97,7 +96,7 @@ class EcobeeHumidifier(HumidifierEntity):
     @property
     def device_class(self):
         """Return the device class type."""
-        return DEVICE_CLASS_HUMIDIFIER
+        return HumidifierDeviceClass.HUMIDIFIER
 
     @property
     def is_on(self):

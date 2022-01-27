@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
     """Binary sensor that reports on if there are any pending system alerts."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
@@ -63,7 +63,7 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
 class FloWaterDetectedBinarySensor(FloEntity, BinarySensorEntity):
     """Binary sensor that reports if water is detected (for leak detectors)."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""

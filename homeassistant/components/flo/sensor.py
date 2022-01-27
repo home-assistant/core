@@ -1,12 +1,8 @@
 """Support for Flo Water Monitor sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_PSI,
     TEMP_FAHRENHEIT,
@@ -114,7 +110,7 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
 class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
 
     def __init__(self, name, device):
@@ -133,7 +129,7 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
 class FloHumiditySensor(FloEntity, SensorEntity):
     """Monitors the humidity."""
 
-    _attr_device_class = DEVICE_CLASS_HUMIDITY
+    _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device):
@@ -152,7 +148,7 @@ class FloHumiditySensor(FloEntity, SensorEntity):
 class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
 
-    _attr_device_class = DEVICE_CLASS_PRESSURE
+    _attr_device_class = SensorDeviceClass.PRESSURE
     _attr_native_unit_of_measurement = PRESSURE_PSI
 
     def __init__(self, device):
@@ -171,7 +167,7 @@ class FloPressureSensor(FloEntity, SensorEntity):
 class FloBatterySensor(FloEntity, SensorEntity):
     """Monitors the battery level for battery-powered leak detectors."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device):

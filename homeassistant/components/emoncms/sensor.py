@@ -8,9 +8,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -19,8 +19,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     POWER_WATT,
     STATE_UNKNOWN,
 )
@@ -156,11 +154,11 @@ class EmonCmsSensor(SensorEntity):
         self._elem = elem
 
         if unit_of_measurement == "kWh":
-            self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif unit_of_measurement == "W":
-            self._attr_device_class = DEVICE_CLASS_POWER
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
         if self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(

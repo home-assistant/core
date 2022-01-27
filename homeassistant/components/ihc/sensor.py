@@ -1,6 +1,6 @@
 """Support for IHC sensors."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.util.unit_system import TEMPERATURE_UNITS
 
 from . import IHC_CONTROLLER, IHC_INFO
@@ -42,7 +42,7 @@ class IHCSensor(IHCDevice, SensorEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return (
-            DEVICE_CLASS_TEMPERATURE
+            SensorDeviceClass.TEMPERATURE
             if self._unit_of_measurement in TEMPERATURE_UNITS
             else None
         )
