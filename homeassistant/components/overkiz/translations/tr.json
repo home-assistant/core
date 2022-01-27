@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "reauth_wrong_account": "Bu giri\u015fi yaln\u0131zca ayn\u0131 Overkiz hesab\u0131 ve hub ile yeniden do\u011frulayabilirsiniz."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
