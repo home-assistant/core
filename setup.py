@@ -38,7 +38,6 @@ REQUIRES = [
     "attrs==21.2.0",
     "atomicwrites==1.4.0",
     "awesomeversion==22.1.0",
-    'backports.zoneinfo;python_version<"3.9"',
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",
     "ciso8601==2.2.0",
