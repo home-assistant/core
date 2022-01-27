@@ -209,6 +209,13 @@ async def test_ecobee3_setup(hass):
                     unit_of_measurement=TEMP_CELSIUS,
                     state="21.8",
                 ),
+                EntityTestInfo(
+                    entity_id="select.homew_current_mode",
+                    friendly_name="HomeW Current Mode",
+                    unique_id="homekit-123456789012-aid:1-sid:16-cid:33",
+                    capabilities={"options": ["home", "sleep", "away"]},
+                    state="home",
+                ),
             ],
         ),
     )
