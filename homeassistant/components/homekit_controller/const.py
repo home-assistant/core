@@ -1,4 +1,6 @@
 """Constants for the homekit_controller component."""
+from typing import Final
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 DOMAIN = "homekit_controller"
@@ -62,6 +64,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.ECOBEE_SLEEP_TARGET_HEAT: "number",
     CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_COOL: "number",
     CharacteristicsTypes.Vendor.ECOBEE_AWAY_TARGET_HEAT: "number",
+    CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: "select",
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: "number",
@@ -92,3 +95,7 @@ CHARACTERISTIC_PLATFORMS = {
 for k, v in list(CHARACTERISTIC_PLATFORMS.items()):
     value = CHARACTERISTIC_PLATFORMS.pop(k)
     CHARACTERISTIC_PLATFORMS[CharacteristicsTypes.get_uuid(k)] = value
+
+
+# Device classes
+DEVICE_CLASS_ECOBEE_MODE: Final = "homekit_controller__ecobee_mode"
