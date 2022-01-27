@@ -22,35 +22,7 @@ from homeassistant.util.dt import utcnow
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
-
-
-class IntellifireSensor(CoordinatorEntity, SensorEntity):
-    """Define a generic class for Sensors."""
-
-    # Define types
-    coordinator: IntellifireDataUpdateCoordinator
-    entity_description: IntellifireSensorEntityDescription
-    _attr_attribution = "Data provided by unpublished Intellifire API"
-
-    def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: IntellifireSensorEntityDescription,
-    ) -> None:
-        """Init the sensor."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-
-        # Set the Display name the User will see
-        self._attr_name = f"Fireplace {description.name}"
-        self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
-        # Configure the Device Info
-        self._attr_device_info = self.coordinator.device_info
-
-    @property
-    def native_value(self) -> int | str | datetime | None:
-        """Return the state."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
+from .entity import IntellifireEntity, IntellifireEntityDescription
 
 
 def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
@@ -63,27 +35,21 @@ def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
 @dataclass
 class IntellifireSensorRequiredKeysMixin:
     """Mixin for required keys."""
-
     value_fn: Callable[[IntellifirePollData], int | str | datetime | None]
 
 
 @dataclass
-class IntellifireSensorEntityDescription(
-    SensorEntityDescription, IntellifireSensorRequiredKeysMixin
-):
-    """Describes a sensor sensor entity."""
+class IntellifireSensorEntityDescription(SensorEntityDescription,
+                                         IntellifireEntityDescription,
+                                         IntellifireSensorRequiredKeysMixin):
+    """Describes a binary sensor entity."""
 
+# @dataclass
+# class IntellifireSensorEntityDescription(
+#     SensorEntityDescription, IntellifireSensorRequiredKeysMixin
+# ):
+#     """Describes a sensor sensor entity."""
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Define setup entry call."""
-
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        IntellifireSensor(coordinator=coordinator, description=description)
-        for description in INTELLIFIRE_SENSORS
-    )
 
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
@@ -126,3 +92,49 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         value_fn=_time_remaining_to_timestamp,
     ),
 )
+
+
+
+
+
+class IntellifireSensor(
+    IntellifireEntity, SensorEntity, IntellifireSensorRequiredKeysMixin
+):
+    """Extends IntellifireEntity with Sensor specific logic."""
+
+    def __init__(
+        self,
+        coordinator: IntellifireDataUpdateCoordinator,
+        description: IntellifireSensorEntityDescription,
+    ) -> None:
+        """Init Function with really bad docstring."""
+        super().__init__(coordinator=coordinator, description=description)
+
+        self.description = description
+
+    @property
+    def native_value(self) -> int | str | datetime | None:
+        """Return the state."""
+
+        # This used to be self.entity_description -> but had to use
+        # description in order to access value_fn function
+        # may be a better way to do this
+        return self.description.value_fn(self.coordinator.api.data)
+
+
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Define setup entry call."""
+
+    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        IntellifireSensor(coordinator=coordinator, description=description)
+        for description in INTELLIFIRE_SENSORS
+    )
+
+
+
+

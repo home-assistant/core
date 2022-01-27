@@ -17,21 +17,19 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import IntellifireEntity, IntellifireEntityDescription
 
 
 @dataclass
 class IntellifireBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
-
     value_fn: Callable[[IntellifirePollData], bool]
 
 
 @dataclass
-class IntellifireBinarySensorEntityDescription(
-    BinarySensorEntityDescription, IntellifireBinarySensorRequiredKeysMixin
-):
+class IntellifireBinarySensorEntityDescription(IntellifireEntityDescription,
+                                               IntellifireBinarySensorRequiredKeysMixin):
     """Describes a binary sensor entity."""
-
 
 INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...] = (
     IntellifireBinarySensorEntityDescription(
@@ -62,9 +60,9 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a IntelliFire On/Off Sensor."""
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -75,29 +73,24 @@ async def async_setup_entry(
     )
 
 
-class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """A semi-generic wrapper around Binary Sensor entities for IntelliFire."""
-
-    # Define types
-    coordinator: IntellifireDataUpdateCoordinator
-    entity_description: IntellifireBinarySensorEntityDescription
-
+class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
     def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: IntellifireBinarySensorEntityDescription,
+            self,
+            coordinator: IntellifireDataUpdateCoordinator,
+            description: IntellifireBinarySensorEntityDescription,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
+        super().__init__(coordinator=coordinator, description=description)
 
-        # Set the Display name the User will see
-        self._attr_name = f"Fireplace {description.name}"
-        self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
-        # Configure the Device Info
-        self._attr_device_info = self.coordinator.device_info
+        # I was having issues getting value_fn to come across when I was using
+        # self.entity_description in the `is_on` function. By setting this value
+        # directly -> I was able to access the value_fn call. I'm sure there is
+        # a better way to do this - but I'm unsure as how to do it.
+        self.description = description
 
     @property
     def is_on(self) -> bool:
+
         """Use this to get the correct value."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
+        return self.description.value_fn(self.coordinator.api.data)
+
