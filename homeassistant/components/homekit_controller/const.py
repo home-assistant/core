@@ -1,4 +1,6 @@
 """Constants for the homekit_controller component."""
+from typing import Final
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 DOMAIN = "homekit_controller"
@@ -93,3 +95,7 @@ CHARACTERISTIC_PLATFORMS = {
 for k, v in list(CHARACTERISTIC_PLATFORMS.items()):
     value = CHARACTERISTIC_PLATFORMS.pop(k)
     CHARACTERISTIC_PLATFORMS[CharacteristicsTypes.get_uuid(k)] = value
+
+
+# Device classes
+DEVICE_CLASS_ECOBEE_MODE: Final = "homekit_controller__ecobee_mode"

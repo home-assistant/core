@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, CharacteristicEntity
+from .const import DEVICE_CLASS_ECOBEE_MODE
 
 _ECOBEE_MODE_TO_TEXT = {
     0: "Home",
@@ -22,6 +23,7 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     """Represents a ecobee mode select entity."""
 
     _attr_options = ["Home", "Sleep", "Away"]
+    _attr_device_class = DEVICE_CLASS_ECOBEE_MODE
 
     @property
     def name(self) -> str:
