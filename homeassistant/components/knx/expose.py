@@ -148,8 +148,6 @@ class KNXExposeSensor:
 
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
-        if value is None:
-            return
         await self.device.set(value)
 
 
