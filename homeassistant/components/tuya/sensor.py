@@ -744,6 +744,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Countdown",
             value_to_timestamp=True,
             device_class=SensorDeviceClass.TIMESTAMP,
+            icon="mdi:timer-outline",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }
@@ -813,7 +815,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
             self._type_data = int_type
             self._type = DPType.INTEGER
-            if description.native_unit_of_measurement is None:
+            if (
+                description.native_unit_of_measurement is None
+                and not self.entity_description.value_to_timestamp
+            ):
                 self._attr_native_unit_of_measurement = int_type.unit
         elif enum_type := self.find_dpcode(
             description.key, dptype=DPType.ENUM, prefer_function=True
@@ -834,26 +839,28 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # device class cannot be found in the validation mapping.
             if (
                 self.native_unit_of_measurement is None
-                or self.device_class not in DEVICE_CLASS_UNITS
-            ):
+                and not self.entity_description.value_to_timestamp
+            ) or self.device_class not in DEVICE_CLASS_UNITS:
                 self._attr_device_class = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
-            self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
-                self.native_unit_of_measurement.lower()
-            )
+            if self.native_unit_of_measurement is not None:
+                self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
+                    self.native_unit_of_measurement.lower()
+                )
 
             # Unknown unit of measurement, device class should not be used.
-            if self._uom is None:
+            if self._uom is None and not self.entity_description.value_to_timestamp:
                 self._attr_device_class = None
                 return
 
             # Found unit of measurement, use the standardized Unit
             # Use the target conversion unit (if set)
-            self._attr_native_unit_of_measurement = (
-                self._uom.conversion_unit or self._uom.unit
-            )
+            if self._uom is not None:
+                self._attr_native_unit_of_measurement = (
+                    self._uom.conversion_unit or self._uom.unit
+                )
 
     @property
     def native_value(self) -> StateType:

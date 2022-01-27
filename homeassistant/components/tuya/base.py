@@ -95,6 +95,8 @@ class IntegerTypeData:
     ) -> Timestamp:
         """Convert countdown value to timestamp."""
         now = dt_util.utcnow()
+        if value == 0:
+            return None
         if self.unit is not None:
             if unit == "ms":
                 return dt_util.as_local(now) + datetime.timedelta(milliseconds=value)
