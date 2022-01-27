@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "reauth_wrong_account": "Seda kirjet saab uuesti autentida ainult sama Overkiz'i konto ja keskuse abil."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
