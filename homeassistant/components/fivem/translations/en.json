@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "FiveM server is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect. Please check the host and port and try again. Also ensure that you are running the latest FiveM server."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

@@ -95,6 +95,7 @@ FLOWS = [
     "ezviz",
     "faa_delays",
     "fireservicerota",
+    "fivem",
     "fjaraskupan",
     "flick_electric",
     "flipr",

@@ -1,0 +1,17 @@
+{
+  "domain": "fivem",
+  "name": "FiveM",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fivem",
+  "requirements": [
+    "fivem-api==0.1.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Sander0542"
+  ],
+  "iot_class": "local_polling"
+}
