@@ -20,6 +20,8 @@ async def test_diagnostics(
     await knx.setup_integration({})
 
     with patch("homeassistant.config.async_hass_config_yaml", return_value={}):
+        # Overwrite the version for this test since we don't want to change this with every library bump
+        knx.xknx.version = "1.0.0"
         assert await get_diagnostics_for_config_entry(
             hass, hass_client, mock_config_entry
         ) == {
@@ -31,7 +33,7 @@ async def test_diagnostics(
             },
             "configuration_error": None,
             "configuration_yaml": None,
-            "xknx": {"current_address": "0.0.0", "version": "0.19.0"},
+            "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
         }
 
 
@@ -48,6 +50,8 @@ async def test_diagnostic_config_error(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"knx": {"wrong_key": {}}},
     ):
+        # Overwrite the version for this test since we don't want to change this with every library bump
+        knx.xknx.version = "1.0.0"
         assert await get_diagnostics_for_config_entry(
             hass, hass_client, mock_config_entry
         ) == {
@@ -59,5 +63,5 @@ async def test_diagnostic_config_error(
             },
             "configuration_error": "extra keys not allowed @ data['knx']['wrong_key']",
             "configuration_yaml": {"wrong_key": {}},
-            "xknx": {"current_address": "0.0.0", "version": "0.19.0"},
+            "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
         }

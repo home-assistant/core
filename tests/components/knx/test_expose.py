@@ -142,8 +142,9 @@ async def test_expose_with_date(localtime, hass: HomeAssistant, knx: KNXTestKit)
     )
     assert not hass.states.async_all()
 
-    await knx.receive_read("1/1/8")
     await knx.assert_write("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
+
+    await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
 
     entries = hass.config_entries.async_entries(DOMAIN)
