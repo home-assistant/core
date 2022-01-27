@@ -87,7 +87,9 @@ class AlexaDirective:
         payload["type"] = error_type
         payload["message"] = error_message
 
-        _LOGGER.info(
+        meth = "error" if error_type == "INTERNAL_ERROR" else "info"
+
+        getattr(_LOGGER, meth)(
             "Request %s/%s error %s: %s",
             self._directive[API_HEADER]["namespace"],
             self._directive[API_HEADER]["name"],

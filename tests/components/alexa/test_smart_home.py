@@ -580,7 +580,7 @@ async def test_variable_fan_no_current_speed(hass, caplog):
             "fan.percentage",
         )
     assert (
-        "Request Alexa.RangeController/AdjustRangeValue error INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
+        "Request Alexa.RangeController/AdjustRangeValue error INTERNAL_ERROR: Unexpected value for fan.test_3 percentage attribute: None"
         in caplog.text
     )
     caplog.clear()

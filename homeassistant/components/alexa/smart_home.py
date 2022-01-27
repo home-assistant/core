@@ -50,6 +50,12 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
         response = directive.error(
             error_type=err.error_type, error_message=err.error_message
         )
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception(
+            "Uncaught exception processing Alexa request (%s)",
+            directive.entity_id or "-",
+        )
+        response = directive.error(error_message="Unknown error")
 
     request_info = {"namespace": directive.namespace, "name": directive.name}
 

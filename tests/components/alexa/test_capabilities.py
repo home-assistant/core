@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.alexa import smart_home
-from homeassistant.components.alexa.errors import UnsupportedProperty
 from homeassistant.components.climate import const as climate
 from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player.const import (
@@ -677,16 +676,7 @@ async def test_report_climate_state(hass):
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )
-    with pytest.raises(UnsupportedProperty):
-        properties = await reported_properties(hass, "climate.unsupported")
-        properties.assert_not_has_property(
-            "Alexa.ThermostatController", "thermostatMode"
-        )
-        properties.assert_equal(
-            "Alexa.TemperatureSensor",
-            "temperature",
-            {"value": 34.0, "scale": "CELSIUS"},
-        )
+    properties = await reported_properties(hass, "climate.unsupported", "INVALID_VALUE")
 
 
 async def test_temperature_sensor_sensor(hass):

@@ -1,6 +1,7 @@
 """Alexa message handlers."""
 import logging
 import math
+from typing import Any
 
 from homeassistant import core as ha
 from homeassistant.components import (
@@ -63,6 +64,7 @@ from .const import (
 )
 from .entities import async_get_entities
 from .errors import (
+    AlexaInternalError,
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
@@ -70,10 +72,31 @@ from .errors import (
     AlexaUnsupportedThermostatModeError,
     AlexaVideoActionNotPermittedForContentError,
 )
+from .messages import AlexaDirective
 from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
+_UNDEFINED = object()
+
+
+def get_attribute(
+    directive: AlexaDirective, name: str, expected_type: type, default: Any = _UNDEFINED
+):
+    """Get attribute value."""
+    value = directive.entity.attributes.get(name)
+
+    try:
+        if value is None:
+            if default is _UNDEFINED:
+                raise ValueError("value is None")
+            value = default
+
+        return expected_type(value)
+    except ValueError as err:
+        msg = f"Unexpected value for {directive.entity_id} {name} attribute: {value}"
+        _LOGGER.error(msg)
+        raise AlexaInternalError(msg) from err
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))
@@ -128,13 +151,13 @@ async def async_api_turn_on(hass, config, directive, context):
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = get_attribute(directive, ATTR_SUPPORTED_FEATURES, int, 0)
         if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
             service = vacuum.SERVICE_START
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_START
     elif domain == media_player.DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = get_attribute(directive, ATTR_SUPPORTED_FEATURES, int, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_PLAY
@@ -164,7 +187,7 @@ async def async_api_turn_off(hass, config, directive, context):
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = get_attribute(directive, ATTR_SUPPORTED_FEATURES, int, 0)
         if (
             not supported & vacuum.SUPPORT_TURN_OFF
             and supported & vacuum.SUPPORT_RETURN_HOME
@@ -173,7 +196,7 @@ async def async_api_turn_off(hass, config, directive, context):
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_CANCEL
     elif domain == media_player.DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = get_attribute(directive, ATTR_SUPPORTED_FEATURES, int, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_STOP
@@ -215,7 +238,7 @@ async def async_api_adjust_brightness(hass, config, directive, context):
     # read current state
     try:
         current = math.floor(
-            int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100
+            get_attribute(directive, light.ATTR_BRIGHTNESS, int) / 255 * 100
         )
     except ZeroDivisionError:
         current = 0
@@ -275,8 +298,8 @@ async def async_api_set_color_temperature(hass, config, directive, context):
 async def async_api_decrease_color_temp(hass, config, directive, context):
     """Process a decrease color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
-    max_mireds = int(entity.attributes.get(light.ATTR_MAX_MIREDS))
+    current = get_attribute(directive, light.ATTR_COLOR_TEMP, int)
+    max_mireds = get_attribute(directive, light.ATTR_MAX_MIREDS, int)
 
     value = min(max_mireds, current + 50)
     await hass.services.async_call(
@@ -294,8 +317,8 @@ async def async_api_decrease_color_temp(hass, config, directive, context):
 async def async_api_increase_color_temp(hass, config, directive, context):
     """Process an increase color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
-    min_mireds = int(entity.attributes.get(light.ATTR_MIN_MIREDS))
+    current = get_attribute(directive, light.ATTR_COLOR_TEMP, int)
+    min_mireds = get_attribute(directive, light.ATTR_MIN_MIREDS, int)
 
     value = max(min_mireds, current - 50)
     await hass.services.async_call(
@@ -392,7 +415,7 @@ async def async_api_adjust_percentage(hass, config, directive, context):
 
     if entity.domain == fan.DOMAIN:
         service = fan.SERVICE_SET_PERCENTAGE
-        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
+        current = get_attribute(directive, fan.ATTR_PERCENTAGE, int, 0)
 
         # set percentage
         percentage = min(100, max(0, percentage_delta + current))
@@ -474,7 +497,9 @@ async def async_api_select_input(hass, config, directive, context):
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST, [])
+    source_list = get_attribute(
+        directive, media_player.const.ATTR_INPUT_SOURCE_LIST, list, []
+    )
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")
@@ -516,7 +541,9 @@ async def async_api_adjust_volume(hass, config, directive, context):
     volume_delta = int(directive.payload["volume"])
 
     entity = directive.entity
-    current_level = entity.attributes.get(media_player.const.ATTR_MEDIA_VOLUME_LEVEL)
+    current_level = get_attribute(
+        directive, media_player.const.ATTR_MEDIA_VOLUME_LEVEL, float
+    )
 
     # read current state
     try:
@@ -676,8 +703,8 @@ def temperature_from_object(hass, temp_obj, interval=False):
 async def async_api_set_target_temp(hass, config, directive, context):
     """Process a set target temperature request."""
     entity = directive.entity
-    min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
-    max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
+    min_temp = get_attribute(directive, climate.ATTR_MIN_TEMP, float)
+    max_temp = get_attribute(directive, climate.ATTR_MAX_TEMP, float)
     unit = hass.config.units.temperature_unit
 
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -736,14 +763,14 @@ async def async_api_set_target_temp(hass, config, directive, context):
 async def async_api_adjust_target_temp(hass, config, directive, context):
     """Process an adjust target temperature request."""
     entity = directive.entity
-    min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
-    max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
+    min_temp = get_attribute(directive, climate.ATTR_MIN_TEMP, float)
+    max_temp = get_attribute(directive, climate.ATTR_MAX_TEMP, float)
     unit = hass.config.units.temperature_unit
 
     temp_delta = temperature_from_object(
         hass, directive.payload["targetSetpointDelta"], interval=True
     )
-    target_temp = float(entity.attributes.get(ATTR_TEMPERATURE)) + temp_delta
+    target_temp = get_attribute(directive, ATTR_TEMPERATURE, float) + temp_delta
 
     if target_temp < min_temp or target_temp > max_temp:
         raise AlexaTempRangeError(hass, target_temp, min_temp, max_temp)
@@ -781,7 +808,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
     ha_preset = next((k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode), None)
 
     if ha_preset:
-        presets = entity.attributes.get(climate.ATTR_PRESET_MODES, [])
+        presets = get_attribute(directive, climate.ATTR_PRESET_MODES, list, [])
 
         if ha_preset not in presets:
             msg = f"The requested thermostat mode {ha_preset} is not supported"
@@ -791,7 +818,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
         data[climate.ATTR_PRESET_MODE] = ha_preset
 
     elif mode == "CUSTOM":
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
+        operation_list = get_attribute(directive, climate.ATTR_HVAC_MODES, list)
         custom_mode = directive.payload["thermostatMode"]["customName"]
         custom_mode = next(
             (k for k, v in API_THERMOSTAT_MODES_CUSTOM.items() if v == custom_mode),
@@ -807,7 +834,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
         data[climate.ATTR_HVAC_MODE] = custom_mode
 
     else:
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
+        operation_list = get_attribute(directive, climate.ATTR_HVAC_MODES, list)
         ha_modes = {k: v for k, v in API_THERMOSTAT_MODES.items() if v == mode}
         ha_mode = next(iter(set(ha_modes).intersection(operation_list)), None)
         if ha_mode not in operation_list:
@@ -932,8 +959,8 @@ async def async_api_set_mode(hass, config, directive, context):
     # Fan preset_mode
     elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
         preset_mode = mode.split(".")[1]
-        if preset_mode != PRESET_MODE_NA and preset_mode in entity.attributes.get(
-            fan.ATTR_PRESET_MODES
+        if preset_mode != PRESET_MODE_NA and preset_mode in get_attribute(
+            directive, fan.ATTR_PRESET_MODES, list
         ):
             service = fan.SERVICE_SET_PRESET_MODE
             data[fan.ATTR_PRESET_MODE] = preset_mode
@@ -1092,7 +1119,7 @@ async def async_api_set_range(hass, config, directive, context):
         if range_value == 0:
             service = fan.SERVICE_TURN_OFF
         else:
-            supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            supported = get_attribute(directive, ATTR_SUPPORTED_FEATURES, int, 0)
             if supported and fan.SUPPORT_SET_SPEED:
                 service = fan.SERVICE_SET_PERCENTAGE
                 data[fan.ATTR_PERCENTAGE] = range_value
@@ -1103,14 +1130,14 @@ async def async_api_set_range(hass, config, directive, context):
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_value = float(range_value)
         service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
+        min_value = get_attribute(directive, input_number.ATTR_MIN, float)
+        max_value = get_attribute(directive, input_number.ATTR_MAX, float)
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Vacuum Fan Speed
     elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+        speed_list = get_attribute(directive, vacuum.ATTR_FAN_SPEED_LIST, list)
         speed = next(
             (v for i, v in enumerate(speed_list) if i == int(range_value)), None
         )
@@ -1158,9 +1185,7 @@ async def async_api_adjust_range(hass, config, directive, context):
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_POSITION)):
-            msg = f"Unable to determine {entity.entity_id} current position"
-            raise AlexaInvalidValueError(msg)
+        current = get_attribute(directive, cover.ATTR_POSITION, int)
         position = response_value = min(100, max(0, range_delta + current))
         if position == 100:
             service = cover.SERVICE_OPEN_COVER
@@ -1173,10 +1198,7 @@ async def async_api_adjust_range(hass, config, directive, context):
     elif instance == f"{cover.DOMAIN}.tilt":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
-        current = entity.attributes.get(cover.ATTR_TILT_POSITION)
-        if not current:
-            msg = f"Unable to determine {entity.entity_id} current tilt position"
-            raise AlexaInvalidValueError(msg)
+        current = get_attribute(directive, cover.ATTR_TILT_POSITION, int)
         tilt_position = response_value = min(100, max(0, range_delta + current))
         if tilt_position == 100:
             service = cover.SERVICE_OPEN_COVER_TILT
@@ -1187,16 +1209,14 @@ async def async_api_adjust_range(hass, config, directive, context):
 
     # Fan speed percentage
     elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
-        percentage_step = entity.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 20
+        percentage_step = get_attribute(directive, fan.ATTR_PERCENTAGE_STEP, int, 20)
         range_delta = (
             int(range_delta * percentage_step)
             if range_delta_default
             else int(range_delta)
         )
         service = fan.SERVICE_SET_PERCENTAGE
-        if not (current := entity.attributes.get(fan.ATTR_PERCENTAGE)):
-            msg = f"Unable to determine {entity.entity_id} current fan speed"
-            raise AlexaInvalidValueError(msg)
+        current = get_attribute(directive, fan.ATTR_PERCENTAGE, int)
         percentage = response_value = min(100, max(0, range_delta + current))
         if percentage:
             data[fan.ATTR_PERCENTAGE] = percentage
@@ -1207,8 +1227,8 @@ async def async_api_adjust_range(hass, config, directive, context):
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_delta = float(range_delta)
         service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
+        min_value = get_attribute(directive, input_number.ATTR_MIN, float)
+        max_value = get_attribute(directive, input_number.ATTR_MAX, float)
         current = float(entity.state)
         data[input_number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
@@ -1218,8 +1238,8 @@ async def async_api_adjust_range(hass, config, directive, context):
     elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         range_delta = int(range_delta)
         service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-        current_speed = entity.attributes[vacuum.ATTR_FAN_SPEED]
+        speed_list = get_attribute(directive, vacuum.ATTR_FAN_SPEED_LIST, list)
+        current_speed = get_attribute(directive, vacuum.ATTR_FAN_SPEED, str)
         current_speed_index = next(
             (i for i, v in enumerate(speed_list) if v == current_speed), 0
         )
@@ -1342,14 +1362,14 @@ async def async_api_seek(hass, config, directive, context):
     entity = directive.entity
     position_delta = int(directive.payload["deltaPositionMilliseconds"])
 
-    current_position = entity.attributes.get(media_player.ATTR_MEDIA_POSITION)
+    current_position = get_attribute(directive, media_player.ATTR_MEDIA_POSITION, int)
     if not current_position:
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
     seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
-    media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
+    media_duration = get_attribute(directive, media_player.ATTR_MEDIA_DURATION, int)
     if media_duration and 0 < int(media_duration) < seek_position:
         seek_position = media_duration
 
@@ -1382,7 +1402,9 @@ async def async_api_set_eq_mode(hass, config, directive, context):
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    sound_mode_list = entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
+    sound_mode_list = get_attribute(
+        directive, media_player.const.ATTR_SOUND_MODE_LIST, list, []
+    )
     if sound_mode_list and mode.lower() in sound_mode_list:
         data[media_player.const.ATTR_SOUND_MODE] = mode.lower()
     else:

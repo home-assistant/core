@@ -6,14 +6,6 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import API_TEMP_UNITS
 
 
-class UnsupportedInterface(HomeAssistantError):
-    """This entity does not support the requested Smart Home API interface."""
-
-
-class UnsupportedProperty(HomeAssistantError):
-    """This entity does not support the requested Smart Home API property."""
-
-
 class NoTokenAvailable(HomeAssistantError):
     """There is no access token available."""
 
@@ -51,11 +43,26 @@ class AlexaInvalidEndpointError(AlexaError):
         self.endpoint_id = endpoint_id
 
 
+class AlexaInternalError(AlexaError):
+    """Class to represent internal errors."""
+
+    namespace = "Alexa"
+    error_type = "INTERNAL_ERROR"
+
+
 class AlexaInvalidValueError(AlexaError):
     """Class to represent InvalidValue errors."""
 
     namespace = "Alexa"
     error_type = "INVALID_VALUE"
+
+
+class UnsupportedInterface(AlexaInvalidValueError):
+    """This entity does not support the requested Smart Home API interface."""
+
+
+class UnsupportedProperty(AlexaInvalidValueError):
+    """This entity does not support the requested Smart Home API property."""
 
 
 class AlexaUnsupportedThermostatModeError(AlexaError):
