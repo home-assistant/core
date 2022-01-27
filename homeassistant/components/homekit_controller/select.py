@@ -22,7 +22,6 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     """Represents a ecobee mode select entity."""
 
     _attr_options = ["Home", "Sleep", "Away"]
-    _attr_icon = "mdi:water"
 
     @property
     def name(self) -> str:
