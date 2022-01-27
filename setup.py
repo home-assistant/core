@@ -59,8 +59,6 @@ REQUIRES = [
     "yarl==1.7.2",
 ]
 
-MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
-
 setup(
     name=PROJECT_PACKAGE_NAME,
     url=PROJECT_URL,
@@ -72,7 +70,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=REQUIRES,
-    python_requires=f">={MIN_PY_VERSION}",
     test_suite="tests",
     entry_points={"console_scripts": ["hass = homeassistant.__main__:main"]},
 )
