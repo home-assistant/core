@@ -30,5 +30,16 @@ async def test_diagnostics(
                 "declination": 30,
                 "modules power": 5100,
             },
-        }
+        },
+        "data": {
+            "energy_production_today": 100000,
+            "energy_production_tomorrow": 200000,
+            "energy_current_hour": 800000,
+            "power_production_now": 300000,
+        },
+        "account": {
+            "type": "public",
+            "rate_limit": 60,
+            "timezone": "Europe/Amsterdam",
+        },
     }
