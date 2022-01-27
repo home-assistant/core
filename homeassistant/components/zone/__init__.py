@@ -343,13 +343,10 @@ class Zone(entity.Entity):
         person_entity_id = evt.data["entity_id"]
         cur_count = len(self._persons_in_zone)
         if (
-            evt.data["new_state"]
-            and None
-            not in (
-                (latitude := evt.data["new_state"].attributes.get(ATTR_LATITUDE)),
-                (longitude := evt.data["new_state"].attributes.get(ATTR_LONGITUDE)),
-                (accuracy := evt.data["new_state"].attributes.get(ATTR_GPS_ACCURACY)),
-            )
+            (state := evt.data["new_state"])
+            and (latitude := state.attributes.get(ATTR_LATITUDE)) is not None
+            and (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None
+            and (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is not None
             and (
                 zone_state := async_active_zone(
                     self.hass, latitude, longitude, accuracy
@@ -371,13 +368,14 @@ class Zone(entity.Entity):
         persons = self.hass.states.async_entity_ids(person_domain)
         for person in persons:
             state = self.hass.states.get(person)
-            if not state or None in (
-                latitude := state.attributes.get(ATTR_LATITUDE),
-                longitude := state.attributes.get(ATTR_LONGITUDE),
-                accuracy := state.attributes.get(ATTR_GPS_ACCURACY),
+            if (
+                state is None
+                or (latitude := state.attributes.get(ATTR_LATITUDE)) is None
+                or (longitude := state.attributes.get(ATTR_LONGITUDE)) is None
+                or (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is None
             ):
                 continue
-            zone_state = async_active_zone(self.hass, latitude, longitude, accuracy)  # type: ignore[arg-type]
+            zone_state = async_active_zone(self.hass, latitude, longitude, accuracy)
             if zone_state is not None and zone_state.entity_id == self.entity_id:
                 self._persons_in_zone.add(person)
 
