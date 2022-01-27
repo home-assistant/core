@@ -107,11 +107,6 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
 
         return cast(float, self.last_state)
 
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return unit of number."""
-        return self.entity_description.unit_of_measurement
-
     async def async_set_value(self, value: float) -> None:
         """Set value."""
         # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
