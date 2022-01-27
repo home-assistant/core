@@ -11,7 +11,7 @@ from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import DependencyError, Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -127,7 +127,13 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
             raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
 
         # pylint: disable=no-value-for-parameter
-        return await super().post(request)
+        try:
+            return await super().post(request)
+        except DependencyError as exc:
+            return self.json_message(
+                f"Failed dependencies {exc.failed_dependencies}",
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
 
     def _prepare_result_json(self, result):
         """Convert result to JSON."""

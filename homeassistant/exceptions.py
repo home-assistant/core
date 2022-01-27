@@ -199,3 +199,15 @@ class RequiredParameterMissing(HomeAssistantError):
             ),
         )
         self.parameter_names = parameter_names
+
+
+class DependencyError(HomeAssistantError):
+    """Raised when dependencies can not be setup."""
+
+    def __init__(self, failed_dependencies: list[str]) -> None:
+        """Initialize error."""
+        super().__init__(
+            self,
+            ("Could not setup dependencies " f"{', '.join(failed_dependencies)}"),
+        )
+        self.failed_dependencies = failed_dependencies
