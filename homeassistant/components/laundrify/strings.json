@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "init": {
+        "description": "Please enter your personal AuthCode that is shown in the laundrify-App.",
+        "data": {
+          "code": "Auth Code (xxx-xxx)",
+          "poll_interval": "Poll Interval (in seconds)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The laundrify integration needs to re-authenticate."
+      }
+    },
+    "error": {
+      "invalid_format": "Invalid format. Please specify as xxx-xxx.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure laundrify",
+        "data": {
+          "poll_interval": "Poll Interval (in seconds)"
+        }
+      }
+    }
+  }
+}
