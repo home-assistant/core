@@ -97,7 +97,7 @@ class VerticalCover(OverkizGenericCover):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = 100 - kwargs.get(ATTR_POSITION, 0)
+        position = 100 - kwargs[ATTR_POSITION]
         await self.executor.async_execute_command(OverkizCommand.SET_CLOSURE, position)
 
     async def async_open_cover(self, **kwargs: Any) -> None:

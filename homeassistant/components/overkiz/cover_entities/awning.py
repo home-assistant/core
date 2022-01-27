@@ -55,9 +55,8 @@ class Awning(OverkizGenericCover):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION, 0)
         await self.executor.async_execute_command(
-            OverkizCommand.SET_DEPLOYMENT, position
+            OverkizCommand.SET_DEPLOYMENT, kwargs[ATTR_POSITION]
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
