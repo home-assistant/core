@@ -2,12 +2,22 @@
     "state": {
         "climacell__health_concern": {
             "hazardous": "Gevaarlijk",
+            "moderate": "Gematigd",
             "unhealthy": "Ongezond",
             "unhealthy_for_sensitive_groups": "Ongezond voor gevoelige groepen",
             "very_unhealthy": "Heel ongezond"
         },
         "climacell__pollen_index": {
-            "none": "Geen"
+            "none": "Geen",
+            "very_high": "Zeer Hoog",
+            "very_low": "Zeer Laag"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "IJzel",
+            "ice_pellets": "Hagel",
+            "none": "Geen",
+            "rain": "Regen",
+            "snow": "Sneeuw"
         }
     }
 }

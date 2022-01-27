@@ -338,7 +338,7 @@ aqualogic==2.6
 arcam-fmj==0.12.0
 
 # homeassistant.components.arris_tg2492lg
-arris-tg2492lg==1.1.0
+arris-tg2492lg==1.2.1
 
 # homeassistant.components.ampio
 asmog==0.0.6
@@ -684,7 +684,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.11
+flux_led==0.28.17
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -845,7 +845,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220124.0
+home-assistant-frontend==20220126.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1663,7 +1663,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.1
+pymazda==0.3.2
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
@@ -2114,7 +2114,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.11.0
+rokuecp==0.12.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5

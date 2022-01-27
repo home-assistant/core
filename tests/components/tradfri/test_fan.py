@@ -121,7 +121,6 @@ async def test_set_percentage(
     """Test setting speed of a fan."""
     # Note pytradfri style, not hass. Values not really important.
     initial_state = {"percentage": 10, "fan_speed": 3}
-
     # Setup the gateway with a mock fan.
     fan = mock_fan(test_state=initial_state, device_number=0)
     mock_gateway.mock_devices.append(fan)
