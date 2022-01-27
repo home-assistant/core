@@ -21,7 +21,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         # Check if location have been defined.
-        if not self.hass.config.latitude or not self.hass.config.longitude:
+        if not self.hass.config.latitude and not self.hass.config.longitude:
             return self.async_abort(reason="latitude_longitude_not_defined")
 
         if user_input is not None:
