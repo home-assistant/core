@@ -171,7 +171,7 @@ class YaleOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_CODE, default=self.entry.options.get(CONF_CODE)
+                        CONF_CODE, default=self.entry.options.get(CONF_CODE, "")
                     ): str,
                     vol.Optional(
                         CONF_LOCK_CODE_DIGITS,
