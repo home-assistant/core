@@ -208,6 +208,6 @@ class DependencyError(HomeAssistantError):
         """Initialize error."""
         super().__init__(
             self,
-            ("Could not setup dependencies " f"{', '.join(failed_dependencies)}"),
+            f"Could not setup dependencies: {', '.join(failed_dependencies)}",
         )
         self.failed_dependencies = failed_dependencies
