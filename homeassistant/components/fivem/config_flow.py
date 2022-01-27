@@ -31,10 +31,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect."""
 
     fivem = FiveM(data[CONF_HOST], data[CONF_PORT])
-
     server = await fivem.get_server()
 
-    return server.hostname
+    return server.vars["sv_licenseKeyToken"].split(":")[0]
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,14 +53,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            hostname = await validate_input(self.hass, user_input)
+            license_key = await validate_input(self.hass, user_input)
         except FiveMServerOfflineError:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(hostname)
+            await self.async_set_unique_id(license_key)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
