@@ -4,6 +4,7 @@ import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
+from homeassistant.components.media_player import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CREDENTIALS,
@@ -60,7 +61,8 @@ async def async_browse_media(
     hass, media_content_type, media_content_id, *, can_play_artist=True
 ):
     """Browse Spotify media."""
-    info = list(hass.data[DOMAIN].values())[0]
+    if not (info := next(iter(hass.data[DOMAIN].values()), None)):
+        raise BrowseError("No Spotify accounts available")
     return await async_browse_media_internal(
         hass,
         info[DATA_SPOTIFY_CLIENT],
