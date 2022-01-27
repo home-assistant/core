@@ -124,7 +124,7 @@ class FiveMEntity(Entity):
     """Representation of a FiveM base entity."""
 
     def __init__(
-        self, fivem: FiveMServer, type_name: str, icon: str, device_class: str
+        self, fivem: FiveMServer, type_name: str, icon: str, device_class: str = None
     ) -> None:
         """Initialize base entity."""
         self._fivem = fivem

@@ -13,11 +13,11 @@ from .const import DOMAIN, ICON_STATUS, NAME_STATUS
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FiveM binary sensor platform."""
-    server = hass.data[DOMAIN][config_entry.entry_id]
+    server = hass.data[DOMAIN][entry.entry_id]
 
     entities = [FiveMStatusBinarySensor(server)]
 
