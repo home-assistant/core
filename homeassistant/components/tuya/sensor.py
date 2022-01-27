@@ -733,12 +733,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
     "fs": (
         TuyaSensorEntityDescription(
-            key=DPCode.COUNTDOWN_LEFT,
-            name="Remaining Time of Countdown",
-            entity_category=EntityCategory.CONFIG,
-            icon="mdi:timer-outline",
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             name="Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
