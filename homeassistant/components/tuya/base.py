@@ -3,14 +3,17 @@ from __future__ import annotations
 
 import base64
 from dataclasses import dataclass
+import datetime
 import json
 import struct
 from typing import Any, Literal, overload
 
+from construct import Timestamp
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
@@ -84,6 +87,23 @@ class IntegerTypeData:
             unit=parsed.get("unit"),
             type=parsed.get("type"),
         )
+
+    def int_to_timestamp(
+        self,
+        value: float,
+        unit: str | None = None,
+    ) -> Timestamp:
+        """Convert countdown value to timestamp."""
+        now = dt_util.utcnow()
+        if self.unit is not None:
+            if unit == "ms":
+                return dt_util.as_local(now) + datetime.timedelta(milliseconds=value)
+            if self.unit == "s":
+                return dt_util.as_local(now) + datetime.timedelta(seconds=value)
+            if self.unit == "min":
+                return dt_util.as_local(now) + datetime.timedelta(minutes=value)
+            return None
+        return None
 
 
 @dataclass

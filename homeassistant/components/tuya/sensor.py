@@ -43,6 +43,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     subkey: str | None = None
+    value_to_timestamp: bool | None = False
 
 
 # Commonly used battery sensors, that are re-used in the sensors down below.
@@ -738,6 +739,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.COUNTDOWN_LEFT,
+            name="Countdown",
+            value_to_timestamp=True,
+            device_class=SensorDeviceClass.TIMESTAMP,
+        ),
     ),
 }
 
@@ -871,6 +878,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             scaled_value = self._type_data.scale_value(value)
             if self._uom and self._uom.conversion_fn is not None:
                 return self._uom.conversion_fn(scaled_value)
+            if self.entity_description.value_to_timestamp:
+                return self._type_data.int_to_timestamp(
+                    scaled_value, self._type_data.unit
+                )
             return scaled_value
 
         # Unexpected enum value
