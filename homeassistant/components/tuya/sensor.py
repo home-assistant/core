@@ -760,11 +760,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:progress-clock",
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.WORK_STATE,
-            name="Working Status",
-            icon="mdi-information-outline",
-        ),
     ),
 }
 
