@@ -364,8 +364,7 @@ class SensiboClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_assume_state(self, state) -> None:
         """Sync state with api."""
-        change_needed = state != self.state
-
-        if change_needed:
-            await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
-            await self.coordinator.async_refresh()
+        if state == self.state or (state == "on" and self.state != HVAC_MODE_OFF):
+            return
+        await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
+        await self.coordinator.async_refresh()
