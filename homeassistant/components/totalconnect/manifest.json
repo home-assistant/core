@@ -1,17 +1,10 @@
 {
-    "domain": "totalconnect",
-    "name": "Total Connect",
-    "documentation": "https://www.home-assistant.io/integrations/totalconnect",
-    "requirements": [
-        "total_connect_client==2022.1"
-    ],
-    "dependencies": [],
-    "codeowners": [
-        "@austinmroczek"
-    ],
-    "config_flow": true,
-    "iot_class": "cloud_polling",
-    "loggers": [
-        "total_connect_client"
-    ]
+  "domain": "totalconnect",
+  "name": "Total Connect",
+  "documentation": "https://www.home-assistant.io/integrations/totalconnect",
+  "requirements": ["total_connect_client==2022.1"],
+  "dependencies": [],
+  "codeowners": ["@austinmroczek"],
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

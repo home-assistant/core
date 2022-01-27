@@ -1,15 +1,8 @@
 {
-    "domain": "amazon_polly",
-    "name": "Amazon Polly",
-    "documentation": "https://www.home-assistant.io/integrations/amazon_polly",
-    "requirements": [
-        "boto3==1.20.24"
-    ],
-    "codeowners": [],
-    "iot_class": "cloud_push",
-    "loggers": [
-        "s3transfer",
-        "botocore",
-        "boto3"
-    ]
+  "domain": "amazon_polly",
+  "name": "Amazon Polly",
+  "documentation": "https://www.home-assistant.io/integrations/amazon_polly",
+  "requirements": ["boto3==1.20.24"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }
