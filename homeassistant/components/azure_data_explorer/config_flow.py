@@ -6,13 +6,14 @@ from copy import deepcopy
 import logging
 from typing import Any
 
+from azure.kusto.data.exceptions import KustoAuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.azure_data_explorer.client import AzureDataExplorerClient
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
+from . import AzureDataExplorerClient
 from .const import (
     CONF_ADX_CLUSTER_INGEST_URI,
     CONF_ADX_DATABASE_NAME,
@@ -21,6 +22,7 @@ from .const import (
     CONF_APP_REG_SECRET,
     CONF_AUTHORITY_ID,
     CONF_SEND_INTERVAL,
+    CONF_USE_FREE,
     DEFAULT_OPTIONS,
     DOMAIN,
 )
@@ -35,6 +37,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_APP_REG_ID): str,
         vol.Required(CONF_APP_REG_SECRET): str,
         vol.Required(CONF_AUTHORITY_ID): str,
+        vol.Optional(CONF_USE_FREE, default=False): bool,
     }
 )
 
@@ -50,17 +53,16 @@ async def validate_input(
     client = AzureDataExplorerClient(**data)
 
     try:
-        # result = await hass.async_add_executor_job(lambda: client.test_connection())
-        result = await hass.async_add_executor_job(client.test_connection)
-        # result = await client.test_connection()
-        if result is not True:
-            return {"base": "cannot_connect"}
+        await hass.async_add_executor_job(client.test_connection)
 
-    except Exception as exp:
+    except KustoAuthenticationError as exp:
         _LOGGER.error(exp)
-        return {"base": "cannot_connect"}
+        return {"base": "invalid_auth"}
 
-    # Return info that you want to store in the config entry.
+    except Exception as exp:  # pylint: disable=broad-except
+        _LOGGER.error(exp)
+        return {"base": "unknown"}
+
     return None
 
 
@@ -104,14 +106,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             # Get the Cluster Name from the full url
-            title=str(
-                str(str(self._data[CONF_ADX_CLUSTER_INGEST_URI]).split("//")[1]).split(
-                    "."
-                )[0]
-            ).split("-")[1],
+            title=self.create_title(),
             data=self._data,
             options=self._options,
         )
+
+    def create_title(self):
+        """Build the Cluster Title from the URL."""
+        url_no_https = str(self._data[CONF_ADX_CLUSTER_INGEST_URI]).split("//")[1]
+        cluster_name = str(url_no_https.split(".")[0])
+
+        return cluster_name
 
 
 class ADXOptionsFlowHandler(config_entries.OptionsFlow):

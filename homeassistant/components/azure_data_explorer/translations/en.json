@@ -16,7 +16,8 @@
                     "table": "Table name",
                     "client_id": "Client ID",
                     "client_secret": "Client  secret",
-                    "authority_id": "Authority ID"
+                    "authority_id": "Authority ID",
+                    "use_free_cluster": "Use Queueing client"
 
                 },
                 "title": "Setup your Azure Data Explorer integration"

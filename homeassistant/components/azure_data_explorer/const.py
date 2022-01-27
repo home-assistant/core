@@ -17,6 +17,7 @@ CONF_AUTHORITY_ID = "authority_id"
 CONF_SEND_INTERVAL = "send_interval"
 CONF_MAX_DELAY = "max_delay"
 CONF_FILTER = DATA_FILTER = "filter"
+CONF_USE_FREE = "use_free_cluster"
 DATA_HUB = "hub"
 
 
