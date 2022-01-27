@@ -87,6 +87,8 @@ PLATFORMS = [
 class TuyaDeviceClass(StrEnum):
     """Tuya specific device classes, used for translations."""
 
+    CURTAIN_MODE = "tuya__curtain_mode"
+    CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
     BASIC_NIGHTVISION = "tuya__basic_nightvision"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
@@ -187,7 +189,10 @@ class DPCode(StrEnum):
     CONTROL = "control"
     CONTROL_2 = "control_2"
     CONTROL_3 = "control_3"
+    CONTROL_BACK = "control_back"
+    CONTROL_BACK_MODE = "control_back_mode"
     COUNTDOWN = "countdown"  # Countdown
+    COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
@@ -249,6 +254,7 @@ class DPCode(StrEnum):
     MOVEMENT_DETECT_PIC = "movement_detect_pic"
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
+    OPPOSITE = "opposite"
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
     PERCENT_CONTROL_2 = "percent_control_2"
@@ -341,6 +347,7 @@ class DPCode(StrEnum):
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
+    TIME_TOTAL = "time_total"
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"

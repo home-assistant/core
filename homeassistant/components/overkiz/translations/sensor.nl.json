@@ -9,7 +9,8 @@
         "overkiz__discrete_rssi_level": {
             "good": "Goed",
             "low": "Laag",
-            "normal": "Normaal"
+            "normal": "Normaal",
+            "verylow": "Zeer laag"
         },
         "overkiz__priority_lock_originator": {
             "local_user": "Lokale gebruiker",

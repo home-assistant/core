@@ -1193,6 +1193,7 @@ omit =
     homeassistant/components/tradfri/__init__.py
     homeassistant/components/tradfri/base_class.py
     homeassistant/components/tradfri/config_flow.py
+    homeassistant/components/tradfri/coordinator.py
     homeassistant/components/tradfri/cover.py
     homeassistant/components/tradfri/fan.py
     homeassistant/components/tradfri/light.py

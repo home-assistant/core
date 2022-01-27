@@ -900,6 +900,15 @@ async def test_get_with_templates(hass, mqtt_mock, caplog):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("hvac_action") == "cooling"
 
+    # Test ignoring null values
+    async_fire_mqtt_message(hass, "action", "null")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("hvac_action") == "cooling"
+    assert (
+        "Invalid ['off', 'heating', 'cooling', 'drying', 'idle', 'fan'] action: None, ignoring"
+        in caplog.text
+    )
+
 
 async def test_set_with_templates(hass, mqtt_mock, caplog):
     """Test setting various attributes with templates."""
