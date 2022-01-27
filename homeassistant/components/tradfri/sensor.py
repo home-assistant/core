@@ -28,7 +28,7 @@ async def async_setup_entry(
     api = coordinator_data[KEY_API]
 
     async_add_entities(
-        TradfriSensor(
+        TradfriBatterySensor(
             device_coordinator,
             api,
             gateway_id,
@@ -37,14 +37,13 @@ async def async_setup_entry(
         if (
             not device_coordinator.device.has_light_control
             and not device_coordinator.device.has_socket_control
-            and not device_coordinator.device.has_blind_control
             and not device_coordinator.device.has_signal_repeater_control
             and not device_coordinator.device.has_air_purifier_control
         )
     )
 
 
-class TradfriSensor(TradfriBaseEntity, SensorEntity):
+class TradfriBatterySensor(TradfriBaseEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
