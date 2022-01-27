@@ -6,14 +6,17 @@ from dataclasses import dataclass
 
 from intellifire4py import IntellifirePollData
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
-from .entity import IntellifireEntity, IntellifireEntityDescription
+from .entity import IntellifireEntity
 
 
 @dataclass
@@ -25,7 +28,7 @@ class IntellifireBinarySensorRequiredKeysMixin:
 
 @dataclass
 class IntellifireBinarySensorEntityDescription(
-    IntellifireEntityDescription, IntellifireBinarySensorRequiredKeysMixin
+    BinarySensorEntityDescription, IntellifireBinarySensorRequiredKeysMixin
 ):
     """Describes a binary sensor entity."""
 
@@ -75,21 +78,9 @@ async def async_setup_entry(
 class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
     """Class definition."""
 
-    def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: IntellifireBinarySensorEntityDescription,
-    ) -> None:
-        """Class initializer."""
-        super().__init__(coordinator=coordinator, description=description)
-
-        # I was having issues getting value_fn to come across when I was using
-        # self.entity_description in the `is_on` function. By setting this value
-        # directly -> I was able to access the value_fn call. I'm sure there is
-        # a better way to do this - but I'm unsure as how to do it.
-        self.description = description
+    entity_description: IntellifireBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool:
         """Use this to get the correct value."""
-        return self.description.value_fn(self.coordinator.api.data)
+        return self.entity_description.value_fn(self.coordinator.api.data)

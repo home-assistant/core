@@ -21,7 +21,7 @@ from homeassistant.util.dt import utcnow
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
-from .entity import IntellifireEntity, IntellifireEntityDescription
+from .entity import IntellifireEntity
 
 
 def _time_remaining_to_timestamp(data: IntellifirePollData) -> datetime | None:
@@ -41,17 +41,9 @@ class IntellifireSensorRequiredKeysMixin:
 @dataclass
 class IntellifireSensorEntityDescription(
     SensorEntityDescription,
-    IntellifireEntityDescription,
     IntellifireSensorRequiredKeysMixin,
 ):
     """Describes a binary sensor entity."""
-
-
-# @dataclass
-# class IntellifireSensorEntityDescription(
-#     SensorEntityDescription, IntellifireSensorRequiredKeysMixin
-# ):
-#     """Describes a sensor sensor entity."""
 
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
@@ -96,29 +88,15 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
 )
 
 
-class IntellifireSensor(
-    IntellifireEntity, SensorEntity, IntellifireSensorRequiredKeysMixin
-):
+class IntellifireSensor(IntellifireEntity, SensorEntity):
     """Extends IntellifireEntity with Sensor specific logic."""
 
-    def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: IntellifireSensorEntityDescription,
-    ) -> None:
-        """Init Function with really bad docstring."""
-        super().__init__(coordinator=coordinator, description=description)
-
-        self.description = description
+    entity_description: IntellifireSensorEntityDescription
 
     @property
     def native_value(self) -> int | str | datetime | None:
         """Return the state."""
-
-        # This used to be self.entity_description -> but had to use
-        # description in order to access value_fn function
-        # may be a better way to do this
-        return self.description.value_fn(self.coordinator.api.data)
+        return self.entity_description.value_fn(self.coordinator.api.data)
 
 
 async def async_setup_entry(

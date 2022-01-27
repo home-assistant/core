@@ -1,19 +1,12 @@
+"""Platform for shared base classes for sensors."""
 from __future__ import annotations
 
-from datetime import datetime
-
-from intellifire4py import IntellifirePollData
-
-from homeassistant.components.intellifire import IntellifireDataUpdateCoordinator
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from collections.abc import Callable
 from dataclasses import dataclass
 
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-@dataclass
-class IntellifireEntityDescription(EntityDescription):
-    """mixing with class."""
+from . import IntellifireDataUpdateCoordinator
 
 
 @dataclass
@@ -24,9 +17,9 @@ class IntellifireEntity(CoordinatorEntity):
     _attr_attribution = "Data provided by unpublished Intellifire API"
 
     def __init__(
-            self,
-            coordinator: IntellifireDataUpdateCoordinator,
-            description: EntityDescription,
+        self,
+        coordinator: IntellifireDataUpdateCoordinator,
+        description: EntityDescription,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
