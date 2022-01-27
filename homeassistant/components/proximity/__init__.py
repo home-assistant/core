@@ -77,7 +77,7 @@ def setup_proximity_component(
     unit_of_measurement: str = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
     )
-    zone_id = f"zone.{config.get(CONF_ZONE)}"
+    zone_id = f"zone.{config[CONF_ZONE]}"
 
     proximity = Proximity(  # type:ignore[no-untyped-call]
         hass,
