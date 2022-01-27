@@ -26,7 +26,7 @@ class IntellifireEntity(CoordinatorEntity):
     def __init__(
             self,
             coordinator: IntellifireDataUpdateCoordinator,
-            description: IntellifireEntityDescription,
+            description: EntityDescription,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
