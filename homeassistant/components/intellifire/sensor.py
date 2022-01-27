@@ -43,7 +43,7 @@ class IntellifireSensorEntityDescription(
     SensorEntityDescription,
     IntellifireSensorRequiredKeysMixin,
 ):
-    """Describes a binary sensor entity."""
+    """Describes a sensor entity."""
 
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
