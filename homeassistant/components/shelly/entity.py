@@ -562,6 +562,11 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         self.block: Block | None = block  # type: ignore[assignment]
         self.entity_description = description
 
+        self._attr_should_poll = False
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        )
+
         if block is not None:
             self._attr_unique_id = f"{self.wrapper.mac}-{block.description}-{attribute}"
             self._attr_name = get_block_entity_name(
