@@ -1,5 +1,4 @@
 """Representation of a toggleButton."""
-import logging
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity
@@ -8,8 +7,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ZWaveMeEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_NAME = "toggleButton"
 
