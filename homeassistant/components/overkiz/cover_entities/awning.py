@@ -48,7 +48,8 @@ class Awning(OverkizGenericCover):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if current_position := self.executor.select_state(OverkizState.CORE_DEPLOYMENT):
+        current_position = self.executor.select_state(OverkizState.CORE_DEPLOYMENT)
+        if current_position is not None:
             return cast(int, current_position)
 
         return None
