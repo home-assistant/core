@@ -182,6 +182,12 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         attrs.update(super().extra_state_attributes)
         return attrs
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+        self.async_schedule_update_ha_state()
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if DENSITY in data:
@@ -379,6 +385,12 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
             config_entry,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+        self.async_schedule_update_ha_state()
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         self._should_poll = False
@@ -416,6 +428,12 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         attrs = {ATTR_DENSITY: self._density}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
