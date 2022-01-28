@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools~=60.5", "wheel~=0.37.1"]
+build-backend = "setuptools.build_meta"
+
 [tool.black]
 target-version = ["py38"]
 exclude = 'generated'
