@@ -1,5 +1,4 @@
 """Support for VELUX KLF 200 devices."""
-import asyncio
 import logging
 
 from pyvlx import PyVLX, PyVLXException
@@ -56,7 +55,6 @@ class VeluxModule:
     def __init__(self, hass, domain_config):
         """Initialize for velux component."""
         self.pyvlx = None
-        self.semaphore_poll_data = None
         self._hass = hass
         self._domain_config = domain_config
 
@@ -75,8 +73,6 @@ class VeluxModule:
         host = self._domain_config.get(CONF_HOST)
         password = self._domain_config.get(CONF_PASSWORD)
         self.pyvlx = PyVLX(host=host, password=password)
-        # the gateway cannot fetch more than one time in parallel
-        self.semaphore_poll_data = asyncio.Semaphore(1)
 
         self._hass.services.async_register(
             DOMAIN, "reboot_gateway", async_reboot_gateway

@@ -178,13 +178,12 @@ class VeluxWindow(VeluxCover):
 
     async def async_update_limitation(self):
         """Get the updated status of the cover (limitations only)."""
-        async with self._hass.data[DATA_VELUX].semaphore_poll_data:
-            try:
-                limitation = await self.node.get_limitation()
-                self._extra_attr_limitation_min = limitation.min_value
-                self._extra_attr_limitation_max = limitation.max_value
-            except PyVLXException:
-                _LOGGER.error("Error fetch limitation data for cover %s", self.name)
+        try:
+            limitation = await self.node.get_limitation()
+            self._extra_attr_limitation_min = limitation.min_value
+            self._extra_attr_limitation_max = limitation.max_value
+        except PyVLXException:
+            _LOGGER.error("Error fetch limitation data for cover %s", self.name)
 
     @property
     def extra_state_attributes(self) -> dict[str, int | None]:
