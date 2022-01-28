@@ -26,7 +26,6 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 class TradfriSensorEntityDescription(SensorEntityDescription):
     """Class describing Tradfri sensor entities."""
 
-    should_set_unique_id: bool = False
     value: Callable[[TradfriSensor], Any | None] = None  # type: ignore
 
 
@@ -58,10 +57,6 @@ async def async_setup_entry(
                         device_class=SensorDeviceClass.BATTERY,
                         native_unit_of_measurement=PERCENTAGE,
                         key=SensorDeviceClass.BATTERY,
-                        # Only overwrite unique id for covers
-                        should_set_unique_id=cast(
-                            bool, lambda data: data.coordinator.device.has_blind_control
-                        ),
                         value=lambda data: cast(
                             int, data.coordinator.data.device_info.battery_level
                         ),
@@ -78,10 +73,6 @@ async def async_setup_entry(
                         device_class=SensorDeviceClass.AQI,
                         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
                         key=SensorDeviceClass.AQI,
-                        should_set_unique_id=cast(
-                            bool,
-                            lambda data: data.coordinator.device.has_air_purifier_control,
-                        ),
                         # The sensor returns 65535 if the fan is turned off
                         value=lambda data: None
                         if data.coordinator.data.air_purifier_control.air_purifiers[
@@ -119,9 +110,6 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self._attr_device_class = description.device_class
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-
-        if description.should_set_unique_id:
-            self._attr_unique_id = f"{self._attr_unique_id}-{description.device_class}"
 
         self._refresh()  # Set initial state
 
