@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeEntity
+from . import ZWaveMeController, ZWaveMeEntity
 from .const import DOMAIN
 
 SENSORS_MAP: dict[str, SensorEntityDescription] = {
@@ -78,7 +78,7 @@ async def async_setup_entry(
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
-        controller = hass.data[DOMAIN][config_entry.entry_id]
+        controller: ZWaveMeController = hass.data[DOMAIN][config_entry.entry_id]
         description = get_description(new_device)
         sensor = ZWaveMeSensor(controller, new_device, description)
 
@@ -104,9 +104,14 @@ async def async_setup_entry(
 class ZWaveMeSensor(ZWaveMeEntity, SensorEntity):
     """Representation of a ZWaveMe sensor."""
 
-    def __init__(self, controller, device, description) -> None:
+    def __init__(
+        self,
+        controller: ZWaveMeController,
+        device: ZWaveMeData,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the device."""
-        super().__init__(self, controller=controller, device=device)
+        super().__init__(controller=controller, device=device)
         self.entity_description = description
 
     @property
