@@ -29,6 +29,84 @@ async def test_no_sensors(hass, aioclient_mock):
 
 
 TEST_DATA = [
+    (  # Air quality sensor
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 2,
+            "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
+            "lastseen": "2020-11-20T22:48Z",
+            "manufacturername": "BOSCH",
+            "modelid": "AIR",
+            "name": "BOSCH Air quality sensor",
+            "state": {
+                "airquality": "poor",
+                "airqualityppb": 809,
+                "lastupdated": "2020-11-20T22:48:00.209",
+            },
+            "swversion": "20200402",
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:12:4b:00:14:4d:00:07-02-fdef",
+        },
+        {
+            "entity_count": 2,
+            "device_count": 3,
+            "entity_id": "sensor.bosch_air_quality_sensor",
+            "unique_id": "00:12:4b:00:14:4d:00:07-02-fdef",
+            "state": "poor",
+            "entity_category": None,
+            "device_class": None,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "state_class": "measurement",
+                "friendly_name": "BOSCH Air quality sensor",
+            },
+            "websocket_event": {"state": {"airquality": "excellent"}},
+            "next_state": "excellent",
+        },
+    ),
+    (  # Air quality PPB sensor
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 2,
+            "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
+            "lastseen": "2020-11-20T22:48Z",
+            "manufacturername": "BOSCH",
+            "modelid": "AIR",
+            "name": "BOSCH Air quality sensor",
+            "state": {
+                "airquality": "poor",
+                "airqualityppb": 809,
+                "lastupdated": "2020-11-20T22:48:00.209",
+            },
+            "swversion": "20200402",
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:12:4b:00:14:4d:00:07-02-fdef",
+        },
+        {
+            "entity_count": 2,
+            "device_count": 3,
+            "entity_id": "sensor.bosch_air_quality_sensor_ppb",
+            "unique_id": "00:12:4b:00:14:4d:00:07-ppb",
+            "state": "809",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.AQI,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "state_class": "measurement",
+                "unit_of_measurement": "ppb",
+                "device_class": "aqi",
+                "friendly_name": "BOSCH Air quality sensor PPB",
+            },
+            "websocket_event": {"state": {"airqualityppb": 1000}},
+            "next_state": "1000",
+        },
+    ),
     (  # Battery sensor
         {
             "config": {
@@ -52,7 +130,7 @@ TEST_DATA = [
         {
             "entity_count": 1,
             "device_count": 3,
-            "entity_id": "sensor.fyrtur_block_out_roller_blind_battery_level",
+            "entity_id": "sensor.fyrtur_block_out_roller_blind_battery",
             "unique_id": "00:0d:6f:ff:fe:01:23:45-battery",
             "state": "100",
             "entity_category": EntityCategory.DIAGNOSTIC,
@@ -60,11 +138,12 @@ TEST_DATA = [
             "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
                 "state_class": "measurement",
+                "on": True,
                 "unit_of_measurement": "%",
                 "device_class": "battery",
-                "friendly_name": "FYRTUR block-out roller blind Battery Level",
+                "friendly_name": "FYRTUR block-out roller blind Battery",
             },
-            "websocket_event": {"battery": 50},
+            "websocket_event": {"state": {"battery": 50}},
             "next_state": "50",
         },
     ),
@@ -101,7 +180,7 @@ TEST_DATA = [
                 "device_class": "energy",
                 "friendly_name": "Consumption 15",
             },
-            "websocket_event": {"consumption": 10000},
+            "websocket_event": {"state": {"consumption": 10000}},
             "next_state": "10.0",
         },
     ),
@@ -141,7 +220,7 @@ TEST_DATA = [
                 "icon": "mdi:white-balance-sunny",
                 "friendly_name": "Daylight",
             },
-            "websocket_event": {"status": 210},
+            "websocket_event": {"state": {"status": 210}},
             "next_state": "dusk",
         },
     ),
@@ -176,7 +255,7 @@ TEST_DATA = [
                 "on": True,
                 "friendly_name": "FSM_STATE Motion stair",
             },
-            "websocket_event": {"status": 1},
+            "websocket_event": {"state": {"status": 1}},
             "next_state": "1",
         },
     ),
@@ -217,7 +296,7 @@ TEST_DATA = [
                 "device_class": "humidity",
                 "friendly_name": "Mi temperature 1",
             },
-            "websocket_event": {"humidity": 1000},
+            "websocket_event": {"state": {"humidity": 1000}},
             "next_state": "10.0",
         },
     ),
@@ -267,7 +346,7 @@ TEST_DATA = [
                 "device_class": "illuminance",
                 "friendly_name": "Motion sensor 4",
             },
-            "websocket_event": {"lightlevel": 1000},
+            "websocket_event": {"state": {"lightlevel": 1000}},
             "next_state": "1.3",
         },
     ),
@@ -309,7 +388,7 @@ TEST_DATA = [
                 "device_class": "power",
                 "friendly_name": "Power 16",
             },
-            "websocket_event": {"power": 1000},
+            "websocket_event": {"state": {"power": 1000}},
             "next_state": "1000",
         },
     ),
@@ -349,7 +428,7 @@ TEST_DATA = [
                 "device_class": "pressure",
                 "friendly_name": "Mi temperature 1",
             },
-            "websocket_event": {"pressure": 500},
+            "websocket_event": {"state": {"pressure": 500}},
             "next_state": "500",
         },
     ),
@@ -390,7 +469,7 @@ TEST_DATA = [
                 "device_class": "temperature",
                 "friendly_name": "Mi temperature 1",
             },
-            "websocket_event": {"temperature": 1800},
+            "websocket_event": {"state": {"temperature": 1800}},
             "next_state": "18.0",
         },
     ),
@@ -428,11 +507,10 @@ TEST_DATA = [
             "state_class": SensorStateClass.TOTAL_INCREASING,
             "attributes": {
                 "state_class": "total_increasing",
-                "on": True,
                 "device_class": "timestamp",
                 "friendly_name": "eTRV Séjour",
             },
-            "websocket_event": {"lastset": "2020-12-14T10:12:14Z"},
+            "websocket_event": {"state": {"lastset": "2020-12-14T10:12:14Z"}},
             "next_state": "2020-12-14T10:12:14+00:00",
         },
     ),
@@ -474,48 +552,51 @@ TEST_DATA = [
                 "device_class": "temperature",
                 "friendly_name": "Alarm 10 Temperature",
             },
-            "websocket_event": {"temperature": 1800},
+            "websocket_event": {"state": {"temperature": 1800}},
             "next_state": "26.0",
         },
     ),
-    (  # Air quality PPB sensor
+    (  # Battery from switch
         {
             "config": {
+                "battery": 90,
+                "group": "201",
                 "on": True,
                 "reachable": True,
             },
             "ep": 2,
-            "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
-            "lastseen": "2020-11-20T22:48Z",
-            "manufacturername": "BOSCH",
-            "modelid": "AIR",
-            "name": "BOSCH Air quality sensor",
+            "etag": "233ae541bbb7ac98c42977753884b8d2",
+            "manufacturername": "Philips",
+            "mode": 1,
+            "modelid": "RWL021",
+            "name": "Dimmer switch 3",
             "state": {
-                "airquality": "poor",
-                "airqualityppb": 809,
-                "lastupdated": "2020-11-20T22:48:00.209",
+                "buttonevent": 1002,
+                "lastupdated": "2019-04-28T20:29:13",
             },
-            "swversion": "20200402",
-            "type": "ZHAAirQuality",
-            "uniqueid": "00:12:4b:00:14:4d:00:07-02-fdef",
+            "swversion": "5.45.1.17846",
+            "type": "ZHASwitch",
+            "uniqueid": "00:17:88:01:02:0e:32:a3-02-fc00",
         },
         {
-            "entity_count": 2,
+            "entity_count": 1,
             "device_count": 3,
-            "entity_id": "sensor.bosch_air_quality_sensor_ppb",
-            "unique_id": "00:12:4b:00:14:4d:00:07-ppb",
-            "state": "809",
-            "entity_category": None,
-            "device_class": SensorDeviceClass.AQI,
+            "entity_id": "sensor.dimmer_switch_3_battery",
+            "unique_id": "00:17:88:01:02:0e:32:a3-battery",
+            "state": "90",
+            "entity_category": EntityCategory.DIAGNOSTIC,
+            "device_class": SensorDeviceClass.BATTERY,
             "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
                 "state_class": "measurement",
-                "unit_of_measurement": "ppb",
-                "device_class": "aqi",
-                "friendly_name": "BOSCH Air quality sensor PPB",
+                "on": True,
+                "event_id": "dimmer_switch_3",
+                "unit_of_measurement": "%",
+                "device_class": "battery",
+                "friendly_name": "Dimmer switch 3 Battery",
             },
-            "websocket_event": {"airqualityppb": 1000},
-            "next_state": "1000",
+            "websocket_event": {"config": {"battery": 80}},
+            "next_state": "80",
         },
     ),
 ]
@@ -547,10 +628,13 @@ async def test_sensors(
 
     assert len(hass.states.async_all()) == expected["entity_count"]
 
+    # Verify entity state
     sensor = hass.states.get(expected["entity_id"])
     assert sensor.state == expected["state"]
     assert sensor.attributes.get(ATTR_DEVICE_CLASS) == expected["device_class"]
     assert sensor.attributes == expected["attributes"]
+
+    # Verify entity registry
     assert (
         ent_reg.async_get(expected["entity_id"]).entity_category
         is expected["entity_category"]
@@ -558,6 +642,8 @@ async def test_sensors(
     ent_reg_entry = ent_reg.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
+
+    # Verify device registry
     assert (
         len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
         == expected["device_count"]
@@ -565,13 +651,8 @@ async def test_sensors(
 
     # Change state
 
-    event_changed_sensor = {
-        "t": "event",
-        "e": "changed",
-        "r": "sensors",
-        "id": "1",
-        "state": expected["websocket_event"],
-    }
+    event_changed_sensor = {"t": "event", "e": "changed", "r": "sensors", "id": "1"}
+    event_changed_sensor |= expected["websocket_event"]
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
@@ -721,7 +802,7 @@ async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 0
-    assert not hass.states.get("sensor.switch_1_battery_level")
+    assert not hass.states.get("sensor.switch_1_battery")
 
     event_changed_sensor = {
         "t": "event",
@@ -735,10 +816,11 @@ async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
 
     assert len(hass.states.async_all()) == 1
 
-    assert hass.states.get("sensor.switch_1_battery_level").state == "50"
+    assert hass.states.get("sensor.switch_1_battery").state == "50"
 
 
-async def test_special_danfoss_battery_creation(hass, aioclient_mock):
+@pytest.mark.parametrize("model_id", ["0x8030", "0x8031", "0x8034", "0x8035"])
+async def test_special_danfoss_battery_creation(hass, aioclient_mock, model_id):
     """Test the special Danfoss battery creation works.
 
     Normally there should only be one battery sensor per device from deCONZ.
@@ -760,7 +842,7 @@ async def test_special_danfoss_battery_creation(hass, aioclient_mock):
                 "etag": "982d9acc38bee5b251e24a9be26558e4",
                 "lastseen": "2021-02-15T12:23Z",
                 "manufacturername": "Danfoss",
-                "modelid": "0x8030",
+                "modelid": model_id,
                 "name": "0x8030",
                 "state": {
                     "lastupdated": "2021-02-15T12:23:07.994",
@@ -785,7 +867,7 @@ async def test_special_danfoss_battery_creation(hass, aioclient_mock):
                 "etag": "62f12749f9f51c950086aff37dd02b61",
                 "lastseen": "2021-02-15T12:23Z",
                 "manufacturername": "Danfoss",
-                "modelid": "0x8030",
+                "modelid": model_id,
                 "name": "0x8030",
                 "state": {
                     "lastupdated": "2021-02-15T12:23:22.399",
@@ -810,7 +892,7 @@ async def test_special_danfoss_battery_creation(hass, aioclient_mock):
                 "etag": "f50061174bb7f18a3d95789bab8b646d",
                 "lastseen": "2021-02-15T12:23Z",
                 "manufacturername": "Danfoss",
-                "modelid": "0x8030",
+                "modelid": model_id,
                 "name": "0x8030",
                 "state": {
                     "lastupdated": "2021-02-15T12:23:25.466",
@@ -835,7 +917,7 @@ async def test_special_danfoss_battery_creation(hass, aioclient_mock):
                 "etag": "eea97adf8ce1b971b8b6a3a31793f96b",
                 "lastseen": "2021-02-15T12:23Z",
                 "manufacturername": "Danfoss",
-                "modelid": "0x8030",
+                "modelid": model_id,
                 "name": "0x8030",
                 "state": {
                     "lastupdated": "2021-02-15T12:23:41.939",
@@ -860,7 +942,7 @@ async def test_special_danfoss_battery_creation(hass, aioclient_mock):
                 "etag": "1f7cd1a5d66dc27ac5eb44b8c47362fb",
                 "lastseen": "2021-02-15T12:23Z",
                 "manufacturername": "Danfoss",
-                "modelid": "0x8030",
+                "modelid": model_id,
                 "name": "0x8030",
                 "state": {"lastupdated": "none", "on": False, "temperature": 2325},
                 "swversion": "YYYYMMDD",
