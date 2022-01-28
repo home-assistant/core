@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import logging
 
 from fivem import FiveM, FiveMServerOfflineError
 
@@ -20,9 +21,17 @@ from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FiveM from a config entry."""
+    _LOGGER.debug(
+        "Create FiveM server instance for '%s:%s'",
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+    )
+
     try:
         fivem = FiveMServer(hass, entry.data, entry.entry_id)
         await fivem.initialize()
@@ -100,11 +109,18 @@ class FiveMServer:
 
     async def async_update(self, now: datetime = None) -> None:
         """Get server data from 3rd party library and update properties."""
+        was_online = self.online
+
         try:
             server = await self._fivem.get_server()
             self.online = True
         except FiveMServerOfflineError:
             self.online = False
+
+        if was_online and not self.online:
+            _LOGGER.warning("Connection to '%s:%s' lost", self.host, self.port)
+        elif not was_online and self.online:
+            _LOGGER.info("Connection to '%s:%s' (re-)established", self.host, self.port)
 
         if self.online:
             self.players_online = len(server.players)
