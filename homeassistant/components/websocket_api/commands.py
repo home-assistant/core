@@ -331,6 +331,47 @@ async def handle_integration_logger_info(
     )
 
 
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "integration/log_level",
+        vol.Required("integration"): str,
+        vol.Required("level"): vol.In(
+            [
+                logging.CRITICAL,
+                logging.FATAL,
+                logging.ERROR,
+                logging.WARNING,
+                logging.INFO,
+                logging.DEBUG,
+                logging.NOTSET,
+            ]
+        ),
+    }
+)
+@decorators.async_response
+async def handle_integration_log_level(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle setting integration log level."""
+    try:
+        integration = await async_get_integration(hass, msg["integration"])
+    except IntegrationNotFound:
+        connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
+        return
+    loggers = [f"homeassistant.components.{msg['integration']}"]
+    if integration.loggers:
+        loggers.extend(integration.loggers)
+    await handle_call_service(  # type: ignore
+        hass,
+        connection,
+        {
+            "domain": "logger",
+            "service": "set_level",
+            "service_data": {logger: msg["level"] for logger in loggers},
+        },
+    )
+
+
 @callback
 @decorators.websocket_command({vol.Required("type"): "ping"})
 def handle_ping(
