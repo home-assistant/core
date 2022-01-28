@@ -79,7 +79,7 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
         controller: ZWaveMeController = hass.data[DOMAIN][config_entry.entry_id]
-        description = get_description(new_device)
+        description = SENSORS_MAP.get(new_device.probeType, SENSORS_MAP["generic"])
         sensor = ZWaveMeSensor(controller, new_device, description)
 
         async_add_entities(
@@ -87,12 +87,6 @@ async def async_setup_entry(
                 sensor,
             ]
         )
-
-    @callback
-    def get_description(new_device: ZWaveMeData) -> SensorEntityDescription:
-        if new_device.probeType in SENSORS_MAP:
-            return SENSORS_MAP.get(new_device.probeType)
-        return SENSORS_MAP["generic"]
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
