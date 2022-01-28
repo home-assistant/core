@@ -5,5 +5,6 @@
   "requirements": ["elkm1-lib==1.0.0"],
   "codeowners": ["@gwww", "@bdraco"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["elkm1_lib"]
 }

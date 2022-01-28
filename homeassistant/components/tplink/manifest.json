@@ -113,5 +113,6 @@
       "hostname": "lb*",
       "macaddress": "B09575*"
     }     
-  ]
+  ],
+  "loggers": ["kasa"]
 }
