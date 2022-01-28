@@ -98,12 +98,12 @@ class InverterOperationModeEntity(SelectEntity):
         self.async_write_ha_state()
 
     def _get_eco_mode_power(self) -> int:
-        """Get eco mode power value from the related number entity"""
+        """Get eco mode power value from the related number entity."""
         eco_mode_power_entity = self._config[KEY_ECO_MODE_POWER]
         return int(eco_mode_power_entity.value) if eco_mode_power_entity else 100
 
     async def update_eco_mode_power(self, value: int) -> None:
-        """Update eco mode power value in inverter (when in eco mode)"""
+        """Update eco mode power value in inverter (when in eco mode)."""
         operation_mode = INVERTER_OPERATION_MODES.index(self.current_option)
         if operation_mode in (4, 5):
             await self._inverter.set_operation_mode(operation_mode, value)

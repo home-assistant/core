@@ -1,7 +1,7 @@
 """GoodWe PV inverter selection settings entities."""
+from datetime import datetime
 import logging
 
-from datetime import datetime
 from goodwe import Inverter, InverterError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
