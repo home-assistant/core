@@ -50,8 +50,8 @@ class ZWaveMeLock(ZWaveMeEntity, LockEntity):
 
     def unlock(self, **kwargs: Any) -> None:
         """Send command to unlock the lock."""
-        self.hass.data[DOMAIN].zwave_api.send_command(self.device.id, "open")
+        self.controller.zwave_api.send_command(self.device.id, "open")
 
     def lock(self, **kwargs: Any) -> None:
         """Send command to unlock the lock."""
-        self.hass.data[DOMAIN].zwave_api.send_command(self.device.id, "close")
+        self.controller.zwave_api.send_command(self.device.id, "close")
