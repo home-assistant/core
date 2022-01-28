@@ -102,7 +102,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
         gateway_id: str,
         description: TradfriSensorEntityDescription,
     ) -> None:
-        """Initialize a battery sensor."""
+        """Initialize a Tradfri sensor."""
         super().__init__(
             device_coordinator=device_coordinator,
             api=api,
