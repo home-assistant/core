@@ -55,23 +55,13 @@ class FiveMSensorEntity(FiveMEntity, SensorEntity):
     ) -> None:
         """Initialize sensor base entity."""
         super().__init__(server, type_name, icon, device_class)
-        self._state: Any = None
-        self._unit = unit
+        self._attr_native_value: Any = None
+        self._attr_native_unit_of_measurement = unit
 
     @property
     def available(self) -> bool:
         """Return sensor availability."""
         return self._fivem.online
-
-    @property
-    def native_value(self):
-        """Return sensor state."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return sensor measurement unit."""
-        return self._unit
 
 
 class FiveMPlayersOnlineSensor(FiveMSensorEntity):
@@ -89,7 +79,7 @@ class FiveMPlayersOnlineSensor(FiveMSensorEntity):
 
     async def async_update(self) -> None:
         """Update online players state and device attributes."""
-        self._state = self._fivem.players_online
+        self._attr_native_value = self._fivem.players_online
 
         extra_state_attributes = {}
         players_list = self._fivem.players_list
@@ -97,12 +87,7 @@ class FiveMPlayersOnlineSensor(FiveMSensorEntity):
         if len(players_list) != 0:
             extra_state_attributes = {ATTR_PLAYERS_LIST: players_list}
 
-        self._extra_state_attributes = extra_state_attributes
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return players list in device attributes."""
-        return self._extra_state_attributes
+        self._attr_extra_state_attributes = extra_state_attributes
 
 
 class FiveMPlayersMaxSensor(FiveMSensorEntity):
@@ -119,7 +104,7 @@ class FiveMPlayersMaxSensor(FiveMSensorEntity):
 
     async def async_update(self) -> None:
         """Update maximum number of players."""
-        self._state = self._fivem.players_max
+        self._attr_native_value = self._fivem.players_max
 
 
 class FiveMResourcesSensor(FiveMSensorEntity):
@@ -135,7 +120,7 @@ class FiveMResourcesSensor(FiveMSensorEntity):
 
     async def async_update(self) -> None:
         """Update resources state and state attributes."""
-        self._state = self._fivem.resources_count
+        self._attr_native_value = self._fivem.resources_count
 
         extra_state_attributes = {}
         resources_list = self._fivem.resources_list
@@ -143,9 +128,4 @@ class FiveMResourcesSensor(FiveMSensorEntity):
         if len(resources_list) != 0:
             extra_state_attributes = {ATTR_RESOURCES_LIST: resources_list}
 
-        self._extra_state_attributes = extra_state_attributes
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return resources list in state attributes."""
-        return self._extra_state_attributes
+        self._attr_extra_state_attributes = extra_state_attributes
