@@ -7,4 +7,4 @@ DOMAIN = "zwave_me"
 
 ZWAVE_PLATFORMS = ["switchMultilevel", "binarySwitch", "toggleButton"]
 
-PLATFORMS = [Platform.NUMBER, Platform.SWITCH, Platform.BUTTON]
+PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SWITCH]
