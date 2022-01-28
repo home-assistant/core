@@ -210,7 +210,6 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
-        self._state = False
         self._unsub_set_no_motion = None
         if "proto" not in device or int(device["proto"][0:1]) == 1:
             data_key = "status"
@@ -233,6 +232,12 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         self._unsub_set_no_motion = None
         self._state = False
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway.
@@ -327,9 +332,9 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
         state = await self.async_get_last_state()
         if state is None:
             return
-        self._state = state.state
-        
-        await self.async_schedule_update_ha_state()
+
+        self._state = state.state == "on"
+        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
