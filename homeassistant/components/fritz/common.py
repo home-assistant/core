@@ -14,6 +14,7 @@ from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,
+    FritzInternalError,
     FritzLookUpError,
     FritzSecurityError,
     FritzServiceError,
@@ -523,6 +524,7 @@ class AvmWrapper(FritzBoxTools):
         except (
             FritzActionError,
             FritzActionFailedError,
+            FritzInternalError,
             FritzServiceError,
             FritzLookUpError,
         ):
