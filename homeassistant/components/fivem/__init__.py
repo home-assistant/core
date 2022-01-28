@@ -131,11 +131,7 @@ class FiveMEntity(Entity):
         self._attr_unique_id = f"{self._fivem.unique_id}-{type_name}"
         self._attr_device_class = device_class
         self._attr_should_poll = False
-
-    @property
-    def device_info(self):
-        """Set the device for the entity."""
-        return {
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, self._fivem.unique_id)},
             "manufacturer": MANUFACTURER,
             "model": self._fivem.server,
