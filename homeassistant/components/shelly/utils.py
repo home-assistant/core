@@ -125,15 +125,22 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
-def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
+def is_block_momentary_input(
+    settings: dict[str, Any], block: Block, include_detached: bool = False
+) -> bool:
     """Return true if block input button settings is set to a momentary type."""
+    momentary_types = ["momentary", "momentary_on_release"]
+
+    if include_detached:
+        momentary_types.append("detached")
+
     # Shelly Button type is fixed to momentary and no btn_type
     if settings["device"]["type"] in SHBTN_MODELS:
         return True
 
     if settings.get("mode") == "roller":
         button_type = settings["rollers"][0]["button_type"]
-        return button_type in ["momentary", "momentary_on_release"]
+        return button_type in momentary_types
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
     if button is None:
@@ -148,7 +155,7 @@ def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
         channel = min(int(block.channel or 0), len(button) - 1)
         button_type = button[channel].get("btn_type")
 
-    return button_type in ["momentary", "momentary_on_release"]
+    return button_type in momentary_types
 
 
 def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
@@ -171,7 +178,7 @@ def get_block_input_triggers(
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []
 
-    if not is_block_momentary_input(device.settings, block):
+    if not is_block_momentary_input(device.settings, block, True):
         return []
 
     triggers = []
