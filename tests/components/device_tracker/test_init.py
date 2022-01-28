@@ -298,7 +298,7 @@ async def test_entity_attributes(
     assert picture == attrs.get(ATTR_ENTITY_PICTURE)
 
 
-@patch("homeassistant.components.device_tracker.legacy." "DeviceTracker.async_see")
+@patch("homeassistant.components.device_tracker.legacy.DeviceTracker.async_see")
 async def test_see_service(mock_see, hass, enable_custom_integrations):
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):
