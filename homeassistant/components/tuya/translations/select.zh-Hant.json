@@ -14,6 +14,11 @@
             "0": "\u4f4e\u654f\u611f\u5ea6",
             "1": "\u9ad8\u654f\u611f\u5ea6"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "\u63a8",
             "switch": "\u958b\u95dc"
