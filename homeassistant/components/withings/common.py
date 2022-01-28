@@ -1131,3 +1131,26 @@ class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
         if body := new_token.pop("body", None):
             new_token.update(body)
         return new_token
+
+    async def async_resolve_external_data(self, external_data: Any) -> dict:
+        """Resolve the authorization code to tokens."""
+        return await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "authorization_code",
+                "code": external_data["code"],
+                "redirect_uri": external_data["state"]["redirect_uri"],
+            }
+        )
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}
