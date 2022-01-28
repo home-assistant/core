@@ -114,9 +114,8 @@ async def async_setup_entry(
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
     entities = []
-    circuits = await hass.async_add_executor_job(
-        _get_circuits, hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    )
+    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    circuits = await hass.async_add_executor_job(_get_circuits, api)
 
     try:
         for circuit in circuits:
@@ -126,7 +125,7 @@ async def async_setup_entry(
 
             entity = _build_entity(
                 f"{name} Heating{suffix}",
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
+                api,
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 circuit,
                 config_entry.data[CONF_HEATING_TYPE],
