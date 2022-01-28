@@ -31,34 +31,6 @@ PROJECT_URLS = {
 
 PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
-REQUIRES = [
-    "aiohttp==3.8.1",
-    "astral==2.2",
-    "async_timeout==4.0.2",
-    "attrs==21.2.0",
-    "atomicwrites==1.4.0",
-    "awesomeversion==22.1.0",
-    "bcrypt==3.1.7",
-    "certifi>=2021.5.30",
-    "ciso8601==2.2.0",
-    # When bumping httpx, please check the version pins of
-    # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.21.3",
-    "ifaddr==0.1.7",
-    "jinja2==3.0.3",
-    "PyJWT==2.1.0",
-    # PyJWT has loose dependency. We want the latest one.
-    "cryptography==35.0.0",
-    "pip>=8.0.3,<20.3",
-    "python-slugify==4.0.1",
-    "pyyaml==6.0",
-    "requests==2.27.1",
-    "typing-extensions>=3.10.0.2,<5.0",
-    "voluptuous==0.12.2",
-    "voluptuous-serialize==2.5.0",
-    "yarl==1.7.2",
-]
-
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
 
 setup(
@@ -72,7 +44,6 @@ setup(
     packages=PACKAGES,
     include_package_data=True,
     zip_safe=False,
-    install_requires=REQUIRES,
     python_requires=f">={MIN_PY_VERSION}",
     test_suite="tests",
     entry_points={"console_scripts": ["hass = homeassistant.__main__:main"]},
