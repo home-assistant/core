@@ -112,7 +112,7 @@ async def test_setup_component_with_config(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 3
+        assert fake_post_hits == 9
         mock_impl.assert_called_once()
         mock_webhook.assert_called_once()
 
@@ -354,7 +354,7 @@ async def test_setup_component_with_delay(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert mock_post_request.call_count == 5
+        assert mock_post_request.call_count == 8
 
         mock_impl.assert_called_once()
         mock_webhook.assert_not_called()
