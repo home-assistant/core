@@ -2,19 +2,21 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
-from kasa import SmartDevice
+from kasa import SmartBulb, SmartLightStrip
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
+    SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -43,17 +45,18 @@ async def async_setup_entry(
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     device = coordinator.device
     if device.is_bulb or device.is_light_strip or device.is_dimmer:
-        async_add_entities([TPLinkSmartBulb(device, coordinator)])
+        async_add_entities([TPLinkSmartBulb(cast(SmartBulb, device), coordinator)])
 
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     coordinator: TPLinkDataUpdateCoordinator
+    device: SmartBulb
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: SmartBulb,
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
         """Initialize the switch."""
@@ -101,6 +104,11 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             await self.device.set_hsv(hue, sat, brightness, transition=transition)
             return
 
+        if ATTR_EFFECT in kwargs:
+            assert isinstance(self.device, SmartLightStrip)
+            await self.device.set_effect(kwargs[ATTR_EFFECT])
+            return
+
         # Fallback to adjusting brightness or turning the bulb on
         if brightness is not None:
             await self.device.set_brightness(brightness, transition=transition)
@@ -143,6 +151,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
+        if self.device.has_effects:
+            assert isinstance(self.device, SmartLightStrip)
+            return SUPPORT_TRANSITION | SUPPORT_EFFECT
         return SUPPORT_TRANSITION
 
     @property
@@ -172,3 +183,20 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             return COLOR_MODE_COLOR_TEMP
 
         return COLOR_MODE_BRIGHTNESS
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if not self.device.has_effects:
+            return None
+        assert isinstance(self.device, SmartLightStrip)
+        return cast(str, self.device.effect["name"])
+
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of available effects."""
+        if not self.device.has_effects:
+            return None
+        assert isinstance(self.device, SmartLightStrip)
+        effect_list: list[str] = self.device.effect_list
+        return effect_list
