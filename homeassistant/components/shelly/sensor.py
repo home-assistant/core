@@ -223,7 +223,7 @@ SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda block: cast(int, block.extTemp) != 999
-        and not block.sensorError,
+        and not getattr(block, "sensorError", False),
     ),
     ("sensor", "humidity"): BlockSensorDescription(
         key="sensor|humidity",
@@ -233,7 +233,7 @@ SENSORS: Final = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda block: cast(int, block.humidity) != 999
-        and not block.sensorError,
+        and not getattr(block, "sensorError", False),
     ),
     ("sensor", "luminosity"): BlockSensorDescription(
         key="sensor|luminosity",
