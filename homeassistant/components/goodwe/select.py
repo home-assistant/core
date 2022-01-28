@@ -104,6 +104,6 @@ class InverterOperationModeEntity(SelectEntity):
 
     async def update_eco_mode_power(self, value: int) -> None:
         """Update eco mode power value in inverter (when in eco mode)."""
-        operation_mode = INVERTER_OPERATION_MODES.index(self.current_option)
+        operation_mode = INVERTER_OPERATION_MODES.index(self.current_option) # type: ignore
         if operation_mode in (4, 5):
             await self._inverter.set_operation_mode(operation_mode, value)
