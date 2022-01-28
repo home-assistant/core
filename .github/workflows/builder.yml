@@ -76,8 +76,8 @@ jobs:
       - name: Build package
         shell: bash
         run: |
-          pip install twine wheel
-          python setup.py sdist bdist_wheel
+          pip install twine build
+          python -m build
 
       - name: Upload package
         shell: bash
