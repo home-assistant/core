@@ -21,11 +21,8 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FiveM from a config entry."""
     try:
-        fivem = FiveMServer(hass, entry.data)
+        fivem = FiveMServer(hass, entry.data, entry.entry_id)
         await fivem.initialize()
-
-        if fivem.unique_id is None:
-            raise ConfigEntryNotReady
     except FiveMServerOfflineError as err:
         raise ConfigEntryNotReady from err
 
@@ -53,13 +50,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class FiveMServer:
     """Representation of a FiveM server."""
 
-    def __init__(self, hass: HomeAssistant, config_data) -> None:
+    def __init__(self, hass: HomeAssistant, config_data, unique_id: str) -> None:
         """Initialize server instance."""
         self._hass = hass
 
-        self.unique_id: str | None = None
+        self.unique_id = unique_id
         self.server = None
         self.version = None
+        self.gamename: str | None = None
 
         self.name = config_data[CONF_NAME]
         self.host = config_data[CONF_HOST]
@@ -83,9 +81,9 @@ class FiveMServer:
     async def initialize(self) -> None:
         """Initialize the FiveM server."""
         info = await self._fivem.get_info_raw()
-        self.unique_id = info.get("vars")["sv_licenseKeyToken"].split(":")[0]
         self.server = info.get("server")
         self.version = info.get("version")
+        self.gamename = info.get("vars")["gamename"]
 
     def start_periodic_update(self) -> None:
         """Start periodic execution of update method."""

@@ -29,16 +29,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str | None:
     """Validate the user input allows us to connect."""
 
-    fivem = FiveMServer(hass, data)
+    fivem = FiveMServer(hass, data, "dummy")
     await fivem.initialize()
 
-    if fivem.unique_id is None:
-        raise FiveMServerOfflineError
-
-    return fivem.unique_id
+    return fivem.gamename
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -58,15 +55,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            license_key = await validate_input(self.hass, user_input)
+            gamename = await validate_input(self.hass, user_input)
+
+            if gamename is None or gamename != "gta5":
+                raise FiveMServerOfflineError
         except FiveMServerOfflineError:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(license_key)
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
