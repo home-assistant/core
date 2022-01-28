@@ -8,5 +8,6 @@
   "requirements": [
     "pysignalclirestapi==0.3.18"
   ],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["pysignalclirestapi"]
 }

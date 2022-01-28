@@ -16,5 +16,6 @@
   "codeowners": ["@ctalkington"],
   "quality_scale": "silver",
   "config_flow": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["rokuecp"]
 }
