@@ -68,6 +68,11 @@ def _build_entity(name, vicare_api, circuit, device_config, heating_type):
     )
 
 
+def _get_circuits(vicare_api):
+    """Return the list of circuits."""
+    return vicare_api.circuits
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -75,13 +80,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
-
     entities = []
+    circuits = await hass.async_add_executor_job(
+        _get_circuits, hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    )
+
     try:
-        for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_API].circuits:
+        for circuit in circuits:
             suffix = ""
-            if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_API].circuits) > 1:
+            if len(circuits) > 1:
                 suffix = f" {circuit.id}"
+
             entity = _build_entity(
                 f"{name} Water{suffix}",
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
