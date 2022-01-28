@@ -16,5 +16,6 @@
     {"type":"_sideplay._tcp.local.", "properties": {"mdl":"eb-*"}},
     {"type":"_sideplay._tcp.local.", "properties": {"mdl":"ecobee*"}}
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pyecobee"]
 }

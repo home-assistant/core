@@ -5,5 +5,6 @@
   "requirements": ["pystiebeleltron==0.0.1.dev2"],
   "dependencies": ["modbus"],
   "codeowners": ["@fucm"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pymodbus", "pystiebeleltron"]
 }

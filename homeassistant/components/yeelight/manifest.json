@@ -17,5 +17,6 @@
   "homekit": {
     "models": ["YL*"]
   },
-  "after_dependencies": ["ssdp"]
+  "after_dependencies": ["ssdp"],
+  "loggers": ["async_upnp_client", "yeelight"]
 }
