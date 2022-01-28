@@ -8,6 +8,11 @@
         "tuya__basic_nightvision": {
             "0": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "\u03a0\u03af\u03b5\u03c3\u03b5",
             "switch": "\u0394\u03b9\u03b1\u03ba\u03cc\u03c0\u03c4\u03b7\u03c2"
