@@ -20,11 +20,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def add_new_device(new_device):
         controller = hass.data[DOMAIN][config_entry.entry_id]
-        switch = ZWaveMeButton(controller, new_device)
+        button = ZWaveMeButton(controller, new_device)
 
         async_add_entities(
             [
-                switch,
+                button,
             ]
         )
 
