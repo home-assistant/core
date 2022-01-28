@@ -37,4 +37,4 @@ class ZWaveMeButton(ZWaveMeEntity, ButtonEntity):
 
     def press(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self.hass.data[DOMAIN].zwave_api.send_command(self.device.id, "on")
+        self.controller.zwave_api.send_command(self.device.id, "on")
