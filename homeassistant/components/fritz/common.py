@@ -361,6 +361,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
+                _LOGGER.debug("Client dev_info: %s", dev_info)
 
                 if dev_mac in self._devices:
                     self._devices[dev_mac].update(dev_info, consider_home)
