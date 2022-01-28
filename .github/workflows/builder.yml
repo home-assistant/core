@@ -76,6 +76,8 @@ jobs:
       - name: Build package
         shell: bash
         run: |
+          # Remove dist, build, and homeassistant.egg-info
+          # when build locally for testing!
           pip install twine build
           python -m build
 
