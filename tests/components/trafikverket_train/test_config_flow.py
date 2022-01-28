@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from unittest.mock import patch
-from datetime import datetime
 
 import pytest
 
@@ -16,7 +15,6 @@ from homeassistant.data_entry_flow import (
 )
 
 from homeassistant.components.trafikverket_train.const import (
-    CONF_TRAINS,
     DOMAIN,
     CONF_TO,
     CONF_FROM,
@@ -57,6 +55,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "Stockholm C to Uppsala C"
     assert result2["data"] == {
         "api_key": "1234567890",
+        "name": "Stockholm C to Uppsala C",
         "from": "Stockholm C",
         "to": "Uppsala C",
         "time": "10:00",
@@ -79,48 +78,25 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={
                 CONF_API_KEY: "1234567890",
-                CONF_TRAINS: [
-                    {
-                        CONF_NAME: "Train 1",
-                        CONF_FROM: "Stockholm C",
-                        CONF_TO: "Uppsala C",
-                    },
-                    {
-                        CONF_NAME: "Train 2",
-                        CONF_FROM: "Uppsala C",
-                        CONF_TO: "Stockholm C",
-                        CONF_TIME: "10:00",
-                        CONF_WEEKDAY: ["mon"],
-                    },
-                ],
+                CONF_FROM: "Stockholm C",
+                CONF_TO: "Uppsala C",
+                CONF_TIME: "10:00",
+                CONF_WEEKDAY: ["mon", "fri"],
             },
         )
         await hass.async_block_till_done()
 
-    for step in result2:
-        assert step["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert (
-            step["title"] == "Stockholm C to Uppsala C"
-            if step[0]
-            else "Uppsala C to Stockholm C"
-        )
-        assert (
-            step["data"]
-            == {
-                "api_key": "1234567890",
-                "from": "Stockholm C",
-                "to": "Uppsala C",
-            }
-            if step[0]
-            else {
-                "api_key": "1234567890",
-                "from": "Uppsala C",
-                "to": "Stockholm C",
-                "time": datetime.time(10, 0),
-                "weekday": ["mon"],
-            }
-        )
-    assert len(mock_setup_entry.mock_calls) == 2
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "Stockholm C to Uppsala C"
+    assert result2["data"] == {
+        "api_key": "1234567890",
+        "name": "Stockholm C to Uppsala C",
+        "from": "Stockholm C",
+        "to": "Uppsala C",
+        "time": "10:00",
+        "weekday": ["mon", "fri"],
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
@@ -130,6 +106,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={
             CONF_API_KEY: "1234567890",
+            CONF_NAME: "Stockholm C to Uppsala C",
             CONF_FROM: "Stockholm C",
             CONF_TO: "Uppsala C",
         },
@@ -145,7 +122,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                CONF_NAME: "Train 1",
+                CONF_NAME: "Stockholm C to Uppsala C",
                 CONF_API_KEY: "1234567890",
                 CONF_FROM: "Stockholm C",
                 CONF_TO: "Uppsala C",
@@ -203,3 +180,28 @@ async def test_flow_fails(
         )
 
     assert result4["errors"] == {"base": base_error}
+
+
+async def test_flow_fails_incorrect_time(hass: HomeAssistant) -> None:
+    """Test config flow errors due to bad time"""
+    result5 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result5["type"] == RESULT_TYPE_FORM
+    assert result5["step_id"] == config_entries.SOURCE_USER
+
+    with patch(
+        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+    ):
+        result6 = await hass.config_entries.flow.async_configure(
+            result5["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Stockholm C",
+                CONF_TO: "Uppsala C",
+                CONF_TIME: "25:25",
+            },
+        )
+
+    assert result6["errors"] == {"base": "invalid_time"}

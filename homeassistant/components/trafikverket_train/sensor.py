@@ -14,13 +14,16 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.dt import as_utc, get_time_zone
+from homeassistant.util.dt import as_utc, get_time_zone, parse_time
 
 from .const import DOMAIN, CONF_TO, CONF_FROM, CONF_TIME, CONF_TRAINS
 
@@ -47,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_TO): cv.string,
                 vol.Required(CONF_FROM): cv.string,
-                vol.Optional(CONF_TIME): cv.time,
+                vol.Optional(CONF_TIME): cv.string,
                 vol.Optional(CONF_WEEKDAY, default=WEEKDAYS): vol.All(
                     cv.ensure_list, [vol.In(WEEKDAYS)]
                 ),
@@ -63,43 +66,51 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the departure sensor."""
-    httpsession = async_get_clientsession(hass)
-    train_api = TrafikverketTrain(httpsession, config[CONF_API_KEY])
-    sensors = []
-    station_cache = {}
+    """Import Trafikverket Train configuration from YAML."""
+    _LOGGER.warning(
+        # Config flow added in Home Assistant Core 2022.3, remove import flow in 2022.7
+        "Loading Trafikverket Train via platform setup is deprecated; Please remove it from your configuration"
+    )
+
     for train in config[CONF_TRAINS]:
-        try:
-            trainstops = [train[CONF_FROM], train[CONF_TO]]
-            for station in trainstops:
-                if station not in station_cache:
-                    station_cache[station] = await train_api.async_get_train_station(
-                        station
-                    )
-
-        except ValueError as station_error:
-            if "Invalid authentication" in station_error.args[0]:
-                _LOGGER.error("Unable to set up up component: %s", station_error)
-                return
-            _LOGGER.error(
-                "Problem when trying station %s to %s. Error: %s ",
-                train[CONF_FROM],
-                train[CONF_TO],
-                station_error,
+        new_config = {
+            CONF_API_KEY: config[CONF_API_KEY],
+            CONF_FROM: train[CONF_FROM],
+            CONF_TO: train[CONF_TO],
+            CONF_TIME: train.get(CONF_TIME),
+            CONF_WEEKDAY: train.get(CONF_WEEKDAY, WEEKDAYS),
+        }
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=new_config,
             )
-            continue
-
-        sensor = TrainSensor(
-            train_api,
-            train[CONF_NAME],
-            station_cache[train[CONF_FROM]],
-            station_cache[train[CONF_TO]],
-            train[CONF_WEEKDAY],
-            train.get(CONF_TIME),
         )
-        sensors.append(sensor)
 
-    async_add_entities(sensors, update_before_add=True)
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Trafikverket sensor entry."""
+
+    httpsession = async_get_clientsession(hass)
+    train_api = TrafikverketTrain(httpsession, entry.data[CONF_API_KEY])
+
+    async_add_entities(
+        [
+            TrainSensor(
+                train_api,
+                entry.data[CONF_NAME],
+                entry.data[CONF_FROM],
+                entry.data[CONF_TO],
+                entry.data.get(CONF_WEEKDAY),
+                parse_time(entry.data.get(CONF_TIME)),
+                entry.entry_id,
+            )
+        ],
+        True,
+    )
 
 
 def next_weekday(fromdate: date, weekday: int) -> date:
@@ -142,14 +153,24 @@ class TrainSensor(SensorEntity):
         to_station: str,
         weekday: list,
         departuretime: time,
+        entry_id: str,
     ) -> None:
         """Initialize the sensor."""
         self._train_api = train_api
         self._attr_name = name
+        self._attr_unique_id = f"{name}, {departuretime}, {weekday}"
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
         self._time = departuretime
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Trafikverket",
+            model="v1.2",
+            name=name,
+            configuration_url="https://api.trafikinfo.trafikverket.se/",
+        )
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
