@@ -30,6 +30,6 @@ fi
 echo "Install build and twine"
 pip install -q "build>=0.7.0,<1.0" "twine>=3.7.1,<4.0"
 
-rm -rf dist build
+rm -rf dist build homeassistant.egg-info
 python3 -m build
 python3 -m twine upload dist/* --skip-existing
