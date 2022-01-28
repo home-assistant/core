@@ -1,9 +1,13 @@
 """Representation of a doorlock."""
+from __future__ import annotations
+
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.lock import LockEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveMeEntity
 from .const import DOMAIN
@@ -12,7 +16,9 @@ DEVICE_NAME = "doorlock"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, 
+    config_entry: ConfigEntry, 
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the lock platform."""
 
