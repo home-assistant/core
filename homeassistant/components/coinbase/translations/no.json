@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "En eller flere av de forespurte valutasaldoene leveres ikke av Coinbase API.",
             "currency_unavaliable": "En eller flere av de forespurte valutasaldoene leveres ikke av Coinbase API.",
+            "exchange_rate_unavailable": "En eller flere av de forespurte valutakursene er ikke levert av Coinbase.",
             "exchange_rate_unavaliable": "En eller flere av de forespurte valutakursene leveres ikke av Coinbase.",
             "unknown": "Uventet feil"
         },
