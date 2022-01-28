@@ -107,7 +107,7 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/manifest\.json|setup\.py|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
+        files: ^(homeassistant/.+/manifest\.json|setup\.cfg|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
       - id: hassfest
         name: hassfest
         entry: script/run-in-env.sh python3 -m script.hassfest
