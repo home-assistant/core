@@ -133,8 +133,7 @@ async def async_setup_entry(
             circuit,
             config_entry.data[CONF_HEATING_TYPE],
         )
-        if entity is not None:
-            entities.append(entity)
+        entities.append(entity)
 
     platform = entity_platform.async_get_current_platform()
 

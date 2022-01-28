@@ -100,8 +100,7 @@ async def async_setup_entry(
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             config_entry.data[CONF_HEATING_TYPE],
         )
-        if entity is not None:
-            entities.append(entity)
+        entities.append(entity)
 
     async_add_entities(entities)
 
