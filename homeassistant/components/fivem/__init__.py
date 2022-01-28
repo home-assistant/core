@@ -7,9 +7,12 @@ from fivem import FiveM, FiveMServerOfflineError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -138,3 +141,19 @@ class FiveMEntity(Entity):
             "name": self._fivem.name,
             "sw_version": self._fivem.version,
         }
+        self._disconnect_dispatcher: CALLBACK_TYPE = lambda: None
+
+    async def async_added_to_hass(self) -> None:
+        """Connect dispatcher to signal from server."""
+        self._disconnect_dispatcher = async_dispatcher_connect(
+            self.hass, self._fivem.signal_name, self._update_callback
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher before removal."""
+        self._disconnect_dispatcher()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Triggers update of properties after receiving signal from server."""
+        self.async_schedule_update_ha_state(force_refresh=True)
