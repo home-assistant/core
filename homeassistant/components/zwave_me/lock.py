@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from zwave_me_ws import ZWaveMeData
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +25,7 @@ async def async_setup_entry(
     """Set up the lock platform."""
 
     @callback
-    def add_new_device(new_device: ZWaveMeLock) -> None:
+    def add_new_device(new_device: ZWaveMeData) -> None:
         controller = hass.data[DOMAIN][config_entry.entry_id]
         lock = ZWaveMeLock(controller, new_device)
 
