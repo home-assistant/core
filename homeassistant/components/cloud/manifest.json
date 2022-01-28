@@ -6,5 +6,6 @@
   "dependencies": ["http", "webhook"],
   "after_dependencies": ["google_assistant", "alexa"],
   "codeowners": ["@home-assistant/cloud"],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["hass_nabucasa"]
 }
