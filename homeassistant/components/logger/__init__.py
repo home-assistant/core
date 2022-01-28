@@ -36,6 +36,8 @@ _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
 SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
 
+EVENT_LOGGING_CHANGED = "logging_changed"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -59,6 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def set_default_log_level(level):
         """Set the default log level for components."""
         _set_log_level(logging.getLogger(""), level)
+        hass.bus.async_fire(EVENT_LOGGING_CHANGED)
 
     @callback
     def set_log_levels(logpoints):
@@ -66,17 +69,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN].update(logpoints)
         for key, value in logpoints.items():
             _set_log_level(logging.getLogger(key), value)
+        hass.bus.async_fire(EVENT_LOGGING_CHANGED)
 
     # Set default log severity
-    set_default_log_level(config[DOMAIN].get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY))
+    if DOMAIN in config:
+        set_default_log_level(config[DOMAIN].get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY))
 
-    if LOGGER_LOGS in config[DOMAIN]:
-        set_log_levels(config[DOMAIN][LOGGER_LOGS])
+        if LOGGER_LOGS in config[DOMAIN]:
+            set_log_levels(config[DOMAIN][LOGGER_LOGS])
 
-    if LOGGER_FILTERS in config[DOMAIN]:
-        for key, value in config[DOMAIN][LOGGER_FILTERS].items():
-            logger = logging.getLogger(key)
-            _add_log_filter(logger, value)
+        if LOGGER_FILTERS in config[DOMAIN]:
+            for key, value in config[DOMAIN][LOGGER_FILTERS].items():
+                logger = logging.getLogger(key)
+                _add_log_filter(logger, value)
 
     @callback
     def async_service_handler(service: ServiceCall) -> None:
