@@ -21,9 +21,7 @@ async def test_entry_diagnostics(
     await setup_integration()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        {
-            "discovery": {"attempt": 1, "web.failure": 1, "webrtc.success": 1},
-            "web": {},
-            "webrtc": {},
-        }
+        "discovery": {"attempt": 1, "web.failure": 1, "webrtc.success": 1},
+        "web": {},
+        "webrtc": {},
     }
