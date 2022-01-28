@@ -5,7 +5,7 @@ import logging
 from re import sub
 
 from pyefergy import Efergy
-from pyefergy.exceptions import DataError, ConnectError, ServiceError
+from pyefergy.exceptions import ConnectError, DataError, ServiceError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
