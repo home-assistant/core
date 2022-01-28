@@ -1,6 +1,8 @@
 """Config flow for UptimeRobot integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyuptimerobot import (
     UptimeRobot,
     UptimeRobotAccount,
@@ -61,7 +63,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return errors, account
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -79,13 +83,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Return the reauth confirm step."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:

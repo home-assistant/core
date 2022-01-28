@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import pypck
 
@@ -70,7 +71,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, data: ConfigType) -> FlowResult:
+    async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Import existing configuration from LCN."""
         host_name = data[CONF_HOST]
         # validate the imported connection parameters
