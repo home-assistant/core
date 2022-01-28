@@ -11,7 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HuaweiInverterSlaveDeviceInfos, HuaweiSolarRegisterUpdateCoordinator
+from . import (
+    HuaweiInverterSlaveDeviceInfos,
+    HuaweiSolarRegisterUpdateCoordinator,
+    get_device_info_unique_id,
+)
 from .const import (
     DATA_DEVICE_INFOS,
     DATA_MODBUS_CLIENT,
@@ -101,7 +105,9 @@ class HuaweiSolarSensor(SensorEntity):
         self.entity_description = description
 
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{device_info['serial_number']}_{description.key}{f'_slave_{slave}' if slave else ''}"
+        self._attr_unique_id = (
+            f"{get_device_info_unique_id(device_info)}_{description.key}"
+        )
 
         self._attr_native_value = None
 
@@ -130,7 +136,9 @@ class BatchedHuaweiSolarSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{device_info['serial_number']}_{description.key}{f'_slave_{coordinator.slave_id}' if coordinator.slave_id else ''}"
+        self._attr_unique_id = (
+            f"{get_device_info_unique_id(device_info)}_{description.key}"
+        )
 
     @property
     def native_value(self):

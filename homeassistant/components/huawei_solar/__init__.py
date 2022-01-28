@@ -112,7 +112,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class HuaweiInverterSlaveDeviceInfos(TypedDict):
     """Device Infos from a slave."""
 
-    slave_id: int | None  # When None, we are using the default slave-id from the inverter that we're directly connected to.
+    # When None, we are using the default slave-id from the inverter that we're directly connected to.
+    slave_id: int | None
     inverter: DeviceInfo
     power_meter: DeviceInfo | None
     connected_energy_storage: DeviceInfo | None
@@ -163,15 +164,13 @@ async def _find_slave_devices(
         [rn.MODEL_NAME, rn.SERIAL_NUMBER], slave_id
     )
 
-    current_inverter_identifier_list = [DOMAIN, model_name.value, serial_number.value]
+    current_inverter_unique_id = serial_number.value
 
     if slave_id is not None:
-        current_inverter_identifier_list.append(slave_id)
-
-    current_inverter_identifier = tuple(current_inverter_identifier_list)
+        current_inverter_unique_id = f"{current_inverter_unique_id}/{slave_id}"
 
     inverter_device_info = DeviceInfo(
-        identifiers={current_inverter_identifier},  # type: ignore
+        identifiers={(DOMAIN, current_inverter_unique_id)},
         name=model_name.value,
         manufacturer="Huawei",
         model=model_name.value,
@@ -189,10 +188,10 @@ async def _find_slave_devices(
 
         power_meter_device_info = DeviceInfo(
             identifiers={
-                (*current_inverter_identifier_list, "power_meter"),  # type: ignore
+                (DOMAIN, f"{current_inverter_unique_id}/power_meter"),
             },
             name="Power Meter",
-            via_device=current_inverter_identifier,  # type: ignore
+            via_device=current_inverter_unique_id,
         )
 
     # Add battery device if a battery is detected
@@ -203,12 +202,12 @@ async def _find_slave_devices(
     if has_battery:
         battery_device_info = DeviceInfo(
             identifiers={
-                (*current_inverter_identifier_list, "connected_energy_storage"),  # type: ignore
+                (DOMAIN, f"{current_inverter_unique_id}/connected_energy_storage"),
             },
             name=f"{inverter_device_info['name']} Connected Energy Storage",
             manufacturer=inverter_device_info["manufacturer"],
             model=f"{inverter_device_info['model']} Connected Energy Storage",
-            via_device=current_inverter_identifier,  # type: ignore
+            via_device=current_inverter_unique_id,
         )
 
     return HuaweiInverterSlaveDeviceInfos(
@@ -326,7 +325,7 @@ async def _create_update_coordinator(
         entity_descriptions,
         device_info,
         slave_id,
-        name=f"{coordinator_name}_sensors{f'_slave_{slave_id}' if slave_id else ''}",
+        name=f"{coordinator_name}_sensors{f'/{slave_id}' if slave_id else ''}",
         update_method=async_update_data,
         update_interval=update_interval,
     )
@@ -334,3 +333,13 @@ async def _create_update_coordinator(
     await coordinator.async_config_entry_first_refresh()
 
     return coordinator
+
+
+def get_device_info_unique_id(device_info: DeviceInfo):
+    """Retrieve the value used as the identifier.
+
+    Assumes there is only one identifier!
+    """
+
+    _, value = next(iter(device_info["identifiers"]))
+    return value
