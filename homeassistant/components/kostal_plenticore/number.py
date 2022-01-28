@@ -5,7 +5,7 @@ from abc import ABC
 from datetime import timedelta
 import logging
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -85,6 +85,7 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
         self._attr_device_info = device_info
         self._attr_unique_id = f"{self.entry_id}_{self.module_id}_{self.data_id}"
         self._attr_name = f"{platform_name} {description.name}"
+        self._attr_mode = NumberMode.BOX
 
         self._formatter = PlenticoreDataFormatter.get_method(description.fmt_from)
         self._formatter_back = PlenticoreDataFormatter.get_method(description.fmt_to)
@@ -124,7 +125,7 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
         """Return the current value."""
         if self.available:
             raw_value = self.coordinator.data[self.module_id][self.data_id]
-            return self._formatter(raw_value) if self._formatter else raw_value
+            return self._formatter(raw_value)
 
         return None
 
@@ -134,4 +135,4 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
         await self.coordinator.async_write_data(
             self.module_id, {self.data_id: str_value}
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
