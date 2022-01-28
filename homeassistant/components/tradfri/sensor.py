@@ -82,7 +82,13 @@ async def async_setup_entry(
                             bool,
                             lambda data: data.coordinator.device.has_air_purifier_control,
                         ),
-                        value=lambda data: data.coordinator.data.air_purifier_control.air_purifiers[
+                        # The sensor returns 65535 if the fan is turned off
+                        value=lambda data: None
+                        if data.coordinator.data.air_purifier_control.air_purifiers[
+                            0
+                        ].air_quality
+                        == 65535
+                        else data.coordinator.data.air_purifier_control.air_purifiers[
                             0
                         ].air_quality,
                     ),
@@ -122,9 +128,5 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
     def _refresh(self) -> None:
         """Refresh the device."""
         _native_value = self._device_description.value(self)
-
-        # The sensor returns 65535 if the fan is turned off
-        if self._attr_device_class == SensorDeviceClass.AQI and _native_value == 65535:
-            _native_value = None
 
         self._attr_native_value = _native_value
