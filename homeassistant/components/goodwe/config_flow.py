@@ -34,7 +34,8 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 inverter = await connect(host=host, retries=10)
-            except InverterError:
+            except InverterError as err:
+                _LOGGER.error("Connection error during GoodWe config flow: %s", err)
                 errors[CONF_HOST] = "connection_error"
             else:
                 await self.async_set_unique_id(inverter.serial_number)
