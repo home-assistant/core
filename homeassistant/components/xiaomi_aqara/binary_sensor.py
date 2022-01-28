@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
@@ -294,7 +295,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             return True
 
 
-class XiaomiDoorSensor(XiaomiBinarySensor):
+class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
     """Representation of a XiaomiDoorSensor."""
 
     def __init__(self, device, xiaomi_hub, config_entry):
