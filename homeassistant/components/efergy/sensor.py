@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 from re import sub
 
-from pyefergy import Efergy, exceptions
+from pyefergy import Efergy
+from pyefergy.exceptions import DataError, ConnectError, ServiceError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -165,7 +166,7 @@ class EfergySensor(EfergyEntity, SensorEntity):
             self._attr_native_value = await self.api.async_get_reading(
                 self.entity_description.key, period=self.period, sid=self.sid
             )
-        except (exceptions.DataError, exceptions.ConnectError) as ex:
+        except (ConnectError, DataError, ServiceError) as ex:
             if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error("Error getting data: %s", ex)
