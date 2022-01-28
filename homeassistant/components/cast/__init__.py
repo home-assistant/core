@@ -7,6 +7,9 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import home_assistant_cast
@@ -49,7 +52,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Cast from a config entry."""
     await home_assistant_cast.async_setup_ha_cast(hass, entry)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.data[DOMAIN] = {}
+    await async_process_integration_platforms(hass, DOMAIN, _process_cast_platform)
     return True
+
+
+async def _process_cast_platform(hass, domain, platform):
+    """Process a recorder platform."""
+    hass.data[DOMAIN][domain] = platform
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
