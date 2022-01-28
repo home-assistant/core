@@ -27,6 +27,9 @@ then
   exit 1
 fi
 
+echo "Install build and twine"
+pip install -q "build>=0.7.0,<1.0" "twine>=3.7.1,<4.0"
+
 rm -rf dist build
-python3 setup.py sdist bdist_wheel
+python3 -m build
 python3 -m twine upload dist/* --skip-existing
