@@ -55,6 +55,8 @@ def async_register_commands(
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
+    async_reg(hass, handle_integration_log_level)
+    async_reg(hass, handle_integration_log_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
@@ -317,9 +319,9 @@ async def handle_integration_setup_info(
     )
 
 
-@decorators.websocket_command({vol.Required("type"): "integration/logger_info"})
+@decorators.websocket_command({vol.Required("type"): "integration/log_info"})
 @decorators.async_response
-async def handle_integration_logger_info(
+async def handle_integration_log_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations logger info."""
@@ -343,13 +345,14 @@ async def handle_integration_logger_info(
         vol.Required("integration"): str,
         vol.Required("level"): vol.In(
             [
-                logging.CRITICAL,
-                logging.FATAL,
-                logging.ERROR,
-                logging.WARNING,
-                logging.INFO,
-                logging.DEBUG,
-                logging.NOTSET,
+                "CRITICAL",
+                "FATAL",
+                "ERROR",
+                "WARNING",
+                "WARN",
+                "INFO",
+                "DEBUG",
+                "NOTSET",
             ]
         ),
     }
