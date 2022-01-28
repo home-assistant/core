@@ -6,5 +6,6 @@
   "codeowners": ["@fabaff", "@frenck"],
   "requirements": ["pvo==0.2.0"],
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "loggers": ["pvo"]
 }

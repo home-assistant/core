@@ -6,5 +6,6 @@
   "requirements": ["vehicle==0.3.1"],
   "codeowners": ["@frenck"],
   "quality_scale": "platinum",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["vehicle"]
 }
