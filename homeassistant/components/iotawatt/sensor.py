@@ -220,7 +220,7 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         attrs = {"type": data.getType()}
         if attrs["type"] == "Input":
             attrs["channel"] = data.getChannel()
-        if data.getBegin() and (last_reset := dt.parse_datetime(data.getBegin())):
+        if (begin := data.getBegin()) and (last_reset := dt.parse_datetime(begin)):
             attrs[ATTR_LAST_RESET] = last_reset.isoformat()
 
         return attrs
