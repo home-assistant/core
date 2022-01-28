@@ -23,6 +23,8 @@ from .const import (
 )
 from .speaker import SonosSpeaker
 
+SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -72,10 +74,12 @@ class SonosEntity(Entity):
             else:
                 listener_msg = self.speaker.subscription_address
             message = f"{self.speaker.zone_name} cannot reach {listener_msg}, falling back to polling, functionality may be limited"
-            _LOGGER.warning(message)
+            log_link_msg = f", see {SUB_FAIL_URL} for more details"
+            notification_link_msg = f'.\n\nSee <a href="{SUB_FAIL_URL}">Sonos documentation</a> for more details.'
+            _LOGGER.warning(message + log_link_msg)
             persistent_notification.async_create(
                 self.hass,
-                message,
+                message + notification_link_msg,
                 "Sonos networking issue",
                 "sonos_subscriptions_failed",
             )
