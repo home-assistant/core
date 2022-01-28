@@ -11,11 +11,13 @@ from .const import DOMAIN
 DEVICE_NAME = "doorlock"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the lock platform."""
 
     @callback
-    def add_new_device(new_device):
+    def add_new_device(new_device: ZWaveMeLock) -> None:
         controller = hass.data[DOMAIN][config_entry.entry_id]
         lock = ZWaveMeLock(controller, new_device)
 
@@ -40,10 +42,10 @@ class ZWaveMeLock(ZWaveMeEntity, LockEntity):
         """Return the state of the lock."""
         return self.device.level == "close"
 
-    def unlock(self, **kwargs: Any):
+    def unlock(self, **kwargs: Any) -> None:
         """Send command to unlock the lock."""
         self.hass.data[DOMAIN].zwave_api.send_command(self.device.id, "open")
 
-    def lock(self, **kwargs: Any):
+    def lock(self, **kwargs: Any) -> None:
         """Send command to unlock the lock."""
         self.hass.data[DOMAIN].zwave_api.send_command(self.device.id, "close")
