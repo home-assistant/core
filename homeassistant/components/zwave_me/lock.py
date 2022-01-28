@@ -26,6 +26,7 @@ async def async_setup_entry(
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
+        """Add a new device."""
         controller = hass.data[DOMAIN][config_entry.entry_id]
         lock = ZWaveMeLock(controller, new_device)
 
@@ -55,5 +56,5 @@ class ZWaveMeLock(ZWaveMeEntity, LockEntity):
         self.controller.zwave_api.send_command(self.device.id, "open")
 
     def lock(self, **kwargs: Any) -> None:
-        """Send command to unlock the lock."""
+        """Send command to lock the lock."""
         self.controller.zwave_api.send_command(self.device.id, "close")
