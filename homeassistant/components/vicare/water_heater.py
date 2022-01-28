@@ -68,6 +68,15 @@ def _build_entity(name, vicare_api, circuit, device_config, heating_type):
     )
 
 
+def _get_circuits(vicare_api):
+    """Return the list of circuits."""
+    try:
+        return vicare_api.circuits
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("No circuits found")
+        return []
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -75,24 +84,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
-
     entities = []
-    try:
-        for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_API].circuits:
-            suffix = ""
-            if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_API].circuits) > 1:
-                suffix = f" {circuit.id}"
-            entity = _build_entity(
-                f"{name} Water{suffix}",
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
-                circuit,
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-                config_entry.data[CONF_HEATING_TYPE],
-            )
-            if entity is not None:
-                entities.append(entity)
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No circuits found")
+    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    circuits = await hass.async_add_executor_job(_get_circuits, api)
+
+    for circuit in circuits:
+        suffix = ""
+        if len(circuits) > 1:
+            suffix = f" {circuit.id}"
+
+        entity = _build_entity(
+            f"{name} Water{suffix}",
+            api,
+            circuit,
+            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            config_entry.data[CONF_HEATING_TYPE],
+        )
+        entities.append(entity)
 
     async_add_entities(entities)
 
