@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import json
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -306,6 +307,26 @@ async def handle_integration_setup_info(
         [
             {"domain": integration, "seconds": timedelta.total_seconds()}
             for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
+        ],
+    )
+
+
+@decorators.websocket_command({vol.Required("type"): "integration/logger_info"})
+@decorators.async_response
+async def handle_integration_logger_info(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle integrations logger info."""
+    connection.send_result(
+        msg["id"],
+        [
+            {
+                "domain": integration,
+                "level": logging.getLogger(
+                    f"homeassistant.components.{integration}"
+                ).getEffectiveLevel(),
+            }
+            for integration in async_get_loaded_integrations(hass)
         ],
     )
 
