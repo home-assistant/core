@@ -123,7 +123,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
         """Refresh the device."""
         _native_value = self._device_description.value(self)
 
-        # The sensor returns 65525 if the fan is turned off
+        # The sensor returns 65535 if the fan is turned off
         if self._attr_device_class == SensorDeviceClass.AQI and _native_value == 65535:
             _native_value = None
 
