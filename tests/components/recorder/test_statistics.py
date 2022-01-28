@@ -508,6 +508,46 @@ def test_external_statistics(hass_recorder, caplog):
         ]
     }
 
+    # Adjust the inserted statistics
+    hass.services.call(
+        "recorder",
+        "adjust_statistics",
+        {
+            "statistic_id": "test:total_energy_import",
+            "start_time": period2.isoformat(),
+            "sum_adjustment": 1000,
+        },
+        blocking=True,
+    )
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": approx(1.0),
+                "mean": approx(2.0),
+                "min": approx(3.0),
+                "last_reset": None,
+                "state": approx(4.0),
+                "sum": approx(5.0),
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(1003.0),
+            },
+        ]
+    }
+
 
 def test_external_statistics_errors(hass_recorder, caplog):
     """Test validation of external statistics."""

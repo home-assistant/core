@@ -307,24 +307,32 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "units,device_class,unit,display_unit,factor",
+    "units,device_class,unit,display_unit,factor,factor2",
     [
-        (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", 1),
-        (IMPERIAL_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
-        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", 1),
-        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", 1),
-        (IMPERIAL_SYSTEM, "gas", "m³", "ft³", 35.314666711),
-        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", 1),
-        (METRIC_SYSTEM, "energy", "kWh", "kWh", 1),
-        (METRIC_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
-        (METRIC_SYSTEM, "monetary", "EUR", "EUR", 1),
-        (METRIC_SYSTEM, "monetary", "SEK", "SEK", 1),
-        (METRIC_SYSTEM, "gas", "m³", "m³", 1),
-        (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466),
+        (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", 1, 1),
+        (IMPERIAL_SYSTEM, "energy", "Wh", "kWh", 1 / 1000, 1),
+        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", 1, 1),
+        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", 1, 1),
+        (IMPERIAL_SYSTEM, "gas", "m³", "ft³", 35.314666711, 35.314666711),
+        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", 1, 35.314666711),
+        (METRIC_SYSTEM, "energy", "kWh", "kWh", 1, 1),
+        (METRIC_SYSTEM, "energy", "Wh", "kWh", 1 / 1000, 1),
+        (METRIC_SYSTEM, "monetary", "EUR", "EUR", 1, 1),
+        (METRIC_SYSTEM, "monetary", "SEK", "SEK", 1, 1),
+        (METRIC_SYSTEM, "gas", "m³", "m³", 1, 1),
+        (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466, 1),
     ],
 )
 def test_compile_hourly_sum_statistics_amount(
-    hass_recorder, caplog, units, state_class, device_class, unit, display_unit, factor
+    hass_recorder,
+    caplog,
+    units,
+    state_class,
+    device_class,
+    unit,
+    display_unit,
+    factor,
+    factor2,
 ):
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
@@ -416,19 +424,56 @@ def test_compile_hourly_sum_statistics_amount(
     stats = statistics_during_period(
         hass, period0 + timedelta(minutes=5), period="5minute"
     )
-    expected_stats["sensor.test1"] = expected_stats["sensor.test1"][1:3]
-    assert stats == expected_stats
+    assert stats == {"sensor.test1": expected_stats["sensor.test1"][1:3]}
 
     # With an offset of 6 minutes, we expect to get the 2nd and 3rd periods
     stats = statistics_during_period(
         hass, period0 + timedelta(minutes=6), period="5minute"
     )
-    assert stats == expected_stats
+    assert stats == {"sensor.test1": expected_stats["sensor.test1"][1:3]}
 
     assert "Error while processing event StatisticsTask" not in caplog.text
     assert "Detected new cycle for sensor.test1, last_reset set to" in caplog.text
     assert "Compiling initial sum statistics for sensor.test1" in caplog.text
     assert "Detected new cycle for sensor.test1, value dropped" not in caplog.text
+
+    # Adjust the inserted statistics
+    hass.services.call(
+        "recorder",
+        "adjust_statistics",
+        {
+            "statistic_id": "sensor.test1",
+            "start_time": period1.isoformat(),
+            "sum_adjustment": 100,
+            "table": "statistics_short_term",
+        },
+        blocking=True,
+    )
+    wait_recording_done(hass)
+
+    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + factor2 * 100)
+    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 + factor2 * 100)
+    stats = statistics_during_period(hass, period0, period="5minute")
+    assert stats == expected_stats
+
+    # Adjust the inserted statistics
+    hass.services.call(
+        "recorder",
+        "adjust_statistics",
+        {
+            "statistic_id": "sensor.test1",
+            "start_time": period2.isoformat(),
+            "sum_adjustment": -400,
+            "table": "statistics_short_term",
+        },
+        blocking=True,
+    )
+    wait_recording_done(hass)
+
+    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + factor2 * 100)
+    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 - factor2 * 300)
+    stats = statistics_during_period(hass, period0, period="5minute")
+    assert stats == expected_stats
 
 
 @pytest.mark.parametrize("state_class", ["total"])

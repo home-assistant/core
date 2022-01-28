@@ -90,10 +90,11 @@ _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
+SERVICE_ADJUST_STATISTICS = "adjust_statistics"
+SERVICE_DISABLE = "disable"
+SERVICE_ENABLE = "enable"
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
-SERVICE_ENABLE = "enable"
-SERVICE_DISABLE = "disable"
 
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
@@ -120,6 +121,23 @@ SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
 ).extend(cv.ENTITY_SERVICE_FIELDS)
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
+
+ATTR_SUM_ADJUSTMENT = "sum_adjustment"
+ATTR_START_TIME = "start_time"
+ATTR_STATISTIC_ID = "statistic_id"
+ATTR_TABLE = "table"
+SERVICE_ADJUST_STATISTICS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_STATISTIC_ID, "id"): vol.Any(
+            statistics.validate_statistic_id, cv.entity_id
+        ),
+        vol.Required(ATTR_START_TIME): cv.datetime,
+        vol.Required(ATTR_SUM_ADJUSTMENT): vol.Coerce(float),
+        vol.Optional(ATTR_TABLE, default="statistics"): vol.In(
+            ("statistics", "statistics_short_term")
+        ),
+    }
+)
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
@@ -352,6 +370,22 @@ def _async_register_services(hass, instance):
         schema=SERVICE_DISABLE_SCHEMA,
     )
 
+    async def async_handle_adjust_statistics(service: ServiceCall) -> None:
+        """Handle calls to the adjust statistics service."""
+        statistic_id = service.data[ATTR_STATISTIC_ID]
+        start_time = service.data[ATTR_START_TIME]
+        sum_adjustment = service.data[ATTR_SUM_ADJUSTMENT]
+        table = service.data[ATTR_TABLE]
+
+        instance.do_adjust_statistics(statistic_id, start_time, sum_adjustment, table)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADJUST_STATISTICS,
+        async_handle_adjust_statistics,
+        schema=SERVICE_ADJUST_STATISTICS_SCHEMA,
+    )
+
 
 class RecorderTask(abc.ABC):
     """ABC for recorder tasks."""
@@ -460,6 +494,33 @@ class ExternalStatisticsTask(RecorderTask):
             return
         # Schedule a new statistics task if this one didn't finish
         instance.queue.put(ExternalStatisticsTask(self.metadata, self.statistics))
+
+
+@dataclass
+class AdjustStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run an adjust statistics task."""
+
+    statistic_id: str
+    start_time: datetime
+    sum_adjustment: float
+    table: str
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task."""
+        if statistics.adjust_statistics(
+            instance,
+            self.statistic_id,
+            self.start_time,
+            self.sum_adjustment,
+            self.table,
+        ):
+            return
+        # Schedule a new adjust statistics task if this one didn't finish
+        instance.queue.put(
+            AdjustStatisticsTask(
+                self.statistic_id, self.start_time, self.sum_adjustment, self.table
+            )
+        )
 
 
 @dataclass
@@ -675,6 +736,12 @@ class Recorder(threading.Thread):
         if not (start := kwargs.get("start")):
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
+
+    def do_adjust_statistics(self, statistic_id, start_time, sum_adjustment, table):
+        """Adjust statistics."""
+        self.queue.put(
+            AdjustStatisticsTask(statistic_id, start_time, sum_adjustment, table)
+        )
 
     @callback
     def async_register(self, shutdown_task, hass_started):
