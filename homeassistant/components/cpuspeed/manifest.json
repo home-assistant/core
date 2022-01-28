@@ -5,6 +5,5 @@
   "requirements": ["py-cpuinfo==8.0.0"],
   "config_flow": true,
   "codeowners": ["@fabaff", "@frenck"],
-  "iot_class": "local_push",
-  "loggers": ["cpuinfo"]
+  "iot_class": "local_push"
 }

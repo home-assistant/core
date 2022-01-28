@@ -6,6 +6,5 @@
     "pyaftership==21.11.0"
   ],
   "codeowners": [],
-  "iot_class": "cloud_polling",
-  "loggers": ["pyaftership"]
+  "iot_class": "cloud_polling"
 }

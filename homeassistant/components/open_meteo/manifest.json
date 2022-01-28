@@ -6,6 +6,5 @@
   "requirements": ["open-meteo==0.2.1"],
   "dependencies": ["zone"],
   "codeowners": ["@frenck"],
-  "iot_class": "cloud_polling",
-  "loggers": ["open_meteo"]
+  "iot_class": "cloud_polling"
 }

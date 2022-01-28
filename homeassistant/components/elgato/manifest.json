@@ -7,6 +7,5 @@
   "zeroconf": ["_elg._tcp.local."],
   "codeowners": ["@frenck"],
   "quality_scale": "platinum",
-  "iot_class": "local_polling",
-  "loggers": ["elgato"]
+  "iot_class": "local_polling"
 }

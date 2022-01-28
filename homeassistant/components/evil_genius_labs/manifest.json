@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/evil_genius_labs",
   "requirements": ["pyevilgenius==1.0.0"],
   "codeowners": ["@balloob"],
-  "iot_class": "local_polling",
-  "loggers": ["pyevilgenius"]
+  "iot_class": "local_polling"
 }
