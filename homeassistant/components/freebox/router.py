@@ -13,7 +13,7 @@ from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -50,6 +50,9 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
+    _api: Freepybox
+    mac: str
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
@@ -57,11 +60,10 @@ class FreeboxRouter:
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 
-        self._api: Freepybox = None
+        self._api_open = False
         self.name = None
-        self.mac = None
         self._sw_v = None
-        self._attrs = {}
+        self._attrs: dict[str, Any] = {}
 
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
@@ -69,8 +71,8 @@ class FreeboxRouter:
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
 
-        self._unsub_dispatcher = None
-        self.listeners = []
+        self._unsub_dispatcher: CALLBACK_TYPE | None = None
+        self.listeners: list[CALLBACK_TYPE] = []
 
     async def setup(self) -> None:
         """Set up a Freebox router."""
@@ -78,9 +80,11 @@ class FreeboxRouter:
 
         try:
             await self._api.open(self._host, self._port)
-        except HttpRequestError:
+        except HttpRequestError as err:
             _LOGGER.exception("Failed to connect to Freebox")
-            return ConfigEntryNotReady
+            raise ConfigEntryNotReady from err
+
+        self._api_open = True
 
         # System
         fbx_config = await self._api.system.get_config()
@@ -102,7 +106,7 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: [dict[str, Any]] = await self._api.lan.get_hosts_list()
+        fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -164,7 +168,7 @@ class FreeboxRouter:
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
         # None at first request
-        fbx_disks: [dict[str, Any]] = await self._api.storage.get_disks() or []
+        fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
@@ -175,10 +179,11 @@ class FreeboxRouter:
 
     async def close(self) -> None:
         """Close the connection."""
-        if self._api is not None:
+        if self._api_open:
             await self._api.close()
+            assert self._unsub_dispatcher
             self._unsub_dispatcher()
-        self._api = None
+        self._api_open = False
 
     @property
     def device_info(self) -> DeviceInfo:
