@@ -471,9 +471,16 @@ class CastDevice(MediaPlayerEntity):
                 "audio/"
             )
 
-        if plex.is_plex_media_id(media_content_id):
-            return await plex.async_browse_media(
-                self.hass, media_content_type, media_content_id, platform=CAST_DOMAIN
+        if media_content_id is not None:
+            if plex.is_plex_media_id(media_content_id):
+                return await plex.async_browse_media(
+                    self.hass,
+                    media_content_type,
+                    media_content_id,
+                    platform=CAST_DOMAIN,
+                )
+            return await media_source.async_browse_media(
+                self.hass, media_content_id, **kwargs
             )
 
         if media_content_type == "plex":
