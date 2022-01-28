@@ -180,6 +180,12 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
+    await _handle_call_service(hass, connection, msg)
+
+
+async def _handle_call_service(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     blocking = True
     # We do not support templates.
     target = msg.get("target")
@@ -361,10 +367,11 @@ async def handle_integration_log_level(
     loggers = [f"homeassistant.components.{msg['integration']}"]
     if integration.loggers:
         loggers.extend(integration.loggers)
-    await handle_call_service(  # type: ignore
+    await _handle_call_service(
         hass,
         connection,
         {
+            "id": msg["id"],
             "domain": "logger",
             "service": "set_level",
             "service_data": {logger: msg["level"] for logger in loggers},
