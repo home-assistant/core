@@ -18,7 +18,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import IssData
 from .const import DOMAIN
@@ -75,7 +78,7 @@ async def async_setup_entry(
     async_add_entities([IssBinarySensor(coordinator, name, show_on_map)], True)
 
 
-class IssBinarySensor(BinarySensorEntity):
+class IssBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Implementation of the ISS binary sensor."""
 
     _attr_device_class = DEFAULT_DEVICE_CLASS
@@ -85,6 +88,7 @@ class IssBinarySensor(BinarySensorEntity):
         self, coordinator: DataUpdateCoordinator[IssData], name: str, show: bool
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.coordinator = coordinator
         self._state = None
         self._attr_name = name
