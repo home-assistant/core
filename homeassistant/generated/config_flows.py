@@ -159,6 +159,7 @@ FLOWS = [
     "ipp",
     "iqvia",
     "islamic_prayer_times",
+    "iss",
     "isy994",
     "izone",
     "jellyfin",
