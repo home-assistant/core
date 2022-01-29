@@ -1,8 +1,14 @@
 """Component to embed Google Cast."""
-import logging
+from __future__ import annotations
 
+from collections.abc import Callable
+import logging
+from typing import Protocol
+
+from pychromecast import Chromecast
 import voluptuous as vol
 
+from homeassistant.components.media_player import BrowseMedia
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -53,13 +59,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await home_assistant_cast.async_setup_ha_cast(hass, entry)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     hass.data[DOMAIN] = {}
-    await async_process_integration_platforms(hass, DOMAIN, _process_cast_platform)
+    await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
     return True
 
 
-async def _process_cast_platform(hass, domain, platform):
-    """Process a recorder platform."""
-    hass.data[DOMAIN][domain] = platform
+class CastProtocol(Protocol):
+    """Define the format of cast platforms."""
+
+    async def async_get_media_browser_root_object(
+        self, content_filter: Callable[[BrowseMedia], bool]
+    ) -> list[BrowseMedia]:
+        """Create a list of root objects for media browsing."""
+
+    async def async_browse_media(
+        self,
+        hass: HomeAssistant,
+        media_content_type: str,
+        media_content_id: str,
+        content_filter: Callable[[BrowseMedia], bool],
+    ) -> BrowseMedia | None:
+        """Browse media.
+
+        Return a BrowseMedia object or None if the media does not belong to this platform.
+        """
+
+    async def async_play_media(
+        self,
+        hass: HomeAssistant,
+        cast_entity_id: str,
+        chromecast: Chromecast,
+        media_type: str,
+        media_id: str,
+    ) -> bool:
+        """Play media.
+
+        Return True if the media is played by the platform, False if not.
+        """
+
+
+async def _register_cast_platform(
+    hass: HomeAssistant, integration_domain: str, platform: CastProtocol
+):
+    """Register a cast platform."""
+    if (
+        not getattr(platform, "async_get_media_browser_root_object")
+        or not getattr(platform, "async_browse_media")
+        or not getattr(platform, "async_play_media")
+    ):
+        return
+    hass.data[DOMAIN][integration_domain] = platform
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

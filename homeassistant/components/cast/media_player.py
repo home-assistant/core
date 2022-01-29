@@ -461,9 +461,9 @@ class CastDevice(MediaPlayerEntity):
         children = []
         # Add media browsers
         for _, platform in self.hass.data[CAST_DOMAIN].items():
-            if not hasattr(platform, "async_get_media_browser_root_object"):
-                continue
-            children.append(await platform.async_get_media_browser_root_object())
+            children.extend(
+                await platform.async_get_media_browser_root_object(content_filter)
+            )
 
         # Add media sources
         try:
@@ -508,10 +508,8 @@ class CastDevice(MediaPlayerEntity):
             return await self._async_root_payload(content_filter)
 
         for _, platform in self.hass.data[CAST_DOMAIN].items():
-            if not hasattr(platform, "async_browse_media"):
-                continue
             browse_media = await platform.async_browse_media(
-                self.hass, media_content_type, media_content_id
+                self.hass, media_content_type, media_content_id, content_filter
             )
             if browse_media:
                 return browse_media
@@ -544,7 +542,7 @@ class CastDevice(MediaPlayerEntity):
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
         metadata = extra.get("metadata")
 
-        # We do not want this to be forwarded to a group
+        # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
@@ -576,20 +574,21 @@ class CastDevice(MediaPlayerEntity):
                 )
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
-        else:
-            for _, platform in self.hass.data[CAST_DOMAIN].items():
-                if not hasattr(platform, "async_play_media"):
-                    continue
-                result = await platform.async_play_media(
-                    self.hass, self.entity_id, self._chromecast, media_type, media_id
-                )
-                if result:
-                    return
+            return
 
-            app_data = {"media_id": media_id, "media_type": media_type, **extra}
-            await self.hass.async_add_executor_job(
-                quick_play, self._chromecast, "default_media_receiver", app_data
+        # Try the cast platforms
+        for _, platform in self.hass.data[CAST_DOMAIN].items():
+            result = await platform.async_play_media(
+                self.hass, self.entity_id, self._chromecast, media_type, media_id
             )
+            if result:
+                return
+
+        # Default to play with the default media receiver
+        app_data = {"media_id": media_id, "media_type": media_type, **extra}
+        await self.hass.async_add_executor_job(
+            quick_play, self._chromecast, "default_media_receiver", app_data
+        )
 
     def _media_status(self):
         """
