@@ -305,7 +305,11 @@ class HomeAssistantHTTP:
         )
 
     def register_static_path(
-        self, url_path: str, path: str, cache_headers: bool = True
+        self,
+        url_path: str,
+        path: str,
+        cache_headers: bool = True,
+        follow_symlinks: bool = False,
     ) -> None:
         """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
@@ -314,7 +318,9 @@ class HomeAssistantHTTP:
                     CachingStaticResource(url_path, path)
                 )
             else:
-                resource = web.StaticResource(url_path, path)
+                resource = web.StaticResource(
+                    url_path, path, follow_symlinks=follow_symlinks
+                )
             self.app.router.register_resource(resource)
             self.app["allow_configured_cors"](resource)
             return
