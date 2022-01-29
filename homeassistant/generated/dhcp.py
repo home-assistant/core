@@ -202,6 +202,11 @@ DHCP = [
         "hostname": "nuki_bridge_*"
     },
     {
+        "domain": "oncue",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*"
+    },
+    {
         "domain": "overkiz",
         "hostname": "gateway*",
         "macaddress": "F8811A*"
