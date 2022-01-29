@@ -187,6 +187,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for mac, device in self._discovered_devices.items()
             if mac not in current_unique_ids and device.ip_address not in current_hosts
         }
+        if not devices_name:
+            return await self.async_step_connection()
         devices_name[None] = "Manual Entry"
         return self.async_show_form(
             step_id="user",
