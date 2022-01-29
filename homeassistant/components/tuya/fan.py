@@ -137,7 +137,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
                 [
                     {
                         "code": self._speed.dpcode,
-                        "value": self._speed.scale_value_back(percentage),
+                        "value": int(self._speed.remap_value_from(percentage, 0, 100)),
                     }
                 ]
             )
