@@ -39,7 +39,7 @@ async def async_setup_entry(
     coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     api = coordinator_data[KEY_API]
 
-    entity_list: list[TradfriSensor] = []
+    entities: list[TradfriSensor] = []
 
     for device_coordinator in coordinator_data[COORDINATOR_LIST]:
         if (
@@ -48,7 +48,7 @@ async def async_setup_entry(
             and not device_coordinator.device.has_signal_repeater_control
             and not device_coordinator.device.has_air_purifier_control
         ):
-            entity_list.append(
+            entities.append(
                 TradfriSensor(
                     device_coordinator,
                     api,
@@ -64,7 +64,7 @@ async def async_setup_entry(
                 )
             )
         elif device_coordinator.device.has_air_purifier_control:
-            entity_list.append(
+            entities.append(
                 TradfriSensor(
                     device_coordinator,
                     api,
@@ -86,7 +86,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(entity_list)
+    async_add_entities(entities)
 
 
 class TradfriSensor(TradfriBaseEntity, SensorEntity):
@@ -106,15 +106,12 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
             gateway_id=gateway_id,
         )
 
-        self._device_description = description
+        self.entity_description = description
 
-        self._attr_device_class = description.device_class
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
         self._refresh()  # Set initial state
 
     def _refresh(self) -> None:
         """Refresh the device."""
-        _native_value = self._device_description.value(self)
+        self._attr_native_value = self._device_description.value(self)
 
-        self._attr_native_value = _native_value
