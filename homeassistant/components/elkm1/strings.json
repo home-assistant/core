@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{mac_address} ({ip_address})",
     "step": {
       "user": {
         "title": "Connect to Elk-M1 Control",
@@ -20,6 +21,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "An ElkM1 with this prefix is already configured",
       "address_already_configured": "An ElkM1 with this address is already configured"
     }

@@ -148,7 +148,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_device is not None
         device = self._discovered_device
         placeholders = {
-            "id": _short_mac(device.mac_address),
+            "mac_address": _short_mac(device.mac_address),
             "ip_address": device.ip_address,
         }
         self.context["title_placeholders"] = placeholders
