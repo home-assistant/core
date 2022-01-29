@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} sedang memutar"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} mengubah status",
             "idle": "{entity_name} menjadi siaga",
             "paused": "{entity_name} dijeda",
             "playing": "{entity_name} mulai memutar",
