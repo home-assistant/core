@@ -27,7 +27,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 class TradfriSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value: Callable[[Device], Any | None] = None  # type: ignore
+    value: Callable[[Device], Any | None]
 
 
 @dataclass
