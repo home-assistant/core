@@ -1,6 +1,7 @@
 """Adds constants for SQL integration."""
-from homeassistant.const import Platform
 import re
+
+from homeassistant.const import Platform
 
 DOMAIN = "sql"
 PLATFORMS = [Platform.SENSOR]
