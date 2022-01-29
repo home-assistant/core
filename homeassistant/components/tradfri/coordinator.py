@@ -51,8 +51,6 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     @callback
     def _observe_update(self, device: Device) -> None:
         """Update the coordinator for a device when a change is detected."""
-        self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
-
         self.async_set_updated_data(data=device)
 
     @callback
@@ -90,8 +88,11 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
                     duration=0,
                 )
                 await self.api(cmd)
-            except RequestError as exc:
-                await self._handle_exception(exc)
+            except RequestError as err:
+                raise UpdateFailed(f"Error communicating with API: {err}.") from err
+
+            # Reset update interval
+            self.update_interval = timedelta(seconds=SCAN_INTERVAL)
 
         return self.device
 
