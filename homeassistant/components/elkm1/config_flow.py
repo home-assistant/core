@@ -65,7 +65,7 @@ DEFAULT_SECURE_PROTOCOL = "secure"
 DEFAULT_NON_SECURE_PROTOCOL = "non-secure"
 
 
-async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str]:
+async def validate_input(data: dict[str, str]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -88,8 +88,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT, url):
         raise InvalidAuth
 
-    device_id = mac or data[CONF_PREFIX]
-    device_name = "ElkM1 {device_id}" if device_id else "ElkM1"
+    device_name = f"ElkM1 {data[CONF_PREFIX]}" if data[CONF_PREFIX] else "ElkM1"
     return {"title": device_name, CONF_HOST: url, CONF_PREFIX: slugify(prefix)}
 
 
@@ -222,7 +221,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return None, self.async_abort(reason="address_already_configured")
 
         try:
-            info = await validate_input(user_input, self.unique_id)
+            info = await validate_input(user_input)
         except asyncio.TimeoutError:
             return {CONF_HOST: "cannot_connect"}, None
         except InvalidAuth:
@@ -253,9 +252,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert device is not None
         if user_input is not None:
             user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
-            user_input[CONF_PREFIX] = ""
-            if self._async_current_entries():
-                user_input[CONF_PREFIX] = _short_mac(device.mac_address)
+            user_input[CONF_PREFIX] = _short_mac(device.mac_address)
             if device.port != SECURE_PORT:
                 user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
             errors, result = await self._async_create_or_error(user_input, False)
