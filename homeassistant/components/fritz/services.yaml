@@ -36,7 +36,8 @@ cleanup:
           entity:
             device_class: connectivity
 set_guest_wifi_password:
-  description: Set a new password for the guest wifi. If no additional parameter is set, the password will be auto-generated with a length of 32 characters.
+  name: Set guest wifi password
+  description: Set a new password for the guest wifi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.
   fields:
     device_id:
       name: Fritz!Box Device

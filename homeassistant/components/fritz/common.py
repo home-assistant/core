@@ -417,6 +417,14 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Trigger device reconnect."""
         await self.hass.async_add_executor_job(self.connection.reconnect)
 
+    async def async_trigger_set_guest_password(
+        self, password: str | None, length: int | None
+    ) -> None:
+        """Trigger service to set a new guest wifi password."""
+        await self.hass.async_add_executor_job(
+            self.fritz_guest_wifi.set_password, password, length
+        )
+
     async def async_trigger_cleanup(
         self, config_entry: ConfigEntry | None = None
     ) -> None:
@@ -517,8 +525,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 return
 
             if service_call.service == SERVICE_SET_GUEST_WIFI_PW:
-                await self.hass.async_add_executor_job(
-                    self._set_guest_wifi_password,
+                await self.async_trigger_set_guest_password(
                     service_call.data.get("password"),
                     service_call.data.get("length"),
                 )
