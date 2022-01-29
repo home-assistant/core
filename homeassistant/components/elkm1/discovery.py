@@ -57,8 +57,8 @@ async def async_discover_devices(
         if isinstance(discovered, Exception):
             _LOGGER.debug("Scanning %s failed with error: %s", targets[idx], discovered)
             continue
-        assert isinstance(discovered, ElkSystem)
         for device in discovered:
+            assert isinstance(device, ElkSystem)
             combined_discoveries[device.ip_address] = device
 
     if not address:
