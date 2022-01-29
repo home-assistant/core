@@ -5,5 +5,6 @@
   "requirements": ["fiblary3==0.1.8"],
   "codeowners": [],
   "iot_class": "local_push",
-  "config_flow": true
+  "config_flow": true,
+  "loggers": ["fiblary3"]
 }

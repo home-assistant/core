@@ -661,8 +661,8 @@ async def test_discovery_removal_vacuum(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
     """Test update of discovered vacuum."""
-    config1 = {"name": "Beer", " " "command_topic": "test_topic"}
-    config2 = {"name": "Milk", " " "command_topic": "test_topic"}
+    config1 = {"name": "Beer", "command_topic": "test_topic"}
+    config2 = {"name": "Milk", "command_topic": "test_topic"}
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, vacuum.DOMAIN, config1, config2
     )

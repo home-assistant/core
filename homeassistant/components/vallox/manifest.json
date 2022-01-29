@@ -5,5 +5,6 @@
   "requirements": ["vallox-websocket-api==2.9.0"],
   "codeowners": ["@andre-richter", "@slovdahl", "@viiru-"],
   "config_flow": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["vallox_websocket_api"]
 }
