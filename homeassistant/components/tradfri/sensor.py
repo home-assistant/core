@@ -23,10 +23,36 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 @dataclass
-class TradfriSensorEntityDescription(SensorEntityDescription):
-    """Class describing Tradfri sensor entities."""
+class TradfriSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
 
     value: Callable[[TradfriSensor], Any | None] = None  # type: ignore
+
+
+@dataclass
+class TradfriSensorEntityDescription(
+    TradfriSensorEntityDescriptionMixin,
+    SensorEntityDescription,
+):
+    """Class describing Tradfri sensor entities."""
+
+
+SENSOR_DESCRIPTION_API = TradfriSensorEntityDescription(
+    device_class=SensorDeviceClass.AQI,
+    native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    key=SensorDeviceClass.AQI,
+    # The sensor returns 65535 if the fan is turned off
+    value=lambda data: None
+    if data.coordinator.data.air_purifier_control.air_purifiers[0].air_quality == 65535
+    else data.coordinator.data.air_purifier_control.air_purifiers[0].air_quality,
+)
+
+SENSOR_DESCRIPTION_BATTERY = TradfriSensorEntityDescription(
+    device_class=SensorDeviceClass.BATTERY,
+    native_unit_of_measurement=PERCENTAGE,
+    key=SensorDeviceClass.BATTERY,
+    value=lambda data: cast(int, data.coordinator.data.device_info.battery_level),
+)
 
 
 async def async_setup_entry(
@@ -53,14 +79,7 @@ async def async_setup_entry(
                     device_coordinator,
                     api,
                     gateway_id,
-                    description=TradfriSensorEntityDescription(
-                        device_class=SensorDeviceClass.BATTERY,
-                        native_unit_of_measurement=PERCENTAGE,
-                        key=SensorDeviceClass.BATTERY,
-                        value=lambda data: cast(
-                            int, data.coordinator.data.device_info.battery_level
-                        ),
-                    ),
+                    description=SENSOR_DESCRIPTION_BATTERY,
                 )
             )
         elif device_coordinator.device.has_air_purifier_control:
@@ -69,20 +88,7 @@ async def async_setup_entry(
                     device_coordinator,
                     api,
                     gateway_id,
-                    description=TradfriSensorEntityDescription(
-                        device_class=SensorDeviceClass.AQI,
-                        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-                        key=SensorDeviceClass.AQI,
-                        # The sensor returns 65535 if the fan is turned off
-                        value=lambda data: None
-                        if data.coordinator.data.air_purifier_control.air_purifiers[
-                            0
-                        ].air_quality
-                        == 65535
-                        else data.coordinator.data.air_purifier_control.air_purifiers[
-                            0
-                        ].air_quality,
-                    ),
+                    description=SENSOR_DESCRIPTION_API,
                 )
             )
 
@@ -106,12 +112,10 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
             gateway_id=gateway_id,
         )
 
-        self.entity_description = description
-
+        self.entity_description: TradfriSensorEntityDescription = description
 
         self._refresh()  # Set initial state
 
     def _refresh(self) -> None:
         """Refresh the device."""
-        self._attr_native_value = self._device_description.value(self)
-
+        self._attr_native_value = self.entity_description.value(self)
