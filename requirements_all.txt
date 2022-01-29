@@ -1491,7 +1491,7 @@ pyeconet==0.1.14
 pyedimax==0.2.1
 
 # homeassistant.components.efergy
-pyefergy==0.1.5
+pyefergy==22.1.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.2.0
