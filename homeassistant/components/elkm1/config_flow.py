@@ -29,8 +29,14 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
-from .const import CONF_AUTO_CONFIGURE, DOMAIN
-from .discovery import async_discover_device, async_update_entry_from_discovery
+from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_update_entry_from_discovery,
+)
+
+CONF_DEVICE = "device"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the elkm1 config flow."""
         self.importing = False
         self._discovered_device: ElkSystem | None = None
+        self._discovered_devices: dict[str, ElkSystem] = {}
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
@@ -152,10 +159,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "ip_address": device.ip_address,
         }
         self.context["title_placeholders"] = placeholders
-        return await self.async_step_user()
+        return await self.async_step_connection()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
+        if user_input is not None:
+            if mac := user_input[CONF_DEVICE]:
+                await self.async_set_unique_id(mac, raise_on_progress=False)
+                self._discovered_device = self._discovered_devices[mac]
+            return await self.async_step_connection()
+
+        current_unique_ids = self._async_current_ids()
+        current_hosts = {
+            urlparse(entry.data[CONF_HOST]).hostname
+            for entry in self._async_current_entries(include_ignore=False)
+        }
+        discovered_devices = await async_discover_devices(
+            self.hass, DISCOVER_SCAN_TIMEOUT
+        )
+        self._discovered_devices = {
+            dr.format_mac(device.mac_address): device for device in discovered_devices
+        }
+        devices_name: dict[str | None, str] = {
+            mac: f"{_short_mac(device.mac_address)} ({device.ip_address})"
+            for mac, device in self._discovered_devices.items()
+            if mac not in current_unique_ids and device.ip_address not in current_hosts
+        }
+        devices_name[None] = "Manual Entry"
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+        )
+
+    async def async_step_connection(self, user_input=None):
+        """Handle connecting the device."""
         errors = {}
         if user_input is not None:
             if self._discovered_device is not None:
@@ -218,7 +257,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input):
         """Handle import."""
         self.importing = True
-        return await self.async_step_user(user_input)
+        return await self.async_step_connection(user_input)
 
     def _url_already_configured(self, url):
         """See if we already have a elkm1 matching user input configured."""
