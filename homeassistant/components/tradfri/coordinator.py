@@ -56,22 +56,20 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self.async_set_updated_data(data=device)
 
     @callback
-    def _exception_callback(self, device: Device, exc: Exception | None = None) -> None:
+    def _exception_callback(self, exc: Exception) -> None:
         """Schedule handling exception.."""
-        self.hass.async_create_task(self._handle_exception(device=device, exc=exc))
+        self.hass.async_create_task(self._handle_exception(exc))
 
-    async def _handle_exception(
-        self, device: Device, exc: Exception | None = None
-    ) -> None:
+    async def _handle_exception(self, exc: Exception) -> None:
         """Handle observe exceptions in a coroutine."""
-        self._exception = (
-            exc  # Store exception so that it gets raised in _async_update_data
-        )
+        # Store exception so that it gets raised in _async_update_data
+        self._exception = exc
 
-        _LOGGER.debug("Observation failed for %s, trying again", device, exc_info=exc)
-        self.update_interval = timedelta(
-            seconds=5
-        )  # Change interval so we get a swift refresh
+        _LOGGER.debug(
+            "Observation failed for %s, trying again", self.device, exc_info=exc
+        )
+        # Change interval so we get a swift refresh
+        self.update_interval = timedelta(seconds=5)
         await self.async_request_refresh()
 
     async def _async_update_data(self) -> Device:
@@ -96,7 +94,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
                 )
                 await self.api(cmd)
             except RequestError as exc:
-                await self._handle_exception(device=self.device, exc=exc)
+                await self._handle_exception(exc)
 
         return self.device
 
