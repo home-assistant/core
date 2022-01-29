@@ -78,11 +78,10 @@ async def async_setup_entry(
     async_add_entities([IssBinarySensor(coordinator, name, show_on_map)], True)
 
 
-class IssBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class IssBinarySensor(CoordinatorEntity[IssData], BinarySensorEntity):
     """Implementation of the ISS binary sensor."""
 
     _attr_device_class = DEFAULT_DEVICE_CLASS
-    coordinator: DataUpdateCoordinator[IssData]
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[IssData], name: str, show: bool
