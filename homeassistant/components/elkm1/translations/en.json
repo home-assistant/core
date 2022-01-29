@@ -11,9 +11,19 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{mac_address} ({ip_address})",
+        "flow_title": "{mac_address} ({host})",
         "step": {
-            "connection": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Password",
+                    "protocol": "Protocol",
+                    "temperature_unit": "The temperature unit ElkM1 uses.",
+                    "username": "Username"
+                },
+                "description": "Connect to the discovered system: {mac_address} ({host})",
+                "title": "Connect to Elk-M1 Control"
+            },
+            "manual_connection": {
                 "data": {
                     "address": "The IP address or domain or serial port if connecting via serial.",
                     "password": "Password",

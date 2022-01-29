@@ -49,6 +49,17 @@ PROTOCOL_MAP = {
 
 VALIDATE_TIMEOUT = 35
 
+BASE_SCHEMA = {
+    vol.Required(CONF_PROTOCOL, default="secure"): vol.In(
+        ["secure", "TLS 1.2", "non-secure", "serial"]
+    ),
+    vol.Optional(CONF_USERNAME, default=""): str,
+    vol.Optional(CONF_PASSWORD, default=""): str,
+    vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
+        [TEMP_FAHRENHEIT, TEMP_CELSIUS]
+    ),
+}
+
 
 async def validate_input(data):
     """Validate the user input allows us to connect.
@@ -156,10 +167,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device = self._discovered_device
         placeholders = {
             "mac_address": _short_mac(device.mac_address),
-            "ip_address": device.ip_address,
+            "host": f"{device.ip_address}:{device.port}",
         }
         self.context["title_placeholders"] = placeholders
-        return await self.async_step_connection()
+        return await self.async_step_discovered_connection()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -169,7 +180,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if mac := user_input[CONF_DEVICE]:
                 await self.async_set_unique_id(mac, raise_on_progress=False)
                 self._discovered_device = self._discovered_devices[mac]
-            return await self.async_step_connection()
+                return await self.async_step_discovered_connection()
+            return await self.async_step_manual_connection()
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {
@@ -188,78 +200,93 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if mac not in current_unique_ids and device.ip_address not in current_hosts
         }
         if not devices_name:
-            return await self.async_step_connection()
+            return await self.async_step_manual_connection()
         devices_name[None] = "Manual Entry"
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def async_step_connection(self, user_input=None):
+    async def _async_connection(
+        self, user_input
+    ) -> tuple[dict[str, str] | None, FlowResult | None]:
+        """Try to connect."""
+        if self._url_already_configured(_make_url_from_data(user_input)):
+            return None, self.async_abort(reason="address_already_configured")
+
+        try:
+            info = await validate_input(user_input)
+        except asyncio.TimeoutError:
+            return {CONF_HOST: "cannot_connect"}, None
+        except InvalidAuth:
+            return {CONF_PASSWORD: "invalid_auth"}, None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}, None
+
+        await self.async_set_unique_id(user_input[CONF_PREFIX])
+        self._abort_if_unique_id_configured()
+        if self.importing:
+            return None, self.async_create_entry(title=info["title"], data=user_input)
+
+        return None, self.async_create_entry(
+            title=info["title"],
+            data={
+                CONF_HOST: info[CONF_HOST],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_AUTO_CONFIGURE: True,
+                CONF_TEMPERATURE_UNIT: user_input[CONF_TEMPERATURE_UNIT],
+                CONF_PREFIX: info[CONF_PREFIX],
+            },
+        )
+
+    async def async_step_discovered_connection(self, user_input=None):
+        """Handle connecting the device."""
+        errors = {}
+        ip_address = self._discovered_device.ip_address
+        port = self._discovered_device.port
+        short_mac = _short_mac(self._discovered_device.mac_address)
+        if user_input is not None:
+            user_input[CONF_ADDRESS] = f"{ip_address}:{port}"
+            user_input[CONF_PREFIX] = short_mac
+            errors, result = self._async_connection(user_input)
+            if not errors:
+                return result
+
+        return self.async_show_form(
+            step_id="discovered_connection",
+            data_schema=vol.Schema(BASE_SCHEMA),
+            errors=errors,
+            description_placeholders={
+                "host": f"{ip_address}:{port}",
+                "mac_address": short_mac,
+            },
+        )
+
+    async def async_step_manual_connection(self, user_input=None):
         """Handle connecting the device."""
         errors = {}
         if user_input is not None:
-            if self._discovered_device is not None:
-                user_input[CONF_ADDRESS] = self._discovered_device.ip_address
-                user_input[CONF_PREFIX] = _short_mac(
-                    self._discovered_device.mac_address
-                )
+            errors, result = self._async_connection(user_input)
+            if not errors:
+                return result
 
-            if self._url_already_configured(_make_url_from_data(user_input)):
-                return self.async_abort(reason="address_already_configured")
-
-            try:
-                info = await validate_input(user_input)
-
-            except asyncio.TimeoutError:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if "base" not in errors:
-                await self.async_set_unique_id(user_input[CONF_PREFIX])
-                self._abort_if_unique_id_configured()
-
-                if self.importing:
-                    return self.async_create_entry(title=info["title"], data=user_input)
-
-                return self.async_create_entry(
-                    title=info["title"],
-                    data={
-                        CONF_HOST: info[CONF_HOST],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_AUTO_CONFIGURE: True,
-                        CONF_TEMPERATURE_UNIT: user_input[CONF_TEMPERATURE_UNIT],
-                        CONF_PREFIX: info[CONF_PREFIX],
-                    },
-                )
-
-        base_schema = {
-            vol.Required(CONF_PROTOCOL, default="secure"): vol.In(
-                ["secure", "TLS 1.2", "non-secure", "serial"]
-            ),
-            vol.Optional(CONF_USERNAME, default=""): str,
-            vol.Optional(CONF_PASSWORD, default=""): str,
-            vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
-                [TEMP_FAHRENHEIT, TEMP_CELSIUS]
-            ),
-        }
-        if self._discovered_device is None:
-            base_schema[vol.Required(CONF_ADDRESS)] = str
-            base_schema[vol.Optional(CONF_PREFIX, default="")] = str
+        base_schema = BASE_SCHEMA.copy()
+        base_schema[vol.Required(CONF_ADDRESS)] = str
+        base_schema[vol.Optional(CONF_PREFIX, default="")] = str
 
         return self.async_show_form(
-            step_id="connection", data_schema=vol.Schema(base_schema), errors=errors
+            step_id="manual_connection",
+            data_schema=vol.Schema(base_schema),
+            errors=errors,
         )
 
     async def async_step_import(self, user_input):
         """Handle import."""
         self.importing = True
-        return await self.async_step_connection(user_input)
+        _, result = await self._async_connection(user_input)
+        return result
 
     def _url_already_configured(self, url):
         """See if we already have a elkm1 matching user input configured."""

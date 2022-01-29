@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{mac_address} ({ip_address})",
+    "flow_title": "{mac_address} ({host})",
     "step": {
       "user": {
         "title": "Connect to Elk-M1 Control",
@@ -9,8 +9,8 @@
           "device": "Device"
         }
       }, 
-      "connection": {
-        "title": "Connect to Elk-M1 Control",
+      "manual_connection": {
+        "title": "[%key:component::elkm1::config::step::user::title%]",
         "description": "The address string must be in the form 'address[:port]' for 'secure' and 'non-secure'. Example: '192.168.1.1'. The port is optional and defaults to 2101 for 'non-secure' and 2601 for 'secure'. For the serial protocol, the address must be in the form 'tty[:baud]'. Example: '/dev/ttyS1'. The baud is optional and defaults to 115200.",
         "data": {
           "protocol": "Protocol",
@@ -19,6 +19,16 @@
           "password": "[%key:common::config_flow::data::password%]",
           "prefix": "A unique prefix (leave blank if you only have one ElkM1).",
           "temperature_unit": "The temperature unit ElkM1 uses."
+        }
+      },
+      "discovered_connection": {
+        "title": "[%key:component::elkm1::config::step::user::title%]",
+        "description": "Connect to the discovered system: {mac_address} ({host})",
+        "data": {
+          "protocol": "[%key:component::elkm1::config::step::manual_connection::data::protocol%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "temperature_unit": "[%key:component::elkm1::config::step::manual_connection::data::temperature_unit%]"
         }
       }
     },
