@@ -32,20 +32,27 @@ class TradfriSensorEntityDescriptionMixin:
 
 @dataclass
 class TradfriSensorEntityDescription(
-    TradfriSensorEntityDescriptionMixin,
     SensorEntityDescription,
+    TradfriSensorEntityDescriptionMixin,
 ):
     """Class describing Tradfri sensor entities."""
+
+
+def _get_air_quality(device: Device) -> int | None:
+    """Fetch the air quality value."""
+    if (
+        device.air_purifier_control.air_purifiers[0].air_quality == 65535
+    ):  # The sensor returns 65535 if the fan is turned off
+        return None
+
+    return cast(int, device.air_purifier_control.air_purifiers[0].air_quality)
 
 
 SENSOR_DESCRIPTION_API = TradfriSensorEntityDescription(
     device_class=SensorDeviceClass.AQI,
     native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     key=SensorDeviceClass.AQI,
-    # The sensor returns 65535 if the fan is turned off
-    value=lambda device: None
-    if device.air_purifier_control.air_purifiers[0].air_quality == 65535
-    else device.air_purifier_control.air_purifiers[0].air_quality,
+    value=_get_air_quality,
 )
 
 SENSOR_DESCRIPTION_BATTERY = TradfriSensorEntityDescription(
@@ -100,7 +107,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
     entity_description: TradfriSensorEntityDescription
-    
+
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
