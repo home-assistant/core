@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def create_knx_exposure(
-        hass: HomeAssistant, xknx: XKNX, config: ConfigType
+    hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> KNXExposeSensor | KNXExposeTime:
     """Create exposures from config."""
     address = config[KNX_ADDRESS]
@@ -39,8 +39,8 @@ def create_knx_exposure(
 
     exposure: KNXExposeSensor | KNXExposeTime
     if (
-            isinstance(expose_type, str)
-            and expose_type.lower() in ExposeSchema.EXPOSE_TIME_TYPES
+        isinstance(expose_type, str)
+        and expose_type.lower() in ExposeSchema.EXPOSE_TIME_TYPES
     ):
         exposure = KNXExposeTime(xknx, expose_type, address)
     else:
@@ -61,14 +61,14 @@ class KNXExposeSensor:
     """Object to Expose Home Assistant entity to KNX bus."""
 
     def __init__(
-            self,
-            hass: HomeAssistant,
-            xknx: XKNX,
-            expose_type: int | str,
-            entity_id: str,
-            attribute: str | None,
-            default: StateType,
-            address: str,
+        self,
+        hass: HomeAssistant,
+        xknx: XKNX,
+        expose_type: int | str,
+        entity_id: str,
+        attribute: str | None,
+        default: StateType,
+        address: str,
     ) -> None:
         """Initialize of Expose class."""
         self.hass = hass
@@ -139,8 +139,11 @@ class KNXExposeSensor:
             and issubclass(self.device.sensor_value.dpt_class, DPTNumeric)
         ):
             return float(value)
-        if (value is not None
-                and issubclass(self.device.sensor_value.dpt_class, DPTString)):
+        if (
+            value is not None
+            and isinstance(self.device.sensor_value, RemoteValueSensor)
+            and issubclass(self.device.sensor_value.dpt_class, DPTString)
+        ):
             # DPT 16.000 only allows up to 14 Bytes
             return str(value)[:14]
         return value

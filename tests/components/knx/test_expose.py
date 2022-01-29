@@ -130,6 +130,7 @@ async def test_expose_attribute_with_default(hass: HomeAssistant, knx: KNXTestKi
 
 async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
     """Test an expose to send string values of up to 14 bytes only."""
+
     entity_id = "fake.entity"
     attribute = "fake_attribute"
     await knx.setup_integration(
@@ -174,6 +175,7 @@ async def test_expose_with_date(localtime, hass: HomeAssistant, knx: KNXTestKit)
             }
         }
     )
+    assert not hass.states.async_all()
 
     await knx.assert_write("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
 
