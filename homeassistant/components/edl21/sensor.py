@@ -455,12 +455,4 @@ class EDL21Entity(SensorEntity):
         if unit is None:
             return None
 
-        if not (mapped_unit := SENSOR_UNIT_MAPPING.get(unit)):
-            _LOGGER.error(
-                "Unexpected unit of measurement %s detected. Please report at "
-                'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
-                unit,
-            )
-            return None
-
-        return mapped_unit
+        return SENSOR_UNIT_MAPPING[unit]
