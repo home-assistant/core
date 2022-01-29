@@ -52,7 +52,7 @@ def setup_platform(
     """Import ISS configuration from yaml."""
     _LOGGER.warning(
         "Configuration of the iss platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.4; Your existing configuration "
+        "removed in Home Assistant 2022.5; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
