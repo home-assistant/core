@@ -186,7 +186,6 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._state = False
-        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -243,7 +242,6 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._state = False
-        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway.
@@ -340,7 +338,6 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
             return
 
         self._state = state.state == "on"
-        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -389,7 +386,6 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._state = False
-        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -433,7 +429,6 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._state = False
-        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
