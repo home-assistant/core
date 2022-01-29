@@ -31,6 +31,7 @@ from homeassistant.util import slugify
 from . import async_wait_for_elk_to_sync
 from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN
 from .discovery import (
+    _short_mac,
     async_discover_device,
     async_discover_devices,
     async_update_entry_from_discovery,
@@ -99,10 +100,6 @@ def _make_url_from_data(data):
     protocol = PROTOCOL_MAP[data[CONF_PROTOCOL]]
     address = data[CONF_ADDRESS]
     return f"{protocol}{address}"
-
-
-def _short_mac(mac_address: str) -> str:
-    return mac_address.replace(":", "")[-6:]
 
 
 def _placeholders_from_device(device: ElkSystem) -> dict[str, str]:

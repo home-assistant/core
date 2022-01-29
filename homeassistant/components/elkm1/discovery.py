@@ -17,6 +17,10 @@ from .const import DISCOVER_SCAN_TIMEOUT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def _short_mac(mac_address: str) -> str:
+    return mac_address.replace(":", "")[-6:]
+
+
 @callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant,
