@@ -105,7 +105,7 @@ async def test_config_flow_user_initiated_connect_failure(hass):
 
 
 async def test_config_flow_user_initiated_auth_failure(hass):
-    """Connect failure in flow manually initialized by the user."""
+    """Authentication failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -133,7 +133,7 @@ async def test_config_flow_user_initiated_auth_failure(hass):
 
 
 async def test_config_flow_user_initiated_unknonw_failure_1(hass):
-    """Connect failure in flow manually initialized by the user."""
+    """Unknown failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -161,7 +161,7 @@ async def test_config_flow_user_initiated_unknonw_failure_1(hass):
 
 
 async def test_config_flow_user_initiated_unknown_failure_2(hass):
-    """Connect failure in flow manually initialized by the user."""
+    """Unknown failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -189,7 +189,7 @@ async def test_config_flow_user_initiated_unknown_failure_2(hass):
 
 
 async def test_config_flow_import(hass):
-    """Connect failure in flow manually initialized by the user."""
+    """Test for importing config from configuration.yaml."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
