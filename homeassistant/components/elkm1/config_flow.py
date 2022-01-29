@@ -231,8 +231,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
 
-        await self.async_set_unique_id(user_input[CONF_PREFIX])
-        self._abort_if_unique_id_configured()
+        if not self.unique_id:
+            await self.async_set_unique_id(user_input[CONF_PREFIX])
+            self._abort_if_unique_id_configured()
         if importing:
             return None, self.async_create_entry(title=info["title"], data=user_input)
 
@@ -279,6 +280,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle connecting the device when we need manual entry."""
         errors = {}
         if user_input is not None:
+            # We might be able to discover the device via directed UDP
+            # in case its on another subnet
+            if device := await async_discover_device(
+                self.hass, user_input[CONF_ADDRESS]
+            ):
+                await self.async_set_unique_id(dr.format_mac(device.mac_address))
+                self._abort_if_unique_id_configured()
             errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result
@@ -300,6 +308,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        if device := await async_discover_device(self.hass, user_input[CONF_ADDRESS]):
+            await self.async_set_unique_id(dr.format_mac(device.mac_address))
+            self._abort_if_unique_id_configured()
         return (await self._async_create_or_error(user_input, True))[1]
 
     def _url_already_configured(self, url):
