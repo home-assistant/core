@@ -106,6 +106,13 @@ def _short_mac(mac_address: str) -> str:
     return mac_address.replace(":", "")[-6:]
 
 
+def _placeholders_from_device(device: ElkSystem) -> dict[str, str]:
+    return {
+        "mac_address": _short_mac(device.mac_address),
+        "host": f"{device.ip_address}:{device.port}",
+    }
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elk-M1 Control."""
 
@@ -167,12 +174,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
-        device = self._discovered_device
-        placeholders = {
-            "mac_address": _short_mac(device.mac_address),
-            "host": f"{device.ip_address}:{device.port}",
-        }
-        self.context["title_placeholders"] = placeholders
+        self.context["title_placeholders"] = _placeholders_from_device(
+            self._discovered_device
+        )
         return await self.async_step_discovered_connection()
 
     async def async_step_user(
@@ -247,31 +251,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_discovered_connection(self, user_input=None):
         """Handle connecting the device."""
         errors = {}
-        ip_address = self._discovered_device.ip_address
-        port = self._discovered_device.port
-        short_mac = _short_mac(self._discovered_device.mac_address)
+        device = self._discovered_device
+        assert device is not None
         if user_input is not None:
-            user_input[CONF_ADDRESS] = f"{ip_address}:{port}"
-            user_input[CONF_PREFIX] = short_mac
-            if port != SECURE_PORT:
+            user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
+            user_input[CONF_PREFIX] = _short_mac(device.mac_address)
+            if device.port != SECURE_PORT:
                 user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
             errors, result = self._async_connection(user_input, False)
             if not errors:
                 return result
 
-        base_schema = BASE_SCHEMA.copy()
-        if port == SECURE_PORT:
-            base_schema[
+        base_schmea = BASE_SCHEMA.copy()
+        if device.port == SECURE_PORT:
+            base_schmea[
                 vol.Required(CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL)
             ] = vol.In(SECURE_PROTOCOLS)
+
         return self.async_show_form(
             step_id="discovered_connection",
-            data_schema=vol.Schema(base_schema),
+            data_schema=vol.Schema(base_schmea),
             errors=errors,
-            description_placeholders={
-                "host": f"{ip_address}:{port}",
-                "mac_address": short_mac,
-            },
+            description_placeholders=_placeholders_from_device(device),
         )
 
     async def async_step_manual_connection(self, user_input=None):
@@ -282,15 +283,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 return result
 
-        base_schema = BASE_SCHEMA.copy()
-        base_schema[vol.Required(CONF_ADDRESS)] = str
-        base_schema[vol.Optional(CONF_PREFIX, default="")] = str
-        base_schema[
-            vol.Required(CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL)
-        ] = vol.In(ALL_PROTOCOLS)
         return self.async_show_form(
             step_id="manual_connection",
-            data_schema=vol.Schema(base_schema),
+            data_schema=vol.Schema(
+                {
+                    **BASE_SCHEMA,
+                    vol.Required(CONF_ADDRESS): str,
+                    vol.Optional(CONF_PREFIX, default=""): str,
+                    vol.Required(
+                        CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL
+                    ): vol.In(ALL_PROTOCOLS),
+                }
+            ),
             errors=errors,
         )
 
