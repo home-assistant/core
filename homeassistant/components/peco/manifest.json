@@ -3,11 +3,6 @@
   "name": "PECO Outage Counter",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/peco",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@IceBotYT"
   ],
