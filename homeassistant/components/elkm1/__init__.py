@@ -6,6 +6,7 @@ import logging
 import re
 from types import MappingProxyType
 from typing import Any
+from urllib.parse import urlparse
 
 import async_timeout
 import elkm1_lib as elkm1
@@ -28,8 +29,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     ATTR_KEY,
@@ -48,9 +51,18 @@ from .const import (
     CONF_TASK,
     CONF_THERMOSTAT,
     CONF_ZONE,
+    DISCOVER_SCAN_TIMEOUT,
+    DISCOVERY_INTERVAL,
     DOMAIN,
     ELK_ELEMENTS,
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
+    STARTUP_SCAN_TIMEOUT,
+)
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_trigger_discovery,
+    async_update_entry_from_discovery,
 )
 
 SYNC_TIMEOUT = 120
@@ -161,6 +173,15 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
+    discoveries = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
+
+    async def _async_discovery(*_: Any) -> None:
+        async_trigger_discovery(
+            hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
+        )
+
+    async_trigger_discovery(hass, discoveries)
+    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
     if DOMAIN not in hass_config:
         return True
@@ -204,7 +225,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
+    host = urlparse(entry.data[CONF_HOST]).hostname
+
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
+
+    if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
+        if device := await async_discover_device(hass, host):
+            async_update_entry_from_discovery(hass, entry, device[0])
 
     temperature_unit = TEMP_FAHRENHEIT
     if conf[CONF_TEMPERATURE_UNIT] in (BARE_TEMP_CELSIUS, TEMP_CELSIUS):
@@ -410,7 +437,7 @@ class ElkEntity(Entity):
     @property
     def name(self):
         """Name of the element."""
-        return f"{self._prefix}{self._element.name}"
+        return f"{self._prefix} {self._element.name}"
 
     @property
     def unique_id(self):
