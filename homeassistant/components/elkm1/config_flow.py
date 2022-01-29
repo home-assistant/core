@@ -41,21 +41,6 @@ PROTOCOL_MAP = {
     "serial": "serial://",
 }
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PROTOCOL, default="secure"): vol.In(
-            ["secure", "TLS 1.2", "non-secure", "serial"]
-        ),
-        vol.Required(CONF_ADDRESS): str,
-        vol.Optional(CONF_USERNAME, default=""): str,
-        vol.Optional(CONF_PASSWORD, default=""): str,
-        vol.Optional(CONF_PREFIX, default=""): str,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
-            [TEMP_FAHRENHEIT, TEMP_CELSIUS]
-        ),
-    }
-)
-
 VALIDATE_TIMEOUT = 35
 
 
