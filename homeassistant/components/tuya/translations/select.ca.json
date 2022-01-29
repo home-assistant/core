@@ -10,6 +10,14 @@
             "1": "OFF",
             "2": "ON"
         },
+        "tuya__curtain_mode": {
+            "morning": "Mat\u00ed",
+            "night": "Nit"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Enrere",
+            "forward": "Endavant"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Sensibilitat baixa",
             "1": "Sensibilitat alta"

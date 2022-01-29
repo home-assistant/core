@@ -10,6 +10,14 @@
             "1": "V\u00e4ljas",
             "2": "Sees"
         },
+        "tuya__curtain_mode": {
+            "morning": "Hommik",
+            "night": "\u00d6\u00f6"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Tagasi",
+            "forward": "Edasi"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Madal tundlikkus",
             "1": "K\u00f5rge tundlikkus"

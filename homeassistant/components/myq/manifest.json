@@ -9,5 +9,6 @@
     "models": ["819LMB", "MYQ"]
   },
   "iot_class": "cloud_polling",
-  "dhcp": [{ "macaddress": "645299*" }]
+  "dhcp": [{ "macaddress": "645299*" }],
+  "loggers": ["pkce", "pymyq"]
 }

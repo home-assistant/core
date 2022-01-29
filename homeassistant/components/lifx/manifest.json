@@ -8,5 +8,6 @@
     "models": ["LIFX"]
   },
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aiolifx", "aiolifx_effects", "bitstring"]
 }

@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/efergy",
   "requirements": ["pyefergy==0.1.5"],
   "codeowners": ["@tkdrob"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["iso4217", "pyefergy"]
 }

@@ -13,5 +13,6 @@
       "macaddress": "74C63B*"
     }
   ],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["toonapi"]
 }
