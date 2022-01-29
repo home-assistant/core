@@ -437,7 +437,7 @@ class ElkEntity(Entity):
     @property
     def name(self):
         """Name of the element."""
-        return f"{self._prefix}{self._element.name}"
+        return f"{self._prefix} {self._element.name}"
 
     @property
     def unique_id(self):
