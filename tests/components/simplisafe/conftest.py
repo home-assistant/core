@@ -10,22 +10,25 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+REFRESH_TOKEN = "token123"
+USER_ID = "12345"
+
 
 @pytest.fixture(name="api")
 def api_fixture(websocket):
     """Define a fixture for a simplisafe-python API object."""
     return Mock(
         async_get_systems=AsyncMock(),
-        refresh_token="token123",
-        user_id="12345",
+        refresh_token=REFRESH_TOKEN,
+        user_id=USER_ID,
         websocket=websocket,
     )
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=USER_ID, data=config)
     entry.add_to_hass(hass)
     return entry
 
@@ -34,8 +37,8 @@ def config_entry_fixture(hass, config, unique_id):
 def config_fixture(hass):
     """Define a config entry data fixture."""
     return {
-        CONF_USER_ID: "12345",
-        CONF_TOKEN: "token123",
+        CONF_USER_ID: USER_ID,
+        CONF_TOKEN: REFRESH_TOKEN,
     }
 
 
@@ -66,12 +69,6 @@ async def setup_simplisafe_fixture(hass, api, config):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "12345"
 
 
 @pytest.fixture(name="websocket")
