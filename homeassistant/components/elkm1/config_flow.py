@@ -113,7 +113,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the elkm1 config flow."""
-        self.importing = False
         self._discovered_device: ElkSystem | None = None
         self._discovered_devices: dict[str, ElkSystem] = {}
 
@@ -212,7 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_connection(
-        self, user_input
+        self, user_input: dict[str, Any], importing: bool
     ) -> tuple[dict[str, str] | None, FlowResult | None]:
         """Try to connect."""
         if self._url_already_configured(_make_url_from_data(user_input)):
@@ -230,7 +229,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(user_input[CONF_PREFIX])
         self._abort_if_unique_id_configured()
-        if self.importing:
+        if importing:
             return None, self.async_create_entry(title=info["title"], data=user_input)
 
         return None, self.async_create_entry(
@@ -256,7 +255,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_PREFIX] = short_mac
             if port != SECURE_PORT:
                 user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
-            errors, result = self._async_connection(user_input)
+            errors, result = self._async_connection(user_input, False)
             if not errors:
                 return result
 
@@ -279,7 +278,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle connecting the device."""
         errors = {}
         if user_input is not None:
-            errors, result = self._async_connection(user_input)
+            errors, result = self._async_connection(user_input, False)
             if not errors:
                 return result
 
@@ -297,9 +296,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        self.importing = True
-        _, result = await self._async_connection(user_input)
-        return result
+        return (await self._async_connection(user_input, True))[1]
 
     def _url_already_configured(self, url):
         """See if we already have a elkm1 matching user input configured."""
