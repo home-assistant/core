@@ -89,7 +89,6 @@ class IssBinarySensor(CoordinatorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self._state = None
         self._attr_name = name
         self._show_on_map = show
