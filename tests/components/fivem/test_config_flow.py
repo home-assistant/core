@@ -31,6 +31,24 @@ def __mock_fivem_info_success():
     }
 
 
+def __mock_fivem_info_invalid():
+    return {
+        "plugins": [
+            "sample",
+        ],
+        "data": {
+            "gamename": "gta5",
+        },
+    }
+
+
+def __mock_fivem_info_invalid_gamename():
+    info = __mock_fivem_info_success()
+    info["vars"]["gamename"] = "redm"
+
+    return info
+
+
 async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test if initial configuration form is shown."""
     result = await hass.config_entries.flow.async_init(
@@ -77,6 +95,46 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     with patch(
         "fivem.fivem.FiveM.get_info_raw",
         side_effect=FiveMServerOfflineError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_invalid(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "fivem.fivem.FiveM.get_info_raw",
+        return_value=__mock_fivem_info_invalid(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_invalid_gamename(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "fivem.fivem.FiveM.get_info_raw",
+        return_value=__mock_fivem_info_invalid_gamename(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
