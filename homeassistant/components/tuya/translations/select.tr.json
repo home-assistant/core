@@ -10,6 +10,14 @@
             "1": "Kapal\u0131",
             "2": "A\u00e7\u0131k"
         },
+        "tuya__curtain_mode": {
+            "morning": "Sabah",
+            "night": "Gece"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Geri",
+            "forward": "\u0130leri"
+        },
         "tuya__decibel_sensitivity": {
             "0": "D\u00fc\u015f\u00fck hassasiyet",
             "1": "Y\u00fcksek hassasiyet"

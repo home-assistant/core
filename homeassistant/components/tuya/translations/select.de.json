@@ -10,6 +10,14 @@
             "1": "Aus",
             "2": "An"
         },
+        "tuya__curtain_mode": {
+            "morning": "Morgen",
+            "night": "Nacht"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Zur\u00fcck",
+            "forward": "Vorw\u00e4rts"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Geringe Empfindlichkeit",
             "1": "Hohe Empfindlichkeit"
