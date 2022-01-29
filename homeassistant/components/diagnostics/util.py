@@ -8,7 +8,7 @@ from homeassistant.core import callback
 
 from .const import REDACTED
 
-T = TypeVar("T")
+T = TypeVar("T", list, dict[str, Any])
 
 
 @callback
