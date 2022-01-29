@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update() -> IssData:
         try:
 
-            def update(latitude, longitude) -> IssData:
+            def update(latitude: float, longitude: float) -> IssData:
                 return IssData(
                     number_of_people_in_space=iss.number_of_people_in_space(),
                     current_location=iss.current_location(),
