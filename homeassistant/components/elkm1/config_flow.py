@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
-from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN, LOGIN_TIMEOUT
 from .discovery import (
     _short_mac,
     async_discover_device,
@@ -86,7 +86,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     )
     elk.connect()
 
-    if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT, url):
+    if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT, url):
         raise InvalidAuth
 
     device_id = data[CONF_PREFIX]

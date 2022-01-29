@@ -56,6 +56,7 @@ from .const import (
     DOMAIN,
     ELK_ELEMENTS,
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
+    LOGIN_TIMEOUT,
 )
 from .discovery import (
     async_discover_device,
@@ -278,10 +279,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         keypad.add_callback(_element_changed)
 
     try:
-        if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
+        if not await async_wait_for_elk_to_sync(
+            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, conf[CONF_HOST]
+        ):
             return False
     except asyncio.TimeoutError as exc:
-        raise ConfigEntryNotReady from exc
+        raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
@@ -323,8 +326,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
+async def async_wait_for_elk_to_sync(
+    elk: elkm1.Elk, login_timeout: int, sync_timeout: int, conf_host: str
+) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
+
+    sync_event = asyncio.Event()
+    login_event = asyncio.Event()
 
     def login_status(succeeded):
         nonlocal success
@@ -332,29 +340,28 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
         success = succeeded
         if succeeded:
             _LOGGER.debug("ElkM1 login succeeded")
+            login_event.set()
         else:
             elk.disconnect()
             _LOGGER.error("ElkM1 login failed; invalid username or password")
-            event.set()
+            login_event.set()
+            sync_event.set()
 
     def sync_complete():
-        event.set()
+        sync_event.set()
 
     success = True
-    event = asyncio.Event()
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
-    try:
-        async with async_timeout.timeout(timeout):
-            await event.wait()
-    except asyncio.TimeoutError:
-        _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
-            timeout,
-            conf_host,
-        )
-        elk.disconnect()
-        raise
+    events = ((login_event, login_timeout), (sync_event, sync_timeout))
+
+    for event, timeout in events:
+        try:
+            async with async_timeout.timeout(timeout):
+                await event.wait()
+        except asyncio.TimeoutError:
+            elk.disconnect()
+            raise
 
     return success
 
