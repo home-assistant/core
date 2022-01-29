@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_utc, get_time_zone, parse_time
 
-from .const import DOMAIN, CONF_TO, CONF_FROM, CONF_TIME, CONF_TRAINS
+from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_TRAINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,15 +97,33 @@ async def async_setup_entry(
     httpsession = async_get_clientsession(hass)
     train_api = TrafikverketTrain(httpsession, entry.data[CONF_API_KEY])
 
+    try:
+        to_station = await train_api.async_get_train_station(entry.data[CONF_TO])
+        from_station = await train_api.async_get_train_station(entry.data[CONF_FROM])
+    except ValueError as error:
+        if "Invalid authentication" in error.args[0]:
+            _LOGGER.error("Unable to set up up component: %s", error)
+            return
+        _LOGGER.error(
+            "Problem when trying station %s to %s. Error: %s ",
+            entry.data[CONF_FROM],
+            entry.data[CONF_TO],
+            error,
+        )
+
+    train_time = (
+        parse_time(entry.data.get(CONF_TIME, "")) if entry.data.get(CONF_TIME) else None
+    )
+
     async_add_entities(
         [
             TrainSensor(
                 train_api,
                 entry.data[CONF_NAME],
-                entry.data[CONF_FROM],
-                entry.data[CONF_TO],
-                entry.data.get(CONF_WEEKDAY),
-                parse_time(entry.data.get(CONF_TIME)),
+                from_station,
+                to_station,
+                entry.data[CONF_WEEKDAY],
+                train_time,
                 entry.entry_id,
             )
         ],
@@ -152,7 +170,7 @@ class TrainSensor(SensorEntity):
         from_station: str,
         to_station: str,
         weekday: list,
-        departuretime: time,
+        departuretime: time | None,
         entry_id: str,
     ) -> None:
         """Initialize the sensor."""

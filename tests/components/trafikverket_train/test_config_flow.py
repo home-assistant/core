@@ -6,19 +6,18 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.trafikverket_train.const import (
+    CONF_FROM,
+    CONF_TIME,
+    CONF_TO,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
-)
-
-from homeassistant.components.trafikverket_train.const import (
-    DOMAIN,
-    CONF_TO,
-    CONF_FROM,
-    CONF_TIME,
 )
 
 from tests.common import MockConfigEntry
@@ -52,10 +51,10 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Stockholm C to Uppsala C"
+    assert result2["title"] == "Stockholm C to Uppsala C at 10:00"
     assert result2["data"] == {
         "api_key": "1234567890",
-        "name": "Stockholm C to Uppsala C",
+        "name": "Stockholm C to Uppsala C at 10:00",
         "from": "Stockholm C",
         "to": "Uppsala C",
         "time": "10:00",
@@ -87,10 +86,10 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Stockholm C to Uppsala C"
+    assert result2["title"] == "Stockholm C to Uppsala C at 10:00"
     assert result2["data"] == {
         "api_key": "1234567890",
-        "name": "Stockholm C to Uppsala C",
+        "name": "Stockholm C to Uppsala C at 10:00",
         "from": "Stockholm C",
         "to": "Uppsala C",
         "time": "10:00",
@@ -183,7 +182,7 @@ async def test_flow_fails(
 
 
 async def test_flow_fails_incorrect_time(hass: HomeAssistant) -> None:
-    """Test config flow errors due to bad time"""
+    """Test config flow errors due to bad time."""
     result5 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

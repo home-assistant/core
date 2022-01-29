@@ -1,8 +1,8 @@
 """Adds config flow for Trafikverket Train integration."""
 from __future__ import annotations
 
-from typing import Any
 import logging
+from typing import Any
 
 from pytrafikverket import TrafikverketTrain
 import voluptuous as vol
@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, CONF_TO, CONF_FROM, CONF_TIME
+from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +70,11 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             train_time = user_input.get(CONF_TIME)
             train_days = user_input[CONF_WEEKDAY]
 
-            name = f"{train_from} to {train_to}"
+            name = (
+                f"{train_from} to {train_to} at {train_time}"
+                if train_time
+                else f"{train_from} to {train_to}"
+            )
 
             validate = await self.validate_input(api_key, train_from, train_to)
 
