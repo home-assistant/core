@@ -80,10 +80,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
                 self._exception = None  # Clear stored exception
                 raise exc  # pylint: disable-msg=raising-bad-type
         except RequestError as err:
-            raise UpdateFailed(
-                f"Error communicating with API: {err}. Try unplugging and replugging your "
-                f"IKEA gateway."
-            ) from err
+            raise UpdateFailed(f"Error communicating with API: {err}.") from err
 
         if not self.data or not self.last_update_success:  # Start subscription
             try:
