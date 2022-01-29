@@ -634,8 +634,6 @@ homeassistant/components/nut/* @bdraco @ollo69
 tests/components/nut/* @bdraco @ollo69
 homeassistant/components/nws/* @MatthewFlamm
 tests/components/nws/* @MatthewFlamm
-homeassistant/components/nws_alerts/* @IceBotYT
-tests/components/nws_alerts/* @IceBotYT
 homeassistant/components/nzbget/* @chriscla
 tests/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
