@@ -94,6 +94,7 @@ FLOWS = [
     "evil_genius_labs",
     "ezviz",
     "faa_delays",
+    "fibaro",
     "fireservicerota",
     "fjaraskupan",
     "flick_electric",

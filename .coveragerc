@@ -320,7 +320,15 @@ omit =
     homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
-    homeassistant/components/fibaro/*
+    homeassistant/components/fibaro/__init__.py
+    homeassistant/components/fibaro/binary_sensor.py
+    homeassistant/components/fibaro/climate.py
+    homeassistant/components/fibaro/cover.py
+    homeassistant/components/fibaro/light.py
+    homeassistant/components/fibaro/lock.py
+    homeassistant/components/fibaro/scene.py
+    homeassistant/components/fibaro/sensor.py
+    homeassistant/components/fibaro/switch.py
     homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
     homeassistant/components/fireservicerota/__init__.py
