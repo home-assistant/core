@@ -920,7 +920,7 @@ pydispatcher==2.0.5
 pyeconet==0.1.14
 
 # homeassistant.components.efergy
-pyefergy==0.1.5
+pyefergy==22.1.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
