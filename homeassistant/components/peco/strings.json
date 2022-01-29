@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PECO Outage Counter",
+        "description": "Please choose your county below. If you would like to include a sensor that has the total amount of outages in the service area, please check that below.",
+        "data": {
+          "county": "County"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
