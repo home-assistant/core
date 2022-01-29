@@ -23,7 +23,6 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "county": "PHILADELPHIA",
-                "include_total_sensor": True,
             },
         )
         await hass.async_block_till_done()
@@ -32,5 +31,4 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "Philadelphia Outage Count"
     assert result2["data"] == {
         "county": "PHILADELPHIA",
-        "include_total_sensor": True,
     }
