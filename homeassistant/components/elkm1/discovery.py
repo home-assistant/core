@@ -61,13 +61,7 @@ async def async_discover_devices(
             assert isinstance(device, ElkSystem)
             combined_discoveries[device.ip_address] = device
 
-    if not address:
-        return list(combined_discoveries.values())
-
-    if address in combined_discoveries:
-        return [combined_discoveries[address]]
-
-    return []
+    return list(combined_discoveries.values())
 
 
 async def async_discover_device(hass: HomeAssistant, host: str) -> ElkSystem | None:
