@@ -889,8 +889,8 @@ tests/components/spider/* @peternijssen
 homeassistant/components/splunk/* @Bre77
 homeassistant/components/spotify/* @frenck
 tests/components/spotify/* @frenck
-homeassistant/components/sql/* @dgomes
-tests/components/sql/* @dgomes
+homeassistant/components/sql/* @dgomes @gjohansson-ST
+tests/components/sql/* @dgomes @gjohansson-ST
 homeassistant/components/squeezebox/* @rajlaud
 tests/components/squeezebox/* @rajlaud
 homeassistant/components/srp_energy/* @briglx
@@ -975,6 +975,7 @@ tests/components/trace/* @home-assistant/core
 homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
 tests/components/tractive/* @Danielhiversen @zhulik @bieniu
 homeassistant/components/trafikverket_train/* @endor-force @gjohansson-ST
+tests/components/trafikverket_train/* @endor-force @gjohansson-ST
 homeassistant/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
 tests/components/trafikverket_weatherstation/* @endor-force @gjohansson-ST
 homeassistant/components/transmission/* @engrbm87 @JPHutchins

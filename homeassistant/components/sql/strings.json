@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+        },
+        "error": {
+            "db_url_invalid": "Database url invalid",
+            "query_invalid": "Query invalid. Needs to start with Select",
+            "value_template_invalid": "Value template invalid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "db_url": "Database url",
+                    "query": "Select query",
+                    "column": "Column",
+                    "unit_of_measurement": "Unit of Measure",
+                    "value_template": "Value Template"
+                }
+            }
+        }
+    }
+}

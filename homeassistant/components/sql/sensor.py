@@ -9,25 +9,27 @@ import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
-from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
+from homeassistant.components.recorder import CONF_DB_URL
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COLUMN_NAME, CONF_QUERIES, CONF_QUERY, DB_URL_RE
+from .const import CONF_COLUMN_NAME, CONF_QUERIES, CONF_QUERY, DB_URL_RE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def redact_credentials(data):
+def redact_credentials(data) -> str:
     """Redact credentials from string data."""
     return DB_URL_RE.sub("//****:****@", data)
 
 
-def validate_sql_select(value):
+def validate_sql_select(value) -> str:
     """Validate that value is a SQL SELECT query."""
     if not value.lstrip().lower().startswith("select"):
         raise vol.Invalid("Only SELECT queries allowed")
@@ -49,68 +51,92 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the SQL sensor platform."""
-    if not (db_url := config.get(CONF_DB_URL)):
-        db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
-    sess = None
-    try:
-        engine = sqlalchemy.create_engine(db_url)
-        sessmaker = scoped_session(sessionmaker(bind=engine))
-
-        # Run a dummy query just to test the db_url
-        sess = sessmaker()
-        sess.execute("SELECT 1;")
-
-    except sqlalchemy.exc.SQLAlchemyError as err:
-        _LOGGER.error(
-            "Couldn't connect using %s DB_URL: %s",
-            redact_credentials(db_url),
-            redact_credentials(str(err)),
-        )
-        return
-    finally:
-        if sess:
-            sess.close()
-
-    queries = []
+    _LOGGER.warning(
+        # Config flow added in Home Assistant Core 2022.3, remove import flow in 2022.7
+        "Loading SQL via platform setup is deprecated; Please remove it from your configuration"
+    )
 
     for query in config[CONF_QUERIES]:
-        name = query.get(CONF_NAME)
-        query_str = query.get(CONF_QUERY)
-        unit = query.get(CONF_UNIT_OF_MEASUREMENT)
-        value_template = query.get(CONF_VALUE_TEMPLATE)
-        column_name = query.get(CONF_COLUMN_NAME)
-
-        if value_template is not None:
-            value_template.hass = hass
-
-        # MSSQL uses TOP and not LIMIT
-        if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
-            query_str = (
-                query_str.replace("SELECT", "SELECT TOP 1")
-                if "mssql" in db_url
-                else query_str.replace(";", " LIMIT 1;")
+        new_config = {
+            CONF_DB_URL: config.get(CONF_DB_URL),
+            CONF_NAME: query.get(CONF_NAME),
+            CONF_QUERY: query.get(CONF_QUERY),
+            CONF_UNIT_OF_MEASUREMENT: query.get(CONF_UNIT_OF_MEASUREMENT),
+            CONF_VALUE_TEMPLATE: query.get(CONF_VALUE_TEMPLATE),
+            CONF_COLUMN_NAME: query.get(CONF_COLUMN_NAME),
+        }
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=new_config,
             )
-
-        sensor = SQLSensor(
-            name, sessmaker, query_str, column_name, unit, value_template
         )
-        queries.append(sensor)
 
-    add_entities(queries, True)
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the SQL sensor entry."""
+
+    db_url = entry.data[CONF_DB_URL]
+    name = entry.data[CONF_NAME]
+    query_str = entry.data[CONF_QUERY]
+    unit = entry.data.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template = entry.data.get(CONF_VALUE_TEMPLATE)
+    column_name = entry.data[CONF_COLUMN_NAME]
+
+    if value_template is not None:
+        value_template.hass = hass
+
+    engine = sqlalchemy.create_engine(db_url)
+    sessmaker = scoped_session(sessionmaker(bind=engine))
+
+    # MSSQL uses TOP and not LIMIT
+    if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
+        query_str = (
+            query_str.replace("SELECT", "SELECT TOP 1")
+            if "mssql" in db_url
+            else query_str.replace(";", " LIMIT 1;")
+        )
+
+    async_add_entities(
+        [
+            SQLSensor(
+                name,
+                sessmaker,
+                query_str,
+                column_name,
+                unit,
+                value_template,
+                entry.entry_id,
+            )
+        ],
+        True,
+    )
 
 
 class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
-    def __init__(self, name, sessmaker, query, column, unit, value_template):
+    def __init__(
+        self,
+        name: str,
+        sessmaker: scoped_session,
+        query: str,
+        column: str,
+        unit: str | None,
+        value_template: Template | None,
+        entry_id: str,
+    ) -> None:
         """Initialize the SQL sensor."""
         self._name = name
         self._query = query
@@ -120,6 +146,7 @@ class SQLSensor(SensorEntity):
         self.sessionmaker = sessmaker
         self._state = None
         self._attributes = None
+        self._attr_unique_id = entry_id
 
     @property
     def name(self):
