@@ -56,7 +56,6 @@ from .const import (
     DOMAIN,
     ELK_ELEMENTS,
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
-    STARTUP_SCAN_TIMEOUT,
 )
 from .discovery import (
     async_discover_device,
@@ -173,14 +172,13 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
-    discoveries = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    async_trigger_discovery(hass, discoveries)
+    asyncio.create_task(_async_discovery())
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
     if DOMAIN not in hass_config:
