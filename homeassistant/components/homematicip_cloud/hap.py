@@ -182,7 +182,7 @@ class HomematicipHAP:
         """Start WebSocket connection."""
         tries = 0
         while True:
-            retry_delay = 2 ** min(tries, 8)
+            retry_delay = 2 ** min(2+tries, 600)
 
             try:
                 await self.home.get_current_state()
