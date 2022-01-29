@@ -4,7 +4,6 @@ from __future__ import annotations
 import datetime
 import decimal
 import logging
-import re
 
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -18,13 +17,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import CONF_COLUMN_NAME, CONF_QUERIES, CONF_QUERY, DB_URL_RE
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_COLUMN_NAME = "column"
-CONF_QUERIES = "queries"
-CONF_QUERY = "query"
-
-DB_URL_RE = re.compile("//.*:.*@")
 
 
 def redact_credentials(data):
