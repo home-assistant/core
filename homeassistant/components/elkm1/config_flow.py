@@ -1,12 +1,17 @@
 """Config flow for Elk-M1 Control integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 import elkm1_lib as elkm1
+from elkm1_lib.discovery import ElkSystem
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import dhcp
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -18,10 +23,14 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
 from .const import CONF_AUTO_CONFIGURE, DOMAIN
+from .discovery import async_discover_device, async_update_entry_from_discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +96,10 @@ def _make_url_from_data(data):
     return f"{protocol}{address}"
 
 
+def _short_mac(mac_address: str) -> str:
+    return mac_address.replace(":", "")[-6:]
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elk-M1 Control."""
 
@@ -95,11 +108,77 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the elkm1 config flow."""
         self.importing = False
+        self._discovered_device: ElkSystem | None = None
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle discovery via dhcp."""
+        self._discovered_device = ElkSystem(
+            discovery_info.macaddress, discovery_info.ip, 0
+        )
+        return await self._async_handle_discovery()
+
+    async def async_step_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
+        """Handle discovery."""
+        self._discovered_device = ElkSystem(
+            discovery_info["mac_address"],
+            discovery_info["ip_address"],
+            discovery_info["port"],
+        )
+        return await self._async_handle_discovery()
+
+    async def _async_handle_discovery(self) -> FlowResult:
+        """Handle any discovery."""
+        device = self._discovered_device
+        assert device is not None
+        mac = dr.format_mac(device.mac_address)
+        host = device.ip_address
+        await self.async_set_unique_id(mac)
+        for entry in self._async_current_entries(include_ignore=False):
+            if (
+                entry.unique_id == mac
+                or urlparse(entry.data[CONF_HOST]).hostname == host
+            ):
+                if async_update_entry_from_discovery(self.hass, entry, device):
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                return self.async_abort(reason="already_configured")
+        self.context[CONF_HOST] = host
+        for progress in self._async_in_progress():
+            if progress.get("context", {}).get(CONF_HOST) == host:
+                return self.async_abort(reason="already_in_progress")
+        if not device.port:
+            if discovered_device := await async_discover_device(self.hass, host):
+                self._discovered_device = discovered_device[0]
+            else:
+                return self.async_abort(reason="cannot_connect")
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        assert self._discovered_device is not None
+        device = self._discovered_device
+        placeholders = {
+            "id": _short_mac(device.mac_address),
+            "ip_address": device.ip_address,
+        }
+        self.context["title_placeholders"] = placeholders
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            if self._discovered_device is not None:
+                user_input[CONF_ADDRESS] = self._discovered_device.ip_address
+                user_input[CONF_PREFIX] = _short_mac(
+                    self._discovered_device.mac_address
+                )
+
             if self._url_already_configured(_make_url_from_data(user_input)):
                 return self.async_abort(reason="address_already_configured")
 
@@ -133,8 +212,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        base_schema = {
+            vol.Required(CONF_PROTOCOL, default="secure"): vol.In(
+                ["secure", "TLS 1.2", "non-secure", "serial"]
+            ),
+            vol.Optional(CONF_USERNAME, default=""): str,
+            vol.Optional(CONF_PASSWORD, default=""): str,
+            vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
+                [TEMP_FAHRENHEIT, TEMP_CELSIUS]
+            ),
+        }
+        if self._discovered_device is not None:
+            base_schema[vol.Required(CONF_ADDRESS)] = str
+            base_schema[vol.Optional(CONF_PREFIX, default="")] = str
+
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=vol.Schema(base_schema), errors=errors
         )
 
     async def async_step_import(self, user_input):

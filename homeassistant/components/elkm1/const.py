@@ -1,5 +1,7 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
+from datetime import timedelta
+
 from elkm1_lib.const import Max
 import voluptuous as vol
 
@@ -18,6 +20,9 @@ CONF_SETTING = "setting"
 CONF_TASK = "task"
 CONF_THERMOSTAT = "thermostat"
 
+STARTUP_SCAN_TIMEOUT = 5
+DISCOVER_SCAN_TIMEOUT = 10
+DISCOVERY_INTERVAL = timedelta(minutes=15)
 
 BARE_TEMP_FAHRENHEIT = "F"
 BARE_TEMP_CELSIUS = "C"
