@@ -12,7 +12,7 @@ T = TypeVar("T")
 
 
 @callback
-def async_redact_data(data: T, to_redact: Iterable[Any]) -> T:
+def async_redact_data(data: type[T], to_redact: Iterable[Any]) -> type[T]:
     """Redact sensitive data in a dict."""
     if not isinstance(data, (Mapping, list)):
         return data
