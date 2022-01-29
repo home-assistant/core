@@ -32,7 +32,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -50,6 +49,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     DOMAIN,
+    PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
@@ -66,6 +66,7 @@ CONF_AVAILABLE_TONES = "available_tones"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
+CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_SUPPORT_DURATION = "support_duration"
 CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
@@ -82,9 +83,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
         vol.Optional(CONF_STATE_ON): cv.string,
+        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_SUPPORT_DURATION, default=True): cv.boolean,
         vol.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -151,7 +152,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         self._attr_name = config[CONF_NAME]
         self._attr_should_poll = False
         self._supported_features = SUPPORTED_BASE
-        self._attr_is_on = False
+        self._attr_is_on = None
         self._state_on = None
         self._state_off = None
         self._optimistic = None
@@ -190,6 +191,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
 
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
+        self._attr_is_on = False if self._optimistic else None
 
         command_template = config.get(CONF_COMMAND_TEMPLATE)
         command_off_template = config.get(CONF_COMMAND_OFF_TEMPLATE) or config.get(
@@ -208,7 +210,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             else None,
         }
         self._value_template = MqttValueTemplate(
-            config.get(CONF_VALUE_TEMPLATE),
+            config.get(CONF_STATE_VALUE_TEMPLATE),
             entity=self,
         ).async_render_with_possible_json_value
 
@@ -220,7 +222,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
-            if not payload or payload in PAYLOAD_NONE:
+            if not payload or payload == PAYLOAD_EMPTY_JSON:
                 _LOGGER.debug(
                     "Ignoring empty payload '%s' after rendering for topic %s",
                     payload,
@@ -228,7 +230,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 )
                 return
             json_payload = {}
-            if payload in [self._state_on, self._state_off]:
+            if payload in [self._state_on, self._state_off, PAYLOAD_NONE]:
                 json_payload = {STATE: payload}
             else:
                 try:
@@ -250,6 +252,8 @@ class MqttSiren(MqttEntity, SirenEntity):
                     self._attr_is_on = True
                 if json_payload[STATE] == self._state_off:
                     self._attr_is_on = False
+                if json_payload[STATE] == PAYLOAD_NONE:
+                    self._attr_is_on = None
                 del json_payload[STATE]
 
             if json_payload:

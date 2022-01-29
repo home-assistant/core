@@ -14,6 +14,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
@@ -86,7 +87,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("siren.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "1")
@@ -153,14 +154,14 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
                 "command_topic": "command-topic",
                 "payload_on": "beer on",
                 "payload_off": "beer off",
-                "value_template": "{{ value_json.val }}",
+                "state_value_template": "{{ value_json.val }}",
             }
         },
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("siren.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"beer on"}')
 
@@ -168,13 +169,8 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "state-topic", '{"val": null }')
-    assert (
-        "Ignoring empty payload 'None' after rendering for topic state-topic"
-        in caplog.text
-    )
-
     state = hass.states.get("siren.test")
-    assert state.state == STATE_ON
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"beer off"}')
 
@@ -204,7 +200,7 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     await hass.async_block_till_done()
 
     state = hass.states.get("siren.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(siren.ATTR_TONE) is None
     assert state.attributes.get(siren.ATTR_DURATION) is None
     assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) is None
@@ -248,6 +244,20 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     assert state.attributes.get(siren.ATTR_TONE) == "bell"
     assert state.attributes.get(siren.ATTR_DURATION) == 5
     assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
+
+    async_fire_mqtt_message(
+        hass,
+        "state-topic",
+        "{}",
+    )
+    assert state.state == STATE_OFF
+    assert state.attributes.get(siren.ATTR_TONE) == "bell"
+    assert state.attributes.get(siren.ATTR_DURATION) == 5
+    assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
+    assert (
+        "Ignoring empty payload '{}' after rendering for topic state-topic"
+        in caplog.text
+    )
 
 
 async def test_filtering_not_supported_attributes_optimistic(hass, mqtt_mock):
@@ -361,7 +371,7 @@ async def test_filtering_not_supported_attributes_via_state(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state1 = hass.states.get("siren.test1")
-    assert state1.state == STATE_OFF
+    assert state1.state == STATE_UNKNOWN
     assert siren.ATTR_DURATION not in state1.attributes
     assert siren.ATTR_AVAILABLE_TONES in state1.attributes
     assert siren.ATTR_TONE in state1.attributes
@@ -481,7 +491,7 @@ async def test_custom_state_payload(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("siren.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "HIGH")
@@ -578,8 +588,8 @@ async def test_discovery_update_siren_topic_template(hass, mqtt_mock, caplog):
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"
     config2["state_topic"] = "siren/state2"
-    config1["value_template"] = "{{ value_json.state1.state }}"
-    config2["value_template"] = "{{ value_json.state2.state }}"
+    config1["state_value_template"] = "{{ value_json.state1.state }}"
+    config2["state_value_template"] = "{{ value_json.state2.state }}"
 
     state_data1 = [
         ([("siren/state1", '{"state1":{"state":"ON"}}')], "on", None),
@@ -613,8 +623,8 @@ async def test_discovery_update_siren_template(hass, mqtt_mock, caplog):
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"
     config2["state_topic"] = "siren/state1"
-    config1["value_template"] = "{{ value_json.state1.state }}"
-    config2["value_template"] = "{{ value_json.state2.state }}"
+    config1["state_value_template"] = "{{ value_json.state1.state }}"
+    config2["state_value_template"] = "{{ value_json.state2.state }}"
 
     state_data1 = [
         ([("siren/state1", '{"state1":{"state":"ON"}}')], "on", None),
