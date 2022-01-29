@@ -48,7 +48,7 @@ def _get_air_quality(device: Device) -> int | None:
     return cast(int, device.air_purifier_control.air_purifiers[0].air_quality)
 
 
-SENSOR_DESCRIPTION_API = TradfriSensorEntityDescription(
+SENSOR_DESCRIPTION_AQI = TradfriSensorEntityDescription(
     device_class=SensorDeviceClass.AQI,
     native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     key=SensorDeviceClass.AQI,
@@ -76,27 +76,24 @@ async def async_setup_entry(
     entities: list[TradfriSensor] = []
 
     for device_coordinator in coordinator_data[COORDINATOR_LIST]:
+        description = None
         if (
             not device_coordinator.device.has_light_control
             and not device_coordinator.device.has_socket_control
             and not device_coordinator.device.has_signal_repeater_control
             and not device_coordinator.device.has_air_purifier_control
         ):
-            entities.append(
-                TradfriSensor(
-                    device_coordinator,
-                    api,
-                    gateway_id,
-                    description=SENSOR_DESCRIPTION_BATTERY,
-                )
-            )
+            description = SENSOR_DESCRIPTION_BATTERY
         elif device_coordinator.device.has_air_purifier_control:
+            description = SENSOR_DESCRIPTION_AQI
+
+        if description:
             entities.append(
                 TradfriSensor(
                     device_coordinator,
                     api,
                     gateway_id,
-                    description=SENSOR_DESCRIPTION_API,
+                    description=description,
                 )
             )
 
