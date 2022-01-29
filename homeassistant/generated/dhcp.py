@@ -47,6 +47,11 @@ DHCP = [
         "macaddress": "B85F98*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "00037F*"
+    },
+    {
         "domain": "broadlink",
         "macaddress": "34EA34*"
     },
