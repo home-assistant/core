@@ -1,5 +1,5 @@
 """Test GitHub sensor."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from aiogithubapi import GitHubNotModifiedException
 import pytest
@@ -40,3 +40,23 @@ async def test_sensor_updates_with_not_modified_content(
         )
     new_state = hass.states.get(TEST_SENSOR_ENTITY)
     assert state.state == new_state.state
+
+
+async def test_sensor_updates_with_empty_release_array(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the sensor updates by default GitHub sensors."""
+    state = hass.states.get(TEST_SENSOR_ENTITY)
+    assert state.state == "v1.0.0"
+
+    with patch(
+        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.list",
+        return_value=MagicMock(data=[]),
+    ):
+
+        async_fire_time_changed(hass, dt.utcnow() + DEFAULT_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    new_state = hass.states.get(TEST_SENSOR_ENTITY)
+    assert new_state.state == "unavailable"

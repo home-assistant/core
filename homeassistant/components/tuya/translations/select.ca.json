@@ -10,9 +10,22 @@
             "1": "OFF",
             "2": "ON"
         },
+        "tuya__curtain_mode": {
+            "morning": "Mat\u00ed",
+            "night": "Nit"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Enrere",
+            "forward": "Endavant"
+        },
         "tuya__decibel_sensitivity": {
             "0": "Sensibilitat baixa",
             "1": "Sensibilitat alta"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
         },
         "tuya__fingerbot_mode": {
             "click": "Polsador",

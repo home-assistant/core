@@ -11,5 +11,6 @@
       "manufacturer": "NETGEAR, Inc.",
       "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
     }
-  ]
+  ],
+  "loggers": ["pynetgear"]
 }

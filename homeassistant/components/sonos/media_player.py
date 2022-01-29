@@ -546,7 +546,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             plex_plugin = self.speaker.plex_plugin
             media_id = media_id[len(PLEX_URI_SCHEME) :]
             payload = json.loads(media_id)
-            shuffle = payload.pop("shuffle", None)
+            if isinstance(payload, dict):
+                shuffle = payload.pop("shuffle", False)
+            else:
+                shuffle = False
             media = lookup_plex_media(self.hass, media_type, json.dumps(payload))
             if not kwargs.get(ATTR_MEDIA_ENQUEUE):
                 soco.clear_queue()

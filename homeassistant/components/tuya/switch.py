@@ -480,6 +480,56 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Switch",
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Anion",
+            icon="mdi:atom",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.HUMIDIFIER,
+            name="Humidification",
+            icon="mdi:air-humidifier",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OXYGEN,
+            name="Oxygen Bar",
+            icon="mdi:molecule",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_BEEP,
+            name="Sound",
+            icon="mdi:minus-circle",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SwitchEntityDescription(
+            key=DPCode.CONTROL_BACK,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OPPOSITE,
+            name="Reverse",
+            icon="mdi:swap-horizontal",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)

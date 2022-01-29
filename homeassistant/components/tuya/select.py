@@ -227,8 +227,54 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:layers-outline",
         ),
     ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45vs7vkge
+    "fs": (
+        SelectEntityDescription(
+            key=DPCode.FAN_VERTICAL,
+            name="Vertical Swing Flap Angle",
+            device_class=TuyaDeviceClass.FAN_ANGLE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:format-vertical-align-center",
+        ),
+        SelectEntityDescription(
+            key=DPCode.FAN_HORIZONTAL,
+            name="Horizontal Swing Flap Angle",
+            device_class=TuyaDeviceClass.FAN_ANGLE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:format-horizontal-align-center",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown Setting",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+    ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SelectEntityDescription(
+            key=DPCode.CONTROL_BACK_MODE,
+            name="Motor Mode",
+            device_class=TuyaDeviceClass.CURTAIN_MOTOR_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:swap-horizontal",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            name="Mode",
+            device_class=TuyaDeviceClass.CURTAIN_MODE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
-
 
 # Socket (duplicate of `kg`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s

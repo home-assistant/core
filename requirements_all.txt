@@ -56,7 +56,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.5
 
 # homeassistant.components.vicare
-PyViCare==2.15.0
+PyViCare==2.16.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -338,7 +338,7 @@ aqualogic==2.6
 arcam-fmj==0.12.0
 
 # homeassistant.components.arris_tg2492lg
-arris-tg2492lg==1.1.0
+arris-tg2492lg==1.2.1
 
 # homeassistant.components.ampio
 asmog==0.0.6
@@ -681,7 +681,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.28.11
+flux_led==0.28.17
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -764,7 +764,7 @@ google-cloud-pubsub==2.9.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.5.1
+google-nest-sdm==1.6.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220124.0
+home-assistant-frontend==20220127.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -914,7 +914,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.intellifire
-intellifire4py==0.4.3
+intellifire4py==0.5
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1660,7 +1660,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.1
+pymazda==0.3.2
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
@@ -1746,7 +1746,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.0
+pyoverkiz==1.3.1
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2087,7 +2087,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.4
+renault-api==0.1.7
 
 # homeassistant.components.python_script
 restrictedpython==5.2
@@ -2111,7 +2111,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.11.0
+rokuecp==0.12.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5

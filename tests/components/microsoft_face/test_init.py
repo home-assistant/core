@@ -210,7 +210,7 @@ async def test_service_person(hass, aioclient_mock):
     )
     aioclient_mock.delete(
         ENDPOINT_URL.format(
-            "persongroups/test_group1/persons/" "25985303-c537-4467-b41d-bdb45cd95ca1"
+            "persongroups/test_group1/persons/25985303-c537-4467-b41d-bdb45cd95ca1"
         ),
         status=200,
         text="{}",
