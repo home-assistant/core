@@ -71,6 +71,7 @@ PRESET_HOLD_INDEFINITE = "indefinite"
 AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
+HAS_HEAT_PUMP = "hasHeatPump"
 
 DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
@@ -173,7 +174,6 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
 SUPPORT_FLAGS = (
     SUPPORT_TARGET_TEMPERATURE
     | SUPPORT_PRESET_MODE
-    | SUPPORT_AUX_HEAT
     | SUPPORT_TARGET_TEMPERATURE_RANGE
     | SUPPORT_FAN_MODE
 )
@@ -362,9 +362,12 @@ class Thermostat(ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
+        supported = SUPPORT_FLAGS
         if self.has_humidifier_control:
-            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
-        return SUPPORT_FLAGS
+            supported = supported | SUPPORT_TARGET_HUMIDITY
+        if self.has_aux_heat:
+            supported = supported | SUPPORT_AUX_HEAT
+        return supported
 
     @property
     def name(self):
@@ -431,8 +434,16 @@ class Thermostat(ClimateEntity):
     def has_humidifier_control(self):
         """Return true if humidifier connected to thermostat and set to manual/on mode."""
         return (
-            self.thermostat["settings"]["hasHumidifier"]
+            "hasHumidifer" in self.thermostat["settings"]
             and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
+        )
+
+    @property
+    def has_aux_heat(self):
+        """Return true if the ecobee has a heat pump."""
+        return (
+            HAS_HEAT_PUMP in self.thermostat["settings"]
+            and self.thermostat["settings"][HAS_HEAT_PUMP]
         )
 
     @property

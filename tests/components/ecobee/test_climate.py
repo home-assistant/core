@@ -4,6 +4,7 @@ from unittest import mock
 
 import pytest
 
+from homeassistant.components.climate.const import SUPPORT_AUX_HEAT
 from homeassistant.components.ecobee import climate as ecobee
 import homeassistant.const as const
 from homeassistant.const import STATE_OFF
@@ -74,6 +75,17 @@ def thermostat_fixture(data):
 async def test_name(thermostat):
     """Test name property."""
     assert thermostat.name == "Ecobee"
+
+
+async def test_aux_heat_not_supported_by_default(ecobee_fixture, thermostat):
+    """Default setup should not support Aux heat."""
+    assert not thermostat.supported_features & SUPPORT_AUX_HEAT
+
+
+async def test_aux_heat_supported_with_heat_pump(ecobee_fixture, thermostat):
+    """Aux Heat shouuld be supported if thermostat has heatpump."""
+    ecobee_fixture["settings"]["hasHeatPump"] = True
+    assert thermostat.supported_features & SUPPORT_AUX_HEAT
 
 
 async def test_current_temperature(ecobee_fixture, thermostat):
