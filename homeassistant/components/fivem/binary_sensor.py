@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FiveMEntity, FiveMServer
+from . import FiveMDataUpdateCoordinator, FiveMEntity
 from .const import DOMAIN, ICON_STATUS, NAME_STATUS
 
 
@@ -21,24 +21,21 @@ async def async_setup_entry(
 
     entities = [FiveMStatusBinarySensor(server)]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class FiveMStatusBinarySensor(FiveMEntity, BinarySensorEntity):
+class FiveMSensorEntity(FiveMEntity, BinarySensorEntity):
+    """Representation of a FiveM sensor base entity."""
+
+    def _update_value(self):
+        self._attr_is_on = self.coordinator.data[self.type_name]
+
+
+class FiveMStatusBinarySensor(FiveMSensorEntity):
     """Representation of a FiveM status binary sensor."""
 
-    def __init__(self, fivem: FiveMServer) -> None:
+    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
         """Initialize status binary sensor."""
         super().__init__(
-            fivem, NAME_STATUS, ICON_STATUS, BinarySensorDeviceClass.CONNECTIVITY
+            coordinator, NAME_STATUS, ICON_STATUS, BinarySensorDeviceClass.CONNECTIVITY
         )
-        self._is_on = self._fivem.online
-
-    @property
-    def is_on(self) -> bool:
-        """Return binary state."""
-        return self._is_on
-
-    async def async_update(self) -> None:
-        """Update status."""
-        self._is_on = self._fivem.online

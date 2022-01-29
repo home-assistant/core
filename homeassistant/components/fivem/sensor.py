@@ -1,12 +1,10 @@
 """The FiveM sensor platform."""
-from typing import Any
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FiveMEntity, FiveMServer
+from . import FiveMDataUpdateCoordinator, FiveMEntity
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
@@ -39,7 +37,7 @@ async def async_setup_entry(
     ]
 
     # Add sensor entities.
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FiveMSensorEntity(FiveMEntity, SensorEntity):
@@ -47,85 +45,54 @@ class FiveMSensorEntity(FiveMEntity, SensorEntity):
 
     def __init__(
         self,
-        server: FiveMServer,
+        coordinator: FiveMDataUpdateCoordinator,
         type_name: str,
         icon: str,
         unit: str,
         device_class: str = None,
+        extra_attrs: list[str] = None,
     ) -> None:
         """Initialize sensor base entity."""
-        super().__init__(server, type_name, icon, device_class)
-        self._attr_native_value: Any = None
+        super().__init__(coordinator, type_name, icon, device_class, extra_attrs)
         self._attr_native_unit_of_measurement = unit
 
-    @property
-    def available(self) -> bool:
-        """Return sensor availability."""
-        return self._fivem.online
+    def _update_value(self):
+        self._attr_native_value = self.coordinator.data[self.type_name]
 
 
 class FiveMPlayersOnlineSensor(FiveMSensorEntity):
     """Representation of a FiveM online players sensor."""
 
-    def __init__(
-        self,
-        server: FiveMServer,
-    ) -> None:
+    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
         """Initialize online players sensor."""
         super().__init__(
-            server, NAME_PLAYERS_ONLINE, ICON_PLAYERS_ONLINE, UNIT_PLAYERS_ONLINE
+            coordinator,
+            NAME_PLAYERS_ONLINE,
+            ICON_PLAYERS_ONLINE,
+            UNIT_PLAYERS_ONLINE,
+            extra_attrs=[ATTR_PLAYERS_LIST],
         )
-        self._extra_state_attributes: dict[str, Any] = {}
-
-    async def async_update(self) -> None:
-        """Update online players state and device attributes."""
-        self._attr_native_value = self._fivem.players_online
-
-        extra_state_attributes = {}
-        players_list = self._fivem.players_list
-
-        if len(players_list) != 0:
-            extra_state_attributes = {ATTR_PLAYERS_LIST: players_list}
-
-        self._attr_extra_state_attributes = extra_state_attributes
 
 
 class FiveMPlayersMaxSensor(FiveMSensorEntity):
     """Representation of a FiveM maximum number of players sensor."""
 
-    def __init__(self, server: FiveMServer) -> None:
+    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
         """Initialize maximum number of players sensor."""
         super().__init__(
-            server=server,
-            type_name=NAME_PLAYERS_MAX,
-            icon=ICON_PLAYERS_MAX,
-            unit=UNIT_PLAYERS_MAX,
+            coordinator, NAME_PLAYERS_MAX, ICON_PLAYERS_MAX, UNIT_PLAYERS_MAX
         )
-
-    async def async_update(self) -> None:
-        """Update maximum number of players."""
-        self._attr_native_value = self._fivem.players_max
 
 
 class FiveMResourcesSensor(FiveMSensorEntity):
     """Representation of a FiveM resources sensor."""
 
-    def __init__(
-        self,
-        server: FiveMServer,
-    ) -> None:
+    def __init__(self, coordinator: FiveMDataUpdateCoordinator) -> None:
         """Initialize resources sensor."""
-        super().__init__(server, NAME_RESOURCES, ICON_RESOURCES, UNIT_RESOURCES)
-        self._extra_state_attributes: dict[str, Any] = {}
-
-    async def async_update(self) -> None:
-        """Update resources state and state attributes."""
-        self._attr_native_value = self._fivem.resources_count
-
-        extra_state_attributes = {}
-        resources_list = self._fivem.resources_list
-
-        if len(resources_list) != 0:
-            extra_state_attributes = {ATTR_RESOURCES_LIST: resources_list}
-
-        self._attr_extra_state_attributes = extra_state_attributes
+        super().__init__(
+            coordinator,
+            NAME_RESOURCES,
+            ICON_RESOURCES,
+            UNIT_RESOURCES,
+            extra_attrs=[ATTR_RESOURCES_LIST],
+        )
