@@ -1,5 +1,6 @@
 """Component to integrate the Home Assistant cloud."""
 import asyncio
+from typing import Final
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -46,6 +47,9 @@ from .const import (
     MODE_PROD,
 )
 from .prefs import CloudPreferences
+
+EVENT_CLOUD_CONNECTED: Final = "cloud_connected"
+EVENT_CLOUD_DISCONNECTED: Final = "cloud_disconnected"
 
 DEFAULT_MODE = MODE_PROD
 
@@ -252,11 +256,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             Platform.TTS, DOMAIN, {}, config
         )
 
+        hass.bus.async_fire(EVENT_CLOUD_CONNECTED)
+
+    async def _on_disconnect():
+        """Handle cloud disconnect."""
+        hass.bus.async_fire(EVENT_CLOUD_DISCONNECTED)
+
     async def _on_initialized():
         """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
     cloud.iot.register_on_connect(_on_connect)
+    cloud.iot.register_on_disconnect(_on_disconnect)
     cloud.register_on_initialized(_on_initialized)
 
     await cloud.initialize()

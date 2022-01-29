@@ -8,7 +8,7 @@ from homeassistant.components import cloud
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context
+from homeassistant.core import Context, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
@@ -137,6 +137,14 @@ async def test_on_connect(hass, mock_cloud_fixture):
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 
+    all_events = []
+
+    @callback
+    def capture_events(ev):
+        all_events.append(ev.event_type)
+
+    hass.bus.async_listen(cloud.EVENT_CLOUD_CONNECTED, capture_events)
+
     assert "async_setup" in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
     await hass.async_block_till_done()
@@ -148,6 +156,8 @@ async def test_on_connect(hass, mock_cloud_fixture):
         await hass.async_block_till_done()
 
     assert len(mock_load.mock_calls) == 0
+
+    assert all_events == [cloud.EVENT_CLOUD_CONNECTED]
 
 
 async def test_remote_ui_url(hass, mock_cloud_fixture):
