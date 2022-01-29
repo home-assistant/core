@@ -15,7 +15,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_custom_components, async_get_integration
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -121,17 +123,40 @@ def handle_get(
     )
 
 
-def _get_json_file_response(
+async def _async_get_json_file_response(
+    hass: HomeAssistant,
     data: dict | list,
     filename: str,
+    domain: str,
     d_type: DiagnosticsType,
     d_id: str,
     sub_type: DiagnosticsSubType | None = None,
     sub_id: str | None = None,
 ) -> web.Response:
     """Return JSON file from dictionary."""
+    hass_sys_info = await async_get_system_info(hass)
+    hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
+    del hass_sys_info["user"]
+
+    integration = await async_get_integration(hass, domain)
+    custom_components = {}
+    all_custom_components = await async_get_custom_components(hass)
+    for cc_domain, cc_obj in all_custom_components.items():
+        custom_components[cc_domain] = {
+            "version": cc_obj.version,
+            "requirements": cc_obj.requirements,
+        }
     try:
-        json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
+        json_data = json.dumps(
+            {
+                "home_assistant": hass_sys_info,
+                "custom_components": custom_components,
+                "integration_manifest": integration.manifest,
+                "data": data,
+            },
+            indent=2,
+            cls=ExtendedJSONEncoder,
+        )
     except TypeError:
         _LOGGER.error(
             "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
@@ -189,7 +214,9 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
                 return web.Response(status=HTTPStatus.NOT_FOUND)
             data = await info[d_type.value](hass, config_entry)
             filename = f"{d_type}-{filename}"
-            return _get_json_file_response(data, filename, d_type.value, d_id)
+            return await _async_get_json_file_response(
+                hass, data, filename, config_entry.domain, d_type.value, d_id
+            )
 
         # sub_type handling
         try:
@@ -210,4 +237,6 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         data = await info[sub_type.value](hass, config_entry, device)
-        return _get_json_file_response(data, filename, d_type, d_id, sub_type, sub_id)
+        return await _async_get_json_file_response(
+            hass, data, filename, config_entry.domain, d_type, d_id, sub_type, sub_id
+        )

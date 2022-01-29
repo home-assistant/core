@@ -1,11 +1,13 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,8 +31,8 @@ from homeassistant.helpers.typing import StateType
 from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
-    RestAttributeDescription,
-    RpcAttributeDescription,
+    RestEntityDescription,
+    RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
@@ -40,6 +42,17 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import get_device_entry_gen, get_device_uptime, temperature_unit
+
+
+@dataclass
+class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
+    """Class to describe a RPC sensor."""
+
+
+@dataclass
+class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
+    """Class to describe a REST sensor."""
+
 
 SENSORS: Final = {
     ("device", "battery"): BlockAttributeDescription(
@@ -229,86 +242,88 @@ SENSORS: Final = {
 }
 
 REST_SENSORS: Final = {
-    "rssi": RestAttributeDescription(
+    "rssi": RestSensorDescription(
+        key="rssi",
         name="RSSI",
-        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "uptime": RestAttributeDescription(
+    "uptime": RestSensorDescription(
+        key="uptime",
         name="Uptime",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=SensorDeviceClass.TIMESTAMP,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
 
 RPC_SENSORS: Final = {
-    "power": RpcAttributeDescription(
+    "power": RpcSensorDescription(
         key="switch",
         sub_key="apower",
         name="Power",
-        unit=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         value=lambda status, _: round(float(status), 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "voltage": RpcAttributeDescription(
+    "voltage": RpcSensorDescription(
         key="switch",
         sub_key="voltage",
         name="Voltage",
-        unit=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         value=lambda status, _: round(float(status), 1),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
     ),
-    "energy": RpcAttributeDescription(
+    "energy": RpcSensorDescription(
         key="switch",
         sub_key="aenergy",
         name="Energy",
-        unit=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value=lambda status, _: round(status["total"] / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "temperature": RpcAttributeDescription(
+    "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
         name="Temperature",
-        unit=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda status, _: round(status["tC"], 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        should_poll=True,
+        use_polling_wrapper=True,
     ),
-    "rssi": RpcAttributeDescription(
+    "rssi": RpcSensorDescription(
         key="wifi",
         sub_key="rssi",
         name="RSSI",
-        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        should_poll=True,
+        use_polling_wrapper=True,
     ),
-    "uptime": RpcAttributeDescription(
+    "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
         name="Uptime",
         value=get_device_uptime,
         device_class=SensorDeviceClass.TIMESTAMP,
-        default_enabled=False,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        should_poll=True,
+        use_polling_wrapper=True,
     ),
 }
 
@@ -359,39 +374,23 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
 class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a REST sensor."""
 
+    entity_description: RestSensorDescription
+
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
-
-    @property
-    def state_class(self) -> str | None:
-        """State class of sensor."""
-        return self.description.state_class
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return unit of sensor."""
-        return self.description.unit
 
 
 class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     """Represent a RPC sensor."""
 
+    entity_description: RpcSensorDescription
+
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
-
-    @property
-    def state_class(self) -> str | None:
-        """State class of sensor."""
-        return self.description.state_class
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return unit of sensor."""
-        return self.description.unit
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):

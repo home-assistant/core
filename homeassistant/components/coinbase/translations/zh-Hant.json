@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Coinbase API \u672a\u63d0\u4f9b\u4e00\u500b\u6216\u591a\u500b\u6240\u8981\u6c42\u7684\u8ca8\u5e63\u9918\u984d\u3002",
             "currency_unavaliable": "Coinbase API \u672a\u63d0\u4f9b\u4e00\u500b\u6216\u591a\u500b\u6240\u8981\u6c42\u7684\u8ca8\u5e63\u9918\u984d\u3002",
+            "exchange_rate_unavailable": "Coinbase \u672a\u63d0\u4f9b\u4e00\u500b\u6216\u591a\u500b\u6240\u8981\u6c42\u7684\u532f\u7387\u3002",
             "exchange_rate_unavaliable": "Coinbase \u672a\u63d0\u4f9b\u4e00\u500b\u6216\u591a\u500b\u6240\u8981\u6c42\u7684\u532f\u7387\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },

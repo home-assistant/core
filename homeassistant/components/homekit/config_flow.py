@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_PORT,
-    ENTITY_CATEGORIES,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
@@ -542,7 +541,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entity_cat_entities = set()
         for entity_id in all_supported_entities:
             if ent_reg_ent := ent_reg.async_get(entity_id):
-                if ent_reg_ent.entity_category in ENTITY_CATEGORIES:
+                if ent_reg_ent.entity_category is not None:
                     entity_cat_entities.add(entity_id)
         # Remove entity category entities since we will exclude them anyways
         all_supported_entities = {

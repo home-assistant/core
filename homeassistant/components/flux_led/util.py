@@ -9,8 +9,9 @@ from homeassistant.components.light import (
     COLOR_MODE_ONOFF,
     COLOR_MODE_WHITE,
 )
+from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
-from .const import FLUX_COLOR_MODE_TO_HASS
+from .const import FLUX_COLOR_MODE_TO_HASS, MIN_RGB_BRIGHTNESS
 
 
 def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
@@ -54,24 +55,50 @@ def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
     assert False  # pragma: no cover
 
 
+def _is_zero_rgb_brightness(rgb: tuple[int, int, int]) -> bool:
+    """RGB brightness is zero."""
+    return all(byte == 0 for byte in rgb)
+
+
 def _min_rgb_brightness(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
     """Ensure the RGB value will not turn off the device from a turn on command."""
-    if all(byte == 0 for byte in rgb):
-        return (1, 1, 1)
+    if _is_zero_rgb_brightness(rgb):
+        return (MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS)
     return rgb
 
 
-def _min_rgbw_brightness(rgbw: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
-    """Ensure the RGBW value will not turn off the device from a turn on command."""
-    if all(byte == 0 for byte in rgbw):
-        return (1, 1, 1, 0)
-    return rgbw
+def _min_scaled_rgb_brightness(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Scale an RGB tuple to minimum brightness."""
+    return color_hsv_to_RGB(*color_RGB_to_hsv(*rgb)[:2], 1)
+
+
+def _min_rgbw_brightness(
+    rgbw: tuple[int, int, int, int], current_rgbw: tuple[int, int, int, int]
+) -> tuple[int, int, int, int]:
+    """Ensure the RGBW value will not turn off the device from a turn on command.
+
+    For RGBW, we also need to ensure that there is at least one
+    value in the RGB fields or the device will switch to CCT mode unexpectedly.
+
+    If the new value being set is all zeros, scale the current
+    color to brightness of 1 so we do not unexpected switch to white
+    """
+    if _is_zero_rgb_brightness(rgbw[:3]):
+        return (*_min_scaled_rgb_brightness(current_rgbw[:3]), rgbw[3])
+    return (*_min_rgb_brightness(rgbw[:3]), rgbw[3])
 
 
 def _min_rgbwc_brightness(
-    rgbwc: tuple[int, int, int, int, int]
+    rgbwc: tuple[int, int, int, int, int], current_rgbwc: tuple[int, int, int, int, int]
 ) -> tuple[int, int, int, int, int]:
-    """Ensure the RGBWC value will not turn off the device from a turn on command."""
-    if all(byte == 0 for byte in rgbwc):
-        return (1, 1, 1, 0, 0)
-    return rgbwc
+    """Ensure the RGBWC value will not turn off the device from a turn on command.
+
+    For RGBWC, we also need to ensure that there is at least one
+    value in the RGB fields or the device will switch to CCT mode unexpectedly
+
+    If the new value being set is all zeros, scale the current
+    color to brightness of 1 so we do not unexpected switch to white
+    """
+    if _is_zero_rgb_brightness(rgbwc[:3]):
+        return (*_min_scaled_rgb_brightness(current_rgbwc[:3]), rgbwc[3], rgbwc[4])
+    return (*_min_rgb_brightness(rgbwc[:3]), rgbwc[3], rgbwc[4])

@@ -175,10 +175,6 @@ async def test_migration(hass, config, config_entry, setup_airvisual, unique_id)
     }
 
 
-@pytest.mark.parametrize(
-    "unique_id",
-    [("51.528308, -0.3817765",)],
-)
 async def test_options_flow(hass, config_entry):
     """Test config flow options."""
     with patch(
@@ -222,14 +218,12 @@ async def test_step_geography_by_coords(hass, config, setup_airvisual):
 @pytest.mark.parametrize(
     "config",
     [
-        (
-            {
-                CONF_API_KEY: "abcde12345",
-                CONF_CITY: "Beijing",
-                CONF_STATE: "Beijing",
-                CONF_COUNTRY: "China",
-            }
-        )
+        {
+            CONF_API_KEY: "abcde12345",
+            CONF_CITY: "Beijing",
+            CONF_STATE: "Beijing",
+            CONF_COUNTRY: "China",
+        }
     ],
 )
 async def test_step_geography_by_name(hass, config, setup_airvisual):
@@ -257,12 +251,10 @@ async def test_step_geography_by_name(hass, config, setup_airvisual):
 @pytest.mark.parametrize(
     "config",
     [
-        (
-            {
-                CONF_IP_ADDRESS: "192.168.1.100",
-                CONF_PASSWORD: "my_password",
-            }
-        ),
+        {
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_PASSWORD: "my_password",
+        }
     ],
 )
 async def test_step_node_pro(hass, config, setup_airvisual):
@@ -282,7 +274,7 @@ async def test_step_node_pro(hass, config, setup_airvisual):
     }
 
 
-async def test_step_reauth(hass, config_entry):
+async def test_step_reauth(hass, config_entry, setup_airvisual):
     """Test that the reauth step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config_entry.data
@@ -295,8 +287,8 @@ async def test_step_reauth(hass, config_entry):
 
     new_api_key = "defgh67890"
 
-    with patch("homeassistant.config_entries.ConfigEntries.async_reload"), patch(
-        "pyairvisual.air_quality.AirQuality.nearest_city"
+    with patch(
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: new_api_key}

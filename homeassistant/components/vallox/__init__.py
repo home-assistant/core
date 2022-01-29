@@ -52,6 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS: list[str] = [
     Platform.SENSOR,
     Platform.FAN,
+    Platform.BINARY_SENSOR,
 ]
 
 ATTR_PROFILE = "profile"

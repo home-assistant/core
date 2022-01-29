@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "cct_unsupported": "Ez a WLED-eszk\u00f6z CCT-csatorn\u00e1kat haszn\u00e1l, amit ez az integr\u00e1ci\u00f3 nem t\u00e1mogat"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"

@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "server_failure": "RTSPtoWebRTC sunucusu bir hata ile kar\u015f\u0131la\u015ft\u0131. Daha fazla bilgi i\u00e7in g\u00fcnl\u00fckleri kontrol edin.",
+            "server_unreachable": "RTSPtoWebRTC sunucusuyla ileti\u015fim kurulam\u0131yor. Daha fazla bilgi i\u00e7in g\u00fcnl\u00fckleri kontrol edin.",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
         "error": {

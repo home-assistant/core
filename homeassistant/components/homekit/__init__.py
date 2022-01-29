@@ -35,7 +35,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
-    ENTITY_CATEGORIES,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
@@ -667,7 +666,7 @@ class HomeKit:
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
                 if (
-                    ent_reg_ent.entity_category in ENTITY_CATEGORIES
+                    ent_reg_ent.entity_category is not None
                     and not self._filter.explicitly_included(entity_id)
                 ):
                     continue

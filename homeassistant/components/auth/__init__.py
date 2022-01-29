@@ -588,7 +588,6 @@ def websocket_sign_path(
             {
                 "path": async_sign_path(
                     hass,
-                    connection.refresh_token_id,
                     msg["path"],
                     timedelta(seconds=msg["expires"]),
                 )

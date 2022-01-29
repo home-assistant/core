@@ -4,7 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
   "requirements": [
-    "pyunifiprotect==3.1.1", "unifi-discovery==1.1.2"
+    "pyunifiprotect==3.2.0",
+    "unifi-discovery==1.1.2"
   ],
   "dependencies": [
     "http"
@@ -57,6 +58,6 @@
     {
       "manufacturer": "Ubiquiti Networks",
       "modelDescription": "UniFi Dream Machine SE"
-    }    
+    }
   ]
 }

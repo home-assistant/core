@@ -70,7 +70,8 @@ async def test_entry_diagnostics(hass, hass_client):
 
 async def test_setup_susbcriber_failure(hass, hass_client):
     """Test configuration error."""
-    config_entry = create_config_entry(hass)
+    config_entry = create_config_entry()
+    config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
     ), patch(

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -76,6 +77,27 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
+    CharacteristicsTypes.Vendor.EVE_ENERGY_KW_HOUR: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.EVE_ENERGY_KW_HOUR,
+        name="Energy kWh",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    CharacteristicsTypes.Vendor.EVE_ENERGY_VOLTAGE: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.EVE_ENERGY_VOLTAGE,
+        name="Volts",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+    ),
+    CharacteristicsTypes.Vendor.EVE_ENERGY_AMPERE: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.EVE_ENERGY_AMPERE,
+        name="Amps",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+    ),
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY,
         name="Real Time Energy",
@@ -96,6 +118,13 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PRESSURE_HPA,
+    ),
+    CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.VOCOLINC_OUTLET_ENERGY,
+        name="Real Time Energy",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     CharacteristicsTypes.TEMPERATURE_CURRENT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.TEMPERATURE_CURRENT,
@@ -358,7 +387,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return f"{super().name} - {self.entity_description.name}"
+        return f"{super().name} {self.entity_description.name}"
 
     @property
     def native_value(self):

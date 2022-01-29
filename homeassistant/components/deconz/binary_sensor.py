@@ -119,6 +119,15 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    DeconzBinarySensorDescription(
+        key="in_test_mode",
+        required_attr="in_test_mode",
+        value_fn=lambda device: device.in_test_mode,
+        suffix="Test Mode",
+        update_key="test",
+        device_class=BinarySensorDeviceClass.SMOKE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 

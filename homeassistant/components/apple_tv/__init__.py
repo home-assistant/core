@@ -7,6 +7,7 @@ from pyatv import connect, exceptions, scan
 from pyatv.const import DeviceModel, Protocol
 from pyatv.convert import model_str
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -269,8 +270,13 @@ class AppleTVManager:
         }
 
         _LOGGER.debug("Discovering device %s", self.config_entry.title)
+        aiozc = await zeroconf.async_get_async_instance(self.hass)
         atvs = await scan(
-            self.hass.loop, identifier=identifiers, protocol=protocols, hosts=[address]
+            self.hass.loop,
+            identifier=identifiers,
+            protocol=protocols,
+            hosts=[address],
+            aiozc=aiozc,
         )
         if atvs:
             return atvs[0]
