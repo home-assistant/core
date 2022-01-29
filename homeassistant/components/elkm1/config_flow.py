@@ -88,13 +88,9 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT, url):
         raise InvalidAuth
 
-    device_name = mac or data[CONF_PREFIX] or "Default"
-    # Return info that you want to store in the config entry.
-    return {
-        "title": f"ElkM1 {device_name}",
-        CONF_HOST: url,
-        CONF_PREFIX: slugify(prefix),
-    }
+    device_id = mac or data[CONF_PREFIX]
+    device_name = "ElkM1 {device_id}" if device_id else "ElkM1"
+    return {"title": device_name, CONF_HOST: url, CONF_PREFIX: slugify(prefix)}
 
 
 def _make_url_from_data(data):
