@@ -520,6 +520,7 @@ omit =
     homeassistant/components/iperf3/*
     homeassistant/components/iqvia/*
     homeassistant/components/irish_rail_transport/sensor.py
+    homeassistant/components/iss/__init__.py
     homeassistant/components/iss/binary_sensor.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
