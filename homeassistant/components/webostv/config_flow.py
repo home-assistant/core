@@ -208,7 +208,7 @@ async def async_get_sources(host: str, key: str) -> list[str]:
         return []
 
     return list(
-        dict.fromkeys(
+        dict.fromkeys(  # Preserve order when filtering duplicates
             [
                 *(app["title"] for app in client.apps.values()),
                 *(app["label"] for app in client.inputs.values()),
