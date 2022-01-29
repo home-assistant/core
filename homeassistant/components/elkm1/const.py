@@ -9,6 +9,8 @@ from homeassistant.const import ATTR_CODE, CONF_ZONE
 
 DOMAIN = "elkm1"
 
+LOGIN_TIMEOUT = 15
+
 CONF_AUTO_CONFIGURE = "auto_configure"
 CONF_AREA = "area"
 CONF_COUNTER = "counter"
