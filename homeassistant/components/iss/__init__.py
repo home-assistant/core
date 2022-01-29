@@ -41,20 +41,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update() -> IssData:
         try:
-            return IssData(
-                number_of_people_in_space=await hass.async_add_executor_job(
-                    iss.number_of_people_in_space
-                ),
-                current_location=await hass.async_add_executor_job(
-                    iss.current_location
-                ),
-                is_above=await hass.async_add_executor_job(
-                    iss.is_ISS_above, latitude, longitude
-                ),
-                next_rise=await hass.async_add_executor_job(
-                    iss.next_rise, latitude, longitude
-                ),
-            )
+
+            def update(latitude, longitude) -> IssData:
+                return IssData(
+                    number_of_people_in_space=iss.number_of_people_in_space(),
+                    current_location=iss.current_location(),
+                    is_above=iss.is_ISS_above(latitude, longitude),
+                    next_rise=iss.next_rise(latitude, longitude),
+                )
+
+            return await hass.async_add_executor_job(update, latitude, longitude)
         except (HTTPError, requests.exceptions.ConnectionError) as ex:
             raise UpdateFailed("Unable to retrieve data") from ex
 
