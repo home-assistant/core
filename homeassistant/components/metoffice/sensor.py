@@ -1,6 +1,8 @@
 """Support for UK Met Office weather service."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import get_device_info
 from .const import (
@@ -34,6 +39,7 @@ from .const import (
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
+from .data import MetOfficeData
 
 ATTR_LAST_UPDATE = "last_update"
 ATTR_SENSOR_ID = "sensor_id"
@@ -170,16 +176,16 @@ async def async_setup_entry(
     )
 
 
-class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
+class MetOfficeCurrentSensor(CoordinatorEntity[MetOfficeData], SensorEntity):
     """Implementation of a Met Office current weather condition sensor."""
 
     def __init__(
         self,
-        coordinator,
-        hass_data,
-        use_3hourly,
+        coordinator: DataUpdateCoordinator[MetOfficeData],
+        hass_data: dict[str, Any],
+        use_3hourly: bool,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
@@ -230,7 +236,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon for the entity card."""
         value = self.entity_description.icon
         if self.entity_description.key == "weather":
@@ -244,7 +250,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
