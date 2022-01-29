@@ -178,10 +178,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
             return self.async_create_entry(title="", data=options_input)
         # Get sources
-        sources = self.options.get(CONF_SOURCES, "")
         sources_list = await async_get_sources(self.host, self.key)
         if not sources_list:
             errors["base"] = "cannot_retrieve"
+
+        sources = [s for s in self.options.get(CONF_SOURCES, []) if s in sources_list]
+        if not sources:
+            sources = sources_list
 
         options_schema = vol.Schema(
             {
@@ -204,7 +207,11 @@ async def async_get_sources(host: str, key: str) -> list[str]:
     except WEBOSTV_EXCEPTIONS:
         return []
 
-    return [
-        *(app["title"] for app in client.apps.values()),
-        *(app["label"] for app in client.inputs.values()),
-    ]
+    return list(
+        dict.fromkeys(  # Preserve order when filtering duplicates
+            [
+                *(app["title"] for app in client.apps.values()),
+                *(app["label"] for app in client.inputs.values()),
+            ]
+        )
+    )
