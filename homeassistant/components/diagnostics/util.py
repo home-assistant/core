@@ -2,17 +2,17 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from typing import Any, TypeVar
+from typing import Any
 
 from homeassistant.core import callback
 
 from .const import REDACTED
 
-T = TypeVar("T")
-
 
 @callback
-def async_redact_data(data: T, to_redact: Iterable[Any]) -> T:
+def async_redact_data(
+    data: list | dict[str, Any], to_redact: Iterable[Any]
+) -> list | dict[str, Any]:
     """Redact sensitive data in a dict."""
     if not isinstance(data, (Mapping, list)):
         return data
