@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo já está configurado",
+            "already_in_progress": "O fluxo de configuração já está em andamento",
+            "cannot_connect": "Falha ao conectar",
+            "invalid_host": "Inválido hostname ou endereço IP",
+            "not_supported": "Dispositivo não suportado",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "cannot_connect": "Falha em conectar",
+            "invalid_host": "Inválido hostname ou endereço IP",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "{name} ({model} em {host})",
+        "step": {
+            "auth": {
+                "title": "Autenticar no dispositivo"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nome"
+                },
+                "title": "Escolha um nome para o dispositivo"
+            },
+            "reset": {
+                "description": "{name} ({model} em {host}) está bloqueado. Você precisa desbloquear o dispositivo para autenticar e concluir a configuração. Instruções:\n1. Abre o app Broadlink.\n2. Clique no dispositivo.\n3. Clique nos `...` na direita em cima.\n4. Role até o final da página.\n5. Desabilite o bloqueio.",
+                "title": "Desbloqueou o dispositivo"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Sim, fiz isso."
+                },
+                "description": "{name} ({model} em {host}) está bloqueado. Isso pode levar a problemas de autenticação no Home Assistant. Você gostaria de desbloqueá-lo?",
+                "title": "Desbloqueie o dispositivo (opcional)"
+            },
+            "user": {
+                "data": {
+                    "host": "Endereço IP",
+                    "timeout": "Tempo esgotado"
+                },
+                "title": "Conecte-se ao dispositivo"
+            }
+        }
+    }
+}
