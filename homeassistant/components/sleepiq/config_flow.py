@@ -49,8 +49,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
             except SleepIQTimeoutException:
                 errors["base"] = "cannot_connect"
-            except SleepIQLoginException:
+            except SleepIQLoginException as err:
                 errors["base"] = "invalid_auth"
+                _LOGGER.exception(str(err))
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -58,3 +59,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_import(self, user_input):
+        """Handle import."""
+        await self.async_set_unique_id(user_input[CONF_EMAIL])
+        self._abort_if_unique_id_configured()
+
+        return await self.async_step_user(user_input)

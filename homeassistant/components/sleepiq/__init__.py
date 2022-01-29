@@ -1,27 +1,35 @@
 """Support for SleepIQ from SleepNumber."""
 from datetime import timedelta
+import asyncio
 import logging
 
-from sleepyq import Sleepyq
+from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, SLEEPIQ_DATA, SLEEPIQ_STATUS_COORDINATOR
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    Platform,
+)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.BUTTON]
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(DOMAIN): vol.Schema(
+        DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
@@ -32,79 +40,77 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the SleepIQ component.
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the SleepIQ component."""
+    hass.data.setdefault(DOMAIN, {})
+    conf = config.get(DOMAIN)
+    if not conf:
+        return True
 
-    Will automatically load sensor components to support
-    devices discovered on the account.
-    """
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    client = Sleepyq(username, password)
-    try:
-        data = SleepIQData(client)
-        data.update()
-    except ValueError:
-        message = """
-            SleepIQ failed to login, double check your username and password"
-        """
-        _LOGGER.error(message)
-        return False
-
-    hass.data[DOMAIN] = data
-    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
-    discovery.load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_EMAIL: conf[CONF_EMAIL],
+                CONF_PASSWORD: conf[CONF_PASSWORD],
+            },
+        )
+    )
     return True
 
 
-class SleepIQData:
-    """Get the latest data from SleepIQ."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up SleepIQ from a config entry."""
 
-    def __init__(self, client):
-        """Initialize the data object."""
-        self._client = client
-        self.beds = {}
+    entry_data = entry.data
+    email = entry_data[CONF_EMAIL]
+    password = entry_data[CONF_PASSWORD]
 
-        self.update()
+    client_session = async_get_clientsession(hass)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from SleepIQ."""
-        self._client.login()
-        beds = self._client.beds_with_sleeper_status()
+    gateway = AsyncSleepIQ(client_session=client_session)
 
-        self.beds = {bed.bed_id: bed for bed in beds}
+    try:
+        await gateway.login(email, password)
+    except SleepIQLoginException:
+        _LOGGER.error("Could not authenticate with SleepIQ server")
+        return False
+    except SleepIQTimeoutException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Timed out during authentication"
+        ) from err
+
+    try:
+        await gateway.init_beds()
+    except SleepIQTimeoutException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Timed out during realtime update"
+        ) from err
+
+    status_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"SleepIQ Bed Statuses - {email}",
+        update_method=gateway.update_bed_statuses,
+        update_interval=MIN_TIME_BETWEEN_UPDATES,
+    )
+    # Start out as unavailable so we do not report 0 data
+    # until the update happens
+    status_coordinator.last_update_success = False
+    asyncio.create_task(status_coordinator.async_request_refresh())
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        SLEEPIQ_DATA: gateway,
+        SLEEPIQ_STATUS_COORDINATOR: status_coordinator,
+    }
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
 
-class SleepIQSensor(Entity):
-    """Implementation of a SleepIQ sensor."""
-
-    def __init__(self, sleepiq_data, bed_id, side):
-        """Initialize the sensor."""
-        self._bed_id = bed_id
-        self._side = side
-        self.sleepiq_data = sleepiq_data
-        self.side = None
-        self.bed = None
-
-        # added by subclass
-        self._name = None
-        self.type = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "SleepNumber {} {} {}".format(
-            self.bed.name, self.side.sleeper.first_name, self._name
-        )
-
-    def update(self):
-        """Get the latest data from SleepIQ and updates the states."""
-        # Call the API for new sleepiq data. Each sensor will re-trigger this
-        # same exact call, but that's fine. We cache results for a short period
-        # of time to prevent hitting API limits.
-        self.sleepiq_data.update()
-
-        self.bed = self.sleepiq_data.beds[self._bed_id]
-        self.side = getattr(self.bed, self._side)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok

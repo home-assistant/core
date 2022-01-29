@@ -257,6 +257,9 @@ arcam-fmj==0.12.0
 # homeassistant.components.yeelight
 async-upnp-client==0.23.4
 
+# homeassistant.components.sleepiq
+asyncsleepiq==0.9.0
+
 # homeassistant.components.aurora
 auroranoaa==0.0.2
 
@@ -1341,9 +1344,6 @@ simplisafe-python==2021.12.2
 
 # homeassistant.components.slack
 slackclient==2.5.0
-
-# homeassistant.components.sleepiq
-sleepyq==0.8.1
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
