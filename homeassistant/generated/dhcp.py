@@ -256,6 +256,11 @@ DHCP = [
         "macaddress": "80A589*"
     },
     {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "DCF505*"
+    },
+    {
         "domain": "samsungtv",
         "hostname": "tizen*"
     },
