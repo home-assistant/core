@@ -214,10 +214,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def _async_connection(
+    async def _async_create_or_error(
         self, user_input: dict[str, Any], importing: bool
     ) -> tuple[dict[str, str] | None, FlowResult | None]:
-        """Try to connect."""
+        """Try to connect and create the entry or error."""
         if self._url_already_configured(_make_url_from_data(user_input)):
             return None, self.async_abort(reason="address_already_configured")
 
@@ -258,7 +258,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_PREFIX] = _short_mac(device.mac_address)
             if device.port != SECURE_PORT:
                 user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
-            errors, result = self._async_connection(user_input, False)
+            errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result
 
@@ -279,7 +279,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle connecting the device."""
         errors = {}
         if user_input is not None:
-            errors, result = self._async_connection(user_input, False)
+            errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result
 
@@ -300,7 +300,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        return (await self._async_connection(user_input, True))[1]
+        return (await self._async_create_or_error(user_input, True))[1]
 
     def _url_already_configured(self, url):
         """See if we already have a elkm1 matching user input configured."""
