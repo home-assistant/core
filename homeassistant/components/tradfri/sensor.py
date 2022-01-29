@@ -115,7 +115,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
             gateway_id=gateway_id,
         )
 
-        self.entity_description: TradfriSensorEntityDescription = description
+        self.entity_description = description
 
         self._refresh()  # Set initial state
 
