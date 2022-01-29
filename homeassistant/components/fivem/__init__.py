@@ -10,7 +10,7 @@ from fivem import FiveM, FiveMServerOfflineError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -28,7 +28,6 @@ from .const import (
     NAME_RESOURCES,
     NAME_STATUS,
     SCAN_INTERVAL,
-    SIGNAL_NAME_PREFIX,
 )
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -91,12 +90,6 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.online = False
 
         self._fivem = FiveM(self.host, self.port)
-
-        # Dispatcher signal name
-        self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
-
-        # Callback for stopping periodic update.
-        self._stop_periodic_update: CALLBACK_TYPE = lambda: None
 
         update_interval = timedelta(seconds=SCAN_INTERVAL)
         _LOGGER.debug("Data will be updated every %s", update_interval)

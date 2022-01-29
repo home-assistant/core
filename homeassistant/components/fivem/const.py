@@ -19,8 +19,6 @@ NAME_STATUS = "Status"
 
 SCAN_INTERVAL = 60
 
-SIGNAL_NAME_PREFIX = f"signal_{DOMAIN}"
-
 UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 UNIT_RESOURCES = "resources"

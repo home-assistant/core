@@ -26,14 +26,14 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Minecraft Server sensor platform."""
-    server = hass.data[DOMAIN][entry.entry_id]
+    """Set up the FiveM sensor platform."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     # Create entities list.
     entities = [
-        FiveMPlayersOnlineSensor(server),
-        FiveMPlayersMaxSensor(server),
-        FiveMResourcesSensor(server),
+        FiveMPlayersOnlineSensor(coordinator),
+        FiveMPlayersMaxSensor(coordinator),
+        FiveMResourcesSensor(coordinator),
     ]
 
     # Add sensor entities.
