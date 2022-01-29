@@ -99,6 +99,8 @@ async def async_setup_entry(
 class TradfriSensor(TradfriBaseEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
+    entity_description: TradfriSensorEntityDescription
+    
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
