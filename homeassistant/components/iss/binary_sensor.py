@@ -1,8 +1,8 @@
 """Support for iss binary sensor."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -30,8 +30,6 @@ ATTR_ISS_NUMBER_PEOPLE_SPACE = "number_of_people_in_space"
 
 DEFAULT_NAME = "ISS"
 DEFAULT_DEVICE_CLASS = "visible"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -83,7 +81,9 @@ class IssBinarySensor(BinarySensorEntity):
     _attr_device_class = DEFAULT_DEVICE_CLASS
     coordinator: DataUpdateCoordinator[IssData]
 
-    def __init__(self, coordinator, name, show):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[IssData], name: str, show: bool
+    ) -> None:
         """Initialize the sensor."""
         self.coordinator = coordinator
         self._state = None
@@ -96,7 +96,7 @@ class IssBinarySensor(BinarySensorEntity):
         return self.coordinator.data["is_above"] is True
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = {
             ATTR_ISS_NUMBER_PEOPLE_SPACE: self.coordinator.data[
