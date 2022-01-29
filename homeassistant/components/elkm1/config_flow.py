@@ -249,7 +249,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_discovered_connection(self, user_input=None):
-        """Handle connecting the device."""
+        """Handle connecting the device when we have a discovery."""
         errors = {}
         device = self._discovered_device
         assert device is not None
@@ -276,7 +276,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual_connection(self, user_input=None):
-        """Handle connecting the device."""
+        """Handle connecting the device when we need manual entry."""
         errors = {}
         if user_input is not None:
             errors, result = await self._async_create_or_error(user_input, False)
