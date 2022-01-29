@@ -126,7 +126,12 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
             "1": {
                 "name": "Presence sensor",
                 "type": "ZHAPresence",
-                "state": {"dark": False, "presence": False, "tampered": False},
+                "state": {
+                    "dark": False,
+                    "lowbattery": False,
+                    "presence": False,
+                    "tampered": False,
+                },
                 "config": {"on": True, "reachable": True, "temperature": 10},
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
@@ -137,11 +142,20 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
 
     ent_reg = er.async_get(hass)
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
+    hass.states.get("binary_sensor.presence_sensor_low_battery").state == STATE_OFF
+    assert (
+        ent_reg.async_get("binary_sensor.presence_sensor_low_battery").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
     presence_tamper = hass.states.get("binary_sensor.presence_sensor_tampered")
     assert presence_tamper.state == STATE_OFF
     assert (
         presence_tamper.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.TAMPER
+    )
+    assert (
+        ent_reg.async_get("binary_sensor.presence_sensor_tampered").entity_category
+        is EntityCategory.DIAGNOSTIC
     )
 
     event_changed_sensor = {
@@ -155,10 +169,6 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence_sensor_tampered").state == STATE_ON
-    assert (
-        ent_reg.async_get("binary_sensor.presence_sensor_tampered").entity_category
-        == EntityCategory.DIAGNOSTIC
-    )
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -170,6 +180,58 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_fire_sensor(hass, aioclient_mock, mock_deconz_websocket):
+    """Verify smoke alarm sensor works."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "Fire alarm",
+                "type": "ZHAFire",
+                "state": {"fire": False, "test": False},
+                "config": {"on": True, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    ent_reg = er.async_get(hass)
+
+    assert len(hass.states.async_all()) == 2
+    assert hass.states.get("binary_sensor.fire_alarm").state == STATE_OFF
+    assert ent_reg.async_get("binary_sensor.fire_alarm").entity_category is None
+
+    assert hass.states.get("binary_sensor.fire_alarm_test_mode").state == STATE_OFF
+    assert (
+        ent_reg.async_get("binary_sensor.fire_alarm_test_mode").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"fire": True, "test": True},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.fire_alarm").state == STATE_ON
+    assert hass.states.get("binary_sensor.fire_alarm_test_mode").state == STATE_ON
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get("binary_sensor.fire_alarm").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("binary_sensor.fire_alarm_test_mode").state == STATE_UNAVAILABLE
+    )
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 

@@ -87,9 +87,12 @@ PLATFORMS = [
 class TuyaDeviceClass(StrEnum):
     """Tuya specific device classes, used for translations."""
 
+    CURTAIN_MODE = "tuya__curtain_mode"
+    CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
     BASIC_NIGHTVISION = "tuya__basic_nightvision"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
+    FAN_ANGLE = "tuya__fan_angle"
     FINGERBOT_MODE = "tuya__fingerbot_mode"
     IPC_WORK_MODE = "tuya__ipc_work_mode"
     LED_TYPE = "tuya__led_type"
@@ -112,6 +115,17 @@ class WorkMode(StrEnum):
     WHITE = "white"
 
 
+class DPType(StrEnum):
+    """Data point types."""
+
+    BOOLEAN = "Boolean"
+    ENUM = "Enum"
+    INTEGER = "Integer"
+    JSON = "Json"
+    RAW = "Raw"
+    STRING = "String"
+
+
 class DPCode(StrEnum):
     """Data Point Codes used by Tuya.
 
@@ -121,6 +135,7 @@ class DPCode(StrEnum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALARM_MESSAGE = "alarm_message"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -174,6 +189,11 @@ class DPCode(StrEnum):
     CONTROL = "control"
     CONTROL_2 = "control_2"
     CONTROL_3 = "control_3"
+    CONTROL_BACK = "control_back"
+    CONTROL_BACK_MODE = "control_back_mode"
+    COUNTDOWN = "countdown"  # Countdown
+    COUNTDOWN_LEFT = "countdown_left"
+    COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
@@ -189,9 +209,15 @@ class DPCode(StrEnum):
     DUSTER_CLOTH = "duster_cloth"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
+    FAN_BEEP = "fan_beep"  # Sound
+    FAN_COOL = "fan_cool"  # Cool wind
     FAN_DIRECTION = "fan_direction"  # Fan direction
+    FAN_HORIZONTAL = "fan_horizontal"  # Horizontal swing flap angle
+    FAN_SPEED = "fan_speed"
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FAN_MODE = "fan_mode"
+    FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
     FEED_REPORT = "feed_report"
@@ -204,6 +230,7 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
+    HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
@@ -224,8 +251,10 @@ class DPCode(StrEnum):
     MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
     MOTION_TRACKING = "motion_tracking"
+    MOVEMENT_DETECT_PIC = "movement_detect_pic"
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
+    OPPOSITE = "opposite"
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
     PERCENT_CONTROL_2 = "percent_control_2"
@@ -249,6 +278,7 @@ class DPCode(StrEnum):
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
     PUMP_RESET = "pump_reset"  # Water pump reset
+    OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -288,6 +318,7 @@ class DPCode(StrEnum):
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
     SWITCH_DISTURB = "switch_disturb"
+    SWITCH_FAN = "switch_fan"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
@@ -304,6 +335,7 @@ class DPCode(StrEnum):
     SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
+    TEMP = "temp"  # Temperature setting
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
     TEMP_CONTROLLER = "temp_controller"
@@ -315,6 +347,7 @@ class DPCode(StrEnum):
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
+    TIME_TOTAL = "time_total"
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"

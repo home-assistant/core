@@ -462,22 +462,21 @@ def perodic_db_cleanups(instance: Recorder):
 
 
 @contextmanager
-def write_lock_db(instance: Recorder):
+def write_lock_db_sqlite(instance: Recorder):
     """Lock database for writes."""
 
-    if instance.engine.dialect.name == "sqlite":
-        with instance.engine.connect() as connection:
-            # Execute sqlite to create a wal checkpoint
-            # This is optional but makes sure the backup is going to be minimal
-            connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
-            # Create write lock
-            _LOGGER.debug("Lock database")
-            connection.execute(text("BEGIN IMMEDIATE;"))
-            try:
-                yield
-            finally:
-                _LOGGER.debug("Unlock database")
-                connection.execute(text("END;"))
+    with instance.engine.connect() as connection:
+        # Execute sqlite to create a wal checkpoint
+        # This is optional but makes sure the backup is going to be minimal
+        connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
+        # Create write lock
+        _LOGGER.debug("Lock database")
+        connection.execute(text("BEGIN IMMEDIATE;"))
+        try:
+            yield
+        finally:
+            _LOGGER.debug("Unlock database")
+            connection.execute(text("END;"))
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:

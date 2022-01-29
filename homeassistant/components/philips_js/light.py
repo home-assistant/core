@@ -4,7 +4,6 @@ from __future__ import annotations
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -16,8 +15,10 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
@@ -33,9 +34,9 @@ EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the configuration entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([PhilipsTVLightEntity(coordinator)])

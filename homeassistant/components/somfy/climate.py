@@ -126,7 +126,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         """Return hvac operation ie. heat, cool mode."""
         if self._climate.get_regulation_state() == RegulationState.TIMETABLE:
             return HVAC_MODE_AUTO
-        return HVAC_MODES_MAPPING.get(self._climate.get_hvac_state())
+        return HVAC_MODES_MAPPING[self._climate.get_hvac_state()]
 
     @property
     def hvac_modes(self) -> list[str]:

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung"
+        },
+        "error": {
+            "connection_error": "Gagal terhubung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Alamat IP"
+                },
+                "description": "Hubungkan ke inverter",
+                "title": "Inverter GoodWe"
+            }
+        }
+    }
+}

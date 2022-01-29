@@ -89,6 +89,8 @@ async def test_temperature_sensor_not_added_twice(hass, utcnow):
     )
 
     for state in hass.states.async_all():
+        if state.entity_id.startswith("button"):
+            continue
         assert state.entity_id == helper.entity_id
 
 
@@ -216,7 +218,7 @@ async def test_switch_with_sensor(hass, utcnow):
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
         hass,
-        "sensor.testdevice_real_time_energy",
+        "sensor.testdevice_power",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
@@ -246,7 +248,7 @@ async def test_sensor_unavailable(hass, utcnow):
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
         hass,
-        "sensor.testdevice_real_time_energy",
+        "sensor.testdevice_power",
         helper.pairing,
         helper.accessory,
         helper.config_entry,

@@ -7,5 +7,6 @@
     "adafruit-circuitpython-mcp230xx==2.2.2"
   ],
   "codeowners": ["@jardiamj"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["adafruit_mcp230xx"]
 }

@@ -1,10 +1,9 @@
 """Support for the Environment Canada weather service."""
 from __future__ import annotations
 
-import logging
-import re
-
-import voluptuous as vol
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,180 +31,230 @@ from .const import ATTR_STATION, DOMAIN
 
 ATTR_TIME = "alert time"
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass
+class ECSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Any], Any]
+
+
+@dataclass
+class ECSensorEntityDescription(
+    SensorEntityDescription, ECSensorEntityDescriptionMixin
+):
+    """Describes Environment Canada sensor entity."""
+
+    transform: Callable[[Any], Any] | None = None
+
+
+SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
+    ECSensorEntityDescription(
         key="condition",
         name="Current Condition",
+        value_fn=lambda data: data.conditions.get("condition", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="dewpoint",
         name="Dew Point",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("dewpoint", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="high_temp",
         name="High Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("high_temp", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="humidex",
         name="Humidex",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("humidex", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="humidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("humidity", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="icon_code",
         name="Icon Code",
+        value_fn=lambda data: data.conditions.get("icon_code", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="low_temp",
         name="Low Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("low_temp", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="normal_high",
         name="Normal High Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        value_fn=lambda data: data.conditions.get("normal_high", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="normal_low",
         name="Normal Low Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        value_fn=lambda data: data.conditions.get("normal_low", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="pop",
         name="Chance of Precipitation",
         native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda data: data.conditions.get("pop", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="precip_yesterday",
         name="Precipitation Yesterday",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("precip_yesterday", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="pressure",
         name="Barometric Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_KPA,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("pressure", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("temperature", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="tendency",
         name="Tendency",
+        value_fn=lambda data: data.conditions.get("tendency", {}).get("value"),
+        transform=lambda val: str(val).capitalize(),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="text_summary",
         name="Summary",
+        value_fn=lambda data: data.conditions.get("text_summary", {}).get("value"),
+        transform=lambda val: val[:255],
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="timestamp",
         name="Observation Time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.metadata.get("timestamp"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="uv_index",
         name="UV Index",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("uv_index", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="visibility",
         name="Visibility",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("visibility", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="wind_bearing",
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
+        value_fn=lambda data: data.conditions.get("wind_bearing", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="wind_chill",
         name="Wind Chill",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("wind_chill", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="wind_dir",
         name="Wind Direction",
+        value_fn=lambda data: data.conditions.get("wind_dir", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="wind_gust",
         name="Wind Gust",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("wind_gust", {}).get("value"),
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="wind_speed",
         name="Wind Speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.conditions.get("wind_speed", {}).get("value"),
     ),
 )
 
-ALERT_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+AQHI_SENSOR = ECSensorEntityDescription(
+    key="aqhi",
+    name="AQHI",
+    device_class=SensorDeviceClass.AQI,
+    native_unit_of_measurement="AQI",
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda data: data.current,
+)
+
+ALERT_TYPES: tuple[ECSensorEntityDescription, ...] = (
+    ECSensorEntityDescription(
         key="advisories",
         name="Advisory",
         icon="mdi:bell-alert",
+        value_fn=lambda data: data.alerts.get("advisories", {}).get("value"),
+        transform=len,
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="endings",
         name="Endings",
         icon="mdi:alert-circle-check",
+        value_fn=lambda data: data.alerts.get("endings", {}).get("value"),
+        transform=len,
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="statements",
         name="Statements",
         icon="mdi:bell-alert",
+        value_fn=lambda data: data.alerts.get("statements", {}).get("value"),
+        transform=len,
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="warnings",
         name="Warnings",
         icon="mdi:alert-octagon",
+        value_fn=lambda data: data.alerts.get("warnings", {}).get("value"),
+        transform=len,
     ),
-    SensorEntityDescription(
+    ECSensorEntityDescription(
         key="watches",
         name="Watches",
         icon="mdi:alert",
+        value_fn=lambda data: data.alerts.get("watches", {}).get("value"),
+        transform=len,
     ),
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return None
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
 
 
 async def async_setup_entry(
@@ -215,12 +264,17 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
-    async_add_entities(ECSensor(coordinator, desc) for desc in SENSOR_TYPES)
-    async_add_entities(ECAlertSensor(coordinator, desc) for desc in ALERT_TYPES)
+    sensors: list[ECBaseSensor] = [ECSensor(coordinator, desc) for desc in SENSOR_TYPES]
+    sensors.extend([ECAlertSensor(coordinator, desc) for desc in ALERT_TYPES])
+    aqhi_coordinator = hass.data[DOMAIN][config_entry.entry_id]["aqhi_coordinator"]
+    sensors.append(ECSensor(aqhi_coordinator, AQHI_SENSOR))
+    async_add_entities(sensors)
 
 
 class ECBaseSensor(CoordinatorEntity, SensorEntity):
     """Environment Canada sensor base."""
+
+    entity_description: ECSensorEntityDescription
 
     def __init__(self, coordinator, description):
         """Initialize the base sensor."""
@@ -229,7 +283,15 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
         self._ec_data = coordinator.ec_data
         self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_name = f"{coordinator.config_entry.title} {description.name}"
-        self._attr_unique_id = f"{self._ec_data.metadata['location']}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        value = self.entity_description.value_fn(self._ec_data)
+        if value is not None and self.entity_description.transform:
+            value = self.entity_description.transform(value)
+        return value
 
 
 class ECSensor(ECBaseSensor):
@@ -243,39 +305,16 @@ class ECSensor(ECBaseSensor):
             ATTR_STATION: self._ec_data.metadata.get("station"),
         }
 
-    @property
-    def native_value(self):
-        """Update current conditions."""
-        sensor_type = self.entity_description.key
-        if sensor_type == "timestamp":
-            return self._ec_data.metadata.get("timestamp")
-
-        value = self._ec_data.conditions.get(sensor_type, {}).get("value")
-        if sensor_type == "tendency":
-            value = str(value).capitalize()
-        elif isinstance(value, str) and len(value) > 255:
-            value = value[:255]
-            _LOGGER.info(
-                "Value for %s truncated to 255 characters", self._attr_unique_id
-            )
-        return value
-
 
 class ECAlertSensor(ECBaseSensor):
     """Environment Canada sensor for alerts."""
 
     @property
-    def native_value(self):
-        """Return the state."""
-        alert_name = self.entity_description.key
-        value = self._ec_data.alerts.get(alert_name, {}).get("value", [])
-        return len(value)
-
-    @property
     def extra_state_attributes(self):
         """Return the extra state attributes."""
-        alert_name = self.entity_description.key
-        value = self._ec_data.alerts.get(alert_name, {}).get("value", [])
+        value = self.entity_description.value_fn(self._ec_data)
+        if not value:
+            return None
 
         extra_state_attrs = {
             ATTR_LOCATION: self._ec_data.metadata.get("location"),

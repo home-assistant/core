@@ -4,10 +4,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Generic
 
-from pyunifiprotect.data import NVR, Camera, Event
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import (
+    NVR,
+    Camera,
+    Event,
+    ProtectAdoptableDeviceModel,
+    ProtectDeviceModel,
+    Sensor,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -39,20 +45,22 @@ from .entity import (
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import ProtectRequiredKeysMixin
+from .models import ProtectRequiredKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
-DETECTED_OBJECT_NONE = "none"
+OBJECT_TYPE_NONE = "none"
 DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
-class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescription):
+class ProtectSensorEntityDescription(
+    ProtectRequiredKeysMixin, SensorEntityDescription, Generic[T]
+):
     """Describes UniFi Protect Sensor entity."""
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: ProtectAdoptableDeviceModel | NVR) -> Any:
+    def get_ufp_value(self, obj: ProtectDeviceModel) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
 
@@ -61,7 +69,7 @@ class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescr
         return value
 
 
-def _get_uptime(obj: ProtectAdoptableDeviceModel | NVR) -> datetime | None:
+def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
     if obj.up_since is None:
         return None
 
@@ -70,26 +78,34 @@ def _get_uptime(obj: ProtectAdoptableDeviceModel | NVR) -> datetime | None:
     return obj.up_since.replace(second=0, microsecond=0)
 
 
-def _get_nvr_recording_capacity(obj: Any) -> int:
-    assert isinstance(obj, NVR)
-
+def _get_nvr_recording_capacity(obj: NVR) -> int:
     if obj.storage_stats.capacity is None:
         return 0
 
     return int(obj.storage_stats.capacity.total_seconds())
 
 
-def _get_nvr_memory(obj: Any) -> float | None:
-    assert isinstance(obj, NVR)
-
+def _get_nvr_memory(obj: NVR) -> float | None:
     memory = obj.system_info.memory
     if memory.available is None or memory.total is None:
         return None
     return (1 - memory.available / memory.total) * 100
 
 
+def _get_alarm_sound(obj: Sensor) -> str:
+
+    alarm_type = OBJECT_TYPE_NONE
+    if (
+        obj.is_alarm_detected
+        and obj.last_alarm_event is not None
+        and obj.last_alarm_event.metadata is not None
+    ):
+        alarm_type = obj.last_alarm_event.metadata.alarm_type or OBJECT_TYPE_NONE
+    return alarm_type.lower()
+
+
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[ProtectDeviceModel](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -210,6 +226,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.light.value",
+        ufp_enabled="is_light_sensor_enabled",
     ),
     ProtectSensorEntityDescription(
         key="humidity_level",
@@ -218,6 +235,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.humidity.value",
+        ufp_enabled="is_humidity_sensor_enabled",
     ),
     ProtectSensorEntityDescription(
         key="temperature_level",
@@ -226,11 +244,30 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
+        ufp_enabled="is_temperature_sensor_enabled",
+    ),
+    ProtectSensorEntityDescription[Sensor](
+        key="alarm_sound",
+        name="Alarm Sound Detected",
+        ufp_value_fn=_get_alarm_sound,
+        ufp_enabled="is_alarm_sensor_enabled",
+    ),
+)
+
+DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="battery_level",
+        name="Battery Level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_value="battery_status.percentage",
     ),
 )
 
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[ProtectDeviceModel](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -308,7 +345,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="storage_stats.storage_distribution.free.percentage",
         precision=2,
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[NVR](
         key="record_capacity",
         name="Recording Capacity",
         native_unit_of_measurement=TIME_SECONDS,
@@ -340,7 +377,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="system_info.cpu.temperature",
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[NVR](
         key="memory_utilization",
         name="Memory Utilization",
         native_unit_of_measurement=PERCENTAGE,
@@ -375,6 +412,7 @@ async def async_setup_entry(
         all_descs=ALL_DEVICES_SENSORS,
         camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
         sense_descs=SENSE_SENSORS,
+        lock_descs=DOORLOCK_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)
@@ -479,6 +517,6 @@ class ProtectEventSensor(ProtectDeviceSensor, EventThumbnailMixin):
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventThumbnailMixin._async_update_device_from_protect(self)
         if self._event is None:
-            self._attr_native_value = DETECTED_OBJECT_NONE
+            self._attr_native_value = OBJECT_TYPE_NONE
         else:
             self._attr_native_value = self._event.smart_detect_types[0].value

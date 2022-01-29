@@ -1,16 +1,15 @@
 """Class for helpers and communication with the OverKiz API."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 from urllib.parse import urlparse
 
+from pyoverkiz.enums.command import OverkizCommand
 from pyoverkiz.models import Command, Device
+from pyoverkiz.types import StateType as OverkizStateType
 
-from .const import OverkizStateType
+from .const import LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OverkizExecutor:
@@ -67,7 +66,7 @@ class OverkizExecutor:
                 "Home Assistant",
             )
         except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.error(exception)
+            LOGGER.error(exception)
             return
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here
@@ -78,7 +77,9 @@ class OverkizExecutor:
 
         await self.coordinator.async_refresh()
 
-    async def async_cancel_command(self, commands_to_cancel: list[str]) -> bool:
+    async def async_cancel_command(
+        self, commands_to_cancel: list[OverkizCommand]
+    ) -> bool:
         """Cancel running execution by command."""
 
         # Cancel a running execution

@@ -1,7 +1,6 @@
 """The tests for the Picnic sensor platform."""
 import copy
 from datetime import timedelta
-from typing import Dict
 import unittest
 from unittest.mock import patch
 
@@ -324,7 +323,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform(use_default_responses=True)
 
         # Set non-datetime strings as eta
-        eta_dates: Dict[str, str] = {
+        eta_dates: dict[str, str] = {
             "start": "wrong-time",
             "end": "other-malformed-datetime",
         }

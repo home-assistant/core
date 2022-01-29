@@ -15,9 +15,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS
+from . import PLATFORMS, MqttCommandTemplate
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    DOMAIN,
+)
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 CONF_PAYLOAD_PRESS = "payload_press"
@@ -26,6 +33,7 @@ DEFAULT_PAYLOAD_PRESS = "PRESS"
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): button.DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -81,6 +89,12 @@ class MqttButton(MqttEntity, ButtonEntity):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
+        self._command_template = MqttCommandTemplate(
+            config.get(CONF_COMMAND_TEMPLATE), entity=self
+        ).async_render
+
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
@@ -94,10 +108,11 @@ class MqttButton(MqttEntity, ButtonEntity):
 
         This method is a coroutine.
         """
+        payload = self._command_template(self._config[CONF_PAYLOAD_PRESS])
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_PRESS],
+            payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],

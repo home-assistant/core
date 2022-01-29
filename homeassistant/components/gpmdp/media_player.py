@@ -10,6 +10,7 @@ from typing import Any
 import voluptuous as vol
 from websocket import _exceptions, create_connection
 
+from homeassistant.components import configurator
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -65,10 +66,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def request_configuration(hass, config, url, add_entities_callback):
     """Request configuration steps from the user."""
-    configurator = hass.components.configurator
     if "gpmdp" in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING["gpmdp"], "Failed to register, please try again."
+            hass, _CONFIGURING["gpmdp"], "Failed to register, please try again."
         )
 
         return
@@ -152,8 +152,7 @@ def setup_gpmdp(hass, config, code, add_entities):
         return
 
     if "gpmdp" in _CONFIGURING:
-        configurator = hass.components.configurator
-        configurator.request_done(_CONFIGURING.pop("gpmdp"))
+        configurator.request_done(hass, _CONFIGURING.pop("gpmdp"))
 
     add_entities([GPMDP(name, url, code)], True)
 

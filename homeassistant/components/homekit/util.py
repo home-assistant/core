@@ -12,7 +12,12 @@ import socket
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components import (
+    binary_sensor,
+    media_player,
+    persistent_notification,
+    sensor,
+)
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
@@ -342,14 +347,12 @@ def async_show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.async_create(
-        message, "HomeKit Pairing", entry_id
-    )
+    persistent_notification.async_create(hass, message, "HomeKit Pairing", entry_id)
 
 
 def async_dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.async_dismiss(entry_id)
+    persistent_notification.async_dismiss(hass, entry_id)
 
 
 def convert_to_float(state):

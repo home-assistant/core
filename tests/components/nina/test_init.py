@@ -1,6 +1,6 @@
 """Test the Nina init file."""
 import json
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import patch
 
 from pynina import ApiError
@@ -12,7 +12,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
-ENTRY_DATA: Dict[str, Any] = {
+ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
     "corona_filter": True,
     "regions": {"083350000000": "Aach, Stadt"},
@@ -22,7 +22,7 @@ ENTRY_DATA: Dict[str, Any] = {
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the NINA integration in Home Assistant."""
 
-    dummy_response: Dict[str, Any] = json.loads(
+    dummy_response: dict[str, Any] = json.loads(
         load_fixture("sample_warnings.json", "nina")
     )
 

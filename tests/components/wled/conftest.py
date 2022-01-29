@@ -1,6 +1,6 @@
 """Fixtures for WLED integration tests."""
+from collections.abc import Generator
 import json
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest

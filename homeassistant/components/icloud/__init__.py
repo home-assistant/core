@@ -1,4 +1,6 @@
 """The iCloud component."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -84,11 +86,21 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up iCloud from legacy config file."""
     if (conf := config.get(DOMAIN)) is None:
         return True
+
+    # Note: need to remember to cleanup device_tracker (remove async_setup_scanner)
+    _LOGGER.warning(
+        "Configuration of the iCloud integration in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
 
     for account_conf in conf:
         hass.async_create_task(

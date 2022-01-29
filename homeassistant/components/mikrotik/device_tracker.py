@@ -1,4 +1,6 @@
 """Support for Mikrotik routers as device tracker."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -6,9 +8,11 @@ from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER,
     SOURCE_TYPE_ROUTER,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -20,11 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_ATTRS = ("ip_address", "mac_address")
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up device tracker for Mikrotik component."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    tracked = {}
+    tracked: dict[str, MikrotikHubTracker] = {}
 
     registry = await entity_registry.async_get_registry(hass)
 

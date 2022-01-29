@@ -71,7 +71,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_DOMAIN: Platform.SWITCH,
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
-            CONF_TYPE: "toggled",
+            CONF_TYPE: "changed_states",
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,

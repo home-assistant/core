@@ -48,6 +48,31 @@
             "on": "Actif",
             "power_off": "Inactif",
             "power_on": "Actif"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Ferm\u00e9",
+            "high": "Haut"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Grand",
+            "middle": "Moyen",
+            "small": "Petit"
+        },
+        "tuya__vacuum_mode": {
+            "chargego": "Retour \u00e0 la base",
+            "left_spiral": "Spirale gauche",
+            "mop": "Serpilli\u00e8re",
+            "partial_bow": "Arc partiel",
+            "pick_zone": "S\u00e9lectionner une zone",
+            "random": "Al\u00e9atoire",
+            "right_bow": "Arc \u00e0 droite",
+            "right_spiral": "Spirale droite",
+            "single": "Simple",
+            "smart": "Intelligent",
+            "spiral": "Spirale",
+            "standby": "Veille",
+            "wall_follow": "Suivre le mur",
+            "zone": "Zone"
         }
     }
 }

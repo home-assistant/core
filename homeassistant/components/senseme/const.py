@@ -20,4 +20,10 @@ PRESET_MODE_WHOOSH = "Whoosh"
 SENSEME_DIRECTION_FORWARD = "FWD"
 SENSEME_DIRECTION_REVERSE = "REV"
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SWITCH,
+]

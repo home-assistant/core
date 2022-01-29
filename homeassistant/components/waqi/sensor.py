@@ -80,7 +80,7 @@ async def async_setup_platform(
     """Set up the requested World Air Quality Index locations."""
 
     token = config[CONF_TOKEN]
-    station_filter = config[CONF_STATIONS]
+    station_filter = config.get(CONF_STATIONS)
     locations = config[CONF_LOCATIONS]
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)

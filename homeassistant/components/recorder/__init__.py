@@ -78,7 +78,7 @@ from .util import (
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
-    write_lock_db,
+    write_lock_db_sqlite,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -870,7 +870,7 @@ class Recorder(threading.Thread):
         def _async_set_database_locked(task: DatabaseLockTask):
             task.database_locked.set()
 
-        with write_lock_db(self):
+        with write_lock_db_sqlite(self):
             # Notify that lock is being held, wait until database can be used again.
             self.hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
@@ -1057,6 +1057,12 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
+        if not self.engine or self.engine.dialect.name != "sqlite":
+            _LOGGER.debug(
+                "Not a SQLite database or not connected, locking not necessary"
+            )
+            return True
+
         if self._database_lock_task:
             _LOGGER.warning("Database already locked")
             return False
@@ -1080,6 +1086,12 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
+        if not self.engine or self.engine.dialect.name != "sqlite":
+            _LOGGER.debug(
+                "Not a SQLite database or not connected, unlocking not necessary"
+            )
+            return True
+
         if not self._database_lock_task:
             _LOGGER.warning("Database currently not locked")
             return False

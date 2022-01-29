@@ -30,5 +30,6 @@
     "@chemelli74"
   ],
   "config_flow": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["samsungctl", "samsungtvws"]
 }

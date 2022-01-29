@@ -47,6 +47,11 @@ DHCP = [
         "macaddress": "B85F98*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "00037F*"
+    },
+    {
         "domain": "broadlink",
         "macaddress": "34EA34*"
     },
@@ -202,6 +207,11 @@ DHCP = [
         "hostname": "nuki_bridge_*"
     },
     {
+        "domain": "oncue",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*"
+    },
+    {
         "domain": "overkiz",
         "hostname": "gateway*",
         "macaddress": "F8811A*"
@@ -251,6 +261,11 @@ DHCP = [
         "macaddress": "80A589*"
     },
     {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "DCF505*"
+    },
+    {
         "domain": "samsungtv",
         "hostname": "tizen*"
     },
@@ -289,6 +304,10 @@ DHCP = [
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "A4D578*"
+    },
+    {
+        "domain": "senseme",
+        "macaddress": "20F85E*"
     },
     {
         "domain": "simplisafe",
@@ -387,6 +406,11 @@ DHCP = [
         "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "403F8C*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "C0C9E3*"
     },
     {
         "domain": "tplink",
@@ -545,6 +569,42 @@ DHCP = [
     {
         "domain": "twinkly",
         "hostname": "twinkly_*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "B4FBE4*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "802AA8*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "F09FC2*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "68D79A*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "18E829*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "245A4C*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "784558*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "E063DA*"
+    },
+    {
+        "domain": "unifiprotect",
+        "macaddress": "265A4C*"
     },
     {
         "domain": "verisure",

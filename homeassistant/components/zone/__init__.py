@@ -1,6 +1,7 @@
 """Support for the definition of zones."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import Any, cast
 
@@ -9,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_EDITABLE,
+    ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_ICON,
@@ -27,6 +29,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity,
     entity_component,
+    event,
     service,
     storage,
 )
@@ -285,7 +288,9 @@ class Zone(entity.Entity):
         self._config = config
         self.editable = True
         self._attrs: dict | None = None
+        self._remove_listener: Callable[[], None] | None = None
         self._generate_attrs()
+        self._persons_in_zone: set[str] = set()
 
     @classmethod
     def from_yaml(cls, config: dict) -> Zone:
@@ -296,9 +301,9 @@ class Zone(entity.Entity):
         return zone
 
     @property
-    def state(self) -> str:
+    def state(self) -> int:
         """Return the state property really does nothing for a zone."""
-        return "zoning"
+        return len(self._persons_in_zone)
 
     @property
     def name(self) -> str:
@@ -332,6 +337,55 @@ class Zone(entity.Entity):
         self._config = config
         self._generate_attrs()
         self.async_write_ha_state()
+
+    @callback
+    def _person_state_change_listener(self, evt: Event) -> None:
+        person_entity_id = evt.data["entity_id"]
+        cur_count = len(self._persons_in_zone)
+        if (
+            (state := evt.data["new_state"])
+            and (latitude := state.attributes.get(ATTR_LATITUDE)) is not None
+            and (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None
+            and (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is not None
+            and (
+                zone_state := async_active_zone(
+                    self.hass, latitude, longitude, accuracy
+                )
+            )
+            and zone_state.entity_id == self.entity_id
+        ):
+            self._persons_in_zone.add(person_entity_id)
+        elif person_entity_id in self._persons_in_zone:
+            self._persons_in_zone.remove(person_entity_id)
+
+        if len(self._persons_in_zone) != cur_count:
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        person_domain = "person"  # avoid circular import
+        persons = self.hass.states.async_entity_ids(person_domain)
+        for person in persons:
+            state = self.hass.states.get(person)
+            if (
+                state is None
+                or (latitude := state.attributes.get(ATTR_LATITUDE)) is None
+                or (longitude := state.attributes.get(ATTR_LONGITUDE)) is None
+                or (accuracy := state.attributes.get(ATTR_GPS_ACCURACY)) is None
+            ):
+                continue
+            zone_state = async_active_zone(self.hass, latitude, longitude, accuracy)
+            if zone_state is not None and zone_state.entity_id == self.entity_id:
+                self._persons_in_zone.add(person)
+
+        self.async_on_remove(
+            event.async_track_state_change_filtered(
+                self.hass,
+                event.TrackStates(False, set(), {person_domain}),
+                self._person_state_change_listener,
+            ).async_remove
+        )
 
     @callback
     def _generate_attrs(self) -> None:

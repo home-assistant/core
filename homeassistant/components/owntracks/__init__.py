@@ -7,8 +7,7 @@ import re
 from aiohttp.web import json_response
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import mqtt
+from homeassistant.components import cloud, mqtt, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -39,37 +38,34 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(DOMAIN, default={}): {
-            vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-            vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
-            vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
-            vol.Optional(
-                CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
-            ): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_SECRET): vol.Any(
-                vol.Schema({vol.Optional(cv.string): cv.string}), cv.string
-            ),
-            vol.Optional(CONF_REGION_MAPPING, default={}): dict,
-            vol.Optional(CONF_WEBHOOK_ID): cv.string,
-        }
-    },
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = vol.All(
+    cv.removed(CONF_WEBHOOK_ID),
+    vol.Schema(
+        {
+            vol.Optional(DOMAIN, default={}): {
+                vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
+                vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+                vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
+                vol.Optional(
+                    CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
+                ): mqtt.valid_subscribe_topic,
+                vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_SECRET): vol.Any(
+                    vol.Schema({vol.Optional(cv.string): cv.string}), cv.string
+                ),
+                vol.Optional(CONF_REGION_MAPPING, default={}): dict,
+            }
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize OwnTracks component."""
     hass.data[DOMAIN] = {"config": config[DOMAIN], "devices": {}, "unsub": None}
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
-            )
-        )
-
     return True
 
 
@@ -101,9 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_when_setup(hass, "mqtt", async_connect_mqtt)
 
-    hass.components.webhook.async_register(
-        DOMAIN, "OwnTracks", webhook_id, handle_webhook
-    )
+    webhook.async_register(hass, DOMAIN, "OwnTracks", webhook_id, handle_webhook)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -116,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OwnTracks config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN]["unsub"]()
 
@@ -128,7 +122,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not entry.data.get("cloudhook"):
         return
 
-    await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
+    await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_connect_mqtt(hass, component):
@@ -147,9 +141,7 @@ async def async_connect_mqtt(hass, component):
         message["topic"] = msg.topic
         hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
 
-    await hass.components.mqtt.async_subscribe(
-        context.mqtt_topic, async_handle_mqtt_message, 1
-    )
+    await mqtt.async_subscribe(hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
     return True
 

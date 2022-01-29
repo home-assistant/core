@@ -7,7 +7,14 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Coroutine, Iterable, Mapping
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Coroutine,
+    Iterable,
+    Mapping,
+)
 import datetime
 import enum
 import functools
@@ -21,8 +28,6 @@ from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
     Any,
-    Awaitable,
-    Callable,
     Generic,
     NamedTuple,
     Optional,
@@ -240,7 +245,6 @@ class HomeAssistant:
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
-        # pylint: disable-next=unsubscriptable-object
         self._pending_tasks: list[asyncio.Future[Any]] = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -363,21 +367,21 @@ class HomeAssistant:
     @callback
     def async_add_job(
         self, target: Callable[..., Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
         self, target: Callable[..., Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
@@ -385,7 +389,7 @@ class HomeAssistant:
         self,
         target: Callable[..., Awaitable[_R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
 
         If the job is either a coroutine or decorated with @callback, it will be
@@ -409,27 +413,27 @@ class HomeAssistant:
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
 
         This method must be run in the event loop.
         hassjob: HassJob to call.
         args: parameters for method to call.
         """
-        task: asyncio.Future[_R]  # pylint: disable=unsubscriptable-object
+        task: asyncio.Future[_R]
         if hassjob.job_type == HassJobType.Coroutinefunction:
             task = self.loop.create_task(
                 cast(Callable[..., Awaitable[_R]], hassjob.target)(*args)
@@ -473,7 +477,7 @@ class HomeAssistant:
     @callback
     def async_add_executor_job(
         self, target: Callable[..., T], *args: Any
-    ) -> asyncio.Future[T]:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
 
@@ -497,20 +501,20 @@ class HomeAssistant:
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
@@ -528,21 +532,21 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self, target: Callable[..., Awaitable[_R]], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Callable[..., Awaitable[_R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
@@ -550,7 +554,7 @@ class HomeAssistant:
         self,
         target: Callable[..., Awaitable[_R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
-    ) -> asyncio.Future[_R] | None:  # pylint: disable=unsubscriptable-object
+    ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.

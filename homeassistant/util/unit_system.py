@@ -40,8 +40,6 @@ from . import (
     volume as volume_util,
 )
 
-# mypy: disallow-any-generics
-
 LENGTH_UNITS = distance_util.VALID_UNITS
 
 MASS_UNITS: tuple[str, ...] = (MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS)

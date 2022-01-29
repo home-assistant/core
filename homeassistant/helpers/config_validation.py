@@ -16,7 +16,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Dict, TypeVar, cast, overload
+from typing import Any, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -896,11 +896,11 @@ def key_value_schemas(
         key_value = value.get(key)
 
         if isinstance(key_value, Hashable) and key_value in value_schemas:
-            return cast(Dict[Hashable, Any], value_schemas[key_value](value))
+            return cast(dict[Hashable, Any], value_schemas[key_value](value))
 
         if default_schema:
             with contextlib.suppress(vol.Invalid):
-                return cast(Dict[Hashable, Any], default_schema(value))
+                return cast(dict[Hashable, Any], default_schema(value))
 
         alternatives = ", ".join(str(key) for key in value_schemas)
         if default_description:

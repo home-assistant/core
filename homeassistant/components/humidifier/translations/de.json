@@ -13,6 +13,7 @@
             "is_on": "{entity_name} ist eingeschaltet"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} ein- oder ausgeschaltet",
             "target_humidity_changed": "{entity_name} Soll-Luftfeuchtigkeit ge\u00e4ndert",
             "toggled": "{entity_name} ein- oder ausgeschaltet",
             "turned_off": "{entity_name} ausgeschaltet",
