@@ -6,6 +6,7 @@ import logging
 import re
 from types import MappingProxyType
 from typing import Any
+from urllib.parse import urlparse
 
 import async_timeout
 import elkm1_lib as elkm1
@@ -28,8 +29,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     ATTR_KEY,
@@ -48,9 +51,18 @@ from .const import (
     CONF_TASK,
     CONF_THERMOSTAT,
     CONF_ZONE,
+    DISCOVER_SCAN_TIMEOUT,
+    DISCOVERY_INTERVAL,
     DOMAIN,
     ELK_ELEMENTS,
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
+    LOGIN_TIMEOUT,
+)
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_trigger_discovery,
+    async_update_entry_from_discovery,
 )
 
 SYNC_TIMEOUT = 120
@@ -162,6 +174,14 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
 
+    async def _async_discovery(*_: Any) -> None:
+        async_trigger_discovery(
+            hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
+        )
+
+    asyncio.create_task(_async_discovery())
+    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+
     if DOMAIN not in hass_config:
         return True
 
@@ -204,7 +224,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
+    host = urlparse(entry.data[CONF_HOST]).hostname
+
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
+
+    if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
+        if device := await async_discover_device(hass, host):
+            async_update_entry_from_discovery(hass, entry, device[0])
 
     temperature_unit = TEMP_FAHRENHEIT
     if conf[CONF_TEMPERATURE_UNIT] in (BARE_TEMP_CELSIUS, TEMP_CELSIUS):
@@ -253,10 +279,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         keypad.add_callback(_element_changed)
 
     try:
-        if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
+        if not await async_wait_for_elk_to_sync(
+            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, conf[CONF_HOST]
+        ):
             return False
     except asyncio.TimeoutError as exc:
-        raise ConfigEntryNotReady from exc
+        raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
@@ -298,8 +326,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
+async def async_wait_for_elk_to_sync(
+    elk: elkm1.Elk, login_timeout: int, sync_timeout: int, conf_host: str
+) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
+
+    sync_event = asyncio.Event()
+    login_event = asyncio.Event()
 
     def login_status(succeeded):
         nonlocal success
@@ -307,29 +340,28 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
         success = succeeded
         if succeeded:
             _LOGGER.debug("ElkM1 login succeeded")
+            login_event.set()
         else:
             elk.disconnect()
             _LOGGER.error("ElkM1 login failed; invalid username or password")
-            event.set()
+            login_event.set()
+            sync_event.set()
 
     def sync_complete():
-        event.set()
+        sync_event.set()
 
     success = True
-    event = asyncio.Event()
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
-    try:
-        async with async_timeout.timeout(timeout):
-            await event.wait()
-    except asyncio.TimeoutError:
-        _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
-            timeout,
-            conf_host,
-        )
-        elk.disconnect()
-        raise
+    events = ((login_event, login_timeout), (sync_event, sync_timeout))
+
+    for event, timeout in events:
+        try:
+            async with async_timeout.timeout(timeout):
+                await event.wait()
+        except asyncio.TimeoutError:
+            elk.disconnect()
+            raise
 
     return success
 
@@ -392,6 +424,7 @@ class ElkEntity(Entity):
         self._elk = elk
         self._element = element
         self._prefix = elk_data["prefix"]
+        self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
@@ -410,7 +443,7 @@ class ElkEntity(Entity):
     @property
     def name(self):
         """Name of the element."""
-        return f"{self._prefix}{self._element.name}"
+        return f"{self._name_prefix}{self._element.name}"
 
     @property
     def unique_id(self):
