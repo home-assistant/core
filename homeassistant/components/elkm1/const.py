@@ -20,7 +20,6 @@ CONF_SETTING = "setting"
 CONF_TASK = "task"
 CONF_THERMOSTAT = "thermostat"
 
-STARTUP_SCAN_TIMEOUT = 5
 DISCOVER_SCAN_TIMEOUT = 10
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 
