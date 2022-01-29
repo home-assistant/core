@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from pytradfri.command import Command
+from pytradfri.device import Device
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,7 +27,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 class TradfriSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value: Callable[[TradfriSensor], Any | None] = None  # type: ignore
+    value: Callable[[Device], Any | None] = None  # type: ignore
 
 
 @dataclass
@@ -42,16 +43,16 @@ SENSOR_DESCRIPTION_API = TradfriSensorEntityDescription(
     native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     key=SensorDeviceClass.AQI,
     # The sensor returns 65535 if the fan is turned off
-    value=lambda data: None
-    if data.coordinator.data.air_purifier_control.air_purifiers[0].air_quality == 65535
-    else data.coordinator.data.air_purifier_control.air_purifiers[0].air_quality,
+    value=lambda device: None
+    if device.air_purifier_control.air_purifiers[0].air_quality == 65535
+    else device.air_purifier_control.air_purifiers[0].air_quality,
 )
 
 SENSOR_DESCRIPTION_BATTERY = TradfriSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
     native_unit_of_measurement=PERCENTAGE,
     key=SensorDeviceClass.BATTERY,
-    value=lambda data: cast(int, data.coordinator.data.device_info.battery_level),
+    value=lambda device: cast(int, device.device_info.battery_level),
 )
 
 
@@ -118,4 +119,4 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
     def _refresh(self) -> None:
         """Refresh the device."""
-        self._attr_native_value = self.entity_description.value(self)
+        self._attr_native_value = self.entity_description.value(self.coordinator.data)
