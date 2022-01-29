@@ -231,9 +231,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
 
-        if not self.unique_id:
-            await self.async_set_unique_id(user_input[CONF_PREFIX])
-            self._abort_if_unique_id_configured()
         if importing:
             return None, self.async_create_entry(title=info["title"], data=user_input)
 
@@ -256,7 +253,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert device is not None
         if user_input is not None:
             user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
-            user_input[CONF_PREFIX] = _short_mac(device.mac_address)
+            if self._async_current_entries():
+                user_input[CONF_PREFIX] = _short_mac(device.mac_address)
             if device.port != SECURE_PORT:
                 user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
             errors, result = await self._async_create_or_error(user_input, False)
