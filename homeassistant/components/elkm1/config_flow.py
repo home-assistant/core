@@ -253,6 +253,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert device is not None
         if user_input is not None:
             user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
+            user_input[CONF_PREFIX] = ""
             if self._async_current_entries():
                 user_input[CONF_PREFIX] = _short_mac(device.mac_address)
             if device.port != SECURE_PORT:
