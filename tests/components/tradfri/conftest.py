@@ -78,7 +78,7 @@ def mock_api_factory(mock_api):
         yield factory.return_value
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True)
 def setup(request):
     """
     Set up patches for pytradfri methods for the fan platform.
