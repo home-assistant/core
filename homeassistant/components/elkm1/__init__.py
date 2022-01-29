@@ -58,7 +58,6 @@ from .const import (
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
 )
 from .discovery import (
-    _short_mac,
     async_discover_device,
     async_discover_devices,
     async_trigger_discovery,
@@ -284,14 +283,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except asyncio.TimeoutError as exc:
         raise ConfigEntryNotReady from exc
 
-    if entry.unique_id and _short_mac(entry.unique_id) == conf[CONF_PREFIX]:
-        name_prefix = ""
-    else:
-        name_prefix = f"{conf[CONF_PREFIX]} "
-
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
-        "name_prefix": name_prefix,
         "prefix": conf[CONF_PREFIX],
         "auto_configure": conf[CONF_AUTO_CONFIGURE],
         "config": config,
@@ -424,7 +417,7 @@ class ElkEntity(Entity):
         self._elk = elk
         self._element = element
         self._prefix = elk_data["prefix"]
-        self._name_prefix = elk_data["name_prefix"]
+        self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
