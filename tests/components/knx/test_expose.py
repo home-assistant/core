@@ -163,6 +163,38 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
     )
 
 
+async def test_expose_conversion_exception(hass: HomeAssistant, knx: KNXTestKit):
+    """Test expose throws exception."""
+
+    entity_id = "fake.entity"
+    attribute = "fake_attribute"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "percent",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                CONF_ATTRIBUTE: attribute,
+                ExposeSchema.CONF_KNX_EXPOSE_DEFAULT: 1,
+            }
+        },
+    )
+    assert not hass.states.async_all()
+
+    # Before init default value shall be sent as response
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", (3,))
+
+    # Change attribute: Expect no exception
+    hass.states.async_set(
+        entity_id,
+        "on",
+        {attribute: 101},
+    )
+
+    await knx.assert_no_telegram()
+
+
 @patch("time.localtime")
 async def test_expose_with_date(localtime, hass: HomeAssistant, knx: KNXTestKit):
     """Test an expose with a date."""
