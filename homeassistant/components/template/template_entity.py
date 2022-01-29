@@ -364,8 +364,12 @@ class TemplateEntity(Entity):
     async def _async_template_startup(self, *_) -> None:
         template_var_tups = []
         has_availability_template = False
+        this = None
+        if state := self.hass.states.get(self.entity_id):
+            this = state.as_dict()
+        variables = {"this": this}
         for template, attributes in self._template_attrs.items():
-            template_var_tup = TrackTemplate(template, None)
+            template_var_tup = TrackTemplate(template, variables)
             is_availability_template = False
             for attribute in attributes:
                 # pylint: disable-next=protected-access
