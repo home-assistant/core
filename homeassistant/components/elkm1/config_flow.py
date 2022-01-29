@@ -307,7 +307,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        if device := await async_discover_device(self.hass, user_input[CONF_ADDRESS]):
+        if device := await async_discover_device(
+            self.hass, urlparse(user_input[CONF_HOST]).hostname
+        ):
             await self.async_set_unique_id(dr.format_mac(device.mac_address))
             self._abort_if_unique_id_configured()
         return (await self._async_create_or_error(user_input, True))[1]
