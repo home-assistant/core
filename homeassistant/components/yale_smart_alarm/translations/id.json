@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Kode tidak sesuai dengan jumlah digit yang diperlukan"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kode bawaan untuk kunci, digunakan jika tidak ada yang diberikan",
+                    "lock_code_digits": "Jumlah digit dalam kode PIN untuk kunci"
+                }
+            }
+        }
     }
 }
