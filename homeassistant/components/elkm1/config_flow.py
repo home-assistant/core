@@ -251,7 +251,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             base_schema[vol.Optional(CONF_PREFIX, default="")] = str
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(base_schema), errors=errors
+            step_id="connection", data_schema=vol.Schema(base_schema), errors=errors
         )
 
     async def async_step_import(self, user_input):
