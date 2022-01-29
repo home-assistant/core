@@ -8,6 +8,14 @@
         "tuya__basic_nightvision": {
             "0": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf"
         },
+        "tuya__curtain_mode": {
+            "morning": "\u03a0\u03c1\u03c9\u03af",
+            "night": "\u039d\u03cd\u03c7\u03c4\u03b1"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "\u03a0\u03af\u03c3\u03c9",
+            "forward": "\u0395\u03bc\u03c0\u03c1\u03cc\u03c2"
+        },
         "tuya__fan_angle": {
             "30": "30\u00b0",
             "60": "60\u00b0",
