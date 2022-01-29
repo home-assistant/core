@@ -252,6 +252,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
             if self._async_current_entries():
                 user_input[CONF_PREFIX] = _short_mac(device.mac_address)
+            else:
+                user_input[CONF_PREFIX] = ""
             if device.port != SECURE_PORT:
                 user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
             errors, result = await self._async_create_or_error(user_input, False)
