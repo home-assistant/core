@@ -47,6 +47,11 @@ DHCP = [
         "macaddress": "B85F98*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "00037F*"
+    },
+    {
         "domain": "broadlink",
         "macaddress": "34EA34*"
     },
@@ -260,6 +265,11 @@ DHCP = [
         "macaddress": "80A589*"
     },
     {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "DCF505*"
+    },
+    {
         "domain": "samsungtv",
         "hostname": "tizen*"
     },
@@ -400,6 +410,11 @@ DHCP = [
         "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "403F8C*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "C0C9E3*"
     },
     {
         "domain": "tplink",

@@ -343,14 +343,15 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
             for interf in node["node_interfaces"]:
                 dev_mac = interf["mac_address"]
+
+                if dev_mac not in hosts:
+                    continue
+
+                dev_info: Device = hosts[dev_mac]
+
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
-                    if (
-                        intf is not None
-                        and link["state"] == "CONNECTED"
-                        and dev_mac in hosts
-                    ):
-                        dev_info: Device = hosts[dev_mac]
+                    if intf is not None:
                         if intf["op_mode"] != "AP_GUEST":
                             dev_info.wan_access = not self.connection.call_action(
                                 "X_AVM-DE_HostFilter:1",
@@ -361,14 +362,15 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
+                _LOGGER.debug("Client dev_info: %s", dev_info)
 
-                        if dev_mac in self._devices:
-                            self._devices[dev_mac].update(dev_info, consider_home)
-                        else:
-                            device = FritzDevice(dev_mac, dev_info.name)
-                            device.update(dev_info, consider_home)
-                            self._devices[dev_mac] = device
-                            new_device = True
+                if dev_mac in self._devices:
+                    self._devices[dev_mac].update(dev_info, consider_home)
+                else:
+                    device = FritzDevice(dev_mac, dev_info.name)
+                    device.update(dev_info, consider_home)
+                    self._devices[dev_mac] = device
+                    new_device = True
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
