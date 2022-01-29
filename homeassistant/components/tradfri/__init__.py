@@ -233,7 +233,6 @@ def remove_stale_devices(
         device_id: str | None = None
         gateway_id: str | None = None
 
-        # identifier = (DOMAIN, self._device.id)
         for identifier in device_entry.identifiers:
             if identifier[0] != DOMAIN:
                 continue
