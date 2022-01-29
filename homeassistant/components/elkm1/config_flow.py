@@ -38,6 +38,8 @@ from .discovery import (
 
 CONF_DEVICE = "device"
 
+SECURE_PORT = 2601
+
 _LOGGER = logging.getLogger(__name__)
 
 PROTOCOL_MAP = {
@@ -50,15 +52,17 @@ PROTOCOL_MAP = {
 VALIDATE_TIMEOUT = 35
 
 BASE_SCHEMA = {
-    vol.Required(CONF_PROTOCOL, default="secure"): vol.In(
-        ["secure", "TLS 1.2", "non-secure", "serial"]
-    ),
     vol.Optional(CONF_USERNAME, default=""): str,
     vol.Optional(CONF_PASSWORD, default=""): str,
     vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
         [TEMP_FAHRENHEIT, TEMP_CELSIUS]
     ),
 }
+
+SECURE_PROTOCOLS = ["secure", "TLS 1.2"]
+ALL_PROTOCOLS = [*SECURE_PROTOCOLS, "non-secure", "serial"]
+DEFAULT_SECURE_PROTOCOL = "secure"
+DEFAULT_NON_SECURE_PROTOCOL = "non-secure"
 
 
 async def validate_input(data):
@@ -250,13 +254,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_ADDRESS] = f"{ip_address}:{port}"
             user_input[CONF_PREFIX] = short_mac
+            if port != SECURE_PORT:
+                user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
             errors, result = self._async_connection(user_input)
             if not errors:
                 return result
 
+        base_schema = BASE_SCHEMA.copy()
+        if port == SECURE_PORT:
+            base_schema[
+                vol.Required(CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL)
+            ] = vol.In(SECURE_PROTOCOLS)
         return self.async_show_form(
             step_id="discovered_connection",
-            data_schema=vol.Schema(BASE_SCHEMA),
+            data_schema=vol.Schema(base_schema),
             errors=errors,
             description_placeholders={
                 "host": f"{ip_address}:{port}",
@@ -275,7 +286,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         base_schema = BASE_SCHEMA.copy()
         base_schema[vol.Required(CONF_ADDRESS)] = str
         base_schema[vol.Optional(CONF_PREFIX, default="")] = str
-
+        base_schema[
+            vol.Required(CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL)
+        ] = vol.In(ALL_PROTOCOLS)
         return self.async_show_form(
             step_id="manual_connection",
             data_schema=vol.Schema(base_schema),
