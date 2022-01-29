@@ -246,7 +246,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 [TEMP_FAHRENHEIT, TEMP_CELSIUS]
             ),
         }
-        if self._discovered_device is not None:
+        if self._discovered_device is None:
             base_schema[vol.Required(CONF_ADDRESS)] = str
             base_schema[vol.Optional(CONF_PREFIX, default="")] = str
 
