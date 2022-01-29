@@ -230,7 +230,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
         if device := await async_discover_device(hass, host):
-            async_update_entry_from_discovery(hass, entry, device[0])
+            async_update_entry_from_discovery(hass, entry, device)
 
     temperature_unit = TEMP_FAHRENHEIT
     if conf[CONF_TEMPERATURE_UNIT] in (BARE_TEMP_CELSIUS, TEMP_CELSIUS):
