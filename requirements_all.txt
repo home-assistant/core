@@ -278,7 +278,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.1.1
+aiowebostv==0.1.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
