@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import logging
 
 from pytautulli import (
     PyTautulli,
@@ -17,12 +16,11 @@ from pytautulli.exceptions import (
 )
 from pytautulli.models.host_configuration import PyTautulliHostConfiguration
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
@@ -37,7 +35,7 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
-            logger=logging.getLogger(__name__),
+            logger=LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
@@ -58,8 +56,6 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
                 ]
             )
         except PyTautulliConnectionException as ex:
-            if self.config_entry and self.config_entry.state == ConfigEntryState.LOADED:
-                raise UpdateFailed(ex) from ex
-            raise ConfigEntryNotReady(ex) from ex
+            raise UpdateFailed(ex) from ex
         except PyTautulliAuthenticationException as ex:
             raise ConfigEntryAuthFailed(ex) from ex

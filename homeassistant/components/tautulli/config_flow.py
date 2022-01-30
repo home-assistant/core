@@ -4,7 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pytautulli import PyTautulli, PyTautulliHostConfiguration, exceptions
+from pytautulli import (
+    PyTautulli,
+    PyTautulliApiServerInfo,
+    PyTautulliException,
+    PyTautulliHostConfiguration,
+    exceptions,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -45,7 +51,8 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             info, error = await self.validate_input(user_input)
             if error is None:
-                await self.async_set_unique_id(info.pms_identifier)
+                if info is not None:
+                    await self.async_set_unique_id(info.pms_identifier)
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
@@ -79,34 +86,27 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if user_input is not None and entry:
-            _input = dict(entry.data)
-            _input[CONF_API_KEY] = user_input[CONF_API_KEY]
-            _, error = await self.validate_input(dict(_input))
+            _input = {**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
+            _, error = await self.validate_input(_input)
             if error is None:
                 self.hass.config_entries.async_update_entry(entry, data=_input)
                 await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
             errors["base"] = error
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
-                    ): str
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == config[CONF_API_KEY]:
-                _part = config[CONF_API_KEY][0:4]
-                _msg = f"Tautulli yaml config with partial key {_part} has been imported. Please remove it"
-                _LOGGER.warning(_msg)
+            if config[CONF_HOST] in entry.data[CONF_URL]:
+                _LOGGER.warning(
+                    "Tautulli yaml config with partial key %s has been imported. Please remove it",
+                    config[CONF_API_KEY][0:4],
+                )
                 return self.async_abort(reason="already_configured")
         host_configuration = PyTautulliHostConfiguration(
             config[CONF_API_KEY],
@@ -116,15 +116,17 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             verify_ssl=config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             base_api_path=config.get(CONF_PATH, DEFAULT_PATH),
         )
-        conf = {}
-        conf[CONF_API_KEY] = host_configuration.api_token
-        conf[CONF_URL] = host_configuration.base_url
-        conf[CONF_VERIFY_SSL] = host_configuration.verify_ssl
-        return await self.async_step_user(conf)
+        return await self.async_step_user(
+            {
+                CONF_API_KEY: host_configuration.api_token,
+                CONF_URL: host_configuration.base_url,
+                CONF_VERIFY_SSL: host_configuration.verify_ssl,
+            }
+        )
 
     async def validate_input(
         self, user_input: dict[str, Any]
-    ) -> tuple[Any, str | None]:
+    ) -> tuple[PyTautulliApiServerInfo | None, str | None]:
         """Try connecting to Tautulli."""
         try:
             api_client = PyTautulli(
@@ -140,5 +142,5 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, "cannot_connect"
         except exceptions.PyTautulliAuthenticationException:
             return None, "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except PyTautulliException:
             return None, "unknown"

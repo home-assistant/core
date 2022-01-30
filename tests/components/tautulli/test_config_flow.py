@@ -77,7 +77,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant):
 async def test_flow_user_unknown_error(hass: HomeAssistant):
     """Test user initialized flow with unreachable server."""
     with patch_config_flow_tautulli(await create_mocked_tautulli()) as tautullimock:
-        tautullimock.side_effect = Exception
+        tautullimock.side_effect = exceptions.PyTautulliException
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
