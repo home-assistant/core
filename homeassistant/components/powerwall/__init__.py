@@ -223,7 +223,7 @@ def call_base_info(power_wall):
     # Make sure the serial numbers always have the same order
     gateway_din = None
     with contextlib.suppress((AssertionError, PowerwallError)):
-        gateway_din = power_wall.get_gateway_din()
+        gateway_din = power_wall.get_gateway_din().upper()
     return {
         POWERWALL_API_SITE_INFO: power_wall.get_site_info(),
         POWERWALL_API_STATUS: power_wall.get_status(),
