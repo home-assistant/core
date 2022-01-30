@@ -88,6 +88,7 @@ class Manifest(TypedDict, total=False):
     is_built_in: bool
     version: str
     codeowners: list[str]
+    loggers: list[str]
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -441,6 +442,11 @@ class Integration:
     def issue_tracker(self) -> str | None:
         """Return issue tracker link."""
         return self.manifest.get("issue_tracker")
+
+    @property
+    def loggers(self) -> list[str] | None:
+        """Return list of loggers used by the integration."""
+        return self.manifest.get("loggers")
 
     @property
     def quality_scale(self) -> str | None:

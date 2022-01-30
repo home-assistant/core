@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tile",
   "requirements": ["pytile==2022.01.0"],
   "codeowners": ["@bachya"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pytile"]
 }

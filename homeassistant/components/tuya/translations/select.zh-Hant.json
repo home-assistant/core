@@ -10,6 +10,14 @@
             "1": "\u95dc\u9589",
             "2": "\u958b\u555f"
         },
+        "tuya__curtain_mode": {
+            "morning": "\u65e9\u6668",
+            "night": "\u591c\u9593"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "\u5f8c\u9000",
+            "forward": "\u524d\u9032"
+        },
         "tuya__decibel_sensitivity": {
             "0": "\u4f4e\u654f\u611f\u5ea6",
             "1": "\u9ad8\u654f\u611f\u5ea6"
