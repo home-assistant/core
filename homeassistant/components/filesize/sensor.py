@@ -80,6 +80,7 @@ class Filesize(SensorEntity):
         decimals = 2
         if self._size:
             return round(self._size / 1e6, decimals)
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
