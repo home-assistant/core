@@ -12,6 +12,7 @@ def create_service_with_ecobee_mode(accessory: Accessory):
 
     current_mode = service.add_char(CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE)
     current_mode.value = 0
+    current_mode.perms.append("ev")
 
     service.add_char(CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE)
 
@@ -21,10 +22,9 @@ def create_service_with_ecobee_mode(accessory: Accessory):
 async def test_read_current_mode(hass, utcnow):
     """Test that Ecobee mode can be correctly read and show as human readable text."""
     helper = await setup_test_component(hass, create_service_with_ecobee_mode)
-    service = helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
-    energy_helper = Helper(
+    ecobee_mode = Helper(
         hass,
         "select.testdevice_current_mode",
         helper.pairing,
@@ -32,38 +32,44 @@ async def test_read_current_mode(hass, utcnow):
         helper.config_entry,
     )
 
-    mode = service[CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE]
-
-    state = await energy_helper.poll_and_get_state()
+    state = await ecobee_mode.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: 0,
+        },
+    )
     assert state.state == "home"
 
-    mode.value = 1
-    state = await energy_helper.poll_and_get_state()
+    state = await ecobee_mode.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: 1,
+        },
+    )
     assert state.state == "sleep"
 
-    mode.value = 2
-    state = await energy_helper.poll_and_get_state()
+    state = await ecobee_mode.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.Vendor.ECOBEE_CURRENT_MODE: 2,
+        },
+    )
     assert state.state == "away"
 
 
 async def test_write_current_mode(hass, utcnow):
     """Test can set a specific mode."""
     helper = await setup_test_component(hass, create_service_with_ecobee_mode)
-    service = helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
+    helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
-    energy_helper = Helper(
+    current_mode = Helper(
         hass,
         "select.testdevice_current_mode",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
     )
-
-    service = energy_helper.accessory.services.first(
-        service_type=ServicesTypes.THERMOSTAT
-    )
-    mode = service[CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE]
 
     await hass.services.async_call(
         "select",
@@ -71,7 +77,10 @@ async def test_write_current_mode(hass, utcnow):
         {"entity_id": "select.testdevice_current_mode", "option": "home"},
         blocking=True,
     )
-    assert mode.value == 0
+    current_mode.async_assert_service_values(
+        ServicesTypes.THERMOSTAT,
+        {CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE: 0},
+    )
 
     await hass.services.async_call(
         "select",
@@ -79,7 +88,10 @@ async def test_write_current_mode(hass, utcnow):
         {"entity_id": "select.testdevice_current_mode", "option": "sleep"},
         blocking=True,
     )
-    assert mode.value == 1
+    current_mode.async_assert_service_values(
+        ServicesTypes.THERMOSTAT,
+        {CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE: 1},
+    )
 
     await hass.services.async_call(
         "select",
@@ -87,4 +99,7 @@ async def test_write_current_mode(hass, utcnow):
         {"entity_id": "select.testdevice_current_mode", "option": "away"},
         blocking=True,
     )
-    assert mode.value == 2
+    current_mode.async_assert_service_values(
+        ServicesTypes.THERMOSTAT,
+        {CharacteristicsTypes.Vendor.ECOBEE_SET_HOLD_SCHEDULE: 2},
+    )
