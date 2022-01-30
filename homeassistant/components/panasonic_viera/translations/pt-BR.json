@@ -1,11 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta TV Panasonic Viera j\u00e1 est\u00e1 configurada."
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_pin_code": "C\u00f3digo PIN"
         },
         "step": {
+            "pairing": {
+                "data": {
+                    "pin": "C\u00f3digo PIN"
+                },
+                "description": "C\u00f3digo PIN"
+            },
             "user": {
-                "description": "Digite o endere\u00e7o IP da sua TV Panasonic Viera",
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "name": "Nome"
+                },
+                "description": "Digite o Endere\u00e7o IP da sua TV Panasonic Viera",
                 "title": "Configure sua TV"
             }
         }

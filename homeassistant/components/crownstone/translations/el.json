@@ -43,6 +43,28 @@
             "usb_config_option": {
                 "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c4\u03b7 \u03c3\u03b5\u03b9\u03c1\u03b9\u03b1\u03ba\u03ae \u03b8\u03cd\u03c1\u03b1 \u03c4\u03bf\u03c5 Crownstone USB dongle.\n\n\u0391\u03bd\u03b1\u03b6\u03b7\u03c4\u03ae\u03c3\u03c4\u03b5 \u03bc\u03b9\u03b1 \u03c3\u03c5\u03c3\u03ba\u03b5\u03c5\u03ae \u03bc\u03b5 VID 10C4 \u03ba\u03b1\u03b9 PID EA60.",
                 "title": "\u03a1\u03cd\u03b8\u03bc\u03b9\u03c3\u03b7 \u03c4\u03bf\u03c5 Crownstone USB dongle"
+            },
+            "usb_manual_config": {
+                "description": "\u03a7\u03b5\u03b9\u03c1\u03bf\u03ba\u03af\u03bd\u03b7\u03c4\u03b7 \u03b5\u03b9\u03c3\u03b1\u03b3\u03c9\u03b3\u03ae \u03c4\u03b7\u03c2 \u03b4\u03b9\u03b1\u03b4\u03c1\u03bf\u03bc\u03ae\u03c2 \u03b5\u03bd\u03cc\u03c2 dongle USB Crownstone.",
+                "title": "\u03a7\u03b5\u03b9\u03c1\u03bf\u03ba\u03af\u03bd\u03b7\u03c4\u03b7 \u03b5\u03b9\u03c3\u03b1\u03b3\u03c9\u03b3\u03ae \u03c4\u03b7\u03c2 \u03b4\u03b9\u03b1\u03b4\u03c1\u03bf\u03bc\u03ae\u03c2 USB dongle Crownstone"
+            },
+            "usb_manual_config_option": {
+                "description": "\u03a7\u03b5\u03b9\u03c1\u03bf\u03ba\u03af\u03bd\u03b7\u03c4\u03b7 \u03b5\u03b9\u03c3\u03b1\u03b3\u03c9\u03b3\u03ae \u03c4\u03b7\u03c2 \u03b4\u03b9\u03b1\u03b4\u03c1\u03bf\u03bc\u03ae\u03c2 \u03b5\u03bd\u03cc\u03c2 dongle USB Crownstone.",
+                "title": "\u03a7\u03b5\u03b9\u03c1\u03bf\u03ba\u03af\u03bd\u03b7\u03c4\u03b7 \u03b5\u03b9\u03c3\u03b1\u03b3\u03c9\u03b3\u03ae \u03c4\u03b7\u03c2 \u03b4\u03b9\u03b1\u03b4\u03c1\u03bf\u03bc\u03ae\u03c2 USB dongle Crownstone"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Crownstone Sphere"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03bc\u03af\u03b1 Crownstone Sphere \u03cc\u03c0\u03bf\u03c5 \u03b2\u03c1\u03af\u03c3\u03ba\u03b5\u03c4\u03b1\u03b9 \u03c4\u03bf USB.",
+                "title": "Crownstone USB Sphere"
+            },
+            "usb_sphere_config_option": {
+                "data": {
+                    "usb_sphere": "Crownstone Sphere"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03bc\u03af\u03b1 Crownstone Sphere \u03cc\u03c0\u03bf\u03c5 \u03b2\u03c1\u03af\u03c3\u03ba\u03b5\u03c4\u03b1\u03b9 \u03c4\u03bf USB.",
+                "title": "Crownstone USB Sphere"
             }
         }
     }

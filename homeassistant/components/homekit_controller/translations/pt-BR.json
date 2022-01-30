@@ -3,7 +3,7 @@
         "abort": {
             "accessory_not_found_error": "N\u00e3o \u00e9 poss\u00edvel adicionar o emparelhamento, pois o dispositivo n\u00e3o pode mais ser encontrado.",
             "already_configured": "O acess\u00f3rio j\u00e1 est\u00e1 configurado com este controlador.",
-            "already_in_progress": "O fluxo de configura\u00e7\u00e3o para o dispositivo j\u00e1 est\u00e1 em andamento.",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
             "already_paired": "Este acess\u00f3rio j\u00e1 est\u00e1 pareado com outro dispositivo. Por favor, redefina o acess\u00f3rio e tente novamente.",
             "ignored_model": "O suporte do HomeKit para este modelo est\u00e1 bloqueado, j\u00e1 que uma integra\u00e7\u00e3o nativa mais completa est\u00e1 dispon\u00edvel.",
             "invalid_config_entry": "Este dispositivo est\u00e1 mostrando como pronto para parear, mas existe um conflito na configura\u00e7\u00e3o de entrada para ele no Home Assistant que deve ser removida primeiro.",

@@ -1,7 +1,13 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
             "discovery_started": "Descoberta iniciada"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
         },
         "flow_title": "{nome} ({ip_address})",
         "step": {
@@ -9,9 +15,39 @@
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio",
-                    "verify_ssl": "Verificar certificado SSL"
+                    "verify_ssl": "Verifique o certificado SSL"
                 },
-                "description": "Deseja configurar {name} ({ip_address})?"
+                "description": "Deseja configurar {name} ({ip_address})?",
+                "title": "Descoberta UniFi Protect"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "host": "IP/Host do Servidor UniFi Protect",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "username": "Usu\u00e1rio"
+                },
+                "title": "Reautentica\u00e7\u00e3o UniFi Protect"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verifique o certificado SSL"
+                },
+                "description": "Voc\u00ea precisar\u00e1 de um usu\u00e1rio local criado no console do sistema operacional UniFi para fazer login. Usu\u00e1rios da Ubiquiti Cloud n\u00e3o funcionar\u00e3o. Para mais informa\u00e7\u00f5es: {local_user_documentation_url}",
+                "title": "Configura\u00e7\u00e3o do UniFi Protect"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "disable_rtsp": "Desativar o fluxo RTSP"
+                }
             }
         }
     }

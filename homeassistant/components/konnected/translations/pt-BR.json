@@ -1,7 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
         "step": {
             "user": {
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "port": "Porta"
+                },
                 "description": "Por favor, digite as informa\u00e7\u00f5es do host para o seu Painel Konnected."
             }
         }
@@ -58,6 +71,11 @@
                 "data": {
                     "api_host": "Substituir URL do host da API (opcional)",
                     "override_api_host": "Substituir o URL padr\u00e3o do painel do host da API do Home Assistant"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Nome (opcional)"
                 }
             }
         }
