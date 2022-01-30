@@ -79,8 +79,18 @@ def mock_whois_missing_some_attrs() -> Generator[Mock, None, None]:
         """A limited mock of whois_query."""
 
         def __init__(self, *args, **kwargs):
-            """Mock only one attribute being available."""
-            self.admin = "admin@example.com"
+            """Mock only attributes the library always sets being available."""
+            self.creation_date = datetime(2019, 1, 1, 0, 0, 0)
+            self.dnssec = True
+            self.expiration_date = datetime(2023, 1, 1, 0, 0, 0)
+            self.last_updated = datetime(
+                2022, 1, 1, 0, 0, 0, tzinfo=dt_util.get_time_zone("Europe/Amsterdam")
+            )
+            self.name = "home-assistant.io"
+            self.name_servers = ["ns1.example.com", "ns2.example.com"]
+            self.registrar = "My Registrar"
+            self.status = "OK"
+            self.statuses = ["OK"]
 
     with patch(
         "homeassistant.components.whois.whois_query", LimitedWhoisMock

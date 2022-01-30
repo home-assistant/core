@@ -50,7 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class WhoisSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    required_attr: str
     value_fn: Callable[[Domain], datetime | int | str | None]
 
 
@@ -81,6 +80,13 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
     return timestamp
 
 
+def _fetch_attr_if_exists(domain: Domain, attr: str) -> str | None:
+    """Fetch an attribute if it exists and is truthy or return None."""
+    if hasattr(domain, attr) and (value := getattr(domain, attr)):
+        return cast(str, value)
+    return None
+
+
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="admin",
@@ -88,15 +94,13 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        required_attr="admin",
-        value_fn=lambda domain: domain.admin if domain.admin else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "admin"),
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
         name="Created",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        required_attr="creation_date",
         value_fn=lambda domain: _ensure_timezone(domain.creation_date),
     ),
     WhoisSensorEntityDescription(
@@ -104,7 +108,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Days Until Expiration",
         icon="mdi:calendar-clock",
         native_unit_of_measurement=TIME_DAYS,
-        required_attr="expiration_date",
         value_fn=_days_until_expiration,
     ),
     WhoisSensorEntityDescription(
@@ -112,7 +115,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Expires",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        required_attr="expiration_date",
         value_fn=lambda domain: _ensure_timezone(domain.expiration_date),
     ),
     WhoisSensorEntityDescription(
@@ -120,7 +122,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Last Updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        required_attr="last_updated",
         value_fn=lambda domain: _ensure_timezone(domain.last_updated),
     ),
     WhoisSensorEntityDescription(
@@ -129,8 +130,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        required_attr="owner",
-        value_fn=lambda domain: domain.owner if domain.owner else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "owner"),
     ),
     WhoisSensorEntityDescription(
         key="registrant",
@@ -138,8 +138,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        required_attr="registrant",
-        value_fn=lambda domain: domain.registrant if domain.registrant else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "registrant"),
     ),
     WhoisSensorEntityDescription(
         key="registrar",
@@ -147,7 +146,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        required_attr="registrar",
         value_fn=lambda domain: domain.registrar if domain.registrar else None,
     ),
     WhoisSensorEntityDescription(
@@ -156,8 +154,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        required_attr="reseller",
-        value_fn=lambda domain: domain.reseller if domain.reseller else None,
+        value_fn=lambda domain: _fetch_attr_if_exists(domain, "reseller"),
     ),
 )
 
@@ -191,7 +188,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform from config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    data = coordinator.data
     async_add_entities(
         [
             WhoisSensorEntity(
@@ -200,7 +196,6 @@ async def async_setup_entry(
                 domain=entry.data[CONF_DOMAIN],
             )
             for description in SENSORS
-            if hasattr(data, description.required_attr)
         ],
     )
 
