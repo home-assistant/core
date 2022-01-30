@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 from datetime import timedelta
+from functools import partial
 import logging
 
 from kostal.plenticore import SettingsData
@@ -54,7 +55,7 @@ async def async_setup_entry(
 
         setting_data = next(
             filter(
-                lambda x: x.id == description.data_id,
+                partial(lambda id, sd: id == sd.id, description.data_id),
                 available_settings_data[description.module_id],
             )
         )
