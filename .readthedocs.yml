@@ -5,7 +5,7 @@ version: 2
 build:
   image: latest
   tools:
-    python: 3.8
+    python: 3.9
 
 python:
   install:
