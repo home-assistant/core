@@ -94,7 +94,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Created",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda domain: getattr(domain, "creation_date", None),
+        value_fn=lambda domain: _ensure_timezone(domain.creation_date),
     ),
     WhoisSensorEntityDescription(
         key="days_until_expiration",
