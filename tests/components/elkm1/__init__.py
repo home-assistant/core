@@ -5,8 +5,9 @@ from unittest.mock import MagicMock, patch
 
 from elkm1_lib.discovery import ElkSystem
 
+MOCK_IP_ADDRESS = "127.0.0.1"
 MOCK_MAC = "aa:bb:cc:dd:ee:ff"
-ELK_DISCOVERY = ElkSystem(MOCK_MAC, "127.0.0.1", 2601)
+ELK_DISCOVERY = ElkSystem(MOCK_MAC, MOCK_IP_ADDRESS, 2601)
 
 
 def mock_elk(invalid_auth=None, sync_complete=None):

@@ -1,12 +1,28 @@
 """Test the Elk-M1 Control config flow."""
-
+from dataclasses import asdict
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 
-from . import MOCK_MAC, _patch_discovery, _patch_elk, mock_elk
+from . import (
+    ELK_DISCOVERY,
+    MOCK_IP_ADDRESS,
+    MOCK_MAC,
+    _patch_discovery,
+    _patch_elk,
+    mock_elk,
+)
+
+from tests.common import MockConfigEntry
+
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(MOCK_IP_ADDRESS, "", MOCK_MAC)
+ELK_DISCOVERY_INFO = asdict(ELK_DISCOVERY)
 
 
 async def test_form_user_with_secure_elk_no_discovery(hass):
@@ -429,3 +445,33 @@ async def test_form_import(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, ELK_DISCOVERY_INFO),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already_configured(
+    hass, source, data
+):
+    """Test we abort if the host is already configured but the mac does not match."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"elks://{MOCK_IP_ADDRESS}"},
+        unique_id="cc:cc:cc:cc:cc:cc",
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == "cc:cc:cc:cc:cc:cc"
