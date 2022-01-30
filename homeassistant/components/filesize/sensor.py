@@ -79,9 +79,7 @@ class Filesize(SensorEntity):
         """Return the size of the file in MB."""
         decimals = 2
         if self._size:
-            state_mb = round(self._size / 1e6, decimals)
-            return state_mb
-        return None
+            return round(self._size / 1e6, decimals)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
