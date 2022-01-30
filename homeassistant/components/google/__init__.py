@@ -208,6 +208,7 @@ def do_authentication(hass, hass_config, config):
                 notification_id=NOTIFICATION_ID,
             )
             listener()
+            return
 
         try:
             credentials = oauth.step2_exchange(device_flow_info=dev_flow)
