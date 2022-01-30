@@ -39,7 +39,7 @@ def get_config_entry(
     )
 
 
-async def validate_connection(host_name: str, data: ConfigType) -> ConfigType:
+async def validate_connection(host_name: str, data: dict[str, Any]) -> dict[str, Any]:
     """Validate if a connection to LCN can be established."""
     host = data[CONF_IP_ADDRESS]
     port = data[CONF_PORT]

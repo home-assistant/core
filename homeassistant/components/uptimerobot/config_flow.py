@@ -17,7 +17,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import API_ATTR_OK, DOMAIN, LOGGER
 
@@ -30,7 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def _validate_input(
-        self, data: ConfigType
+        self, data: dict[str, Any]
     ) -> tuple[dict[str, str], UptimeRobotAccount | None]:
         """Validate the user input allows us to connect."""
         errors: dict[str, str] = {}
