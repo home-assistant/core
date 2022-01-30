@@ -62,7 +62,7 @@ from .const import (
 )
 from .favorites import SonosFavorites
 from .helpers import soco_error
-from .statistics import EventStatistics
+from .statistics import ActivityStatistics, EventStatistics
 
 NEVER_TIME = -1200.0
 EVENT_CHARGING = {
@@ -177,6 +177,7 @@ class SonosSpeaker:
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
         self._last_event_cache: dict[str, Any] = {}
+        self.activity_stats: ActivityStatistics = ActivityStatistics(self.zone_name)
         self.event_stats: EventStatistics = EventStatistics(self.zone_name)
 
         # Scheduled callback handles
@@ -528,6 +529,7 @@ class SonosSpeaker:
         """Track the last activity on this speaker, set availability and resubscribe."""
         _LOGGER.debug("Activity on %s from %s", self.zone_name, source)
         self._last_activity = time.monotonic()
+        self.activity_stats.activity(source, self._last_activity)
         was_available = self.available
         self.available = True
         if not was_available:
