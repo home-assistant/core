@@ -179,9 +179,6 @@ aiopvapi==1.6.19
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
 
-# homeassistant.components.radarr
-aiopyarr==22.1.3
-
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
 
