@@ -477,17 +477,21 @@ async def test_binary_sensors(
 
     assert len(hass.states.async_all()) == expected["entity_count"]
 
+    # Verify state data
+
     sensor = hass.states.get(expected["entity_id"])
     assert sensor.state == expected["state"]
     assert sensor.attributes.get(ATTR_DEVICE_CLASS) == expected["device_class"]
     assert sensor.attributes == expected["attributes"]
-    assert (
-        ent_reg.async_get(expected["entity_id"]).entity_category
-        is expected["entity_category"]
-    )
+
+    # Verify entity registry data
+
     ent_reg_entry = ent_reg.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
+
+    # Verify device registry data
+
     assert (
         len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
         == expected["device_count"]
