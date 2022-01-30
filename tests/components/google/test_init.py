@@ -37,7 +37,7 @@ YieldFixture = Generator[T, None, None]
 
 
 CODE_CHECK_INTERVAL = 1
-CODE_CHECK_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL)
+CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
 
 
 @pytest.fixture
@@ -198,7 +198,7 @@ async def test_init_success(
 
     # Run one tick to invoke the credential exchange check
     now = utcnow()
-    await fire_alarm(hass, now + CODE_CHECK_TIMEDELTA)
+    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
     assert len(mock_exchange.mock_calls) == 1
 
     mock_load_platform.assert_called_once()
@@ -240,7 +240,7 @@ async def test_expired_after_exchange(
     assert await component_setup()
 
     now = utcnow()
-    await fire_alarm(hass, now + CODE_CHECK_TIMEDELTA)
+    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
 
     mock_notification.assert_called()
     assert (
@@ -264,7 +264,7 @@ async def test_exchange_error(
         assert await component_setup()
 
         now = utcnow()
-        await fire_alarm(hass, now + CODE_CHECK_TIMEDELTA)
+        await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
 
     mock_notification.assert_called()
     assert "In order to authorize Home-Assistant" in mock_notification.call_args[0][1]
@@ -311,7 +311,7 @@ async def test_existing_token_missing_scope(
 
     # Run one tick to invoke the credential exchange check
     now = utcnow()
-    await fire_alarm(hass, now + CODE_CHECK_TIMEDELTA)
+    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
     assert len(mock_exchange.mock_calls) == 1
 
     mock_load_platform.assert_called_once()

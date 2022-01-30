@@ -249,6 +249,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     token_file = hass.config.path(TOKEN_FILE)
     if not os.path.isfile(token_file):
+        _LOGGER.debug("Token file does not exist, authenticating for first time")
         do_authentication(hass, config, conf)
     else:
         if not check_correct_scopes(token_file, conf):
