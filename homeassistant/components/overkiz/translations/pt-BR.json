@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "reauth_wrong_account": "Voc\u00ea s\u00f3 pode reautenticar esta entrada com a mesma conta e hub do Overkiz"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    }
+}

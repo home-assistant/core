@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "ssl": "Usar um certificado SSL",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verifique o certificado SSL"
+                }
+            }
+        }
+    }
+}

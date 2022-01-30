@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nome"
+                }
+            }
+        }
+    }
+}

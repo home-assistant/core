@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "unknown_error": "Erro inesperado"
+        },
+        "step": {
+            "discovery_confirm": {
+                "title": "Confirmar"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Endere\u00e7o IP"
+                },
+                "title": "Configurar dispositivo"
+            }
+        }
+    }
+}

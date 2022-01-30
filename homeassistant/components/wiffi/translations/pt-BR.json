@@ -2,12 +2,13 @@
     "config": {
         "abort": {
             "addr_in_use": "Porta do servidor j\u00e1 em uso.",
+            "already_configured": "A porta do servidor j\u00e1 est\u00e1 configurada.",
             "start_server_failed": "Falha ao iniciar o servidor."
         },
         "step": {
             "user": {
                 "data": {
-                    "port": "Porta do servidor"
+                    "port": "Porta"
                 },
                 "title": "Configurar servidor TCP para dispositivos WIFFI"
             }

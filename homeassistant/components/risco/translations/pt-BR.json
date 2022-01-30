@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "pin": "C\u00f3digo PIN",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code_arm_required": "C\u00f3digo PIN",
+                    "code_disarm_required": "C\u00f3digo PIN"
+                }
+            }
+        }
+    }
+}
