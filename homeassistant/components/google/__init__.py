@@ -194,6 +194,7 @@ def do_authentication(hass, hass_config, config):
 
     def step2_exchange(now):
         """Keep trying to validate the user_code until it expires."""
+        _LOGGER.debug("Attempting to validate user code")
 
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
@@ -251,6 +252,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         do_authentication(hass, config, conf)
     else:
         if not check_correct_scopes(token_file, conf):
+            _LOGGER.debug("Existing scopes are not sufficient, re-authenticating")
             do_authentication(hass, config, conf)
         else:
             do_setup(hass, config, conf)
@@ -365,6 +367,7 @@ def setup_services(
 
 def do_setup(hass, hass_config, config):
     """Run the setup after we have everything configured."""
+    _LOGGER.debug("Setting up integration")
     # Load calendars the user has configured
     hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
 
