@@ -35,8 +35,6 @@ class DeconzNumberDescriptionMixin:
 class DeconzNumberDescription(NumberEntityDescription, DeconzNumberDescriptionMixin):
     """Class describing deCONZ number entities."""
 
-    entity_category = EntityCategory.CONFIG
-
 
 ENTITY_DESCRIPTIONS = {
     Presence: [
@@ -48,6 +46,7 @@ ENTITY_DESCRIPTIONS = {
             max_value=65535,
             min_value=0,
             step=1,
+            entity_category=EntityCategory.CONFIG,
         )
     ]
 }
