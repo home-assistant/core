@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 from datetime import timedelta
+from functools import partial
 import logging
 
 from homeassistant.components.select import SelectEntity
@@ -24,6 +25,8 @@ async def async_setup_entry(
 ) -> None:
     """Add kostal plenticore Select widget."""
     plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
+
+    available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -32,23 +35,39 @@ async def async_setup_entry(
         plenticore,
     )
 
-    async_add_entities(
-        PlenticoreDataSelect(
-            select_data_update_coordinator,
-            entry_id=entry.entry_id,
-            platform_name=entry.title,
-            device_class="kostal_plenticore__battery",
-            module_id=select.module_id,
-            data_id=select.data_id,
-            name=select.name,
-            current_option="None",
-            options=select.options,
-            is_on=select.is_on,
-            device_info=plenticore.device_info,
-            unique_id=f"{entry.entry_id}_{select.module_id}",
-        )
-        for select in SELECT_SETTINGS_DATA
-    )
+    entities = []
+    for select in SELECT_SETTINGS_DATA:
+        if select.module_id in available_settings_data:
+            needed_data_ids = list(
+                filter(lambda data_id: data_id != "None", select.options)
+            )
+            available_data_ids = [
+                setting.id for setting in available_settings_data[select.module_id]
+            ]
+            if all(
+                map(
+                    partial(lambda aid, data_id: data_id in aid, available_data_ids),
+                    needed_data_ids,
+                )
+            ):
+                entities.append(
+                    PlenticoreDataSelect(
+                        select_data_update_coordinator,
+                        entry_id=entry.entry_id,
+                        platform_name=entry.title,
+                        device_class="kostal_plenticore__battery",
+                        module_id=select.module_id,
+                        data_id=select.data_id,
+                        name=select.name,
+                        current_option="None",
+                        options=select.options,
+                        is_on=select.is_on,
+                        device_info=plenticore.device_info,
+                        unique_id=f"{entry.entry_id}_{select.module_id}",
+                    )
+                )
+
+    async_add_entities(entities)
 
 
 class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
