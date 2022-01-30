@@ -1306,7 +1306,6 @@ def adjust_statistics(
     statistic_id: str,
     start_time: datetime,
     sum_adjustment: float,
-    table: str,
 ) -> bool:
     """Process an add_statistics job."""
 
@@ -1317,12 +1316,17 @@ def adjust_statistics(
         if statistic_id not in metadata:
             return True
 
-        _adjust_sum_statistics(
-            session,
-            Statistics if table == "statistics" else StatisticsShortTerm,
-            metadata[statistic_id][0],
-            start_time,
-            sum_adjustment,
+        tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
+            Statistics,
+            StatisticsShortTerm,
         )
+        for table in tables:
+            _adjust_sum_statistics(
+                session,
+                table,
+                metadata[statistic_id][0],
+                start_time,
+                sum_adjustment,
+            )
 
     return True

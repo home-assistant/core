@@ -1,6 +1,7 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+from functools import partial
 import math
 from statistics import mean
 from unittest.mock import patch
@@ -26,8 +27,15 @@ from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import async_setup_component, init_recorder_component
-from tests.components.recorder.common import wait_recording_done
+from tests.common import (
+    async_init_recorder_component,
+    async_setup_component,
+    init_recorder_component,
+)
+from tests.components.recorder.common import (
+    async_wait_recording_done_without_instance,
+    wait_recording_done,
+)
 
 BATTERY_SENSOR_ATTRIBUTES = {
     "device_class": "battery",
@@ -323,8 +331,9 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
         (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466, 1),
     ],
 )
-def test_compile_hourly_sum_statistics_amount(
-    hass_recorder,
+async def test_compile_hourly_sum_statistics_amount(
+    hass,
+    hass_ws_client,
     caplog,
     units,
     state_class,
@@ -339,10 +348,11 @@ def test_compile_hourly_sum_statistics_amount(
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    hass = hass_recorder()
+    client = await hass_ws_client()
+    await async_init_recorder_component(hass)
     hass.config.units = units
     recorder = hass.data[DATA_INSTANCE]
-    setup_component(hass, "sensor", {})
+    await async_setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -351,21 +361,28 @@ def test_compile_hourly_sum_statistics_amount(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
 
-    four, eight, states = record_meter_states(
-        hass, period0, "sensor.test1", attributes, seq
+    four, eight, states = await hass.async_add_executor_job(
+        record_meter_states, hass, period0, "sensor.test1", attributes, seq
     )
+    await async_wait_recording_done_without_instance(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=period0)
-    wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period1)
-    wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period2)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await hass.async_add_executor_job(
+        partial(recorder.do_adhoc_statistics, start=period0)
+    )
+    await async_wait_recording_done_without_instance(hass)
+    await hass.async_add_executor_job(
+        partial(recorder.do_adhoc_statistics, start=period1)
+    )
+    await async_wait_recording_done_without_instance(hass)
+    await hass.async_add_executor_job(
+        partial(recorder.do_adhoc_statistics, start=period2)
+    )
+    await async_wait_recording_done_without_instance(hass)
+    statistic_ids = await hass.async_add_executor_job(list_statistic_ids, hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -438,18 +455,18 @@ def test_compile_hourly_sum_statistics_amount(
     assert "Detected new cycle for sensor.test1, value dropped" not in caplog.text
 
     # Adjust the inserted statistics
-    hass.services.call(
-        "recorder",
-        "adjust_statistics",
+    await client.send_json(
         {
+            "id": 1,
+            "type": "recorder/adjust_sum_statistics",
             "statistic_id": "sensor.test1",
             "start_time": period1.isoformat(),
-            "sum_adjustment": 100,
-            "table": "statistics_short_term",
-        },
-        blocking=True,
+            "adjustment": 100.0,
+        }
     )
-    wait_recording_done(hass)
+    response = await client.receive_json()
+    assert response["success"]
+    await async_wait_recording_done_without_instance(hass)
 
     expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + factor2 * 100)
     expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 + factor2 * 100)
@@ -457,18 +474,18 @@ def test_compile_hourly_sum_statistics_amount(
     assert stats == expected_stats
 
     # Adjust the inserted statistics
-    hass.services.call(
-        "recorder",
-        "adjust_statistics",
+    await client.send_json(
         {
+            "id": 2,
+            "type": "recorder/adjust_sum_statistics",
             "statistic_id": "sensor.test1",
             "start_time": period2.isoformat(),
-            "sum_adjustment": -400,
-            "table": "statistics_short_term",
-        },
-        blocking=True,
+            "adjustment": -400.0,
+        }
     )
-    wait_recording_done(hass)
+    response = await client.receive_json()
+    assert response["success"]
+    await async_wait_recording_done_without_instance(hass)
 
     expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + factor2 * 100)
     expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 - factor2 * 300)
@@ -881,6 +898,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", attributes, seq
     )
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -972,6 +990,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", attributes, seq
     )
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -1061,6 +1080,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", attributes, seq
     )
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -1163,6 +1183,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     states = {**states, **_states}
     _, _, _states = record_meter_states(hass, period0, "sensor.test3", sns3_attr, seq3)
     states = {**states, **_states}
+    wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
@@ -1252,6 +1273,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     states = {**states, **_states}
     _, _, _states = record_meter_states(hass, period0, "sensor.test3", sns3_attr, seq3)
     states = {**states, **_states}
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -3209,7 +3231,6 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
     def set_state(entity_id, state, **kwargs):
         """Set the state."""
         hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=15 * 5)  # 00:01:15
