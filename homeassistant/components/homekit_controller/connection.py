@@ -494,7 +494,11 @@ class HKDevice:
         tasks = []
         for accessory in self.accessories:
             for service in accessory["services"]:
-                stype = ServicesTypes.get_short(service["type"].upper())
+                try:
+                    stype = ServicesTypes.get_short_uuid(service["type"].upper())
+                except KeyError:
+                    stype = service["type"].upper()
+
                 if stype in HOMEKIT_ACCESSORY_DISPATCH:
                     platform = HOMEKIT_ACCESSORY_DISPATCH[stype]
                     if platform not in self.platforms:
