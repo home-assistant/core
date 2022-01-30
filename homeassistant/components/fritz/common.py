@@ -279,14 +279,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
     def _get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
-        try:
-            return not self.connection.call_action(
-                "X_AVM-DE_HostFilter:1",
-                "GetWANAccessByIP",
-                NewIPv4Address=ip_address,
-            ).get("NewDisallow")
-        except (FritzConnectionException, AttributeError):
-            return None
+        return not self.connection.call_action(
+            "X_AVM-DE_HostFilter:1",
+            "GetWANAccessByIP",
+            NewIPv4Address=ip_address,
+        ).get("NewDisallow")
 
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Wrap up FritzboxTools class scan."""
@@ -326,7 +323,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 connection_type="",
                 ip_address=host["ip"],
                 ssid=None,
-                wan_access=True,
+                wan_access=None,
             )
 
         mesh_intf = {}
@@ -363,7 +360,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
                     if intf is not None:
-                        if intf["op_mode"] != "AP_GUEST":
+                        if intf["op_mode"] != "AP_GUEST" and dev_info.ip_address:
                             dev_info.wan_access = self._get_wan_access(
                                 dev_info.ip_address
                             )
