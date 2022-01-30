@@ -382,6 +382,34 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
+async def test_form_invalid_auth_no_password(hass):
+    """Test we handle invalid auth error when no password is provided."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mocked_elk = mock_elk(invalid_auth=True, sync_complete=True)
+
+    with patch(
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "secure",
+                "address": "1.2.3.4",
+                "username": "test-username",
+                "password": "",
+                "temperature_unit": "°F",
+                "prefix": "",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
 async def test_form_import(hass):
     """Test we get the form with import source."""
 
@@ -475,3 +503,32 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == "cc:cc:cc:cc:cc:cc"
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, ELK_DISCOVERY_INFO),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
+    hass, source, data
+):
+    """Test we add a missing unique id to the config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"elks://{MOCK_IP_ADDRESS}"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MOCK_MAC
