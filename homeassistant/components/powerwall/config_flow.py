@@ -30,7 +30,9 @@ def _login_and_fetch_site_info(power_wall: Powerwall, password: str):
     return power_wall.get_site_info(), power_wall.get_gateway_din()
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, str]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from schema with values provided by the user.
@@ -75,12 +77,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(
         self, user_input
-    ) -> tuple[dict[str, Any] | None, dict[str, str] | None, str | None]:
+    ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
         """Try to connect to the powerwall."""
-        info = unique_id = None
+        info = None
         errors: dict[str, str] = {}
         try:
-            info, unique_id = await validate_input(self.hass, user_input)
+            info = await validate_input(self.hass, user_input)
         except PowerwallUnreachableError:
             errors[CONF_IP_ADDRESS] = "cannot_connect"
         except WrongVersion:
@@ -91,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
-        return errors, info, unique_id
+        return errors, info
 
     async def async_step_confirm_discovery(self, user_input=None) -> FlowResult:
         """Confirm a discovered powerwall."""
@@ -107,7 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        errors, info, _ = await self._async_try_connect(
+        errors, info = await self._async_try_connect(
             {CONF_IP_ADDRESS: self.ip_address, CONF_PASSWORD: self.unique_id[-5:]}
         )
         if errors:
@@ -128,10 +130,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            errors, info, unique_id = await self._async_try_connect(user_input)
+            errors, info = await self._async_try_connect(user_input)
             if not errors:
-                if unique_id:
-                    await self.async_set_unique_id(unique_id)
+                assert info is not None
+                if info["unique_id"]:
+                    await self.async_set_unique_id(info["unique_id"])
                     self._abort_if_unique_id_configured(
                         updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
                     )
@@ -154,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             entry_data = self.reauth_entry.data
-            errors, _, _ = await self._async_try_connect(
+            errors, _ = await self._async_try_connect(
                 {CONF_IP_ADDRESS: entry_data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
