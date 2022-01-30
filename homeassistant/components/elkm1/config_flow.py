@@ -89,10 +89,11 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT, url):
         raise InvalidAuth
 
-    if prefix:
+    short_mac = _short_mac(mac) if mac else None
+    if prefix and prefix != short_mac:
         device_name = prefix
     elif mac:
-        device_name = f"ElkM1 {_short_mac(mac)}"
+        device_name = f"ElkM1 {short_mac}"
     else:
         device_name = "ElkM1"
     return {"title": device_name, CONF_HOST: url, CONF_PREFIX: slugify(prefix)}
@@ -288,6 +289,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 await self.async_set_unique_id(dr.format_mac(device.mac_address))
                 self._abort_if_unique_id_configured()
+                user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
             errors, result = await self._async_create_or_error(user_input, False)
             if not errors:
                 return result

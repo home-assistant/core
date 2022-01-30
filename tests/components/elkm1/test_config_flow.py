@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
     ELK_DISCOVERY,
+    ELK_NON_SECURE_DISCOVERY,
     MOCK_IP_ADDRESS,
     MOCK_MAC,
     _patch_discovery,
@@ -167,7 +168,7 @@ async def test_form_user_with_secure_elk_with_discovery(hass):
 
 
 async def test_form_user_with_secure_elk_with_discovery_pick_manual(hass):
-    """Test we can setup a secure elk with discovery but user picks manual."""
+    """Test we can setup a secure elk with discovery but user picks manual and directed discovery fails."""
 
     with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
@@ -218,6 +219,64 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(hass):
         "username": "test-username",
     }
     assert result3["result"].unique_id is None
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_discovery(
+    hass,
+):
+    """Test we can setup a secure elk with discovery but user picks manual and directed discovery succeeds."""
+
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] is None
+    assert result["step_id"] == "user"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_elk(elk=mocked_elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": None},
+        )
+        await hass.async_block_till_done()
+
+    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "protocol": "secure",
+                "address": "127.0.0.1",
+                "username": "test-username",
+                "password": "test-password",
+                "temperature_unit": "°F",
+                "prefix": "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "ElkM1 ddeeff"
+    assert result3["data"] == {
+        "auto_configure": True,
+        "host": "elks://127.0.0.1:2601",
+        "password": "test-password",
+        "prefix": "",
+        "temperature_unit": "°F",
+        "username": "test-username",
+    }
+    assert result3["result"].unique_id == MOCK_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -820,6 +879,104 @@ async def test_discovered_by_dhcp_udp_responds(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(hass):
+    """Test we can setup when discovered from dhcp but with udp response using the non-secure port."""
+
+    with _patch_discovery(device=ELK_NON_SECURE_DISCOVERY), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovered_connection"
+    assert result["errors"] == {}
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(device=ELK_NON_SECURE_DISCOVERY), _patch_elk(
+        elk=mocked_elk
+    ), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "temperature_unit": "°F",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "ElkM1 ddeeff"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elk://127.0.0.1:2101",
+        "password": "test-password",
+        "prefix": "",
+        "temperature_unit": "°F",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_discovered_by_dhcp_udp_responds_existing_config_entry(hass):
+    """Test we can setup when discovered from dhcp but with udp response with an existing config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "elks://6.6.6.6"},
+        unique_id="cc:cc:cc:cc:cc:cc",
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovered_connection"
+    assert result["errors"] == {}
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "temperature_unit": "°F",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "ElkM1 ddeeff"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elks://127.0.0.1:2601",
+        "password": "test-password",
+        "prefix": "ddeeff",
+        "temperature_unit": "°F",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_discovered_by_dhcp_no_udp_response(hass):
