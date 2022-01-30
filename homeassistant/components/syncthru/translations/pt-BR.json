@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "Nome"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nome"
+                }
+            }
+        }
+    }
+}
