@@ -230,7 +230,7 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
 
     domain = None
     for service in accessory.services:
-        service_name = ServicesTypes.get_short(service.type)
+        service_name = ServicesTypes.get_short_uuid(service.type)
         if service_name in HOMEKIT_ACCESSORY_DISPATCH:
             domain = HOMEKIT_ACCESSORY_DISPATCH[service_name]
             break

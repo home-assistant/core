@@ -2,6 +2,7 @@
 from typing import Final
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 DOMAIN = "homekit_controller"
 
@@ -20,33 +21,33 @@ IDENTIFIER_LEGACY_ACCESSORY_ID = "accessory-id"
 
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
-    "lightbulb": "light",
-    "outlet": "switch",
-    "switch": "switch",
-    "thermostat": "climate",
-    "heater-cooler": "climate",
-    "security-system": "alarm_control_panel",
-    "garage-door-opener": "cover",
-    "window": "cover",
-    "window-covering": "cover",
-    "lock-mechanism": "lock",
-    "contact": "binary_sensor",
-    "motion": "binary_sensor",
-    "carbon-dioxide": "sensor",
-    "humidity": "sensor",
-    "humidifier-dehumidifier": "humidifier",
-    "light": "sensor",
-    "temperature": "sensor",
-    "battery": "sensor",
-    "smoke": "binary_sensor",
-    "carbon-monoxide": "binary_sensor",
-    "leak": "binary_sensor",
-    "fan": "fan",
-    "fanv2": "fan",
-    "occupancy": "binary_sensor",
-    "television": "media_player",
-    "valve": "switch",
-    "camera-rtp-stream-management": "camera",
+    ServicesTypes.LIGHTBULB: "light",
+    ServicesTypes.OUTLET: "switch",
+    ServicesTypes.SWITCH: "switch",
+    ServicesTypes.THERMOSTAT: "climate",
+    ServicesTypes.HEATER_COOLER: "climate",
+    ServicesTypes.SECURITY_SYSTEM: "alarm_control_panel",
+    ServicesTypes.GARAGE_DOOR_OPENER: "cover",
+    ServicesTypes.WINDOW: "cover",
+    ServicesTypes.WINDOW_COVERING: "cover",
+    ServicesTypes.LOCK_MECHANISM: "lock",
+    ServicesTypes.CONTACT_SENSOR: "binary_sensor",
+    ServicesTypes.MOTION_SENSOR: "binary_sensor",
+    ServicesTypes.CARBON_DIOXIDE_SENSOR: "sensor",
+    ServicesTypes.HUMIDITY_SENSOR: "sensor",
+    ServicesTypes.HUMIDIFIER_DEHUMIDIFIER: "humidifier",
+    ServicesTypes.LIGHT_SENSOR: "sensor",
+    ServicesTypes.TEMPERATURE_SENSOR: "sensor",
+    ServicesTypes.BATTERY_SERVICE: "sensor",
+    ServicesTypes.SMOKE_SENSOR: "binary_sensor",
+    ServicesTypes.CARBON_MONOXIDE_SENSOR: "binary_sensor",
+    ServicesTypes.LEAK_SENSOR: "binary_sensor",
+    ServicesTypes.FAN: "fan",
+    ServicesTypes.FAN_V2: "fan",
+    ServicesTypes.OCCUPANCY_SENSOR: "binary_sensor",
+    ServicesTypes.TELEVISION: "media_player",
+    ServicesTypes.VALVE: "switch",
+    ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT: "camera",
 }
 
 CHARACTERISTIC_PLATFORMS = {
