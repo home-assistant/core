@@ -16,6 +16,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN
 
@@ -72,11 +73,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # The hostname is the gateway_din (unique_id)
         await self.async_set_unique_id(gateway_din)
         self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: self.ip_address})
-        self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_IP_ADDRESS] == discovery_info.ip:
+                if entry.unique_id is not None and is_ip_address(entry.unique_id):
+                    if self.hass.config_entries.async_update_entry(
+                        entry, unique_id=gateway_din
+                    ):
+                        self.hass.async_create_task(
+                            self.hass.config_entries.async_reload(entry.entry_id)
+                        )
+                return self.async_abort(reason="already_configured")
         self.context["title_placeholders"] = {
             "name": gateway_din,
             "ip_address": self.ip_address,
         }
+        errors, info = await self._async_try_connect(
+            {CONF_IP_ADDRESS: self.ip_address, CONF_PASSWORD: gateway_din[-5:]}
+        )
+        if errors:
+            return await self.async_step_user()
+        assert info is not None
+        self.title = info["title"]
         return await self.async_step_confirm_discovery()
 
     async def _async_try_connect(
@@ -113,13 +130,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        errors, info = await self._async_try_connect(
-            {CONF_IP_ADDRESS: self.ip_address, CONF_PASSWORD: self.unique_id[-5:]}
-        )
-        if errors:
-            return await self.async_step_user()
-        assert info is not None
-        self.title = info["title"]
         self._set_confirm_only()
         self.context["title_placeholders"] = {
             "name": self.title,
