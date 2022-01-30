@@ -121,7 +121,7 @@ def run(runtime_config: RuntimeConfig) -> int:
         try:
             _cancel_all_tasks_with_timeout(loop, TASK_CANCELATION_TIMEOUT)
             loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.shutdown_default_executor()
+            loop.run_until_complete(loop.shutdown_default_executor())
         finally:
             asyncio.set_event_loop(None)
             loop.close()
