@@ -477,9 +477,16 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Switch status."""
         return self._avm_wrapper.devices[self._mac].wan_access
+
+    @property
+    def available(self) -> bool:
+        """Return availability of the switch."""
+        if self._avm_wrapper.devices[self._mac].wan_access is None:
+            return False
+        return super().available
 
     @property
     def device_info(self) -> DeviceInfo:
