@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Ongeldige authenticatie",
+            "invalid_auth": "Ongeldige authenticatie",
             "invalid_pin": "De opgegeven pincode is ongeldig",
             "network_error": "Er is een netwerkfout opgetreden",
             "no_panel_online": "Er is geen online Elmax-controlepaneel gevonden.",
+            "unknown": "Onverwachte fout",
             "unknown_error": "Een onbekende fout is opgetreden."
         },
         "step": {

@@ -5,9 +5,9 @@ from enum import Enum, unique
 from typing import Any
 
 from homeassistant.components import mysensors
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,7 +37,7 @@ async def async_setup_entry(
         """Discover and add a MySensors cover."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.COVER,
             discovery_info,
             MySensorsCover,
             async_add_entities=async_add_entities,
@@ -48,7 +48,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.COVER),
             async_discover,
         ),
     )

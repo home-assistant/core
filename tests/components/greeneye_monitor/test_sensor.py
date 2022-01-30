@@ -7,9 +7,13 @@ from homeassistant.components.greeneye_monitor.sensor import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get as get_entity_registry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntryDisabler,
+    async_get as get_entity_registry,
+)
 
 from .common import (
+    MULTI_MONITOR_CONFIG,
     SINGLE_MONITOR_CONFIG_POWER_SENSORS,
     SINGLE_MONITOR_CONFIG_PULSE_COUNTERS,
     SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS,
@@ -61,9 +65,9 @@ async def test_disable_sensor_after_monitor_connected(
     )
     monitor = connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
 
-    assert len(monitor.listeners) == 1
+    assert len(monitor.voltage_sensor.listeners) == 1
     await disable_entity(hass, "sensor.voltage_1")
-    assert len(monitor.listeners) == 0
+    assert len(monitor.voltage_sensor.listeners) == 0
 
 
 async def test_updates_state_when_sensor_pushes(
@@ -77,8 +81,8 @@ async def test_updates_state_when_sensor_pushes(
     monitor = connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_sensor_state(hass, "sensor.voltage_1", "120.0")
 
-    monitor.voltage = 119.8
-    monitor.notify_all_listeners()
+    monitor.voltage_sensor.voltage = 119.8
+    monitor.voltage_sensor.notify_all_listeners()
     assert_sensor_state(hass, "sensor.voltage_1", "119.8")
 
 
@@ -151,6 +155,17 @@ async def test_voltage_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
     assert_sensor_state(hass, "sensor.voltage_1", "120.0")
 
 
+async def test_multi_monitor_sensors(hass: HomeAssistant, monitors: AsyncMock) -> None:
+    """Test that sensors still work when multiple monitors are registered."""
+    await setup_greeneye_monitor_component_with_config(hass, MULTI_MONITOR_CONFIG)
+    connect_monitor(monitors, 1)
+    connect_monitor(monitors, 2)
+    connect_monitor(monitors, 3)
+    assert_sensor_state(hass, "sensor.unit_1_temp_1", "32.0")
+    assert_sensor_state(hass, "sensor.unit_2_temp_1", "0.0")
+    assert_sensor_state(hass, "sensor.unit_3_temp_1", "32.0")
+
+
 def connect_monitor(monitors: AsyncMock, serial_number: int) -> MagicMock:
     """Simulate a monitor connecting to Home Assistant. Returns the mock monitor API object."""
     monitor = mock_monitor(serial_number)
@@ -161,5 +176,7 @@ def connect_monitor(monitors: AsyncMock, serial_number: int) -> MagicMock:
 async def disable_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Disable the given entity."""
     entity_registry = get_entity_registry(hass)
-    entity_registry.async_update_entity(entity_id, disabled_by="user")
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=RegistryEntryDisabler.USER
+    )
     await hass.async_block_till_done()

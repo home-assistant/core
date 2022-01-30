@@ -10,6 +10,7 @@ import emoji
 from nacl.secret import SecretBox
 import voluptuous as vol
 
+from homeassistant.components import cloud
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
@@ -32,6 +33,7 @@ from .const import (
     CONF_SECRET,
     CONF_USER_ID,
     DOMAIN,
+    SCHEMA_APP_DATA,
 )
 from .helpers import supports_encryption
 
@@ -45,7 +47,7 @@ class RegistrationsView(HomeAssistantView):
     @RequestDataValidator(
         vol.Schema(
             {
-                vol.Optional(ATTR_APP_DATA, default={}): dict,
+                vol.Optional(ATTR_APP_DATA, default={}): SCHEMA_APP_DATA,
                 vol.Required(ATTR_APP_ID): cv.string,
                 vol.Required(ATTR_APP_NAME): cv.string,
                 vol.Required(ATTR_APP_VERSION): cv.string,
@@ -67,10 +69,10 @@ class RegistrationsView(HomeAssistantView):
 
         webhook_id = secrets.token_hex()
 
-        if hass.components.cloud.async_active_subscription():
-            data[
-                CONF_CLOUDHOOK_URL
-            ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
+        if cloud.async_active_subscription(hass):
+            data[CONF_CLOUDHOOK_URL] = await cloud.async_create_cloudhook(
+                hass, webhook_id
+            )
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
@@ -101,7 +103,7 @@ class RegistrationsView(HomeAssistantView):
 
         remote_ui_url = None
         with suppress(hass.components.cloud.CloudNotAvailable):
-            remote_ui_url = hass.components.cloud.async_remote_ui_url()
+            remote_ui_url = cloud.async_remote_ui_url(hass)
 
         return self.json(
             {

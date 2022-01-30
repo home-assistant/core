@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import datetime, timedelta
-import functools as ft
 import json
 import logging
 from urllib.parse import quote
@@ -21,12 +20,17 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
-from homeassistant.auth.models import RefreshToken
-from homeassistant.components import media_source, zeroconf
+from homeassistant.components import media_source, plex, zeroconf
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
+    MEDIA_CLASS_APP,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -45,11 +49,11 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
-    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -57,6 +61,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
@@ -75,6 +80,8 @@ from .discovery import setup_internal_discovery
 from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
 
 _LOGGER = logging.getLogger(__name__)
+
+APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
@@ -119,7 +126,11 @@ def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
     return CastDevice(info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Cast from a config entry."""
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
 
@@ -298,8 +309,11 @@ class CastDevice(MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
+                # pylint: disable=[import-outside-toplevel]
+                from homeassistant.components import tts
+
                 with suppress(KeyError):  # base_url not configured
-                    tts_base_url = self.hass.components.tts.get_base_url(self.hass)
+                    tts_base_url = tts.get_base_url(self.hass)
 
             with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
@@ -395,11 +409,14 @@ class CastDevice(MediaPlayerEntity):
             return
 
         if self._chromecast.app_id is not None:
-            # Quit the previous app before starting splash screen
+            # Quit the previous app before starting splash screen or media player
             self._chromecast.quit_app()
 
         # The only way we can turn the Chromecast is on is by launching an app
-        self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
+            self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        else:
+            self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
     def turn_off(self):
         """Turn off the cast device."""
@@ -443,10 +460,77 @@ class CastDevice(MediaPlayerEntity):
         media_controller = self._media_controller()
         media_controller.seek(position)
 
+    async def _async_root_payload(self, content_filter):
+        """Generate root node."""
+        children = []
+        # Add external sources
+        if "plex" in self.hass.config.components:
+            children.append(
+                BrowseMedia(
+                    title="Plex",
+                    media_class=MEDIA_CLASS_APP,
+                    media_content_id="",
+                    media_content_type="plex",
+                    thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+                    can_play=False,
+                    can_expand=True,
+                )
+            )
+
+        # Add local media source
+        try:
+            result = await media_source.async_browse_media(
+                self.hass, None, content_filter=content_filter
+            )
+            children.append(result)
+        except BrowseError:
+            if not children:
+                raise
+
+        # If there's only one media source, resolve it
+        if len(children) == 1:
+            return await self.async_browse_media(
+                children[0].media_content_type,
+                children[0].media_content_id,
+            )
+
+        return BrowseMedia(
+            title="Cast",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="",
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        result = await media_source.async_browse_media(self.hass, media_content_id)
-        return result
+        content_filter = None
+
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_AUDIO:
+
+            def audio_content_filter(item):
+                """Filter non audio content."""
+                return item.media_content_type.startswith("audio/")
+
+            content_filter = audio_content_filter
+
+        if media_content_id is None:
+            return await self._async_root_payload(content_filter)
+
+        if plex.is_plex_media_id(media_content_id):
+            return await plex.async_browse_media(
+                self.hass, media_content_type, media_content_id, platform=CAST_DOMAIN
+            )
+        if media_content_type == "plex":
+            return await plex.async_browse_media(
+                self.hass, None, None, platform=CAST_DOMAIN
+            )
+
+        return await media_source.async_browse_media(
+            self.hass, media_content_id, content_filter=content_filter
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -459,31 +543,16 @@ class CastDevice(MediaPlayerEntity):
         # If media ID is a relative URL, we serve it from HA.
         # Create a signed path.
         if media_id[0] == "/":
-            # Sign URL with Home Assistant Cast User
-            config_entry_id = self.registry_entry.config_entry_id
-            config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-            user_id = config_entry.data["user_id"]
-            user = await self.hass.auth.async_get_user(user_id)
-            if user.refresh_tokens:
-                refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
-
-                media_id = async_sign_path(
-                    self.hass,
-                    refresh_token.id,
-                    quote(media_id),
-                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
-                )
+            media_id = async_sign_path(
+                self.hass,
+                quote(media_id),
+                timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
+            )
 
             # prepend external URL
             hass_url = get_url(self.hass, prefer_external=True)
             media_id = f"{hass_url}{media_id}"
 
-        await self.hass.async_add_executor_job(
-            ft.partial(self.play_media, media_type, media_id, **kwargs)
-        )
-
-    def play_media(self, media_type, media_id, **kwargs):
-        """Play media from a URL."""
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
         metadata = extra.get("metadata")
 
@@ -502,7 +571,9 @@ class CastDevice(MediaPlayerEntity):
             if "app_id" in app_data:
                 app_id = app_data.pop("app_id")
                 _LOGGER.info("Starting Cast app by ID %s", app_id)
-                self._chromecast.start_app(app_id)
+                await self.hass.async_add_executor_job(
+                    self._chromecast.start_app, app_id
+                )
                 if app_data:
                     _LOGGER.warning(
                         "Extra keys %s were ignored. Please use app_name to cast media",
@@ -512,21 +583,28 @@ class CastDevice(MediaPlayerEntity):
 
             app_name = app_data.pop("app_name")
             try:
-                quick_play(self._chromecast, app_name, app_data)
+                await self.hass.async_add_executor_job(
+                    quick_play, self._chromecast, app_name, app_data
+                )
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
+
         # Handle plex
         elif media_id and media_id.startswith(PLEX_URI_SCHEME):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
-            media, _ = lookup_plex_media(self.hass, media_type, media_id)
+            media = await self.hass.async_add_executor_job(
+                lookup_plex_media, self.hass, media_type, media_id
+            )
             if media is None:
                 return
             controller = PlexController()
             self._chromecast.register_handler(controller)
-            controller.play_media(media)
+            await self.hass.async_add_executor_job(controller.play_media, media)
         else:
             app_data = {"media_id": media_id, "media_type": media_type, **extra}
-            quick_play(self._chromecast, "homeassistant_media", app_data)
+            await self.hass.async_add_executor_job(
+                quick_play, self._chromecast, "default_media_receiver", app_data
+            )
 
     def _media_status(self):
         """
@@ -561,9 +639,12 @@ class CastDevice(MediaPlayerEntity):
             if media_status.player_is_idle:
                 return STATE_IDLE
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
-            return STATE_PLAYING
+            if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
+                # Some apps don't report media status, show the player as playing
+                return STATE_PLAYING
+            return STATE_IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
-            return STATE_OFF
+            return STATE_IDLE
         return None
 
     @property
@@ -674,9 +755,9 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
-        if (
-            self._chromecast
-            and self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST
+        if self._chromecast and self._chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_CHROMECAST,
+            pychromecast.const.CAST_TYPE_AUDIO,
         ):
             support |= SUPPORT_TURN_ON
 
@@ -721,8 +802,7 @@ class CastDevice(MediaPlayerEntity):
         """
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return None
-        media_status_recevied = self._media_status()[1]
-        return media_status_recevied
+        return self._media_status()[1]
 
     async def _async_cast_discovered(self, discover: ChromecastInfo):
         """Handle discovery of new Chromecast."""

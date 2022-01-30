@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O Accesspoint j\u00e1 est\u00e1 configurado",
-            "connection_aborted": "N\u00e3o foi poss\u00edvel conectar ao servidor HMIP",
-            "unknown": "Ocorreu um erro desconhecido."
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "connection_aborted": "Falha ao conectar",
+            "unknown": "Erro inesperado"
         },
         "error": {
-            "invalid_sgtin_or_pin": "PIN inv\u00e1lido, por favor tente novamente.",
+            "invalid_sgtin_or_pin": "C\u00f3digo PIN inv\u00e1lido, por favor tente novamente.",
             "press_the_button": "Por favor, pressione o bot\u00e3o azul.",
             "register_failed": "Falha ao registrar, por favor tente novamente.",
             "timeout_button": "Tempo para pressionar o Bot\u00e3o Azul expirou, por favor tente novamente."
@@ -16,7 +16,7 @@
                 "data": {
                     "hapid": "ID do AccessPoint (SGTIN)",
                     "name": "Nome (opcional, usado como prefixo de nome para todos os dispositivos)",
-                    "pin": "C\u00f3digo PIN (opcional)"
+                    "pin": "C\u00f3digo PIN"
                 },
                 "title": "Escolha um HomematicIP Accesspoint"
             },

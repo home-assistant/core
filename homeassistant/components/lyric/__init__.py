@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -30,7 +31,11 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
+from .api import (
+    ConfigEntryLyricClient,
+    LyricLocalOAuth2Implementation,
+    OAuth2SessionLyric,
+)
 from .config_flow import OAuth2FlowHandler
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
@@ -84,21 +89,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     session = aiohttp_client.async_get_clientsession(hass)
-    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    oauth_session = OAuth2SessionLyric(hass, entry, implementation)
 
     client = ConfigEntryLyricClient(session, oauth_session)
 
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
     lyric = Lyric(client, client_id)
 
-    async def async_update_data() -> Lyric:
+    async def async_update_data(force_refresh_token: bool = False) -> Lyric:
         """Fetch data from Lyric."""
-        await oauth_session.async_ensure_token_valid()
+        try:
+            if not force_refresh_token:
+                await oauth_session.async_ensure_token_valid()
+            else:
+                await oauth_session.force_refresh_token()
+        except ClientResponseError as exception:
+            if exception.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+                raise ConfigEntryAuthFailed from exception
+            raise UpdateFailed(exception) from exception
+
         try:
             async with async_timeout.timeout(60):
                 await lyric.get_locations()
             return lyric
         except LyricAuthenticationException as exception:
+            # Attempt to refresh the token before failing.
+            # Honeywell appear to have issues keeping tokens saved.
+            _LOGGER.debug("Authentication failed. Attempting to refresh token")
+            if not force_refresh_token:
+                return await async_update_data(force_refresh_token=True)
             raise ConfigEntryAuthFailed from exception
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception

@@ -35,6 +35,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -156,7 +158,12 @@ def _async_create_template_tracking_entities(
     async_add_entities(sensors)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template sensors."""
     if discovery_info is None:
         _async_create_template_tracking_entities(
@@ -192,38 +199,22 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        self._friendly_name_template = config.get(CONF_NAME)
-
-        self._attr_name = None
-        # Try to render the name as it can influence the entity ID
-        if self._friendly_name_template:
-            self._friendly_name_template.hass = hass
-            try:
-                self._attr_name = self._friendly_name_template.async_render(
-                    parse_result=False
-                )
-            except template.TemplateError:
-                pass
-
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._template = config.get(CONF_STATE)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
-        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute(
             "_attr_native_value", self._template, None, self._update_state
         )
-        if self._friendly_name_template and not self._friendly_name_template.is_static:
-            self.add_template_attribute("_attr_name", self._friendly_name_template)
 
         await super().async_added_to_hass()
 

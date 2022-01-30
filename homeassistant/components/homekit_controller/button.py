@@ -15,8 +15,10 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, CharacteristicEntity
 
@@ -43,20 +45,47 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
+    CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.IDENTIFY,
+        name="Identify",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        write_value=True,
+    ),
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+# For legacy reasons, "built-in" characteristic types are in their short form
+# And vendor types don't have a short form
+# This means long and short forms get mixed up in this dict, and comparisons
+# don't work!
+# We call get_uuid on *every* type to normalise them to the long form
+# Eventually aiohomekit will use the long form exclusively amd this can be removed.
+for k, v in list(BUTTON_ENTITIES.items()):
+    BUTTON_ENTITIES[CharacteristicsTypes.get_uuid(k)] = BUTTON_ENTITIES.pop(k)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit buttons."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic):
-        if not (description := BUTTON_ENTITIES.get(char.type)):
-            return False
+        entities = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities([HomeKitButton(conn, info, char, description)], True)
+
+        if description := BUTTON_ENTITIES.get(char.type):
+            entities.append(HomeKitButton(conn, info, char, description))
+        elif entity_type := BUTTON_ENTITY_CLASSES.get(char.type):
+            entities.append(entity_type(conn, info, char))
+        else:
+            return False
+
+        async_add_entities(entities, True)
         return True
 
     conn.add_char_factory(async_add_characteristic)
@@ -86,7 +115,7 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
     def name(self) -> str:
         """Return the name of the device if any."""
         if name := super().name:
-            return f"{name} - {self.entity_description.name}"
+            return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
     async def async_press(self) -> None:
@@ -94,3 +123,37 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         key = self.entity_description.key
         val = self.entity_description.write_value
         return await self.async_put_characteristics({key: val})
+
+
+class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
+    """Representation of a Button control for Ecobee clear hold request."""
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return []
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = name
+        return f"{prefix} Clear Hold"
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        key = self._char.type
+
+        # If we just send true, the request doesn't always get executed by ecobee.
+        # Sending false value then true value will ensure that the hold gets cleared
+        # and schedule resumed.
+        # Ecobee seems to cache the state and not update it correctly, which
+        # causes the request to be ignored if it thinks it has no effect.
+
+        for val in (False, True):
+            await self.async_put_characteristics({key: val})
+
+
+BUTTON_ENTITY_CLASSES: dict[str, type] = {
+    CharacteristicsTypes.Vendor.ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
+}

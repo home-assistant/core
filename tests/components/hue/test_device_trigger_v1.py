@@ -1,6 +1,7 @@
 """The tests for Philips Hue device triggers for V1 bridge."""
 
 from homeassistant.components import automation, hue
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v1 import device_trigger
 from homeassistant.setup import async_setup_component
 
@@ -25,7 +26,9 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
     hue_tap_device = device_reg.async_get_device(
         {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
-    triggers = await async_get_device_automations(hass, "trigger", hue_tap_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, hue_tap_device.id
+    )
 
     expected_triggers = [
         {
@@ -43,7 +46,9 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
     hue_dimmer_device = device_reg.async_get_device(
         {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
     )
-    triggers = await async_get_device_automations(hass, "trigger", hue_dimmer_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, hue_dimmer_device.id
+    )
 
     trigger_batt = {
         "platform": "device",

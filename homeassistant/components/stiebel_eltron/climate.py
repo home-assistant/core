@@ -1,4 +1,6 @@
 """Support for stiebel_eltron climate platform."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.climate import ClimateEntity
@@ -11,6 +13,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as STE_DOMAIN
 
@@ -53,7 +58,12 @@ HA_TO_STE_HVAC = {
 HA_TO_STE_PRESET = {k: i for i, k in STE_TO_HA_PRESET.items()}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the StiebelEltron platform."""
     name = hass.data[STE_DOMAIN]["name"]
     ste_data = hass.data[STE_DOMAIN]["ste_data"]

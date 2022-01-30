@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "not_found": "[%key:common::config_flow::abort::no_devices_found%]"
+        }
+    }
+}

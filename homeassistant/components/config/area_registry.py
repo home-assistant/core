@@ -8,10 +8,10 @@ from homeassistant.helpers.area_registry import async_get
 
 async def async_setup(hass):
     """Enable the Area Registry views."""
-    hass.components.websocket_api.async_register_command(websocket_list_areas)
-    hass.components.websocket_api.async_register_command(websocket_create_area)
-    hass.components.websocket_api.async_register_command(websocket_delete_area)
-    hass.components.websocket_api.async_register_command(websocket_update_area)
+    websocket_api.async_register_command(hass, websocket_list_areas)
+    websocket_api.async_register_command(hass, websocket_create_area)
+    websocket_api.async_register_command(hass, websocket_delete_area)
+    websocket_api.async_register_command(hass, websocket_update_area)
     return True
 
 

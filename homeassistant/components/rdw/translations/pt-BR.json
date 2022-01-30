@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "Placa de carro"
+                }
+            }
+        }
+    }
+}

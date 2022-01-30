@@ -29,7 +29,7 @@ from homeassistant.components.dlna_dmr.const import (
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, CONF_URL
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dr
 from homeassistant.helpers.entity_component import async_update_entity
@@ -37,21 +37,19 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as async_get_er,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
     LOCAL_IP,
     MOCK_DEVICE_LOCATION,
     MOCK_DEVICE_NAME,
+    MOCK_DEVICE_TYPE,
     MOCK_DEVICE_UDN,
     MOCK_DEVICE_USN,
     NEW_DEVICE_LOCATION,
 )
 
 from tests.common import MockConfigEntry
-
-MOCK_DEVICE_ST = "mock_st"
 
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
@@ -181,38 +179,6 @@ async def mock_disconnected_entity_id(
         == dmr_device_mock.async_unsubscribe_services.await_count
     )
     assert dmr_device_mock.on_event is None
-
-
-async def test_setup_platform_import_flow_started(
-    hass: HomeAssistant, domain_data_mock: Mock
-) -> None:
-    """Test import flow of YAML config is started if there's config data."""
-    # Cause connection attempts to fail
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
-
-    # Run the setup
-    mock_config: ConfigType = {
-        MP_DOMAIN: [
-            {
-                CONF_PLATFORM: DLNA_DOMAIN,
-                CONF_URL: MOCK_DEVICE_LOCATION,
-                CONF_LISTEN_PORT: 1234,
-            }
-        ]
-    }
-
-    await async_setup_component(hass, MP_DOMAIN, mock_config)
-    await hass.async_block_till_done()
-
-    # Check config_flow has started
-    flows = hass.config_entries.flow.async_progress(include_uninitialized=True)
-    assert len(flows) == 1
-
-    # It should be paused, waiting for the user to turn on the device
-    flow = flows[0]
-    assert flow["handler"] == "dlna_dmr"
-    assert flow["step_id"] == "import_turn_on"
-    assert flow["context"].get("unique_id") == MOCK_DEVICE_LOCATION
 
 
 async def test_setup_entry_no_options(
@@ -381,7 +347,7 @@ async def test_event_subscribe_rejected(
 
     Device state will instead be obtained via polling in async_update.
     """
-    dmr_device_mock.async_subscribe_services.side_effect = UpnpResponseError(501)
+    dmr_device_mock.async_subscribe_services.side_effect = UpnpResponseError(status=501)
 
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
     mock_state = hass.states.get(mock_entity_id)
@@ -1057,7 +1023,7 @@ async def test_become_available(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1121,14 +1087,86 @@ async def test_alive_but_gone(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
 
+    # There should be a connection attempt to the device
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited()
+
     # Device should still be unavailable
+    mock_state = hass.states.get(mock_disconnected_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # Send the same SSDP notification, expecting no extra connection attempts
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+    await ssdp_callback(
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=NEW_DEVICE_LOCATION,
+            ssdp_st=MOCK_DEVICE_TYPE,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
+            upnp={},
+        ),
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+    domain_data_mock.upnp_factory.async_create_device.assert_not_called()
+    domain_data_mock.upnp_factory.async_create_device.assert_not_awaited()
+    mock_state = hass.states.get(mock_disconnected_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # Send an SSDP notification with a new BOOTID, indicating the device has rebooted
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+    await ssdp_callback(
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=NEW_DEVICE_LOCATION,
+            ssdp_st=MOCK_DEVICE_TYPE,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
+            upnp={},
+        ),
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+
+    # Rebooted device (seen via BOOTID) should mean a new connection attempt
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited()
+    mock_state = hass.states.get(mock_disconnected_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # Send byebye message to indicate device is going away. Next alive message
+    # should result in a reconnect attempt even with same BOOTID.
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+    await ssdp_callback(
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_st=MOCK_DEVICE_TYPE,
+            upnp={},
+        ),
+        ssdp.SsdpChange.BYEBYE,
+    )
+    await ssdp_callback(
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=NEW_DEVICE_LOCATION,
+            ssdp_st=MOCK_DEVICE_TYPE,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
+            upnp={},
+        ),
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+
+    # Rebooted device (seen via byebye/alive) should mean a new connection attempt
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited()
     mock_state = hass.states.get(mock_disconnected_entity_id)
     assert mock_state is not None
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
@@ -1162,7 +1200,7 @@ async def test_multiple_ssdp_alive(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1171,7 +1209,7 @@ async def test_multiple_ssdp_alive(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1203,7 +1241,7 @@ async def test_ssdp_byebye(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.BYEBYE,
@@ -1222,7 +1260,7 @@ async def test_ssdp_byebye(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.BYEBYE,
@@ -1255,7 +1293,7 @@ async def test_ssdp_update_seen_bootid(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1272,7 +1310,7 @@ async def test_ssdp_update_seen_bootid(
                 ssdp.ATTR_SSDP_BOOTID: "1",
                 ssdp.ATTR_SSDP_NEXTBOOTID: "2",
             },
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.UPDATE,
@@ -1297,7 +1335,7 @@ async def test_ssdp_update_seen_bootid(
                 ssdp.ATTR_SSDP_BOOTID: "1",
                 ssdp.ATTR_SSDP_NEXTBOOTID: "2",
             },
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.UPDATE,
@@ -1322,7 +1360,7 @@ async def test_ssdp_update_seen_bootid(
                 ssdp.ATTR_SSDP_BOOTID: "2",
                 ssdp.ATTR_SSDP_NEXTBOOTID: "7c848375-a106-4bd1-ac3c-8e50427c8e4f",
             },
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.UPDATE,
@@ -1343,7 +1381,7 @@ async def test_ssdp_update_seen_bootid(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1382,7 +1420,7 @@ async def test_ssdp_update_missed_bootid(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1399,7 +1437,7 @@ async def test_ssdp_update_missed_bootid(
                 ssdp.ATTR_SSDP_BOOTID: "2",
                 ssdp.ATTR_SSDP_NEXTBOOTID: "3",
             },
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.UPDATE,
@@ -1420,7 +1458,7 @@ async def test_ssdp_update_missed_bootid(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "3"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1459,7 +1497,7 @@ async def test_ssdp_bootid(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1479,7 +1517,7 @@ async def test_ssdp_bootid(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,
@@ -1499,7 +1537,7 @@ async def test_ssdp_bootid(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
-            ssdp_st=MOCK_DEVICE_ST,
+            ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
         ),
         ssdp.SsdpChange.ALIVE,

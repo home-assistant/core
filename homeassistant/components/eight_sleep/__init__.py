@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SENSORS,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
@@ -154,13 +155,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, "sensor", DOMAIN, {CONF_SENSORS: sensors}, config
+            hass, Platform.SENSOR, DOMAIN, {CONF_SENSORS: sensors}, config
         )
     )
 
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, "binary_sensor", DOMAIN, {CONF_BINARY_SENSORS: binary_sensors}, config
+            hass,
+            Platform.BINARY_SENSOR,
+            DOMAIN,
+            {CONF_BINARY_SENSORS: binary_sensors},
+            config,
         )
     )
 
@@ -173,7 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         duration = params.pop(ATTR_HEAT_DURATION, 0)
 
         for sens in sensor:
-            side = sens[0]
+            side = sens.split("_")[1]
             userid = eight.fetch_userid(side)
             usrobj = eight.users[userid]
             await usrobj.set_heating_level(target, duration)

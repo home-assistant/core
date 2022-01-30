@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import somecomfort
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -42,7 +42,7 @@ def _async_migrate_data_to_options(
     )
 
 
-async def async_setup_entry(hass, config):
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Honeywell thermostat."""
     _async_migrate_data_to_options(hass, config)
 
@@ -87,7 +87,7 @@ async def update_listener(hass, config) -> None:
     await hass.config_entries.async_reload(config.entry_id)
 
 
-async def async_unload_entry(hass, config):
+async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Unload the config config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:

@@ -4,7 +4,7 @@ from __future__ import annotations
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import requests.exceptions
 import upcloud_api
@@ -55,7 +55,7 @@ STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
 
 class UpCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[Dict[str, upcloud_api.Server]]
+    DataUpdateCoordinator[dict[str, upcloud_api.Server]]
 ):
     """UpCloud data update coordinator."""
 
