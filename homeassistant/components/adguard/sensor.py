@@ -114,7 +114,7 @@ class AdGuardHomeDNSQueriesSensor(AdGuardHomeSensor):
 class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home blocked by filtering sensor."""
 
-    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
@@ -156,7 +156,7 @@ class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by parental control sensor."""
 
-    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
@@ -177,7 +177,7 @@ class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedSafeBrowsingSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by safe browsing sensor."""
 
-    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
@@ -198,7 +198,7 @@ class AdGuardHomeReplacedSafeBrowsingSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by safe search sensor."""
 
-    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
