@@ -241,7 +241,6 @@ async def test_expired_after_exchange(
 
     now = utcnow()
     await fire_alarm(hass, now + CODE_CHECK_TIMEDELTA)
-    assert len(mock_code_flow.mock_calls) == 4
 
     mock_notification.assert_called()
     assert (
@@ -266,7 +265,6 @@ async def test_exchange_error(
 
         now = utcnow()
         await fire_alarm(hass, now + CODE_CHECK_TIMEDELTA)
-        assert len(mock_code_flow.mock_calls) == 4
 
     mock_notification.assert_called()
     assert "In order to authorize Home-Assistant" in mock_notification.call_args[0][1]
