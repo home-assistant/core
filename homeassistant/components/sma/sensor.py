@@ -84,7 +84,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return self._sensor.name
+        return f"{DOMAIN}_{self._sensor.name}"
 
     @property
     def native_value(self) -> StateType:
