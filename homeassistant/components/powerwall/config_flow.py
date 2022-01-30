@@ -68,11 +68,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip
+        gateway_din = discovery_info.hostname.upper()
         # The hostname is the gateway_din (unique_id)
-        await self.async_set_unique_id(discovery_info.hostname.upper())
+        await self.async_set_unique_id(gateway_din)
         self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: self.ip_address})
         self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
-        self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
+        self.context["title_placeholders"] = {
+            "name": gateway_din,
+            "ip_address": self.ip_address,
+        }
         return await self.async_step_confirm_discovery()
 
     async def _async_try_connect(
@@ -117,11 +121,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert info is not None
         self.title = info["title"]
         self._set_confirm_only()
+        self.context["title_placeholders"] = {
+            "name": self.title,
+            "ip_address": self.ip_address,
+        }
         return self.async_show_form(
             step_id="confirm_discovery",
             data_schema=vol.Schema({}),
             description_placeholders={
-                "gateway_din": self.unique_id,
+                "name": self.title,
                 "ip_address": self.ip_address,
             },
         )
