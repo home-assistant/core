@@ -238,7 +238,7 @@ def release_date(movie: RadarrMovie) -> str:
 
 def to_key(movie: RadarrMovie):
     """Get key."""
-    return "{} ({})".format(movie.title, movie.year)
+    return f"{movie.title} ({movie.year})"
 
 
 def to_unit(value, unit) -> float:
