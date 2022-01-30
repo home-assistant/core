@@ -57,12 +57,18 @@ LISTENERS = "tradfri_listeners"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(
-                    CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
-                ): cv.boolean,
-            }
+            vol.All(
+                cv.deprecated(CONF_HOST),
+                cv.deprecated(
+                    CONF_ALLOW_TRADFRI_GROUPS,
+                ),
+                {
+                    vol.Optional(CONF_HOST): cv.string,
+                    vol.Optional(
+                        CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
+                    ): cv.boolean,
+                },
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -120,6 +126,7 @@ async def async_setup_entry(
 
     api = factory.request
     gateway = Gateway()
+    groups: list[Group] = []
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
@@ -139,7 +146,7 @@ async def async_setup_entry(
             groups_commands: Command = await api(
                 gateway.get_groups(), timeout=TIMEOUT_API
             )
-            groups: list[Group] = await api(groups_commands, timeout=TIMEOUT_API)
+            groups = await api(groups_commands, timeout=TIMEOUT_API)
 
     except PytradfriError as exc:
         await factory.shutdown()
