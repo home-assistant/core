@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .peco_outage_api import PecoOutageApi
 
-# TODO: Add support for binary sensor to check if actual home is still connected
 PLATFORMS: list[str] = [Platform.SENSOR]
 
 

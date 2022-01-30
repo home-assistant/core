@@ -47,7 +47,8 @@ class PecoOutageApi:
                     "customers_served": customers_served,
                 }
 
-    async def get_outage_totals(self):
+    @staticmethod
+    async def get_outage_totals():
         """Get the outage totals for the given county and mode."""
         async with httpx.AsyncClient() as client:
             r = await client.get(API_URL)  # pylint: disable=invalid-name

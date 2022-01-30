@@ -1,6 +1,8 @@
 """Test the PECO Outage Counter config flow."""
 from unittest.mock import patch
 
+from pytest import raises
+
 from homeassistant import config_entries
 from homeassistant.components.peco.config_flow import InvalidCounty
 from homeassistant.components.peco.const import DOMAIN
@@ -43,10 +45,7 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.peco.async_setup_entry",
-        side_effect=InvalidCounty,
-    ):
+    with raises(InvalidCounty):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
