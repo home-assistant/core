@@ -1,18 +1,37 @@
 {
     "config": {
+        "abort": {
+            "all_configured": "Todos os servidores vinculados j\u00e1 configurados",
+            "already_configured": "Este servidor Plex j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "token_request_timeout": "Tempo limite de obten\u00e7\u00e3o do token",
+            "unknown": "Erro inesperado"
+        },
         "error": {
+            "faulty_credentials": "Falha na autoriza\u00e7\u00e3o, verifique o token",
+            "no_servers": "Nenhum servidor vinculado \u00e0 conta Plex",
+            "not_found": "Servidor Plex n\u00e3o encontrado",
             "ssl_error": "Problema no certificado SSL"
         },
         "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
+                    "host": "Nome do host",
                     "port": "Porta",
-                    "ssl": "Usar SSL",
+                    "ssl": "Usar um certificado SSL",
                     "token": "Token (Opcional)",
                     "verify_ssl": "Verifique o certificado SSL"
                 },
                 "title": "Configura\u00e7\u00e3o manual do Plex"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Servidor"
+                },
+                "description": "V\u00e1rios servidores dispon\u00edveis, selecione um:",
+                "title": "Selecione servidor Plex"
             },
             "user_advanced": {
                 "data": {

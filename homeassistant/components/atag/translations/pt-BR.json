@@ -1,7 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este dispositivo j\u00e1 foi adicionado ao Home Assistant"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "port": "Porta"
+                }
+            }
         }
     }
 }

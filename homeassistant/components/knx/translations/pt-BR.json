@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "Nome do host",
+                    "individual_address": "Endere\u00e7o individual para a conex\u00e3o",
+                    "local_ip": "IP local do Home Assistant (deixe em branco para detec\u00e7\u00e3o autom\u00e1tica)",
+                    "port": "Porta",
+                    "route_back": "Modo Rota de Retorno / NAT",
+                    "tunneling_type": "Tipo de t\u00fanel KNX"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "tunnel": {
+                "data": {
+                    "host": "Nome do host",
+                    "local_ip": "IP local (deixe em branco se n\u00e3o tiver certeza)",
+                    "port": "Porta",
+                    "tunneling_type": "Tipo de t\u00fanel KNX"
+                }
+            }
+        }
+    }
+}

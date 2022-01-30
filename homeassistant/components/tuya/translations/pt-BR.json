@@ -1,21 +1,36 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Falhou ao conectar",
-            "invalid_auth": "{%component::tuya::config::error::invalid_auth%}",
-            "single_instance_allowed": "J\u00e1 configurado. S\u00f3 \u00e9 poss\u00edvel uma \u00fanica configura\u00e7\u00e3o."
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
         },
         "error": {
-            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "login_error": "Erro de login ({code}): {msg}"
         },
         "flow_title": "Configura\u00e7\u00e3o Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "country_code": "C\u00f3digo do pa\u00eds",
+                    "endpoint": "Zona de disponibilidade",
+                    "password": "Senha",
+                    "tuya_app_type": "Aplicativo m\u00f3vel",
+                    "username": "Conta"
+                },
+                "description": "Insira sua credencial Tuya",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "Pa\u00eds",
                     "password": "Senha",
                     "platform": "O aplicativo onde sua conta \u00e9 registrada",
                     "region": "Regi\u00e3o",
+                    "tuya_project_type": "Tipo de projeto de nuvem Tuya",
                     "username": "Nome de usu\u00e1rio"
                 },
                 "description": "Digite sua credencial Tuya.",
@@ -24,6 +39,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Falha ao conectar"
+        },
         "error": {
             "dev_multi_type": "V\u00e1rios dispositivos selecionados para configurar devem ser do mesmo tipo",
             "dev_not_config": "Tipo de dispositivo n\u00e3o configur\u00e1vel",

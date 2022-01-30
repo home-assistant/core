@@ -1,12 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Servi\u00e7o j\u00e1 est\u00e1 configurado"
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
         },
         "error": {
             "cannot_connect": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Senha Administrador",
+                    "admin_username": "Usu\u00e1rio",
+                    "surveillance_password": "Senha Vigil\u00e2ncia",
+                    "surveillance_username": "Usu\u00e1rio",
+                    "url": "URL"
+                }
+            }
         }
     },
     "options": {

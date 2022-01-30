@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O dispositivo ONVIF j\u00e1 est\u00e1 configurado.",
-            "already_in_progress": "O fluxo de configura\u00e7\u00e3o para dispositivos ONVIF j\u00e1 est\u00e1 em andamento.",
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
             "no_h264": "N\u00e3o h\u00e1 fluxos H264 dispon\u00edveis. Verifique a configura\u00e7\u00e3o do perfil no seu dispositivo.",
             "no_mac": "N\u00e3o foi poss\u00edvel configurar um ID \u00fanico para o dispositivo ONVIF.",
             "onvif_error": "Erro ao configurar o dispositivo ONVIF. Verifique os logs para obter mais informa\u00e7\u00f5es."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
         },
         "step": {
             "auth": {
@@ -14,6 +17,15 @@
                     "username": "Usu\u00e1rio"
                 },
                 "title": "Configurar autentica\u00e7\u00e3o"
+            },
+            "configure": {
+                "data": {
+                    "host": "Nome do host",
+                    "name": "Nome",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "username": "Usu\u00e1rio"
+                }
             },
             "configure_profile": {
                 "data": {
@@ -30,7 +42,7 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Endere\u00e7o (IP)",
+                    "host": "Nome do host",
                     "name": "Nome",
                     "port": "Porta"
                 },

@@ -1,7 +1,62 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "cannot_connect": "Falha ao conectar"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "s0_legacy_key": "Chave S0 (Legado)",
+                    "s2_access_control_key": "Chave de controle de acesso S2",
+                    "s2_authenticated_key": "Chave autenticada S2",
+                    "s2_unauthenticated_key": "Chave n\u00e3o autenticada S2",
+                    "usb_path": "Caminho do Dispositivo USB"
+                }
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "set_config_parameter": "Definir valor do par\u00e2metro de configura\u00e7\u00e3o {subtype}",
+            "set_lock_usercode": "Defina um c\u00f3digo de usu\u00e1rio em {entity_name}",
+            "set_value": "Definir valor de um valor de onda Z"
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "s0_legacy_key": "Chave S0 (Legado)",
+                    "s2_access_control_key": "Chave de controle de acesso S2",
+                    "s2_authenticated_key": "Chave autenticada S2",
+                    "s2_unauthenticated_key": "Chave n\u00e3o autenticada S2",
+                    "usb_path": "Caminho do Dispositivo USB"
+                }
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            }
         }
     }
 }
