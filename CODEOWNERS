@@ -748,6 +748,7 @@ homeassistant/components/qwikswitch/* @kellerza
 tests/components/qwikswitch/* @kellerza
 homeassistant/components/rachio/* @bdraco
 tests/components/rachio/* @bdraco
+homeassistant/components/radarr/* @tkdrob
 homeassistant/components/radiotherm/* @vinnyfuria
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
@@ -944,6 +945,7 @@ homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery
 tests/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
+tests/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 tests/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne @home-assistant/core
