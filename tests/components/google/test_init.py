@@ -1,7 +1,6 @@
 """The tests for the Google Calendar component."""
 from collections.abc import Awaitable, Callable
 import datetime
-import os
 from typing import Any, Generator, TypeVar
 from unittest.mock import Mock, call, patch
 
@@ -210,9 +209,6 @@ async def test_init_success(
     mock_notification.assert_called()
     assert "We are all setup now" in mock_notification.call_args[0][1]
 
-    # Credentials persisted
-    assert os.path.exists(hass.config.path(TOKEN_FILE))
-
 
 async def test_code_error(
     hass: HomeAssistant,
@@ -230,8 +226,6 @@ async def test_code_error(
 
     mock_notification.assert_called()
     assert "Error: Test Failure" in mock_notification.call_args[0][1]
-    # No credentials persisted
-    assert not os.path.exists(hass.config.path(TOKEN_FILE))
 
 
 @pytest.mark.parametrize("code_expiration_delta", [datetime.timedelta(minutes=-5)])
@@ -255,9 +249,6 @@ async def test_expired_after_exchange(
         in mock_notification.call_args[0][1]
     )
 
-    # No credentials persisted
-    assert not os.path.exists(hass.config.path(TOKEN_FILE))
-
 
 async def test_exchange_error(
     hass: HomeAssistant,
@@ -279,8 +270,6 @@ async def test_exchange_error(
 
     mock_notification.assert_called()
     assert "In order to authorize Home-Assistant" in mock_notification.call_args[0][1]
-    # No credentials persisted
-    assert not os.path.exists(hass.config.path(TOKEN_FILE))
 
 
 async def test_existing_token(
@@ -302,9 +291,6 @@ async def test_existing_token(
 
     # No notifications on success
     mock_notification.assert_not_called()
-
-    # Credentials persisted
-    assert os.path.exists(hass.config.path(TOKEN_FILE))
 
 
 @pytest.mark.parametrize(
@@ -338,9 +324,6 @@ async def test_existing_token_missing_scope(
     # No notifications on success
     mock_notification.assert_called()
     assert "We are all setup now" in mock_notification.call_args[0][1]
-
-    # Credentials persisted
-    assert os.path.exists(hass.config.path(TOKEN_FILE))
 
 
 @pytest.mark.parametrize("calendars_config", [[{"cal_id": "invalid-schema"}]])
