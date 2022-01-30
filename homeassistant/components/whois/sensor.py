@@ -50,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class WhoisSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
+    required_attr: str
     value_fn: Callable[[Domain], datetime | int | str | None]
 
 
@@ -87,6 +88,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        required_attr="admin",
         value_fn=lambda domain: domain.admin if domain.admin else None,
     ),
     WhoisSensorEntityDescription(
@@ -94,6 +96,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Created",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        required_attr="creation_date",
         value_fn=lambda domain: _ensure_timezone(domain.creation_date),
     ),
     WhoisSensorEntityDescription(
@@ -101,6 +104,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Days Until Expiration",
         icon="mdi:calendar-clock",
         native_unit_of_measurement=TIME_DAYS,
+        required_attr="expiration_date",
         value_fn=_days_until_expiration,
     ),
     WhoisSensorEntityDescription(
@@ -108,6 +112,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Expires",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        required_attr="expiration_date",
         value_fn=lambda domain: _ensure_timezone(domain.expiration_date),
     ),
     WhoisSensorEntityDescription(
@@ -115,6 +120,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         name="Last Updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        required_attr="last_updated",
         value_fn=lambda domain: _ensure_timezone(domain.last_updated),
     ),
     WhoisSensorEntityDescription(
@@ -123,6 +129,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        required_attr="owner",
         value_fn=lambda domain: domain.owner if domain.owner else None,
     ),
     WhoisSensorEntityDescription(
@@ -131,6 +138,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        required_attr="registrant",
         value_fn=lambda domain: domain.registrant if domain.registrant else None,
     ),
     WhoisSensorEntityDescription(
@@ -139,6 +147,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        required_attr="registrar",
         value_fn=lambda domain: domain.registrar if domain.registrar else None,
     ),
     WhoisSensorEntityDescription(
@@ -147,6 +156,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        required_attr="reseller",
         value_fn=lambda domain: domain.reseller if domain.reseller else None,
     ),
 )
@@ -181,6 +191,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform from config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
+    data = coordinator.data
     async_add_entities(
         [
             WhoisSensorEntity(
@@ -189,8 +200,8 @@ async def async_setup_entry(
                 domain=entry.data[CONF_DOMAIN],
             )
             for description in SENSORS
+            if hasattr(data, description.required_attr)
         ],
-        update_before_add=True,
     )
 
 
