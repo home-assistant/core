@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import async_control_connect
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .helpers import async_get_sources
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -198,20 +199,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init", data_schema=options_schema, errors=errors
         )
-
-
-async def async_get_sources(host: str, key: str) -> list[str]:
-    """Construct sources list."""
-    try:
-        client = await async_control_connect(host, key)
-    except WEBOSTV_EXCEPTIONS:
-        return []
-
-    return list(
-        dict.fromkeys(  # Preserve order when filtering duplicates
-            [
-                *(app["title"] for app in client.apps.values()),
-                *(app["label"] for app in client.inputs.values()),
-            ]
-        )
-    )
