@@ -81,15 +81,15 @@ def data_subscription_fixture():
 async def setup_simplisafe_fixture(hass, api, config):
     """Define a fixture to set up SimpliSafe."""
     with patch(
+        "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
+        return_value=api,
+    ), patch(
         "homeassistant.components.simplisafe.API.async_from_auth", return_value=api
     ), patch(
         "homeassistant.components.simplisafe.API.async_from_refresh_token",
         return_value=api,
     ), patch(
         "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
-    ), patch(
-        "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
-        return_value=api,
     ), patch(
         "homeassistant.components.simplisafe.PLATFORMS", []
     ):
