@@ -4,10 +4,14 @@ from __future__ import annotations
 import datetime
 import logging
 import os
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FILE_PATHS = "file_paths"
 ICON = "mdi:file"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_FILE_PATHS): vol.All(cv.ensure_list, [cv.isfile])}
 )
 
@@ -52,15 +56,18 @@ def setup_platform(
 class Filesize(SensorEntity):
     """Encapsulates file size information."""
 
-    def __init__(self, path):
+    _attr_native_unit_of_measurement = DATA_MEGABYTES
+    _attr_icon = ICON
+
+    def __init__(self, path: str) -> None:
         """Initialize the data object."""
         self._path = path  # Need to check its a valid path
-        self._size = None
-        self._last_updated = None
-        self._name = path.split("/")[-1]
-        self._unit_of_measurement = DATA_MEGABYTES
+        self._size: int | None = None
+        self._last_updated: str | None = None
+        self._attr_name = path.split("/")[-1]
+        self._attr_unique_id = path
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         statinfo = os.stat(self._path)
         self._size = statinfo.st_size
@@ -68,32 +75,19 @@ class Filesize(SensorEntity):
         self._last_updated = last_updated.isoformat()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the size of the file in MB."""
         decimals = 2
-        state_mb = round(self._size / 1e6, decimals)
-        return state_mb
+        if self._size:
+            state_mb = round(self._size / 1e6, decimals)
+            return state_mb
+        return None
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
         return {
             "path": self._path,
             "last_updated": self._last_updated,
             "bytes": self._size,
         }
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
